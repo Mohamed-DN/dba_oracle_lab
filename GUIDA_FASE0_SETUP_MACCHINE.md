@@ -11,14 +11,14 @@
 ║   ┌─────────────────────────────────────────────────────────────────────┐     ║
 ║   │                  Rete Bridged (192.168.1.0/24)                      │     ║
 ║   │              Collegata alla tua scheda Wi-Fi/Ethernet               │     ║
-║   └──┬────────┬────────┬──────────┬──────────┬──────────┬──────────────┘     ║
-║      │        │        │          │          │          │                     ║
-║   ┌──┴──┐  ┌──┴──┐  ┌──┴──┐   ┌──┴──┐   ┌──┴──┐   ┌──┴──────┐             ║
-║   │rac1 │  │rac2 │  │stby1│   │stby2│   │tgt  │   │ Il tuo  │             ║
-║   │ .101│  │ .102│  │ .201│   │ .202│   │ .150│   │   PC    │             ║
-║   │4GB  │  │4GB  │  │4GB  │   │4GB  │   │2GB  │   │         │             ║
-║   │2CPU │  │2CPU │  │2CPU │   │2CPU │   │1CPU │   │         │             ║
-║   └──┬──┘  └──┬──┘  └──┬──┘   └──┬──┘   └─────┘   └─────────┘             ║
+║   └──┬────────┬────────┬──────────┬──────────────────────────────────────┘     ║
+║      │        │        │          │                                           ║
+║   ┌──┴──┐  ┌──┴──┐  ┌──┴──┐   ┌──┴──┐                                       ║
+║   │rac1 │  │rac2 │  │stby1│   │stby2│   dbtarget + GG sono su cloud/         ║
+║   │ .101│  │ .102│  │ .201│   │ .202│   altra macchina (non su questo PC)    ║
+║   │8GB  │  │8GB  │  │8GB  │   │8GB  │                                       ║
+║   │4CPU │  │4CPU │  │4CPU │   │4CPU │                                       ║
+║   └──┬──┘  └──┬──┘  └──┬──┘   └──┬──┘                                       ║
 ║      │        │        │         │                                           ║
 ║   ┌──┴────────┴──┐  ┌──┴─────────┴──┐                                       ║
 ║   │  Host-Only   │  │  Host-Only    │    (Reti Private Separate)             ║
@@ -40,15 +40,16 @@
 
 ## 0.1 Cosa Ti Serve (Requisiti Hardware)
 
-| Macchina | Tipo | RAM Min. | CPU | Disco OS | Dischi ASM |
+| Macchina | Tipo | RAM | CPU | Disco OS | Dischi ASM |
 |---|---|---|---|---|---|
-| `rac1` | VM VirtualBox | 4 GB | 2 vCPU | 50 GB | 3 condivisi |
-| `rac2` | VM VirtualBox (clone di rac1) | 4 GB | 2 vCPU | 50 GB | stessi di rac1 |
-| `racstby1` | VM VirtualBox | 4 GB | 2 vCPU | 50 GB | 3 condivisi (propri) |
-| `racstby2` | VM VirtualBox (clone di racstby1) | 4 GB | 2 vCPU | 50 GB | stessi di racstby1 |
-| `dbtarget` | VM VirtualBox | 2 GB | 1 vCPU | 50 GB | 0 (filesystem) |
+| `rac1` | VM VirtualBox | **8 GB** | **4 vCPU** | 50 GB | 3 condivisi |
+| `rac2` | VM VirtualBox (clone di rac1) | **8 GB** | **4 vCPU** | 50 GB | stessi di rac1 |
+| `racstby1` | VM VirtualBox | **8 GB** | **4 vCPU** | 50 GB | 3 condivisi (propri) |
+| `racstby2` | VM VirtualBox (clone di racstby1) | **8 GB** | **4 vCPU** | 50 GB | stessi di racstby1 |
 
-**PC host**: Minimo 16 GB RAM (32 GB consigliati). Le VM non devono girare tutte insieme subito — le accendi man mano.
+> **⚠️ Note**: `dbtarget` e GoldenGate girano su **cloud OCI** o altra macchina, non su questo PC.
+>
+> **PC host consigliato**: 32 GB RAM, 8+ core, SSD. Con 4 VM × 8 GB = 32 GB allocati, il sistema regge perché le VM non usano tutta la RAM contemporaneamente (Oracle usa ~4-5 GB effettivi per lab).
 
 ### Software da Scaricare PRIMA di Iniziare
 
@@ -57,13 +58,35 @@
 | Oracle Linux 7.9 ISO | `OracleLinux-R7-U9-Server-x86_64-dvd.iso` | [yum.oracle.com](https://yum.oracle.com/oracle-linux-isos.html) | ~4.6 GB |
 | Grid Infrastructure 19c | `LINUX.X64_193000_grid_home.zip` | [edelivery.oracle.com](https://edelivery.oracle.com) | ~2.7 GB |
 | Database 19c | `LINUX.X64_193000_db_home.zip` | [edelivery.oracle.com](https://edelivery.oracle.com) | ~2.9 GB |
-| **OPatch** | `p6880880_230000_Linux-x86-64.zip` | [support.oracle.com](https://support.oracle.com) (Patch 6880880) | ~100 MB |
-| **Release Update (RU)** | `p37957391_190000_Linux-x86-64.zip` | [support.oracle.com](https://support.oracle.com) (Patch 37957391) | ~1.5 GB |
-| **OJVM Patch** | `p33803476_190000_Linux-x86-64.zip` | [support.oracle.com](https://support.oracle.com) (Patch 33803476) | ~100 MB |
 | GoldenGate 19c/21c | `fbo_ggs_Linux_x64_Oracle_shiphome.zip` | [edelivery.oracle.com](https://edelivery.oracle.com) | ~500 MB |
 | VirtualBox | Ultimo | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) | ~100 MB |
 
-> **Scarica tutto prima di iniziare.** Non c'è niente di peggio che arrivare a metà installazione e scoprire che manca un file da 3 GB.
+### 🔧 Patch Oracle — Come Trovarli (My Oracle Support)
+
+I patch si scaricano da [My Oracle Support (MOS)](https://support.oracle.com). Servono:
+
+| Patch | MOS Patch ID | Come Trovarlo | Note |
+|---|---|---|---|
+| **OPatch** (utility) | **6880880** | [Scarica qui](https://updates.oracle.com/Orion/PatchDetails/process_form?patch_num=6880880) | Aggiorna SEMPRE prima di ogni RU |
+| **Release Update (RU)** | Cambia ogni trimestre | MOS → Patches & Updates → cerca `"Database Release Update 19"` | Ogni 3 mesi esce una nuova RU |
+| **OJVM Patch** | Accompagna la RU | MOS → cerca `"OJVM Release Update 19"` | Stesso trimestre della RU |
+| **Grid RU** | Accompagna la RU | Cerca `"GI Release Update 19"` | Stesso numero della DB RU |
+
+> **Come trovare l'ultima RU**: Vai su MOS (Doc ID **2118136.2**) → "Oracle Database — Critical Patch Update and Release Update". Trovi la tabella con TUTTE le Release Update disponibili per ogni versione.
+>
+> **Come cercare un patch**: MOS → scheda "Patches & Updates" → digita il numero del patch nella barra di ricerca → seleziona piattaforma `Linux x86-64` → scarica.
+>
+> **⚡ Scarica tutto prima di iniziare.** Non c'è niente di peggio che arrivare a metà installazione e scoprire che manca un file da 3 GB.
+
+### 📸 Immagini di Riferimento Setup VirtualBox
+
+> Le immagini seguenti mostrano le configurazioni VirtualBox da replicare:
+
+![Impostazioni VM — 8 GB RAM + 4 CPU](./images/virtualbox_vm_settings.png)
+
+![Configurazione Rete — Bridged + Host-Only](./images/virtualbox_network_config.png)
+
+![Storage — Dischi condivisi ASM](./images/virtualbox_storage_disks.png)
 
 ---
 
