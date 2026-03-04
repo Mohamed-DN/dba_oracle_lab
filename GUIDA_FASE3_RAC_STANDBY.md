@@ -1,37 +1,37 @@
-﻿# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
+# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
-### ðŸ“¸ Architettura Data Guard
+### 📸 Architettura Data Guard
 
-![Architettura Data Guard RAC Primary â†’ RAC Standby](./images/dataguard_architecture.png)
+![Architettura Data Guard RAC Primary → RAC Standby](./images/dataguard_architecture.png)
 
 ### Cosa Succede in Questa Fase
 
 ```
   PRIMA                                           DOPO
-  â•â•â•â•â•                                           â•â•â•â•
+  ═════                                           ════
 
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ RAC PRIMARY â”‚                          â”‚ RAC PRIMARY â”‚
-â”‚   RACDB     â”‚                          â”‚   RACDB     â”‚
-â”‚ â”Œâ”€â”€â”€â”€â”â”Œâ”€â”€â”€â”€â”â”‚                          â”‚ â”Œâ”€â”€â”€â”€â”â”Œâ”€â”€â”€â”€â”â”‚
-â”‚ â”‚DB1 â”‚â”‚DB2 â”‚â”‚                          â”‚ â”‚DB1 â”‚â”‚DB2 â”‚â”‚
-â”‚ â””â”€â”€â”€â”€â”˜â””â”€â”€â”€â”€â”˜â”‚                          â”‚ â””â”€â”€â”€â”€â”˜â””â”€â”€â”€â”€â”˜â”‚
-â”‚ rac1  rac2  â”‚                          â”‚ rac1  rac2  â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                          â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
-                                                â”‚ Redo Shipping
-                                                â”‚ (LGWR ASYNC)
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                 â–¼
-â”‚ RAC STANDBY â”‚   RMAN Duplicate     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  (vuoto)    â”‚  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â–º    â”‚ RAC STANDBY      â”‚
-â”‚ Grid + SW   â”‚   Copia DB via       â”‚ RACDB_STBY       â”‚
-â”‚ NO database â”‚   rete in tempo      â”‚ â”Œâ”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”   â”‚
-â”‚ racstby1/2  â”‚   reale!             â”‚ â”‚DB1 â”‚ â”‚DB2 â”‚   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                      â”‚ â””â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”˜   â”‚
-                                     â”‚ MRP: Applica redoâ”‚
-                                     â”‚ in tempo reale   â”‚
-                                     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────┐                          ┌─────────────┐
+│ RAC PRIMARY │                          │ RAC PRIMARY │
+│   RACDB     │                          │   RACDB     │
+│ ┌────┐┌────┐│                          │ ┌────┐┌────┐│
+│ │DB1 ││DB2 ││                          │ │DB1 ││DB2 ││
+│ └────┘└────┘│                          │ └────┘└────┘│
+│ rac1  rac2  │                          │ rac1  rac2  │
+└─────────────┘                          └──────┬──────┘
+                                                │ Redo Shipping
+                                                │ (LGWR ASYNC)
+┌─────────────┐                                 ▼
+│ RAC STANDBY │   RMAN Duplicate     ┌──────────────────┐
+│  (vuoto)    │  ═══════════════►    │ RAC STANDBY      │
+│ Grid + SW   │   Copia DB via       │ RACDB_STBY       │
+│ NO database │   rete in tempo      │ ┌────┐ ┌────┐   │
+│ racstby1/2  │   reale!             │ │DB1 │ │DB2 │   │
+└─────────────┘                      │ └────┘ └────┘   │
+                                     │ MRP: Applica redo│
+                                     │ in tempo reale   │
+                                     └──────────────────┘
 ```
 
 ---
@@ -39,18 +39,18 @@
 ## 3.1 Prerequisiti sui Nodi Standby
 
 Prima di iniziare, i nodi standby devono avere completato:
-- âœ… **Fase 1 completa** (OS, DNS, utenti, SSH, etc.) su `racstby1` e `racstby2`
-- âœ… **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6) su `racstby1` e `racstby2`
-- âœ… **Software Database installato** (Fase 2.8, solo Software Only, NESSUN database creato) su `racstby1` e `racstby2`
-- âœ… I Disk Group **DATA** e **FRA** devono esistere sullo standby con gli stessi nomi del primario
+- ✅ **Fase 1 completa** (OS, DNS, utenti, SSH, etc.) su `racstby1` e `racstby2`
+- ✅ **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6) su `racstby1` e `racstby2`
+- ✅ **Software Database installato** (Fase 2.8, solo Software Only, NESSUN database creato) su `racstby1` e `racstby2`
+- ✅ I Disk Group **DATA** e **FRA** devono esistere sullo standby con gli stessi nomi del primario
 
-> **PerchÃ© stessi nomi dei Disk Group?** RMAN Duplicate cerca i disk group per nome. Se sul primario i datafile sono in `+DATA` e sullo standby non esiste `+DATA`, il duplicate fallisce.
+> **Perché stessi nomi dei Disk Group?** RMAN Duplicate cerca i disk group per nome. Se sul primario i datafile sono in `+DATA` e sullo standby non esiste `+DATA`, il duplicate fallisce.
 
 ---
 
 ## 3.2 Configurazione Listener Statico sul Primario
 
-Il Listener dinamico (registrato da PMON) non Ã¨ sufficiente per Data Guard. Dobbiamo aggiungere un'entry **statica** perchÃ© il database standby deve potersi connettere anche quando l'istanza primaria non Ã¨ completamente aperta.
+Il Listener dinamico (registrato da PMON) non è sufficiente per Data Guard. Dobbiamo aggiungere un'entry **statica** perché il database standby deve potersi connettere anche quando l'istanza primaria non è completamente aperta.
 
 ### Sul Primario (`rac1`, come utente `grid`)
 
@@ -89,7 +89,7 @@ lsnrctl status
 # Deve mostrare le entry statiche
 ```
 
-> **PerchÃ© il Listener Statico?** Quando il database Ã¨ in mount (non aperto), il servizio PMON non fa la registrazione dinamica con il listener. Ma Data Guard ha bisogno di connettersi al database in mount per applicare i redo. Il listener statico risolve questo problema.
+> **Perché il Listener Statico?** Quando il database è in mount (non aperto), il servizio PMON non fa la registrazione dinamica con il listener. Ma Data Guard ha bisogno di connettersi al database in mount per applicare i redo. Il listener statico risolve questo problema.
 
 ---
 
@@ -197,11 +197,11 @@ RACDB2_STBY =
 EOF
 ```
 
-> **PerchÃ© tnsnames.ora identico ovunque?** Data Guard usa questi alias TNS per comunicare tra primario e standby. Se manca un'entry su un nodo, il redo shipping fallisce.
+> **Perché tnsnames.ora identico ovunque?** Data Guard usa questi alias TNS per comunicare tra primario e standby. Se manca un'entry su un nodo, il redo shipping fallisce.
 
-> **Cos'Ã¨ `(UR=A)`?** "Use Role = Any" â€” permette la connessione anche quando il database Ã¨ in stato NOMOUNT o MOUNT (non solo OPEN). Essenziale per lo standby che non Ã¨ mai in READ WRITE. Senza `UR=A`, `tnsping` funziona ma `sqlplus sys@RACDB_STBY as sysdba` fallisce con timeout.
+> **Cos'è `(UR=A)`?** "Use Role = Any" — permette la connessione anche quando il database è in stato NOMOUNT o MOUNT (non solo OPEN). Essenziale per lo standby che non è mai in READ WRITE. Senza `UR=A`, `tnsping` funziona ma `sqlplus sys@RACDB_STBY as sysdba` fallisce con timeout.
 
-### Test ConnettivitÃ  TNS
+### Test Connettività TNS
 
 ```bash
 # Da rac1 verso lo standby
@@ -221,7 +221,7 @@ tnsping RACDB
 -- Connettiti al primario come sysdba
 sqlplus / as sysdba
 
--- 1. Verifica Force Logging (giÃ  fatto in Fase 2)
+-- 1. Verifica Force Logging (già fatto in Fase 2)
 SELECT force_logging FROM v$database;
 
 -- 2. Configura Standby Redo Logs
@@ -250,7 +250,7 @@ ALTER DATABASE ADD STANDBY LOGFILE THREAD 2
 SELECT group#, thread#, bytes/1024/1024 size_mb, status FROM v$standby_log;
 ```
 
-> **PerchÃ© i Standby Redo Logs?** Quando i redo log arrivano dal primario, lo standby li scrive prima negli Standby Redo Logs e POI li applica. Senza SRL, usa gli archived redo logs, che sono piÃ¹ lenti. La regola "+1" garantisce che ci sia sempre uno SRL disponibile anche durante un log switch.
+> **Perché i Standby Redo Logs?** Quando i redo log arrivano dal primario, lo standby li scrive prima negli Standby Redo Logs e POI li applica. Senza SRL, usa gli archived redo logs, che sono più lenti. La regola "+1" garantisce che ci sia sempre uno SRL disponibile anche durante un log switch.
 
 ```sql
 -- 3. Imposta i parametri Data Guard
@@ -273,50 +273,50 @@ ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/
 ```
 
 > **Spiegazione parametri chiave:**
-> - `log_archive_dest_2`: Dice al primario "spedisci i redo allo standby tramite LGWR ASYNC". LGWR = Log Writer (piÃ¹ veloce di ARCH). ASYNC = non aspettare la conferma dallo standby (performance migliore, possibile perdita minima di dati).
-> - `fal_server/fal_client`: "Fetch Archive Log" â€” se lo standby scopre un gap nei redo, sa dove andarli a prendere.
+> - `log_archive_dest_2`: Dice al primario "spedisci i redo allo standby tramite LGWR ASYNC". LGWR = Log Writer (più veloce di ARCH). ASYNC = non aspettare la conferma dallo standby (performance migliore, possibile perdita minima di dati).
+> - `fal_server/fal_client`: "Fetch Archive Log" — se lo standby scopre un gap nei redo, sa dove andarli a prendere.
 > - `standby_file_management=AUTO`: Se crei un tablespace sul primario, lo standby lo crea automaticamente.
 
 ### Come Funziona il Redo Shipping
 
 ```
 PRIMARIO (RACDB)                              STANDBY (RACDB_STBY)
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•                              â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+════════════════                              ═════════════════════
 
 Utente fa COMMIT
-     â”‚
-     â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                  
-â”‚  LGWR    â”‚â”€â”€â”€â”€ Scrive â”€â”€â”€â–ºâ”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  
-â”‚          â”‚                â”‚ Online Redo  â”‚  
-â”‚          â”‚                â”‚ Log (locale) â”‚  
-â”‚          â”‚                â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜  
-â”‚          â”‚                       â”‚          
-â”‚          â”‚â”€â”€ Spedisce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–ºâ”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚          â”‚   (ASYNC via rete)               â”‚ Standby Redo â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                  â”‚ Log (SRL)    â”‚
-                                              â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
-                                                     â”‚
-                                                     â–¼
-                                              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                                              â”‚  MRP (Managedâ”‚
-                                              â”‚  Recovery    â”‚
-                                              â”‚  Process)    â”‚
-                                              â”‚              â”‚
-                                              â”‚  Applica i   â”‚
-                                              â”‚  redo ai     â”‚
-                                              â”‚  datafile    â”‚
-                                              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+     │
+     ▼
+┌──────────┐                                  
+│  LGWR    │──── Scrive ───►┌──────────────┐  
+│          │                │ Online Redo  │  
+│          │                │ Log (locale) │  
+│          │                └──────┬───────┘  
+│          │                       │          
+│          │── Spedisce ──────────────────────►┌──────────────┐
+│          │   (ASYNC via rete)               │ Standby Redo │
+└──────────┘                                  │ Log (SRL)    │
+                                              └──────┬───────┘
+                                                     │
+                                                     ▼
+                                              ┌──────────────┐
+                                              │  MRP (Managed│
+                                              │  Recovery    │
+                                              │  Process)    │
+                                              │              │
+                                              │  Applica i   │
+                                              │  redo ai     │
+                                              │  datafile    │
+                                              └──────────────┘
 ```
 
 ---
 
 ## 3.6 Creazione Password File e Copia
 
-### Se il password file Ã¨ su ASM (caso piÃ¹ comune in RAC)
+### Se il password file è su ASM (caso più comune in RAC)
 
 ```bash
-# Sul primario (rac1) come oracle â€” prima trova il file in ASM
+# Sul primario (rac1) come oracle — prima trova il file in ASM
 su - oracle
 . grid.env
 asmcmd
@@ -327,7 +327,7 @@ ASMCMD> pwcopy pwdracdb.256.1188432663 /tmp/orapwRACDB1
 ASMCMD> exit
 ```
 
-### Se il password file Ã¨ nel filesystem
+### Se il password file è nel filesystem
 
 ```bash
 # Sul primario (rac1) come oracle
@@ -339,7 +339,7 @@ orapwd file=orapwRACDB1 password=<tua_password_sys> entries=10 force=y
 
 ```bash
 # Il nome del password file DEVE essere orapw<SID>!
-# Se il SID Ã¨ RACDB1 â†’ il file deve chiamarsi orapwRACDB1
+# Se il SID è RACDB1 → il file deve chiamarsi orapwRACDB1
 
 scp /tmp/orapwRACDB1 oracle@racstby1:$ORACLE_HOME/dbs/orapwRACDB1
 scp /tmp/orapwRACDB1 oracle@racstby2:$ORACLE_HOME/dbs/orapwRACDB2
@@ -349,7 +349,7 @@ ls -la $ORACLE_HOME/dbs/orapw*
 # -rw-r----- 1 oracle oinstall 2048 ... orapwRACDB1
 ```
 
-> **PerchÃ© copiare il password file?** Data Guard usa il password file per autenticare la connessione redo transport tra primario e standby. Le password SYS devono essere identiche. Se ricevi `ORA-01017: invalid username/password`, controlla che il nome del file sia `orapw<SID>` e che l'owner sia l'utente oracle.
+> **Perché copiare il password file?** Data Guard usa il password file per autenticare la connessione redo transport tra primario e standby. Le password SYS devono essere identiche. Se ricevi `ORA-01017: invalid username/password`, controlla che il nome del file sia `orapw<SID>` e che l'owner sia l'utente oracle.
 
 ---
 
@@ -418,10 +418,10 @@ EXIT;
 
 ## 3.10 RMAN Duplicate da Active Database
 
-Questa Ã¨ la magia! RMAN copia il database dal primario allo standby **in tempo reale**, senza bisogno di backup fisici.
+Questa è la magia! RMAN copia il database dal primario allo standby **in tempo reale**, senza bisogno di backup fisici.
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-11: Pre-Duplicate" ðŸ”´ CRITICO**
-> L'RMAN Duplicate Ã¨ l'operazione piÃ¹ delicata. Se fallisce (e succede spesso la prima volta), torni qui e risparmi MOLTO tempo.
+> 📸 **SNAPSHOT — "SNAP-11: Pre-Duplicate" 🔴 CRITICO**
+> L'RMAN Duplicate è l'operazione più delicata. Se fallisce (e succede spesso la prima volta), torni qui e risparmi MOLTO tempo.
 > **Fai snapshot su TUTTE le VM (rac1, rac2, racstby1, racstby2)!**
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-11_Pre_Duplicate"
@@ -462,9 +462,9 @@ DUPLICATE TARGET DATABASE
 > - `FROM ACTIVE DATABASE`: Copia i datafile direttamente via rete, senza bisogno di un backup su disco.
 > - `DORECOVER`: Applica automaticamente gli archivelog mancanti dopo la copia.
 > - `SPFILE SET ...`: Sovrascrive i parametri nel SPFILE dello standby.
-> - `NOFILENAMECHECK`: Non verificare che i path dei file siano diversi (utile perchÃ© usiamo gli stessi nomi ASM).
+> - `NOFILENAMECHECK`: Non verificare che i path dei file siano diversi (utile perché usiamo gli stessi nomi ASM).
 
-L'operazione puÃ² richiedere 20-60 minuti a seconda della dimensione del DB.
+L'operazione può richiedere 20-60 minuti a seconda della dimensione del DB.
 
 ---
 
@@ -479,7 +479,7 @@ sqlplus / as sysdba
 -- Verifica dove si trova lo SPFILE attuale
 SHOW PARAMETER spfile;
 
--- Se Ã¨ locale, spostalo in ASM:
+-- Se è locale, spostalo in ASM:
 CREATE SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
   FROM PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
 
@@ -508,13 +508,13 @@ SHOW PARAMETER spfile;
 -- Deve mostrare il path ASM: +DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora
 ```
 
-> **PerchÃ© SPFILE in ASM?** In un RAC, i parametri devono essere condivisi tra tutti i nodi. Se l'SPFILE Ã¨ nel filesystem locale di racstby1, racstby2 non lo troverÃ ! Mettendolo in ASM, Ã¨ accessibile da entrambi i nodi.
+> **Perché SPFILE in ASM?** In un RAC, i parametri devono essere condivisi tra tutti i nodi. Se l'SPFILE è nel filesystem locale di racstby1, racstby2 non lo troverà! Mettendolo in ASM, è accessibile da entrambi i nodi.
 
 ---
 
 ## 3.12 Registrazione nel Cluster (OCR) e Avvio Secondo Nodo
 
-Dopo il duplicate, devi registrare il database standby nell'Oracle Cluster Registry (OCR) perchÃ© il Clusterware possa gestirlo.
+Dopo il duplicate, devi registrare il database standby nell'Oracle Cluster Registry (OCR) perché il Clusterware possa gestirlo.
 
 ```bash
 # Su racstby1 come oracle
@@ -557,7 +557,7 @@ SELECT process, status, thread#, sequence# FROM v$managed_standby WHERE process 
 -- STATUS deve essere APPLYING_LOG
 ```
 
-> **PerchÃ© `USING CURRENT LOGFILE`?** Questo abilita il **Real-Time Apply**: lo standby applica i redo APPENA arrivano, senza aspettare che l'archivelog sia completo. Il ritardo Ã¨ tipicamente di pochi secondi.
+> **Perché `USING CURRENT LOGFILE`?** Questo abilita il **Real-Time Apply**: lo standby applica i redo APPENA arrivano, senza aspettare che l'archivelog sia completo. Il ritardo è tipicamente di pochi secondi.
 
 ```sql
 -- Comandi utili per gestire MRP
@@ -585,7 +585,7 @@ RMAN> SHOW ARCHIVELOG DELETION POLICY;
 # CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
 ```
 
-> **PerchÃ©?** Senza questa policy, gli archivelog si accumulano nella FRA fino a riempirla (ORA-19502). Con questa policy, RMAN elimina automaticamente gli archivelog che sono giÃ  stati applicati sullo standby.
+> **Perché?** Senza questa policy, gli archivelog si accumulano nella FRA fino a riempirla (ORA-19502). Con questa policy, RMAN elimina automaticamente gli archivelog che sono già stati applicati sullo standby.
 
 ---
 
@@ -618,7 +618,7 @@ WHERE applied='YES' GROUP BY thread#;
 | `ORA-16055: FAL request rejected` | `log_archive_dest` errato | Correggi su ENTRAMBI i lati (vedi sotto) |
 | RMAN Duplicate timeout/hang | Rete lenta o sessione SSH caduta | Usa `nohup` o `screen`, verifica rete |
 | MRP non parte: `ORA-00270` | FRA piena sullo standby | Pulisci archivelog: `DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';` |
-| `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB' SCOPE=BOTH;` â†’ FAL recupera automaticamente |
+| `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB' SCOPE=BOTH;` → FAL recupera automaticamente |
 
 ### Fix ORA-16055 (Comune!)
 
@@ -639,11 +639,11 @@ ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB ASYNC
   VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB' SID='*' SCOPE=BOTH;
 ```
 
-> **Riferimento**: MOS Doc ID 2988948.1 â€” "ORA-16055: FAL Request Rejected on primary alert log"
+> **Riferimento**: MOS Doc ID 2988948.1 — "ORA-16055: FAL Request Rejected on primary alert log"
 
 ---
 
-## âœ… Checklist Fine Fase 3
+## ✅ Checklist Fine Fase 3
 
 ```bash
 # 1. Standby in mount su entrambi i nodi
@@ -672,8 +672,8 @@ adrci
 SHOW ALERT -tail 30
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-12: RMAN Duplicate Completato" â­ MILESTONE**
-> Lo standby Ã¨ operativo con MRP attivo e 0 gap! Questo Ã¨ probabilmente lo snapshot piÃ¹ importante dopo SNAP-09.
+> 📸 **SNAPSHOT — "SNAP-12: RMAN Duplicate Completato" ⭐ MILESTONE**
+> Lo standby è operativo con MRP attivo e 0 gap! Questo è probabilmente lo snapshot più importante dopo SNAP-09.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-12_Duplicate_OK"
 > VBoxManage snapshot "rac2" take "SNAP-12_Duplicate_OK"
@@ -683,7 +683,7 @@ SHOW ALERT -tail 30
 
 ---
 
-## ðŸ“‹ Comandi Data Guard Utili â€” Riferimento Rapido
+## 📋 Comandi Data Guard Utili — Riferimento Rapido
 
 ```sql
 -- Verificare errori DG sul primario
@@ -705,4 +705,4 @@ WHERE name IN ('db_name','db_unique_name','log_archive_config',
 
 ---
 
-**â†’ Prossimo: [FASE 4: Configurazione Data Guard e DGMGRL](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**
+**→ Prossimo: [FASE 4: Configurazione Data Guard e DGMGRL](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**
