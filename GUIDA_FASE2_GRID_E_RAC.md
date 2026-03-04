@@ -1,66 +1,66 @@
-﻿# FASE 2: Installazione Grid Infrastructure e Oracle RAC Primario
+# FASE 2: Installazione Grid Infrastructure e Oracle RAC Primario
 
 > Tutti i passaggi di questa fase si riferiscono ai nodi **rac1** e **rac2** (RAC Primario).
-> Lo storage condiviso deve essere giÃ  visibile da entrambi i nodi prima di procedere.
+> Lo storage condiviso deve essere già visibile da entrambi i nodi prima di procedere.
 
-### ðŸ“¸ Riferimenti Visivi
+### 📸 Riferimenti Visivi
 
 ![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)
 
-![Grid Infrastructure Installer â€” Wizard Steps](./images/grid_installer_wizard.png)
+![Grid Infrastructure Installer — Wizard Steps](./images/grid_installer_wizard.png)
 
-![DBCA â€” Creazione Database RAC](./images/dbca_create_database.png)
+![DBCA — Creazione Database RAC](./images/dbca_create_database.png)
 
 ### Cosa Costruiamo in Questa Fase
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                     IL CLUSTER RAC (rac1 + rac2)                     â•‘
-â•‘                                                                       â•‘
-â•‘    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â•‘
-â•‘    â”‚              Oracle Database 19c + RU + OJVM             â”‚       â•‘
-â•‘    â”‚         â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚       â•‘
-â•‘    â”‚         â”‚  Istanza     â”‚  â”‚  Istanza     â”‚               â”‚       â•‘
-â•‘    â”‚         â”‚  RACDB1      â”‚  â”‚  RACDB2      â”‚               â”‚       â•‘
-â•‘    â”‚         â”‚  (rac1)      â”‚  â”‚  (rac2)      â”‚               â”‚       â•‘
-â•‘    â”‚         â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚       â•‘
-â•‘    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â•‘
-â•‘    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â•‘
-â•‘    â”‚         Grid Infrastructure 19c + Release Update         â”‚       â•‘
-â•‘    â”‚         â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”               â”‚       â•‘
-â•‘    â”‚         â”‚    ASM       â”‚  â”‚    ASM        â”‚               â”‚       â•‘
-â•‘    â”‚         â”‚  Instance    â”‚  â”‚  Instance     â”‚               â”‚       â•‘
-â•‘    â”‚         â”‚  (+ASM1)     â”‚  â”‚  (+ASM2)      â”‚               â”‚       â•‘
-â•‘    â”‚         â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚       â•‘
-â•‘    â”‚         Clusterware (CRS) â—„â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â–º              â”‚       â•‘
-â•‘    â”‚           crsd, cssd, evmd, ohasd                        â”‚       â•‘
-â•‘    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â•‘
-â•‘                     â”‚                 â”‚                               â•‘
-â•‘    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â•‘
-â•‘    â”‚                  Dischi ASM Condivisi                     â”‚       â•‘
-â•‘    â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”          â”‚       â•‘
-â•‘    â”‚  â”‚ +CRS    â”‚     â”‚ +DATA    â”‚     â”‚ +FRA     â”‚          â”‚       â•‘
-â•‘    â”‚  â”‚  5 GB   â”‚     â”‚  20 GB   â”‚     â”‚  15 GB   â”‚          â”‚       â•‘
-â•‘    â”‚  â”‚ OCR,    â”‚     â”‚ Datafile,â”‚     â”‚ Archive, â”‚          â”‚       â•‘
-â•‘    â”‚  â”‚ Voting  â”‚     â”‚ Redo,    â”‚     â”‚ Backup,  â”‚          â”‚       â•‘
-â•‘    â”‚  â”‚ Disk    â”‚     â”‚ Control  â”‚     â”‚ Flashbackâ”‚          â”‚       â•‘
-â•‘    â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜          â”‚       â•‘
-â•‘    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════════════════╗
+║                     IL CLUSTER RAC (rac1 + rac2)                     ║
+║                                                                       ║
+║    ┌──────────────────────────────────────────────────────────┐       ║
+║    │              Oracle Database 19c + RU + OJVM             │       ║
+║    │         ┌──────────────┐  ┌──────────────┐               │       ║
+║    │         │  Istanza     │  │  Istanza     │               │       ║
+║    │         │  RACDB1      │  │  RACDB2      │               │       ║
+║    │         │  (rac1)      │  │  (rac2)      │               │       ║
+║    │         └──────┬───────┘  └──────┬───────┘               │       ║
+║    └────────────────┼─────────────────┼───────────────────────┘       ║
+║    ┌────────────────┼─────────────────┼───────────────────────┐       ║
+║    │         Grid Infrastructure 19c + Release Update         │       ║
+║    │         ┌──────┴───────┐  ┌──────┴───────┐               │       ║
+║    │         │    ASM       │  │    ASM        │               │       ║
+║    │         │  Instance    │  │  Instance     │               │       ║
+║    │         │  (+ASM1)     │  │  (+ASM2)      │               │       ║
+║    │         └──────┬───────┘  └──────┬───────┘               │       ║
+║    │         Clusterware (CRS) ◄═══════════════►              │       ║
+║    │           crsd, cssd, evmd, ohasd                        │       ║
+║    └────────────────┼─────────────────┼───────────────────────┘       ║
+║                     │                 │                               ║
+║    ┌────────────────┴─────────────────┴───────────────────────┐       ║
+║    │                  Dischi ASM Condivisi                     │       ║
+║    │  ┌─────────┐     ┌──────────┐     ┌──────────┐          │       ║
+║    │  │ +CRS    │     │ +DATA    │     │ +FRA     │          │       ║
+║    │  │  5 GB   │     │  20 GB   │     │  15 GB   │          │       ║
+║    │  │ OCR,    │     │ Datafile,│     │ Archive, │          │       ║
+║    │  │ Voting  │     │ Redo,    │     │ Backup,  │          │       ║
+║    │  │ Disk    │     │ Control  │     │ Flashback│          │       ║
+║    │  └─────────┘     └──────────┘     └──────────┘          │       ║
+║    └──────────────────────────────────────────────────────────┘       ║
+╚═══════════════════════════════════════════════════════════════════════╝
 ```
 
 ### Ordine di Installazione in Questa Fase
 
 ```
-Passo 1:  ASM Dischi        â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  oracleasm, partizioni
-Passo 2:  cluvfy             â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  verifica prerequisiti
-Passo 3:  Grid Infrastructure â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  gridSetup.sh + root.sh
-Passo 4:  DATA + FRA          â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  asmca / sqlplus
-Passo 5:  Patch Grid (RU)     â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  opatchauto (come root)
-Passo 6:  DB Software          â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  runInstaller + root.sh
-Passo 7:  Patch DB Home (RU+OJVM)â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  opatchauto + opatch
-Passo 8:  DBCA                  â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  crea database RACDB
-Passo 9:  datapatch              â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â–¶  applica patch al dictionary
+Passo 1:  ASM Dischi        ━━━━━━━━━━━━━━━━━━━━━━━▶  oracleasm, partizioni
+Passo 2:  cluvfy             ━━━━━━━━━━━━━━━━━━━━━━━▶  verifica prerequisiti
+Passo 3:  Grid Infrastructure ━━━━━━━━━━━━━━━━━━━━━▶  gridSetup.sh + root.sh
+Passo 4:  DATA + FRA          ━━━━━━━━━━━━━━━━━━━━━▶  asmca / sqlplus
+Passo 5:  Patch Grid (RU)     ━━━━━━━━━━━━━━━━━━━━━▶  opatchauto (come root)
+Passo 6:  DB Software          ━━━━━━━━━━━━━━━━━━━━▶  runInstaller + root.sh
+Passo 7:  Patch DB Home (RU+OJVM)━━━━━━━━━━━━━━━━━▶  opatchauto + opatch
+Passo 8:  DBCA                  ━━━━━━━━━━━━━━━━━━━▶  crea database RACDB
+Passo 9:  datapatch              ━━━━━━━━━━━━━━━━━━▶  applica patch al dictionary
 ```
 
 ---
@@ -77,9 +77,9 @@ Se usi VirtualBox, crea i dischi dal **Virtual Media Manager** (`Ctrl+D`):
 | `asm_data.vdi` | 20 GB | Disk Group DATA (Datafile) |
 | `asm_fra.vdi`  | 15 GB | Disk Group FRA (Archive/Recovery) |
 
-**ProprietÃ  importanti**:
-- **Dimensione Fissa** (Fixed Size) â€” obbligatorio per i dischi condivisi.
-- Dopo la creazione, seleziona ogni disco â†’ **ProprietÃ ** â†’ **Tipo: Condivisibile (Shareable)**.
+**Proprietà importanti**:
+- **Dimensione Fissa** (Fixed Size) — obbligatorio per i dischi condivisi.
+- Dopo la creazione, seleziona ogni disco → **Proprietà** → **Tipo: Condivisibile (Shareable)**.
 - Aggiungi tutti e 3 i dischi al controller SATA di **entrambe** le VM (`rac1` e `rac2`).
 
 ### Partizionamento Dischi (su rac1 come root)
@@ -88,7 +88,7 @@ Se usi VirtualBox, crea i dischi dal **Virtual Media Manager** (`Ctrl+D`):
 # Verifica che i dischi siano visibili
 lsblk
 
-# Dovresti vedere sdb, sdc, sdd (oltre a sda che Ã¨ l'OS)
+# Dovresti vedere sdb, sdc, sdd (oltre a sda che è l'OS)
 # Partiziona ciascun disco
 for disk in sdb sdc sdd; do
   echo -e "n\np\n1\n\n\nw" | fdisk /dev/$disk
@@ -98,11 +98,11 @@ done
 partprobe
 ```
 
-> **PerchÃ© partizionare?** ASM puÃ² usare dischi raw o partizioni. Le partizioni sono piÃ¹ sicure perchÃ© un `fdisk` accidentale su un disco raw cancella tutto. Con una partizione, il blocco 0 (tabella partizioni) funge da "guardia".
+> **Perché partizionare?** ASM può usare dischi raw o partizioni. Le partizioni sono più sicure perché un `fdisk` accidentale su un disco raw cancella tutto. Con una partizione, il blocco 0 (tabella partizioni) funge da "guardia".
 
 ### Configurazione ASMLib (Metodo Consigliato per OL7)
 
-ASMLib Ã¨ il metodo nativo Oracle per gestire i dischi ASM su Linux:
+ASMLib è il metodo nativo Oracle per gestire i dischi ASM su Linux:
 
 ```bash
 # Installa ASMLib (su ENTRAMBI i nodi)
@@ -121,7 +121,7 @@ oracleasm configure -i
 oracleasm init
 ```
 
-> **PerchÃ© ASMLib e non udev?** Su Oracle Linux, ASMLib Ã¨ supportato direttamente da Oracle e garantisce che i permessi dei dischi ASM sopravvivano ai reboot. Con udev devi scrivere regole personalizzate. ASMLib Ã¨ piÃ¹ semplice e meno soggetto a errori umani.
+> **Perché ASMLib e non udev?** Su Oracle Linux, ASMLib è supportato direttamente da Oracle e garantisce che i permessi dei dischi ASM sopravvivano ai reboot. Con udev devi scrivere regole personalizzate. ASMLib è più semplice e meno soggetto a errori umani.
 
 ### Creazione Dischi ASM (solo su rac1)
 
@@ -145,14 +145,14 @@ oracleasm listdisks
 # Output atteso: CRS, DATA, FRA
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-04: ASM Dischi Configurati"**
+> 📸 **SNAPSHOT — "SNAP-04: ASM Dischi Configurati"**
 > I dischi ASM sono visibili da entrambi i nodi. Se la creazione dei disk group fallisce, torna qui.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-04_ASM_Dischi_OK"
 > VBoxManage snapshot "rac2" take "SNAP-04_ASM_Dischi_OK"
 > ```
 
-> **PerchÃ© scandisks?** ASMLib sul nodo 2 non ha ancora "registrato" i dischi creati dal nodo 1. Il comando `scandisks` forza una scansione per trovarli.
+> **Perché scandisks?** ASMLib sul nodo 2 non ha ancora "registrato" i dischi creati dal nodo 1. Il comando `scandisks` forza una scansione per trovarli.
 
 ---
 
@@ -170,7 +170,7 @@ su - grid
 unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
 ```
 
-> **PerchÃ© scompattare direttamente nella GRID_HOME?** A partire da Oracle 18c, la GRID_HOME Ãˆ il software stesso. Non c'Ã¨ piÃ¹ un "installer" separato: scompatti lo zip e quella diventa la home.
+> **Perché scompattare direttamente nella GRID_HOME?** A partire da Oracle 18c, la GRID_HOME È il software stesso. Non c'è più un "installer" separato: scompatti lo zip e quella diventa la home.
 
 ---
 
@@ -181,7 +181,7 @@ unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
 rpm -ivh /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm
 ```
 
-> **PerchÃ© cvuqdisk?** Ãˆ il pacchetto del Cluster Verification Utility per la discovery dei dischi. Senza questo, il `runcluvfy.sh` e il Grid installer non riescono a trovare i dischi condivisi.
+> **Perché cvuqdisk?** È il pacchetto del Cluster Verification Utility per la discovery dei dischi. Senza questo, il `runcluvfy.sh` e il Grid installer non riescono a trovare i dischi condivisi.
 
 ---
 
@@ -198,17 +198,17 @@ cd /u01/app/19.0.0/grid
     -verbose
 ```
 
-> **PerchÃ© cluvfy?** Questo strumento verifica TUTTI i prerequisiti prima dell'installazione: DNS, SSH, swap, kernel params, dischi, NTP... Se cluvfy passa con tutti PASSED, l'installazione andrÃ  liscia. Se ci sono FAILED, risolvili PRIMA di procedere.
+> **Perché cluvfy?** Questo strumento verifica TUTTI i prerequisiti prima dell'installazione: DNS, SSH, swap, kernel params, dischi, NTP... Se cluvfy passa con tutti PASSED, l'installazione andrà liscia. Se ci sono FAILED, risolvili PRIMA di procedere.
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-05: cluvfy PASSED" ðŸ”´ CRITICO**
-> Se cluvfy passa, sei pronto per installare il Grid. Questo Ã¨ il punto di non ritorno.
+> 📸 **SNAPSHOT — "SNAP-05: cluvfy PASSED" 🔴 CRITICO**
+> Se cluvfy passa, sei pronto per installare il Grid. Questo è il punto di non ritorno.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-05_CLUVFY_PASSED"
 > VBoxManage snapshot "rac2" take "SNAP-05_CLUVFY_PASSED"
 > ```
 
 Errori comuni e soluzioni:
-- **PRVG-11250 (RPM Database)**: Ignorabile (Ã¨ un WARNING informativo).
+- **PRVG-11250 (RPM Database)**: Ignorabile (è un WARNING informativo).
 - **PRVF-4664 (NTP)**: Configura chrony correttamente (vedi Fase 1).
 - **SSH user equivalence FAILED**: Ripeti il setup SSH (Fase 1.12).
 
@@ -230,76 +230,76 @@ cd /u01/app/19.0.0/grid
 
 ### Step-by-Step dell'Installer GUI
 
-**Step 1 â€” Configuration Option**:
+**Step 1 — Configuration Option**:
 - Seleziona: **Configure Oracle Grid Infrastructure for a New Cluster**
 
 > Questa opzione installa Clusterware + ASM da zero.
 
-**Step 2 â€” Cluster Configuration**:
+**Step 2 — Cluster Configuration**:
 - Seleziona: **Configure an Oracle Standalone Cluster**
 
-> Standalone = un cluster "normale" (non Domain Services Cluster, che Ã¨ per cloud/grandi infrastrutture).
+> Standalone = un cluster "normale" (non Domain Services Cluster, che è per cloud/grandi infrastrutture).
 
-**Step 3 â€” Cluster Name e SCAN**:
+**Step 3 — Cluster Name e SCAN**:
 - Cluster Name: `rac-cluster`
 - SCAN Name: `rac-scan.localdomain`  
 - SCAN Port: `1521`
 
 > **Il nome SCAN deve corrispondere esattamente a quello nel DNS!** L'installer verifica il DNS in questo momento.
 
-**Step 4 â€” Cluster Nodes**:
+**Step 4 — Cluster Nodes**:
 - Aggiungi `rac2` cliccando "Add":
   - Public Hostname: `rac2.localdomain`
   - Virtual Hostname: `rac2-vip.localdomain`
-- `rac1` sarÃ  giÃ  presente:
+- `rac1` sarà già presente:
   - Virtual Hostname: `rac1-vip.localdomain`
-- Clicca **SSH Connectivity** â†’ inserisci password di `grid` â†’ **Setup**
-- Clicca **Test** per verificare la connettivitÃ 
+- Clicca **SSH Connectivity** → inserisci password di `grid` → **Setup**
+- Clicca **Test** per verificare la connettività
 
-**Step 5 â€” Network Interface Usage**:
+**Step 5 — Network Interface Usage**:
 | Interface | Subnet | Use |
 |---|---|---|
 | eth0 | 192.168.1.0 | Public |
 | eth1 | 192.168.1.0  | ASM & Private |
 
-> L'Interconnect (Private) Ã¨ la rete su cui transita Cache Fusion: le copie dei blocchi di dati tra i nodi. MAI mescolarla con la rete pubblica.
+> L'Interconnect (Private) è la rete su cui transita Cache Fusion: le copie dei blocchi di dati tra i nodi. MAI mescolarla con la rete pubblica.
 
-**Step 6 â€” Storage Option**:
+**Step 6 — Storage Option**:
 - Seleziona: **Use Oracle Flex ASM for Storage**
 
-**Step 7 â€” Grid Infrastructure Management Repository**:
+**Step 7 — Grid Infrastructure Management Repository**:
 - Seleziona: **No** (non ci serve il GIMR per un lab)
 
-**Step 8 â€” Create ASM Disk Group** (per OCR e Voting Disk):
+**Step 8 — Create ASM Disk Group** (per OCR e Voting Disk):
 - Disk Group Name: `CRS`
 - Redundancy: **External** (abbiamo un solo disco per CRS)
 - Seleziona il disco: `ORCL:CRS`
 
-> **PerchÃ© External Redundancy?** In un lab con un disco solo non possiamo usare Normal (che richiede 3 dischi) o High (che ne richiede 5). In produzione, SEMPRE Normal o High.
+> **Perché External Redundancy?** In un lab con un disco solo non possiamo usare Normal (che richiede 3 dischi) o High (che ne richiede 5). In produzione, SEMPRE Normal o High.
 
-**Step 9 â€” ASM Password**:
+**Step 9 — ASM Password**:
 - Imposta la password per `SYS` e `ASMSNMP`
 
-**Step 10 â€” IPMI**:
+**Step 10 — IPMI**:
 - Seleziona: **Do not use IPMI**
 
-**Step 11 â€” EM Registration**:
+**Step 11 — EM Registration**:
 - Deseleziona: **Register with Enterprise Manager**
 
-**Step 12 â€” OS Groups**:
+**Step 12 — OS Groups**:
 - OSASM Group: `asmadmin`
 - OSDBA for ASM: `asmdba`
 - OSOPER for ASM: `asmoper`
 
-**Step 13 â€” Installation Locations**:
+**Step 13 — Installation Locations**:
 - Oracle Base: `/u01/app/grid`
 - Software Location: `/u01/app/19.0.0/grid`
 
-**Step 14 â€” Root Script Execution**:
+**Step 14 — Root Script Execution**:
 - **DESELEZIONA** "Automatically run configuration scripts"
 - Li eseguiremo noi manualmente, uno alla volta, per capire cosa fanno
 
-**Step 15 â€” Summary**:
+**Step 15 — Summary**:
 - Rivedi tutto e clicca **Install**
 
 ### Esecuzione degli Script root
@@ -318,7 +318,7 @@ L'installer si ferma e chiede di eseguire 2 script come `root`. **ESEGUILI UNO A
 /u01/app/19.0.0/grid/root.sh
 ```
 
-> **Questo Ã¨ lo script piÃ¹ importante**. Esegue:
+> **Questo è lo script più importante**. Esegue:
 > - Configura Oracle Clusterware (CRS)
 > - Crea il CRS daemon (`crsd`, `cssd`, `evmd`)
 > - Configura ASM
@@ -333,12 +333,12 @@ L'installer si ferma e chiede di eseguire 2 script come `root`. **ESEGUILI UNO A
 /u01/app/19.0.0/grid/root.sh
 ```
 
-> Sul nodo 2, `root.sh` aggiungerÃ  questo nodo al cluster esistente (creato dal nodo 1).
+> Sul nodo 2, `root.sh` aggiungerà questo nodo al cluster esistente (creato dal nodo 1).
 
 Torna all'installer GUI e clicca **OK** per completare.
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-06: Grid Infrastructure Installato" â­ MILESTONE**
-> Il cluster Ã¨ attivo! Reinstallare il Grid richiederebbe ore. NON cancellare questo snapshot.
+> 📸 **SNAPSHOT — "SNAP-06: Grid Infrastructure Installato" ⭐ MILESTONE**
+> Il cluster è attivo! Reinstallare il Grid richiederebbe ore. NON cancellare questo snapshot.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-06_Grid_Installato"
 > VBoxManage snapshot "rac2" take "SNAP-06_Grid_Installato"
@@ -373,13 +373,13 @@ CRS-4529: Cluster Synchronization Services is online
 CRS-4533: Event Manager is online
 ```
 
-> Se vedi tutto ONLINE, il tuo cluster Ã¨ vivo! ðŸŽ‰
+> Se vedi tutto ONLINE, il tuo cluster è vivo! 🎉
 
 ---
 
 ## 2.7 Creazione Disk Group DATA e FRA
 
-Ora che il cluster Ã¨ attivo, creiamo i disk group per il database:
+Ora che il cluster è attivo, creiamo i disk group per il database:
 
 ```bash
 # Come utente grid
@@ -417,25 +417,25 @@ asmcmd lsdg
 # Dovrai vedere: CRS, DATA, FRA tutti MOUNTED
 ```
 
-> **PerchÃ© creare DATA e FRA separati?** DATA contiene i datafile (i dati veri). FRA (Fast Recovery Area) contiene gli archivelog, i backup RMAN e i flashback log. Separarli Ã¨ una best practice fondamentale: se il disco DATA si riempie, hai ancora lo spazio per il recovery.
+> **Perché creare DATA e FRA separati?** DATA contiene i datafile (i dati veri). FRA (Fast Recovery Area) contiene gli archivelog, i backup RMAN e i flashback log. Separarli è una best practice fondamentale: se il disco DATA si riempie, hai ancora lo spazio per il recovery.
 
 ---
 
 ## 2.8 Patching Grid Infrastructure (Release Update)
 
-> **PerchÃ© patchare?** Oracle 19c base (19.3) Ã¨ la versione iniziale rilasciata nel 2019. Le Release Update (RU) contengono fix di sicurezza, bug fix e miglioramenti di stabilitÃ . In produzione, patchare Ã¨ **obbligatorio**. Nel lab, ti insegna il processo che userai nel mondo reale.
+> **Perché patchare?** Oracle 19c base (19.3) è la versione iniziale rilasciata nel 2019. Le Release Update (RU) contengono fix di sicurezza, bug fix e miglioramenti di stabilità. In produzione, patchare è **obbligatorio**. Nel lab, ti insegna il processo che userai nel mondo reale.
 
-I patch che ti servono (giÃ  presenti nei tuoi download):
+I patch che ti servono (già presenti nei tuoi download):
 
 | Patch | Descrizione | Dove si Applica |
 |---|---|---|
 | **p6880880** | **OPatch** (utility per applicare patch) | Sostituisci in ogni ORACLE_HOME |
-| **p37957391** | **Release Update (RU)** â€” Jan 2025 o successiva | Grid Home + DB Home |
+| **p37957391** | **Release Update (RU)** — Jan 2025 o successiva | Grid Home + DB Home |
 | **p33803476** | **OJVM Release Update** o one-off patch | DB Home |
 
 ### Step 1: Aggiorna OPatch nella Grid Home
 
-OPatch Ã¨ lo strumento che applica le patch. La versione fornita con il software base 19.3 Ã¨ troppo vecchia. Devi aggiornarla PRIMA di applicare qualsiasi patch.
+OPatch è lo strumento che applica le patch. La versione fornita con il software base 19.3 è troppo vecchia. Devi aggiornarla PRIMA di applicare qualsiasi patch.
 
 ```bash
 # Come utente grid su rac1
@@ -452,7 +452,7 @@ $ORACLE_HOME/OPatch/opatch version
 # Deve mostrare: OPatch Version: 12.2.0.1.43 (o superiore)
 ```
 
-> **PerchÃ© la versione 230000?** Il p6880880_**230000** Ã¨ la versione di OPatch compatibile con Oracle 19c e le RU recenti. La versione nel nome (23.x) indica la build di OPatch, non la versione del database.
+> **Perché la versione 230000?** Il p6880880_**230000** è la versione di OPatch compatibile con Oracle 19c e le RU recenti. La versione nel nome (23.x) indica la build di OPatch, non la versione del database.
 
 ```bash
 # Ripeti su rac2
@@ -483,12 +483,12 @@ ls -la
 su - oracle
 srvctl stop database -d RACDB
 
-# Come root su rac1 â€” opatchauto patcha sia Grid che ASM automaticamente
+# Come root su rac1 — opatchauto patcha sia Grid che ASM automaticamente
 export ORACLE_HOME=/u01/app/19.0.0/grid
 $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 ```
 
-> **PerchÃ© opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
+> **Perché opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
 > 1. Ferma il CRS automaticamente
 > 2. Applica la patch
 > 3. Riavvia il CRS
@@ -517,8 +517,8 @@ su - grid
 $ORACLE_HOME/OPatch/opatch lspatches
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-07: Grid Patchato con RU"**
-> Il Grid Ã¨ aggiornato all'ultima Release Update. Se il patching del DB home fallisce, puoi tornare qui.
+> 📸 **SNAPSHOT — "SNAP-07: Grid Patchato con RU"**
+> Il Grid è aggiornato all'ultima Release Update. Se il patching del DB home fallisce, puoi tornare qui.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-07_Grid_Patchato"
 > VBoxManage snapshot "rac2" take "SNAP-07_Grid_Patchato"
@@ -545,7 +545,7 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 
 **Step 1**: Seleziona **Set Up Software Only**
 
-> Installiamo SOLO i binari. Il database lo creiamo dopo con DBCA. Questo Ã¨ il metodo professionale: prima installi, poi crei.
+> Installiamo SOLO i binari. Il database lo creiamo dopo con DBCA. Questo è il metodo professionale: prima installi, poi crei.
 
 **Step 2**: Seleziona **Oracle Real Application Clusters database installation**
 
@@ -583,7 +583,7 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 /u01/app/oracle/product/19.0.0/dbhome_1/root.sh
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-08: DB Software Installato"**
+> 📸 **SNAPSHOT — "SNAP-08: DB Software Installato"**
 > I binari del database sono installati. Se il patching o DBCA fallisce, torni qui e riprovi.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-08_DB_Software"
@@ -626,7 +626,7 @@ export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 ```
 
-> **Nota**: `opatchauto` riconosce automaticamente che Ã¨ una DB Home in un cluster RAC e gestisce il patching di conseguenza.
+> **Nota**: `opatchauto` riconosce automaticamente che è una DB Home in un cluster RAC e gestisce il patching di conseguenza.
 
 ```bash
 # Ripeti su rac2
@@ -637,7 +637,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 
 ### Step 3: Applica il Patch OJVM (p33803476)
 
-Il patch OJVM (Oracle Java Virtual Machine) Ã¨ separato dalla RU e si applica con `opatch apply` standard.
+Il patch OJVM (Oracle Java Virtual Machine) è separato dalla RU e si applica con `opatch apply` standard.
 
 ```bash
 # Scompatta il patch OJVM
@@ -657,7 +657,7 @@ cd /tmp/patch/33803476
 $ORACLE_HOME/OPatch/opatch apply
 ```
 
-> **PerchÃ© OJVM separato?** La OJVM Ã¨ la Java Virtual Machine interna di Oracle (usata per stored procedure Java, APEX, etc.). Il patch OJVM non Ã¨ incluso nella RU e va applicato separatamente. Dopo averlo applicato, al primo avvio del database dovrai eseguire `datapatch`.
+> **Perché OJVM separato?** La OJVM è la Java Virtual Machine interna di Oracle (usata per stored procedure Java, APEX, etc.). Il patch OJVM non è incluso nella RU e va applicato separatamente. Dopo averlo applicato, al primo avvio del database dovrai eseguire `datapatch`.
 
 ### Step 4: Verifica Patch Applicati
 
@@ -674,7 +674,7 @@ Output atteso:
 
 ### Step 5: datapatch (dopo la creazione del DB)
 
-> **IMPORTANTE**: `datapatch` va eseguito DOPO aver creato il database con DBCA (sezione successiva). Non eseguirlo ora â€” non hai ancora un database!
+> **IMPORTANTE**: `datapatch` va eseguito DOPO aver creato il database con DBCA (sezione successiva). Non eseguirlo ora — non hai ancora un database!
 > Dopo DBCA, esegui:
 
 ```bash
@@ -683,7 +683,7 @@ su - oracle
 $ORACLE_HOME/OPatch/datapatch -verbose
 ```
 
-> **Cos'Ã¨ datapatch?** `opatch` aggiorna i binari (i file .o, le librerie). Ma alcune patch richiedono anche modifiche al Data Dictionary (le tabelle interne di Oracle). `datapatch` applica queste modifiche SQL al database. Senza datapatch, la patch Ã¨ applicata solo a metÃ .
+> **Cos'è datapatch?** `opatch` aggiorna i binari (i file .o, le librerie). Ma alcune patch richiedono anche modifiche al Data Dictionary (le tabelle interne di Oracle). `datapatch` applica queste modifiche SQL al database. Senza datapatch, la patch è applicata solo a metà.
 
 ```sql
 -- Verifica che datapatch sia andato a buon fine
@@ -693,7 +693,7 @@ ORDER BY action_time DESC;
 -- Deve mostrare SUCCESS per entrambi i patch
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-08b: DB Home Patchato"**
+> 📸 **SNAPSHOT — "SNAP-08b: DB Home Patchato"**
 > I binari del database sono patchati con RU + OJVM. Pronto per DBCA.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-08b_DB_Patchato"
@@ -726,7 +726,7 @@ dbca
 
 **Step 5**: Database Identification:
 - Global Database Name: `RACDB`
-- SID Prefix: `RACDB` (diventerÃ  RACDB1 su rac1, RACDB2 su rac2)
+- SID Prefix: `RACDB` (diventerà RACDB1 su rac1, RACDB2 su rac2)
 
 **Step 6**: Storage:
 - Use following for the database storage: **Automatic Storage Management (ASM)**
@@ -735,12 +735,12 @@ dbca
 **Step 7**: Fast Recovery Area:
 - Recovery Area: `+FRA`
 - Size: `10000` MB (o quanto hai disponibile)
-- âœ… **Enable archiving** (FONDAMENTALE per Data Guard!)
+- ✅ **Enable archiving** (FONDAMENTALE per Data Guard!)
 
-> **PerchÃ© Enable Archiving?** Senza archivelog mode, Data Guard non funziona. L'archivelog Ã¨ il "diario" di tutte le modifiche. Ãˆ quello che viene spedito allo standby.
+> **Perché Enable Archiving?** Senza archivelog mode, Data Guard non funziona. L'archivelog è il "diario" di tutte le modifiche. È quello che viene spedito allo standby.
 
 **Step 8**: Listener:
-- Seleziona il listener del cluster (giÃ  configurato da Grid)
+- Seleziona il listener del cluster (già configurato da Grid)
 
 **Step 9**: Database Options:
 - Puoi deselezionare componenti non necessari (Oracle Text, Spatial, etc.)
@@ -752,19 +752,19 @@ dbca
 - Character Set: **AL32UTF8** (consigliato)
 
 **Step 11**: Management Options:
-- Deseleziona EM Express per semplicitÃ 
+- Deseleziona EM Express per semplicità
 
 **Step 12**: Password:
 - Imposta password per SYS, SYSTEM, etc.
 
 **Step 13**: Creation Options:
-- âœ… Create Database
-- âœ… Save as a Database Template (opzionale)
-- âœ… Generate Database Creation Scripts (utile per imparare!)
+- ✅ Create Database
+- ✅ Save as a Database Template (opzionale)
+- ✅ Generate Database Creation Scripts (utile per imparare!)
 
-**Step 14**: Rivedi Summary â†’ **Finish**
+**Step 14**: Rivedi Summary → **Finish**
 
-L'installazione richiederÃ  15-30 minuti a seconda dell'hardware.
+L'installazione richiederà 15-30 minuti a seconda dell'hardware.
 
 ---
 
@@ -800,8 +800,8 @@ srvctl status scan_listener
 srvctl config database -d RACDB
 ```
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-09: Database RAC Creato (RACDB)" â­ MILESTONE**
-> Il tuo RAC primario Ã¨ completamente operativo! Questo Ã¨ forse lo snapshot piÃ¹ importante del progetto.
+> 📸 **SNAPSHOT — "SNAP-09: Database RAC Creato (RACDB)" ⭐ MILESTONE**
+> Il tuo RAC primario è completamente operativo! Questo è forse lo snapshot più importante del progetto.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-09_RACDB_Creato"
 > VBoxManage snapshot "rac2" take "SNAP-09_RACDB_Creato"
@@ -818,11 +818,11 @@ SELECT force_logging FROM v$database;
 -- Deve restituire YES
 ```
 
-> **PerchÃ© Force Logging?** Alcune operazioni (come `INSERT /*+ APPEND */ ...` o `CREATE TABLE ... NOLOGGING`) possono bypassare il redo log per velocitÃ . Ma se non generi redo, lo standby non riceve le modifiche e i dati si corrompono. Force Logging impedisce questo bypass.
+> **Perché Force Logging?** Alcune operazioni (come `INSERT /*+ APPEND */ ...` o `CREATE TABLE ... NOLOGGING`) possono bypassare il redo log per velocità. Ma se non generi redo, lo standby non riceve le modifiche e i dati si corrompono. Force Logging impedisce questo bypass.
 
 ---
 
-## âœ… Checklist Fine Fase 2
+## ✅ Checklist Fine Fase 2
 
 ```bash
 # 1. Cluster operativo
@@ -844,4 +844,4 @@ su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT force_logging FROM v\\\$data
 
 ---
 
-**â†’ Prossimo: [FASE 3: Preparazione e Creazione Oracle RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md)**
+**→ Prossimo: [FASE 3: Preparazione e Creazione Oracle RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md)**

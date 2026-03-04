@@ -1,4 +1,4 @@
-﻿# GUIDA: CDB/PDB, Gestione Utenti e EM Express
+# GUIDA: CDB/PDB, Gestione Utenti e EM Express
 
 > Questa guida copre 3 aree fondamentali per un DBA Oracle 19c che spesso mancano nei lab RAC:
 > l'architettura Multitenant (CDB/PDB), la gestione utenti/privilegi, e Enterprise Manager Express.
@@ -9,84 +9,84 @@
 ## Percorso di Lettura
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘  PRIMA di questa guida leggi: GUIDA_ARCHITETTURA_ORACLE.md              â•‘
-â•‘  DOPO questa guida leggi:     GUIDA_ATTIVITA_DBA.md                     â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════════════════════════════════╗
+║  PRIMA di questa guida leggi: GUIDA_ARCHITETTURA_ORACLE.md              ║
+║  DOPO questa guida leggi:     GUIDA_ATTIVITA_DBA.md                     ║
+╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
 ## PARTE 1: Architettura Multitenant (CDB/PDB)
 
-### Cos'Ã¨ il Multitenant e PerchÃ© Esiste?
+### Cos'è il Multitenant e Perché Esiste?
 
 Prima di Oracle 12c, ogni database era indipendente: un'istanza, un database, una copia del dizionario. Se avevi 10 applicazioni, servivano 10 database con 10 copie del data dictionary (spreco di memoria e disco).
 
 **Oracle 12c+ ha introdotto il Multitenant:**
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                ARCHITETTURA NON-CDB (prima di 12c)                â•‘
-â•‘                                                                    â•‘
-â•‘   Istanza A     Istanza B     Istanza C     Istanza D              â•‘
-â•‘   â”Œâ”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”             â•‘
-â•‘   â”‚SGA    â”‚     â”‚SGA    â”‚     â”‚SGA    â”‚     â”‚SGA    â”‚             â•‘
-â•‘   â”‚1 GB   â”‚     â”‚1 GB   â”‚     â”‚1 GB   â”‚     â”‚1 GB   â”‚   = 4 GB   â•‘
-â•‘   â””â”€â”€â”€â”¬â”€â”€â”€â”˜     â””â”€â”€â”€â”¬â”€â”€â”€â”˜     â””â”€â”€â”€â”¬â”€â”€â”€â”˜     â””â”€â”€â”€â”¬â”€â”€â”€â”˜   di RAM   â•‘
-â•‘       â”‚             â”‚             â”‚             â”‚                   â•‘
-â•‘   â”Œâ”€â”€â”€â”´â”€â”€â”€â”     â”Œâ”€â”€â”€â”´â”€â”€â”€â”     â”Œâ”€â”€â”€â”´â”€â”€â”€â”     â”Œâ”€â”€â”€â”´â”€â”€â”€â”             â•‘
-â•‘   â”‚ DB_A  â”‚     â”‚ DB_B  â”‚     â”‚ DB_C  â”‚     â”‚ DB_D  â”‚             â•‘
-â•‘   â”‚Dict! â”‚     â”‚ Dict! â”‚     â”‚ Dict! â”‚     â”‚ Dict! â”‚   4 copie   â•‘
-â•‘   â””â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”˜   del dict  â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════════════╗
+║                ARCHITETTURA NON-CDB (prima di 12c)                ║
+║                                                                    ║
+║   Istanza A     Istanza B     Istanza C     Istanza D              ║
+║   ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐             ║
+║   │SGA    │     │SGA    │     │SGA    │     │SGA    │             ║
+║   │1 GB   │     │1 GB   │     │1 GB   │     │1 GB   │   = 4 GB   ║
+║   └───┬───┘     └───┬───┘     └───┬───┘     └───┬───┘   di RAM   ║
+║       │             │             │             │                   ║
+║   ┌───┴───┐     ┌───┴───┐     ┌───┴───┐     ┌───┴───┐             ║
+║   │ DB_A  │     │ DB_B  │     │ DB_C  │     │ DB_D  │             ║
+║   │Dict! │     │ Dict! │     │ Dict! │     │ Dict! │   4 copie   ║
+║   └───────┘     └───────┘     └───────┘     └───────┘   del dict  ║
+╚═══════════════════════════════════════════════════════════════════╝
 
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                ARCHITETTURA CDB/PDB (12c e oltre)                 â•‘
-â•‘                                                                    â•‘
-â•‘               UNA SOLA Istanza (CDB)                               â•‘
-â•‘               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                 â•‘
-â•‘               â”‚  SGA (2 GB = tutto condiviso!)    â”‚                 â•‘
-â•‘               â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                 â•‘
-â•‘                              â”‚                                     â•‘
-â•‘   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”         â•‘
-â•‘   â”‚                          CDB$ROOT                     â”‚         â•‘
-â•‘   â”‚                    (Dizionario Master)                 â”‚         â•‘
-â•‘   â”‚  SYSTEM, SYSAUX, UNDO, TEMP â† Condivisi             â”‚         â•‘
-â•‘   â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜         â•‘
-â•‘          â”‚          â”‚          â”‚                                    â•‘
-â•‘   â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”´â”€â”€â”€â” â”Œâ”€â”€â”€â”´â”€â”€â”€â”€â”€â”                             â•‘
-â•‘   â”‚PDB$SEED â”‚ â”‚  PDB_A  â”‚ â”‚  PDB_B  â”‚     â† Ogni PDB ha i suoi   â•‘
-â•‘   â”‚(templateâ”‚ â”‚  App A  â”‚ â”‚  App B  â”‚        datafile, ma il dict â•‘
-â•‘   â”‚ vuoto)  â”‚ â”‚  dati   â”‚ â”‚  dati   â”‚        Ã¨ un "link" al ROOT  â•‘
-â•‘   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                             â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════════════╗
+║                ARCHITETTURA CDB/PDB (12c e oltre)                 ║
+║                                                                    ║
+║               UNA SOLA Istanza (CDB)                               ║
+║               ┌──────────────────────────────────┐                 ║
+║               │  SGA (2 GB = tutto condiviso!)    │                 ║
+║               └──────────────┬───────────────────┘                 ║
+║                              │                                     ║
+║   ┌──────────────────────────┴───────────────────────────┐         ║
+║   │                          CDB$ROOT                     │         ║
+║   │                    (Dizionario Master)                 │         ║
+║   │  SYSTEM, SYSAUX, UNDO, TEMP ← Condivisi             │         ║
+║   └──────┬──────────┬──────────┬─────────────────────────┘         ║
+║          │          │          │                                    ║
+║   ┌──────┴──┐ ┌─────┴───┐ ┌───┴─────┐                             ║
+║   │PDB$SEED │ │  PDB_A  │ │  PDB_B  │     ← Ogni PDB ha i suoi   ║
+║   │(template│ │  App A  │ │  App B  │        datafile, ma il dict ║
+║   │ vuoto)  │ │  dati   │ │  dati   │        è un "link" al ROOT  ║
+║   └─────────┘ └─────────┘ └─────────┘                             ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
 
 ### I Componenti del CDB
 
-| Componente | Descrizione | VisibilitÃ  |
+| Componente | Descrizione | Visibilità |
 |---|---|---|
 | **CDB$ROOT** | Dizionario dati master, metadata Oracle | Solo DBA |
 | **PDB$SEED** | Template vuoto per creare nuove PDB | Solo Oracle |
 | **PDB (utente)** | Database dell'applicazione, isolato | Applicazione + DBA |
 | **UNDO tablespace** | Condiviso da tutte le PDB (in CDB) | CDB |
-| **TEMP tablespace** | Ogni PDB puÃ² averne uno proprio | Per PDB |
+| **TEMP tablespace** | Ogni PDB può averne uno proprio | Per PDB |
 
 ### Il Nostro Lab: CDB o Non-CDB?
 
-> **Nel nostro lab usiamo un database non-CDB** (RACDB senza container). Questo Ã¨ ancora supportato in 19c ma **desupportato da Oracle 21c+**. Se prepari il CV per il futuro, devi conoscere entrambe le architetture.
+> **Nel nostro lab usiamo un database non-CDB** (RACDB senza container). Questo è ancora supportato in 19c ma **desupportato da Oracle 21c+**. Se prepari il CV per il futuro, devi conoscere entrambe le architetture.
 
 ### Operazioni CDB/PDB da Conoscere
 
 #### Creare un CDB con DBCA
 
 ```bash
-# Usando DBCA in modalitÃ  GUI:
+# Usando DBCA in modalità GUI:
 # Durante la creazione database, seleziona "Create as Container Database"
 # Specifica il nome del PDB (esempio: PDB1)
 
-# In modalitÃ  silent:
+# In modalità silent:
 dbca -silent -createDatabase \
   -templateName General_Purpose.dbc \
   -gdbname CDBRAC -sid CDBRAC \
@@ -163,7 +163,7 @@ ALTER PLUGGABLE DATABASE PDB2
 DROP PLUGGABLE DATABASE PDB2 KEEP DATAFILES;
 
 -- PLUG: inserisci la PDB in un altro CDB
--- Prima verifica compatibilitÃ 
+-- Prima verifica compatibilità
 SET SERVEROUTPUT ON
 DECLARE
   compatible BOOLEAN := FALSE;
@@ -184,7 +184,7 @@ CREATE PLUGGABLE DATABASE PDB2 USING '/tmp/pdb2_manifest.xml'
 ALTER PLUGGABLE DATABASE PDB2 OPEN;
 ```
 
-> **PerchÃ© Ã¨ importante per il CV?** In produzione si usa Unplug/Plug per migrare applicazioni tra CDB senza Export/Import. Ãˆ il modo piÃ¹ veloce per muovere un database tra server.
+> **Perché è importante per il CV?** In produzione si usa Unplug/Plug per migrare applicazioni tra CDB senza Export/Import. È il modo più veloce per muovere un database tra server.
 
 ---
 
@@ -193,30 +193,30 @@ ALTER PLUGGABLE DATABASE PDB2 OPEN;
 ### Tipi di Utenti Oracle
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                    GERARCHIA UTENTI ORACLE                        â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                                                   â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â•‘
-â•‘  â”‚ SYS (SYSDBA)                                                â”‚  â•‘
-â•‘  â”‚ â€¢ Proprietario del DD (data dictionary)                     â”‚  â•‘
-â•‘  â”‚ â€¢ PuÃ² fare TUTTO (startup, shutdown, recover)               â”‚  â•‘
-â•‘  â”‚ â€¢ Mai usare direttamente per operazioni normali!            â”‚  â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â•‘
-â•‘                              â”‚                                    â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â•‘
-â•‘  â”‚ SYSTEM                                                       â”‚  â•‘
-â•‘  â”‚ â€¢ DBA amministrativo (non proprietario del DD)              â”‚  â•‘
-â•‘  â”‚ â€¢ Per operazioni giornaliere                                â”‚  â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â•‘
-â•‘                              â”‚                                    â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â•‘
-â•‘  â”‚ Utenti DBA personalizzati              â”‚  â”‚ Utenti App     â”‚  â•‘
-â•‘  â”‚ â€¢ dba_admin, backup_admin              â”‚  â”‚ â€¢ app_user     â”‚  â•‘
-â•‘  â”‚ â€¢ Ruoli: DBA, SYSDBA (se servono)      â”‚  â”‚ â€¢ app_readonly â”‚  â•‘
-â•‘  â”‚ â€¢ Usa QUESTI per il lavoro quotidiano  â”‚  â”‚ â€¢ Ruoli custom â”‚  â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════════════╗
+║                    GERARCHIA UTENTI ORACLE                        ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                                                                   ║
+║  ┌─────────────────────────────────────────────────────────────┐  ║
+║  │ SYS (SYSDBA)                                                │  ║
+║  │ • Proprietario del DD (data dictionary)                     │  ║
+║  │ • Può fare TUTTO (startup, shutdown, recover)               │  ║
+║  │ • Mai usare direttamente per operazioni normali!            │  ║
+║  └───────────────────────────┬─────────────────────────────────┘  ║
+║                              │                                    ║
+║  ┌───────────────────────────┴─────────────────────────────────┐  ║
+║  │ SYSTEM                                                       │  ║
+║  │ • DBA amministrativo (non proprietario del DD)              │  ║
+║  │ • Per operazioni giornaliere                                │  ║
+║  └───────────────────────────┬─────────────────────────────────┘  ║
+║                              │                                    ║
+║  ┌───────────────────────────┴────────────┐  ┌────────────────┐  ║
+║  │ Utenti DBA personalizzati              │  │ Utenti App     │  ║
+║  │ • dba_admin, backup_admin              │  │ • app_user     │  ║
+║  │ • Ruoli: DBA, SYSDBA (se servono)      │  │ • app_readonly │  ║
+║  │ • Usa QUESTI per il lavoro quotidiano  │  │ • Ruoli custom │  ║
+║  └────────────────────────────────────────┘  └────────────────┘  ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
 
 ### Creare un Utente DBA Personalizzato (Best Practice!)
@@ -278,7 +278,7 @@ GRANT app_readwrite_role TO app_user;
 CREATE USER app_readonly IDENTIFIED BY "Read_P@ss!"
   DEFAULT TABLESPACE users_ts
   TEMPORARY TABLESPACE TEMP
-  QUOTA 0 ON users_ts;  -- zero quota = non puÃ² creare oggetti
+  QUOTA 0 ON users_ts;  -- zero quota = non può creare oggetti
 
 GRANT app_connect_role TO app_readonly;
 ```
@@ -321,13 +321,13 @@ ALTER USER app_user PASSWORD EXPIRE;
 -- COMMON USER: visibile in TUTTO il CDB (nome inizia con C##)
 CREATE USER C##DBA_ADMIN IDENTIFIED BY Oracle_19c CONTAINER=ALL;
 GRANT DBA TO C##DBA_ADMIN CONTAINER=ALL;
--- â†’ Questo utente esiste nel ROOT e in TUTTE le PDB
+-- → Questo utente esiste nel ROOT e in TUTTE le PDB
 
 -- LOCAL USER: esiste SOLO in una PDB specifica
 ALTER SESSION SET CONTAINER = PDB1;
 CREATE USER app_user IDENTIFIED BY Oracle_19c;
 GRANT CREATE SESSION, CREATE TABLE TO app_user;
--- â†’ Questo utente esiste SOLO in PDB1
+-- → Questo utente esiste SOLO in PDB1
 ```
 
 ### Visualizzare e Auditare gli Utenti
@@ -366,31 +366,31 @@ WHERE grantee = 'APP_USER';
 
 ## PARTE 3: Enterprise Manager Database Express (EM Express)
 
-### Cos'Ã¨ EM Express?
+### Cos'è EM Express?
 
-**EM Express** Ã¨ l'interfaccia web integrata in Oracle 19c che NON richiede installazioni aggiuntive. Ãˆ un servlet dentro Oracle XML DB che gira sulla porta HTTPS 5500.
+**EM Express** è l'interfaccia web integrata in Oracle 19c che NON richiede installazioni aggiuntive. È un servlet dentro Oracle XML DB che gira sulla porta HTTPS 5500.
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                    EM EXPRESS vs EM Cloud Control                  â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘       EM Express             â•‘     EM Cloud Control (OMS)        â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘ âœ… Integrato nel DB          â•‘ âŒ Installazione separata        â•‘
-â•‘ âœ… Zero overhead             â•‘ âš ï¸ Server dedicato (WebLogic)    â•‘
-â•‘ âœ… Gestisce 1 DB             â•‘ âœ… Gestisce 100+ DB             â•‘
-â•‘ âœ… Perfetto per il lab       â•‘ âœ… Perfetto per produzione       â•‘
-â•‘ âŒ No startup/shutdown       â•‘ âœ… Operazioni complete           â•‘
-â•‘ âŒ No job scheduling         â•‘ âœ… Job, patching, compliance     â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════════════╗
+║                    EM EXPRESS vs EM Cloud Control                  ║
+╠══════════════════════════════╦════════════════════════════════════╣
+║       EM Express             ║     EM Cloud Control (OMS)        ║
+╠══════════════════════════════╬════════════════════════════════════╣
+║ ✅ Integrato nel DB          ║ ❌ Installazione separata        ║
+║ ✅ Zero overhead             ║ ⚠️ Server dedicato (WebLogic)    ║
+║ ✅ Gestisce 1 DB             ║ ✅ Gestisce 100+ DB             ║
+║ ✅ Perfetto per il lab       ║ ✅ Perfetto per produzione       ║
+║ ❌ No startup/shutdown       ║ ✅ Operazioni complete           ║
+║ ❌ No job scheduling         ║ ✅ Job, patching, compliance     ║
+╚══════════════════════════════╩════════════════════════════════════╝
 ```
 
 ### Configurare EM Express nel Lab
 
 ```sql
--- 1. Verifica se EM Express Ã¨ giÃ  configurato
+-- 1. Verifica se EM Express è già configurato
 SELECT dbms_xdb_config.gethttpsport() FROM dual;
--- Se ritorna 0, non Ã¨ configurato
+-- Se ritorna 0, non è configurato
 
 -- 2. Configura la porta HTTPS
 EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);
@@ -415,7 +415,7 @@ Login:
   As: SYSDBA (se usi SYS)
 ```
 
-> **âš ï¸ Nota VirtualBox**: Per accedere dalla macchina host, assicurati che la porta 5500 della VM sia raggiungibile (la rete Bridged la espone automaticamente).
+> **⚠️ Nota VirtualBox**: Per accedere dalla macchina host, assicurati che la porta 5500 della VM sia raggiungibile (la rete Bridged la espone automaticamente).
 
 ### Cosa Puoi Fare con EM Express
 
@@ -439,8 +439,8 @@ EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);
 EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);
 
 -- Accedi poi a:
--- https://rac1:5500/em/  â† istanza RACDB1
--- https://rac2:5500/em/  â† istanza RACDB2
+-- https://rac1:5500/em/  ← istanza RACDB1
+-- https://rac2:5500/em/  ← istanza RACDB2
 ```
 
 ---
@@ -476,10 +476,10 @@ SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('tune_slow_query') AS report
 FROM dual;
 
 -- Il report ti dice:
--- â€¢ Se mancano statistiche
--- â€¢ Se un indice migliorerebbe la query
--- â€¢ Se un SQL Profile puÃ² ottimizzare il piano di esecuzione
--- â€¢ Se c'Ã¨ un piano migliore disponibile
+-- • Se mancano statistiche
+-- • Se un indice migliorerebbe la query
+-- • Se un SQL Profile può ottimizzare il piano di esecuzione
+-- • Se c'è un piano migliore disponibile
 ```
 
 ### Accettare un SQL Profile
@@ -507,11 +507,11 @@ END;
 /
 ```
 
-### SQL Plan Management (SPM) â€” Bloccare un Piano Buono
+### SQL Plan Management (SPM) — Bloccare un Piano Buono
 
 ```sql
 -- SPM permette di "bloccare" un piano di esecuzione che funziona bene
--- cosÃ¬ Oracle non puÃ² cambiarlo in peggio dopo una raccolta di statistiche.
+-- così Oracle non può cambiarlo in peggio dopo una raccolta di statistiche.
 
 -- 1. Carica un piano dalla cursor cache
 DECLARE
@@ -534,7 +534,7 @@ FROM dba_sql_plan_baselines
 ORDER BY created DESC;
 ```
 
-> **PerchÃ© SPM Ã¨ fondamentale in produzione?** Dopo un aggiornamento di statistiche o un upgrade, Oracle potrebbe "scegliere" un piano di esecuzione peggiore. SPM previene le **regressioni di performance** bloccando i piani che funzionano.
+> **Perché SPM è fondamentale in produzione?** Dopo un aggiornamento di statistiche o un upgrade, Oracle potrebbe "scegliere" un piano di esecuzione peggiore. SPM previene le **regressioni di performance** bloccando i piani che funzionano.
 
 ---
 
@@ -565,16 +565,16 @@ FROM v$im_segments;
 
 ```
 Database Vault aggiunge un ulteriore livello di sicurezza:
-anche un utente con DBA o SYSDBA NON puÃ² accedere ai dati
-dell'applicazione se non Ã¨ autorizzato dal DBV.
+anche un utente con DBA o SYSDBA NON può accedere ai dati
+dell'applicazione se non è autorizzato dal DBV.
 
-Esempio reale: in una banca, il DBA puÃ² gestire il database
-(startup, backup, patching) ma NON puÃ² leggere i saldi dei conti
-correnti. Solo l'applicazione puÃ² accedere a quei dati.
+Esempio reale: in una banca, il DBA può gestire il database
+(startup, backup, patching) ma NON può leggere i saldi dei conti
+correnti. Solo l'applicazione può accedere a quei dati.
 
--- Questo Ã¨ un concetto avanzato. Nel lab basta conoscerlo a livello
--- teorico. In produzione Ã¨ richiesto in settori regolamentati
--- (banche, assicurazioni, sanitÃ ).
+-- Questo è un concetto avanzato. Nel lab basta conoscerlo a livello
+-- teorico. In produzione è richiesto in settori regolamentati
+-- (banche, assicurazioni, sanità).
 ```
 
 ### Workload Capture e Replay (Real Application Testing)
@@ -631,7 +631,7 @@ GRANT DBA TO lab_dba;
 GRANT SYSDBA TO lab_dba;
 
 -- Test: connettiti con il nuovo utente
--- sqlplus lab_dba/"Lab_DBA_2024!"@rac-scan.localdomain:1521/RACDB
+-- sqlplus lab_dba/"Lab_DBA_2024!"@rac-scan:1521/RACDB
 ```
 
 ### Esercizio 2: Configura EM Express
@@ -647,7 +647,7 @@ EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);
 ### Esercizio 3: SQL Tuning Advisor
 
 ```sql
--- Trova la query piÃ¹ lenta e usa il Tuning Advisor:
+-- Trova la query più lenta e usa il Tuning Advisor:
 SELECT sql_id, elapsed_time/1000000 as secs, sql_text
 FROM v$sql
 ORDER BY elapsed_time DESC
@@ -658,4 +658,4 @@ FETCH FIRST 5 ROWS ONLY;
 
 ---
 
-> **â†’ Prossimo: [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md)** per batch jobs, AWR/ADDM, patching, e sicurezza avanzata.
+> **→ Prossimo: [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md)** per batch jobs, AWR/ADDM, patching, e sicurezza avanzata.

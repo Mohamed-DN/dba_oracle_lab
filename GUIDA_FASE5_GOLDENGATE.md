@@ -1,35 +1,35 @@
-﻿# FASE 5: Configurazione GoldenGate su Standby (Extract) verso Terzo DB (Replicat)
+# FASE 5: Configurazione GoldenGate su Standby (Extract) verso Terzo DB (Replicat)
 
 > In questa fase configuriamo Oracle GoldenGate per catturare le modifiche dal database standby (Active Data Guard) e replicarle verso un terzo database target indipendente (`dbtarget`).
 
-### ðŸ“¸ Flusso GoldenGate
+### 📸 Flusso GoldenGate
 
-![GoldenGate: Extract â†’ Pump â†’ Replicat](./images/goldengate_flow.png)
+![GoldenGate: Extract → Pump → Replicat](./images/goldengate_flow.png)
 
 ---
 
 ## 5.1 Architettura GoldenGate con ADG Standby
 
-L'architettura che implementiamo Ã¨ chiamata **Downstream Integrated Extract**:
+L'architettura che implementiamo è chiamata **Downstream Integrated Extract**:
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”      Redo Shipping       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  RAC PRIMARY   â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â†’â”‚  RAC STANDBY     â”‚
-â”‚  (RACDB)       â”‚                           â”‚  (RACDB_STBY)    â”‚
-â”‚                â”‚                           â”‚  Active DG       â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                           â”‚                  â”‚
-                                             â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚
-                                             â”‚  â”‚ GG Extract â”‚  â”‚     Trails
-                                             â”‚  â”‚ (Integratedâ”‚â”€â”€â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â†’ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                                             â”‚  â”‚  Capture)  â”‚  â”‚                â”‚  dbtarget    â”‚
-                                             â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚                â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
-                                             â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                â”‚  â”‚GG Repli-â”‚ â”‚
-                                                                                 â”‚  â”‚cat      â”‚ â”‚
-                                                                                 â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
-                                                                                 â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌────────────────┐      Redo Shipping       ┌──────────────────┐
+│  RAC PRIMARY   │ ─────────────────────────→│  RAC STANDBY     │
+│  (RACDB)       │                           │  (RACDB_STBY)    │
+│                │                           │  Active DG       │
+└────────────────┘                           │                  │
+                                             │  ┌────────────┐  │
+                                             │  │ GG Extract │  │     Trails
+                                             │  │ (Integrated│──│──────────────→ ┌──────────────┐
+                                             │  │  Capture)  │  │                │  dbtarget    │
+                                             │  └────────────┘  │                │  ┌─────────┐ │
+                                             └──────────────────┘                │  │GG Repli-│ │
+                                                                                 │  │cat      │ │
+                                                                                 │  └─────────┘ │
+                                                                                 └──────────────┘
 ```
 
-> **PerchÃ© estrarre dallo standby e non dal primario?**
+> **Perché estrarre dallo standby e non dal primario?**
 > 1. **Zero impatto sul primario**: L'Extract legge i redo log sullo standby, non tocca il primario.
 > 2. **Ridondanza**: Se il primario muore, l'Extract continua a lavorare sullo standby (che diventa primario dopo failover).
 > 3. **Best practice Oracle**: Consigliato per ambienti mission-critical.
@@ -38,7 +38,7 @@ L'architettura che implementiamo Ã¨ chiamata **Downstream Integrated Extract**
 
 ## 5.2 Prerequisiti Database
 
-### Sul Primario (RACDB) â€” Abilitare GoldenGate Replication
+### Sul Primario (RACDB) — Abilitare GoldenGate Replication
 
 ```sql
 sqlplus / as sysdba
@@ -58,7 +58,7 @@ SELECT supplemental_log_data_min, supplemental_log_data_all FROM v$database;
 -- Deve mostrare: YES / YES
 ```
 
-> **PerchÃ© Supplemental Logging?** GoldenGate ha bisogno di informazioni aggiuntive nei redo log per ricostruire correttamente le operazioni DML. Senza supplemental logging, GG non sa quali colonne sono state modificate in un UPDATE.
+> **Perché Supplemental Logging?** GoldenGate ha bisogno di informazioni aggiuntive nei redo log per ricostruire correttamente le operazioni DML. Senza supplemental logging, GG non sa quali colonne sono state modificate in un UPDATE.
 
 ### Sullo Standby (RACDB_STBY)
 
@@ -130,7 +130,7 @@ Scarica Oracle GoldenGate 19c (o 21c) da [Oracle eDelivery](https://edelivery.or
 - Per lo Standby: **Oracle GoldenGate 19c for Oracle Database on Linux x86-64**
 - Per il Target ARM (se OCI ARM): **Oracle GoldenGate for Oracle Database on Linux ARM**
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-16: Pre-GoldenGate" ðŸ”´ CRITICO**
+> 📸 **SNAPSHOT — "SNAP-16: Pre-GoldenGate" 🔴 CRITICO**
 > Fai snapshot PRIMA di installare GoldenGate. Se GG crea problemi, torni al tuo ambiente DG perfettamente funzionante.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-16_Pre_GoldenGate"
@@ -182,7 +182,7 @@ cd fbo_ggs_Linux_x64_Oracle_shiphome/Disk1
 
 ### Installazione sul Target (`dbtarget`)
 
-Stessa procedura, ma directory diversa se Ã¨ una macchina diversa.
+Stessa procedura, ma directory diversa se è una macchina diversa.
 
 ```bash
 mkdir -p /u01/app/goldengate
@@ -194,7 +194,7 @@ chown oracle:oinstall /u01/app/goldengate
 
 ## 5.5 Configurazione Variabili d'Ambiente GoldenGate
 
-Su ogni macchina dove GG Ã¨ installato:
+Su ogni macchina dove GG è installato:
 
 ```bash
 cat >> /home/oracle/.bash_profile <<'EOF'
@@ -211,7 +211,7 @@ source /home/oracle/.bash_profile
 
 ## 5.6 Configurazione Manager (su Standby e Target)
 
-Il Manager Ã¨ il processo "supervisore" di GoldenGate: gestisce tutti gli altri processi.
+Il Manager è il processo "supervisore" di GoldenGate: gestisce tutti gli altri processi.
 
 ### Sullo Standby (`racstby1`)
 
@@ -262,7 +262,7 @@ GGSCI> START MGR
 
 ## 5.7 Configurazione Extract (sullo Standby)
 
-L'Extract cattura le modifiche dai redo log. Usiamo **Integrated Capture** che sfrutta il LogMiner interno di Oracle â€” Ã¨ il metodo piÃ¹ robusto e supportato.
+L'Extract cattura le modifiche dai redo log. Usiamo **Integrated Capture** che sfrutta il LogMiner interno di Oracle — è il metodo più robusto e supportato.
 
 ### Preparazione Database per Integrated Extract
 
@@ -298,7 +298,7 @@ GGSCI> ADD EXTRACT ext_racdb, INTEGRATED TRANLOG, BEGIN NOW
 GGSCI> ADD EXTTRAIL ./dirdat/ea, EXTRACT ext_racdb, MEGABYTES 100
 ```
 
-> **PerchÃ© `INTEGRATED TRANLOG`?** A differenza del Classic Extract che legge direttamente i redo file, l'Integrated Extract usa il LogMiner Server integrato nel database. Questo Ã¨ piÃ¹ efficiente, supporta piÃ¹ data types, e funziona nativamente con RAC/ADG.
+> **Perché `INTEGRATED TRANLOG`?** A differenza del Classic Extract che legge direttamente i redo file, l'Integrated Extract usa il LogMiner Server integrato nel database. Questo è più efficiente, supporta più data types, e funziona nativamente con RAC/ADG.
 
 ### Creazione Parameter File dell'Extract
 
@@ -350,7 +350,7 @@ RMTTRAIL ./dirdat/ra
 TABLE HR.*;
 ```
 
-> **PerchÃ© un Data Pump?** Ãˆ un livello di indirezione: l'Extract scrive localmente, il Pump trasmette via rete. Se la rete cade, l'Extract non si ferma â€” il Pump accumula i trail e li spedisce quando la rete torna. Senza Pump, un problema di rete fermerebbe l'Extract.
+> **Perché un Data Pump?** È un livello di indirezione: l'Extract scrive localmente, il Pump trasmette via rete. Se la rete cade, l'Extract non si ferma — il Pump accumula i trail e li spedisce quando la rete torna. Senza Pump, un problema di rete fermerebbe l'Extract.
 
 ---
 
@@ -387,7 +387,7 @@ MAP HR.*, TARGET HR.*;
 
 > **Spiegazione parametri:**
 > - `ASSUMETARGETDEFS`: Assume che la struttura delle tabelle sul target sia identica al source. Se le tabelle fossero diverse, useresti un file `DEFGEN`.
-> - `DISCARDFILE`: Se una transazione non puÃ² essere applicata (es. conflitto chiave), viene scritta qui invece di fermare il Replicat.
+> - `DISCARDFILE`: Se una transazione non può essere applicata (es. conflitto chiave), viene scritta qui invece di fermare il Replicat.
 > - `MAP ... TARGET`: Mappa le tabelle source alle tabelle target. `HR.* -> HR.*` significa "stesse tabelle".
 
 ---
@@ -412,7 +412,7 @@ impdp ggadmin/<password> schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.
 ### Metodo 2: GoldenGate Initial Load
 
 ```
--- Usa un Extract speciale in modalitÃ  "SOURCEISTABLE"
+-- Usa un Extract speciale in modalità "SOURCEISTABLE"
 GGSCI> ADD EXTRACT initload, SOURCEISTABLE
 GGSCI> ADD RMTTRAIL ./dirdat/il, EXTRACT initload
 GGSCI> EDIT PARAMS initload
@@ -431,8 +431,8 @@ TABLE HR.*;
 ### Sequenza di avvio (ORDINE IMPORTANTE):
 
 ```
--- 1. Avvia Manager (su entrambi, se non giÃ  attivo)
--- GiÃ  fatto in 5.6
+-- 1. Avvia Manager (su entrambi, se non già attivo)
+-- Già fatto in 5.6
 
 -- 2. Avvia l'Extract sullo Standby
 GGSCI> START EXTRACT ext_racdb
@@ -464,10 +464,10 @@ MANAGER     RUNNING
 REPLICAT    RUNNING     rep_racdb   00:00:03      00:00:04
 ```
 
-> Se tutti i processi sono `RUNNING` con lag minimo, hai un sistema di replica funzionante! ðŸŽ‰
+> Se tutti i processi sono `RUNNING` con lag minimo, hai un sistema di replica funzionante! 🎉
 
-> ðŸ“¸ **SNAPSHOT â€” "SNAP-17: GoldenGate Running" â­ MILESTONE FINALE**
-> L'intero ambiente Ã¨ operativo: RAC + Data Guard + GoldenGate! Questo Ã¨ il tuo punto di partenza "gold".
+> 📸 **SNAPSHOT — "SNAP-17: GoldenGate Running" ⭐ MILESTONE FINALE**
+> L'intero ambiente è operativo: RAC + Data Guard + GoldenGate! Questo è il tuo punto di partenza "gold".
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-17_GG_Running_FINALE"
 > VBoxManage snapshot "rac2" take "SNAP-17_GG_Running_FINALE"
@@ -497,7 +497,7 @@ GGSCI> VIEW REPORT rep_racdb
 
 ---
 
-## âœ… Checklist Fine Fase 5
+## ✅ Checklist Fine Fase 5
 
 ```
 -- Sullo Standby
@@ -516,6 +516,6 @@ GGSCI> LAG REPLICAT rep_racdb
 
 ---
 
-**â†’ Prossimo: [FASE 6: Test di Verifica](./GUIDA_FASE6_TEST_VERIFICA.md)**
+**→ Prossimo: [FASE 6: Test di Verifica](./GUIDA_FASE6_TEST_VERIFICA.md)**
 
-> ðŸŒ **Variante Cloud**: Se vuoi replicare verso Oracle Cloud Infrastructure (OCI) ARM Free Tier invece del dbtarget locale, consulta la **[GUIDA_CLOUD_GOLDENGATE.md](./GUIDA_CLOUD_GOLDENGATE.md)** â€” usa SSH tunnel e binari ARM (aarch64).
+> 🌐 **Variante Cloud**: Se vuoi replicare verso Oracle Cloud Infrastructure (OCI) ARM Free Tier invece del dbtarget locale, consulta la **[GUIDA_CLOUD_GOLDENGATE.md](./GUIDA_CLOUD_GOLDENGATE.md)** — usa SSH tunnel e binari ARM (aarch64).
