@@ -2,6 +2,10 @@
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
+### 📸 Architettura Data Guard
+
+![Architettura Data Guard RAC Primary → RAC Standby](./images/dataguard_architecture.png)
+
 ### Cosa Succede in Questa Fase
 
 ```

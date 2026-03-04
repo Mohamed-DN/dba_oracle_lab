@@ -1,8 +1,14 @@
 # FASE 1: Preparazione Nodi e OS (Oracle Linux 7.9)
 
-> **Architettura di riferimento**: 2 nodi RAC primario (`rac1`, `rac2`) + 2 nodi RAC standby (`racstby1`, `racstby2`) + 1 nodo target GoldenGate (`dbtarget`).
+> **Architettura di riferimento**: 2 nodi RAC primario (`rac1`, `rac2`) + 2 nodi RAC standby (`racstby1`, `racstby2`).
 > Tutti i comandi vanno eseguiti come `root` salvo dove diversamente indicato.
 > I passaggi di questa fase vanno ripetuti su **tutti i nodi** salvo dove specificato.
+
+### 📸 Riferimenti Visivi
+
+![Partizionamento Disco OS](./images/os_install_partitions.png)
+
+![Architettura DNS BIND](./images/dns_bind_architecture.png)
 
 ---
 

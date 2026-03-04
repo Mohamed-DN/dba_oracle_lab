@@ -3,6 +3,14 @@
 > Tutti i passaggi di questa fase si riferiscono ai nodi **rac1** e **rac2** (RAC Primario).
 > Lo storage condiviso deve essere già visibile da entrambi i nodi prima di procedere.
 
+### 📸 Riferimenti Visivi
+
+![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)
+
+![Grid Infrastructure Installer — Wizard Steps](./images/grid_installer_wizard.png)
+
+![DBCA — Creazione Database RAC](./images/dbca_create_database.png)
+
 ### Cosa Costruiamo in Questa Fase
 
 ```

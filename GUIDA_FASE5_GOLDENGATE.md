@@ -2,6 +2,10 @@
 
 > In questa fase configuriamo Oracle GoldenGate per catturare le modifiche dal database standby (Active Data Guard) e replicarle verso un terzo database target indipendente (`dbtarget`).
 
+### 📸 Flusso GoldenGate
+
+![GoldenGate: Extract → Pump → Replicat](./images/goldengate_flow.png)
+
 ---
 
 ## 5.1 Architettura GoldenGate con ADG Standby
