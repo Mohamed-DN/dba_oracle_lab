@@ -389,68 +389,46 @@ df -h /u01
 
 ---
 
-## 0.8 Configurare udev per i Dischi ASM
+## 0.8 Configurare ASMLib (oracleasm) per i Dischi ASM
 
-> **Perché udev e NON oracleasm/ASMFD?** Oracle ha deprecato ASMFD su 19c (MOS Note 2806979.1). Il metodo raccomandato è **udev rules**, che non richiede pacchetti extra e funziona su tutte le distribuzioni Linux. Oracle Base lo usa nel suo lab.
+> **ASMLib vs UDEV**: Sebbene Oracle spinga verso udev o ASMFD sulle ultime release, **ASMLib (`oracleasm`)** rimane un metodo robusto, facile da usare e storicamente consolidato per l'insegnamento e i laboratori su Oracle Linux 7/8. Utilizzeremo questo metodo.
+
+### 1. Partizionamento dei dischi (== ESEGUI SOLO SU rac1 ==)
+
+Tutti i dischi ASM devono essere partizionati prima di essere assegnati ad ASMLib.
 
 ```bash
-# == ESEGUI COME ROOT su rac1 ==
-
-# 1. Abilita scsi_id per VirtualBox
-cat > /etc/scsi_id.config <<EOF
-options=-g
-EOF
-
-# 2. Partiziona ogni disco condiviso (solo su UN nodo!)
+# Come root su rac1
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdc   # CRS disk 1
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdd   # CRS disk 2
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sde   # CRS disk 3
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdf   # DATA disk
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdg   # RECO disk
 
-# 3. Identifica gli ID univoci dei dischi
-ASM_DISK1=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdc)
-ASM_DISK2=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdd)
-ASM_DISK3=$(/usr/lib/udev/scsi_id -g -u -d /dev/sde)
-ASM_DISK4=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdf)
-ASM_DISK5=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdg)
-
-echo "CRS1 = ${ASM_DISK1}"
-echo "CRS2 = ${ASM_DISK2}"
-echo "CRS3 = ${ASM_DISK3}"
-echo "DATA = ${ASM_DISK4}"
-echo "RECO = ${ASM_DISK5}"
-
-# 4. Crea regole udev (QUESTO FILE VA COPIATO IDENTICO SU OGNI NODO!)
-cat > /etc/udev/rules.d/99-oracle-asmdevices.rules <<EOF
-KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", RESULT=="${ASM_DISK1}", SYMLINK+="oracleasm/asm-crs-disk1", OWNER="oracle", GROUP="dba", MODE="0660"
-KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", RESULT=="${ASM_DISK2}", SYMLINK+="oracleasm/asm-crs-disk2", OWNER="oracle", GROUP="dba", MODE="0660"
-KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", RESULT=="${ASM_DISK3}", SYMLINK+="oracleasm/asm-crs-disk3", OWNER="oracle", GROUP="dba", MODE="0660"
-KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", RESULT=="${ASM_DISK4}", SYMLINK+="oracleasm/asm-data-disk1", OWNER="oracle", GROUP="dba", MODE="0660"
-KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", RESULT=="${ASM_DISK5}", SYMLINK+="oracleasm/asm-reco-disk1", OWNER="oracle", GROUP="dba", MODE="0660"
-EOF
-
-# 5. Ricarica le regole (esegui 2 volte per sicurezza!)
-/sbin/partprobe /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1
-sleep 10
-/sbin/udevadm control --reload-rules
-sleep 10
-/sbin/partprobe /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1
-/sbin/udevadm control --reload-rules
-sleep 10
-
-# 6. VERIFICA
-ls -la /dev/oracleasm/
-# asm-crs-disk1 -> ../../sdc1   ✅
-# asm-crs-disk2 -> ../../sdd1   ✅
-# asm-crs-disk3 -> ../../sde1   ✅
-# asm-data-disk1 -> ../../sdf1  ✅
-# asm-reco-disk1 -> ../../sdg1  ✅
+# Rileggi la tabella delle partizioni
+partprobe
 ```
 
-![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)
+### 2. Installazione e Configurazione ASMLib (== ESEGUI SU rac1 E rac2 ==)
 
-> **Dopo il clone**: il file `99-oracle-asmdevices.rules` viene copiato automaticamente nel clone. Su rac2 basta fare `udevadm control --reload-rules` e i symlink appariranno.
+```bash
+# Come root su rac1 e rac2
+yum install -y oracleasm-support
+yum install -y kmod-oracleasm
+
+# Configura ASMLib
+oracleasm configure -i
+# Rispondi alle domande come segue:
+# Default user to own the driver interface []: grid
+# Default group to own the driver interface []: asmadmin
+# Start Oracle ASM library driver on boot (y/n) [n]: y
+# Scan for Oracle ASM disks on boot (y/n) [y]: y
+
+# Inizializza il modulo
+oracleasm init
+```
+
+> **Verifica**: Il comando `oracleasm status` dovrebbe mostrare che il driver è caricato e montato. Non creeremo i dischi ora, lo faremo nella Fase 2.
 
 ---
 
