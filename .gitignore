@@ -1,0 +1,21 @@
+# Binaries and large files
+*.zip
+*.tar.gz
+*.iso
+*.vdi
+
+# Software directory (Oracle installers are too large for git)
+software/
+
+# Old/backup files
+vecchio/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp
+*.tmp
+*.bak
+*.swp
