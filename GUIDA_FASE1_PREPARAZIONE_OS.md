@@ -193,9 +193,63 @@ ping -c 2 rac2-priv   # Da rac1 (rete privata)
 
 ---
 
-## 1.4 Configurazione DNS (BIND) su rac1
+## 1.4 Configurazione DNS (Dnsmasq su VM separata)
 
-Lo SCAN richiede obbligatoriamente un DNS (non basta /etc/hosts per lo SCAN!).
+> **Il DNS è già stato configurato nella Fase 0** sulla VM `dnsnode` con Dnsmasq.
+> Se non hai ancora completato la [Fase 0 — sezione 0.3](./GUIDA_FASE0_SETUP_MACCHINE.md), torna indietro e falla ora.
+>
+> **Perché una VM DNS separata?** (Oracle Base approach)
+> - Il DNS non si ferma quando riavvii i nodi RAC
+> - Lo SCAN funziona sempre, anche durante i restart del cluster
+> - Dnsmasq legge `/etc/hosts` e lo espone come DNS — zero configurazione di zone
+> - Costa solo 1 GB di RAM
+
+### Configura resolv.conf su TUTTI i nodi RAC
+
+```bash
+# == ESEGUI SU OGNI NODO (rac1, rac2, racstby1, racstby2) ==
+
+# Punta al DNS server (la VM dnsnode)
+cat > /etc/resolv.conf <<'EOF'
+search localdomain
+nameserver 192.168.56.50
+EOF
+
+# CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf
+sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
+systemctl restart NetworkManager.service
+
+# Proteggilo anche con chattr per sicurezza extra
+chattr +i /etc/resolv.conf
+```
+
+> **Cosa fa dns=none?** Dice a NetworkManager di NON toccare `/etc/resolv.conf` dopo un reboot. Senza questo fix, dopo ogni restart il file viene riscritto e il SCAN smette di funzionare. È uno dei bug più insidiosi!
+
+### Test DNS (da ogni nodo)
+
+```bash
+# Verifica che il DNS risolve gli hostname
+nslookup rac1 192.168.56.50
+nslookup rac2 192.168.56.50
+
+# SCAN deve ritornare 3 IP!
+nslookup rac-scan 192.168.56.50
+# Server:  192.168.56.50
+# Name:    rac-scan
+# Address: 192.168.56.105
+# Address: 192.168.56.106
+# Address: 192.168.56.107
+
+# Standby SCAN
+nslookup racstby-scan 192.168.56.50
+```
+
+> **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
+
+> 📸 **SNAPSHOT — "SNAP-02: Rete e DNS Configurati"**
+> Hai rete statica + DNS funzionante. Se qualcosa va storto dopo, puoi tornare qui.
+> ```
+> VBoxManage snapshot "rac1" take "SNAP-02_Rete_DNS_OK"
 
 ```bash
 # Installa BIND

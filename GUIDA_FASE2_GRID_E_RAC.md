@@ -88,71 +88,40 @@ Se usi VirtualBox, crea i dischi dal **Virtual Media Manager** (`Ctrl+D`):
 # Verifica che i dischi siano visibili
 lsblk
 
-# Dovresti vedere sdb, sdc, sdd (oltre a sda che è l'OS)
-# Partiziona ciascun disco
-for disk in sdb sdc sdd; do
-  echo -e "n\np\n1\n\n\nw" | fdisk /dev/$disk
-done
+## 2.2 Creazione Dischi ASM con ASMLib (solo su rac1)
 
-# Rileggi la tabella delle partizioni
-partprobe
-```
-
-> **Perché partizionare?** ASM può usare dischi raw o partizioni. Le partizioni sono più sicure perché un `fdisk` accidentale su un disco raw cancella tutto. Con una partizione, il blocco 0 (tabella partizioni) funge da "guardia".
-
-### Configurazione ASMLib (Metodo Consigliato per OL7)
-
-ASMLib è il metodo nativo Oracle per gestire i dischi ASM su Linux:
+Il pacchetto `oracleasm` è stato installato e configurato nella [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md). Ora dobbiamo etichettare i dischi:
 
 ```bash
-# Installa ASMLib (su ENTRAMBI i nodi)
-yum install -y oracleasm-support
-yum install -y kmod-oracleasm
-
-# Configura ASMLib (su ENTRAMBI i nodi)
-oracleasm configure -i
-# Risposte:
-#   Default user to own the driver interface: grid
-#   Default group to own the driver interface: asmadmin
-#   Start Oracle ASM library driver on boot (y/n): y
-#   Scan for Oracle ASM disks on boot (y/n): y
-
-# Carica il modulo kernel
-oracleasm init
-```
-
-> **Perché ASMLib e non udev?** Su Oracle Linux, ASMLib è supportato direttamente da Oracle e garantisce che i permessi dei dischi ASM sopravvivano ai reboot. Con udev devi scrivere regole personalizzate. ASMLib è più semplice e meno soggetto a errori umani.
-
-### Creazione Dischi ASM (solo su rac1)
-
-```bash
-# Crea i dischi ASM (SOLO dal nodo 1!)
-oracleasm createdisk CRS  /dev/sdb1
-oracleasm createdisk DATA /dev/sdc1
-oracleasm createdisk FRA  /dev/sdd1
+# Esegui SOLO su rac1 (come root)
+oracleasm createdisk CRS1 /dev/sdc1
+oracleasm createdisk CRS2 /dev/sdd1
+oracleasm createdisk CRS3 /dev/sde1
+oracleasm createdisk DATA /dev/sdf1
+oracleasm createdisk RECO /dev/sdg1
 
 # Verifica
 oracleasm listdisks
-# Output atteso: CRS, DATA, FRA
+# Output atteso: CRS1, CRS2, CRS3, DATA, RECO
 ```
 
 ### Scansione Dischi dal Nodo 2 (su rac2)
 
 ```bash
-# Il nodo 2 non vede automaticamente i dischi creati dal nodo 1
+# Il nodo 2 non vede automaticamente i dischi creati dal nodo 1 (come root)
 oracleasm scandisks
 oracleasm listdisks
-# Output atteso: CRS, DATA, FRA
+# Output atteso: CRS1, CRS2, CRS3, DATA, RECO
 ```
 
+> **Perché scandisks?** ASMLib sul logico nodo 2 non ha ancora "registrato" i dischi etichettati dal nodo 1. `scandisks` forza il kernel a leggerli.
+
 > 📸 **SNAPSHOT — "SNAP-04: ASM Dischi Configurati"**
-> I dischi ASM sono visibili da entrambi i nodi. Se la creazione dei disk group fallisce, torna qui.
+> I dischi ASM sono pronti su entrambi i nodi. Se l'installazione Grid fallisce, torna qui.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-04_ASM_Dischi_OK"
 > VBoxManage snapshot "rac2" take "SNAP-04_ASM_Dischi_OK"
 > ```
-
-> **Perché scandisks?** ASMLib sul nodo 2 non ha ancora "registrato" i dischi creati dal nodo 1. Il comando `scandisks` forza una scansione per trovarli.
 
 ---
 
@@ -272,10 +241,10 @@ cd /u01/app/19.0.0/grid
 
 **Step 8 — Create ASM Disk Group** (per OCR e Voting Disk):
 - Disk Group Name: `CRS`
-- Redundancy: **External** (abbiamo un solo disco per CRS)
-- Seleziona il disco: `ORCL:CRS`
+- Redundancy: **Normal** (abbiamo 3 dischi per CRS)
+- Seleziona i dischi: `ORCL:CRS1`, `ORCL:CRS2`, `ORCL:CRS3`
 
-> **Perché External Redundancy?** In un lab con un disco solo non possiamo usare Normal (che richiede 3 dischi) o High (che ne richiede 5). In produzione, SEMPRE Normal o High.
+> **Perché Normal Redundancy?** Oracle raccomanda di usare 3 Voting Disk per formare un quorum (2 sopravvissuti su 3). Usando Normal Redundancy su 3 dischi fisici separati, se ne perdi uno il cluster rimane operativo!
 
 **Step 9 — ASM Password**:
 - Imposta la password per `SYS` e `ASMSNMP`
@@ -399,9 +368,9 @@ CREATE DISKGROUP DATA EXTERNAL REDUNDANCY
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
--- Crea disk group FRA
-CREATE DISKGROUP FRA EXTERNAL REDUNDANCY
-  DISK 'ORCL:FRA'
+-- Crea disk group RECO
+CREATE DISKGROUP RECO EXTERNAL REDUNDANCY
+  DISK 'ORCL:RECO'
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
@@ -414,10 +383,10 @@ EXIT;
 ```bash
 # Verifica da asmcmd
 asmcmd lsdg
-# Dovrai vedere: CRS, DATA, FRA tutti MOUNTED
+# Dovrai vedere: CRS, DATA, RECO tutti MOUNTED
 ```
 
-> **Perché creare DATA e FRA separati?** DATA contiene i datafile (i dati veri). FRA (Fast Recovery Area) contiene gli archivelog, i backup RMAN e i flashback log. Separarli è una best practice fondamentale: se il disco DATA si riempie, hai ancora lo spazio per il recovery.
+> **Perché creare DATA e RECO separati?** DATA contiene i datafile (i dati veri). La Fast Recovery Area (situata nel disk group RECO) contiene gli archivelog, i backup RMAN e i flashback log. Separarli è una best practice fondamentale: se il disco DATA si riempie, hai ancora lo spazio per il recovery.
 
 ---
 
@@ -733,7 +702,7 @@ dbca
 - Database Area: `+DATA`
 
 **Step 7**: Fast Recovery Area:
-- Recovery Area: `+FRA`
+- Recovery Area: `+RECO`
 - Size: `10000` MB (o quanto hai disponibile)
 - ✅ **Enable archiving** (FONDAMENTALE per Data Guard!)
 
@@ -830,7 +799,7 @@ crsctl stat res -t | grep -E "ONLINE|OFFLINE"
 
 # 2. ASM Disk Groups
 su - grid -c "asmcmd lsdg"
-# CRS, DATA, FRA tutti MOUNTED
+# CRS, DATA, RECO tutti MOUNTED
 
 # 3. Database RAC attivo
 su - oracle -c "srvctl status database -d RACDB"
