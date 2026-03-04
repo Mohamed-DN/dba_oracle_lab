@@ -1,10 +1,10 @@
-# FASE 1: Preparazione Nodi e OS (Oracle Linux 7.9)
+﻿# FASE 1: Preparazione Nodi e OS (Oracle Linux 7.9)
 
 > **Architettura di riferimento**: 2 nodi RAC primario (`rac1`, `rac2`) + 2 nodi RAC standby (`racstby1`, `racstby2`).
 > Tutti i comandi vanno eseguiti come `root` salvo dove diversamente indicato.
 > I passaggi di questa fase vanno ripetuti su **tutti i nodi** salvo dove specificato.
 
-### 📸 Riferimenti Visivi
+### ðŸ“¸ Riferimenti Visivi
 
 ![Partizionamento Disco OS](./images/os_install_partitions.png)
 
@@ -12,33 +12,33 @@
 
 ---
 
-### Cos'è il DNS e Perché Ci Serve?
+### Cos'Ã¨ il DNS e PerchÃ© Ci Serve?
 
-**DNS (Domain Name System)** è il servizio che traduce i nomi in indirizzi IP. Quando digiti `rac-scan.oracleland.local`, il DNS risponde con `192.168.1.120, 192.168.1.121, 192.168.1.122`.
+**DNS (Domain Name System)** Ã¨ il servizio che traduce i nomi in indirizzi IP. Quando digiti `rac-scan.localdomain`, il DNS risponde con `192.168.56.105, 192.168.56.106, 192.168.56.107`.
 
 ```
   Senza DNS:                          Con DNS:
-  ══════════                          ═════════
+  â•â•â•â•â•â•â•â•â•â•                          â•â•â•â•â•â•â•â•â•
 
   Applicazione:                       Applicazione:
   "Connettimi a                       "Connettimi a
-   192.168.1.120"                      rac-scan.oracleland.local"
-           │                                    │
-           ▼                                    ▼
-  ┌────────────────┐                  ┌────────────────┐
-  │  Connessione   │                  │  DNS Server    │
-  │  a UN solo IP  │                  │  Risponde con  │
-  │  (se cambia,   │                  │  3 IP in round │
-  │   tutto si     │                  │  robin:        │
-  │   rompe!)      │                  │  .120 .121 .122│
-  └────────────────┘                  └────────┬───────┘
-                                               │
+   192.168.56.105"                      rac-scan.localdomain"
+           â”‚                                    â”‚
+           â–¼                                    â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚  Connessione   â”‚                  â”‚  DNS Server    â”‚
+  â”‚  a UN solo IP  â”‚                  â”‚  Risponde con  â”‚
+  â”‚  (se cambia,   â”‚                  â”‚  3 IP in round â”‚
+  â”‚   tutto si     â”‚                  â”‚  robin:        â”‚
+  â”‚   rompe!)      â”‚                  â”‚  .120 .121 .122â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                  â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                                               â”‚
                                       Load balanced!
                                       Se cambi un IP,
                                       aggiorni solo il DNS
 ```
 
-**Perché Oracle RAC lo richiede?**
+**PerchÃ© Oracle RAC lo richiede?**
 - Lo **SCAN** (Single Client Access Name) DEVE risolvere a 3 IP tramite DNS
 - `/etc/hosts` NON basta per lo SCAN (Oracle lo verifica esplicitamente)
 - Il DNS permette il **round-robin**: le connessioni vengono distribuite automaticamente
@@ -47,63 +47,63 @@
 
 | Tipo | Esempio | Cosa fa |
 |---|---|---|
-| **A** | `rac1 → 192.168.1.101` | Nome → IP (forward) |
-| **PTR** | `192.168.1.101 → rac1` | IP → Nome (reverse) |
-| **SOA** | `oracleland.local` | Authority della zona |
-| **NS** | `ns1.oracleland.local` | Chi risponde per questa zona |
+| **A** | `rac1 â†’ 192.168.56.101` | Nome â†’ IP (forward) |
+| **PTR** | `192.168.56.101 â†’ rac1` | IP â†’ Nome (reverse) |
+| **SOA** | `localdomain` | Authority della zona |
+| **NS** | `ns1.localdomain` | Chi risponde per questa zona |
 
 ---
 
 ## 1.1 Piano IP e Hostname
 
-Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qualsiasi cluster: se sbagli gli IP, niente funziona.
+Prima di tutto, definiamo il piano di indirizzamento. Questo Ã¨ il cuore di qualsiasi cluster: se sbagli gli IP, niente funziona.
 
 | Ruolo | Hostname | IP Pubblica | IP Privata (Interconnect) | IP VIP |
 |---|---|---|---|---|
-| RAC Nodo 1 | rac1 | 192.168.1.101 | 10.10.10.1 | 192.168.1.111 |
-| RAC Nodo 2 | rac2 | 192.168.1.102 | 10.10.10.2 | 192.168.1.112 |
-| RAC SCAN | rac-scan | 192.168.1.120, .121, .122 | - | - |
-| Standby Nodo 1 | racstby1 | 192.168.1.201 | 10.10.10.11 | 192.168.1.211 |
-| Standby Nodo 2 | racstby2 | 192.168.1.202 | 10.10.10.12 | 192.168.1.212 |
-| Standby SCAN | racstby-scan | 192.168.1.220, .221, .222 | - | - |
+| RAC Nodo 1 | rac1 | 192.168.56.101 | 192.168.1.101 | 192.168.56.103 |
+| RAC Nodo 2 | rac2 | 192.168.56.102 | 192.168.1.102 | 192.168.56.104 |
+| RAC SCAN | rac-scan | 192.168.56.105, .121, .122 | - | - |
+| Standby Nodo 1 | racstby1 | 192.168.56.111 | 192.168.2.111 | 192.168.56.113 |
+| Standby Nodo 2 | racstby2 | 192.168.56.112 | 192.168.2.112 | 192.168.56.114 |
+| Standby SCAN | racstby-scan | 192.168.56.115, .221, .222 | - | - |
 | Target GoldenGate | dbtarget | 192.168.1.150 | - | - |
 
-> **Perché?** Oracle RAC necessita di minimo 3 tipi di IP per nodo: Pubblica (comunicazione client), Privata (Cache Fusion, il "sangue" del cluster), VIP (failover trasparente). Lo SCAN (Single Client Access Name) è un load balancer DNS integrato nel cluster.
+> **PerchÃ©?** Oracle RAC necessita di minimo 3 tipi di IP per nodo: Pubblica (comunicazione client), Privata (Cache Fusion, il "sangue" del cluster), VIP (failover trasparente). Lo SCAN (Single Client Access Name) Ã¨ un load balancer DNS integrato nel cluster.
 
 ### Come Funzionano le Reti del RAC
 
 ```
-                     ┌───────────────────────────────────────────┐
-                     │          RETE PUBBLICA (eth0)             │
-                     │       192.168.1.0/24 (Bridged)           │
-      Client App     │                                           │
-          │          │  ┌──────┐  ┌──────┐  ┌──────┐            │
-          ▼          │  │SCAN  │  │SCAN  │  │SCAN  │            │
-    ┌──────────┐     │  │ .120 │  │ .121 │  │ .122 │            │
-    │ SCAN     │◄────│──┤      │  │      │  │      │ DNS        │
-    │ Listener │     │  └──────┘  └──────┘  └──────┘ Round-Robin│
-    └────┬─────┘     │                                           │
-         │           │  ┌─────────────┐   ┌─────────────┐       │
-         ├──────────►│  │ rac1        │   │ rac2        │       │
-         │           │  │ IP: .101    │   │ IP: .102    │       │
-         │           │  │ VIP: .111   │   │ VIP: .112   │       │
-         │           │  │ (Se rac1    │   │ (Se rac2    │       │
-         │           │  │  muore, VIP │   │  muore, VIP │       │
-         │           │  │  migra su   │   │  migra su   │       │
-         │           │  │  rac2)      │   │  rac1)      │       │
-         │           │  └──────┬──────┘   └──────┬──────┘       │
-         │           └─────────┼──────────────────┼─────────────┘
-         │                     │                  │
-         │           ┌─────────┼──────────────────┼─────────────┐
-         │           │         │  RETE PRIVATA    │   (eth1)    │
-         │           │         │  10.10.10.0/24   │  Host-Only  │
-         │           │  ┌──────┴──────┐   ┌──────┴──────┐      │
-         │           │  │ rac1-priv   │   │ rac2-priv   │      │
-         │           │  │ 10.10.10.1  │◄═►│ 10.10.10.2  │      │
-         │           │  └─────────────┘   └─────────────┘      │
-         │           │         Cache Fusion (GCS/GES)           │
-         │           │    Blocchi dati trasferiti via RAM        │
-         │           └─────────────────────────────────────────┘
+                     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                     â”‚          RETE PUBBLICA (eth0)             â”‚
+                     â”‚       192.168.1.0/24 (Bridged)           â”‚
+      Client App     â”‚                                           â”‚
+          â”‚          â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”            â”‚
+          â–¼          â”‚  â”‚SCAN  â”‚  â”‚SCAN  â”‚  â”‚SCAN  â”‚            â”‚
+    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”‚  â”‚ .120 â”‚  â”‚ .121 â”‚  â”‚ .122 â”‚            â”‚
+    â”‚ SCAN     â”‚â—„â”€â”€â”€â”€â”‚â”€â”€â”¤      â”‚  â”‚      â”‚  â”‚      â”‚ DNS        â”‚
+    â”‚ Listener â”‚     â”‚  â””â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”˜ Round-Robinâ”‚
+    â””â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”˜     â”‚                                           â”‚
+         â”‚           â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”‚
+         â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–ºâ”‚  â”‚ rac1        â”‚   â”‚ rac2        â”‚       â”‚
+         â”‚           â”‚  â”‚ IP: .101    â”‚   â”‚ IP: .102    â”‚       â”‚
+         â”‚           â”‚  â”‚ VIP: .111   â”‚   â”‚ VIP: .112   â”‚       â”‚
+         â”‚           â”‚  â”‚ (Se rac1    â”‚   â”‚ (Se rac2    â”‚       â”‚
+         â”‚           â”‚  â”‚  muore, VIP â”‚   â”‚  muore, VIP â”‚       â”‚
+         â”‚           â”‚  â”‚  migra su   â”‚   â”‚  migra su   â”‚       â”‚
+         â”‚           â”‚  â”‚  rac2)      â”‚   â”‚  rac1)      â”‚       â”‚
+         â”‚           â”‚  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜       â”‚
+         â”‚           â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚                     â”‚                  â”‚
+         â”‚           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+         â”‚           â”‚         â”‚  RETE PRIVATA    â”‚   (eth1)    â”‚
+         â”‚           â”‚         â”‚  192.168.1.0/24   â”‚  Host-Only  â”‚
+         â”‚           â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”      â”‚
+         â”‚           â”‚  â”‚ rac1-priv   â”‚   â”‚ rac2-priv   â”‚      â”‚
+         â”‚           â”‚  â”‚ 192.168.1.101  â”‚â—„â•â–ºâ”‚ 192.168.1.102  â”‚      â”‚
+         â”‚           â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜      â”‚
+         â”‚           â”‚         Cache Fusion (GCS/GES)           â”‚
+         â”‚           â”‚    Blocchi dati trasferiti via RAM        â”‚
+         â”‚           â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 > **VIP (Virtual IP)**: Quando un nodo crasha, il suo VIP "migra" sull'altro nodo in pochi secondi. I client connessi al VIP vengono re-indirizzati automaticamente senza cambiare configurazione.
@@ -119,27 +119,27 @@ Esegui su **TUTTI** i nodi:
 ```bash
 cat >> /etc/hosts <<'EOF'
 # === RAC PRIMARY ===
-192.168.1.101   rac1.oracleland.local       rac1
-192.168.1.102   rac2.oracleland.local       rac2
-10.10.10.1      rac1-priv.oracleland.local  rac1-priv
-10.10.10.2      rac2-priv.oracleland.local  rac2-priv
-192.168.1.111   rac1-vip.oracleland.local   rac1-vip
-192.168.1.112   rac2-vip.oracleland.local   rac2-vip
+192.168.56.101   rac1.localdomain       rac1
+192.168.56.102   rac2.localdomain       rac2
+192.168.1.101      rac1-priv.localdomain  rac1-priv
+192.168.1.102      rac2-priv.localdomain  rac2-priv
+192.168.56.103   rac1-vip.localdomain   rac1-vip
+192.168.56.104   rac2-vip.localdomain   rac2-vip
 
 # === RAC STANDBY ===
-192.168.1.201   racstby1.oracleland.local      racstby1
-192.168.1.202   racstby2.oracleland.local      racstby2
-10.10.10.11     racstby1-priv.oracleland.local racstby1-priv
-10.10.10.12     racstby2-priv.oracleland.local racstby2-priv
-192.168.1.211   racstby1-vip.oracleland.local  racstby1-vip
-192.168.1.212   racstby2-vip.oracleland.local  racstby2-vip
+192.168.56.111   racstby1.localdomain      racstby1
+192.168.56.112   racstby2.localdomain      racstby2
+192.168.2.111     racstby1-priv.localdomain racstby1-priv
+192.168.2.112     racstby2-priv.localdomain racstby2-priv
+192.168.56.113   racstby1-vip.localdomain  racstby1-vip
+192.168.56.114   racstby2-vip.localdomain  racstby2-vip
 
 # === TARGET GOLDENGATE ===
-192.168.1.150   dbtarget.oracleland.local   dbtarget
+192.168.1.150   dbtarget.localdomain   dbtarget
 EOF
 ```
 
-> **Perché /etc/hosts e non solo DNS?** Oracle Clusterware verifica la risoluzione dei nomi PRIMA che il DNS sia attivo. Se metti tutto solo in DNS e il DNS non parte, il cluster non si avvia. Il file hosts è la "rete di sicurezza".
+> **PerchÃ© /etc/hosts e non solo DNS?** Oracle Clusterware verifica la risoluzione dei nomi PRIMA che il DNS sia attivo. Se metti tutto solo in DNS e il DNS non parte, il cluster non si avvia. Il file hosts Ã¨ la "rete di sicurezza".
 
 ---
 
@@ -156,11 +156,11 @@ BOOTPROTO=static
 NAME=eth0
 DEVICE=eth0
 ONBOOT=yes
-IPADDR=192.168.1.101
+IPADDR=192.168.56.101
 NETMASK=255.255.255.0
 GATEWAY=192.168.1.1
-DNS1=192.168.1.101
-DOMAIN=oracleland.local
+DNS1=192.168.56.101
+DOMAIN=localdomain
 EOF
 ```
 
@@ -173,12 +173,12 @@ BOOTPROTO=static
 NAME=eth1
 DEVICE=eth1
 ONBOOT=yes
-IPADDR=10.10.10.1
+IPADDR=192.168.1.101
 NETMASK=255.255.255.0
 EOF
 ```
 
-> **Perché BOOTPROTO=static?** L'interconnect del RAC NON deve MAI cambiare IP. Se usi DHCP e l'IP cambia, il cluster va in split-brain (i due nodi pensano di essere soli e corrompono i dati).
+> **PerchÃ© BOOTPROTO=static?** L'interconnect del RAC NON deve MAI cambiare IP. Se usi DHCP e l'IP cambia, il cluster va in split-brain (i due nodi pensano di essere soli e corrompono i dati).
 
 ```bash
 # Riavvia il networking
@@ -209,7 +209,7 @@ cp /etc/named.conf /etc/named.conf.bkp
 
 cat > /etc/named.conf <<'EOF'
 options {
-    listen-on port 53 { 127.0.0.1; 192.168.1.101; };
+    listen-on port 53 { 127.0.0.1; 192.168.56.101; };
     listen-on-v6 port 53 { ::1; };
     directory       "/var/named";
     dump-file       "/var/named/data/cache_dump.db";
@@ -237,59 +237,59 @@ include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
 // Forward Zone
-zone "oracleland.local" IN {
+zone "localdomain" IN {
     type master;
-    file "forward.oracleland.local";
+    file "forward.localdomain";
     allow-update { none; };
 };
 
 // Reverse Zone
 zone "1.168.192.in-addr.arpa" IN {
     type master;
-    file "reverse.oracleland.local";
+    file "reverse.localdomain";
     allow-update { none; };
 };
 EOF
 ```
 
-> **Perché il DNS?** Oracle richiede che il nome SCAN risolva ad almeno 1 IP (consigliati 3) tramite DNS. Il file `/etc/hosts` NON viene usato per lo SCAN.
+> **PerchÃ© il DNS?** Oracle richiede che il nome SCAN risolva ad almeno 1 IP (consigliati 3) tramite DNS. Il file `/etc/hosts` NON viene usato per lo SCAN.
 
 ### Come Funziona la Risoluzione DNS nel Nostro Lab
 
 ```
-Client → "Connettimi a rac-scan.oracleland.local"
-    │
-    ▼
-┌──────────────────┐
-│  /etc/resolv.conf │──→ nameserver 192.168.1.101 (rac1)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────────────────────────────┐
-│  BIND DNS Server (su rac1, porta 53)     │
-│                                          │
-│  Zone: oracleland.local                  │
-│  ┌────────────────────────────────────┐  │
-│  │ rac-scan  →  192.168.1.120        │  │
-│  │ rac-scan  →  192.168.1.121        │  │  ← 3 record A!
-│  │ rac-scan  →  192.168.1.122        │  │    Round-robin
-│  │ rac1      →  192.168.1.101        │  │
-│  │ rac2      →  192.168.1.102        │  │
-│  │ rac1-vip  →  192.168.1.111        │  │
-│  │ ...                               │  │
-│  └────────────────────────────────────┘  │
-└──────────────────────────────────────────┘
-    │
-    ▼ Risponde con 3 IP in ordine casuale
-    192.168.1.121, 192.168.1.120, 192.168.1.122
+Client â†’ "Connettimi a rac-scan.localdomain"
+    â”‚
+    â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  /etc/resolv.conf â”‚â”€â”€â†’ nameserver 192.168.56.101 (rac1)
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  BIND DNS Server (su rac1, porta 53)     â”‚
+â”‚                                          â”‚
+â”‚  Zone: localdomain                  â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚
+â”‚  â”‚ rac-scan  â†’  192.168.56.105        â”‚  â”‚
+â”‚  â”‚ rac-scan  â†’  192.168.56.106        â”‚  â”‚  â† 3 record A!
+â”‚  â”‚ rac-scan  â†’  192.168.56.107        â”‚  â”‚    Round-robin
+â”‚  â”‚ rac1      â†’  192.168.56.101        â”‚  â”‚
+â”‚  â”‚ rac2      â†’  192.168.56.102        â”‚  â”‚
+â”‚  â”‚ rac1-vip  â†’  192.168.56.103        â”‚  â”‚
+â”‚  â”‚ ...                               â”‚  â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+    â”‚
+    â–¼ Risponde con 3 IP in ordine casuale
+    192.168.56.106, 192.168.56.105, 192.168.56.107
 ```
 
 ### Zone Forward
 
 ```bash
-cat > /var/named/forward.oracleland.local <<'EOF'
+cat > /var/named/forward.localdomain <<'EOF'
 $TTL 86400
-@ IN SOA rac1.oracleland.local. admin.oracleland.local. (
+@ IN SOA rac1.localdomain. admin.localdomain. (
     2024030201 ; Serial
     3600       ; Refresh
     1800       ; Retry
@@ -298,25 +298,25 @@ $TTL 86400
 )
 
 ; Name Server
-@ IN NS rac1.oracleland.local.
+@ IN NS rac1.localdomain.
 
 ; A Records - RAC Primary
-rac1            IN  A   192.168.1.101
-rac2            IN  A   192.168.1.102
-rac1-vip        IN  A   192.168.1.111
-rac2-vip        IN  A   192.168.1.112
-rac-scan        IN  A   192.168.1.120
-rac-scan        IN  A   192.168.1.121
-rac-scan        IN  A   192.168.1.122
+rac1            IN  A   192.168.56.101
+rac2            IN  A   192.168.56.102
+rac1-vip        IN  A   192.168.56.103
+rac2-vip        IN  A   192.168.56.104
+rac-scan        IN  A   192.168.56.105
+rac-scan        IN  A   192.168.56.106
+rac-scan        IN  A   192.168.56.107
 
 ; A Records - RAC Standby
-racstby1        IN  A   192.168.1.201
-racstby2        IN  A   192.168.1.202
-racstby1-vip    IN  A   192.168.1.211
-racstby2-vip    IN  A   192.168.1.212
-racstby-scan    IN  A   192.168.1.220
-racstby-scan    IN  A   192.168.1.221
-racstby-scan    IN  A   192.168.1.222
+racstby1        IN  A   192.168.56.111
+racstby2        IN  A   192.168.56.112
+racstby1-vip    IN  A   192.168.56.113
+racstby2-vip    IN  A   192.168.56.114
+racstby-scan    IN  A   192.168.56.115
+racstby-scan    IN  A   192.168.56.116
+racstby-scan    IN  A   192.168.56.117
 
 ; A Records - Target GoldenGate
 dbtarget        IN  A   192.168.1.150
@@ -326,9 +326,9 @@ EOF
 ### Zone Reverse
 
 ```bash
-cat > /var/named/reverse.oracleland.local <<'EOF'
+cat > /var/named/reverse.localdomain <<'EOF'
 $TTL 86400
-@ IN SOA rac1.oracleland.local. admin.oracleland.local. (
+@ IN SOA rac1.localdomain. admin.localdomain. (
     2024030201 ; Serial
     3600       ; Refresh
     1800       ; Retry
@@ -336,32 +336,32 @@ $TTL 86400
     86400      ; Minimum TTL
 )
 
-@ IN NS rac1.oracleland.local.
-rac1 IN A 192.168.1.101
+@ IN NS rac1.localdomain.
+rac1 IN A 192.168.56.101
 
 ; PTR Records
-101 IN PTR rac1.oracleland.local.
-102 IN PTR rac2.oracleland.local.
-111 IN PTR rac1-vip.oracleland.local.
-112 IN PTR rac2-vip.oracleland.local.
-120 IN PTR rac-scan.oracleland.local.
-121 IN PTR rac-scan.oracleland.local.
-122 IN PTR rac-scan.oracleland.local.
-201 IN PTR racstby1.oracleland.local.
-202 IN PTR racstby2.oracleland.local.
-150 IN PTR dbtarget.oracleland.local.
+101 IN PTR rac1.localdomain.
+102 IN PTR rac2.localdomain.
+111 IN PTR rac1-vip.localdomain.
+112 IN PTR rac2-vip.localdomain.
+120 IN PTR rac-scan.localdomain.
+121 IN PTR rac-scan.localdomain.
+122 IN PTR rac-scan.localdomain.
+201 IN PTR racstby1.localdomain.
+202 IN PTR racstby2.localdomain.
+150 IN PTR dbtarget.localdomain.
 EOF
 ```
 
 ```bash
 # Imposta permessi e owner
-chown named:named /var/named/forward.oracleland.local
-chown named:named /var/named/reverse.oracleland.local
+chown named:named /var/named/forward.localdomain
+chown named:named /var/named/reverse.localdomain
 
 # Verifica configurazione
 named-checkconf /etc/named.conf
-named-checkzone oracleland.local /var/named/forward.oracleland.local
-named-checkzone 1.168.192.in-addr.arpa /var/named/reverse.oracleland.local
+named-checkzone localdomain /var/named/forward.localdomain
+named-checkzone 1.168.192.in-addr.arpa /var/named/reverse.localdomain
 
 # Avvia il servizio
 systemctl enable named
@@ -372,8 +372,8 @@ systemctl start named
 
 ```bash
 cat > /etc/resolv.conf <<'EOF'
-search oracleland.local
-nameserver 192.168.1.101
+search localdomain
+nameserver 192.168.56.101
 options timeout:1
 options attempts:5
 EOF
@@ -385,16 +385,16 @@ chattr +i /etc/resolv.conf
 ### Test DNS
 
 ```bash
-nslookup rac-scan.oracleland.local
-# Deve restituire 3 IP: 192.168.1.120, .121, .122
+nslookup rac-scan.localdomain
+# Deve restituire 3 IP: 192.168.56.105, .121, .122
 
-nslookup racstby-scan.oracleland.local
-# Deve restituire 3 IP: 192.168.1.220, .221, .222
+nslookup racstby-scan.localdomain
+# Deve restituire 3 IP: 192.168.56.115, .221, .222
 
-nslookup rac1.oracleland.local
+nslookup rac1.localdomain
 ```
 
-> 📸 **SNAPSHOT — "SNAP-02: Rete e DNS Configurati"**
+> ðŸ“¸ **SNAPSHOT â€” "SNAP-02: Rete e DNS Configurati"**
 > Hai rete statica + DNS funzionante. Se qualcosa va storto dopo, puoi tornare qui.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-02_Rete_DNS_OK"
@@ -414,7 +414,7 @@ sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
 setenforce 0
 ```
 
-> **Perché?** In un ambiente di laboratorio, firewall e SELinux aggiungono complessità non necessaria. In produzione useresti regole specifiche, ma per imparare è meglio eliminarli.
+> **PerchÃ©?** In un ambiente di laboratorio, firewall e SELinux aggiungono complessitÃ  non necessaria. In produzione useresti regole specifiche, ma per imparare Ã¨ meglio eliminarli.
 
 ---
 
@@ -431,7 +431,7 @@ yum install -y ksh libaio-devel net-tools nfs-utils \
     xorg-x11-utils xterm
 ```
 
-> **Perché oracle-database-preinstall-19c?** Questo pacchetto RPM magico fa il 70% del lavoro di preparazione OS: crea l'utente `oracle`, configura i parametri kernel (`sysctl.conf`), imposta i limiti di risorse (`limits.conf`), installa le dipendenze RPM. Senza questo, dovresti fare tutto a mano.
+> **PerchÃ© oracle-database-preinstall-19c?** Questo pacchetto RPM magico fa il 70% del lavoro di preparazione OS: crea l'utente `oracle`, configura i parametri kernel (`sysctl.conf`), imposta i limiti di risorse (`limits.conf`), installa le dipendenze RPM. Senza questo, dovresti fare tutto a mano.
 
 ---
 
@@ -440,7 +440,7 @@ yum install -y ksh libaio-devel net-tools nfs-utils \
 Il pacchetto preinstall crea l'utente `oracle` e il gruppo `oinstall`, ma per il RAC servono anche l'utente `grid` e i gruppi ASM.
 
 ```bash
-# Gruppi ASM (se non esistono già)
+# Gruppi ASM (se non esistono giÃ )
 groupadd -g 54327 asmdba   2>/dev/null
 groupadd -g 54328 asmoper  2>/dev/null
 groupadd -g 54329 asmadmin 2>/dev/null
@@ -456,7 +456,7 @@ echo "oracle" | passwd oracle --stdin
 echo "grid"   | passwd grid   --stdin
 ```
 
-> **Perché due utenti (oracle e grid)?** Questa è una best practice di sicurezza chiamata **Role Separation**. L'utente `grid` gestisce il cluster e lo storage (ASM), l'utente `oracle` gestisce solo il database. In caso di compromissione di un account, l'altro è protetto.
+> **PerchÃ© due utenti (oracle e grid)?** Questa Ã¨ una best practice di sicurezza chiamata **Role Separation**. L'utente `grid` gestisce il cluster e lo storage (ASM), l'utente `oracle` gestisce solo il database. In caso di compromissione di un account, l'altro Ã¨ protetto.
 
 ---
 
@@ -480,7 +480,7 @@ chown -R oracle:oinstall /u01/app/oracle
 chmod -R 775 /u01
 ```
 
-> **Perché questa struttura?** Oracle ha una convenzione storica: `/u01` per i binari. Il `GRID_HOME` deve essere in un path diverso da `ORACLE_BASE` per motivi di supporto Oracle (MOS Note 1373511.1).
+> **PerchÃ© questa struttura?** Oracle ha una convenzione storica: `/u01` per i binari. Il `GRID_HOME` deve essere in un path diverso da `ORACLE_BASE` per motivi di supporto Oracle (MOS Note 1373511.1).
 
 ---
 
@@ -548,7 +548,7 @@ chown oracle:oinstall /home/oracle/.db_env
 
 ## 1.10 Parametri Kernel e Limiti (Verifica)
 
-Il pacchetto `oracle-database-preinstall-19c` li ha già configurati, ma verifichiamo:
+Il pacchetto `oracle-database-preinstall-19c` li ha giÃ  configurati, ma verifichiamo:
 
 ```bash
 # Verifica sysctl
@@ -603,7 +603,7 @@ systemctl restart chronyd
 chronyc sources
 ```
 
-> **Perché?** Se i clock dei nodi del cluster divergono troppo, il Clusterware forza un "node eviction" (espelle il nodo dal cluster) per proteggere i dati.
+> **PerchÃ©?** Se i clock dei nodi del cluster divergono troppo, il Clusterware forza un "node eviction" (espelle il nodo dal cluster) per proteggere i dati.
 
 ---
 
@@ -653,7 +653,7 @@ ssh oracle@rac1 date
 ssh oracle@rac2 date
 ```
 
-> **Perché?** Durante l'installazione del Grid e del DB, Oracle copia i binari dal nodo 1 al nodo 2 via SSH. Se chiede la password, l'installazione fallisce.
+> **PerchÃ©?** Durante l'installazione del Grid e del DB, Oracle copia i binari dal nodo 1 al nodo 2 via SSH. Se chiede la password, l'installazione fallisce.
 
 ### Fix per errore INS-06006 (SCP)
 
@@ -663,7 +663,7 @@ cp -p /usr/bin/scp /usr/bin/scp.bkp
 echo '/usr/bin/scp.bkp -T $*' > /usr/bin/scp
 ```
 
-> **Perché?** In OpenSSH 9+, il comando `scp` utilizza il protocollo SFTP per default. L'installer Oracle 19c non è compatibile con questo cambiamento e fallisce con l'errore INS-06006. Questo workaround forza il vecchio comportamento.
+> **PerchÃ©?** In OpenSSH 9+, il comando `scp` utilizza il protocollo SFTP per default. L'installer Oracle 19c non Ã¨ compatibile con questo cambiamento e fallisce con l'errore INS-06006. Questo workaround forza il vecchio comportamento.
 
 ---
 
@@ -679,8 +679,8 @@ chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
 ```
 
-> 📸 **SNAPSHOT — "SNAP-03: Prerequisiti Completi (Pre-Grid)" ⭐ MILESTONE**
-> Questo è uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati.
+> ðŸ“¸ **SNAPSHOT â€” "SNAP-03: Prerequisiti Completi (Pre-Grid)" â­ MILESTONE**
+> Questo Ã¨ uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati.
 > Se l'installazione Grid fallisce, torni qui e risparmi ore.
 > **Fai questo snapshot su ENTRAMBE le VM (rac1 e rac2)!**
 > ```
@@ -690,7 +690,7 @@ chown grid:oinstall /etc/oraInst.loc
 
 ---
 
-## ✅ Checklist Fine Fase 1
+## âœ… Checklist Fine Fase 1
 
 Esegui questi controlli prima di procedere alla Fase 2:
 
@@ -702,7 +702,7 @@ hostname
 ping -c 1 rac1 && ping -c 1 rac2 && ping -c 1 rac1-priv && ping -c 1 rac2-priv
 
 # 3. DNS SCAN funzionante
-nslookup rac-scan.oracleland.local
+nslookup rac-scan.localdomain
 
 # 4. SSH senza password (grid e oracle)
 su - grid -c "ssh rac2 hostname"
@@ -724,4 +724,4 @@ ls -la /u01/app/
 
 ---
 
-**→ Prossimo: [FASE 2: Installazione Grid Infrastructure e Oracle RAC Primario](./GUIDA_FASE2_GRID_E_RAC.md)**
+**â†’ Prossimo: [FASE 2: Installazione Grid Infrastructure e Oracle RAC Primario](./GUIDA_FASE2_GRID_E_RAC.md)**
