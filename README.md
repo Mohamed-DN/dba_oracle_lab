@@ -14,7 +14,7 @@ STEP 0: LEGGI PRIMA LA TEORIA (2 ore)
   |
   |  1. GUIDA_ARCHITETTURA_ORACLE.md   <-- SGA, PGA, Redo, Undo, Temp, ASM
   |  2. GUIDA_COMANDI_DBA.md           <-- Query SQL essenziali, script DBA
-  |  3. PIANO_STUDIO_GIORNALIERO.md    <-- Il TUO piano: 25 giorni x 3h
+  |  3. PIANO_STUDIO_GIORNALIERO.md    <-- Il TUO piano: 40 giorni x 3h
   |
   v
 STEP 1-7: COSTRUISCI IL LAB (Settimane 1-4)
@@ -42,6 +42,13 @@ STEP 12-14: CLOUD + DBA PRO (Settimana 5)
   | 16. Cloud GoldenGate su OCI ARM Free Tier
   | 17. Attivita DBA (Batch, AWR, Patching, DataPump, Security)
   | 18. MAA Best Practices + Validazione
+  |
+  v
+STEP 15-17: POSTGRES + ESAMI (Settimane 6-8)
+  |
+  | 19. Migrazione Oracle -> PostgreSQL con GoldenGate
+  | 20. Ripasso per Esame 1Z0-082 (Admin I + SQL)
+  | 21. Ripasso per Esame 1Z0-083 (DBA Professional 2)
   |
   v
 COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
