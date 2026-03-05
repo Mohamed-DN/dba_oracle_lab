@@ -690,9 +690,10 @@ SELECT TIMESTAMP '2025-01-01 00:00:00' + INTERVAL '10:30' HOUR TO MINUTE FROM du
 
 ---
 
-## PARTE 11: DBA Professional 2 (1Z0-083)
+## PARTE 11: DBA Professional 2 (1Z0-083) — Zero to Hero
 
-> 📖 Riferimento Lab: Tutte le guide del lab coprono questi argomenti avanzati.
+> 📖 **Esame**: 1Z0-083 — Oracle Database Administration II
+> Copre: Multitenant, RMAN avanzato, Deploy/Patch/Upgrade, 19c New Features, Performance Tuning, SQL Tuning, ASM, HA, Security.
 
 ### 11.1 ASM (Automatic Storage Management)
 
@@ -896,7 +897,663 @@ SELECT patch_id, status FROM dba_registry_sqlpatch;
 
 ---
 
-## ✅ Mappa Esame → Lab
+### 11.8 Multitenant Architecture — CDB e PDB (Approfondimento)
+
+> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md)
+> **Corso**: Oracle Database: Managing Multitenant Architecture Ed 1
+
+#### 11.8.1 Creare CDB e PDB
+
+```sql
+-- Struttura di un CDB
+-- CDB$ROOT (root container) → contiene i metadati comuni
+-- PDB$SEED (template) → usato come base per creare nuove PDB
+-- PDB1, PDB2... → le Pluggable Database reali
+
+-- Verifica se sei in un CDB
+SELECT name, cdb, open_mode FROM v$database;
+SELECT con_id, name, open_mode FROM v$pdbs;
+
+-- Crea PDB da seed
+CREATE PLUGGABLE DATABASE pdb_app
+  ADMIN USER pdbadmin IDENTIFIED BY "PdbApp123!"
+  STORAGE (MAXSIZE 10G MAX_SHARED_TEMP_SIZE 512M)
+  DEFAULT TABLESPACE app_data
+    DATAFILE '+DATA' SIZE 500M AUTOEXTEND ON
+  FILE_NAME_CONVERT = ('+DATA/RACDB/pdbseed/', '+DATA/RACDB/pdb_app/');
+
+-- Apri la PDB e salvane lo stato per auto-start dopo reboot
+ALTER PLUGGABLE DATABASE pdb_app OPEN;
+ALTER PLUGGABLE DATABASE pdb_app SAVE STATE;
+
+-- Connettiti alla PDB
+ALTER SESSION SET CONTAINER = pdb_app;
+-- oppure
+CONNECT pdbadmin/PdbApp123!@rac-scan:1521/pdb_app
+```
+
+> **Perché SAVE STATE?** Senza SAVE STATE, dopo un riavvio del CDB le PDB restano in stato MOUNTED. Il DBA deve aprirle a mano ogni volta. SAVE STATE automatizza l'apertura.
+
+#### 11.8.2 Gestione CDB e PDB
+
+```sql
+-- Cambia modalità PDB
+ALTER PLUGGABLE DATABASE pdb_app CLOSE IMMEDIATE;
+ALTER PLUGGABLE DATABASE pdb_app OPEN READ ONLY;  -- Active Data Guard style
+ALTER PLUGGABLE DATABASE pdb_app OPEN READ WRITE;
+
+-- Parametri: CDB-level vs PDB-level
+-- Alcuni parametri si possono settare per PDB:
+ALTER SESSION SET CONTAINER = pdb_app;
+ALTER SYSTEM SET open_cursors = 400 SCOPE=BOTH;
+
+-- Verifica parametri modificabili a livello PDB
+SELECT name, ispdb_modifiable FROM v$system_parameter WHERE ispdb_modifiable = 'TRUE';
+
+-- Service names per PDB (ogni PDB ha il suo servizio)
+SELECT name, network_name, pdb FROM cdb_services;
+```
+
+#### 11.8.3 Clonazione e Plug/Unplug
+
+```sql
+-- Clona PDB (hot clone — 12.2+)
+CREATE PLUGGABLE DATABASE pdb_clone FROM pdb_app;
+ALTER PLUGGABLE DATABASE pdb_clone OPEN;
+
+-- Duplicate PDB attiva (richiede ARCHIVELOG)
+CREATE PLUGGABLE DATABASE pdb_copy FROM pdb_app@dblink_to_remote;
+
+-- Unplug PDB (la stacca dal CDB)
+ALTER PLUGGABLE DATABASE pdb_app CLOSE IMMEDIATE;
+ALTER PLUGGABLE DATABASE pdb_app UNPLUG INTO '/tmp/pdb_app.xml';
+DROP PLUGGABLE DATABASE pdb_app KEEP DATAFILES;
+
+-- Plug PDB in un altro CDB (o nello stesso)
+CREATE PLUGGABLE DATABASE pdb_app USING '/tmp/pdb_app.xml'
+  SOURCE_FILE_NAME_CONVERT = ('+DATA/OLDCDB/', '+DATA/RACDB/');
+ALTER PLUGGABLE DATABASE pdb_app OPEN;
+```
+
+#### 11.8.4 Application Containers (19c)
+
+```sql
+-- Application Root: un CDB dentro un CDB per gestire app multi-tenant
+ALTER PLUGGABLE DATABASE APPLICATION app_root BEGIN INSTALL 'MYAPP' 1.0;
+  -- Crea oggetti condivisi nell'app root
+  CREATE TABLE common_config (key VARCHAR2(100), value VARCHAR2(500)) SHARING=DATA;
+ALTER PLUGGABLE DATABASE APPLICATION app_root END INSTALL 'MYAPP' 1.0;
+
+-- Le PDB "figlie" ereditano le tabelle dall'app root
+-- Sync PDB dall'application root:
+ALTER SESSION SET CONTAINER = app_pdb1;
+ALTER PLUGGABLE DATABASE APPLICATION MYAPP SYNC;
+```
+
+#### 11.8.5 Local Undo vs Shared Undo
+
+```sql
+-- Shared Undo (default CDB): un solo undo tablespace nel CDB$ROOT
+-- Local Undo: ogni PDB ha il suo undo tablespace
+
+-- Verifica modalità attuale
+SELECT PROPERTY_VALUE FROM database_properties WHERE PROPERTY_NAME = 'LOCAL_UNDO_ENABLED';
+
+-- Abilita Local Undo (richiede riavvio in UPGRADE mode)
+STARTUP UPGRADE;
+ALTER DATABASE LOCAL UNDO ON;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+```
+
+> **Perché Local Undo?** Con Shared Undo, non puoi fare Flashback PDB (perché l'undo è condiviso). Con Local Undo, ogni PDB ha il proprio undo e puoi fare Flashback PDB indipendentemente!
+
+#### 11.8.6 Security Multitenant
+
+```sql
+-- Common User (utente nel CDB$ROOT, visibile in tutte le PDB)
+CREATE USER C##admin IDENTIFIED BY "Admin123!" CONTAINER=ALL;
+GRANT DBA TO C##admin CONTAINER=ALL;
+
+-- Local User (utente solo in una PDB specifica)
+ALTER SESSION SET CONTAINER = pdb_app;
+CREATE USER app_user IDENTIFIED BY "App123!";
+
+-- PDB Lockdown Profiles (limita cosa possono fare le PDB)
+CREATE LOCKDOWN PROFILE prod_lockdown;
+ALTER LOCKDOWN PROFILE prod_lockdown DISABLE STATEMENT = ('ALTER SYSTEM');
+ALTER LOCKDOWN PROFILE prod_lockdown DISABLE OPTION = ('NETWORK ACCESS');
+ALTER SYSTEM SET PDB_LOCKDOWN = 'prod_lockdown';
+
+-- Audit in CDB e PDB
+CREATE AUDIT POLICY pdb_security_audit
+  ACTIONS CREATE USER, DROP USER, ALTER USER, GRANT, REVOKE;
+AUDIT POLICY pdb_security_audit;
+
+-- Verifica audit
+SELECT * FROM unified_audit_trail WHERE dbusername = 'APP_USER' ORDER BY event_timestamp DESC;
+```
+
+---
+
+### 11.9 RMAN Backup & Recovery Workshop (Approfondimento)
+
+> 📖 Riferimento Lab: [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
+> **Corso**: Oracle Database: Backup and Recovery Workshop
+
+#### 11.9.1 Strategie e Terminologia
+
+```bash
+# Backup Set vs Image Copy
+RMAN> BACKUP AS BACKUPSET DATABASE;    # Compresso, solo blocchi usati
+RMAN> BACKUP AS COPY DATABASE;         # Copia 1:1, piu veloce per restore
+
+# Duplexed backup sets (2 copie dello stesso backup)
+RMAN> CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO BACKUPSET;
+RMAN> BACKUP COPIES 2 DATABASE;
+
+# Archival backup (per long term retention)
+RMAN> BACKUP DATABASE TAG 'ARCHIVAL_Q1_2025' KEEP UNTIL TIME 'SYSDATE+365';
+
+# Multi-section backup (parallelo per file > 2GB)
+RMAN> BACKUP SECTION SIZE 2G DATABASE;
+
+# Backup ASM metadata
+RMAN> BACKUP DEVICE TYPE DISK FORMAT '/tmp/asm_md_%U' SPFILE;
+-- Per backup completo ASM metadata: asmcmd md_backup
+```
+
+#### 11.9.2 Backup CDB e PDB
+
+```bash
+# Backup intero CDB
+RMAN> BACKUP DATABASE PLUS ARCHIVELOG;
+
+# Backup singola PDB
+RMAN> BACKUP PLUGGABLE DATABASE pdb_app PLUS ARCHIVELOG;
+
+# Backup datafile specifici di una PDB
+RMAN> BACKUP DATAFILE '+DATA/RACDB/pdb_app/users01.dbf';
+
+# Restore e Recovery di una PDB (le altre PDB restano online!)
+RMAN> ALTER PLUGGABLE DATABASE pdb_app CLOSE;
+RMAN> RESTORE PLUGGABLE DATABASE pdb_app;
+RMAN> RECOVER PLUGGABLE DATABASE pdb_app;
+RMAN> ALTER PLUGGABLE DATABASE pdb_app OPEN RESETLOGS;
+```
+
+#### 11.9.3 Flashback Technologies
+
+```sql
+-- Flashback Database (richiede Flashback ON + ARCHIVELOG)
+ALTER DATABASE FLASHBACK ON;
+
+-- Flashback intero database
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+FLASHBACK DATABASE TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '2' HOUR);
+ALTER DATABASE OPEN RESETLOGS;
+
+-- Flashback PDB (richiede Local Undo!)
+ALTER PLUGGABLE DATABASE pdb_app CLOSE;
+FLASHBACK PLUGGABLE DATABASE pdb_app TO TIMESTAMP
+  (SYSTIMESTAMP - INTERVAL '1' HOUR);
+ALTER PLUGGABLE DATABASE pdb_app OPEN RESETLOGS;
+
+-- Flashback Table
+FLASHBACK TABLE hr.employees TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
+
+-- Flashback Drop (recupera tabella dal cestino)
+FLASHBACK TABLE hr.employees TO BEFORE DROP;
+SELECT * FROM recyclebin;
+```
+
+#### 11.9.4 Duplication
+
+```bash
+# Duplicate database (per creare standby o clone di test)
+RMAN> DUPLICATE TARGET DATABASE TO testdb
+  FROM ACTIVE DATABASE
+  SPFILE
+    SET db_unique_name='TESTDB'
+    SET log_archive_dest_1='LOCATION=+RECO'
+  NOFILENAMECHECK;
+
+# Duplicate PDB attiva
+RMAN> DUPLICATE TARGET DATABASE TO testdb
+  PLUGGABLE DATABASE pdb_app
+  FROM ACTIVE DATABASE;
+```
+
+#### 11.9.5 Diagnosing Failures e Block Corruption
+
+```bash
+# Detect corruzioni
+RMAN> VALIDATE DATABASE;
+RMAN> VALIDATE DATAFILE 5 BLOCK 100 TO 200;
+
+# Ripara blocchi corrotti con Block Media Recovery
+RMAN> BLOCKRECOVER DATAFILE 5 BLOCK 100;
+
+# Data Recovery Advisor (DRA)
+RMAN> LIST FAILURE;
+RMAN> ADVISE FAILURE;
+RMAN> REPAIR FAILURE;
+
+# Verifica integrità con DBVerify
+dbv FILE='+DATA/RACDB/datafile/users01.dbf' BLOCKSIZE=8192
+```
+
+#### 11.9.6 RMAN Troubleshooting e Tuning
+
+```bash
+# Interpreta output RMAN
+RMAN> LIST BACKUP SUMMARY;           # Lista tutti i backup
+RMAN> LIST BACKUP OF DATABASE;       # Backup del database
+RMAN> REPORT OBSOLETE;               # Backup scaduti
+RMAN> DELETE OBSOLETE;               # Rimuove backup scaduti
+
+# Performance tuning
+RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 4;  # Parallelismo
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK MAXPIECESIZE 2G;
+
+# Recovery catalog
+RMAN> CONNECT CATALOG rman_user/password@catdb
+RMAN> REGISTER DATABASE;
+RMAN> RESYNC CATALOG;
+```
+
+---
+
+### 11.10 Deploy, Patch e Upgrade Workshop
+
+> 📖 Riferimento Lab: [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md), [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md)
+> **Corso**: Oracle Database: Deploy, Patch and Upgrade Workshop
+
+#### 11.10.1 Grid Infrastructure per Standalone Server
+
+```bash
+# Oracle Restart (Grid Infrastructure Standalone) — gestisce auto-restart  
+# di database, listener, ASM su un singolo server
+srvctl add database -d MYDB -o $ORACLE_HOME
+srvctl add listener -l LISTENER
+srvctl enable database -d MYDB
+srvctl start database -d MYDB
+
+# Verifica componenti gestiti da Oracle Restart
+crsctl stat res -t
+```
+
+#### 11.10.2 Image e RPM-Based Installation (19c)
+
+```bash
+# 19c introduce l'installazione basata su image (zip → ORACLE_HOME)
+# Non c'e piu il runInstaller tradizionale per il software
+
+# Grid Infrastructure
+unzip -q LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
+
+# Database (lo zip E il software!)
+mkdir -p /u01/app/oracle/product/19.0.0/dbhome_1
+unzip -q LINUX.X64_193000_db_home.zip -d /u01/app/oracle/product/19.0.0/dbhome_1
+
+# RPM-based installation (alternativa)
+yum install -y oracle-database-ee-19c
+```
+
+#### 11.10.3 DBCA Create/Delete/Configure
+
+```bash
+# Crea database con DBCA silent
+dbca -silent -createDatabase \
+  -templateName General_Purpose.dbc \
+  -gdbName MYDB -sid MYDB \
+  -createAsContainerDatabase true \
+  -numberOfPDBs 1 -pdbName pdb1 \
+  -characterSet AL32UTF8 \
+  -memoryPercentage 40 \
+  -storageType ASM -diskGroupName +DATA \
+  -recoveryGroupName +RECO \
+  -sysPassword "SysPass123!" -systemPassword "SysPass123!" \
+  -pdbAdminPassword "PdbPass123!"
+
+# Deleta database
+dbca -silent -deleteDatabase -sourceDB MYDB
+
+# Configura database esistente (aggiungi componenti)
+dbca -silent -configureDatabase -sourceDB MYDB \
+  -registerWithDirService false
+```
+
+#### 11.10.4 Upgrade Oracle Database
+
+```bash
+# Pre-upgrade check
+$NEW_ORACLE_HOME/jdk/bin/java -jar $NEW_ORACLE_HOME/rdbms/admin/preupgrade.jar \
+  TERMINAL TEXT DIR /tmp/preupgrade
+
+# Upgrade con DBUA (GUI)
+$NEW_ORACLE_HOME/bin/dbua
+
+# Upgrade manuale
+# 1. Shutdown con vecchia home
+sqlplus / as sysdba <<< "SHUTDOWN IMMEDIATE;"
+
+# 2. Cambia ORACLE_HOME alla nuova versione
+export ORACLE_HOME=/u01/app/oracle/product/21.0.0/dbhome_1
+
+# 3. Startup upgrade
+sqlplus / as sysdba <<< "STARTUP UPGRADE;"
+
+# 4. Esegui upgrade script
+$ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/catctl.pl \
+  -l /tmp/upgrade_log -n 4 $ORACLE_HOME/rdbms/admin/catupgrd.sql
+
+# 5. Post-upgrade
+@$ORACLE_HOME/rdbms/admin/utlrp.sql     -- Ricompila invalidi
+@$ORACLE_HOME/rdbms/admin/catcon.pl -n 1 -e -b postupgrade \
+  -d $ORACLE_HOME/rdbms/admin postupgrade_fixups.sql
+```
+
+#### 11.10.5 Rapid Home Provisioning (RHP)
+
+```bash
+# RHP permette di creare, patchare e upgradare Oracle Homes
+# in modo centralizzato via Gold Images
+
+# Crea Gold Image da una home esistente
+rhpctl add image -image db19_gi -path /u01/app/19.0.0/grid
+
+# Provisiona una nuova home da Gold Image
+rhpctl add workingcopy -workingcopy wc_db19 -image db19_gi \
+  -path /u01/app/oracle/product/19.0.0/dbhome_2
+```
+
+---
+
+### 11.11 Oracle Database 19c: New Features
+
+#### 11.11.1 Automatic Indexing
+
+```sql
+-- 19c crea e gestisce indici automaticamente
+EXEC DBMS_AUTO_INDEX.CONFIGURE('AUTO_INDEX_MODE','IMPLEMENT');
+-- Monitora
+SELECT * FROM DBA_AUTO_INDEX_CONFIG;
+SELECT index_name, table_name, visibility FROM DBA_AUTO_INDEX_IND_ACTIONS;
+```
+
+#### 11.11.2 Real-Time Statistics (19c+)
+
+```sql
+-- Le statistiche vengono raccolte in tempo reale durante DML
+-- Abilitato di default, nessuna configurazione necessaria
+-- Verifica
+SELECT table_name, num_rows, last_analyzed, notes
+FROM dba_tab_statistics WHERE owner = 'HR' AND notes IS NOT NULL;
+```
+
+#### 11.11.3 SQL Quarantine (19c)
+
+```sql
+-- Blocca SQL statement che consumano troppe risorse
+BEGIN
+  DBMS_SQLQ.CREATE_QUARANTINE_BY_SQL_ID(
+    sql_id        => 'abc123xyz',
+    plan_hash_value => 12345,
+    quarantine_name => 'q_bad_sql');
+END;
+/
+```
+
+#### 11.11.4 Private Temporary Tables (19c)
+
+```sql
+-- Visibili SOLO nella sessione che le crea, scompaiono a fine transazione
+CREATE PRIVATE TEMPORARY TABLE ORA$PTT_temp_results (
+  id NUMBER, result VARCHAR2(200)
+) ON COMMIT DROP DEFINITION;
+```
+
+---
+
+### 11.12 Performance Monitoring e Tuning (Approfondimento)
+
+> 📖 Riferimento Lab: [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md)
+> **Corso**: Oracle Database: Administration Workshop — Performance Monitoring
+
+#### 11.12.1 Memory Management
+
+```sql
+-- Automatic Memory Management (AMM) — Oracle gestisce SGA+PGA
+ALTER SYSTEM SET MEMORY_TARGET = 4G SCOPE=SPFILE;
+ALTER SYSTEM SET MEMORY_MAX_TARGET = 4G SCOPE=SPFILE;
+
+-- Automatic Shared Memory Management (ASMM) — solo SGA automatica
+ALTER SYSTEM SET SGA_TARGET = 3G SCOPE=BOTH;       -- SGA totale
+ALTER SYSTEM SET PGA_AGGREGATE_TARGET = 1G SCOPE=BOTH;
+
+-- Monitora allocazione
+SELECT component, current_size/1024/1024 MB FROM v$sga_dynamic_components;
+SELECT name, value/1024/1024 MB FROM v$pgastat WHERE name LIKE '%target%';
+
+-- Memory Advisor
+SELECT * FROM v$memory_target_advice ORDER BY memory_size;
+SELECT * FROM v$sga_target_advice ORDER BY sga_size;
+```
+
+#### 11.12.2 AWR (Automatic Workload Repository)
+
+```sql
+-- AWR cattura snapshots automatici ogni ora
+-- Retention default: 8 giorni
+
+-- Configura
+EXEC DBMS_WORKLOAD_REPOSITORY.MODIFY_SNAPSHOT_SETTINGS(interval=>30, retention=>43200);
+-- interval=30 minuti, retention=30 giorni
+
+-- Crea snapshot manuale
+EXEC DBMS_WORKLOAD_REPOSITORY.CREATE_SNAPSHOT;
+
+-- Genera AWR Report
+@$ORACLE_HOME/rdbms/admin/awrrpt.sql
+-- Scegli: HTML, snap_begin, snap_end
+
+-- AWR per RAC (Global AWR)
+@$ORACLE_HOME/rdbms/admin/awrgrpt.sql
+
+-- AWR Diff (confronta 2 periodi)
+@$ORACLE_HOME/rdbms/admin/awrddrpt.sql
+```
+
+#### 11.12.3 ADDM (Automatic Database Diagnostic Monitor)
+
+```sql
+-- ADDM analizza AWR e produce raccomandazioni automatiche
+@$ORACLE_HOME/rdbms/admin/addmrpt.sql
+
+-- Programmaticamente
+DECLARE
+  task_name VARCHAR2(64) := 'ADDM_TASK_1';
+BEGIN
+  DBMS_ADVISOR.CREATE_TASK('ADDM', task_name);
+  DBMS_ADVISOR.SET_TASK_PARAMETER(task_name, 'START_SNAPSHOT', 100);
+  DBMS_ADVISOR.SET_TASK_PARAMETER(task_name, 'END_SNAPSHOT', 110);
+  DBMS_ADVISOR.EXECUTE_TASK(task_name);
+END;
+/
+SELECT DBMS_ADVISOR.GET_TASK_REPORT('ADDM_TASK_1') FROM dual;
+```
+
+#### 11.12.4 Wait Events, Sessions e Services
+
+```sql
+-- Top wait events
+SELECT event, total_waits, time_waited_micro/1000000 secs
+FROM v$system_event WHERE wait_class != 'Idle' ORDER BY time_waited_micro DESC;
+
+-- Sessioni attive (cosa stanno aspettando?)
+SELECT sid, serial#, username, event, wait_class, state, seconds_in_wait
+FROM v$session WHERE status = 'ACTIVE' AND username IS NOT NULL;
+
+-- ASH (Active Session History) — campionamento ogni secondo
+SELECT sql_id, event, COUNT(*) samples
+FROM v$active_session_history
+WHERE sample_time > SYSTIMESTAMP - INTERVAL '10' MINUTE
+GROUP BY sql_id, event ORDER BY samples DESC;
+
+-- Monitora Services
+SELECT service_name, stat_name, value FROM v$service_stats;
+```
+
+#### 11.12.5 Metriche, Soglie e Alert
+
+```sql
+-- Visualizza metriche
+SELECT metric_name, value, metric_unit FROM v$sysmetric WHERE group_id = 2;
+
+-- Configura soglie di alert
+EXEC DBMS_SERVER_ALERT.SET_THRESHOLD(
+  metrics_id   => DBMS_SERVER_ALERT.TABLESPACE_PCT_FULL,
+  warning_value => '85',
+  critical_value => '95',
+  observation_period => 1,
+  consecutive_occurrences => 1,
+  instance_name => NULL,
+  object_type => DBMS_SERVER_ALERT.OBJECT_TYPE_TABLESPACE,
+  object_name => 'USERS');
+
+-- Verifica alert
+SELECT * FROM dba_outstanding_alerts;
+SELECT * FROM dba_alert_history ORDER BY creation_time DESC;
+```
+
+#### 11.12.6 Resource Manager in CDB/PDB
+
+```sql
+-- Resource Manager per CDB — controlla risorse tra le PDB
+BEGIN
+  DBMS_RESOURCE_MANAGER.CREATE_PENDING_AREA();
+  
+  -- Crea CDB Resource Plan
+  DBMS_RESOURCE_MANAGER.CREATE_CDB_PLAN(plan => 'CDB_PROD_PLAN', comment => 'Prod');
+  
+  -- Assegna shares e limiti alle PDB
+  DBMS_RESOURCE_MANAGER.CREATE_CDB_PLAN_DIRECTIVE(
+    plan => 'CDB_PROD_PLAN',
+    pluggable_database => 'PDB_APP',
+    shares => 3,              -- 3x risorse rispetto a PDB di test
+    utilization_limit => 80,  -- Max 80% CPU
+    parallel_server_limit => 50);
+  
+  DBMS_RESOURCE_MANAGER.SUBMIT_PENDING_AREA();
+END;
+/
+
+ALTER SYSTEM SET RESOURCE_MANAGER_PLAN='CDB_PROD_PLAN';
+```
+
+---
+
+### 11.13 SQL Tuning (Approfondimento)
+
+> **Corso**: Oracle Database: Administration Workshop — Tuning SQL Statements
+
+#### 11.13.1 Oracle Optimizer
+
+```sql
+-- Il Cost-Based Optimizer (CBO) sceglie il piano di esecuzione migliore
+-- Fattori: statistiche, indici, vincoli, parametri
+
+-- Visualizza il piano di esecuzione
+EXPLAIN PLAN FOR SELECT * FROM hr.employees WHERE department_id = 50;
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-- Piano di esecuzione reale (con statistiche runtime)
+SELECT /*+ GATHER_PLAN_STATISTICS */ * FROM hr.employees WHERE department_id = 50;
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL, NULL, 'ALLSTATS LAST'));
+
+-- Hints (forzare un comportamento dell'optimizer)
+SELECT /*+ FULL(e) */ * FROM hr.employees e WHERE employee_id = 100;
+SELECT /*+ INDEX(e idx_emp_dept) */ * FROM hr.employees e WHERE department_id = 50;
+SELECT /*+ PARALLEL(e, 4) */ * FROM hr.employees e;
+```
+
+#### 11.13.2 SQL Tuning Advisor
+
+```sql
+-- Crea e esegui task di tuning per un SQL specifico
+DECLARE
+  l_task VARCHAR2(64);
+BEGIN
+  l_task := DBMS_SQLTUNE.CREATE_TUNING_TASK(
+    sql_id          => '3nkd305d1g5a2',
+    scope           => DBMS_SQLTUNE.SCOPE_COMPREHENSIVE,
+    time_limit      => 300,
+    task_name       => 'tune_slow_query');
+  DBMS_SQLTUNE.EXECUTE_TUNING_TASK('tune_slow_query');
+END;
+/
+
+-- Leggi il report (raccomandazioni)
+SET LONG 10000
+SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('tune_slow_query') FROM dual;
+
+-- Accetta un SQL Profile (se raccomandato)
+EXEC DBMS_SQLTUNE.ACCEPT_SQL_PROFILE(task_name => 'tune_slow_query', replace => TRUE);
+```
+
+#### 11.13.3 Optimizer Statistics
+
+```sql
+-- Raccogli statistiche (FONDAMENTALE per buon piano di esecuzione)
+EXEC DBMS_STATS.GATHER_DATABASE_STATS;
+EXEC DBMS_STATS.GATHER_SCHEMA_STATS('HR');
+EXEC DBMS_STATS.GATHER_TABLE_STATS('HR', 'EMPLOYEES');
+EXEC DBMS_STATS.GATHER_TABLE_STATS('HR', 'EMPLOYEES', METHOD_OPT => 'FOR ALL COLUMNS SIZE AUTO');
+
+-- Statistiche pendenti (test-before-publish)
+EXEC DBMS_STATS.SET_TABLE_PREFS('HR','EMPLOYEES','PUBLISH','FALSE');
+-- Raccogli (vanno in pending)
+EXEC DBMS_STATS.GATHER_TABLE_STATS('HR','EMPLOYEES');
+-- Verifica impatto senza pubblicare
+SELECT * FROM dba_tab_pending_stats;
+-- Pubblica se soddisfatto
+EXEC DBMS_STATS.PUBLISH_PENDING_STATS('HR','EMPLOYEES');
+
+-- Blocca statistiche (evita che il job auto le sovrascriva)
+EXEC DBMS_STATS.LOCK_TABLE_STATS('HR', 'EMPLOYEES');
+```
+
+#### 11.13.4 SQL Access Advisor
+
+```sql
+-- Raccomanda indici, viste materializzate e partizioni
+DECLARE
+  task_name VARCHAR2(64) := 'access_advisor_task';
+BEGIN
+  DBMS_ADVISOR.CREATE_TASK('SQL Access Advisor', task_name);
+  
+  -- Usa workload dall'AWR
+  DBMS_ADVISOR.SET_TASK_PARAMETER(task_name, 'ANALYSIS_SCOPE', 'ALL');
+  DBMS_ADVISOR.SET_TASK_PARAMETER(task_name, 'MODE', 'COMPREHENSIVE');
+  
+  -- Aggiungi SQL dal cache
+  DBMS_ADVISOR.ADD_STS_REF(task_name, 'HR', 'STS_HR_WORKLOAD');
+  
+  DBMS_ADVISOR.EXECUTE_TASK(task_name);
+END;
+/
+
+-- Leggi raccomandazioni
+SELECT DBMS_ADVISOR.GET_TASK_SCRIPT(task_name => 'access_advisor_task') FROM dual;
+```
+
+---
+
+## ✅ Mappa Completa Esame → Lab
+
+### 1Z0-082 — Oracle Database Administration I + SQL
 
 | Argomento Esame | Dove lo Pratichi nel Lab |
 |---|---|
@@ -906,18 +1563,27 @@ SELECT patch_id, status FROM dba_registry_sqlpatch;
 | Storage Management | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
 | Data Pump / SQL*Loader | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
 | Net Services / Listener | [GUIDA_LISTENER_SERVICES_DBA.md](./GUIDA_LISTENER_SERVICES_DBA.md) |
-| Tablespaces | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
+| Tablespaces / Undo | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
+| SQL Fundamentals | Parte 10 di questa guida |
+
+### 1Z0-083 — Oracle Database Administration II (DBA Professional 2)
+
+| Argomento Esame | Dove lo Pratichi nel Lab |
+|---|---|
 | ASM | [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md) + [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md) |
-| RAC | [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md) |
+| RAC (High Availability) | [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md) |
 | Data Guard | [Fase 3](./GUIDA_FASE3_RAC_STANDBY.md) + [Fase 4](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
-| RMAN | [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md) |
-| CDB/PDB | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) |
-| Performance Tuning | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
+| Switchover/Failover | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) + [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) |
+| Multitenant (CDB/PDB) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.8 |
+| RMAN Backup/Recovery | [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md) + Sezione 11.9 |
+| Flashback Technologies | Sezione 11.9.3 |
+| Deploy/Patch/Upgrade | [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md) + Sezione 11.10 |
+| 19c New Features | Sezione 11.11 |
+| Performance Tuning (AWR/ADDM) | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) + Sezione 11.12 |
+| SQL Tuning | Sezione 11.13 |
+| Security (TDE, Audit) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.6 |
 | GoldenGate | [Fase 5](./GUIDA_FASE5_GOLDENGATE.md) |
-| Switchover/Failover | [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md) + [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md) |
-| Security | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) |
-| Patching | [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md) |
-| Oracle→PostgreSQL | [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
+| Oracle→PostgreSQL | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
 
 ---
 
