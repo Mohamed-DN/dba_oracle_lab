@@ -59,7 +59,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 |---|---|---|---|
 | 1 | **Architettura Oracle** | [GUIDA_ARCHITETTURA](./GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, Temp, ASM, Cache Fusion |
 | 2 | **Comandi DBA** | [GUIDA_COMANDI_DBA](./GUIDA_COMANDI_DBA.md) | 100+ query SQL, script Oracle Base, health check |
-| 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
+| 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
 | 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 25 giorni x 3h/giorno (5 settimane), tips CV |
 
 ---
