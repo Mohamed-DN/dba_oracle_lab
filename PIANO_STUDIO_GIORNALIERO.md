@@ -1,8 +1,8 @@
 # 📅 Piano di Studio Giornaliero — 3 Ore al Giorno
 
-> **Obiettivo**: Completare l'intero lab Oracle RAC + Data Guard + GoldenGate + Cloud.
+> **Obiettivo**: Completare l'intero lab Oracle RAC + Data Guard + GoldenGate + Cloud + Migrazione PostgreSQL.
 > **Ritmo**: 3 ore al giorno, 5 giorni a settimana.
-> **Durata**: 5 settimane (25 giorni).
+> **Durata**: 6 settimane (30 giorni).
 
 ---
 
@@ -48,7 +48,7 @@
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 1h: Clona rac1 → rac2             ║                           ║
 ║ Giorno 4  ║   (aggiusta hostname, IP)            ║ rac1↔rac2 ping+SSH OK    ║
-║           ║ 💻 1h: Dischi ASM (oracleasm/udev)   ║ Dischi ASM visibili       ║
+║           ║ 💻 1h: Dischi ASM (oracleasm/ASMLib) ║ Dischi ASM visibili       ║
 ║           ║ 💻 1h: cluvfy → tutti i check PASSED ║ 📸 SNAP-03 ⭐            ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 2h: Grid installer (GUI o silent) ║                           ║
@@ -213,15 +213,52 @@
 ## 📊 Progresso Visivo
 
 ```
-Giorno:  1    5    10   15   20   25
-         │    │    │    │    │    │
+Giorno:  1    5    10   15   20   25   30
+         │    │    │    │    │    │    │
 Sett 1:  ████████████              Teoria + VM + OS + Grid
 Sett 2:       ████████████         Database + Standby + RMAN Dup
 Sett 3:            ████████████    DG + GG + Backup
 Sett 4:                 ███████████ Switch/Fail + Listener + DBA
 Sett 5:                      ██████████ Cloud + MAA + Ripasso
-         │    │    │    │    │    │
-         S1   S1   S2   S3   S4   S5
+Sett 6:                           ██████████ Esame + Oracle→PG
+         │    │    │    │    │    │    │
+         S1   S1   S2   S3   S4   S5   S6
+```
+
+---
+
+## 🗓️ SETTIMANA 6: Ripasso Esame + Migrazione Oracle → PostgreSQL (Giorni 26-30)
+
+> **Obiettivo**: Ripasso completo argomenti esame (1Z0-082 + 1Z0-083), migrazione Oracle→PostgreSQL con GoldenGate.
+
+```
+╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
+║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 📖 1.5h: Leggi GUIDA_ESAME Parti 1-5 ║                           ║
+║ Giorno 26 ║   (Architettura, Instance, Users,    ║ Concetti base rivisti     ║
+║           ║    Storage, Data Movement)            ║                           ║
+║           ║ 💻 1.5h: Esercizi SQL (Parte 10)     ║ SQL fluente               ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 📖 1h: Leggi GUIDA_ESAME Parti 6-9   ║                           ║
+║ Giorno 27 ║   (Tools, Net Services, Tablespace,  ║ Net Services + Undo OK    ║
+║           ║    Undo)                              ║                           ║
+║           ║ 💻 2h: Leggi Parte 11 (DBA Pro 2)    ║ 1Z0-083 topics rivisti    ║
+║           ║   AWR/ADDM/ASH, Resource Manager      ║                           ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 📖 30min: Leggi GUIDA_MIGRAZIONE_PG  ║                           ║
+║ Giorno 28 ║ 💻 1h: Installa PostgreSQL 16         ║ PG installato             ║
+║           ║ 💻 1h: ora2pg + converti schema       ║ Schema HR su PG           ║
+║           ║ 💻 30min: Configura ODBC + GG for PG  ║ GG for PG pronto          ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 💻 1h: Configura Extract + Pump       ║                           ║
+║ Giorno 29 ║ 💻 1h: Initial Load + Replicat        ║ Replica Oracle→PG attiva  ║
+║           ║ 💻 1h: Test CDC (INSERT/UPDATE/DELETE)║ CDC funzionante!          ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 💻 1h: Cutover simulato              ║                           ║
+║ Giorno 30 ║ 💻 1h: Validazione post-migrazione    ║ Migrazione completata!    ║
+║           ║ 📝 1h: Aggiorna CV + ripasso finale   ║ 🏆 LAB COMPLETO! 🏆       ║
+╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
 ```
 
 ---
@@ -249,6 +286,7 @@ Sett 5:                      ██████████ Cloud + MAA + Ripass
 │  ✅ Oracle Data Guard (Physical Standby, DGMGRL, ADG)        │
 │  ✅ Data Guard Switchover & Failover (FSFO, Reinstate)       │
 │  ✅ Oracle GoldenGate (Integrated Extract, CDC, Migration)   │
+│  ✅ Oracle → PostgreSQL Migration con GoldenGate             │
 │  ✅ Oracle Cloud Infrastructure (OCI) — Free Tier ARM        │
 │  ✅ Hybrid Architecture (On-Prem → Cloud via SSH Tunnel)     │
 │  ✅ Zero-Downtime Migration con GoldenGate                   │
@@ -256,15 +294,17 @@ Sett 5:                      ██████████ Cloud + MAA + Ripass
 │  ✅ CDB/PDB Multitenant Architecture                         │
 │  ✅ Oracle Linux Administration (7.9, 8.10, ARM)             │
 │  ✅ Grid Infrastructure & Clusterware                        │
-│  ✅ ASM Storage Management (NORMAL/HIGH redundancy)          │
+│  ✅ ASM Storage Management (NORMAL/HIGH redundancy, ASMLib)  │
 │  ✅ Oracle Patching (OPatch, opatchauto, datapatch)           │
 │  ✅ Performance Tuning (AWR, ADDM, ASH, SQL Tuning Advisor)  │
 │  ✅ DBA Automation (DBMS_SCHEDULER, Health Checks)            │
 │  ✅ Security (Profiles, Unified Auditing, TDE concepts)      │
 │  ✅ Oracle MAA Gold Architecture (FSFO, FAN, Block Checking)  │
+│  ✅ PostgreSQL 16 Administration (basics)                     │
 │                                                              │
 │  Progetto Lab: Architettura enterprise ibrida con            │
-│  RAC → Data Guard → GoldenGate → OCI Cloud su 6+ nodi     │
+│  RAC → Data Guard → GoldenGate → OCI Cloud → PostgreSQL   │
+│  su 7+ nodi                                                  │
 └──────────────────────────────────────────────────────────────┘
 ```
 

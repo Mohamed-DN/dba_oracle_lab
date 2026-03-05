@@ -1,5 +1,7 @@
 # Analisi: Oracle Base Vagrant RAC vs Nostro Lab — Best Practice Estratte
 
+> **Nota**: Questo documento è un'analisi comparativa. Il nostro lab usa **ASMLib (`oracleasm`)** per i dischi ASM, non udev. Oracle Base usa udev nel suo Vagrant, ma ASMLib rimane supportato e preferito per il nostro approccio didattico.
+
 > Fonte: [oraclebase/vagrant/rac/ol7_19](https://github.com/oraclebase/vagrant/tree/master/rac/ol7_19) + [oracle-base.com articolo dettagliato](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox)
 
 ---
