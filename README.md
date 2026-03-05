@@ -68,7 +68,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Fase | File | Cosa Fai |
 |---|---|---|---|
-| 4 | **Fase 0** | [SETUP MACCHINE](./GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS Dnsmasq, dischi ASM udev, installa OL 7.9 |
+| 4 | **Fase 0** | [SETUP MACCHINE](./GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS Dnsmasq, dischi ASM oracleasm, installa OL 7.9 |
 | 5 | **Fase 1** | [PREPARAZIONE OS](./GUIDA_FASE1_PREPARAZIONE_OS.md) | Configura rete, DNS, utenti, SSH, kernel |
 | 6 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
 | 7 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
@@ -97,6 +97,15 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 16 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_CLOUD_GOLDENGATE.md) | OCI Free Tier ARM, setup ibrido, SSH tunnel |
 | 17 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
 | 18 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
+
+---
+
+### Esame + Migrazione PostgreSQL (Settimana 6)
+
+| # | Documento | File | Cosa Impari |
+|---|---|---|---|
+| 19 | **Ripasso Esame** | [GUIDA_ESAME_REVIEW](./GUIDA_ESAME_REVIEW.md) | Tutti gli argomenti 1Z0-082 + 1Z0-083 (Admin + SQL + DBA Pro 2) |
+| 20 | **Oracle → PostgreSQL** | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione Oracle→PostgreSQL con GoldenGate, ora2pg, ODBC |
 
 ---
 
