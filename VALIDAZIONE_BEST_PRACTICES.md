@@ -57,7 +57,7 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 | # | Best Practice Oracle | Il Nostro Lab | Status | Nota |
 |---|---|---|---|---|
 | 1 | Usa ASM per tutto lo storage DB | ✅ +CRS, +DATA, +FRA | ✅ | Perfetto |
-| 2 | udev rules per device naming | ✅ In Fase 0.10 | ✅ | Metodo raccomandato 19c+ |
+| 2 | oracleasm (ASMLib) per device naming | ✅ In Fase 0.8 | ✅ | Metodo collaudato per Oracle Linux 7/8 |
 | 3 | Dischi stessa dimensione per Disk Group | ✅ Un disco per DG nel lab | ✅ | In prod: multipli dischi |
 | 4 | NORMAL redundancy per CRS | ⚠️ Opzionale in 0.10E | ⚠️ | 3 dischi CRS consigliato |
 | 5 | FRA >= 2x DATA | ⚠️ 15GB FRA, 20GB DATA | ⚠️ | Accettabile per lab |
