@@ -154,7 +154,12 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 |                  |                                                        |
 |                  | Data Guard: Redo Shipping (LGWR ASYNC)                 |
 |                  v                                                        |
-|  dbtarget + GoldenGate --> su cloud OCI o altra macchina                  |
+|  +---------------------------------------------------------------+        |
+|  | TARGET ENVIRONMENT (dbtarget / Cloud OCI / Altra VM)          |        |
+|  | - Oracle Database Target (Replica Oracle-Oracle)              |        |
+|  | - PostgreSQL 16 Target   (Migrazione Oracle-PostgreSQL)       |        |
+|  |   --> Riceve dati via GoldenGate Replicat                     |        |
+|  +---------------------------------------------------------------+        |
 +===========================================================================+
 ```
 
