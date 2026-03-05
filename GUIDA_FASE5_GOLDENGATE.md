@@ -20,13 +20,17 @@ L'architettura che implementiamo è chiamata **Downstream Integrated Extract**:
 └────────────────┘                           │                  │
                                              │  ┌────────────┐  │
                                              │  │ GG Extract │  │     Trails
-                                             │  │ (Integrated│──│──────────────→ ┌──────────────┐
-                                             │  │  Capture)  │  │                │  dbtarget    │
-                                             │  └────────────┘  │                │  ┌─────────┐ │
-                                             └──────────────────┘                │  │GG Repli-│ │
-                                                                                 │  │cat      │ │
-                                                                                 │  └─────────┘ │
-                                                                                 └──────────────┘
+                                             │  │ (Integrated│──│──────────────→ ┌────────────────────┐
+                                             │  │  Capture)  │  │                │  TARGET VMS        │
+                                             │  └────────────┘  │                │  ┌───────────────┐ │
+                                             └──────────────────┘                │  │ GG Replicat   │ │
+                                                                                 │  │ (Oracle dbtar)│ │
+                                                                                 │  └───────────────┘ │
+                                                                                 │  ┌───────────────┐ │
+                                                                                 │  │ GG Replicat   │ │
+                                                                                 │  │ (PostgreSQL)  │ │
+                                                                                 │  └───────────────┘ │
+                                                                                 └────────────────────┘
 ```
 
 > **Perché estrarre dallo standby e non dal primario?**
