@@ -7,6 +7,8 @@
 
 ## Architettura della Migrazione
 
+![Architettura Migrazione Oracle-PostgreSQL](./images/oracle_to_postgres_flow.png)
+
 ```
 ┌──────────────────────┐                    ┌──────────────────────┐
 │   ORACLE RAC (Source) │                    │  POSTGRESQL (Target)  │
