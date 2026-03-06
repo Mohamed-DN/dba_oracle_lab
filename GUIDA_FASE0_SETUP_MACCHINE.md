@@ -255,11 +255,11 @@ systemctl start dnsmasq
 firewall-cmd --permanent --add-service=dns
 firewall-cmd --reload
 
-# 6. VERIFICA
-nslookup rac1 192.168.56.50
-nslookup rac-scan 192.168.56.50     # Deve ritornare 3 IP!
-nslookup racstby1 192.168.56.50
-nslookup racstby-scan 192.168.56.50  # Deve ritornare 3 IP!
+# 6. VERIFICA (Usa i nomi completi FQDN per evitare problemi col router di casa!)
+nslookup rac1.localdomain 192.168.56.50
+nslookup rac-scan.localdomain 192.168.56.50     # Deve ritornare 3 IP!
+nslookup racstby1.localdomain 192.168.56.50
+nslookup racstby-scan.localdomain 192.168.56.50  # Deve ritornare 3 IP!
 ```
 
 > 📸 **SNAP-DNS**: Quando Dnsmasq funziona, fai snapshot della VM dnsnode!
