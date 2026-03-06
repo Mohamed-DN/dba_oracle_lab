@@ -223,8 +223,8 @@ cat >> /etc/hosts <<EOF
 192.168.56.117   racstby-scan
 EOF
 
-# 3. Installa Dnsmasq
-yum install -y dnsmasq
+# 3. Installa Dnsmasq e tools di rete (nslookup)
+yum install -y dnsmasq bind-utils
 
 # Configura Dnsmasq
 cat > /etc/dnsmasq.d/rac.conf <<EOF

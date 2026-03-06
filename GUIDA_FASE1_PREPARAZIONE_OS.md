@@ -554,7 +554,7 @@ yum install -y oracle-database-preinstall-19c
 # Pacchetti aggiuntivi necessari
 yum install -y ksh libaio-devel net-tools nfs-utils \
     smartmontools sysstat unzip wget xorg-x11-xauth \
-    xorg-x11-utils xterm
+    xorg-x11-utils xterm bind-utils
 ```
 
 > **Perché oracle-database-preinstall-19c?** Questo pacchetto RPM magico fa il 70% del lavoro di preparazione OS: crea l'utente `oracle`, configura i parametri kernel (`sysctl.conf`), imposta i limiti di risorse (`limits.conf`), installa le dipendenze RPM. Senza questo, dovresti fare tutto a mano.
