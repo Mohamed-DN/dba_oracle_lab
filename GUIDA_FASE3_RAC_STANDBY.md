@@ -48,6 +48,17 @@ Prima di iniziare, i nodi standby devono avere completato:
 
 ---
 
+> 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
+> Per tutte le operazioni seguenti (modifiche file, RMAN, etc.) è **obbligatorio** usare MobaXterm per poter fare copia-incolla e avere X11 funzionante. Assicurati di aprire sessioni SSH separate per ciascuna VM di cui avrai bisogno.
+>
+> **Tabella IP di Riferimento (Rete Pubblica):**
+> - `rac1`: 192.168.56.101
+> - `rac2`: 192.168.56.102
+> - `racstby1`: 192.168.56.111
+> - `racstby2`: 192.168.56.112
+
+---
+
 ## 3.2 Configurazione Listener Statico sul Primario
 
 Il Listener dinamico (registrato da PMON) non è sufficiente per Data Guard. Dobbiamo aggiungere un'entry **statica** perché il database standby deve potersi connettere anche quando l'istanza primaria non è completamente aperta.
