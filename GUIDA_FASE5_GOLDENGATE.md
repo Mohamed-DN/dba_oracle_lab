@@ -502,6 +502,28 @@ GGSCI> VIEW REPORT rep_racdb
 
 ---
 
+## 🚨 TROUBLESHOOTING: L'Extract o il Replicat vanno in ABENDED?
+
+Se lanci `INFO ALL` e vedi che un processo è in stato `ABENDED` invece di `RUNNING`, qualcosa è andato storto. Non andare nel panico, GoldenGate registra tutto dettagliatamente.
+
+**Come capire l'errore:**
+1. **Controlla il file di log generale (ggserr.log)**:
+   ```bash
+   # Dalla directory $OGG_HOME
+   tail -n 50 ggserr.log
+   ```
+   > Questo file ti dirà il motivo ad alto livello del crash (es. "OGG-00446: Could not find archived log", oppure errori di permessi su Oracle).
+
+2. **Controlla il report specifico del processo**:
+   ```
+   GGSCI> VIEW REPORT ext_racdb
+   # Oppure
+   GGSCI> VIEW REPORT rep_racdb
+   ```
+   > Scorri fino in fondo al report. Lì troverai la query SQL esatta che ha bloccato il Replicat (es. violazione di chiave primaria sul target) o il motivo per cui l'Extract si è fermato sul source. Nella maggior parte dei casi troverai un codice ORA-XXXXX.
+
+---
+
 ## ✅ Checklist Fine Fase 5
 
 ```
