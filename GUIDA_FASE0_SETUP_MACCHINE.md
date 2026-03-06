@@ -394,6 +394,12 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 
 ![Partizionamento Disco OS](./images/os_install_partitions.png)
 
+> 💡 **Oracle Best Practices: Quanta Swap serve davvero?**
+> Assegnare 8 GB di swap è la raccomandazione UFFICIALE ed esatta di Oracle per un server con 8 GB di RAM. La matrice ufficiale di calcolo per Oracle 19c prevede:
+> - **RAM tra 1 GB e 2 GB**: Swap = 1.5 volte la RAM
+> - **RAM tra 2 GB e 16 GB**: Swap = uguale alla RAM (questo è il nostro caso: 8 GB RAM = 8 GB Swap)
+> - **RAM maggiore di 16 GB**: Swap = 16 GB fissi
+
 **Network & Host Name**:
 - Attiva **TUTTE** le interfacce (ON)
 - Hostname: `rac1`
