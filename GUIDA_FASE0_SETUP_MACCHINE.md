@@ -489,6 +489,29 @@ chronyc -a makestep
 
 ---
 
+## 0.12 Come Connettersi alle VM (MobaXterm)
+
+> 💡 **IMPORTANTE**: Da questo momento in poi, **NON** usare la finestra console di VirtualBox per lavorare. Usa un client SSH professionale come **MobaXterm** (gratuito) dal tuo PC Windows. Perché?
+> 1. Puoi fare copia-incolla dei comandi comodamente.
+> 2. Supporta il multi-tabling (apri `rac1` e `rac2` affiancati).
+> 3. **FONDAMENTALE**: Ha un server X11 integrato per farti vedere le finestre grafiche (es. l'installer di Oracle Grid).
+
+### Configurare le Sessioni in MobaXterm
+
+1. Scarica e apri MobaXterm (versione Home/Portable va benissimo).
+2. Clicca in alto a sinistra su **Session** -> **SSH**.
+3. **Remote host**: Inserisci l'IP pubblico (Rete Host-Only #1) della VM.
+   - Es. `192.168.56.50` per `dnsnode`
+   - Es. `192.168.56.101` per `rac1`
+4. **Specify username**: Spunta la casella e scrivi `root` (o `oracle`).
+5. **Advanced SSH settings** (scheda sotto):
+   - Assicurati che **X11-Forwarding** sia SPUNTATO ✅ (questo serve per vedere le API grafiche).
+6. Clicca **OK**. Ti chiederà la password (inserisci la tua pwd di root).
+
+Ripeti questo processo per creare le sessioni salvate per `dnsnode`, `rac1`, `rac2`, `racstby1`, `racstby2`.
+
+---
+
 > 📸 **Riepilogo Snapshot Fase 0**:
 > - **SNAP-DNS** (dnsnode funzionante)
 > - **SNAP-01** (OS installato su rac1)

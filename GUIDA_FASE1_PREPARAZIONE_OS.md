@@ -39,9 +39,22 @@
 ```
 
 **Perché Oracle RAC lo richiede?**
-- Lo **SCAN** (Single Client Access Name) DEVE risolvere a 3 IP tramite DNS
-- `/etc/hosts` NON basta per lo SCAN (Oracle lo verifica esplicitamente)
-- Il DNS permette il **round-robin**: le connessioni vengono distribuite automaticamente
+- Lo **SCAN** (Single Client Access Name) DEVE risolvere a 3 IP simultaneamente.
+- `/etc/hosts` **NON** basta per lo SCAN. Non supporta il Round-Robin. Se metti 3 IP per `rac-scan` nel file hosts, Linux userà sempre e solo il primo.
+- Il DNS invece permette il **round-robin**: le connessioni dei client vengono distribuite automaticamente tra i 3 IP.
+
+**Che DNS usiamo nel Lab? (Dnsmasq vs BIND)**
+In produzione si usano server DNS complessi come **BIND** o Microsoft DNS. In laboratorio, installare BIND richiede decine di file di configurazione composti da sintassi ostica.
+Per **semplificare enormemente**, noi useremo **Dnsmasq**. Dnsmasq è un DNS leggerissimo che fa una cosa magica: **legge il suo file `/etc/hosts` e lo trasforma in record DNS interrogabili dalla rete**.
+
+```
+  Il trucco di Dnsmasq:
+  ═════════════════════
+  1. Compiliamo /etc/hosts sul nodo 'dnsnode' con tutti gli IP (inclusi i 3 SCAN)
+  2. Avviamo dnsmasq
+  3. dnsmasq legge quel file e "serve" quelle traduzioni agli altri nodi (rac1, rac2)
+  4. Quando rac1 chiede "chi è rac-scan?", dnsmasq restituisce i 3 IP in round-robin!
+```
 
 **Tipi di record DNS che configuriamo:**
 
@@ -235,6 +248,25 @@ nslookup rac2 192.168.56.50
 # SCAN deve ritornare 3 IP!
 nslookup rac-scan 192.168.56.50
 # Server:  192.168.56.50
+# Address: 192.168.56.50#53
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.105
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.106
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.107
+```
+
+### (Opzionale ma Consigliato) Configurare il DNS su Windows (Host)
+
+Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal browser del tuo PC fisico usando i nomi (es. `https://rac1.localdomain:5500/em`), devi dire a Windows di usare il tuo `dnsnode`.
+
+1. Su Windows, apri **Impostazioni di rete** -> **Modifica opzioni scheda**.
+2. Trova la scheda **VirtualBox Host-Only Network** (quella relativa a `192.168.56.x`).
+3. Tasto destro -> **Proprietà** -> Doppio clic su **Protocollo Internet versione 4 (TCP/IPv4)**.
+4. Seleziona **Utilizza i seguenti indirizzi server DNS**.
+5. Server DNS preferito: inserisci l'IP del dnsnode (`192.168.56.50`).
+6. Clicca OK. Ora dal tuo browser Windows puoi navigare usando gli hostname del lab!
 # Name:    rac-scan
 # Address: 192.168.56.105
 # Address: 192.168.56.106
