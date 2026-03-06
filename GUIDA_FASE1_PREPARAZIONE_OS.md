@@ -135,9 +135,11 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 2. Esegui: `nmtui`
 3. Seleziona **Edit a connection** → Scegli la scheda corrispondente alla rete **Host-Only** (di solito `enp0s3` o `enp0s8`).
 4. Cambia IPv4 Configuration in **Manual**.
-5. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP).
+5. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP della FASE 0):
    - *Es. per rac1: `192.168.56.101/24`*
    - *Es. per rac2: `192.168.56.102/24`*
+   - *Es. per racstby1: `192.168.56.111/24`*
+   - *Es. per racstby2: `192.168.56.112/24`*
    - *Es. per dbtarget: `192.168.56.150/24`*
 6. Salva, esci e riavvia la rete: `systemctl restart network`
 7. Verifica che l'IP sia assegnato: `ip addr`
