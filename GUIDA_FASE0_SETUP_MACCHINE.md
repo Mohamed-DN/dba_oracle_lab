@@ -163,12 +163,15 @@ Dal terminale di VirtualBox:
 1. Accedi come `root`
 2. Digita il comando: `nmtui`
 3. Scegli **Edit a connection**
-4. Vai sulla seconda scheda di rete (quella host-only, di solito `enp0s8`)
-5. Cambia IPv4 Configuration in **Manual**
-6. Inserisci l'indirizzo: `192.168.56.50/24` (lascia vuoto il gateway)
-7. Salva ed esci.
-8. Digita: `systemctl restart network`
-9. Verifica di avere l'IP: `ip addr show enp0s8`
+4. **ATTIVA IL NAT (Internet)**: Seleziona la PRIMA scheda (es. `enp0s3`), vai su Edit, e spunta la casella **"Automatically connect"**. Questo abiliterà Internet tramite il DHCP di VirtualBox. Fai OK.
+5. **CONFIGURA L'IP STATICO**: Vai sulla SECONDA scheda (quella host-only, di solito `enp0s8`), vai su Edit.
+6. Cambia IPv4 Configuration in **Manual**
+7. Inserisci l'indirizzo: `192.168.56.50/24` (lascia vuoto il gateway)
+8. Salva, esci e torna al prompt.
+9. Digita: `systemctl restart network`
+10. **TASSATIVO**: Verifica di avere Internet prima di procedere!
+    `ping -c 2 google.com` (Se non risponde, torna in `nmtui` e assicurati che la prima scheda sia attiva).
+11. Verifica l'IP statico: `ip addr show`
 
 ### Connettiti con MobaXterm (ORA PUOI FARE COPIA-INCOLLA!)
 

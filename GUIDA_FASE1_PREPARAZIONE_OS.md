@@ -131,18 +131,22 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 > Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. Questo vale per **TUTTE le macchine** (`rac1`, `rac2`, `racstby1`, etc.) man mano che le crei.
 
 **Passo 1: Assegna un IP Temporaneo (dalla console VirtualBox)**
-1. Fai login come `root` sulla VM che stai preparando (es. `rac1`).
+1. Fai login come `root` sulla VM che stai preparando.
 2. Esegui: `nmtui`
-3. Seleziona **Edit a connection** → Scegli la scheda corrispondente alla rete **Host-Only** (di solito `enp0s3` o `enp0s8`).
-4. Cambia IPv4 Configuration in **Manual**.
-5. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP della FASE 0):
+3. Seleziona **Edit a connection**.
+4. **ATTIVA IL NAT (Internet)**: Seleziona la PRIMA scheda (es. `enp0s3`), vai su Edit, e assicurati che la casella **"Automatically connect"** sia SPUNTATA. Fai OK. Questo garantisce l'accesso a Internet via DHCP di VirtualBox.
+5. **CONFIGURA L'IP PUBBLICO**: Seleziona la SECONDA scheda (es. `enp0s8` host-only), vai su Edit.
+6. Cambia IPv4 Configuration in **Manual**.
+7. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP della FASE 0):
    - *Es. per rac1: `192.168.56.101/24`*
    - *Es. per rac2: `192.168.56.102/24`*
    - *Es. per racstby1: `192.168.56.111/24`*
    - *Es. per racstby2: `192.168.56.112/24`*
    - *Es. per dbtarget: `192.168.56.150/24`*
-6. Salva, esci e riavvia la rete: `systemctl restart network`
-7. Verifica che l'IP sia assegnato: `ip addr`
+8. Salva, esci e torna al prompt.
+9. Riavvia la rete: `systemctl restart network`
+10. **TASSATIVO**: Verifica di avere Internet: `ping -c 2 google.com`
+11. Verifica l'IP statico: `ip addr`
 
 **Passo 2: Connettiti tramite MobaXterm**
 1. Apri MobaXterm sul tuo PC Windows.
@@ -154,33 +158,47 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 
 ## 1.3 Configurazione Rete (File Statici)
 
-Ora che sei su MobaXterm, rendiamo permanente e rigorosa la configurazione di rete scrivendo i file. Esempio per `rac1`:
+Ora che sei su MobaXterm, rendiamo permanente e rigorosa la configurazione scrivendo i file. 
+> ⚠️ **ATTENZIONE AI NOMI DELLE SCHEDE**: I nomi fisici dipendono dall'OS. In Oracle Linux 7, di solito l'Adattatore 1 (NAT) si chiama `enp0s3`, l'Adattatore 2 (Pubblica) si chiama `enp0s8`, e l'Adattatore 3 (Privata) si chiama `enp0s9`. Sostituisci i nomi negli script se necessario controllando `ip addr`.
 
-### Interfaccia Pubblica (eth0 o enp0s3)
+Esempio per `rac1`:
 
+### 1. Interfaccia NAT (Internet) $\rightarrow$ `enp0s3`
+Non usare IP statici qui. Deve prendere IP, Gateway e DNS dal DHCP di VirtualBox.
 ```bash
-cat > /etc/sysconfig/network-scripts/ifcfg-eth0 <<'EOF'
+cat > /etc/sysconfig/network-scripts/ifcfg-enp0s3 <<'EOF'
 TYPE=Ethernet
-BOOTPROTO=static
-NAME=eth0
-DEVICE=eth0
+BOOTPROTO=dhcp
+NAME=enp0s3
+DEVICE=enp0s3
 ONBOOT=yes
-IPADDR=192.168.56.101
-NETMASK=255.255.255.0
-GATEWAY=192.168.1.1
-DNS1=192.168.56.101
-DOMAIN=localdomain
 EOF
 ```
 
-### Interfaccia Privata (eth1 o enp0s8)
-
+### 2. Interfaccia Pubblica (192.168.56.x) $\rightarrow$ `enp0s8`
+Questa è la rete del Lab dove i nodi comunicano tra loro e con il tuo PC.
 ```bash
-cat > /etc/sysconfig/network-scripts/ifcfg-eth1 <<'EOF'
+cat > /etc/sysconfig/network-scripts/ifcfg-enp0s8 <<'EOF'
 TYPE=Ethernet
 BOOTPROTO=static
-NAME=eth1
-DEVICE=eth1
+NAME=enp0s8
+DEVICE=enp0s8
+ONBOOT=yes
+IPADDR=192.168.56.101
+NETMASK=255.255.255.0
+DOMAIN=localdomain
+EOF
+```
+> *(Nota: Abbiamo omesso volontariamente il GATEWAY qui per evitare che scavalchi il NAT interrompendo l'accesso a Internet)*
+
+### 3. Interfaccia Privata (192.168.1.x o o 2.x) $\rightarrow$ `enp0s9`
+L'interconnect per il traffico esclusivo del cluster. **NIENTE GATEWAY QUI**.
+```bash
+cat > /etc/sysconfig/network-scripts/ifcfg-enp0s9 <<'EOF'
+TYPE=Ethernet
+BOOTPROTO=static
+NAME=enp0s9
+DEVICE=enp0s9
 ONBOOT=yes
 IPADDR=192.168.1.101
 NETMASK=255.255.255.0
