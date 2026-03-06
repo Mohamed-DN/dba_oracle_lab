@@ -493,28 +493,36 @@ oracleasm init
 
 ## 0.10 Setup Macchine Standby (`racstby1`, `racstby2`)
 
-L'installazione dei nodi standby è **identica** a rac1/rac2, con queste differenze:
+Per costruire il nostro Data Guard, abbiamo bisogno di un secondo cluster RAC gemello (lo Standby). 
 
-| Parametro | Primario | Standby |
-|---|---|---|
-| Nomi VM | `rac1`, `rac2` | `racstby1`, `racstby2` |
-| IP Pubblica | 192.168.56.101-102 | 192.168.56.111-112 |
-| IP Privata | 192.168.1.101-102 | 192.168.2.111-112 |
-| VIP | 192.168.56.103-104 | 192.168.56.113-114 |
-| SCAN | 192.168.56.105-107 | 192.168.56.115-117 |
-| Interconnect (NIC3) | Rete Host-Only #2 | Rete Host-Only **#3** |
-| Dischi ASM | `asm-crs-disk*` | `asm-stby-crs-*` (dischi DIVERSI!) |
+> 💡 **Oracle Best Practices: Serve un altro Server DNS per lo Standby?**
+> **NO.** In un ambiente Enterprise reale, primario e standby si trovano spesso nello stesso dominio aziendale o in domini trustati in foresta Active Directory, risolvibili globalmente. Nel nostro laboratorio, abbiamo già popolato il file `/etc/hosts` e il `dnsmasq` del `dnsnode` unico con **TUTTI** gli indirizzi del lab (sia primari che standby). 
+> Il nostro singolo `dnsnode` (192.168.56.50) fungerà da DNS globale per l'intero data center simulato.
 
-> **IMPORTANTE**: I dischi ASM dello standby sono dischi **DIVERSI** da quelli del primario! Ogni cluster ha i propri dischi condivisi.
+### Step-by-step per creare `racstby1`
 
-### Procedura
+1. Apri VirtualBox → **Nuova** (New)
+2. Nome: `racstby1`, Tipo: **Linux** → **Oracle (64-bit)**
+3. **Memoria**: 8192 MB (8 GB)
+4. **CPU**: 4 processori
+5. **Disco OS**: VDI Dinamico da **50 GB** (per l'OS)
+6. Vai nelle Impostazioni → **Archiviazione**:
+   - Aggiungi un secondo disco VDI Dinamico da **100 GB** (per `/u01`)
+7. **Rete** (3 Schede, esatte come il primario ma con reti diverse):
+   - **Scheda 1**: NAT (Attiva)
+   - **Scheda 2 (Pubblica)**: Scheda solo host → Nome: `192.168.56.0` (Stessa rete pubblica del primario per permettere il routing del Data Guard)
+   - **Scheda 3 (Privata)**: Scheda solo host → Nome: **`192.168.2.0`** (⚠️ **ATTENZIONE**: Questa DEVE essere la rete "Standby Interconnect", NON quella del primario!)
+8. **Dischi condivisi ASM per lo Standby**:
+   - Vai in Virtual Media Manager (`Ctrl+D`).
+   - Crea 5 nuovi dischi **Dimensione Fissa**: `asm-stby-crs1` (2GB), `asm-stby-crs2` (2GB), `asm-stby-crs3` (2GB), `asm-stby-data` (20GB), `asm-stby-reco` (15GB).
+   - Impostali tutti come **Condivisibile (Shareable)**.
+   - Attaccali alla VM `racstby1`.
 
-1. Crea `racstby1` esattamente come `rac1` (stessi passaggi 0.4-0.8)
-2. Crea 5 dischi ASM separati per lo standby
-3. Marcali come Shareable
-4. Installa Oracle Linux 7.9
-5. Completa la Fase 1
-6. Clona `racstby1` → `racstby2`
+> **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario! Non attaccare i dischi vecchi, ne servono di nuovi.
+
+9. Installa Oracle Linux 7.9 esattamente come hai fatto per `rac1` (Server with GUI, 8GB Swap partizione). Al riavvio fagli la formattazione del disco `/u01`.
+
+10. Clona `racstby1` in `racstby2` (Clonazione Collegata, re-inizializza i MAC Address).
 
 ---
 
