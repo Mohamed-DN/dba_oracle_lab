@@ -902,6 +902,8 @@ SELECT patch_id, status FROM dba_registry_sqlpatch;
 > 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md)
 > **Corso**: Oracle Database: Managing Multitenant Architecture Ed 1
 
+![Oracle Multitenant Architecture](./images/oracle_multitenant_cdb_pdb.png)
+
 #### 11.8.1 Creare CDB e PDB
 
 ```sql

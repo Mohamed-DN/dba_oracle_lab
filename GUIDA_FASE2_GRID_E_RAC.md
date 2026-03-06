@@ -187,10 +187,13 @@ Errori comuni e soluzioni:
 
 ### Metodo GUI (Consigliato per imparare)
 
+> ⚠️ **ATTENZIONE MOBAXTERM**: Questo step lancia un'interfaccia grafica (GUI). L'unico modo per vederla dal tuo PC Windows è aver effettuato l'accesso a `rac1` tramite **MobaXterm** con la spunta su **X11-Forwarding** (vedi Fase 0.12). 
+> Se sei connesso dalla console nera di VirtualBox o da un Putty senza Xming, il comando fallirà dicendo "Display not set".
+
 ```bash
-# Come utente grid su rac1
-# Abilita il display X11 (serve un X Server sul tuo PC Windows, es. MobaXterm o XMing)
-export DISPLAY=<IP_del_tuo_PC_Windows>:0.0
+# Come utente grid su rac1 (connesso via MobaXterm)
+# Il DISPLAY di solito viene settato in automatico da MobaXterm.
+# Se hai problemi, verifica con `echo $DISPLAY` (dovrebbe darti qualcosa come localhost:10.0)
 
 # Avvia l'installer  
 cd /u01/app/19.0.0/grid
@@ -673,10 +676,12 @@ ORDER BY action_time DESC;
 
 ## 2.12 Creazione Database RAC con DBCA
 
+> ⚠️ **ATTENZIONE MOBAXTERM**: Anche `dbca` lancia un'interfaccia grafica (GUI). Devi essere connesso a `rac1` tramite **MobaXterm** con la spunta su **X11-Forwarding** (vedi Fase 0.12). 
+
 ```bash
-# Come utente oracle su rac1
+# Come utente oracle su rac1 (connesso via MobaXterm)
 su - oracle
-export DISPLAY=<IP_del_tuo_PC>:0.0
+# Il DISPLAY di solito viene settato in automatico da MobaXterm.
 dbca
 ```
 

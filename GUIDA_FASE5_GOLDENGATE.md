@@ -159,8 +159,9 @@ cd /u01/app/goldengate
 unzip /tmp/fbo_ggs_Linux_x64_Oracle_shiphome.zip
 cd fbo_ggs_Linux_x64_Oracle_shiphome/Disk1
 
-# Lancia l'installer
-export DISPLAY=<IP_PC>:0.0
+# Lancia l'installer (GUI)
+> ⚠️ **ATTENZIONE MOBAXTERM**: Questo comando avvia una GUI. Devi essere connesso con **MobaXterm** e **X11-Forwarding** attivo (vedi Fase 0.12).
+# Il DISPLAY di solito viene settato in automatico da MobaXterm.
 ./runInstaller
 ```
 
