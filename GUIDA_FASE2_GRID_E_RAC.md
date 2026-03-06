@@ -318,6 +318,19 @@ Torna all'installer GUI e clicca **OK** per completare.
 
 ---
 
+### 🚨 TROUBLESHOOTING: Cosa fare se l'installazione fallisce?
+
+Se l'esecuzione di `root.sh` fallisce (es. per timeout SSH, problemi di rete o dischi formattati male), il cluster rimane a metà configurazione. Se provi a rilanciare `root.sh` o `gridSetup.sh`, otterrai un errore perché i file sono già presenti. 
+
+**Per pulire l'installazione fallita e riprovare (da eseguire come `root`):**
+```bash
+# Sul nodo dove ha fallito (o su entrambi se necessario)
+/u01/app/19.0.0/grid/crs/install/rootcrs.sh -deconfig -force
+```
+> Questo script "smonta" il cluster, pulisce le interfacce, killa i demoni e resetta i dischi ASM (header inclusi) permettendoti di ripartire pulito.
+
+---
+
 ## 2.6 Verifica Cluster
 
 ```bash

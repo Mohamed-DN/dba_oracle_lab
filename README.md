@@ -5,6 +5,12 @@
 
 ---
 
+> ⚠️ **REQUISITI HARDWARE CRITICI**: Per far girare l'intero ambiente (4 Nodi RAC + 1 Nodo DNS + 1 Nodo Target PostgreSQL + OS Host) **sono necessari almeno 32GB di RAM fisica** sul tuo PC. Se hai 16GB, puoi fare solo metà del lab (es. 2 nodi RAC senza Standby).
+
+> 🤖 **AUTOMAZIONE DISPONIBILE**: Vuoi saltare i passaggi noiosi? Nella cartella `scripts/` troverai bash script pronti all'uso per autoconfigurare lo storage (`configure_storage.sh`) e installare il Grid (`install_grid.sh`). Le guide ti mostrano la strada manuale (per imparare), ma gli script sono a tua disposizione!
+
+---
+
 ## DA DOVE INIZIARE
 
 **PERCORSO DI STUDIO**
