@@ -128,22 +128,25 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 ## 1.2 Il Problema del Copia-Incolla (MobaXterm)
 
 > ⚠️ **ATTENZIONE**: Appena installato il sistema operativo, ti trovi nella console nera di VirtualBox dove **non puoi incollare testo**. Tutte le configurazioni successive (come l'`/etc/hosts`) sono file lunghissimi. 
-> Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**.
+> Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. Questo vale per **TUTTE le macchine** (`rac1`, `rac2`, `racstby1`, etc.) man mano che le crei.
 
 **Passo 1: Assegna un IP Temporaneo (dalla console VirtualBox)**
-1. Fai login come `root` su `rac1`
+1. Fai login come `root` sulla VM che stai preparando (es. `rac1`).
 2. Esegui: `nmtui`
-3. Seleziona **Edit a connection** → Scegli la scheda corrispondente alla rete **Host-Only** (Rete Pubblica RAC, di solito la prima o la seconda, es. `enp0s3` o `enp0s8`).
+3. Seleziona **Edit a connection** → Scegli la scheda corrispondente alla rete **Host-Only** (di solito `enp0s3` o `enp0s8`).
 4. Cambia IPv4 Configuration in **Manual**.
-5. Inserisci l'IP pubblico di questo nodo: `192.168.56.101/24` (per rac1).
+5. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP).
+   - *Es. per rac1: `192.168.56.101/24`*
+   - *Es. per rac2: `192.168.56.102/24`*
+   - *Es. per dbtarget: `192.168.56.150/24`*
 6. Salva, esci e riavvia la rete: `systemctl restart network`
 7. Verifica che l'IP sia assegnato: `ip addr`
 
 **Passo 2: Connettiti tramite MobaXterm**
 1. Apri MobaXterm sul tuo PC Windows.
-2. Crea una nuova sessione SSH verso `192.168.56.101` come utente `root`.
+2. Crea una nuova sessione SSH verso quell'IP come utente `root`.
 3. Ricorda di spuntare **X11-Forwarding**.
-4. **Ora puoi fare copia-incolla di tutti i comandi seguenti!**
+4. **Ora puoi fare copia-incolla di tutti i comandi seguenti per questo nodo!**
 
 ---
 
