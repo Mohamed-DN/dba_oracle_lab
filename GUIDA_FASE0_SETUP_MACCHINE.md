@@ -255,11 +255,17 @@ systemctl start dnsmasq
 firewall-cmd --permanent --add-service=dns
 firewall-cmd --reload
 
-# 6. VERIFICA (Usa i nomi completi FQDN per evitare problemi col router di casa!)
+# 6. TESTARE DNSMASQ (Fondamentale prima di spegnere la macchina!)
+# Test 1: Il servizio sta girando?
+systemctl status dnsmasq
+
+# Test 2: Risoluzione Locale FQDN (Bypassa il router di casa)
 nslookup rac1.localdomain 192.168.56.50
-nslookup rac-scan.localdomain 192.168.56.50     # Deve ritornare 3 IP!
-nslookup racstby1.localdomain 192.168.56.50
-nslookup racstby-scan.localdomain 192.168.56.50  # Deve ritornare 3 IP!
+nslookup rac-scan.localdomain 192.168.56.50      # ← DEVE ritornare 3 IP!
+nslookup racstby-scan.localdomain 192.168.56.50  # ← DEVE ritornare 3 IP!
+
+# Test 3: Risoluzione Esterna (Internet)
+nslookup google.com 192.168.56.50               # ← DEVE ritornare l'IP di Google!
 ```
 
 > 📸 **SNAP-DNS**: Quando Dnsmasq funziona, fai snapshot della VM dnsnode!
