@@ -125,40 +125,31 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 
 ---
 
-## 1.2 Configurazione /etc/hosts
+## 1.2 Il Problema del Copia-Incolla (MobaXterm)
 
-Esegui su **TUTTI** i nodi:
+> ⚠️ **ATTENZIONE**: Appena installato il sistema operativo, ti trovi nella console nera di VirtualBox dove **non puoi incollare testo**. Tutte le configurazioni successive (come l'`/etc/hosts`) sono file lunghissimi. 
+> Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**.
 
-```bash
-cat >> /etc/hosts <<'EOF'
-# === RAC PRIMARY ===
-192.168.56.101   rac1.localdomain       rac1
-192.168.56.102   rac2.localdomain       rac2
-192.168.1.101      rac1-priv.localdomain  rac1-priv
-192.168.1.102      rac2-priv.localdomain  rac2-priv
-192.168.56.103   rac1-vip.localdomain   rac1-vip
-192.168.56.104   rac2-vip.localdomain   rac2-vip
+**Passo 1: Assegna un IP Temporaneo (dalla console VirtualBox)**
+1. Fai login come `root` su `rac1`
+2. Esegui: `nmtui`
+3. Seleziona **Edit a connection** → Scegli la scheda corrispondente alla rete **Host-Only** (Rete Pubblica RAC, di solito la prima o la seconda, es. `enp0s3` o `enp0s8`).
+4. Cambia IPv4 Configuration in **Manual**.
+5. Inserisci l'IP pubblico di questo nodo: `192.168.56.101/24` (per rac1).
+6. Salva, esci e riavvia la rete: `systemctl restart network`
+7. Verifica che l'IP sia assegnato: `ip addr`
 
-# === RAC STANDBY ===
-192.168.56.111   racstby1.localdomain      racstby1
-192.168.56.112   racstby2.localdomain      racstby2
-192.168.2.111     racstby1-priv.localdomain racstby1-priv
-192.168.2.112     racstby2-priv.localdomain racstby2-priv
-192.168.56.113   racstby1-vip.localdomain  racstby1-vip
-192.168.56.114   racstby2-vip.localdomain  racstby2-vip
-
-# === TARGET GOLDENGATE ===
-192.168.56.150   dbtarget.localdomain   dbtarget
-EOF
-```
-
-> **Perché /etc/hosts e non solo DNS?** Oracle Clusterware verifica la risoluzione dei nomi PRIMA che il DNS sia attivo. Se metti tutto solo in DNS e il DNS non parte, il cluster non si avvia. Il file hosts è la "rete di sicurezza".
+**Passo 2: Connettiti tramite MobaXterm**
+1. Apri MobaXterm sul tuo PC Windows.
+2. Crea una nuova sessione SSH verso `192.168.56.101` come utente `root`.
+3. Ricorda di spuntare **X11-Forwarding**.
+4. **Ora puoi fare copia-incolla di tutti i comandi seguenti!**
 
 ---
 
-## 1.3 Configurazione Rete (Static IP)
+## 1.3 Configurazione Rete (File Statici)
 
-Su ogni nodo, configura le due interfacce di rete. Esempio per `rac1`:
+Ora che sei su MobaXterm, rendiamo permanente e rigorosa la configurazione di rete scrivendo i file. Esempio per `rac1`:
 
 ### Interfaccia Pubblica (eth0 o enp0s3)
 
@@ -200,9 +191,40 @@ systemctl restart network
 # Verifica
 ip addr show eth0
 ip addr show eth1
-ping -c 2 rac2        # Da rac1
+ping -c 2 rac2        # Da rac1 (dopo aver configurato hosts)
 ping -c 2 rac2-priv   # Da rac1 (rete privata)
 ```
+
+---
+
+## 1.4 Configurazione /etc/hosts
+
+Esegui su **TUTTI** i nodi (sempre da MobaXterm!):
+
+```bash
+cat >> /etc/hosts <<'EOF'
+# === RAC PRIMARY ===
+192.168.56.101   rac1.localdomain       rac1
+192.168.56.102   rac2.localdomain       rac2
+192.168.1.101    rac1-priv.localdomain  rac1-priv
+192.168.1.102    rac2-priv.localdomain  rac2-priv
+192.168.56.103   rac1-vip.localdomain   rac1-vip
+192.168.56.104   rac2-vip.localdomain   rac2-vip
+
+# === RAC STANDBY ===
+192.168.56.111   racstby1.localdomain      racstby1
+192.168.56.112   racstby2.localdomain      racstby2
+192.168.2.111    racstby1-priv.localdomain racstby1-priv
+192.168.2.112    racstby2-priv.localdomain racstby2-priv
+192.168.56.113   racstby1-vip.localdomain  racstby1-vip
+192.168.56.114   racstby2-vip.localdomain  racstby2-vip
+
+# === TARGET GOLDENGATE ===
+192.168.56.150   dbtarget.localdomain   dbtarget
+EOF
+```
+
+> **Perché /etc/hosts e non solo DNS?** Oracle Clusterware verifica la risoluzione dei nomi PRIMA che il DNS sia attivo. Se metti tutto solo in DNS e il DNS non parte, il cluster non si avvia. Il file hosts è la "rete di sicurezza".
 
 ---
 
@@ -255,6 +277,9 @@ nslookup rac-scan 192.168.56.50
 # Address: 192.168.56.106
 # Name:    rac-scan.localdomain
 # Address: 192.168.56.107
+
+# Standby SCAN
+nslookup racstby-scan 192.168.56.50
 ```
 
 ### (Opzionale ma Consigliato) Configurare il DNS su Windows (Host)
@@ -267,14 +292,6 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 4. Seleziona **Utilizza i seguenti indirizzi server DNS**.
 5. Server DNS preferito: inserisci l'IP del dnsnode (`192.168.56.50`).
 6. Clicca OK. Ora dal tuo browser Windows puoi navigare usando gli hostname del lab!
-# Name:    rac-scan
-# Address: 192.168.56.105
-# Address: 192.168.56.106
-# Address: 192.168.56.107
-
-# Standby SCAN
-nslookup racstby-scan 192.168.56.50
-```
 
 > **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
