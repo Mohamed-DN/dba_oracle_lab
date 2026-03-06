@@ -341,7 +341,14 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 | `asm-data-disk1.vdi` | **20 GB** | **Dimensione Fissa** | Datafile (Disk Group DATA) |
 | `asm-reco-disk1.vdi` | **15 GB** | **Dimensione Fissa** | Recovery (Disk Group RECO) |
 
-> **Perché 3 dischi CRS?** Per usare **NORMAL redundancy** con Failure Groups! Se un disco muore, l'OCR e i Voting Disk sopravvivono. Oracle Base usa questo approccio.
+> 💡 **Oracle Best Practices: Perché 3 dischi da 2 GB per il CRS?**
+>
+> 1. **Perché tre dischi? (La regola del Quorum):** Il Cluster Ready Services (CRS) salva lo stato del cluster nel *Voting Disk*. Per evitare lo split-brain (quando i nodi non comunicano e cercano di scriversi sopra i dati a vicenda), Oracle usa un sistema a maggioranza (Quorum): `(N/2) + 1`. 
+>    - Con **3 dischi** (Normal Redundancy), per avere la maggioranza servono almeno 2 dischi attivi. Se 1 disco si rompe, il cluster sopravvive.
+>    - Se ne usassimo **2**, il quorum sarebbe 2. Se 1 disco si rompe, il cluster si spegne (niente alta affidabilità).
+>    - Usare **1 disco** (External Redundancy) si fa in produzione solo se hai una SAN/NAS formidabile che garantisce l'alta affidabilità hardware, ma per un lab MAA vogliamo simulare la ridondanza ASM software.
+> 
+> 2. **Perché 2 GB?** OCR (Oracle Cluster Registry) e Voting Disk insieme occupano meno di 500 MB. Tuttavia, assegnare 2 GB è la best practice raccomandata per Oracle 19c per gestire senza problemi futuri upgrade (Grid patching), backup automatici dell'OCR (che vengono tenuti nello stesso disk group) e per garantire abbastanza *Allocation Units* (AU) ad ASM.
 
 ### Rendi i dischi Condivisibili (CRITICO!)
 
