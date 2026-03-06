@@ -175,9 +175,16 @@ Dal terminale di VirtualBox:
 
 ### Connettiti con MobaXterm (ORA PUOI FARE COPIA-INCOLLA!)
 
-Ora che la macchina ha l'IP `192.168.56.50`, minimizza VirtualBox e apri **MobaXterm** dal tuo PC Windows.
-- Crea una sessione SSH verso `192.168.56.50`, utente `root`.
-- Ora sei comodamente collegato e puoi incollare il blocco seguente!
+> 🛑 **ALT! FERMATI! SEI ANCORA NELLA SCHERMATA NERA DI VIRTUALBOX?**
+>
+> **TUTTI I COMANDI DA QUI IN POI VANNO ESEGUITI VIA MOBAXTERM!**
+> Ora che la macchina ha l'IP `192.168.56.50` assegnato via `nmtui`, minimizza la finestra di VirtualBox. La console di VirtualBox non supporta il copia-incolla che ti serve ora.
+> Apri **MobaXterm** dal tuo PC Windows e crea una sessione SSH verso quell'IP.
+> 
+> **Tabella IP di Riferimento per MobaXterm:**
+> - `dnsnode`: 192.168.56.50
+
+Una volta dentro MobaXterm come utente `root`, puoi comodamente incollare i seguenti blocchi di codice!
 
 ### Configurare Dnsmasq
 
