@@ -3,6 +3,13 @@
 > Tutti i passaggi di questa fase si riferiscono ai nodi **rac1** e **rac2** (RAC Primario).
 > Lo storage condiviso deve essere già visibile da entrambi i nodi prima di procedere.
 
+> 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
+> Questa fase è densa di script e configurazioni grafiche. È **obbligatorio** usare MobaXterm con X11-Forwarding attivato. Apri due tab in MobaXterm per avere entrambi i nodi sottomano.
+>
+> **Tabella IP di Riferimento (Rete Pubblica):**
+> - `rac1`: 192.168.56.101
+> - `rac2`: 192.168.56.102
+
 ### 📸 Riferimenti Visivi
 
 ![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)

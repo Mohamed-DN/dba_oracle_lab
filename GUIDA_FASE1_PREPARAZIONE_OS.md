@@ -155,12 +155,27 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 
 ---
 
+---
+
 ## 1.3 Configurazione Rete (File Statici)
 
-Ora che sei su MobaXterm, rendiamo permanente e rigorosa la configurazione scrivendo i file. 
+> 🛑 **ALT! FERMATI! SEI ANCORA NELLA SCHERMATA NERA DI VIRTUALBOX?**
+>
+> **TUTTI I COMANDI DA QUI IN POI VANNO ESEGUITI VIA MOBAXTERM!**
+> La console di VirtualBox non supporta il copia-incolla. Ora che la tua VM ha un IP, minimizza la finestra di VirtualBox, apri MobaXterm e crea una sessione SSH verso l'IP che le hai appena dato. Fallo per ogni VM che stai configurando!
+> 
+> **Tabella IP di Riferimento per MobaXterm:**
+> - `rac1`: 192.168.56.101
+> - `rac2`: 192.168.56.102
+> - `racstby1`: 192.168.56.111
+> - `racstby2`: 192.168.56.112
+> - `dbtarget`: 192.168.56.150
+
+Ora che hai aperto il terminale in MobaXterm e hai fatto login come `root`, rendiamo permanente e rigorosa la configurazione scrivendo i file. 
+
 > ⚠️ **ATTENZIONE AI NOMI DELLE SCHEDE**: I nomi fisici dipendono dall'OS. In Oracle Linux 7, di solito l'Adattatore 1 (NAT) si chiama `enp0s3`, l'Adattatore 2 (Pubblica) si chiama `enp0s8`, e l'Adattatore 3 (Privata) si chiama `enp0s9`. Sostituisci i nomi negli script se necessario controllando `ip addr`.
 
-Esempio per `rac1`:
+Esempio per `rac1` (ricordati di cambiare l'IP al punto 2 e 3 se sei su un'altra VM!):
 
 ### 1. Interfaccia NAT (Internet) $\rightarrow$ `enp0s3`
 Non usare IP statici qui. Deve prendere IP, Gateway e DNS dal DHCP di VirtualBox.
