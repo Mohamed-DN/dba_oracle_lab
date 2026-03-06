@@ -155,12 +155,33 @@ Prima di creare qualsiasi VM, configura le reti a livello globale.
    - Adattatore 2: **Scheda solo host** → seleziona la rete 192.168.56.0
 6. **Installa Oracle Linux 7.9** (installazione minimale, no GUI)
 
+### Configurare la Rete (Console VirtualBox)
+
+> ⚠️ **Problema Copia-Incolla**: Sei appena entrato nella console nera di VirtualBox. Non puoi fare "copia e incolla" del codice qui sotto. Prima dobbiamo dare un IP alla macchina, e poi ci collegheremo comodamente con MobaXterm!
+
+Dal terminale di VirtualBox:
+1. Accedi come `root`
+2. Digita il comando: `nmtui`
+3. Scegli **Edit a connection**
+4. Vai sulla seconda scheda di rete (quella host-only, di solito `enp0s8`)
+5. Cambia IPv4 Configuration in **Manual**
+6. Inserisci l'indirizzo: `192.168.56.50/24` (lascia vuoto il gateway)
+7. Salva ed esci.
+8. Digita: `systemctl restart network`
+9. Verifica di avere l'IP: `ip addr show enp0s8`
+
+### Connettiti con MobaXterm (ORA PUOI FARE COPIA-INCOLLA!)
+
+Ora che la macchina ha l'IP `192.168.56.50`, minimizza VirtualBox e apri **MobaXterm** dal tuo PC Windows.
+- Crea una sessione SSH verso `192.168.56.50`, utente `root`.
+- Ora sei comodamente collegato e puoi incollare il blocco seguente!
+
 ### Configurare Dnsmasq
 
 ```bash
-# == ESEGUI COME ROOT su dnsnode ==
+# == ESEGUI COME ROOT (ora via MobaXterm) ==
 
-# 1. Configura IP statico sull'interfaccia host-only
+# (Opzionale) Rendi statica la configurazione di rete via file per sicurezza
 cat > /etc/sysconfig/network-scripts/ifcfg-enp0s8 <<EOF
 TYPE=Ethernet
 BOOTPROTO=static
@@ -171,6 +192,7 @@ IPADDR=192.168.56.50
 NETMASK=255.255.255.0
 EOF
 systemctl restart network
+
 
 # 2. Popola /etc/hosts con TUTTI gli hostname del cluster
 cat >> /etc/hosts <<EOF
