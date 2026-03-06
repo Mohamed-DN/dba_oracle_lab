@@ -8,6 +8,31 @@
 
 ---
 
+## 5.0 Preparazione Macchina Target (`dbtarget`)
+
+> ⚠️ Se hai posticipato la creazione del Target per concentrarti sul RAC, è il momento di mettere in piedi la VM di destinazione.
+
+1. **Crea la VM in VirtualBox**: 8GB RAM, 4 CPU, 50GB Disco, 2 Schede di rete (Scheda 1: NAT, Scheda 2: Host-Only 192.168.56.0).
+2. **Sistema Operativo**: Installa Oracle Linux 7.9 (minimale).
+3. **Imposta l'IP**: Dal terminale VirtualBox, fai login come root, avvia `nmtui`. Attiva il DHCP sulla scheda NAT e imposta l'IP manuale `192.168.56.150/24` (senza gateway) sulla scheda Host-Only. Riavvia la rete (`systemctl restart network`).
+4. **Hosts e DNS**: Collegati via MobaXterm a `192.168.56.150` come root e sovrascrivi `/etc/hosts`:
+   ```bash
+   cat > /etc/hosts <<EOF
+   127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+   ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+   192.168.56.150   dbtarget.localdomain   dbtarget
+   EOF
+   ```
+   > 💡 **LINK DI COMUNICAZIONE**: Affinché GoldenGate possa trasferire i file (Pump) dallo Standby verso il Target, **devi aggiungere l'IP del Target nel file `/etc/hosts` dei nodi Standby** (`racstby1` e `racstby2`):
+   > ```bash
+   > # Su racstby1 e racstby2 come root (fondamentale)
+   > echo "192.168.56.150   dbtarget.localdomain   dbtarget" >> /etc/hosts
+   > ```
+5. **Prerequisiti OS**: Ripeti gli step della [FASE 1](./GUIDA_FASE1_PREPARAZIONE_OS.md) (firewall, `oracle-database-preinstall-19c`, bash_profile, unzip oracle_sw).
+6. **Database Target**: Installa Oracle 19c (Solo Software DB) e crea un database Single Instance con `dbca` nominato `DBTAR`. Non installare Grid Infrastructure sul target.
+
+---
+
 ## 5.1 Architettura GoldenGate con ADG Standby
 
 L'architettura che implementiamo è chiamata **Downstream Integrated Extract**:

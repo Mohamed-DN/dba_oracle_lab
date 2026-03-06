@@ -142,7 +142,6 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
    - *Es. per rac2: `192.168.56.102/24`*
    - *Es. per racstby1: `192.168.56.111/24`*
    - *Es. per racstby2: `192.168.56.112/24`*
-   - *Es. per dbtarget: `192.168.56.150/24`*
 8. Salva, esci e torna al prompt.
 9. Riavvia la rete: `systemctl restart network`
 10. **TASSATIVO**: Verifica di avere Internet: `ping -c 2 google.com`
@@ -241,9 +240,6 @@ cat >> /etc/hosts <<'EOF'
 192.168.2.112    racstby2-priv.localdomain racstby2-priv
 192.168.56.113   racstby1-vip.localdomain  racstby1-vip
 192.168.56.114   racstby2-vip.localdomain  racstby2-vip
-
-# === TARGET GOLDENGATE ===
-192.168.56.150   dbtarget.localdomain   dbtarget
 EOF
 ```
 
