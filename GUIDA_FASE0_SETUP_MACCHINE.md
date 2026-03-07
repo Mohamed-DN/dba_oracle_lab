@@ -547,6 +547,9 @@ done
 ```
 *(L'output confermerà che per ogni disco è stata creata una nuova partizione Linux `sdX1` e la tabella delle partizioni è stata sincronizzata).*
 
+> 💡 **Tip da DBA: Perché NON formattiamo questi dischi in XFS né li mettiamo in fstab?**
+> A differenza di `/u01` (che è un filesystem gestito da Linux per contenere cartelle e file), i dischi ASM devono rimanere "grezzi" (raw block devices). Oracle ASM è un file system a sé stante (volume manager + file system combinati). Se provassi a montarli in `fstab`, Linux cercherebbe una struttura di cartelle ext4/xfs che non esiste, mandando in kernel panic la macchina all'avvio! Sarà ASMLib a riconoscerli al boot e a passarli ad Oracle.
+
 #### Step 3: Rileggi la tabella
 Diciamo al kernel di aggiornare la sua mappa dischi (altrimenti ASMLib non li vedrà).
 
