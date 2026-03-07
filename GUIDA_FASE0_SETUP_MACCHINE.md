@@ -620,10 +620,10 @@ Prima di poter avere i nodi standby, definisci il loro storage:
    - Impostali tutti come **Condivisibile (Shareable)**.
    > **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario!
 
-### 💡 Il Trucco del DBA: Clonare `rac1` per creare gli Standby
+### 💡 Il Trucco del DBA: Clonare dalla Golden Image (SNAP-04)
 
 Perché reinstallare il sistema operativo da zero e rifare tutta la preparazione OS (Fase 1) per i nodi standby? Non ha senso ed è prono ad errori (typo, pacchetti dimenticati)! 
-L'approccio più intelligente (e veloce) è aspettare di aver finito la **Fase 1 completa su `rac1`** e usarla come "Golden Image".
+L'approccio più intelligente (e veloce) è aspettare di aver finito la **Fase 1 completa su `rac1`**, creare lo snapshot **SNAP-04_Prerequisiti_Cloni_Pronti**, e usare quello snapshot come "Golden Image" da clonare.
 
 Alla fine della Fase 1, dal tuo `rac1` spento, eseguirai queste clonazioni in cascata, generando sempre **nuovi indirizzi MAC**:
 1. `rac1` -> Clona in `rac2` (come spiegato nella Sezione 1.14).
