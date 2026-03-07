@@ -422,37 +422,37 @@ MAP HR.*, TARGET HR.*;
 
 ---
 
-## 5.10 Initial Load (Caricamento Iniziale)
+## 5.10 Initial Load (Instanziazione) tramite CSN
 
-Prima di avviare la replica continua, devi caricare i dati esistenti sul target.
+Prima di avviare la replica continua, devi caricare i dati esistenti sul target. La **Best Practice Oracle** è usare Data Pump (`expdp`/`impdp`) sincronizzato tramite un **SCN (System Change Number)** specifico. Senza questo, il Replicat applicherebbe modifiche sovrapposte al dump, causando errori di violazione chiave primaria!
 
-### Metodo 1: Oracle Data Pump (Consigliato)
+### Step 1: Trova l'SCN corrente sullo Standby
+
+```sql
+-- Su racstby1 (come sysdba)
+sqlplus / as sysdba
+SELECT current_scn FROM v$database;
+-- Annota questo numero! Es: 3456789
+```
+
+### Step 2: Esporta i dati congelati a quell'SCN
 
 ```bash
-# Sullo Standby (in ADG Read Only) - esporta
-expdp ggadmin/<password>@RACDB_STBY schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_export.log
+# Sullo Standby - esporta specificando l'SCN
+expdp ggadmin/<password>@RACDB_STBY schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_export.log flashback_scn=3456789
+```
 
+### Step 3: Trasferisci e Importa sul Target
+
+```bash
 # Trasferisci il dump
-scp /path/to/hr_initial.dmp oracle@dbtarget:/path/to/
+scp /u01/app/oracle/admin/RACDB_STBY/dpdump/hr_initial.dmp oracle@dbtarget:/u01/app/oracle/admin/DBTAR/dpdump/
 
 # Sul Target - importa
 impdp ggadmin/<password> schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_import.log
 ```
 
-### Metodo 2: GoldenGate Initial Load
-
-```
--- Usa un Extract speciale in modalità "SOURCEISTABLE"
-GGSCI> ADD EXTRACT initload, SOURCEISTABLE
-GGSCI> ADD RMTTRAIL ./dirdat/il, EXTRACT initload
-GGSCI> EDIT PARAMS initload
-
-EXTRACT initload
-USERID ggadmin@RACDB_STBY, PASSWORD <password>
-RMTHOST dbtarget.localdomain, MGRPORT 7809
-RMTTRAIL ./dirdat/il
-TABLE HR.*;
-```
+> 💡 **Il trucco del DBA**: Avendo importato i dati fermi all'SCN `3456789`, diremo al Replicat di ignorare tutte le transazioni precedenti a quel momento e di applicare solo le novità!
 
 ---
 
@@ -470,9 +470,10 @@ GGSCI> START EXTRACT ext_racdb
 -- 3. Avvia il Data Pump sullo Standby
 GGSCI> START EXTRACT pump_racdb
 
--- 4. Avvia il Replicat sul Target
+-- 4. Avvia il Replicat sul Target (Fondamentale l'uso del CSN!)
+-- Questo dice a GG di scartare le transazioni vecchie e applicare solo quelle DOPO l'esportazione:
 -- Sul target:
-GGSCI> START REPLICAT rep_racdb
+GGSCI> START REPLICAT rep_racdb, AFTERCSN 3456789
 ```
 
 ### Verifica
