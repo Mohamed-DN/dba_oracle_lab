@@ -601,24 +601,17 @@ Le istruzioni dettagliate passo-passo per clonare in modo sicuro si trovano alla
 
 ---
 
-## 0.10 Setup Macchine Standby (`racstby1`, `racstby2`)
+## 0.10 Preparazione Dischi per lo Standby (SOLO DISCHI!)
 
-Per costruire il nostro Data Guard, abbiamo bisogno di un secondo cluster RAC gemello (lo Standby). 
+Per costruire il nostro Data Guard, abbiamo bisogno di uno storage separato per il secondo cluster. 
 
-> 💡 **Oracle Best Practices: Serve un altro Server DNS per lo Standby?**
-> **NO.** In un ambiente Enterprise reale, primario e standby si trovano spesso nello stesso dominio aziendale o in domini trustati in foresta Active Directory, risolvibili globalmente. Nel nostro laboratorio, abbiamo già popolato il file `/etc/hosts` e il `dnsmasq` del `dnsnode` unico con **TUTTI** gli indirizzi del lab (sia primari che standby). 
-> Il nostro singolo `dnsnode` (192.168.56.50) fungerà da DNS globale per l'intero data center simulato.
+> 🛑 **ATTENZIONE:** In questa fase **NON creare le macchine virtuali** `racstby1` o `racstby2`. Le creerai in 30 secondi clonando la "Golden Image" alla fine della Fase 1. Ora devi solo creare i "pezzi di ferro" (i dischi .vdi) che useranno dopo.
 
-### Preparazione dell'Hardware Virtuale Standby
-
-Prima di poter avere i nodi standby, definisci il loro storage:
-
-1. **Rete Privata Standby**: Assicurati di avere in VirtualBox la terza scheda di rete in Host-Only che usa la subnet `192.168.2.0/24` (a differenza del primario che usa `1.0`). Questa è l'Interconnect dello Standby.
-2. **Dischi condivisi ASM per lo Standby**:
-   - Vai in VirtualBox -> Virtual Media Manager (`Ctrl+D`).
-   - Crea 5 nuovi dischi **Dimensione Fissa**: `asm-stby-crs1` (2GB), `asm-stby-crs2` (2GB), `asm-stby-crs3` (2GB), `asm-stby-data` (20GB), `asm-stby-reco` (15GB).
-   - Impostali tutti come **Condivisibile (Shareable)**.
-   > **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario!
+### Creazione Dischi Condivisi ASM per lo Standby:
+1.  Vai in VirtualBox -> **Virtual Media Manager** (`Ctrl+D`).
+2.  Crea 5 nuovi dischi **Dimensione Fissa**: `asm-stby-crs1` (2GB), `asm-stby-crs2` (2GB), `asm-stby-crs3` (2GB), `asm-stby-data` (20GB), `asm-stby-reco` (15GB).
+3.  Impostali tutti come **Condivisibile (Shareable)**.
+> **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario!
 
 ### 💡 Il Trucco del DBA: Clonare dalla Golden Image (SNAP-04)
 
