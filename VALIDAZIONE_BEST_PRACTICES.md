@@ -69,9 +69,9 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 | # | Best Practice Oracle | Il Nostro Lab | Status | Nota |
 |---|---|---|---|---|
 | 8 | SCAN risolto da DNS (non /etc/hosts) | ✅ BIND configurato | ✅ | Perfetto |
-| 9 | SCAN 3 IP | ✅ .120, .121, .122 | ✅ | Perfetto |
-| 10 | Interconnect su rete separata | ✅ Host-Only 10.10.10.x | ✅ | Perfetto |
-| 11 | VIP su stessa subnet della pubblica | ✅ .111, .112 su 192.168.1.x | ✅ | Perfetto |
+| 9 | SCAN 3 IP | ✅ .105, .106, .107 | ✅ | Perfetto |
+| 10 | Interconnect su rete separata | ✅ Host-Only 192.168.1.x e 2.x | ✅ | Perfetto |
+| 11 | VIP su stessa subnet della pubblica | ✅ .103, .104 su 192.168.56.x | ✅ | Perfetto |
 | 12 | `dns=none` in NetworkManager | ✅ In Fase 0.10C | ✅ | Fondamentale |
 | 13 | NTP/chrony sincronizzato | ✅ chrony in 0.10D | ✅ | Perfetto |
 
