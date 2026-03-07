@@ -520,7 +520,7 @@ Tutti i dischi ASM devono essere partizionati prima di essere assegnati ad ASMLi
 >
 > **Tassativo**: verifica la dimensione dei dischi con `lsblk` prima di partizionare per essere sicuro di non formattare il disco sbagliato.
 
-#### Step 1: Esegui `fdisk` per ogni singolo disco
+#### Step 1: Esegui `fdisk` in modalità Manuale (Didattico)
 Dal terminale MobaXterm su `rac1` come utente `root`, lancia `fdisk` per il primo disco:
 
 ```bash
@@ -532,9 +532,20 @@ fdisk /dev/sdc
 4. Premi `Invio` (accetta il first sector di default)
 5. Premi `Invio` (accetta il last sector di default, prendendo tutto il disco)
 6. Premi `w` (write and exit)
+7. Ripeti l'operazione per gli altri dischi: `fdisk /dev/sdd`, `fdisk /dev/sde`, `fdisk /dev/sdf`, e `fdisk /dev/sdg`.
 
-#### Step 2: Ripeti l'operazione
-Ripeti fedelmente `fdisk /dev/sdd`, `fdisk /dev/sde`, `fdisk /dev/sdf`, e `fdisk /dev/sdg` premendo l'esatta medesima sequenza (`n, p, 1, invio, invio, w`).
+#### Step 1.1: Metodo Veloce (Opzionale - Script Automatico)
+In alternativa al fdisk manuale disco per disco, puoi usare questo comodo script "copia e incolla" che eseguirà le sequenze `n, p, 1, invio, invio, w` in automatico per tutti i cinque dischi.
+
+Dal terminale su `rac1` come `root`, incolla:
+
+```bash
+for disk in /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg; do
+  echo "Partizionando $disk..."
+  echo -e "n\np\n1\n\n\nw" | fdisk $disk
+done
+```
+*(L'output confermerà che per ogni disco è stata creata una nuova partizione Linux `sdX1` e la tabella delle partizioni è stata sincronizzata).*
 
 #### Step 3: Rileggi la tabella
 Diciamo al kernel di aggiornare la sua mappa dischi (altrimenti ASMLib non li vedrà).
