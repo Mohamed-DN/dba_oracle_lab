@@ -463,24 +463,26 @@ mkdir -p /u01
 ### Step 5: Montaggio Permanente (fstab)
 Per fare in modo che il disco non si smonti al riavvio, bisogna registrarlo in `/etc/fstab`. Invece del nome `sdb1` (che potrebbe cambiare), usiamo l'UUID univoco del disco.
 
-> 💡 **Tip da DBA: Come si legge il file fstab?**
+> 💡 **Tip da DBA: Come si legge il file fstab e perché usiamo 0 0?**
 > La riga che stiamo per aggiungere è composta da 6 campi separati da spazi/tab:
 > `<Device/UUID>  <Mount Point>  <File System>  <Opzioni>  <Dump>  <Fsck Pass>`
-> Nel nostro caso: `UUID=... /u01 xfs defaults 1 2`
+> Nel nostro caso: `UUID=... /u01 xfs defaults 0 0`
 > - `defaults`: Usa le opzioni di mount standard (rw, suid, dev, exec, auto, nouser, async).
-> - **Il `1` (Campo 5 - Dump)**: Abilita il backup del filesystem tramite l'utility `dump` di Linux. `0` significa ignoralo, `1` significa includilo.
-> - **Il `2` (Campo 6 - Pass)**: Indica l'ordine in cui il tool `fsck` (File System Consistency Check) scansionerà i dischi all'avvio nel caso in cui la macchina si fosse spenta male. `0` = non controllare, `1` = controlla per primo (riservato al disco root `/`), **`2` = controlla dopo aver finito il root**. Siccome la nostra `/u01` contiene dati importanti per Oracle ma non è il sistema operativo, `2` è il valore corretto!
+> - **Campo 5 (Dump)**: Abilita il backup dell'utility legacy `dump`. Per i filesystem `xfs` (lo standard moderno di Oracle Linux), questo tool è obsoleto (si usa `xfsdump`). Pertanto, si imposta sempre a `0` (disabilitato).
+> - **Campo 6 (Pass)**: Indica l'ordine in cui il tool `fsck` scansionerà i dischi all'avvio. Con i vecchi filesystem ext3/ext4 si usava `1` per il root e `2` per gli altri dischi. **Ma XFS non usa fsck al boot!** XFS gestisce la consistenza (journaling) internamente al momento del mount.
+> 
+> Ecco perché se guardi il tuo `fstab`, vedrai che anche il disco di Root (`/`) ha impostato `0 0`. Per coerenza e best practice, assegniamo `0 0` anche alla nostra `/u01` in XFS!
 
 ```bash
 # Leggi l'UUID del disco
 blkid /dev/sdb1
 
 # Copia mentalmente l'UUID e aggiungi questa riga in fondo al file /etc/fstab usando 'vi' o 'nano':
-# UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx /u01 xfs defaults 1 2
+# UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx /u01 xfs defaults 0 0
 
 # Oppure, se preferisci un comando rapido che fa tutto da solo:
 UUID=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=${UUID}  /u01  xfs  defaults 1 2" >> /etc/fstab
+echo "UUID=${UUID}  /u01  xfs  defaults 0 0" >> /etc/fstab
 ```
 
 ### Step 6: Monta e Verifica
