@@ -130,10 +130,12 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 > ⚠️ **ATTENZIONE**: Appena installato il sistema operativo, ti trovi nella console nera di VirtualBox dove **non puoi incollare testo**. Tutte le configurazioni successive (come l'`/etc/hosts`) sono file lunghissimi. 
 > Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. Questo vale per **TUTTE le macchine** (`rac1`, `rac2`, `racstby1`, etc.) man mano che le crei.
 
-**Passo 1: Assegna un IP Temporaneo (dalla console VirtualBox)**
-1. Fai login come `root` sulla VM che stai preparando.
-2. Esegui: `nmtui`
-3. Seleziona **Edit a connection**.
+**Passo 1: Assegna un IP Temporaneo e Hostname (dalla console VirtualBox)**
+1. Fai login come `root` sulla VM che stai preparando (iniziamo con `rac1`).
+2. Imposta l'hostname completo:
+   `hostnamectl set-hostname rac1.localdomain`
+3. Esegui: `nmtui`
+4. Seleziona **Edit a connection**.
 4. **ATTIVA IL NAT (Internet)**: Seleziona la PRIMA scheda (es. `enp0s3`), vai su Edit, e assicurati che la casella **"Automatically connect"** sia SPUNTATA. Fai OK. Questo garantisce l'accesso a Internet via DHCP di VirtualBox.
 5. **CONFIGURA L'IP PUBBLICO**: Seleziona la SECONDA scheda (es. `enp0s8` host-only), vai su Edit.
 6. Cambia IPv4 Configuration in **Manual**.
