@@ -486,19 +486,26 @@ echo "UUID=${UUID}  /u01  xfs  defaults 0 0" >> /etc/fstab
 ```
 
 ### Step 6: Monta e Verifica
-Aggiorna i mount correnti leggendo l'`fstab` e verifica le dimensioni.
+Scrivere in `fstab` dice al sistema cosa fare al prossimo riavvio. Per montare il disco *adesso* senza riavviare, usiamo il comando globale di mount che rilegge il file.
 
 ```bash
-mount /u01
-df -h /u01
+mount -a
+df -h
 ```
-*(L'output deve mostrare ~100 GB disponibili e montati su `/u01`)*
+*(Cerca `/u01` nell'elenco. L'output deve mostrare ~100 GB disponibili e montati).*
 
 ---
 
 ## 0.8 Configurare ASMLib (oracleasm) per i Dischi ASM
 
-> **ASMLib vs UDEV**: Sebbene Oracle spinga verso udev o ASMFD sulle ultime release, **ASMLib (`oracleasm`)** rimane un metodo robusto, facile da usare e storicamente consolidato per l'insegnamento e i laboratori su Oracle Linux 7/8. Utilizzeremo questo metodo.
+> **ASMLib (Deprecated) vs UDEV vs ASMFD**:  
+> Come hai giustamente notato se leggi la documentazione ufficiale recente, Oracle considera **ASMLib deprecato** sulle nuove release (Oracle Linux 8/9 e DB 19c+), raccomandando caldamente l'uso di **udev rules** (lo standard Linux) o di **ASMFD** (ASM Filter Driver). 
+> 
+> *Perché allora usiamo ASMLib nel nostro laboratorio (Oracle Linux 7.9)?*
+> 1. È storicamente il metodo più diffuso su OEL 7, ed è probabile che in produzione tu debba ancora gestire cluster legacy che lo usano.
+> 2. È estremamente didattico e intuitivo ("timbrare" i dischi con un nome logico come `CRS1` facilita enormemente la prima installazione Grid in VirtualBox rispetto a scrivere regole udev complesse basate su SCSI ID).
+> 
+> Per il nostro progetto "Scuola DBA", la semplicità di ASMLib vince. Ma in uno scenario Enterprise greenfield moderno, useresti UDEV o ASMFD!
 
 ### 1. Partizionamento dei dischi (== ESEGUI SOLO SU rac1 ==)
 
