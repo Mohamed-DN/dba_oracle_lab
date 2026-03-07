@@ -486,18 +486,37 @@ df -h /u01
 
 ### 1. Partizionamento dei dischi (== ESEGUI SOLO SU rac1 ==)
 
-Tutti i dischi ASM devono essere partizionati prima di essere assegnati ad ASMLib.
+Tutti i dischi ASM devono essere partizionati prima di essere assegnati ad ASMLib. Invece di usare script automatici "ciechi", mapperemo logicamente i dischi ai loro scopi ASM (CRS, DATA, RECO) e li partizioneremo a mano. È il lavoro base di un DBA!
 
+> 💡 **Mapping Dischi Fisici → Ruoli ASM (Lab)**:
+> - `sdc` (2GB) -> CRS Disk 1 (Quorum/OCR)
+> - `sdd` (2GB) -> CRS Disk 2
+> - `sde` (2GB) -> CRS Disk 3
+> - `sdf` (20GB) -> DATA (Datafiles del DB)
+> - `sdg` (15GB) -> RECO / FRA (Archivelog e Backup)
+>
+> **Tassativo**: verifica la dimensione dei dischi con `lsblk` prima di partizionare per essere sicuro di non formattare il disco sbagliato.
+
+#### Step 1: Esegui `fdisk` per ogni singolo disco
+Dal terminale MobaXterm su `rac1` come utente `root`, lancia `fdisk` per il primo disco:
 ```bash
-# Come root su rac1
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdc   # CRS disk 1
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdd   # CRS disk 2
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sde   # CRS disk 3
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdf   # DATA disk
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdg   # RECO disk
+fdisk /dev/sdc
+```
+1. Premi `n` (new partition)
+2. Premi `p` (primary partition)
+3. Premi `1` (partition number 1)
+4. Premi `Invio` (accetta il first sector di default)
+5. Premi `Invio` (accetta il last sector di default, prendendo tutto il disco)
+6. Premi `w` (write and exit)
 
-# Rileggi la tabella delle partizioni
+#### Step 2: Ripeti l'operazione
+Ripeti fedelmente `fdisk /dev/sdd`, `fdisk /dev/sde`, `fdisk /dev/sdf`, e `fdisk /dev/sdg` premendo l'esatta medesima sequenza (`n, p, 1, invio, invio, w`).
+
+#### Step 3: Rileggi la tabella
+Diciamo al kernel di aggiornare la sua mappa dischi (altrimenti ASMLib non li vedrà).
+```bash
 partprobe
+
 ```
 
 ### 2. Installazione e Configurazione ASMLib (== ESEGUI SU rac1 E rac2 ==)
