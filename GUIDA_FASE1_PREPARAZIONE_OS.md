@@ -214,6 +214,7 @@ Ora che hai aperto il terminale in MobaXterm e hai fatto login come `root`, rend
 Esempio per `rac1` (ricordati di cambiare l'IP al punto 2 e 3 se sei su un'altra VM!):
 
 ### 1. Interfaccia NAT (Internet) $\rightarrow$ `enp0s3`
+> **Nodo: rac1** | **Utente: root**
 Non usare IP statici qui. Deve prendere IP, Gateway e DNS dal DHCP di VirtualBox.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-enp0s3 <<'EOF'
@@ -226,6 +227,7 @@ EOF
 ```
 
 ### 2. Interfaccia Pubblica (192.168.56.x) $\rightarrow$ `enp0s8`
+> **Nodo: rac1** | **Utente: root**
 Questa è la rete del Lab dove i nodi comunicano tra loro e con il tuo PC.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-enp0s8 <<'EOF'
@@ -241,7 +243,8 @@ EOF
 ```
 > *(Nota: Abbiamo omesso volontariamente il GATEWAY qui per evitare che scavalchi il NAT interrompendo l'accesso a Internet)*
 
-### 3. Interfaccia Privata (192.168.1.x o o 2.x) $\rightarrow$ `enp0s9`
+### 3. Interfaccia Privata (Interconnect) $\rightarrow$ `enp0s9`
+> **Nodo: rac1** | **Utente: root**
 L'interconnect per il traffico esclusivo del cluster. **NIENTE GATEWAY QUI**.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-enp0s9 <<'EOF'
@@ -261,12 +264,17 @@ EOF
 # Riavvia il networking
 systemctl restart network
 
-# Verifica
-ip addr show eth0
-ip addr show eth1
+# Verifica (Sostituisci i nomi se diversi sul tuo sistema)
+ip addr show enp0s3
+ip addr show enp0s8
+ip addr show enp0s9
+
 ping -c 2 rac2        # Da rac1 (dopo aver configurato hosts)
 ping -c 2 rac2-priv   # Da rac1 (rete privata)
 ```
+
+> ⚠️ **PERCHÉ ETH0 NON ESISTE?**
+> Nelle versioni moderne di Oracle Linux (come la 7.9), il sistema non usa più la nomenclatura `eth0`, `eth1` ecc. ma nomi "consistenti" basati sulla posizione hardware (es. `enp0s3`). Se provi a fare `ip addr show eth0` e ricevi errore, è perché la tua scheda si chiama `enp0s3`. Usa sempre `ip addr` per vedere i nomi reali assegnati dal BIOS della tua VM.
 
 ---
 
