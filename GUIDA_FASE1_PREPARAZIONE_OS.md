@@ -616,12 +616,33 @@ Se i limits per l'utente `grid` non esistono (il preinstall li crea solo per `or
    cp /etc/security/limits.d/oracle-database-preinstall-19c.conf \
       /etc/security/limits.d/grid-database-preinstall-19c.conf
    ```
-2. Apri il nuovo file con l'editor testuale:
+2. Apri il nuovo file con `vi`:
    ```bash
    vi /etc/security/limits.d/grid-database-preinstall-19c.conf
    ```
-3. Scendi lungo il file e cambia la parola `oracle` con `grid` in *tutte* le righe non commentate.
+3. 💡 **Vim Pro Tip (Sostituzione Rapida)**:
+   Invece di cambiare ogni riga a mano, usa questo comando "magico" di Vim. Digita (mentre non sei in modalità inserimento):
+   `:%s/oracle/grid/g`
+   E poi premi `Invio`. Vim sostituirà TUTTE le scadenze di "oracle" con "grid" in un colpo solo!
 4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
+
+---
+
+## 🚀 DBA Pro Tip: Come fare tutto velocemente (MobaXterm)
+
+Se trovi noioso ripetere gli stessi comandi su `rac1`, `rac2`, ecc., usa queste due tecniche:
+
+1. **Multi-Execution Mode (Il Top!)**:
+   In MobaXterm, clicca sul pulsante **"Multi-exec"** (icona con quattro terminali). Qualsiasi comando scriverai in un tab verrà replicato istantaneamente su TUTTI i tab aperti. Perfetto per `/etc/hosts`, installazione pacchetti e setup utenti.
+   > ⚠️ **ATTENZIONE**: Disabilitalo quando devi scrivere IP specifici per ogni nodo!
+
+2. **Copiare i file tra nodi (scp)**:
+   Invece di fare `cat` su ogni macchina, puoi configurare un file su `rac1` e copiarlo sugli altri:
+   ```bash
+   scp /etc/resolv.conf rac2:/etc/
+   ```
+
+---
 
 ---
 
