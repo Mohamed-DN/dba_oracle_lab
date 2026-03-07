@@ -735,26 +735,14 @@ chronyc sources
 
 ---
 
-## 1.12 Predisposizione Chiavi SSH (Golden Image)
+## 1.12 Predisposizione SSH (GUIDA RIVISTA)
 
-> 💡 **Nodo: rac1** | **Utente: grid / oracle**
-> Lo facciamo ora sulla Golden Image così i cloni avranno già la loro chiave privata pronta. **In questa fase NON puoi ancora scambiare le chiavi con rac2 (perché non esiste ancora!)**. 
+> ⚠️ **IMPORTANTE**: Abbiamo deciso di **NON** generare le chiavi sulla Golden Image. 
+> Se le generassimo su `rac1` e poi clonassimo, tutti i nodi avrebbero la **stessa identica chiave**, il che non è la best practice di sicurezza.
+> 
+> **COSA FARE ORA**: Salta questo passaggio e vai direttamente al punto 1.13. Genereremo chiavi uniche per ogni nodo nella **Sezione 1.15**, subito dopo la clonazione.
 
-### Generazione su rac1 (come utente `grid`):
-```bash
-su - grid
-ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-# Premi Invio se ti chiede di sovrascrivere.
-```
-
-### Generazione su rac1 (come utente `oracle`):
-```bash
-su - oracle
-ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-# Premi Invio se ti chiede di sovrascrivere.
-```
-
-> **STOP! Lo scambio delle chiavi (`ssh-copy-id`) va fatto solo DOPO la clonazione (Sezione 1.15).**
+---
 
 ---
 
@@ -809,20 +797,36 @@ Accendi i cloni uno alla volta e usa `nmtui` per cambiare:
 
 ---
 
-## 1.15 Configurazione Post-Clonazione: SSH Trust (Scambio Chiavi)
+## 1.15 Configurazione Post-Clonazione: SSH Trust (Chiavi UNICHE)
 
 > 💡 **Nodi: rac1 E rac2** | **Utente: grid / oracle**
-> Ora che entrambi i nodi sono vivi e hanno IP diversi, possiamo finalmente farli "fidare" l'uno dell'altro.
+> Ora che entrambi i nodi sono vivi e hanno IP diversi, creiamo le loro identità digitali uniche e facciamoli "fidare" l'uno dell'altro.
 
-### Per l'utente `grid` (Esegui su ENTRAMBI i nodi):
-Assicurati di essere loggato come `grid` su entrambi i tab di MobaXterm.
+### STEP 1: Generazione Chiavi (Esegui su ENTRAMBI i nodi)
+Apri due tab in MobaXterm (uno per `rac1` e uno per `rac2`) e attiva il **Multi-Execution Mode**.
 
+**Come utente `grid`:**
 ```bash
-# Da rac1 manda la chiave a rac2
+su - grid
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+```
+
+**Come utente `oracle`:**
+```bash
+su - oracle
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+```
+
+### STEP 2: Scambio Chiavi (SSH Trust)
+Ora **DISABILITA** il Multi-Execution Mode e procedi nodo per nodo.
+
+#### Per l'utente `grid`:
+```bash
+# Da rac1 manda la chiave a se stesso e a rac2
 ssh-copy-id grid@rac1
 ssh-copy-id grid@rac2
 
-# Da rac2 manda la chiave a rac1
+# Da rac2 manda la chiave a se stesso e a rac1
 ssh-copy-id grid@rac1
 ssh-copy-id grid@rac2
 
@@ -831,7 +835,7 @@ ssh grid@rac1 date
 ssh grid@rac2 date
 ```
 
-### Per l'utente `oracle` (Esegui su ENTRAMBI i nodi):
+#### Per l'utente `oracle`:
 ```bash
 # Da rac1
 ssh-copy-id oracle@rac1
@@ -841,6 +845,8 @@ ssh-copy-id oracle@rac2
 ssh-copy-id oracle@rac1
 ssh-copy-id oracle@rac2
 ```
+
+> 💡 **PERCHÉ ORA?** Facendolo in questo momento, ogni macchina genera la sua chiave specifica. Se lo avessimo fatto nella Golden Image, `rac1` e `rac2` sarebbero stati "gemelli identici" a livello di sicurezza SSH (stessa chiave privata), il che è sconsigliato.
 
 ---
 
