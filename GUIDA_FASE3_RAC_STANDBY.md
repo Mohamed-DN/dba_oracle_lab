@@ -39,9 +39,9 @@
 
 Prima di poter configurare Data Guard, devi **costruire fisicamente** il cluster Standby. Come spiegato in Fase 0, **non re-installare Linux da zero**. Usa `rac1` (esattamente allo stato post-Fase 1, prima di installare Grid) come tua **Golden Image**.
 
-### Step 1: Clona le Macchine
-1. Assicurati che `rac1` sia spento (o usa il suo snapshot `SNAP-04_Prerequisiti_Cloni_Pronti`).
-2. Da VirtualBox, fai tasto destro su `rac1` -> **Clona**.
+### Step 1: Clona le Macchine dalla Golden Image
+1. Assicurati che `rac1` sia spento.
+2. Apri **VirtualBox Manager**, fai clic sulla VM `rac1`, vai nella sezione "Istantanee" (Snapshots), seleziona `SNAP-04_Prerequisiti_Cloni_Pronti` e clicca su **Clona**. *(Devi partire da questo esatto snapshot, NON dallo stato attuale o da snapshot successivi!)*
 3. Nome: `racstby1` -> Seleziona **Genera nuovi indirizzi MAC** -> Clonazione completa.
 4. Ripeti l'operazione per creare `racstby2` (clonando sempre da `rac1`).
 5. Assegna a `racstby1` e `racstby2` i 5 dischi condivisi fittizi creati per lo standby (`asm-stby-crs1`, `asm-stby-crs2`, ecc.).

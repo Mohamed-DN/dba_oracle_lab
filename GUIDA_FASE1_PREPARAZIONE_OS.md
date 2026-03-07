@@ -763,16 +763,22 @@ chown grid:oinstall /etc/oraInst.loc
 
 > ⚠️ **ATTENZIONE:** Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e SSH su `rac1`. **Questo è l'esatto momento in cui devi clonare la macchina per creare `rac2`!** Se non lo fai ora e procedi alla Fase 2, dovrai ripetere manualmente tutti i 13 step precedenti anche sul secondo nodo!
 
-### Step 1: Spegni `rac1`
+### Step 1: Fai lo Snapshot (Golden Image) e Spegni `rac1`
 Per clonare in sicurezza, la macchina sorgente deve essere spenta.
 ```bash
 # Da MobaXterm su rac1
 poweroff
 ```
 
-### Step 2: Clona in VirtualBox
+> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
+> Appena la macchina è spenta, fai lo snapshot ORA. Questo snapshot è la tua "Golden Image". Da qui nasceranno tutti gli altri nodi.
+> ```
+> VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
+> ```
+
+### Step 2: Clona in VirtualBox partendo dallo Snapshot
 1. Apri **VirtualBox Manager**.
-2. Fai clic col tasto destro sulla VM `rac1` -> **Clona...**
+2. Fai clic sulla VM `rac1`, vai nella sezione "Istantanee" (Snapshots), seleziona `SNAP-04_Prerequisiti_Cloni_Pronti` e clicca su **Clona**. *(Importante: Clona dalla snapshot, non dallo stato attuale "Macchina Spenta")*.
 3. **Nome**: `rac2`
 4. **Policy Indirizzo MAC**: Scegli tassativamente **Genera nuovi indirizzi MAC per tutte le schede di rete** (Altrimenti avrai conflitti IP!).
 5. Clicca **Avanti**.
@@ -833,6 +839,20 @@ Se entri in entrambe, la clonazione è stata un successo perfetto!
 > VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
 > VBoxManage snapshot "rac2" take "SNAP-04_Prerequisiti_Cloni_Pronti"
 > ```
+
+---
+
+## 💡 Procedura Operativa: Il Momento della Verità
+
+Per essere sicuri al 100% del workflow (Golden Image Strategy):
+
+1.  **FASE 1 (ORA)**: Esegui TUTTI i passaggi (da 1.1 a 1.13) **SOLO su `rac1`**.
+2.  **STOP**: Quando hai finito tutto su `rac1`, **SPEGNILA**.
+3.  **SNAPSHOT**: Fai lo snapshot `SNAP-04_Prerequisiti_Cloni_Pronti` su `rac1` spenta.
+4.  **CLONE**: Da quello snapshot, crea i cloni per `rac2`, `racstby1` e `racstby2` (usando "Clona" dalla snapshot).
+5.  **CUSTOMIZE**: Accendi i cloni (uno alla volta) e cambia solo **Hostname** e **IP** (Sincronizzandoli con la tabella al punto 1.1).
+
+**SOLO DOPO** aver fatto questo e aver verificato che tutti i nomi e gli IP rispondano correttamente, potrai procedere alla **FASE 2** (Installazione Grid).
 
 ---
 
