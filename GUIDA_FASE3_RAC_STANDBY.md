@@ -29,17 +29,51 @@
 │ NO database │   rete in tempo      │ ┌────┐ ┌────┐   │
 │ racstby1/2  │   reale!             │ │DB1 │ │DB2 │   │
 └─────────────┘                      │ └────┘ └────┘   │
-                                     │ MRP: Applica redo│
                                      │ in tempo reale   │
                                      └──────────────────┘
 ```
 
 ---
 
+## 3.0 Creazione Macchine Standby e Setup Base (Il Metodo Golden Image)
+
+Prima di poter configurare Data Guard, devi **costruire fisicamente** il cluster Standby. Come spiegato in Fase 0, **non re-installare Linux da zero**. Usa `rac1` (esattamente allo stato post-Fase 1, prima di installare Grid) come tua **Golden Image**.
+
+### Step 1: Clona le Macchine
+1. Assicurati che `rac1` sia spento (o usa il suo snapshot `SNAP-03_Prerequisiti_Cloni_Pronti`).
+2. Da VirtualBox, fai tasto destro su `rac1` -> **Clona**.
+3. Nome: `racstby1` -> Seleziona **Genera nuovi indirizzi MAC** -> Clonazione completa.
+4. Ripeti l'operazione per creare `racstby2` (clonando sempre da `rac1`).
+5. Assegna a `racstby1` e `racstby2` i 5 dischi condivisi fittizi creati per lo standby (`asm-stby-crs1`, `asm-stby-crs2`, ecc.).
+
+### Step 2: Modifica IP e Hostname
+Accendi **UNA VM ALLA VOLTA** (dalla console nera di VirtualBox, non usare MobaXterm ancora) ed esegui queste modifiche:
+
+**Su `racstby1`:**
+- `hostnamectl set-hostname racstby1.localdomain`
+- Lancia `nmtui` e cambia Scheda Pubblica a **`192.168.56.111`**
+- Lancia `nmtui` e cambia Scheda Privata (Interconnect) a **`192.168.2.111`** (Attenzione, rete 2.x!)
+- Riavvia (`reboot`)
+
+**Su `racstby2`:**
+- `hostnamectl set-hostname racstby2.localdomain`
+- Lancia `nmtui` e cambia Scheda Pubblica a **`192.168.56.112`**
+- Lancia `nmtui` e cambia Scheda Privata (Interconnect) a **`192.168.2.112`**
+- Riavvia (`reboot`)
+
+### Step 3: Ripeti Installazione Grid e Database (Fase 2)
+Ora che i nodi standby esistono e la rete funziona, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby:
+1. **Installazione Grid Infrastructure:** Segui la Fase 2 paro paro, ma inserisci come nodi `racstby1` e `racstby2`, e come SCAN name `racstby-scan.localdomain`.
+2. **Installazione Database (Software Only):** Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
+
+Fatto questo, hai un cluster RAC vuoto pronto per ricevere i dati dal primario. 
+
+---
+
 ## 3.1 Prerequisiti sui Nodi Standby
 
-Prima di iniziare, i nodi standby devono avere completato:
-- ✅ **Fase 1 completa** (OS, DNS, utenti, SSH, etc.) su `racstby1` e `racstby2`
+Per verificare di essere pronto per proseguire con Data Guard, fai questa check-list sui nodi standby:
+- ✅ **Fase 1 completa** tramite la clonazione (OS, DNS, utenti, SSH) su `racstby1` e `racstby2`.
 - ✅ **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6) su `racstby1` e `racstby2`
 - ✅ **Software Database installato** (Fase 2.8, solo Software Only, NESSUN database creato) su `racstby1` e `racstby2`
 - ✅ I Disk Group **DATA** e **FRA** devono esistere sullo standby con gli stessi nomi del primario
