@@ -586,6 +586,12 @@ oracleasm init
 > `setenforce 0`
 > E poi ripeti il comando `oracleasm init`.
 
+> 📸 **SNAPSHOT — "SNAP-02: Base VM Ready" ⭐ MILESTONE**
+> Hai finito la Fase 0! L'hardware, i dischi, la rete di base e ASMLib sono pronti. Fai uno snapshot adesso. Se fai disastri in Fase 1, potrai tornare qui e ripartire con una macchina pulita in 10 secondi invece di reinstallare l'OS.
+> ```
+> VBoxManage snapshot "rac1" take "SNAP-02_Base_VM_Ready"
+> ```
+
 ---
 
 ## 0.9 Clonazione `rac1` → `rac2`
