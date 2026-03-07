@@ -335,222 +335,56 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 
 > **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
-> 📸 **SNAPSHOT — "SNAP-02: Rete e DNS Configurati"**
-> Hai rete statica + DNS funzionante. Se qualcosa va storto dopo, puoi tornare qui.
+> 📸 **SNAPSHOT — "SNAP-02: Rete Configurata"**
+> Hai rete statica funzionante. Se qualcosa va storto dopo, puoi tornare qui.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-02_Rete_OK"
 > ```
-> VBoxManage snapshot "rac1" take "SNAP-02_Rete_DNS_OK"
+
+---
+
+## 1.4 Configurazione Client DNS (Verso Dnsmasq)
+
+> 💡 **Il DNS Server è già stato configurato nella FASE 0** sulla VM `dnsnode` usando Dnsmasq.
+> In questa fase dobbiamo solo dire ai nodi RAC di usare quel server.
+
+### Configura resolv.conf su TUTTI i nodi RAC
+
+Esegui questo blocco su ogni nodo (`rac1`, `rac2`, `racstby`...) per puntare al tuo DNS:
 
 ```bash
-# Installa BIND
-yum install -y bind bind-utils
-```
-
-### Configurazione /etc/named.conf
-
-```bash
-cp /etc/named.conf /etc/named.conf.bkp
-
-cat > /etc/named.conf <<'EOF'
-options {
-    listen-on port 53 { 127.0.0.1; 192.168.56.101; };
-    listen-on-v6 port 53 { ::1; };
-    directory       "/var/named";
-    dump-file       "/var/named/data/cache_dump.db";
-    statistics-file "/var/named/data/named_stats.txt";
-    memstatistics-file "/var/named/data/named_mem_stats.txt";
-    allow-query     { localhost; 192.168.1.0/24; };
-    recursion yes;
-    dnssec-enable yes;
-    dnssec-validation yes;
-};
-
-logging {
-    channel default_debug {
-        file "data/named.run";
-        severity dynamic;
-    };
-};
-
-zone "." IN {
-    type hint;
-    file "named.ca";
-};
-
-include "/etc/named.rfc1912.zones";
-include "/etc/named.root.key";
-
-// Forward Zone
-zone "localdomain" IN {
-    type master;
-    file "forward.localdomain";
-    allow-update { none; };
-};
-
-// Reverse Zone
-zone "1.168.192.in-addr.arpa" IN {
-    type master;
-    file "reverse.localdomain";
-    allow-update { none; };
-};
-EOF
-```
-
-> **Perché il DNS?** Oracle richiede che il nome SCAN risolva ad almeno 1 IP (consigliati 3) tramite DNS. Il file `/etc/hosts` NON viene usato per lo SCAN.
-
-### Come Funziona la Risoluzione DNS nel Nostro Lab
-
-```
-Client → "Connettimi a rac-scan.localdomain"
-    │
-    ▼
-┌──────────────────┐
-│  /etc/resolv.conf │──→ nameserver 192.168.56.101 (rac1)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────────────────────────────┐
-│  BIND DNS Server (su rac1, porta 53)     │
-│                                          │
-│  Zone: localdomain                  │
-│  ┌────────────────────────────────────┐  │
-│  │ rac-scan  →  192.168.56.105        │  │
-│  │ rac-scan  →  192.168.56.106        │  │  ← 3 record A!
-│  │ rac-scan  →  192.168.56.107        │  │    Round-robin
-│  │ rac1      →  192.168.56.101        │  │
-│  │ rac2      →  192.168.56.102        │  │
-│  │ rac1-vip  →  192.168.56.103        │  │
-│  │ ...                               │  │
-│  └────────────────────────────────────┘  │
-└──────────────────────────────────────────┘
-    │
-    ▼ Risponde con 3 IP in ordine casuale
-    192.168.56.106, 192.168.56.105, 192.168.56.107
-```
-
-### Zone Forward
-
-```bash
-cat > /var/named/forward.localdomain <<'EOF'
-$TTL 86400
-@ IN SOA rac1.localdomain. admin.localdomain. (
-    2024030201 ; Serial
-    3600       ; Refresh
-    1800       ; Retry
-    604800     ; Expire
-    86400      ; Minimum TTL
-)
-
-; Name Server
-@ IN NS rac1.localdomain.
-
-; A Records - RAC Primary
-rac1            IN  A   192.168.56.101
-rac2            IN  A   192.168.56.102
-rac1-vip        IN  A   192.168.56.103
-rac2-vip        IN  A   192.168.56.104
-rac-scan        IN  A   192.168.56.105
-rac-scan        IN  A   192.168.56.106
-rac-scan        IN  A   192.168.56.107
-
-; A Records - RAC Standby
-racstby1        IN  A   192.168.56.111
-racstby2        IN  A   192.168.56.112
-racstby1-vip    IN  A   192.168.56.113
-racstby2-vip    IN  A   192.168.56.114
-racstby-scan    IN  A   192.168.56.115
-racstby-scan    IN  A   192.168.56.116
-racstby-scan    IN  A   192.168.56.117
-
-; A Records - Target GoldenGate
-dbtarget        IN  A   192.168.56.150
-EOF
-```
-
-### Zone Reverse
-
-```bash
-cat > /var/named/reverse.localdomain <<'EOF'
-$TTL 86400
-@ IN SOA rac1.localdomain. admin.localdomain. (
-    2024030201 ; Serial
-    3600       ; Refresh
-    1800       ; Retry
-    604800     ; Expire
-    86400      ; Minimum TTL
-)
-
-@ IN NS rac1.localdomain.
-rac1 IN A 192.168.56.101
-
-; PTR Records RAC Primary
-101 IN PTR rac1.localdomain.
-102 IN PTR rac2.localdomain.
-103 IN PTR rac1-vip.localdomain.
-104 IN PTR rac2-vip.localdomain.
-105 IN PTR rac-scan.localdomain.
-106 IN PTR rac-scan.localdomain.
-107 IN PTR rac-scan.localdomain.
-
-; PTR Records RAC Standby
-111 IN PTR racstby1.localdomain.
-112 IN PTR racstby2.localdomain.
-113 IN PTR racstby1-vip.localdomain.
-114 IN PTR racstby2-vip.localdomain.
-115 IN PTR racstby-scan.localdomain.
-116 IN PTR racstby-scan.localdomain.
-117 IN PTR racstby-scan.localdomain.
-
-; PTR Target
-150 IN PTR dbtarget.localdomain.
-EOF
-```
-
-```bash
-# Imposta permessi e owner
-chown named:named /var/named/forward.localdomain
-chown named:named /var/named/reverse.localdomain
-
-# Verifica configurazione
-named-checkconf /etc/named.conf
-named-checkzone localdomain /var/named/forward.localdomain
-named-checkzone 1.168.192.in-addr.arpa /var/named/reverse.localdomain
-
-# Avvia il servizio
-systemctl enable named
-systemctl start named
-```
-
-### Configura resolv.conf su TUTTI i nodi
-
-```bash
+# Punta al DNS server (la VM dnsnode)
 cat > /etc/resolv.conf <<'EOF'
 search localdomain
-nameserver 192.168.56.101
+nameserver 192.168.56.50
 options timeout:1
 options attempts:5
 EOF
 
-# Proteggilo da sovrascritture di NetworkManager
+# CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf al reboot
+sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
+systemctl restart NetworkManager.service
+
+# Proteggilo anche con chattr per sicurezza extra
 chattr +i /etc/resolv.conf
 ```
 
-### Test DNS
+> **Cosa fa dns=none?** È un classico "DBA gotcha". Senza questo fix, NetworkManager riscrive `/etc/resolv.conf` ad ogni riavvio, facendo perdere ai nodi la capacità di risolvere lo SCAN, portando al collasso del cluster!
+
+### Test DNS (da ogni nodo)
+
+Assicurati che il DNS risponda correttamente prima di procedere:
 
 ```bash
-nslookup rac-scan.localdomain
-# Deve restituire 3 IP: 192.168.56.105, .106, .107
-
-nslookup racstby-scan.localdomain
-# Deve restituire 3 IP: 192.168.56.115, .116, .117
-
 nslookup rac1.localdomain
-```
+nslookup rac2.localdomain
 
-> 📸 **SNAPSHOT — "SNAP-02: Rete e DNS Configurati"**
-> Hai rete statica + DNS funzionante. Se qualcosa va storto dopo, puoi tornare qui.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-02_Rete_DNS_OK"
-> ```
+# SCAN deve ritornare 3 IP in round-robin!
+nslookup rac-scan.localdomain
+
+# Standby SCAN deve ritornare 3 IP!
+nslookup racstby-scan.localdomain
+```
 
 ---
 
@@ -779,13 +613,50 @@ Se i limits per l'utente `grid` non esistono (il preinstall li crea solo per `or
 
 ---
 
+### 1.10.1 Oracle Best Practices (Tassative)
+Oltre ai parametri standard, Oracle raccomanda fortemente di disabilitare alcune feature di Linux che causano instabilità e degrado delle performance sui cluster RAC:
+
+#### 1. Disabilitare Transparent HugePages (THP)
+I THP causano grave frammentazione della memoria e crolli delle prestazioni sul database. Vanno disabilitati a livello di kernel (`grub`).
+
+```bash
+# Apri il file di configurazione di GRUB
+vi /etc/default/grub
+
+# Trova la riga che inizia con GRUB_CMDLINE_LINUX e aggiungi alla fine (prima delle virgolette di chiusura della stringa):
+# transparent_hugepage=never
+
+# Esempio:
+# GRUB_CMDLINE_LINUX="crashkernel=auto ... rhgb quiet transparent_hugepage=never"
+
+# Ricompila il file grub per applicare la modifica al prossimo riavvio
+grub2-mkconfig -o /boot/grub2/grub.cfg
+```
+
+#### 2. Disabilitare Avahi Daemon (mDNS)
+L'Avahi daemon invia pacchetti multicast (Bonjour/mDNS) costanti sulla rete. Sull'interfaccia privata del RAC questo genera "rumore di fondo" che può disturbare il protocollo di heartbeat del Clusterware.
+```bash
+systemctl stop avahi-daemon.socket
+systemctl stop avahi-daemon.service
+systemctl disable avahi-daemon.socket
+systemctl disable avahi-daemon.service
+```
+
+#### 3. Disabilitare NOZEROCONF (Rotta 169.254.x.x)
+Evita che Linux assegni automaticamente indirizzi di link-local (169.254.0.0) sulle interfacce di rete, mantenendo la tabella di routing pulita.
+```bash
+echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+```
+
+---
+
 ## 1.11 Configurazione NTP/Chrony
 
 Oracle Clusterware richiede che i clock siano sincronizzati tra tutti i nodi (max 1 secondo di differenza):
 
 ```bash
 # Configura Chrony
-vim /etc/chrony.conf
+vi /etc/chrony.conf
 # Aggiungi/modifica:
 # server 0.pool.ntp.org iburst
 # server 1.pool.ntp.org iburst
@@ -798,6 +669,7 @@ chronyc sources
 ```
 
 > **Perché?** Se i clock dei nodi del cluster divergono troppo, il Clusterware forza un "node eviction" (espelle il nodo dal cluster) per proteggere i dati.
+
 
 ---
 
