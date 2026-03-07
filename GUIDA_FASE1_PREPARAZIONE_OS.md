@@ -758,6 +758,16 @@ chronyc sources
 > **Nodo: rac1** | **Utente: root**
 
 ```bash
+## 1.13 Inventory Location (Golden Image)
+
+> 💡 **Nodo: rac1** | **Utente: root**
+
+Questo file è fondamentale: dice all'installer di Oracle dove tenere il registro (l'inventario) di tutti i prodotti installati sulla macchina.
+
+**Perché lo facciamo nella Golden Image?**
+Configurandolo qui, tutti i nodi clonati (`rac2`, `racstby`...) avranno già il puntamento corretto e i permessi giusti. Questo evita che l'installer si blocchi chiedendoti di crearlo a mano durante l'installazione del Grid.
+
+```bash
 cat > /etc/oraInst.loc <<'EOF'
 inventory_loc=/u01/app/oraInventory
 inst_group=oinstall
@@ -765,6 +775,9 @@ EOF
 
 chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
+```
+
+---
 ```
 
 ---
