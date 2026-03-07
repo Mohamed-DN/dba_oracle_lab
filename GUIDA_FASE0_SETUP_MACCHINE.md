@@ -498,14 +498,14 @@ df -h
 
 ## 0.8 Configurare ASMLib (oracleasm) per i Dischi ASM
 
-> **ASMLib (Deprecated) vs UDEV vs ASMFD**:  
-> Come hai giustamente notato se leggi la documentazione ufficiale recente, Oracle considera **ASMLib deprecato** sulle nuove release (Oracle Linux 8/9 e DB 19c+), raccomandando caldamente l'uso di **udev rules** (lo standard Linux) o di **ASMFD** (ASM Filter Driver). 
+> **ASMLib v3 vs UDEV (La caduta di ASMFD)**:  
+> Hai assolutamente ragione! Fino a poco tempo fa Oracle spingeva per l'uso di **ASMFD** (ASM Filter Driver) per rimpiazzare ASMLib. Tuttavia, con un clamoroso dietrofront sulle versioni recenti (19c e l'imminente 23ai su kernel Linux 5.14+ come OEL 8/9), **Oracle ha ufficialmente DEPRECATO ASMFD**.
 > 
-> *Perché allora usiamo ASMLib nel nostro laboratorio (Oracle Linux 7.9)?*
-> 1. È storicamente il metodo più diffuso su OEL 7, ed è probabile che in produzione tu debba ancora gestire cluster legacy che lo usano.
-> 2. È estremamente didattico e intuitivo ("timbrare" i dischi con un nome logico come `CRS1` facilita enormemente la prima installazione Grid in VirtualBox rispetto a scrivere regole udev complesse basate su SCSI ID).
+> *Qual è lo standard Enterprise attuale (2026+)?*
+> 1. **UDEV Rules**: Rimane lo standard open-source Linux universally raccomandato per configurazioni pure.
+> 2. **Il ritorno di ASMLib**: Oracle ha rilasciato **ASMLib v3**, che ora supporta nativamente le moderne API del kernel (io_uring) e fornisce le feature di filtering di ASMFD senza i suoi problemi di compatibilità kernel.
 > 
-> Per il nostro progetto "Scuola DBA", la semplicità di ASMLib vince. Ma in uno scenario Enterprise greenfield moderno, useresti UDEV o ASMFD!
+> Quindi, la nostra scelta didattica di usare ASMLib (`oracleasm`) nel laboratorio non solo facilita enormemente l'insegnamento rispetto a UDEV, ma si allinea perfettamente all'attuale "ritorno di fiamma" di Oracle verso questo componente!
 
 ### 1. Partizionamento dei dischi (== ESEGUI SOLO SU rac1 ==)
 
