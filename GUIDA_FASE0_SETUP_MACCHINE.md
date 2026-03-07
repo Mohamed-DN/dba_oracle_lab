@@ -580,6 +580,12 @@ oracleasm init
 
 > **Verifica**: Il comando `oracleasm status` dovrebbe mostrare che il driver è caricato e montato. Non creeremo i dischi ora, lo faremo nella Fase 2.
 
+> 🛠️ **Troubleshooting: Errore "Mounting ASMlib driver filesystem: failed"**
+> Se `oracleasm init` fallisce con questo errore, è colpa di **SELinux** che sta bloccando il driver in memoria. Anche se l'hai disabilitato in `/etc/selinux/config` nella Fase 1, devi riavviare la macchina per disattivarlo. 
+> Per risolvere **al volo senza riavviare**, lancia come root:
+> `setenforce 0`
+> E poi ripeti il comando `oracleasm init`.
+
 ---
 
 ## 0.9 Clonazione `rac1` → `rac2`
