@@ -809,7 +809,22 @@ poweroff
 4. **TIPO CLONE**: Clonazione completa.
 5. Ripeti per creare: `rac2`, `racstby1`, `racstby2`.
 
-#### Step 3: Customizza i Cloni (Hostname e IP)
+#### Step 3: FIX STORAGE (Cruciale!) - Rimuovi i "cloni" dei dischi condivisi
+Quando cloni `rac1`, VirtualBox crea purtroppo delle copie inutili dei dischi ASM (es. `rac2-disk1.vdi`). Dobbiamo rimuoverli e collegare quelli originali.
+
+**Per RAC2:**
+1. Seleziona `rac2` -> **Impostazioni** -> **Archiviazione**.
+2. Sotto il Controller SATA, vedrai molti dischi. **Rimuovi tutti i dischi TRANNE il primo** (quello del sistema operativo, di solito circa 40GB).
+3. Ora clicca sull'icona "Aggiungi disco fisso" e seleziona **Scegli un disco esistente**.
+4. Seleziona i 5 dischi originali creati in Fase 0: `asm_crs1`, `asm_crs2`, `asm_crs3`, `asm_data`, `asm_reco`.
+5. Clicca OK. Ora `rac1` e `rac2` puntano agli STESSI dischi (fondamentale per il RAC).
+
+**Per RACSTBY1 e RACSTBY2:**
+1. Fai la stessa cosa: **Rimuovi i dischi duplicati dal clone**.
+2. Aggiungi i dischi specifici per lo standby creati in Fase 0: `asm_stby_data` e `asm_stby_reco`.
+3. (Opzionale ma consigliato): Aggiungi anche 3 dischetti piccoli per il voto del cluster dello standby se vuoi un mini-cluster anche lì.
+
+#### Step 4: Customizza i Cloni (Hostname e IP)
 Accendi i cloni uno alla volta e usa `nmtui` per cambiare:
 - **Hostname** (es. `rac2.localdomain`)
 - **IP Pubblico** (es. `192.168.56.102`)
