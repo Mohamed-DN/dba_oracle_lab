@@ -11,6 +11,16 @@
 
 ---
 
+## 🚀 CHANGELOG: Ottimizzazione DBA Autonoma
+
+*Questa sezione traccia le ottimizzazioni architetturali e didattiche applicate in totale autonomia per portare il repository agli standard Enterprise ottimali.*
+
+| Data | File Modificato | Modifica Applicata (Spiegazione per il DBA) |
+|---|---|---|
+| In corso... | `...` | *Inizio Audit...* |
+
+---
+
 ## DA DOVE INIZIARE
 
 **PERCORSO DI STUDIO**
