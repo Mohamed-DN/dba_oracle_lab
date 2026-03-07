@@ -570,7 +570,11 @@ chown oracle:oinstall /home/oracle/.db_env
 
 ---
 
-## 1.10 Parametri Kernel e Limiti (Verifica)
+## 1.10 Parametri Kernel e Ottimizzazioni Golden Image (Tassative)
+
+> 💡 **IMPORTANTE**: Tutti i passaggi di questa sezione rappresentano il cuore della tua **Golden Image**. Vanno eseguiti **SOLO su `rac1`**. Quando clonerai la macchina, queste ottimizzazioni saranno già presenti in tutti i nodi, risparmiandoti ore di lavoro e configurazioni manuali.
+
+### 1.10.1 Oracle Pre-Install Limits
 
 Il pacchetto `oracle-database-preinstall-19c` li ha già configurati, ma verifichiamo:
 
@@ -648,6 +652,14 @@ systemctl disable avahi-daemon.service
 Evita che Linux assegni automaticamente indirizzi di link-local (169.254.0.0) sulle interfacce di rete, mantenendo la tabella di routing pulita.
 ```bash
 echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+```
+
+#### 4. Configurazione Standard HugePages (Opzionale ma Raccomandata)
+A differenza dei Transparent HugePages (che vanno spenti), gli **Standard HugePages** pre-allocati sono una best practice fondamentale per database con molta RAM. In questo lab con sga da 1.5GB, configuriamo 1024 pagine (2GB totali).
+```bash
+# Imposta 1024 HugePages (2MB l'una = 2GB)
+echo "vm.nr_hugepages = 1024" >> /etc/sysctl.conf
+sysctl -p
 ```
 
 ---
