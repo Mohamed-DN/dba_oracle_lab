@@ -5,11 +5,13 @@
 cat >> /etc/hosts <<EOF
 192.168.56.101 rac1.localdomain rac1
 192.168.56.102 rac2.localdomain rac2
-192.168.10.1   rac1-priv.localdomain rac1-priv
-192.168.10.2   rac2-priv.localdomain rac2-priv
-192.168.56.111 rac1-vip.localdomain rac1-vip
-192.168.56.112 rac2-vip.localdomain rac2-vip
-192.168.56.110 rac-scan.localdomain rac-scan
+192.168.1.101  rac1-priv.localdomain rac1-priv
+192.168.1.102  rac2-priv.localdomain rac2-priv
+192.168.56.103 rac1-vip.localdomain rac1-vip
+192.168.56.104 rac2-vip.localdomain rac2-vip
+192.168.56.105 rac-scan.localdomain rac-scan
+192.168.56.106 rac-scan.localdomain rac-scan
+192.168.56.107 rac-scan.localdomain rac-scan
 EOF
 
 # 2. Yum Update & Pre-reqs

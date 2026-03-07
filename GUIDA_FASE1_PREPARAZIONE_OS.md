@@ -30,7 +30,7 @@
   │  a UN solo IP  │                  │  Risponde con  │
   │  (se cambia,   │                  │  3 IP in round │
   │   tutto si     │                  │  robin:        │
-  │   rompe!)      │                  │  .120 .121 .122│
+  │   rompe!)      │                  │  .105 .106 .107│
   └────────────────┘                  └────────┬───────┘
                                                │
                                       Load balanced!
@@ -75,10 +75,10 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 |---|---|---|---|---|
 | RAC Nodo 1 | rac1 | 192.168.56.101 | 192.168.1.101 | 192.168.56.103 |
 | RAC Nodo 2 | rac2 | 192.168.56.102 | 192.168.1.102 | 192.168.56.104 |
-| RAC SCAN | rac-scan | 192.168.56.105, .121, .122 | - | - |
+| RAC SCAN | rac-scan | 192.168.56.105, .106, .107 | - | - |
 | Standby Nodo 1 | racstby1 | 192.168.56.111 | 192.168.2.111 | 192.168.56.113 |
 | Standby Nodo 2 | racstby2 | 192.168.56.112 | 192.168.2.112 | 192.168.56.114 |
-| Standby SCAN | racstby-scan | 192.168.56.115, .221, .222 | - | - |
+| Standby SCAN | racstby-scan | 192.168.56.115, .116, .117 | - | - |
 | Target GoldenGate | dbtarget | 192.168.56.150 | - | - |
 
 > **Perché?** Oracle RAC necessita di minimo 3 tipi di IP per nodo: Pubblica (comunicazione client), Privata (Cache Fusion, il "sangue" del cluster), VIP (failover trasparente). Lo SCAN (Single Client Access Name) è un load balancer DNS integrato nel cluster.
@@ -92,7 +92,7 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
       Client App     │                                           │
           │          │  ┌──────┐  ┌──────┐  ┌──────┐            │
           ▼          │  │SCAN  │  │SCAN  │  │SCAN  │            │
-    ┌──────────┐     │  │ .120 │  │ .121 │  │ .122 │            │
+    ┌──────────┐     │  │ .105 │  │ .106 │  │ .107 │            │
     │ SCAN     │◄────│──┤      │  │      │  │      │ DNS        │
     │ Listener │     │  └──────┘  └──────┘  └──────┘ Round-Robin│
     └────┬─────┘     │                                           │
@@ -247,6 +247,9 @@ cat >> /etc/hosts <<'EOF'
 192.168.1.102    rac2-priv.localdomain  rac2-priv
 192.168.56.103   rac1-vip.localdomain   rac1-vip
 192.168.56.104   rac2-vip.localdomain   rac2-vip
+192.168.56.105   rac-scan.localdomain   rac-scan
+192.168.56.106   rac-scan.localdomain   rac-scan
+192.168.56.107   rac-scan.localdomain   rac-scan
 
 # === RAC STANDBY ===
 192.168.56.111   racstby1.localdomain      racstby1
@@ -255,6 +258,9 @@ cat >> /etc/hosts <<'EOF'
 192.168.2.112    racstby2-priv.localdomain racstby2-priv
 192.168.56.113   racstby1-vip.localdomain  racstby1-vip
 192.168.56.114   racstby2-vip.localdomain  racstby2-vip
+192.168.56.115   racstby-scan.localdomain  racstby-scan
+192.168.56.116   racstby-scan.localdomain  racstby-scan
+192.168.56.117   racstby-scan.localdomain  racstby-scan
 EOF
 ```
 
@@ -476,16 +482,25 @@ $TTL 86400
 @ IN NS rac1.localdomain.
 rac1 IN A 192.168.56.101
 
-; PTR Records
+; PTR Records RAC Primary
 101 IN PTR rac1.localdomain.
 102 IN PTR rac2.localdomain.
-111 IN PTR rac1-vip.localdomain.
-112 IN PTR rac2-vip.localdomain.
-120 IN PTR rac-scan.localdomain.
-121 IN PTR rac-scan.localdomain.
-122 IN PTR rac-scan.localdomain.
-201 IN PTR racstby1.localdomain.
-202 IN PTR racstby2.localdomain.
+103 IN PTR rac1-vip.localdomain.
+104 IN PTR rac2-vip.localdomain.
+105 IN PTR rac-scan.localdomain.
+106 IN PTR rac-scan.localdomain.
+107 IN PTR rac-scan.localdomain.
+
+; PTR Records RAC Standby
+111 IN PTR racstby1.localdomain.
+112 IN PTR racstby2.localdomain.
+113 IN PTR racstby1-vip.localdomain.
+114 IN PTR racstby2-vip.localdomain.
+115 IN PTR racstby-scan.localdomain.
+116 IN PTR racstby-scan.localdomain.
+117 IN PTR racstby-scan.localdomain.
+
+; PTR Target
 150 IN PTR dbtarget.localdomain.
 EOF
 ```
@@ -523,10 +538,10 @@ chattr +i /etc/resolv.conf
 
 ```bash
 nslookup rac-scan.localdomain
-# Deve restituire 3 IP: 192.168.56.105, .121, .122
+# Deve restituire 3 IP: 192.168.56.105, .106, .107
 
 nslookup racstby-scan.localdomain
-# Deve restituire 3 IP: 192.168.56.115, .221, .222
+# Deve restituire 3 IP: 192.168.56.115, .116, .117
 
 nslookup rac1.localdomain
 ```
