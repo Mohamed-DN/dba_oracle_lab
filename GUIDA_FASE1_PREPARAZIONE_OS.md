@@ -291,9 +291,6 @@ cat >> /etc/hosts <<'EOF'
 192.168.1.102    rac2-priv.localdomain  rac2-priv
 192.168.56.103   rac1-vip.localdomain   rac1-vip
 192.168.56.104   rac2-vip.localdomain   rac2-vip
-192.168.56.105   rac-scan.localdomain   rac-scan
-192.168.56.106   rac-scan.localdomain   rac-scan
-192.168.56.107   rac-scan.localdomain   rac-scan
 
 # === RAC STANDBY ===
 192.168.56.111   racstby1.localdomain      racstby1
@@ -302,13 +299,14 @@ cat >> /etc/hosts <<'EOF'
 192.168.2.112    racstby2-priv.localdomain racstby2-priv
 192.168.56.113   racstby1-vip.localdomain  racstby1-vip
 192.168.56.114   racstby2-vip.localdomain  racstby2-vip
-192.168.56.115   racstby-scan.localdomain  racstby-scan
-192.168.56.116   racstby-scan.localdomain  racstby-scan
-192.168.56.117   racstby-scan.localdomain  racstby-scan
 EOF
 ```
 
-> **Perché /etc/hosts e non solo DNS?** Oracle Clusterware verifica la risoluzione dei nomi PRIMA che il DNS sia attivo. Se metti tutto solo in DNS e il DNS non parte, il cluster non si avvia. Il file hosts è la "rete di sicurezza".
+> 💡 **IL SEGRETO DEL DBA: Perché non mettiamo lo SCAN qui?**
+> Hai notato che abbiamo omesso lo SCAN? Ecco perché:
+> 1. **Il file hosts NON fa Round-Robin**: Se scrivi 3 IP per lo SCAN qui, Linux userà sempre e solo il primo. Il bilanciamento del carico morirebbe sul nascere.
+> 2. **Il DNS invece lo fa**: Lo SCAN deve stare solo nel DNS affinché ad ogni richiesta il DNS risponda con un ordine diverso di IP, distribuendo i client su tutto il cluster.
+> 3. **VIP e Privati invece vanno messi**: Servono ai nodi per "parlarsi" velocemente e garantisce che il cluster parta anche se il DNS ha un momento di crisi.
 
 ---
 
