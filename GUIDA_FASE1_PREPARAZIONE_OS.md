@@ -330,6 +330,8 @@ EOF
 cat > /etc/resolv.conf <<'EOF'
 search localdomain
 nameserver 192.168.56.50
+options timeout:1
+options attempts:5
 EOF
 
 # CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf
@@ -377,56 +379,13 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 
 > **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
-> 📸 **SNAPSHOT — "SNAP-03: Rete Configurata"**
-> Hai rete statica funzionante. Se qualcosa va storto dopo, puoi tornare qui.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-03_Rete_OK"
-> ```
-
 ---
 
-## 1.4 Configurazione Client DNS (Verso Dnsmasq)
-
-> 💡 **Il DNS Server è già stato configurato nella FASE 0** sulla VM `dnsnode` usando Dnsmasq.
-> In questa fase dobbiamo solo dire ai nodi RAC di usare quel server.
-
-### Configura resolv.conf su TUTTI i nodi RAC
-
-Esegui questo blocco su ogni nodo (`rac1`, `rac2`, `racstby`...) per puntare al tuo DNS:
-
-```bash
-# Punta al DNS server (la VM dnsnode)
-cat > /etc/resolv.conf <<'EOF'
-search localdomain
-nameserver 192.168.56.50
-options timeout:1
-options attempts:5
-EOF
-
-# CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf al reboot
-sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
-systemctl restart NetworkManager.service
-
-# Proteggilo anche con chattr per sicurezza extra
-chattr +i /etc/resolv.conf
-```
-
-> **Cosa fa dns=none?** È un classico "DBA gotcha". Senza questo fix, NetworkManager riscrive `/etc/resolv.conf` ad ogni riavvio, facendo perdere ai nodi la capacità di risolvere lo SCAN, portando al collasso del cluster!
-
-### Test DNS (da ogni nodo)
-
-Assicurati che il DNS risponda correttamente prima di procedere:
-
-```bash
-nslookup rac1.localdomain
-nslookup rac2.localdomain
-
-# SCAN deve ritornare 3 IP in round-robin!
-nslookup rac-scan.localdomain
-
-# Standby SCAN deve ritornare 3 IP!
-nslookup racstby-scan.localdomain
-```
+> 📸 **SNAPSHOT — "SNAP-03: Rete_e_DNS_OK"**
+> Hai configurato Hostname, IP Statici e Client DNS. Esegui lo snapshot ora su `rac1`.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-03_Rete_e_DNS_OK"
+> ```
 
 ---
 
