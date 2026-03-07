@@ -89,15 +89,19 @@ Se usi VirtualBox, crea i dischi dal **Virtual Media Manager** (`Ctrl+D`):
 - Dopo la creazione, seleziona ogni disco → **Proprietà** → **Tipo: Condivisibile (Shareable)**.
 - Aggiungi tutti e 3 i dischi al controller SATA di **entrambe** le VM (`rac1` e `rac2`).
 
-### Partizionamento Dischi (su rac1 come root)
+### Verifica Partizioni (su rac1 come root)
 
+I dischi per ASM sono già stati partizionati manualmente nella [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md) tramite `fdisk`. Verifichiamo che le partizioni siano visibili:
 ```bash
-# Verifica che i dischi siano visibili
 lsblk
+# Devi vedere sdc1, sdd1, sde1, sdf1, sdg1
+```
 
 ## 2.2 Creazione Dischi ASM con ASMLib (solo su rac1)
 
-Il pacchetto `oracleasm` è stato installato e configurato nella [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md). Ora dobbiamo etichettare i dischi:
+Il demone `oracleasm` è stato installato e configurato nella Fase 0. Ora dobbiamo "timbrare" fisicamente i dischi partizionati per farli riconoscere al cluster Oracle.
+
+> **Ricorda:** Questa operazione va eseguita **solo sul primo nodo** (`rac1`). Lo storage è condiviso, quindi una volta "timbrati", i dischi saranno leggibili anche da `rac2`.
 
 ```bash
 # Esegui SOLO su rac1 (come root)
