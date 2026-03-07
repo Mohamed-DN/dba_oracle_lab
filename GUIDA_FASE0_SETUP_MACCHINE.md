@@ -461,7 +461,15 @@ mkdir -p /u01
 ```
 
 ### Step 5: Montaggio Permanente (fstab)
-Per fare in modo che il disco non si smonti al prossimo riavvio, bisogna scriverlo in `/etc/fstab`. Invece del nome `sdb1` (che potrebbe cambiare), usiamo l'UUID univoco del disco.
+Per fare in modo che il disco non si smonti al riavvio, bisogna registrarlo in `/etc/fstab`. Invece del nome `sdb1` (che potrebbe cambiare), usiamo l'UUID univoco del disco.
+
+> 💡 **Tip da DBA: Come si legge il file fstab?**
+> La riga che stiamo per aggiungere è composta da 6 campi separati da spazi/tab:
+> `<Device/UUID>  <Mount Point>  <File System>  <Opzioni>  <Dump>  <Fsck Pass>`
+> Nel nostro caso: `UUID=... /u01 xfs defaults 1 2`
+> - `defaults`: Usa le opzioni di mount standard (rw, suid, dev, exec, auto, nouser, async).
+> - **Il `1` (Campo 5 - Dump)**: Abilita il backup del filesystem tramite l'utility `dump` di Linux. `0` significa ignoralo, `1` significa includilo.
+> - **Il `2` (Campo 6 - Pass)**: Indica l'ordine in cui il tool `fsck` (File System Consistency Check) scansionerà i dischi all'avvio nel caso in cui la macchina si fosse spenta male. `0` = non controllare, `1` = controlla per primo (riservato al disco root `/`), **`2` = controlla dopo aver finito il root**. Siccome la nostra `/u01` contiene dati importanti per Oracle ma non è il sistema operativo, `2` è il valore corretto!
 
 ```bash
 # Leggi l'UUID del disco
