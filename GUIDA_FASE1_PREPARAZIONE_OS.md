@@ -666,6 +666,13 @@ vi /etc/default/grub
 grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
+> 💡 **Verifica Live (Senza riavviare)**:
+> Se vuoi essere sicuro che THP sia disabilitato ora (o se lo avevi già nel file), lancia questo:
+> ```bash
+> cat /sys/kernel/mm/transparent_hugepage/enabled
+> ```
+> Se vedi `[never]`, allora sei a posto! Se vedi `[always]`, devi riavviare la macchina dopo aver lanciato `grub2-mkconfig`.
+
 #### 2. Disabilitare Avahi Daemon (mDNS)
 L'Avahi daemon invia pacchetti multicast (Bonjour/mDNS) costanti sulla rete. Sull'interfaccia privata del RAC questo genera "rumore di fondo" che può disturbare il protocollo di heartbeat del Clusterware.
 ```bash
