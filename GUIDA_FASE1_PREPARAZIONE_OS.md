@@ -326,7 +326,10 @@ EOF
 ```bash
 # == ESEGUI SU OGNI NODO (rac1, rac2, racstby1, racstby2) ==
 
-# Punta al DNS server (la VM dnsnode)
+# 1. Sblocca il file (se precedentemente protetto)
+chattr -i /etc/resolv.conf
+
+# 2. Punta al DNS server (la VM dnsnode)
 cat > /etc/resolv.conf <<'EOF'
 search localdomain
 nameserver 192.168.56.50
@@ -334,13 +337,17 @@ options timeout:1
 options attempts:5
 EOF
 
-# CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf
+# 3. CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf
 sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
 systemctl restart NetworkManager.service
 
-# Proteggilo anche con chattr per sicurezza extra
+# 4. Blocca il file per sicurezza extra (Protezione "anti-overwrite")
 chattr +i /etc/resolv.conf
 ```
+
+> 💡 **PERCHÉ "Operation not permitted"?**
+> Se ricevi questo errore pur essendo `root`, è perché il file è "immutabile" (protetto dal comando `chattr +i`). Linux impedisce a CHIUNQUE (anche a root) di modificarlo finché non lo sblocchi con `chattr -i`. 
+> Lo usiamo per evitare che NetworkManager o altri processi cancellino la nostra configurazione DNS, che è vitale per lo SCAN.
 
 > **Cosa fa dns=none?** Dice a NetworkManager di NON toccare `/etc/resolv.conf` dopo un reboot. Senza questo fix, dopo ogni restart il file viene riscritto e il SCAN smette di funzionare. È uno dei bug più insidiosi!
 
