@@ -544,7 +544,8 @@ oracleasm init
 
 ## 0.9 Clonazione `rac1` → `rac2`
 
-**NON clonare adesso!** Prima completa tutta la **Fase 1** (configurazione OS, pacchetti, utenti) su `rac1`. Il momento giusto è alla fine della Fase 1, **PRIMA** dell'installazione Grid.
+**NON clonare adesso!** Prima completa tutta la **Fase 1** (configurazione OS, pacchetti, utenti, SSH) su `rac1`. 
+Le istruzioni dettagliate passo-passo per clonare in modo sicuro si trovano alla fine della Fase 1 (nella **Sezione 1.14**).
 
 ---
 
@@ -556,30 +557,34 @@ Per costruire il nostro Data Guard, abbiamo bisogno di un secondo cluster RAC ge
 > **NO.** In un ambiente Enterprise reale, primario e standby si trovano spesso nello stesso dominio aziendale o in domini trustati in foresta Active Directory, risolvibili globalmente. Nel nostro laboratorio, abbiamo già popolato il file `/etc/hosts` e il `dnsmasq` del `dnsnode` unico con **TUTTI** gli indirizzi del lab (sia primari che standby). 
 > Il nostro singolo `dnsnode` (192.168.56.50) fungerà da DNS globale per l'intero data center simulato.
 
-### Step-by-step per creare `racstby1`
+### Preparazione dell'Hardware Virtuale Standby
 
-1. Apri VirtualBox → **Nuova** (New)
-2. Nome: `racstby1`, Tipo: **Linux** → **Oracle (64-bit)**
-3. **Memoria**: 8192 MB (8 GB)
-4. **CPU**: 4 processori
-5. **Disco OS**: VDI Dinamico da **50 GB** (per l'OS)
-6. Vai nelle Impostazioni → **Archiviazione**:
-   - Aggiungi un secondo disco VDI Dinamico da **100 GB** (per `/u01`)
-7. **Rete** (3 Schede, esatte come il primario ma con reti diverse):
-   - **Scheda 1**: NAT (Attiva)
-   - **Scheda 2 (Pubblica)**: Scheda solo host → Nome: `192.168.56.0` (Stessa rete pubblica del primario per permettere il routing del Data Guard)
-   - **Scheda 3 (Privata)**: Scheda solo host → Nome: **`192.168.2.0`** (⚠️ **ATTENZIONE**: Questa DEVE essere la rete "Standby Interconnect", NON quella del primario!)
-8. **Dischi condivisi ASM per lo Standby**:
-   - Vai in Virtual Media Manager (`Ctrl+D`).
+Prima di poter avere i nodi standby, definisci il loro storage:
+
+1. **Rete Privata Standby**: Assicurati di avere in VirtualBox la terza scheda di rete in Host-Only che usa la subnet `192.168.2.0/24` (a differenza del primario che usa `1.0`). Questa è l'Interconnect dello Standby.
+2. **Dischi condivisi ASM per lo Standby**:
+   - Vai in VirtualBox -> Virtual Media Manager (`Ctrl+D`).
    - Crea 5 nuovi dischi **Dimensione Fissa**: `asm-stby-crs1` (2GB), `asm-stby-crs2` (2GB), `asm-stby-crs3` (2GB), `asm-stby-data` (20GB), `asm-stby-reco` (15GB).
    - Impostali tutti come **Condivisibile (Shareable)**.
-   - Attaccali alla VM `racstby1`.
+   > **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario!
 
-> **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario! Non attaccare i dischi vecchi, ne servono di nuovi.
+### 💡 Il Trucco del DBA: Clonare `rac1` per creare gli Standby
 
-9. Installa Oracle Linux 7.9 esattamente come hai fatto per `rac1` (Server with GUI, 8GB Swap partizione). Al riavvio fagli la formattazione del disco `/u01`.
+Perché reinstallare il sistema operativo da zero e rifare tutta la preparazione OS (Fase 1) per i nodi standby? Non ha senso ed è prono ad errori (typo, pacchetti dimenticati)! 
+L'approccio più intelligente (e veloce) è aspettare di aver finito la **Fase 1 completa su `rac1`** e usarla come "Golden Image".
 
-10. Clona `racstby1` in `racstby2` (Clonazione Collegata, re-inizializza i MAC Address).
+Alla fine della Fase 1, dal tuo `rac1` spento, eseguirai queste clonazioni in cascata, generando sempre **nuovi indirizzi MAC**:
+1. `rac1` -> Clona in `rac2` (come spiegato nella Sezione 1.14).
+2. `rac1` -> Clona in `racstby1`.
+3. `rac1` -> Clona in `racstby2` (oppure clona `racstby1` in `racstby2`).
+
+**Cosa dovrai cambiare sui cloni Standby?**
+Esattamente come farai per `rac2`, dovrai avviare i cloni Standby uno alla volta dalla console nera di VirtualBox e usare `nmtui` per cambiare:
+- **L'Hostname**: in `racstby1.localdomain` e `racstby2.localdomain`.
+- **L'IP Pubblico (Scheda 2)**: in `192.168.56.111` e `192.168.56.112`.
+- **L'IP Privato (Scheda 3)**: in `192.168.2.111` e `192.168.2.112` (**ATTENZIONE**: la rete privata dello standby è `.2.x`!).
+
+Dopodiché dovrai andare nelle impostazioni VirtualBox delle VM `racstby1` e `racstby2` e collegare loro i 5 nuovi dischi `asm-stby-xxx` creati al punto precedente.
 
 ---
 
