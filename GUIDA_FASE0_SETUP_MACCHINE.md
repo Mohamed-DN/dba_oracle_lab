@@ -433,12 +433,14 @@ Dopo il primo boot di `rac1`, apri MobaXterm (o usa la console se non hai ancora
 
 ### Step 1: Identifica il disco corretto
 Assicurati che il disco da 100 GB sia visto come `sdb`.
+
 ```bash
 lsblk
 ```
 
 ### Step 2: Partiziona il disco (/dev/sdb)
 Usa il tool `fdisk` in modo interattivo per creare una nuova partizione primaria.
+
 ```bash
 fdisk /dev/sdb
 ```
@@ -446,18 +448,21 @@ fdisk /dev/sdb
 
 ### Step 3: Formatta la partizione in XFS
 La partizione appena creata si chiamerà `sdb1`. Formattala con il file system XFS (lo standard di Oracle Linux 7).
+
 ```bash
 mkfs.xfs -f /dev/sdb1
 ```
 
 ### Step 4: Crea la cartella di mount (u01)
 Questa è la directory dove installeremo tutto il software Oracle (Grid e Database).
+
 ```bash
 mkdir -p /u01
 ```
 
 ### Step 5: Montaggio Permanente (fstab)
 Per fare in modo che il disco non si smonti al prossimo riavvio, bisogna scriverlo in `/etc/fstab`. Invece del nome `sdb1` (che potrebbe cambiare), usiamo l'UUID univoco del disco.
+
 ```bash
 # Leggi l'UUID del disco
 blkid /dev/sdb1
@@ -472,6 +477,7 @@ echo "UUID=${UUID}  /u01  xfs  defaults 1 2" >> /etc/fstab
 
 ### Step 6: Monta e Verifica
 Aggiorna i mount correnti leggendo l'`fstab` e verifica le dimensioni.
+
 ```bash
 mount /u01
 df -h /u01
@@ -499,6 +505,7 @@ Tutti i dischi ASM devono essere partizionati prima di essere assegnati ad ASMLi
 
 #### Step 1: Esegui `fdisk` per ogni singolo disco
 Dal terminale MobaXterm su `rac1` come utente `root`, lancia `fdisk` per il primo disco:
+
 ```bash
 fdisk /dev/sdc
 ```
@@ -514,9 +521,9 @@ Ripeti fedelmente `fdisk /dev/sdd`, `fdisk /dev/sde`, `fdisk /dev/sdf`, e `fdisk
 
 #### Step 3: Rileggi la tabella
 Diciamo al kernel di aggiornare la sua mappa dischi (altrimenti ASMLib non li vedrà).
+
 ```bash
 partprobe
-
 ```
 
 ### 2. Installazione e Configurazione ASMLib (== ESEGUI SOLO SU rac1 ==)
