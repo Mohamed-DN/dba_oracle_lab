@@ -689,12 +689,26 @@ echo "NOZEROCONF=yes" >> /etc/sysconfig/network
 ```
 
 #### 4. Configurazione Standard HugePages (Opzionale ma Raccomandata)
-A differenza dei Transparent HugePages (che vanno spenti), gli **Standard HugePages** pre-allocati sono una best practice fondamentale per database con molta RAM. In questo lab con sga da 1.5GB, configuriamo 1024 pagine (2GB totali).
+
+A differenza dei Transparent HugePages (che vanno spenti), gli **Standard HugePages** pre-allocati sono una best practice fondamentale. 
+
+##### 💡 Perché usarli? (Semplificato)
+1. **Pagine Giganti**: Di default Linux usa pagine da 4KB. Per una SGA da 1.5GB, Linux deve gestire milioni di "pezzettini". Con le HugePages, usiamo pagine da **2MB** (512 volte più grandi!). Il processore trova i dati molto più velocemente.
+2. **Niente Swap**: Le HugePages rimangono "inchiodate" nella RAM fisica. Oracle non finirà mai nello "swap" (disco lento), garantendo performance costanti.
+3. **Meno Carico CPU**: Il kernel fatica molto meno a gestire la memoria del database.
+
+##### 🧮 La Matematica del Lab
+- La nostra **SGA** Oracle sarà di circa **1.5 GB**.
+- Configurando **1024 pagine** da 2MB l'una, allochiamo **2 GB** totali di RAM ultra-veloce.
+- In questo modo la SGA ci starà comodamente dentro.
+
 ```bash
-# Imposta 1024 HugePages (2MB l'una = 2GB)
+# Imposta 1024 HugePages (2MB l'una = 2GB totali)
 echo "vm.nr_hugepages = 1024" >> /etc/sysctl.conf
 sysctl -p
 ```
+
+> ⚠️ **Nota**: Una volta dato il comando `sysctl -p`, la RAM viene "sequestrata" dal kernel per Oracle. Non vederla più come "Free" è normale!
 
 ---
 
