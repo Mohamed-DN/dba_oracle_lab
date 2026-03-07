@@ -429,23 +429,54 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 
 ## 0.7 Preparare il disco /u01
 
-Dopo il primo boot di rac1, esegui come root:
+Dopo il primo boot di `rac1`, apri MobaXterm (o usa la console se non hai ancora configurato la rete) ed esegui questi comandi come utente `root` passo dopo passo.
 
+### Step 1: Identifica il disco corretto
+Assicurati che il disco da 100 GB sia visto come `sdb`.
 ```bash
-# Partiziona il disco da 100 GB (sdb)
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdb
-mkfs.xfs -f /dev/sdb1
+lsblk
+```
 
-# Monta permanentemente
+### Step 2: Partiziona il disco (/dev/sdb)
+Usa il tool `fdisk` in modo interattivo per creare una nuova partizione primaria.
+```bash
+fdisk /dev/sdb
+```
+*(Premi la sequenza di tasti: `n` [Nuova], `p` [Primaria], `1` [Numero 1], `Invio` [Primo settore default], `Invio` [Ultimo settore default], `w` [Scrivi e salva])*
+
+### Step 3: Formatta la partizione in XFS
+La partizione appena creata si chiamerà `sdb1`. Formattala con il file system XFS (lo standard di Oracle Linux 7).
+```bash
+mkfs.xfs -f /dev/sdb1
+```
+
+### Step 4: Crea la cartella di mount (u01)
+Questa è la directory dove installeremo tutto il software Oracle (Grid e Database).
+```bash
 mkdir -p /u01
+```
+
+### Step 5: Montaggio Permanente (fstab)
+Per fare in modo che il disco non si smonti al prossimo riavvio, bisogna scriverlo in `/etc/fstab`. Invece del nome `sdb1` (che potrebbe cambiare), usiamo l'UUID univoco del disco.
+```bash
+# Leggi l'UUID del disco
+blkid /dev/sdb1
+
+# Copia mentalmente l'UUID e aggiungi questa riga in fondo al file /etc/fstab usando 'vi' o 'nano':
+# UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx /u01 xfs defaults 1 2
+
+# Oppure, se preferisci un comando rapido che fa tutto da solo:
 UUID=$(blkid -s UUID -o value /dev/sdb1)
 echo "UUID=${UUID}  /u01  xfs  defaults 1 2" >> /etc/fstab
-mount /u01
-
-# Verifica
-df -h /u01
-# Deve mostrare ~100 GB montato su /u01
 ```
+
+### Step 6: Monta e Verifica
+Aggiorna i mount correnti leggendo l'`fstab` e verifica le dimensioni.
+```bash
+mount /u01
+df -h /u01
+```
+*(L'output deve mostrare ~100 GB disponibili e montati su `/u01`)*
 
 ---
 

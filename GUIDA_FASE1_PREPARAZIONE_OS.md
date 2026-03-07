@@ -541,17 +541,31 @@ nslookup rac1.localdomain
 
 ## 1.5 Disabilitare Firewall e SELinux
 
+> **Perché?** In un ambiente di laboratorio, firewall e SELinux aggiungono complessità non necessaria e spesso bloccano le porte necessarie all'interconnect del RAC o i processi di Grid Infrastructure. In produzione useresti policy e regole di rete certosine, ma per imparare l'architettura è imperativo eliminarli per evitare falsi positivi.
+
+### Step 1: Disabilitare il Firewall (firewalld)
+Esegui questi due comandi da root per fermare il firewall adesso e impedirne l'avvio al prossimo reboot:
 ```bash
-# Disabilita Firewall
 systemctl stop firewalld
 systemctl disable firewalld
-
-# Disabilita SELinux
-sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
-setenforce 0
 ```
 
-> **Perché?** In un ambiente di laboratorio, firewall e SELinux aggiungono complessità non necessaria. In produzione useresti regole specifiche, ma per imparare è meglio eliminarli.
+### Step 2: Disabilitare SELinux (Modifica Manuale)
+SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando il suo file di configurazione.
+
+1. Apri il file con l'editor testuale `vi`:
+   ```bash
+   vi /etc/selinux/config
+   ```
+2. Cerca la riga che dice `SELINUX=enforcing` (usa le frecce della tastiera per muoverti).
+3. Premi il tasto `i` per entrare in modalità INSERIMENTO.
+4. Cancella `enforcing` e scrivi `disabled`. La riga deve risultare esattamente:
+   `SELINUX=disabled`
+5. Premi `Esc` per uscire dall'inserimento, poi scrivi `:wq` e premi `Invio` per salvare e uscire.
+6. Per non dover riavviare subito la macchina, abbassa le difese di SELinux in RAM per la sessione corrente in questo modo:
+   ```bash
+   setenforce 0
+   ```
 
 ---
 
@@ -574,50 +588,72 @@ yum install -y ksh libaio-devel net-tools nfs-utils \
 
 ## 1.7 Creazione Gruppi e Utenti
 
-Il pacchetto preinstall crea l'utente `oracle` e il gruppo `oinstall`, ma per il RAC servono anche l'utente `grid` e i gruppi ASM.
+> **Perché due utenti (oracle e grid)?** Questa è una best practice Oracle "Role Separation". L'utente `grid` installerà e gestirà il clusterware e lo storage (ASM). L'utente `oracle` installerà e gestirà solo i motori dei database. Se un account viene compromesso, l'altro resta protetto. Il pacchetto `preinstall` ha già creato l'utente `oracle` base, ora dobbiamo creare il resto.
 
+### Step 1: Creazione dei gruppi ASM
+Creiamo tre gruppi Linux specifici per amministrare lo storage condiviso ASM. I numeri -g indicano il GroupID fisso (devono essere uguali su tutti i nodi!).
 ```bash
-# Gruppi ASM (se non esistono già)
-groupadd -g 54327 asmdba   2>/dev/null
-groupadd -g 54328 asmoper  2>/dev/null
-groupadd -g 54329 asmadmin 2>/dev/null
-
-# Modifica utente oracle per aggiungere asmdba
-usermod -a -G asmdba oracle
-
-# Crea utente grid
-useradd -u 54331 -g oinstall -G dba,asmdba,asmadmin,asmoper,racdba grid
-
-# Imposta password
-echo "oracle" | passwd oracle --stdin
-echo "grid"   | passwd grid   --stdin
+groupadd -g 54327 asmdba
+groupadd -g 54328 asmoper
+groupadd -g 54329 asmadmin
 ```
 
-> **Perché due utenti (oracle e grid)?** Questa è una best practice di sicurezza chiamata **Role Separation**. L'utente `grid` gestisce il cluster e lo storage (ASM), l'utente `oracle` gestisce solo il database. In caso di compromissione di un account, l'altro è protetto.
+### Step 2: Aggiungi "oracle" al gruppo ASM
+L'utente oracle deve poter leggere lo storage ASM per poterci scrivere i datafile del database. Aggiungiamolo al gruppo `asmdba`:
+```bash
+usermod -a -G asmdba oracle
+```
+
+### Step 3: Creazione dell'utente "grid"
+Creiamo l'utente `grid`, che avrà come gruppo principale `oinstall` e farà parte di tutti i gruppi amministrativi (dba, asmdba, asmadmin, asmoper, racdba):
+```bash
+useradd -u 54331 -g oinstall -G dba,asmdba,asmadmin,asmoper,racdba grid
+```
+
+### Step 4: Imposta le password (Manualmente)
+Siamo in un laboratorio, diamo la stessa password facile a entrambi.
+Esegui questi comandi. Linux ti chiederà di digitare la nuova password (non vedrai i caratteri mentre digiti per sicurezza). Scrivi `oracle` per il primo e `grid` per il secondo, dando sempre Invio.
+
+```bash
+passwd oracle
+# (Digita: oracle -> Invio -> oracle -> Invio)
+
+passwd grid
+# (Digita: grid -> Invio -> grid -> Invio)
+```
 
 ---
 
-## 1.8 Creazione Directory
+## 1.8 Creazione Directory (Albero ORACLE_BASE)
 
+> **Perché questa struttura complessa?** Oracle segue un'architettura rigida chiamata *OFA (Optimal Flexible Architecture)*. Separa i binari di Grid dai binari di Database. Memorizza questo concetto: il software Grid risiede in `GRID_HOME`, e *non può mai essere una sottocartella* dell' `ORACLE_BASE` di grid, deve essere "fuori" (MOS Note 1373511.1).
+
+### Step 1: Crea le cartelle per il Grid Infrastructure (Gestore Cluster)
+Queste ospiteranno l'inventory globale, il path base per i log di grid, e la casa effettiva dei binari 19c.
 ```bash
-# Grid Infrastructure
-mkdir -p /u01/app/19.0.0/grid        # GRID_HOME
-mkdir -p /u01/app/grid                # GRID ORACLE_BASE
-mkdir -p /u01/app/oraInventory        # Central Inventory
+mkdir -p /u01/app/19.0.0/grid        # Questa sarà la GRID_HOME
+mkdir -p /u01/app/grid                # Questa sarà la ORACLE_BASE dell'utente grid
+mkdir -p /u01/app/oraInventory        # L'inventario unico per tutto il server
+```
 
-# Database
-mkdir -p /u01/app/oracle              # DB ORACLE_BASE
-mkdir -p /u01/app/oracle/product/19.0.0/dbhome_1  # DB ORACLE_HOME
+### Step 2: Crea le cartelle per il Database
+Qui risiederanno invece i binari di Oracle 19c Database.
+```bash
+mkdir -p /u01/app/oracle                              # Questa sarà la ORACLE_BASE dell'utente oracle
+mkdir -p /u01/app/oracle/product/19.0.0/dbhome_1      # Questa sarà la DB_HOME
+```
 
-# Permessi
+### Step 3: Assegna Proprietari e Permessi
+Ora diciamo al sistema operativo che la roba di `grid` appartiene all'utente `grid`, e la roba del database appartiene ad `oracle`. Entrambi fanno parte del gruppo installatori (`oinstall`).
+```bash
 chown -R grid:oinstall   /u01/app/19.0.0/grid
 chown -R grid:oinstall   /u01/app/grid
 chown -R grid:oinstall   /u01/app/oraInventory
 chown -R oracle:oinstall /u01/app/oracle
+
+# Diamo i permessi corretti in lettura/scrittura/esecuzione a tutto l'albero /u01
 chmod -R 775 /u01
 ```
-
-> **Perché questa struttura?** Oracle ha una convenzione storica: `/u01` per i binari. Il `GRID_HOME` deve essere in un path diverso da `ORACLE_BASE` per motivi di supporto Oracle (MOS Note 1373511.1).
 
 ---
 
@@ -712,13 +748,19 @@ fs.aio-max-nr = 1048576
 cat /etc/security/limits.d/oracle-database-preinstall-19c.conf
 ```
 
-Se i limits del grid user non esistono:
+Se i limits per l'utente `grid` non esistono (il preinstall li crea solo per `oracle`), dobbiamo crearli noi copiando quelli di oracle.
 
-```bash
-cp /etc/security/limits.d/oracle-database-preinstall-19c.conf \
-   /etc/security/limits.d/grid-database-preinstall-19c.conf
-sed -i 's/oracle/grid/g' /etc/security/limits.d/grid-database-preinstall-19c.conf
-```
+1. Copia il file di configurazione esistente:
+   ```bash
+   cp /etc/security/limits.d/oracle-database-preinstall-19c.conf \
+      /etc/security/limits.d/grid-database-preinstall-19c.conf
+   ```
+2. Apri il nuovo file con l'editor testuale:
+   ```bash
+   vi /etc/security/limits.d/grid-database-preinstall-19c.conf
+   ```
+3. Scendi lungo il file e cambia la parola `oracle` con `grid` in *tutte* le righe non commentate.
+4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
 
 ---
 
@@ -792,13 +834,25 @@ ssh oracle@rac2 date
 
 > **Perché?** Durante l'installazione del Grid e del DB, Oracle copia i binari dal nodo 1 al nodo 2 via SSH. Se chiede la password, l'installazione fallisce.
 
-### Fix per errore INS-06006 (SCP)
+### Fix manuale per errore INS-06006 (Il problema di SCP)
 
-```bash
-# Esegui su TUTTI i nodi come root
-cp -p /usr/bin/scp /usr/bin/scp.bkp
-echo '/usr/bin/scp.bkp -T $*' > /usr/bin/scp
-```
+Nelle nuove versioni di Linux, il comando `scp` usa un protocollo moderno (SFTP). L'installer di Oracle 19c è vecchio e non lo capisce, fallendo l'installazione quando cerca di copiare i file sul secondo nodo. Dobbiamo "ingannare" Oracle.
+
+1. Rinominamo il vero comando `scp` per fare un backup:
+   ```bash
+   cp -p /usr/bin/scp /usr/bin/scp.bkp
+   ```
+2. Creiamo un "finto" comando scp aprendo l'editor:
+   ```bash
+   vi /usr/bin/scp
+   ```
+3. Premi `i` e scrivi esattamente questa singola riga di codice (che richiama il vecchio scp forzando il protocollo classico `-T`):
+   `/usr/bin/scp.bkp -T $*`
+4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
+5. Diamo i permessi di esecuzione al nostro finto script:
+   ```bash
+   chmod +x /usr/bin/scp
+   ```
 
 > **Perché?** In OpenSSH 9+, il comando `scp` utilizza il protocollo SFTP per default. L'installer Oracle 19c non è compatibile con questo cambiamento e fallisce con l'errore INS-06006. Questo workaround forza il vecchio comportamento.
 
