@@ -519,10 +519,12 @@ partprobe
 
 ```
 
-### 2. Installazione e Configurazione ASMLib (== ESEGUI SU rac1 E rac2 ==)
+### 2. Installazione e Configurazione ASMLib (== ESEGUI SOLO SU rac1 ==)
+
+> **NOTA DA DBA:** Installeremo ASMLib solo sul nodo 1. Siccome alla fine della Fase 1 cloneremo questa macchina per generare `rac2` e i nodi standby, questa configurazione verrà automaticamente ereditata su tutti i cloni!
 
 ```bash
-# Come root su rac1 e rac2
+# Come root su rac1
 yum install -y oracleasm-support
 yum install -y kmod-oracleasm
 
