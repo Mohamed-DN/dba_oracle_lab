@@ -885,13 +885,79 @@ chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
 ```
 
-> 📸 **SNAPSHOT — "SNAP-03: Prerequisiti Completi (Pre-Grid)" ⭐ MILESTONE**
-> Questo è uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati.
+## 1.14 Clonazione di `rac1` in `rac2` (IL MOMENTO È ORA!)
+
+> ⚠️ **ATTENZIONE:** Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e SSH su `rac1`. **Questo è l'esatto momento in cui devi clonare la macchina per creare `rac2`!** Se non lo fai ora e procedi alla Fase 2, dovrai ripetere manualmente tutti i 13 step precedenti anche sul secondo nodo!
+
+### Step 1: Spegni `rac1`
+Per clonare in sicurezza, la macchina sorgente deve essere spenta.
+```bash
+# Da MobaXterm su rac1
+poweroff
+```
+
+### Step 2: Clona in VirtualBox
+1. Apri **VirtualBox Manager**.
+2. Fai clic col tasto destro sulla VM `rac1` -> **Clona...**
+3. **Nome**: `rac2`
+4. **Policy Indirizzo MAC**: Scegli tassativamente **Genera nuovi indirizzi MAC per tutte le schede di rete** (Altrimenti avrai conflitti IP!).
+5. Clicca **Avanti**.
+6. Seleziona **Clonazione completa** (Full Clone) -> **Clona**.
+
+### Step 3: Associa i dischi condivisi a `rac2`
+1. Seleziona `rac2` in VirtualBox -> **Impostazioni** -> **Archiviazione**.
+2. Nel controller SATA, troverai il disco OS clonato.
+3. Clicca sull'icona "Aggiungi disco fisso" (il quadratino col plus verde) e seleziona **Scegli un disco esistente**.
+4. Seleziona i 5 dischi ASM creati in Fase 0 (`asm_crs1`, `asm_crs2`, `asm_crs3`, `asm_data`, `asm_reco`).
+5. Clicca **OK**.
+
+### Step 4: Accendi `rac2` (e solo `rac2` per ora loggandoti dalla console)
+Accendi la VM `rac2`. Fai il login come `root` **dalla console nera di VirtualBox** (MobaXterm non funzionerà ancora perché `rac2` ha in pancia lo stesso IP di `rac1`).
+
+### Step 5: Modifica Hostname e IP su `rac2`
+Dato che è un clone, `rac2` crede di essere ancora `rac1`. Sistemiamolo:
+
+1. **Cambia l'Hostname:**
+   ```bash
+   hostnamectl set-hostname rac2.localdomain
+   ```
+
+2. **Cambia l'IP Pubblico (Scheda 2):**
+   Usa l'editor visivo di rete NetworkManager (è facilissimo):
+   ```bash
+   nmtui
+   ```
+   - Vai su **Modifica una connessione**.
+   - Seleziona la connessione che corrisponde alla rete 192.168.56.x (es. `Wired connection 2` o `enp0s8`).
+   - Cambia l'indirizzo IP da `192.168.56.101` a **`192.168.56.102`**.
+   - Spostati in giù su `OK` e salva.
+
+3. **Cambia l'IP Privato (Scheda 3):**
+   Nello stesso menù `nmtui`:
+   - Seleziona la connessione per la rete 192.168.1.x (es. `Wired connection 3` o `enp0s9`).
+   - Cambia l'indirizzo IP da `192.168.1.101` a **`192.168.1.102`**.
+   - Salva e chiudi `nmtui`.
+
+4. **Riavvia il servizio di rete (o tutta la VM):**
+   ```bash
+   systemctl restart network
+   reboot
+   ```
+
+### Step 6: Accendi `rac1` e verifica
+Ora accendi anche `rac1`. Apri **MobaXterm** e connettiti a entrambi:
+- Sessione MobaXterm 1 -> `192.168.56.101` (`rac1`)
+- Sessione MobaXterm 2 -> `192.168.56.102` (`rac2`)
+
+Se entri in entrambe, la clonazione è stata un successo perfetto!
+
+> 📸 **SNAPSHOT — "SNAP-03: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
+> Questo è uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati, e la clonazione è terminata.
 > Se l'installazione Grid fallisce, torni qui e risparmi ore.
-> **Fai questo snapshot su ENTRAMBE le VM (rac1 e rac2)!**
+> **Fai questo snapshot su ENTRAMBE le VM (`rac1` e `rac2`)!**
 > ```
-> VBoxManage snapshot "rac1" take "SNAP-03_Prerequisiti_Completi"
-> VBoxManage snapshot "rac2" take "SNAP-03_Prerequisiti_Completi"
+> VBoxManage snapshot "rac1" take "SNAP-03_Prerequisiti_Cloni_Pronti"
+> VBoxManage snapshot "rac2" take "SNAP-03_Prerequisiti_Cloni_Pronti"
 > ```
 
 ---
