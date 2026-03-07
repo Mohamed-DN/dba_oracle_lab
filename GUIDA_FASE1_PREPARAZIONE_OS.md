@@ -735,79 +735,31 @@ chronyc sources
 
 ---
 
-## 1.12 Configurazione SSH Passwordless
+## 1.12 Predisposizione Chiavi SSH (Golden Image)
 
-Necessario tra tutti i nodi del MEDESIMO cluster (non tra cluster diversi).
+> 💡 **Nodo: rac1** | **Utente: grid / oracle**
+> Lo facciamo ora sulla Golden Image così i cloni avranno già la loro chiave privata pronta. **In questa fase NON puoi ancora scambiare le chiavi con rac2 (perché non esiste ancora!)**. 
 
-### Su rac1 e rac2, come utente `grid`:
-
+### Generazione su rac1 (come utente `grid`):
 ```bash
 su - grid
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+# Premi Invio se ti chiede di sovrascrivere.
 ```
 
-```bash
-# Da rac1
-ssh-copy-id grid@rac1
-ssh-copy-id grid@rac2
-
-# Da rac2
-ssh-copy-id grid@rac1
-ssh-copy-id grid@rac2
-
-# Test (NON deve chiedere password)
-ssh grid@rac1 date
-ssh grid@rac2 date
-```
-
-### Stessa procedura per `oracle`:
-
+### Generazione su rac1 (come utente `oracle`):
 ```bash
 su - oracle
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+# Premi Invio se ti chiede di sovrascrivere.
 ```
 
-```bash
-# Da rac1
-ssh-copy-id oracle@rac1
-ssh-copy-id oracle@rac2
-
-# Da rac2
-ssh-copy-id oracle@rac1
-ssh-copy-id oracle@rac2
-
-# Test
-ssh oracle@rac1 date
-ssh oracle@rac2 date
-```
-
-> **Perché?** Durante l'installazione del Grid e del DB, Oracle copia i binari dal nodo 1 al nodo 2 via SSH. Se chiede la password, l'installazione fallisce.
-
-### Fix manuale per errore INS-06006 (Il problema di SCP)
-
-Nelle nuove versioni di Linux, il comando `scp` usa un protocollo moderno (SFTP). L'installer di Oracle 19c è vecchio e non lo capisce, fallendo l'installazione quando cerca di copiare i file sul secondo nodo. Dobbiamo "ingannare" Oracle.
-
-1. Rinominamo il vero comando `scp` per fare un backup:
-   ```bash
-   cp -p /usr/bin/scp /usr/bin/scp.bkp
-   ```
-2. Creiamo un "finto" comando scp aprendo l'editor:
-   ```bash
-   vi /usr/bin/scp
-   ```
-3. Premi `i` e scrivi esattamente questa singola riga di codice (che richiama il vecchio scp forzando il protocollo classico `-T`):
-   `/usr/bin/scp.bkp -T $*`
-4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
-5. Diamo i permessi di esecuzione al nostro finto script:
-   ```bash
-   chmod +x /usr/bin/scp
-   ```
-
-> **Perché?** In OpenSSH 9+, il comando `scp` utilizza il protocollo SFTP per default. L'installer Oracle 19c non è compatibile con questo cambiamento e fallisce con l'errore INS-06006. Questo workaround forza il vecchio comportamento.
+> **STOP! Lo scambio delle chiavi (`ssh-copy-id`) va fatto solo DOPO la clonazione (Sezione 1.15).**
 
 ---
 
-## 1.13 Central Inventory
+## 1.13 Inventory Location (Golden Image)
+> **Nodo: rac1** | **Utente: root**
 
 ```bash
 cat > /etc/oraInst.loc <<'EOF'
@@ -819,134 +771,128 @@ chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
 ```
 
-## 1.14 Clonazione di `rac1` in `rac2` (IL MOMENTO È ORA!)
+---
 
-> ⚠️ **ATTENZIONE:** Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e SSH su `rac1`. **Questo è l'esatto momento in cui devi clonare la macchina per creare `rac2`!** Se non lo fai ora e procedi alla Fase 2, dovrai ripetere manualmente tutti i 13 step precedenti anche sul secondo nodo!
+## 🛑 IL MOMENTO DELLA VERITÀ: Clonazione Golden Image
 
-### Step 1: Fai lo Snapshot (Golden Image) e Spegni `rac1`
-Per clonare in sicurezza, la macchina sorgente deve essere spenta.
+Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e binari su **`rac1`**. 
+
+> ⚠️ **ATTENZIONE:** Questo è l'esatto momento in cui devi fermarti. Se procedi oltre o cerchi di fare lo scambio delle chiavi SSH, fallirai. **DEVI CLONARE ORA.**
+
+### 1.14 Procedura di Clonazione (DA RAC1 A TUTTI)
+
+#### Step 1: Spegni `rac1`
 ```bash
 # Da MobaXterm su rac1
 poweroff
 ```
 
-> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
-> Appena la macchina è spenta, fai lo snapshot ORA. Questo snapshot è la tua "Golden Image". Da qui nasceranno tutti gli altri nodi.
+> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti_Completi_Golden_Image" ⭐ MILESTONE**
+> Appena la macchina è spenta, fai lo snapshot ORA. Questa è la tua **Golden Image**.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
 > ```
 
-### Step 2: Clona in VirtualBox partendo dallo Snapshot
-1. Apri **VirtualBox Manager**.
-2. Fai clic sulla VM `rac1`, vai nella sezione "Istantanee" (Snapshots), seleziona `SNAP-04_Prerequisiti_Cloni_Pronti` e clicca su **Clona**. *(Importante: Clona dalla snapshot, non dallo stato attuale "Macchina Spenta")*.
-3. **Nome**: `rac2`
-4. **Policy Indirizzo MAC**: Scegli tassativamente **Genera nuovi indirizzi MAC per tutte le schede di rete** (Altrimenti avrai conflitti IP!).
-5. Clicca **Avanti**.
-6. Seleziona **Clonazione completa** (Full Clone) -> **Clona**.
+#### Step 2: Crea i Cloni (rac2, racstby1, racstby2)
+1. In VirtualBox, seleziona `rac1` -> Sezione **Istantanee**.
+2. Tasto destro su `SNAP-04` -> **Clona**.
+3. **POLICY MAC**: Seleziona **Genera nuovi indirizzi MAC** (FONDAMENTALE).
+4. **TIPO CLONE**: Clonazione completa.
+5. Ripeti per creare: `rac2`, `racstby1`, `racstby2`.
 
-### Step 3: Associa i dischi condivisi a `rac2`
-1. Seleziona `rac2` in VirtualBox -> **Impostazioni** -> **Archiviazione**.
-2. Nel controller SATA, troverai il disco OS clonato.
-3. Clicca sull'icona "Aggiungi disco fisso" (il quadratino col plus verde) e seleziona **Scegli un disco esistente**.
-4. Seleziona i 5 dischi ASM creati in Fase 0 (`asm_crs1`, `asm_crs2`, `asm_crs3`, `asm_data`, `asm_reco`).
-5. Clicca **OK**.
-
-### Step 4: Accendi `rac2` (e solo `rac2` per ora loggandoti dalla console)
-Accendi la VM `rac2`. Fai il login come `root` **dalla console nera di VirtualBox** (MobaXterm non funzionerà ancora perché `rac2` ha in pancia lo stesso IP di `rac1`).
-
-### Step 5: Modifica Hostname e IP su `rac2`
-Dato che è un clone, `rac2` crede di essere ancora `rac1`. Sistemiamolo:
-
-1. **Cambia l'Hostname:**
-   ```bash
-   hostnamectl set-hostname rac2.localdomain
-   ```
-
-2. **Cambia l'IP Pubblico (Scheda 2):**
-   Usa l'editor visivo di rete NetworkManager (è facilissimo):
-   ```bash
-   nmtui
-   ```
-   - Vai su **Modifica una connessione**.
-   - Seleziona la connessione che corrisponde alla rete 192.168.56.x (es. `Wired connection 2` o `enp0s8`).
-   - Cambia l'indirizzo IP da `192.168.56.101` a **`192.168.56.102`**.
-   - Spostati in giù su `OK` e salva.
-
-3. **Cambia l'IP Privato (Scheda 3):**
-   Nello stesso menù `nmtui`:
-   - Seleziona la connessione per la rete 192.168.1.x (es. `Wired connection 3` o `enp0s9`).
-   - Cambia l'indirizzo IP da `192.168.1.101` a **`192.168.1.102`**.
-   - Salva e chiudi `nmtui`.
-
-4. **Riavvia il servizio di rete (o tutta la VM):**
-   ```bash
-   systemctl restart network
-   reboot
-   ```
-
-### Step 6: Accendi `rac1` e verifica
-Ora accendi anche `rac1`. Apri **MobaXterm** e connettiti a entrambi:
-- Sessione MobaXterm 1 -> `192.168.56.101` (`rac1`)
-- Sessione MobaXterm 2 -> `192.168.56.102` (`rac2`)
-
-Se entri in entrambe, la clonazione è stata un successo perfetto!
-
-> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
-> Questo è uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati, e la clonazione è terminata.
-> Se l'installazione Grid fallisce, torni qui e risparmi ore.
-> **Fai questo snapshot su ENTRAMBE le VM (`rac1` e `rac2`)!**
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
-> VBoxManage snapshot "rac2" take "SNAP-04_Prerequisiti_Cloni_Pronti"
-> ```
+#### Step 3: Customizza i Cloni (Hostname e IP)
+Accendi i cloni uno alla volta e usa `nmtui` per cambiare:
+- **Hostname** (es. `rac2.localdomain`)
+- **IP Pubblico** (es. `192.168.56.102`)
+- **IP Privato** (es. `192.168.1.102`)
+*(Riferiti alla tabella IP nella Sezione 1.1)*.
 
 ---
 
-## 💡 Procedura Operativa: Il Momento della Verità
+## 1.15 Configurazione Post-Clonazione: SSH Trust (Scambio Chiavi)
 
-Per essere sicuri al 100% del workflow (Golden Image Strategy):
+> 💡 **Nodi: rac1 E rac2** | **Utente: grid / oracle**
+> Ora che entrambi i nodi sono vivi e hanno IP diversi, possiamo finalmente farli "fidare" l'uno dell'altro.
 
-1.  **FASE 1 (ORA)**: Esegui TUTTI i passaggi (da 1.1 a 1.13) **SOLO su `rac1`**.
-2.  **STOP**: Quando hai finito tutto su `rac1`, **SPEGNILA**.
-3.  **SNAPSHOT**: Fai lo snapshot `SNAP-04_Prerequisiti_Cloni_Pronti` su `rac1` spenta.
-4.  **CLONE**: Da quello snapshot, crea i cloni per `rac2`, `racstby1` e `racstby2` (usando "Clona" dalla snapshot).
-5.  **CUSTOMIZE**: Accendi i cloni (uno alla volta) e cambia solo **Hostname** e **IP** (Sincronizzandoli con la tabella al punto 1.1).
+### Per l'utente `grid` (Esegui su ENTRAMBI i nodi):
+Assicurati di essere loggato come `grid` su entrambi i tab di MobaXterm.
 
-**SOLO DOPO** aver fatto questo e aver verificato che tutti i nomi e gli IP rispondano correttamente, potrai procedere alla **FASE 2** (Installazione Grid).
+```bash
+# Da rac1 manda la chiave a rac2
+ssh-copy-id grid@rac1
+ssh-copy-id grid@rac2
+
+# Da rac2 manda la chiave a rac1
+ssh-copy-id grid@rac1
+ssh-copy-id grid@rac2
+
+# Test finale (NON deve chiedere password)
+ssh grid@rac1 date
+ssh grid@rac2 date
+```
+
+### Per l'utente `oracle` (Esegui su ENTRAMBI i nodi):
+```bash
+# Da rac1
+ssh-copy-id oracle@rac1
+ssh-copy-id oracle@rac2
+
+# Da rac2
+ssh-copy-id oracle@rac1
+ssh-copy-id oracle@rac2
+```
+
+---
+
+## 1.16 Fix manuale per errore INS-06006 (Protocollo SCP)
+> **Nodo: rac1 E rac2** | **Utente: root**
+Nelle nuove versioni di Linux, il comando `scp` usa un protocollo moderno (SFTP) che l'installer Oracle 19c non capisce. Dobbiamo forzare il vecchio comportamento.
+
+1. Rinominamo il vero comando `scp` per fare un backup:
+   ```bash
+   cp -p /usr/bin/scp /usr/bin/scp.bkp
+   ```
+2. Creiamo un "finto" comando scp:
+   ```bash
+   vi /usr/bin/scp
+   ```
+3. Inserisci questa riga:
+   `/usr/bin/scp.bkp -T $*`
+4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
+5. Dai i permessi di esecuzione:
+   ```bash
+   chmod +x /usr/bin/scp
+   ```
 
 ---
 
 ## ✅ Checklist Fine Fase 1
 
-Esegui questi controlli prima di procedere alla Fase 2:
+Esegui questi controlli finali su **ENTRAMBI** i nodi prima di passare alla Fase 2:
 
 ```bash
-# 1. Hostname corretto
+# 1. Hostname corretto (Deve essere rac1 su una e rac2 sull'altra)
 hostname
 
-# 2. Tutti i nodi pingabili
+# 2. Tutti i nodi pingabili (Deve rispondere tutto!)
 ping -c 1 rac1 && ping -c 1 rac2 && ping -c 1 rac1-priv && ping -c 1 rac2-priv
 
-# 3. DNS SCAN funzionante
+# 3. DNS SCAN funzionante (Deve tornare 3 IP)
 nslookup rac-scan.localdomain
 
 # 4. SSH senza password (grid e oracle)
+# Su rac1 prova a entrare in rac2
 su - grid -c "ssh rac2 hostname"
 su - oracle -c "ssh rac2 hostname"
 
-# 5. Firewall disabilitato
-systemctl status firewalld
-
-# 6. SELinux disabilitato
+# 5. Firewall e SELinux (Devono essere disabled/Permissive)
+systemctl is-active firewalld || echo "Firewall OK (Disabled)"
 getenforce
-
-# 7. Utenti e gruppi corretti
-id oracle
-id grid
-
-# 8. Directory esistono con permessi corretti
-ls -la /u01/app/
 ```
+
+> 📸 **SNAPSHOT FINALE — "SNAP-04: Fase_1_OK_Pronto_Grid"**
+> Questo è il tuo punto di ripristino d'oro. Se l'installazione Grid fallisce, torna qui.
+> **Fallo su rac1 e rac2.**
 
 ---
 
