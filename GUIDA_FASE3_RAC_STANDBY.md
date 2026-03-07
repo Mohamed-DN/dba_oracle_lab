@@ -61,8 +61,35 @@ Accendi **UNA VM ALLA VOLTA** (dalla console nera di VirtualBox, non usare MobaX
 - Lancia `nmtui` e cambia Scheda Privata (Interconnect) a **`192.168.2.112`**
 - Riavvia (`reboot`)
 
-### Step 3: Ripeti Installazione Grid e Database (Fase 2)
-Ora che i nodi standby esistono e la rete funziona, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby:
+### Step 3: Inizializzazione Dischi ASM per lo Standby (SOLO su `racstby1`)
+I 5 nuovi dischi che hai assegnato in VirtualBox sono "vergini". Devi partizionarli e renderli dischi ASMLib, esattamente come hai fatto in Fase 0 e Fase 2 per il primario.
+
+1. **Partizionamento base:** Usa MobaXterm collegandoti a `racstby1` come `root`.
+   Esegui `fdisk` per `/dev/sdc`, `/dev/sdd`, `/dev/sde`, `/dev/sdf`, `/dev/sdg`.
+   La sequenza per ognuno è sempre: `n`, `p`, `1`, `Invio`, `Invio`, `w`.
+   Infine lancia `partprobe`.
+
+2. **Creazione Dischi ASM (Sempre su `racstby1` come `root`):**
+   ```bash
+   oracleasm createdisk CRS1 /dev/sdc1
+   oracleasm createdisk CRS2 /dev/sdd1
+   oracleasm createdisk CRS3 /dev/sde1
+   oracleasm createdisk DATA /dev/sdf1
+   oracleasm createdisk RECO /dev/sdg1
+   
+   oracleasm scandisks
+   oracleasm listdisks
+   ```
+
+3. **Verifica su `racstby2` (come `root`):**
+   ```bash
+   oracleasm scandisks
+   oracleasm listdisks
+   ```
+   *Se vedi i 5 dischi anche qui, lo storage condiviso dello standby è pronto!*
+
+### Step 4: Ripeti Installazione Grid e Database (Fase 2)
+Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby:
 1. **Installazione Grid Infrastructure:** Segui la Fase 2 paro paro, ma inserisci come nodi `racstby1` e `racstby2`, e come SCAN name `racstby-scan.localdomain`.
 2. **Installazione Database (Software Only):** Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
 

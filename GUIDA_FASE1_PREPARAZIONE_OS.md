@@ -335,10 +335,10 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 
 > **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
-> 📸 **SNAPSHOT — "SNAP-02: Rete Configurata"**
+> 📸 **SNAPSHOT — "SNAP-03: Rete Configurata"**
 > Hai rete statica funzionante. Se qualcosa va storto dopo, puoi tornare qui.
 > ```bash
-> VBoxManage snapshot "rac1" take "SNAP-02_Rete_OK"
+> VBoxManage snapshot "rac1" take "SNAP-03_Rete_OK"
 > ```
 
 ---
@@ -823,13 +823,13 @@ Ora accendi anche `rac1`. Apri **MobaXterm** e connettiti a entrambi:
 
 Se entri in entrambe, la clonazione è stata un successo perfetto!
 
-> 📸 **SNAPSHOT — "SNAP-03: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
+> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti Completi e Cloni Pronti" ⭐ MILESTONE**
 > Questo è uno snapshot fondamentale! Hai OS, rete, DNS, utenti, SSH, kernel params tutti configurati, e la clonazione è terminata.
 > Se l'installazione Grid fallisce, torni qui e risparmi ore.
 > **Fai questo snapshot su ENTRAMBE le VM (`rac1` e `rac2`)!**
 > ```
-> VBoxManage snapshot "rac1" take "SNAP-03_Prerequisiti_Cloni_Pronti"
-> VBoxManage snapshot "rac2" take "SNAP-03_Prerequisiti_Cloni_Pronti"
+> VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
+> VBoxManage snapshot "rac2" take "SNAP-04_Prerequisiti_Cloni_Pronti"
 > ```
 
 ---
