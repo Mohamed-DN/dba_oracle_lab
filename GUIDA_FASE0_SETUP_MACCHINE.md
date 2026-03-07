@@ -640,27 +640,12 @@ Dopodiché dovrai andare nelle impostazioni VirtualBox delle VM `racstby1` e `ra
 
 ---
 
-## 0.11 Tips e Best Practice
+## 0.11 Prossimi Passi: Il Cuore del Sistema Operativo
 
-### NetworkManager dns=none (CRITICO!)
+Hai completato il setup hardware/hypervisor e installato Oracle Linux con le partizioni corrette. 
 
-```bash
-# Impedisce a NetworkManager di sovrascrivere /etc/resolv.conf dopo reboot
-sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
-systemctl restart NetworkManager.service
-```
-
-> ⚠️ **Senza questo fix**, dopo un reboot NetworkManager può sovrascrivere il tuo `/etc/resolv.conf` e **rompere la risoluzione SCAN**. Bug insidioso e difficile da diagnosticare!
-
-### chrony Time Sync (al posto di NTP)
-
-```bash
-yum install -y chrony
-systemctl enable chronyd
-systemctl restart chronyd
-chronyc -a 'burst 4/4'
-chronyc -a makestep
-```
+Tutta la configurazione del sistema operativo (utenti, kernel parameters, Chrony, HugePages) è centralizzata nella **[FASE 1](./GUIDA_FASE1_PREPARAZIONE_OS.md)**. 
+Eseguirai quella fase **SOLO su `rac1`**; diventerà la tua **Golden Image** che clonerai per creare tutti gli altri nodi. Non farlo ora sui cloni per risparmiare tempo.
 
 ---
 
