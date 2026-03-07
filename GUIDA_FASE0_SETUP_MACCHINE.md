@@ -687,9 +687,11 @@ Ripeti questo processo per creare le sessioni salvate per `dnsnode`, `rac1`, `ra
 
 ---
 
-> 📸 **Riepilogo Snapshot Fase 0**:
-> - **SNAP-DNS** (dnsnode funzionante)
-> - **SNAP-01** (OS installato su rac1)
-> - **SNAP-01-stby** (OS installato su racstby1)
+> 📸 **Riepilogo Snapshot Fondamentali (Fase 0)**:
+> - **SNAP-DNS**: VM `dnsnode` configurata e funzionante.
+> - **SNAP-01_OS_Installato**: Solo OS e partizioni base su `rac1`.
+> - **SNAP-02_Base_VM_Ready**: ASMLib e dischi configurati su `rac1`. 
+> 
+> *Nota: Non creare snapshot per lo standby ora. Lo standby sarà un clone di `rac1` dopo la Fase 1 (`SNAP-04`).*
 
 **→ Prossimo: [FASE 1: Preparazione OS e Configurazione](./GUIDA_FASE1_PREPARAZIONE_OS.md)**
