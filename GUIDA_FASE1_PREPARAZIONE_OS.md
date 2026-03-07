@@ -786,6 +786,13 @@ chown grid:oinstall /etc/oraInst.loc
 
 Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e binari su **`rac1`**. 
 
+> 🔍 **Verifica ASM (Prima di clonare)**:
+> Come utente `root`, verifica che il driver ASM sia pronto (anche se non vedi ancora i dischi):
+> ```bash
+> oracleasm status
+> # Deve rispondere: "Checking if ASM is loaded: yes" e "Checking if /dev/oracleasm is mounted: yes"
+> ```
+
 > ⚠️ **ATTENZIONE:** Questo è l'esatto momento in cui devi fermarti. Se procedi oltre o cerchi di fare lo scambio delle chiavi SSH, fallirai. **DEVI CLONARE ORA.**
 
 ### 1.14 Procedura di Clonazione (DA RAC1 A TUTTI)
@@ -886,7 +893,27 @@ ssh-copy-id oracle@rac2
 
 ---
 
-## 1.16 Fix manuale per errore INS-06006 (Protocollo SCP)
+## 1.16 Sincronizzazione Dischi ASM (Post-Clonazione)
+
+> 💡 **Nodi: rac1 E rac2** | **Utente: root**
+> Ora che hai clonato la macchina e ricollegato i dischi condivisi originali in VirtualBox (Step 1.14), dobbiamo dire al sistema operativo di "scansionarli".
+
+### Su ENTRAMBI i nodi (rac1 e rac2):
+Lancia questi comandi per far sì che il driver ASM veda i dischi collegati:
+
+```bash
+# 1. Scansiona i nuovi dischi collegati
+oracleasm scandisks
+
+# 2. Elenca i dischi trovati (al momento dovresti vedere una lista vuota o i dischi se li hai già creati)
+oracleasm listdisks
+```
+
+> **Perché?** Dopo la clonazione e il riattacco dei dischi in VirtualBox, il kernel di `rac2` ha bisogno di un "refresh" per mappare i nuovi device `/dev/sdX` e passarli al driver `oracleasm`.
+
+---
+
+## 1.17 Fix manuale per errore INS-06006 (Protocollo SCP)
 > **Nodo: rac1 E rac2** | **Utente: root**
 Nelle nuove versioni di Linux, il comando `scp` usa un protocollo moderno (SFTP) che l'installer Oracle 19c non capisce. Dobbiamo forzare il vecchio comportamento.
 
