@@ -131,29 +131,63 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 > Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. Questo vale per **TUTTE le macchine** (`rac1`, `rac2`, `racstby1`, etc.) man mano che le crei.
 
 **Passo 1: Assegna un IP Temporaneo e Hostname (dalla console VirtualBox)**
-1. Fai login come `root` sulla VM che stai preparando (iniziamo con `rac1`).
-2. Imposta l'hostname completo:
-   `hostnamectl set-hostname rac1.localdomain`
-3. Esegui: `nmtui`
-4. Seleziona **Edit a connection**.
-4. **ATTIVA IL NAT (Internet)**: Seleziona la PRIMA scheda (es. `enp0s3`), vai su Edit, e assicurati che la casella **"Automatically connect"** sia SPUNTATA. Fai OK. Questo garantisce l'accesso a Internet via DHCP di VirtualBox.
-5. **CONFIGURA L'IP PUBBLICO**: Seleziona la SECONDA scheda (es. `enp0s8` host-only), vai su Edit.
-6. Cambia IPv4 Configuration in **Manual**.
-7. Inserisci l'IP pubblico corretto per questo nodo (vedi piano IP della FASE 0):
-   - *Es. per rac1: `192.168.56.101/24`*
-   - *Es. per rac2: `192.168.56.102/24`*
-   - *Es. per racstby1: `192.168.56.111/24`*
-   - *Es. per racstby2: `192.168.56.112/24`*
-8. Salva, esci e torna al prompt.
-9. Riavvia la rete: `systemctl restart network`
-10. **TASSATIVO**: Verifica di avere Internet: `ping -c 2 google.com`
-11. Verifica l'IP statico: `ip addr`
+
+Ti trovi nella "console nera" di VirtualBox. Fai login come `root`.
+
+1. **Imposta l'Hostname**:
+   ```bash
+   hostnamectl set-hostname rac1.localdomain
+   ```
+
+2. **Lancia l'interfaccia di rete**:
+   ```bash
+   nmtui
+   ```
+
+3. **Configura le Schede (Step-by-Step)**:
+   - Seleziona **Edit a connection** e premi `Invio`.
+   - **SCHEDA 1 (NAT/Internet - di solito `enp0s3`)**:
+     - Vai su **Edit...**
+     - Assicurati che **IPv4 CONFIGURATION** sia su `<Automatic>`.
+     - ⚠️ **MOLTO IMPORTANTE**: Scorri in basso e spunta con la barra spaziatrice `[X] Automatically connect`.
+     - Vai su `<OK>` in fondo e premi `Invio`.
+   - **SCHEDA 2 (Pubblica - di solito `enp0s8`)**:
+     - Vai su **Edit...**
+     - Cambia **IPv4 CONFIGURATION** da `<Automatic>` a `<Manual>`.
+     - Seleziona `<Show>` a destra di IPv4 per espandere i campi.
+     - **Addresses**: Inserisci l'indirizzo per il nodo (es. `192.168.56.101/24`).
+     - **Gateway**: Lascia VUOTO.
+     - **DNS Servers**: Lascia VUOTO.
+     - Spunta `[X] Automatically connect`.
+     - Vai su `<OK>` in fondo e premi `Invio`.
+
+4. **Esci e Applica**:
+   - Premi `Esc` o seleziona `<Back>` finché non torni al menu principale, poi seleziona **Quit**.
+   - Riavvia il networking per applicare:
+     ```bash
+     systemctl restart network
+     ```
+
+5. **Tabella di Riferimento Rapida (IP Pubblici)**:
+
+| Nodo | Hostname | IP Pubblico (Scheda 2) |
+| :--- | :--- | :--- |
+| **rac1** | `rac1.localdomain` | `192.168.56.101/24` |
+| **rac2** | `rac2.localdomain` | `192.168.56.102/24` |
+| **racstby1** | `racstby1.localdomain` | `192.168.56.111/24` |
+| **racstby2** | `racstby2.localdomain` | `192.168.56.112/24` |
+
+6. **Verifica TASSATIVA**:
+   - Controlla gli IP: `ip addr`
+   - Controlla Internet: `ping -c 2 google.com` (Se non risponde, hai sbagliato lo step della Scheda 1).
 
 **Passo 2: Connettiti tramite MobaXterm**
-1. Apri MobaXterm sul tuo PC Windows.
-2. Crea una nuova sessione SSH verso quell'IP come utente `root`.
-3. Ricorda di spuntare **X11-Forwarding**.
-4. **Ora puoi fare copia-incolla di tutti i comandi seguenti per questo nodo!**
+Ora che la macchina ha un IP raggiungibile dal tuo PC:
+1. Apri **MobaXterm**.
+2. **Session** -> **SSH** -> Remote Host: `192.168.56.101` (o quello che hai scelto).
+3. Username: `root`.
+4. **Advanced SSH settings**: Spunta **X11-Forwarding** ✅.
+5. Clicca OK e **D'ORA IN POI COPIA-INCOLLA I COMANDI DA QUI!**
 
 ---
 
