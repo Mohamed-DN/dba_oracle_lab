@@ -742,6 +742,14 @@ chronyc sources
 > 
 > **COSA FARE ORA**: Salta questo passaggio e vai direttamente al punto 1.13. Genereremo chiavi uniche per ogni nodo nella **Sezione 1.15**, subito dopo la clonazione.
 
+> 🛠️ **OPS! HAI GIÀ GENERATO LE CHIAVI?**
+> Se hai già lanciato i comandi ed è comparsa la "randomart image", non preoccuparti. Per tornare alla Golden Image "pulita" ed evitare chiavi duplicate, lancia questi due comandi da root:
+> ```bash
+> rm -rf /home/grid/.ssh
+> rm -rf /home/oracle/.ssh
+> ```
+> Fatto! Ora la tua macchina è di nuovo vergine e pronta per essere clonata correttamente.
+
 ---
 
 ---
