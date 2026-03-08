@@ -4,6 +4,25 @@
 
 ---
 
+## ⚠️ AVVERTENZA LAB: Snapshot VirtualBox e Test di Failover
+
+> **DOMANDA FREQUENTE**: *"Visto che sono su VirtualBox, posso fare uno snapshot di tutte e 4 le macchine, testare il failover, e poi rimettere gli snapshot per tornare indietro velocemente?"*
+> 
+> 🛑 **RISPOSTA: ASSOLUTAMENTE NO! Corromperai tutto il cluster.**
+> 
+> **Perché?** In VirtualBox, i dischi configurati come **"Condivisibili" (Shareable)** (come i nostri `asm_crs`, `asm_data`, ecc.) sono intenzionalmente **ESCLUSI** dagli snapshot delle VM. 
+> Se fai un failover (che scrive e modifica i dischi ASM condivisi) e poi ripristini le VM a uno snapshot precedente, i dischi OS delle macchine torneranno indietro nel tempo, ma i dischi ASM rimarranno nello stato futuro post-failover. Questo causerà un disallineamento fatale tra il sistema operativo/Clusterware e i dati su disco (Split Brain o OCR corruption).
+> 
+> ✅ **COME TESTARE IN MODO SICURO (Cold Backup Fisico):**
+> Se vuoi "salvare" lo stato dell'intero scenario per poter tornare indietro senza impazzire col comando REINSTATE, devi fare un **backup fisico a freddo**:
+> 1. Fallo come useresti una chiavetta USB: **Spegni completamente** le 4 VM (rac1, rac2, racstby1, racstby2).
+> 2. Vai nella cartella di Windows dove tieni le macchine virtuali e in quella dei dischi virtuali (`.vdi`).
+> 3. Clicca col tasto destro e **zippa/copia-incolla** l'intera cartella delle VM e l'intera cartella con tutti i dischi ASM in una directory di backup (es. `Backup_RAC_PreFailover`).
+> 4. Accendi le VM, devasta tutto col failover, fai i tuoi test.
+> 5. Quando hai finito, spegni le VM, **cancella** i file correnti e unzippa il tuo backup fisico al loro posto. Tornerai magicamente a 10 minuti prima.
+
+---
+
 ## Switchover vs Failover — La Differenza Cruciale
 
 ```
