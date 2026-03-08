@@ -97,38 +97,8 @@ lsblk
 # Devi vedere sdc1, sdd1, sde1, sdf1, sdg1
 ```
 
-## 2.2 Creazione Dischi ASM con ASMLib (solo su rac1)
-
-Il demone `oracleasm` è stato installato e configurato nella Fase 0. Ora dobbiamo "timbrare" fisicamente i dischi partizionati per farli riconoscere al cluster Oracle.
-
-> **Ricorda:** Questa operazione va eseguita **solo sul primo nodo** (`rac1`). Lo storage è condiviso, quindi una volta "timbrati", i dischi saranno leggibili anche da `rac2`.
-
-```bash
-# Esegui SOLO su rac1 (come root)
-oracleasm createdisk CRS1 /dev/sdc1
-oracleasm createdisk CRS2 /dev/sdd1
-oracleasm createdisk CRS3 /dev/sde1
-oracleasm createdisk DATA /dev/sdf1
-oracleasm createdisk RECO /dev/sdg1
-
-# Verifica
-oracleasm listdisks
-# Output atteso: CRS1, CRS2, CRS3, DATA, RECO
-```
-
-### Scansione Dischi dal Nodo 2 (su rac2)
-
-```bash
-# Il nodo 2 non vede automaticamente i dischi creati dal nodo 1 (come root)
-oracleasm scandisks
-oracleasm listdisks
-# Output atteso: CRS1, CRS2, CRS3, DATA, RECO
-```
-
-> **Perché scandisks?** ASMLib sul logico nodo 2 non ha ancora "registrato" i dischi etichettati dal nodo 1. `scandisks` forza il kernel a leggerli.
-
 > 📸 **SNAPSHOT — "SNAP-05: ASM Dischi Configurati"**
-> I dischi ASM sono pronti su entrambi i nodi. Se l'installazione Grid fallisce, torna qui.
+> I dischi ASM sono pronti su entrambi i nodi (creati e scansionati alla fine della Fase 1). Se l'installazione Grid fallisce, torna qui.
 > ```
 > VBoxManage snapshot "rac1" take "SNAP-05_ASM_Dischi_OK"
 > VBoxManage snapshot "rac2" take "SNAP-05_ASM_Dischi_OK"
