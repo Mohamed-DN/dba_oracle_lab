@@ -534,12 +534,18 @@ fdisk /dev/sdc
 6. Premi `w` (write and exit)
 7. Ripeti l'operazione per gli altri dischi: `fdisk /dev/sdd`, `fdisk /dev/sde`, `fdisk /dev/sdf`, e `fdisk /dev/sdg`.
 
-#### Step 1.1: Metodo Veloce (Opzionale - Script Automatico)
-In alternativa al fdisk manuale disco per disco, puoi usare questo comodo script "copia e incolla" che eseguirà le sequenze `n, p, 1, invio, invio, w` in automatico per tutti i cinque dischi.
+#### Step 1.1: Metodo Veloce (Script Automatico Sicuro)
+In alternativa al fdisk manuale disco per disco, puoi usare questo comodo script "copia e incolla".
 
-Dal terminale su `rac1` come `root`, incolla:
+> ⚠️ **ATTENZIONE TASSATIVA ALLE LETTERE DEI DISCHI!**
+> Esattamente come accadrà in Fase 1 per la creazione dei volumi ASM, l'ordinamento delle lettere (`sdb`, `sdc`, `sdd`...) dipende da come VirtualBox ha "attaccato" i dischi e non è sempre sequenziale.
+> **PRIMA DI ESEGUIRE LO SCRIPT**, lancia `lsblk` e segnati su un foglio le 5 lettere che corrispondono ai tuoi nuovi dischi vuoti (quelli da 2G, 20G e 15G).
+> Ignora `sda` (che ha le partizioni del sistema operativo e `/u01`).
+
+Dal terminale su `rac1` come `root`, **MODIFICA l'elenco dei dischi** nella prima riga con le VERE lettere viste su `lsblk`, poi incolla e premi Invio:
 
 ```bash
+# Sostituisci "sdc sdd sde sdf sdg" con le TUE reali lettere dei 5 dischi vuoti!
 for disk in /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg; do
   echo "Partizionando $disk..."
   echo -e "n\np\n1\n\n\nw" | fdisk $disk
