@@ -386,13 +386,8 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 
 > **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
----
-
-> 📸 **SNAPSHOT — "SNAP-03: Rete_e_DNS_OK"**
-> Hai configurato Hostname, IP Statici e Client DNS. Esegui lo snapshot ora su `rac1`.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-03_Rete_e_DNS_OK"
-> ```
+> 📸 **NOTA SNAPSHOT:**
+> *Il vecchio "SNAP-03: Rete_e_DNS_OK" qui è stato rimosso per ottimizzare lo spazio. Continua la configurazione di rac1 verso la Golden Image.*
 
 ---
 
@@ -803,10 +798,10 @@ Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e binar
 poweroff
 ```
 
-> 📸 **SNAPSHOT — "SNAP-04: Prerequisiti_Completi_Golden_Image" ⭐ MILESTONE**
+> 📸 **SNAPSHOT — "SNAP-02: Golden_Image_Pronta" ⭐ MILESTONE**
 > Appena la macchina è spenta, fai lo snapshot ORA. Questa è la tua **Golden Image**.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-04_Prerequisiti_Cloni_Pronti"
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-02: Golden_Image_Pronta"
 > ```
 
 #### Step 2: Crea i Cloni (rac2, racstby1, racstby2)
@@ -1109,9 +1104,9 @@ systemctl is-active firewalld || echo "Firewall OK (Disabled)"
 getenforce
 ```
 
-> 📸 **SNAPSHOT FINALE — "SNAP-04: Fase_1_OK_Pronto_Grid"**
-> Questo è il tuo punto di ripristino d'oro. Se l'installazione Grid fallisce, torna qui.
-> **Fallo su rac1 e rac2.**
+> 📸 **SNAPSHOT FINALE — "SNAP-03: Cloni_In_Rete_Dischi_ASM_OK"**
+> Questo è il tuo punto di ripristino d'oro per l'intero cluster. Se l'installazione Grid fallisce, torna qui scartando la Fase 2 fallita.
+> **Fallo su TUTTI i nodi accesi in questo momento (`rac1` e `rac2`, più eventuali standby se li hai già configurati in rete).**
 
 ---
 
