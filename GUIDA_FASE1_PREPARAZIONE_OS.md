@@ -832,12 +832,30 @@ Quando cloni `rac1`, VirtualBox crea purtroppo delle copie inutili dei dischi AS
 3. Seleziona i **5 dischi specifici per lo Standby** creati in Fase 0: `asm_stby_crs1`, `asm_stby_crs2`, `asm_stby_crs3`, `asm_stby_data`, `asm_stby_reco`.
 > 🛑 **FONDAMENTALE**: Un RAC Standby è a tutti gli effetti un cluster indipendente! **DEVE** avere i suoi 3 dischi CRS per il Clusterware e i suoi dischi DATA/RECO. Non condividere МАI i dischi tra il cluster primario e quello di standby.
 
-#### Step 4: Customizza i Cloni (Hostname e IP)
-Accendi i cloni uno alla volta e usa `nmtui` per cambiare:
-- **Hostname** (es. `rac2.localdomain`)
-- **IP Pubblico** (es. `192.168.56.102`)
-- **IP Privato** (es. `192.168.1.102`)
-*(Riferiti alla tabella IP nella Sezione 1.1)*.
+#### Step 4: Customizza i Cloni (Le 3 Checklist)
+Accendi i cloni **uno alla volta** dalla console nera di VirtualBox. 
+> ⚠️ **ATTENZIONE**: Non usare MobaXterm! Appena accesi, tutti i cloni hanno l'IP `.101` di `rac1` e farebbero conflitto.
+Fai il login come `root`, digita `nmtui` per gestire la rete, e alla fine lancia `systemctl restart network` e `reboot`.
+
+Ecco la lista esatta delle modifiche per ogni clone:
+
+##### 🟢 Checklist per `rac2`
+- [ ] **Hostname**: Cambia in `rac2.localdomain`
+- [ ] **Rete Pubblica** (es. `enp0s8`): Cambia l'IP da `.101` a **`192.168.56.102`**
+- [ ] **Rete Privata** (es. `enp0s9`): Cambia l'IP da `.101` a **`192.168.1.102`** (Nota: la subnet è `.1.x`)
+- [ ] **Storage (VM Settings)**: Hai rimosso i cloni `.vdi` inutili e attaccato i 5 dischi condivisi originali (`asm_crs1`, `crs2`, `crs3`, `data`, `reco`)?
+
+##### 🔵 Checklist per `racstby1`
+- [ ] **Hostname**: Cambia in `racstby1.localdomain`
+- [ ] **Rete Pubblica** (es. `enp0s8`): Cambia l'IP da `.101` a **`192.168.56.111`**
+- [ ] **Rete Privata** (es. `enp0s9`): Cambia l'IP da `.101` a **`192.168.2.111`** (❗**ATTENZIONE**: la subnet privata dello standby è `.2.x`!)
+- [ ] **Storage (VM Settings)**: Hai attaccato i 5 dischi FISICAMENTE DIVERSI creati per lo standby (`asm_stby_crs1`, `crs2`, `crs3`, `data`, `reco`)?
+
+##### 🔵 Checklist per `racstby2`
+- [ ] **Hostname**: Cambia in `racstby2.localdomain`
+- [ ] **Rete Pubblica** (es. `enp0s8`): Cambia l'IP a **`192.168.56.112`**
+- [ ] **Rete Privata** (es. `enp0s9`): Cambia l'IP a **`192.168.2.112`** (Subnet `.2.x`)
+- [ ] **Storage (VM Settings)**: Hai attaccato allo stesso modo i 5 dischi dello standby (`asm_stby...`) condividendoli con `racstby1`?
 
 ---
 
