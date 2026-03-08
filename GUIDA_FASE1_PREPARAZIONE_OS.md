@@ -977,16 +977,37 @@ C'è una **differenza fondamentale** tra il modo in cui `rac2` e i nodi standby 
 - `rac2` ha ricevuto i dischi originariamente creati su `rac1`. Hanno già l'intestazione ASM. Devi solo "scansionarli".
 - I nodi Standby hanno ricevuto dischi **NUOVI E VUOTI** creati in Fase 0. Devi prima "formattarli" per ASM su `racstby1`, e poi scansionarli su `racstby2`.
 
+> 💡 **Tip da DBA: Il concetto del "Timbro" ASM**
+> Molti si confondono in questa fase. Creare i file `.vdi` in VirtualBox e fare `fdisk` (come fatto in Fase 0) significa solo fornire "pezzi di ferro" grezzi al sistema operativo. 
+> Finché non usi il comando `oracleasm createdisk` (che stiamo per lanciare), Oracle non sa che quei dischi esistono. `createdisk` scrive fisicamente un "header ASM" nel primo megabyte del disco. Lo `scandisks` che farai sull'altro nodo serve semplicemente a dire al kernel: *"Ehi, guarda che l'altro nodo ha appena messo il timbro Oracle su questo disco, leggilo!"*
+
 > 💡 **Utente: root** su tutte le macchine.
 
-### Caso A: Su ENTRAMBI i nodi primari (rac1 e rac2)
-Lancia questi comandi per far sì che il driver ASM veda i dischi collegati:
+### Caso A: Nodi Primari (`rac1` e `rac2`)
+
+**1. SOLO su `rac1` (Creazione):**
+I dischi condivisi che abbiamo partizionato nella Fase 0 (`sdc1`, `sdd1`, `sde1`, `sdf1`, `sdg1`) devono ora essere "timbrati" per ASM. Questo va fatto **esclusivamente dal primo nodo**.
 
 ```bash
-# 1. Scansiona i dischi condivisi che hanno già l'header ASM
+# Formatta i dischi primari come volumi ASM
+oracleasm createdisk CRS1 /dev/sdc1
+oracleasm createdisk CRS2 /dev/sdd1
+oracleasm createdisk CRS3 /dev/sde1
+oracleasm createdisk DATA /dev/sdf1
+oracleasm createdisk RECO /dev/sdg1
+
+# Verifica che siano stati creati
+oracleasm listdisks
+```
+
+**2. SOLO su `rac2` (Scansione):**
+Il nodo 2 non deve formattare nulla, condivide i dischi con `rac1`. Deve solo dire al suo kernel di rileggere i dischi per accorgersi del lavoro appena fatto.
+
+```bash
+# Fai accorgere rac2 dei volumi appena creati da rac1
 oracleasm scandisks
 
-# 2. Elenca i dischi trovati (dovresti vedere CRS1, CRS2, CRS3, DATA, RECO)
+# Verifica che ora anche rac2 veda i 5 dischi (CRS1, CRS2...)
 oracleasm listdisks
 ```
 
