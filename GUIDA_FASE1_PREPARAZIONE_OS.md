@@ -844,40 +844,73 @@ Accendi i cloni **uno alla volta** dalla console nera di VirtualBox.
 Fai il login come `root`. La procedura per "pulire" la Golden Image e adattarla al nuovo nodo è divisa in due fasi: **Sistema** e **Rete**.
 
 ##### 🟢 Checklist per `rac2`
-**1. Sistema & Rete (tramite `nmtui`)**
-- [ ] Lancia `nmtui` -> **Set system hostname** -> Cambia in `rac2.localdomain`
-- [ ] In `nmtui` -> **Edit a connection** -> Rete Pubblica (es. `enp0s8`): Cambia l'IP da `.101` a **`192.168.56.102`**
-- [ ] Sempre sulla Rete Pubblica, verifica che il DNS interno sia impostato (se usi Dnsmasq, es. `192.168.56.50`).
-- [ ] Nel menu `nmtui` -> Rete Privata (es. `enp0s9`): Cambia l'IP da `.101` a **`192.168.1.102`** (Nota: subnet `.1.x`).
-- [ ] Esci da `nmtui` e lancia: `systemctl restart network`
-- [ ] Verifica file fisici: Apri `vi /etc/sysconfig/network-scripts/ifcfg-enp0s8` e `/etc/sysconfig/network-scripts/ifcfg-enp0s9`. Assicurati che l'`IPADDR` sia effettivamente `102` e non sia rimasto `101`.
-- [ ] Riavvia il nodo: `reboot`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+Per fare prima e non sbagliare con `nmtui`, **copia e incolla questo script intero** nel terminale di `rac2` appena lo accendi. Cambierà Hostname, IP Pubblico (a `.102`), IP Privato (a `.102` su subnet `.1.x`) e riavvierà il servizio di rete in un colpo solo.
+
+```bash
+# === SCRIPT AUTOMATICO PER RAC2 ===
+hostnamectl set-hostname rac2.localdomain
+
+# Modifica IP Pubblico (enp0s8) da .101 a .102
+sed -i 's/192.168.56.101/192.168.56.102/g' /etc/sysconfig/network-scripts/ifcfg-enp0s8
+
+# Modifica IP Privato (enp0s9) da .101 a .102
+sed -i 's/192.168.1.101/192.168.1.102/g' /etc/sysconfig/network-scripts/ifcfg-enp0s9
+
+# Riavvia la rete per applicare
+systemctl restart network
+ping -c 2 google.com
+```
+
+> 💡 **Fatto!** Ora puoi chiudere la scomoda finestra di VirtualBox, aprire **MobaXterm** e collegarti comodamente in SSH all'IP `192.168.56.102` come root.
 
 **2. Storage (Da fare a VM spenta in VirtualBox)**
 - [ ] Hai rimosso i cloni `.vdi` inutili?
 - [ ] Hai attaccato i 5 dischi condivisi originali (`asm_crs1`, `crs2`, `crs3`, `data`, `reco`)?
 
 ##### 🔵 Checklist per `racstby1`
-**1. Sistema & Rete (tramite `nmtui`)**
-- [ ] Lancia `nmtui` -> **Set system hostname** -> Cambia in `racstby1.localdomain`
-- [ ] In `nmtui` -> **Edit a connection** -> Rete Pubblica (es. `enp0s8`): Cambia l'IP da `.101` a **`192.168.56.111`**
-- [ ] Nel menu `nmtui` -> Rete Privata (es. `enp0s9`): Cambia l'IP da `.101` a **`192.168.2.111`** (❗**ATTENZIONE**: subnet `.2.x` per lo standby!)
-- [ ] Esci da `nmtui` e lancia: `systemctl restart network`
-- [ ] Verifica file fisici: Apri `vi /etc/sysconfig/network-scripts/ifcfg-enp0s8` e `...enp0s9`. Assicurati che l'`IPADDR` sia corretto (`111`).
-- [ ] Riavvia il nodo: `reboot`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+Incolla questo nel terminale nativo di `racstby1`. Attenzione: la rete privata qui cambia subnet! Questa andrà sulla `.2.x`.
+
+```bash
+# === SCRIPT AUTOMATICO PER RACSTBY1 ===
+hostnamectl set-hostname racstby1.localdomain
+
+# Modifica IP Pubblico (enp0s8) da .101 a .111
+sed -i 's/192.168.56.101/192.168.56.111/g' /etc/sysconfig/network-scripts/ifcfg-enp0s8
+
+# Modifica IP Privato (enp0s9) da 192.168.1.101 a 192.168.2.111
+sed -i 's/192.168.1.101/192.168.2.111/g' /etc/sysconfig/network-scripts/ifcfg-enp0s9
+
+# Riavvia la rete per applicare
+systemctl restart network
+ping -c 2 google.com
+```
+
+> 💡 **Fatto!** Ora apri MobaXterm e collegati all'IP `192.168.56.111`.
 
 **2. Storage (Da fare a VM spenta in VirtualBox)**
 - [ ] Hai rimosso i cloni `.vdi` inutili?
 - [ ] Hai attaccato i 5 dischi FISICAMENTE DIVERSI creati in Fase 0 per lo standby (`asm_stby_crs1`, `crs2`, `crs3`, `data`, `reco`)?
 
 ##### 🔵 Checklist per `racstby2`
-**1. Sistema & Rete (tramite `nmtui`)**
-- [ ] Lancia `nmtui` -> **Set system hostname** -> Cambia in `racstby2.localdomain`
-- [ ] In `nmtui` -> **Edit a connection** -> Rete Pubblica (es. `enp0s8`): Cambia l'IP a **`192.168.56.112`**
-- [ ] Nel menu `nmtui` -> Rete Privata (es. `enp0s9`): Cambia l'IP a **`192.168.2.112`** (subnet `.2.x`)
-- [ ] Esci da `nmtui` e lancia: `systemctl restart network`
-- [ ] Verifica file fisici: Assicurati con `vi` che i file in `/etc/sysconfig/network-scripts/` abbiano l'IP `112`.
-- [ ] Riavvia il nodo: `reboot`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+
+```bash
+# === SCRIPT AUTOMATICO PER RACSTBY2 ===
+hostnamectl set-hostname racstby2.localdomain
+
+# Se hai clonato da rac1 (ip finale .101) o da racstby1 (ip finale .111) usa il comando sed appropriato.
+# Ipotizziamo tu stia clonando dalla Golden Image rac1 (IP .101):
+sed -i 's/192.168.56.101/192.168.56.112/g' /etc/sysconfig/network-scripts/ifcfg-enp0s8
+sed -i 's/192.168.1.101/192.168.2.112/g' /etc/sysconfig/network-scripts/ifcfg-enp0s9
+
+# Riavvia la rete per applicare
+systemctl restart network
+ping -c 2 google.com
+```
+
+> 💡 **Fatto!** Ora apri MobaXterm e collegati all'IP `192.168.56.112`.
 
 **2. Storage (Da fare a VM spenta in VirtualBox)**
 - [ ] Hai attaccato allo stesso modo i 5 dischi dello standby (`asm_stby...`) condividendoli con `racstby1`?
