@@ -821,10 +821,14 @@ Quando cloni `rac1`, VirtualBox crea purtroppo delle copie inutili dei dischi AS
 
 **Per RAC2:**
 1. Seleziona `rac2` -> **Impostazioni** -> **Archiviazione**.
-2. Sotto il Controller SATA, vedrai molti dischi. **Rimuovi tutti i dischi TRANNE il primo** (quello del sistema operativo, di solito circa 40GB).
-3. Ora clicca sull'icona "Aggiungi disco fisso" e seleziona **Scegli un disco esistente**.
-4. Seleziona i 5 dischi originali creati in Fase 0: `asm_crs1`, `asm_crs2`, `asm_crs3`, `asm_data`, `asm_reco`.
-5. Clicca OK. Ora `rac1` e `rac2` puntano agli STESSI dischi (fondamentale per il RAC).
+2. Sotto il Controller SATA, vedrai molti dischi. **Devi mantenere i primi DUE dischi:**
+   - Il disco del sistema operativo (circa 50GB).
+   - Il disco con i binari Oracle in `/u01` (esattamente **100GB**).
+   > 🛑 **NON RIMUOVERE IL DISCO DA 100GB!** Contiene tutto il software Oracle che hai installato sulla Golden Image.
+3. **Rimuovi invece tutti gli altri 5 dischi cloni** (quelli da 2GB, 20GB, 15GB che VirtualBox ha rinominato in automatico, es. `rac2-disk3.vdi`).
+4. Ora clicca sull'icona "Aggiungi disco fisso" e seleziona **Scegli un disco esistente**.
+5. Seleziona i 5 dischi originali creati in Fase 0: `asm_crs1`, `asm_crs2`, `asm_crs3`, `asm_data`, `asm_reco`.
+6. Clicca OK. Ora `rac1` e `rac2` puntano agli STESSI dischi (fondamentale per il RAC).
 
 **Per RACSTBY1 e RACSTBY2:**
 1. Esattamente come per RAC2: **Rimuovi i dischi duplicati dal clone**.
