@@ -159,14 +159,14 @@ Scarica Oracle GoldenGate 19c (o 21c) da [Oracle eDelivery](https://edelivery.or
 - Per lo Standby: **Oracle GoldenGate 19c for Oracle Database on Linux x86-64**
 - Per il Target ARM (se OCI ARM): **Oracle GoldenGate for Oracle Database on Linux ARM**
 
-> 📸 **SNAPSHOT — "SNAP-16: Pre-GoldenGate" 🔴 CRITICO**
+> 📸 **SNAPSHOT — "SNAP-10: Pre_GoldenGate" 🔴 CRITICO**
 > Fai snapshot PRIMA di installare GoldenGate. Se GG crea problemi, torni al tuo ambiente DG perfettamente funzionante.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-16_Pre_GoldenGate"
-> VBoxManage snapshot "rac2" take "SNAP-16_Pre_GoldenGate"
-> VBoxManage snapshot "racstby1" take "SNAP-16_Pre_GoldenGate"
-> VBoxManage snapshot "racstby2" take "SNAP-16_Pre_GoldenGate"
-> VBoxManage snapshot "dbtarget" take "SNAP-16_Pre_GoldenGate"
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-10: Pre_GoldenGate"
+> VBoxManage snapshot "rac2" take "SNAP-10: Pre_GoldenGate"
+> VBoxManage snapshot "racstby1" take "SNAP-10: Pre_GoldenGate"
+> VBoxManage snapshot "racstby2" take "SNAP-10: Pre_GoldenGate"
+> VBoxManage snapshot "dbtarget" take "SNAP-10: Pre_GoldenGate"
 > ```
 
 ### Installazione sullo Standby (`racstby1`)
@@ -497,14 +497,14 @@ REPLICAT    RUNNING     rep_racdb   00:00:03      00:00:04
 
 > Se tutti i processi sono `RUNNING` con lag minimo, hai un sistema di replica funzionante! 🎉
 
-> 📸 **SNAPSHOT — "SNAP-17: GoldenGate Running" ⭐ MILESTONE FINALE**
+> 📸 **SNAPSHOT — "SNAP-11: GoldenGate_Running" ⭐ MILESTONE FINALE**
 > L'intero ambiente è operativo: RAC + Data Guard + GoldenGate! Questo è il tuo punto di partenza "gold".
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-17_GG_Running_FINALE"
-> VBoxManage snapshot "rac2" take "SNAP-17_GG_Running_FINALE"
-> VBoxManage snapshot "racstby1" take "SNAP-17_GG_Running_FINALE"
-> VBoxManage snapshot "racstby2" take "SNAP-17_GG_Running_FINALE"
-> VBoxManage snapshot "dbtarget" take "SNAP-17_GG_Running_FINALE"
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-11: GoldenGate_Running"
+> VBoxManage snapshot "rac2" take "SNAP-11: GoldenGate_Running"
+> VBoxManage snapshot "racstby1" take "SNAP-11: GoldenGate_Running"
+> VBoxManage snapshot "racstby2" take "SNAP-11: GoldenGate_Running"
+> VBoxManage snapshot "dbtarget" take "SNAP-11: GoldenGate_Running"
 > ```
 
 ---
