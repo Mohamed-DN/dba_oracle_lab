@@ -1058,25 +1058,30 @@ oracleasm listdisks
 
 ---
 
-## 1.17 Fix manuale per errore INS-06006 (Protocollo SCP)
-> **Nodo: rac1 E rac2** | **Utente: root**
-Nelle nuove versioni di Linux, il comando `scp` usa un protocollo moderno (SFTP) che l'installer Oracle 19c non capisce. Dobbiamo forzare il vecchio comportamento.
+## 1.17 Fix Tassativo per errore INS-06006 (Protocollo SCP)
 
-1. Rinominamo il vero comando `scp` per fare un backup:
-   ```bash
-   cp -p /usr/bin/scp /usr/bin/scp.bkp
-   ```
-2. Creiamo un "finto" comando scp:
-   ```bash
-   vi /usr/bin/scp
-   ```
-3. Inserisci questa riga:
-   `/usr/bin/scp.bkp -T $*`
-4. Salva e chiudi (`Esc`, poi `:wq`, poi `Invio`).
-5. Dai i permessi di esecuzione:
-   ```bash
-   chmod +x /usr/bin/scp
-   ```
+> 🛑 **Devo farlo per forza? SI, SU TUTTI I 4 NODI!** (`rac1`, `rac2`, `racstby1`, `racstby2`)
+> 
+> **Perché?** L'installer di Oracle 19c (che useremo in Fase 2) per copiare i file da `rac1` agli altri nodi durante il setup del cluster usa un vecchissimo comando `scp`. Nelle nuove versioni di Linux 7/8, `scp` è stato aggiornato segretamente per usare il protocollo *SFTP*, che manda in crash l'installer Oracle con un fatale **errore INS-06006**.
+> Questo geniale "workaround" rinomina il vero comando `scp` e ne crea uno finto che forza l'uso del vecchio protocollo (`-T`), ingannando Oracle e facendolo funzionare.
+
+**Come utente `root`, copia e incolla questo blocco su tutti e 4 i nodi:**
+
+```bash
+# 1. Rinominamo il vero comando scp per fare un backup
+cp -p /usr/bin/scp /usr/bin/scp.bkp
+
+# 2. Creiamo un "finto" comando scp che forza il vecchio protocollo (-T)
+cat > /usr/bin/scp <<'EOF'
+/usr/bin/scp.bkp -T $*
+EOF
+
+# 3. Diamo i permessi di esecuzione per farlo funzionare
+chmod +x /usr/bin/scp
+
+# 4. Verifica che abbia funzionato (dovrebbe stampare il comando col -T)
+cat /usr/bin/scp
+```
 
 ---
 
