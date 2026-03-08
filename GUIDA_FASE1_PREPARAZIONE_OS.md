@@ -827,9 +827,10 @@ Quando cloni `rac1`, VirtualBox crea purtroppo delle copie inutili dei dischi AS
 5. Clicca OK. Ora `rac1` e `rac2` puntano agli STESSI dischi (fondamentale per il RAC).
 
 **Per RACSTBY1 e RACSTBY2:**
-1. Fai la stessa cosa: **Rimuovi i dischi duplicati dal clone**.
-2. Aggiungi i dischi specifici per lo standby creati in Fase 0: `asm_stby_data` e `asm_stby_reco`.
-3. (Opzionale ma consigliato): Aggiungi anche 3 dischetti piccoli per il voto del cluster dello standby se vuoi un mini-cluster anche lì.
+1. Esattamente come per RAC2: **Rimuovi i dischi duplicati dal clone**.
+2. Clicca sull'icona "Aggiungi disco fisso" e seleziona **Scegli un disco esistente**.
+3. Seleziona i **5 dischi specifici per lo Standby** creati in Fase 0: `asm_stby_crs1`, `asm_stby_crs2`, `asm_stby_crs3`, `asm_stby_data`, `asm_stby_reco`.
+> 🛑 **FONDAMENTALE**: Un RAC Standby è a tutti gli effetti un cluster indipendente! **DEVE** avere i suoi 3 dischi CRS per il Clusterware e i suoi dischi DATA/RECO. Non condividere МАI i dischi tra il cluster primario e quello di standby.
 
 #### Step 4: Customizza i Cloni (Hostname e IP)
 Accendi i cloni uno alla volta e usa `nmtui` per cambiare:
