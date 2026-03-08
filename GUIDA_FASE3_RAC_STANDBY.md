@@ -492,14 +492,14 @@ EXIT;
 
 Questa è la magia! RMAN copia il database dal primario allo standby **in tempo reale**, senza bisogno di backup fisici.
 
-> 📸 **SNAPSHOT — "SNAP-11: Pre-Duplicate" 🔴 CRITICO**
+> 📸 **SNAPSHOT — "SNAP-07: Standby_Grid_e_OS_Pronti" 🔴 CRITICO**
 > L'RMAN Duplicate è l'operazione più delicata. Se fallisce (e succede spesso la prima volta), torni qui e risparmi MOLTO tempo.
 > **Fai snapshot su TUTTE le VM (rac1, rac2, racstby1, racstby2)!**
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-11_Pre_Duplicate"
-> VBoxManage snapshot "rac2" take "SNAP-11_Pre_Duplicate"
-> VBoxManage snapshot "racstby1" take "SNAP-11_Pre_Duplicate"
-> VBoxManage snapshot "racstby2" take "SNAP-11_Pre_Duplicate"
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-07: Standby_Grid_e_OS_Pronti"
+> VBoxManage snapshot "rac2" take "SNAP-07: Standby_Grid_e_OS_Pronti"
+> VBoxManage snapshot "racstby1" take "SNAP-07: Standby_Grid_e_OS_Pronti"
+> VBoxManage snapshot "racstby2" take "SNAP-07: Standby_Grid_e_OS_Pronti"
 > ```
 
 ```bash
@@ -744,13 +744,13 @@ adrci
 SHOW ALERT -tail 30
 ```
 
-> 📸 **SNAPSHOT — "SNAP-12: RMAN Duplicate Completato" ⭐ MILESTONE**
-> Lo standby è operativo con MRP attivo e 0 gap! Questo è probabilmente lo snapshot più importante dopo SNAP-09.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-12_Duplicate_OK"
-> VBoxManage snapshot "rac2" take "SNAP-12_Duplicate_OK"
-> VBoxManage snapshot "racstby1" take "SNAP-12_Duplicate_OK"
-> VBoxManage snapshot "racstby2" take "SNAP-12_Duplicate_OK"
+> 📸 **SNAPSHOT — "SNAP-08: RMAN_Duplicate_Finito" ⭐ MILESTONE**
+> Lo standby è operativo con MRP attivo e 0 gap! Questo è probabilmente lo snapshot più importante dopo la creazione del primario.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-08: RMAN_Duplicate_Finito"
+> VBoxManage snapshot "rac2" take "SNAP-08: RMAN_Duplicate_Finito"
+> VBoxManage snapshot "racstby1" take "SNAP-08: RMAN_Duplicate_Finito"
+> VBoxManage snapshot "racstby2" take "SNAP-08: RMAN_Duplicate_Finito"
 > ```
 
 ---
