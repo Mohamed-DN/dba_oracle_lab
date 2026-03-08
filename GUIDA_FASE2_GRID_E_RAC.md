@@ -97,12 +97,7 @@ lsblk
 # Devi vedere sdc1, sdd1, sde1, sdf1, sdg1
 ```
 
-> 📸 **SNAPSHOT — "SNAP-05: ASM Dischi Configurati"**
-> I dischi ASM sono pronti su entrambi i nodi (creati e scansionati alla fine della Fase 1). Se l'installazione Grid fallisce, torna qui.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-05_ASM_Dischi_OK"
-> VBoxManage snapshot "rac2" take "SNAP-05_ASM_Dischi_OK"
-> ```
+
 
 ---
 
@@ -150,12 +145,7 @@ cd /u01/app/19.0.0/grid
 
 > **Perché cluvfy?** Questo strumento verifica TUTTI i prerequisiti prima dell'installazione: DNS, SSH, swap, kernel params, dischi, NTP... Se cluvfy passa con tutti PASSED, l'installazione andrà liscia. Se ci sono FAILED, risolvili PRIMA di procedere.
 
-> 📸 **SNAPSHOT — "SNAP-06: cluvfy PASSED" 🔴 CRITICO**
-> Se cluvfy passa, sei pronto per installare il Grid. Questo è il punto di non ritorno.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-06_CLUVFY_PASSED"
-> VBoxManage snapshot "rac2" take "SNAP-06_CLUVFY_PASSED"
-> ```
+
 
 Errori comuni e soluzioni:
 - **PRVG-11250 (RPM Database)**: Ignorabile (è un WARNING informativo).
@@ -290,12 +280,7 @@ L'installer si ferma e chiede di eseguire 2 script come `root`. **ESEGUILI UNO A
 
 Torna all'installer GUI e clicca **OK** per completare.
 
-> 📸 **SNAPSHOT — "SNAP-07: Grid Infrastructure Installato" ⭐ MILESTONE**
-> Il cluster è attivo! Reinstallare il Grid richiederebbe ore. NON cancellare questo snapshot.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-07_Grid_Installato"
-> VBoxManage snapshot "rac2" take "SNAP-07_Grid_Installato"
-> ```
+
 
 ---
 
@@ -483,11 +468,11 @@ su - grid
 $ORACLE_HOME/OPatch/opatch lspatches
 ```
 
-> 📸 **SNAPSHOT — "SNAP-08: Grid Patchato con RU"**
-> Il Grid è aggiornato all'ultima Release Update. Se il patching del DB home fallisce, puoi tornare qui.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-08_Grid_Patchato"
-> VBoxManage snapshot "rac2" take "SNAP-08_Grid_Patchato"
+> 📸 **SNAPSHOT — "SNAP-04: Grid_Installato_e_Patchato" ⭐ MILESTONE**
+> Il cluster è attivo e aggiornato all'ultima Release Update. Reinstallarlo richiederebbe ore. Se l'installazione del Database RDBMS fallisce, puoi tornare qui.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-04: Grid_Installato_e_Patchato"
+> VBoxManage snapshot "rac2" take "SNAP-04: Grid_Installato_e_Patchato"
 > ```
 
 ---
@@ -549,12 +534,7 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 /u01/app/oracle/product/19.0.0/dbhome_1/root.sh
 ```
 
-> 📸 **SNAPSHOT — "SNAP-09: DB Software Installato"**
-> I binari del database sono installati. Se il patching o DBCA fallisce, torni qui e riprovi.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-09_DB_Software"
-> VBoxManage snapshot "rac2" take "SNAP-09_DB_Software"
-> ```
+
 
 ---
 
@@ -659,11 +639,11 @@ ORDER BY action_time DESC;
 -- Deve mostrare SUCCESS per entrambi i patch
 ```
 
-> 📸 **SNAPSHOT — "SNAP-09b: DB Home Patchato"**
-> I binari del database sono patchati con RU + OJVM. Pronto per DBCA.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-09b_DB_Patchato"
-> VBoxManage snapshot "rac2" take "SNAP-09b_DB_Patchato"
+> 📸 **SNAPSHOT — "SNAP-05: DB_Software_Installato"**
+> I binari del database sono installati e completamente patchati con RU + OJVM. Pronto per DBCA.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-05: DB_Software_Installato"
+> VBoxManage snapshot "rac2" take "SNAP-05: DB_Software_Installato"
 > ```
 
 ---
@@ -768,11 +748,11 @@ srvctl status scan_listener
 srvctl config database -d RACDB
 ```
 
-> 📸 **SNAPSHOT — "SNAP-10: Database RAC Creato (RACDB)" ⭐ MILESTONE**
-> Il tuo RAC primario è completamente operativo! Questo è forse lo snapshot più importante del progetto.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-10_RACDB_Creato"
-> VBoxManage snapshot "rac2" take "SNAP-10_RACDB_Creato"
+> 📸 **SNAPSHOT — "SNAP-06: Database_RAC_Creato" ⭐ MILESTONE**
+> Il tuo RAC primario è completamente operativo! Questo è lo snapshot più importante per non dover ripetere MAI PIÙ l'installazione del cluster.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-06: Database_RAC_Creato"
+> VBoxManage snapshot "rac2" take "SNAP-06: Database_RAC_Creato"
 > ```
 
 ### Abilitare Force Logging (necessario per Data Guard)
