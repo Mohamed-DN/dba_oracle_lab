@@ -986,10 +986,19 @@ C'è una **differenza fondamentale** tra il modo in cui `rac2` e i nodi standby 
 ### Caso A: Nodi Primari (`rac1` e `rac2`)
 
 **1. SOLO su `rac1` (Creazione):**
-I dischi condivisi che abbiamo partizionato nella Fase 0 (`sdc1`, `sdd1`, `sde1`, `sdf1`, `sdg1`) devono ora essere "timbrati" per ASM. Questo va fatto **esclusivamente dal primo nodo**.
+I dischi condivisi che abbiamo partizionato nella Fase 0 devono ora essere "timbrati" per ASM. Questo va fatto **esclusivamente dal primo nodo**.
+
+> ⚠️ **ATTENZIONE ALLA LETTERA DEL DISCO (`/dev/sdX`)!**
+> La lettera assegnata da Linux (`sdb`, `sdc`, `sdd`...) dipende dall'ordine casuale in cui VirtualBox ha attaccato i dischi SATA al riavvio. **NON COPIARE I COMANDI QUI SOTTO ALLA CIECA!**
+> Lancia prima `lsblk` per capire chi è chi, basandoti sulle **dimensioni**:
+> - Le tre partizioni da **2G** $\rightarrow$ sono `CRS1`, `CRS2`, `CRS3`
+> - La partizione da **20G** $\rightarrow$ è `DATA`
+> - La partizione da **15G** $\rightarrow$ è `RECO`
+
+Sostituisci le lettere `sdX1` nei comandi qui sotto con quelle che vedi nel tuo `lsblk`:
 
 ```bash
-# Formatta i dischi primari come volumi ASM
+# ESEMPIO: Sostituisci sdc1, sdd1 ecc. con le tue lettere reali!
 oracleasm createdisk CRS1 /dev/sdc1
 oracleasm createdisk CRS2 /dev/sdd1
 oracleasm createdisk CRS3 /dev/sde1
@@ -1014,10 +1023,16 @@ oracleasm listdisks
 ### Caso B: Sui nodi Standby (`racstby1` e `racstby2`)
 
 **1. SOLO su `racstby1` (Creazione):**
-Poiché i dischi scelti per lo standby in VirtualBox erano vergini, devi "timbrarli" con l'header ASM. (Assicurati tramite `lsblk` che i nomi fisici siano corretti, di solito sono sdb, sdc, sdd, sde, sdf).
+Poiché i dischi scelti per lo standby in VirtualBox erano vergini, devi "timbrarli" con l'header ASM. 
+
+> ⚠️ **ATTENZIONE ALLA LETTERA DEL DISCO!**
+> Anche qui, basati sulle dimensioni rilevate da `lsblk` per assegnare le etichette corrette:
+> - Le tre partizioni da **2G** $\rightarrow$ `STBY_CRS1`, `STBY_CRS2`, `STBY_CRS3`
+> - La partizione da **20G** $\rightarrow$ `STBY_DATA`
+> - La partizione da **15G** $\rightarrow$ `STBY_RECO`
 
 ```bash
-# Formatta i 5 nuovi dischi come volumi ASM
+# ESEMPIO: Sostituisci sdb1, sdc1 ecc. con le tue lettere reali in base a lsblk!
 oracleasm createdisk STBY_CRS1 /dev/sdb1
 oracleasm createdisk STBY_CRS2 /dev/sdc1
 oracleasm createdisk STBY_CRS3 /dev/sdd1
