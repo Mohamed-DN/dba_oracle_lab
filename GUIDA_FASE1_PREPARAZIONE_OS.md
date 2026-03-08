@@ -971,23 +971,54 @@ ssh-copy-id oracle@rac2
 
 ---
 
-## 1.16 Sincronizzazione Dischi ASM (Post-Clonazione)
+## 1.16 Sincronizzazione e Creazione Dischi ASM (Post-Clonazione)
 
-> 💡 **Nodi: rac1 E rac2** | **Utente: root**
-> Ora che hai clonato la macchina e ricollegato i dischi condivisi originali in VirtualBox (Step 1.14), dobbiamo dire al sistema operativo di "scansionarli".
+C'è una **differenza fondamentale** tra il modo in cui `rac2` e i nodi standby gestiscono i dischi dopo la clonazione:
+- `rac2` ha ricevuto i dischi originariamente creati su `rac1`. Hanno già l'intestazione ASM. Devi solo "scansionarli".
+- I nodi Standby hanno ricevuto dischi **NUOVI E VUOTI** creati in Fase 0. Devi prima "formattarli" per ASM su `racstby1`, e poi scansionarli su `racstby2`.
 
-### Su ENTRAMBI i nodi (rac1 e rac2):
+> 💡 **Utente: root** su tutte le macchine.
+
+### Caso A: Su ENTRAMBI i nodi primari (rac1 e rac2)
 Lancia questi comandi per far sì che il driver ASM veda i dischi collegati:
 
 ```bash
-# 1. Scansiona i nuovi dischi collegati
+# 1. Scansiona i dischi condivisi che hanno già l'header ASM
 oracleasm scandisks
 
-# 2. Elenca i dischi trovati (al momento dovresti vedere una lista vuota o i dischi se li hai già creati)
+# 2. Elenca i dischi trovati (dovresti vedere CRS1, CRS2, CRS3, DATA, RECO)
 oracleasm listdisks
 ```
 
-> **Perché?** Dopo la clonazione e il riattacco dei dischi in VirtualBox, il kernel di `rac2` ha bisogno di un "refresh" per mappare i nuovi device `/dev/sdX` e passarli al driver `oracleasm`.
+### Caso B: Sui nodi Standby (`racstby1` e `racstby2`)
+
+**1. SOLO su `racstby1` (Creazione):**
+Poiché i dischi scelti per lo standby in VirtualBox erano vergini, devi "timbrarli" con l'header ASM. (Assicurati tramite `lsblk` che i nomi fisici siano corretti, di solito sono sdb, sdc, sdd, sde, sdf).
+
+```bash
+# Formatta i 5 nuovi dischi come volumi ASM
+oracleasm createdisk STBY_CRS1 /dev/sdb1
+oracleasm createdisk STBY_CRS2 /dev/sdc1
+oracleasm createdisk STBY_CRS3 /dev/sdd1
+oracleasm createdisk STBY_DATA /dev/sde1
+oracleasm createdisk STBY_RECO /dev/sdf1
+
+# Verifica che siano stati creati
+oracleasm listdisks
+```
+
+**2. SOLO su `racstby2` (Scansione):**
+Il nodo 2 dello standby non deve formattarli (lo ha già fatto il nodo 1), deve solo accorgersi che l'altro nodo li ha preparati.
+
+```bash
+# Scansiona i dischi appena formattati da racstby1
+oracleasm scandisks
+
+# Verifica che li veda tutti e 5
+oracleasm listdisks
+```
+
+> **Perché?** Dopo la clonazione e il riattacco dei dischi in VirtualBox, il kernel dei cloni ha bisogno di un "refresh" per mappare i nuovi device `/dev/sdX` e passarli al driver `oracleasm`.
 
 ---
 
