@@ -78,14 +78,7 @@ ADD DATABASE RACDB_STBY AS
 ENABLE CONFIGURATION;
 ```
 
-> 📸 **SNAPSHOT — "SNAP-13: Pre-DGMGRL"**
-> Fai questo snapshot PRIMA di eseguire ENABLE CONFIGURATION. Se il Broker si configura male, può essere difficile da pulire.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-13_Pre_DGMGRL"
-> VBoxManage snapshot "rac2" take "SNAP-13_Pre_DGMGRL"
-> VBoxManage snapshot "racstby1" take "SNAP-13_Pre_DGMGRL"
-> VBoxManage snapshot "racstby2" take "SNAP-13_Pre_DGMGRL"
-> ```
+
 
 > **Spiegazione:**
 > - `CREATE CONFIGURATION`: Definisce il nome della configurazione DG.
@@ -146,13 +139,13 @@ SUCCESS
 > - **Apply Lag**: Quanto ritardo c'è nell'applicazione dei redo sullo standby. Idealmente 0 o pochi secondi.
 > - **Apply Rate**: La velocità di applicazione.
 
-> 📸 **SNAPSHOT — "SNAP-14: DGMGRL Configurato e SUCCESS" ⭐ MILESTONE**
-> Data Guard Broker è operativo con STATUS = SUCCESS. Punto sicuro per i test di switchover.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-14_DGMGRL_SUCCESS"
-> VBoxManage snapshot "rac2" take "SNAP-14_DGMGRL_SUCCESS"
-> VBoxManage snapshot "racstby1" take "SNAP-14_DGMGRL_SUCCESS"
-> VBoxManage snapshot "racstby2" take "SNAP-14_DGMGRL_SUCCESS"
+> 📸 **SNAPSHOT — "SNAP-09: DGMGRL_Configurato" ⭐ MILESTONE**
+> Data Guard Broker è operativo con STATUS = SUCCESS. Hai un vero sito di Disaster Recovery.
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-09: DGMGRL_Configurato"
+> VBoxManage snapshot "rac2" take "SNAP-09: DGMGRL_Configurato"
+> VBoxManage snapshot "racstby1" take "SNAP-09: DGMGRL_Configurato"
+> VBoxManage snapshot "racstby2" take "SNAP-09: DGMGRL_Configurato"
 > ```
 
 ---
@@ -238,14 +231,7 @@ DGMGRL> SHOW CONFIGURATION;
 -- RACDB torna primario, RACDB_STBY torna standby
 ```
 
-> 📸 **SNAPSHOT — "SNAP-15: Post-Switchover/Switchback OK"**
-> Lo switchover e il switchback sono riusciti! La tua configurazione DG è solida.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-15_Switchover_OK"
-> VBoxManage snapshot "rac2" take "SNAP-15_Switchover_OK"
-> VBoxManage snapshot "racstby1" take "SNAP-15_Switchover_OK"
-> VBoxManage snapshot "racstby2" take "SNAP-15_Switchover_OK"
-> ```
+
 
 ---
 
