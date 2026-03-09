@@ -574,6 +574,12 @@ partprobe
 yum install -y oracleasm-support
 yum install -y kmod-oracleasm
 
+# Installa la libreria ASMLib (NON è nei repo YUM, va scaricata)
+# Senza questo pacchetto il Grid installer NON vede i dischi!
+cd /tmp
+wget https://download.oracle.com/otn_software/asmlib/oracleasmlib-2.0.15-1.el7.x86_64.rpm
+rpm -ivh oracleasmlib-2.0.15-1.el7.x86_64.rpm
+
 # Configura ASMLib
 oracleasm configure -i
 # Rispondi alle domande come segue:
@@ -585,6 +591,16 @@ oracleasm configure -i
 # Inizializza il modulo
 oracleasm init
 ```
+
+> ⚠️ **ATTENZIONE: 3 pacchetti, non 2!** ASMLib ha bisogno di **3 componenti** per funzionare correttamente:
+>
+> | Pacchetto | Ruolo | Installazione |
+> |---|---|---|
+> | `kmod-oracleasm` | Modulo **kernel** che gestisce i dischi | `yum install` (dai repo) |
+> | `oracleasm-support` | Tool da **riga di comando** (`oracleasm listdisks`, ecc.) | `yum install` (dai repo) |
+> | `oracleasmlib` | **Libreria** che l'installer Grid usa per scoprire i dischi | ❗ Download manuale da oracle.com |
+>
+> Se dimentichi `oracleasmlib`, il comando `oracleasm listdisks` funziona ma **l'installer Grid mostra la lista dischi vuota!**
 
 > **Verifica**: Il comando `oracleasm status` dovrebbe mostrare che il driver è caricato e montato. Non creeremo i dischi ora, lo faremo nella Fase 2.
 
