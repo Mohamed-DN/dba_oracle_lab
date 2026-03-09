@@ -117,7 +117,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 16 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_CLOUD_GOLDENGATE.md) | OCI Free Tier ARM, setup ibrido, SSH tunnel |
+| 16 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI Free Tier ARM, setup ibrido 23ai Free, SSH tunnel |
 | 17 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
 | 18 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
 
