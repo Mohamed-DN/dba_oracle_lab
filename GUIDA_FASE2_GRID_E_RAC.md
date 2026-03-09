@@ -268,23 +268,24 @@ ip -6 addr show enp0s3
 su - grid
 cd /u01/app/19.0.0/grid
 
-# Il flag -ignorePrefail ignora i check non bloccanti
-# (come la RAM a 7.49 GB invece di 8 GB)
 ./runcluvfy.sh stage -pre crsinst \
     -n rac1,rac2 \
-    -verbose \
-    -ignorePrefail
+    -verbose
 ```
 
-> **Perché `-ignorePrefail`?** La nostra VM ha 7.49 GB di RAM visibili al SO (il kernel Linux riserva ~500 MB per sé). Oracle ne vuole 8 GB pieni. In un lab questo non è un problema reale — Oracle funziona perfettamente con 7.5 GB. Il flag dice a cluvfy di segnalare il problema ma continuare con la verifica.
+> **Cosa aspettarsi?** Il pre-check segnalerà probabilmente dei **FAILED** su:
+> - **RAM** (7.49 GB invece di 8 GB) — è normale in VirtualBox, il kernel riserva ~500 MB
+> - **IP duplicato 10.0.2.15** — è la NAT di VirtualBox, identica su ogni VM per design
 >
-> **Se puoi permettertelo**, aumenta la RAM delle VM a **9216 MB (9 GB)** in VirtualBox per eliminare anche questo warning. Altrimenti, anche l'installer Grid mostrerà lo stesso avviso ma ti lascerà proseguire.
+> **Questi warning NON sono bloccanti!** Il `cluvfy` è solo un "consulente" che ti avvisa. Il vero cancello è l'installer (`gridSetup.sh`), che ti mostrerà gli stessi avvisi ma avrà una **checkbox "Ignore All"** in basso a sinistra per proseguire.
+>
+> **Se puoi permettertelo**, aumenta la RAM delle VM a **9216 MB (9 GB)** in VirtualBox per eliminare il warning sulla RAM.
 
 ### Errori da risolvere vs Warning da ignorare
 
 | Errore | Tipo | Azione |
 |---|---|---|
-| `PRVF-7530`: RAM insufficiente | ⚠️ Warning | Ignora con `-ignorePrefail` (o alza la RAM) |
+| `PRVF-7530`: RAM insufficiente | ⚠️ Warning | Procedi — l'installer ha "Ignore All" (o alza la RAM a 9 GB) |
 | `PRVG-1172`: IP 10.0.2.15 duplicato | ⚠️ Warning | Innocuo — è la NAT VirtualBox, Oracle non la usa |
 | `PRVG-11250`: RPM Database check | ℹ️ Info | Ignorabile (serve root per questo check) |
 | `PRVF-4664`: NTP non configurato | ❌ Errore | Configura chrony (vedi Fase 1) |
