@@ -454,27 +454,35 @@ L'installer eseguirà un `cluvfy` interno. Ecco come interpretare i risultati:
 - Spunta la casella **"Ignore All"** in alto a destra.
 - Clicca **Next → Yes** per proseguire.
 
-L'installer si ferma e chiede di eseguire 2 script come `root`. **ESEGUILI UNO ALLA VOLTA, prima su rac1, poi su rac2!**
+L'installer si fermerà allo **Step 17** e ti mostrerà un pop-up che chiede di eseguire 2 script come `root`.
 
-**Su rac1 (come root)**:
+![Execute Configuration Scripts](./images/grid_root_scripts.png)
+
+> 🛑 **ATTENZIONE:** ESEGUI GLI SCRIPT **UNO ALLA VOLTA**, prima su `rac1`, e **SOLO QUANDO HA FINITO** passali su `rac2`. Se li esegui in parallelo, il cluster si corromperà irrimediabilmente!
+
+**Su `rac1` (come root)**:
 
 ```bash
 /u01/app/oraInventory/orainstRoot.sh
 ```
 
-> Questo script registra la Central Inventory. Deve essere eseguito una sola volta.
+> Questo script registra la Central Inventory (oraInventory). Deve essere eseguito una sola volta.
 
 ```bash
 /u01/app/19.0.0/grid/root.sh
 ```
 
-> **Questo è lo script più importante**. Esegue:
-> - Configura Oracle Clusterware (CRS)
+> 💡 **Cosa rispondere al prompt?**
+> Appena lanciato, lo script chiederà: `Enter the full pathname of the local bin directory: [/usr/local/bin]:`
+> Premi semplicemente **Invio** per accettare il default.
+>
+> **Questo è lo script più importante di tutta l'installazione**. Esegue:
+> - Configura Oracle Clusterware (CRS) e OHAS
 > - Crea il CRS daemon (`crsd`, `cssd`, `evmd`)
-> - Configura ASM
+> - Inizializza il disk group ASM `CRS`
 > - Avvia il cluster su questo nodo
 >
-> **ASPETTA** che finisca completamente prima di passare al nodo 2! Se lo esegui in parallelo, il cluster si corrompe.
+> **ASPETTA (ci vorranno 5-10 minuti)** che finisca completamente e ritorni al prompt dei comandi prima di passare al nodo 2!
 
 **Su rac2 (come root)**:
 
