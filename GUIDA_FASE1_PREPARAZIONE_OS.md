@@ -555,6 +555,24 @@ yum install -y ksh libaio-devel net-tools nfs-utils \
 
 ---
 
+## 1.6 Fix Bug Systemd (RemoveIPC) - CRITICO!
+
+> **Perché?** Su Oracle Linux 7 (e derivate Red Hat 7+), `systemd` ha un'impostazione predefinita mortale per Oracle: `RemoveIPC=yes`. Questo parametro fa sì che il demone di login distrugga automaticamente i segmenti di memoria condivisa (IPC) quando un utente si disconnette. Se questo succede all'utente `grid` durante l'installazione, il servizio vitale del cluster (`ohasd`) andrà in crash silenzioso (`CRS-4639: Could not contact Oracle High Availability Services`) costringendoti a distruggere e rifare mezza installazione!
+
+Dobbiamo assolutamente forzare questo valore a `no` nel file di configurazione principale di systemd.
+
+Esegui questo comando come root per aggiungere (o modificare) la riga nel file di configurazione e riavviare il demone:
+
+```bash
+# Aggiunge RemoveIPC=no al logind.conf
+echo "RemoveIPC=no" >> /etc/systemd/logind.conf
+
+# Riavvia il gestore dei login per applicare la modifica
+systemctl restart systemd-logind
+```
+
+---
+
 ## 1.7 Creazione Gruppi e Utenti
 
 > **Perché due utenti (oracle e grid)?** Questa è una best practice Oracle "Role Separation". L'utente `grid` installerà e gestirà il clusterware e lo storage (ASM). L'utente `oracle` installerà e gestirà solo i motori dei database. Se un account viene compromesso, l'altro resta protetto. Il pacchetto `preinstall` ha già creato l'utente `oracle` base, ora dobbiamo creare il resto.
