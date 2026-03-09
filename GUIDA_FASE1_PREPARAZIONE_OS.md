@@ -452,20 +452,34 @@ Applicazione → Kernel Linux → RAM
 
 ### ⚠️ Ma se `/tmp` usa la RAM, non mi ruba memoria per Oracle?
 
-**No!** Ed ecco il trucco geniale di `tmpfs`: la RAM viene occupata **solo da quello che ci scrivi effettivamente**, non dalla dimensione massima dichiarata.
+Domanda fondamentale! La risposta ha **due parti**:
 
-Esempio pratico con `size=10g`:
+**Parte 1: La RAM si usa SOLO per i file effettivamente presenti.**
+`tmpfs` NON pre-alloca tutta la memoria. Se `/tmp` contiene 200 MB di file → usa 200 MB di RAM. Se è vuoto → usa 0 MB. Il `size=4g` è solo il **tetto massimo** (come un limite di carta di credito: puoi spendere *fino a* 4000€, ma se compri un panino paghi solo 5€).
+
+**Parte 2: Quanto dare a `/tmp` se ho poca RAM?**
+Nella nostra VM abbiamo **8 GB di RAM totali**, e la dobbiamo dividere tra diversi inquilini:
+
 ```
-Momento              | File in /tmp | RAM usata da tmpfs | RAM libera (su 8 GB)
----------------------|--------------|--------------------|-----------------------
-Appena montato       | 0 file       | ~0 MB              | ~8 GB ← tutta libera!
-Durante gridSetup    | 2 GB di .jar | ~2 GB              | ~6 GB
-Dopo il reboot       | 0 file       | ~0 MB              | ~8 GB ← torna tutta!
+╔══════════════════════════════════════════════════════════╗
+║              BUDGET RAM (8 GB totali)                    ║
+╠══════════════════════════════════════════════════════════╣
+║  Sistema Operativo Linux       ~1.0 GB (fisso)          ║
+║  Oracle SGA (memoria condivisa)~1.5 GB (per il DB)      ║
+║  Oracle PGA (memoria processi) ~0.5 GB (per il DB)      ║
+║  Grid Infrastructure (ASM/CRS) ~0.5 GB                  ║
+║  ─────────────────────────────────────────────────       ║
+║  /tmp (tmpfs) — TETTO MASSIMO   4.0 GB ← il nostro!    ║
+║  ─────────────────────────────────────────────────       ║
+║  Margine di sicurezza          ~0.5 GB                  ║
+╚══════════════════════════════════════════════════════════╝
 ```
 
-Il `size=10g` è solo un **tetto massimo di sicurezza** (come dire: "Non lasciare che qualcuno scriva più di 10 GB in /tmp"). Se nessuno scrive in `/tmp`, la RAM consumata è **ZERO**.
+Ecco perché scegliamo **4 GB** e non di più: in un lab con soli 8 GB, non possiamo permetterci di rischiare. Nella pratica, `/tmp` non arriverà mai a usare tutti e 4 i GB (l'installer Oracle ne usa al massimo 1-2 GB di picco), ma il tetto ci protegge da sorprese.
 
-> 📘 **Per i curiosi:** E se la RAM si riempie per davvero? Linux è furbo: quando la RAM scarseggia, il kernel sposta automaticamente i file di `tmpfs` nella **swap** (che è su disco). Ecco perché nella Fase 0 abbiamo creato 8 GB di swap — servono anche come "rete di sicurezza" per `tmpfs`! Il ciclo completo è: RAM → Swap → e quando serve, Linux li riporta in RAM. Tutto trasparente per l'applicazione.
+> 📘 **E se la RAM si riempie per davvero?** Linux è furbo: quando la RAM scarseggia, il kernel sposta automaticamente i file "freddi" di `tmpfs` nella **swap** (che è su disco). Ecco perché nella Fase 0 abbiamo creato 8 GB di swap — servono anche come "rete di sicurezza" per `tmpfs`! Quindi il ciclo è: RAM → Swap (disco) → e quando servono di nuovo, Linux li riporta in RAM. Tutto trasparente.
+>
+> **In pratica**: anche se `/tmp` è in RAM, in caso di emergenza Linux lo "parcheggia" su disco senza che nessuno se ne accorga. Il meglio dei due mondi!
 
 ---
 
@@ -478,23 +492,23 @@ Il `size=10g` è solo un **tetto massimo di sicurezza** (come dire: "Non lasciar
 df -hT /tmp
 
 # 2. Aggiungi la riga tmpfs al file fstab per il montaggio permanente
-# Riserviamo 10 GB per /tmp (tetto massimo, la RAM si usa solo per i file reali)
-echo "tmpfs  /tmp  tmpfs  defaults,size=10g,mode=1777  0 0" >> /etc/fstab
+# Tetto massimo: 4 GB (sufficiente per Oracle, senza sprecare RAM)
+echo "tmpfs  /tmp  tmpfs  defaults,size=4g,mode=1777  0 0" >> /etc/fstab
 
 # 3. Monta il nuovo tmpfs ADESSO (senza riavviare)
 mount -o remount /tmp 2>/dev/null || mount /tmp
 
 # 4. Verifica che ora /tmp sia su tmpfs
 df -hT /tmp
-# Deve mostrare: tmpfs    tmpfs   10G  ...  /tmp
+# Deve mostrare: tmpfs    tmpfs   4.0G  ...  /tmp
 
 # 5. Verifica che la RAM NON sia stata "rubata"
 free -h
 # La colonna "available" deve mostrare ancora quasi tutta la RAM libera!
 ```
 
-> 💡 **Tip da DBA: Perché `size=10g` e `mode=1777`?**
-> - `size=10g`: Tetto massimo di 10 GB. Oracle ne richiede minimo 1 GB, ma `opatchauto` e `gridSetup` possono usarne molto di più durante il patching. Ricorda: **la RAM si consuma SOLO per i file effettivamente presenti in /tmp**.
+> 💡 **Tip da DBA: Perché `size=4g` e `mode=1777`?**
+> - `size=4g`: Tetto massimo di 4 GB. È il giusto compromesso per un lab con 8 GB di RAM: abbastanza per qualsiasi installer Oracle, senza rubare troppa memoria al DB. **Ricorda: la RAM si consuma SOLO per i file effettivamente presenti in /tmp.**
 > - `mode=1777`: È lo "sticky bit" (`drwxrwxrwt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
 > - `0 0`: Come per `/u01`, non serve né dump né fsck per un filesystem in RAM.
 
