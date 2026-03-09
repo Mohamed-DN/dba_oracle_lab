@@ -399,7 +399,18 @@ cd /u01/app/19.0.0/grid
 > Se non esce nulla, installalo (vedi Sezione 0.8). ASMLib ha bisogno di **3 pacchetti**: `kmod-oracleasm` (kernel), `oracleasm-support` (CLI), e `oracleasmlib` (libreria per l'installer).
 
 **Step 9 — ASM Password**:
-- Imposta la password per `SYS` e `ASMSNMP`
+
+![Step 9 - Specify ASM Password](./images/grid_asm_password.png)
+
+- Seleziona: **"Use same passwords for these accounts"** (come nello screenshot)
+- Inserisci la password sia in "Specify Password" che in "Confirm Password"
+- Nel nostro lab usiamo la stessa password per tutti gli account (es. `oracle`) per semplicità
+
+> ⚠️ **Warning INS-30011**: L'installer mostra un avviso giallo che dice *"The password entered does not conform to the Oracle recommended standards"*. Questo è perché Oracle in produzione richiede password di **almeno 8 caratteri** con maiuscole, minuscole, numeri e caratteri speciali (es. `Orcl_2024#`).
+>
+> **Per il lab**: ignora il warning e clicca **Next → Yes**. La password semplice funziona.
+>
+> **In produzione (Best Practice Oracle)**: Usa password separate per `SYS` e `ASMSNMP`, con complessità minima 8 caratteri, e salvale in un password vault (come Oracle Key Vault). L'utente `ASMSNMP` serve a Enterprise Manager per monitorare ASM — in produzione non deve avere la stessa password di `SYS`.
 
 **Step 10 — IPMI**:
 - Seleziona: **Do not use IPMI**
