@@ -431,10 +431,32 @@ cd /u01/app/19.0.0/grid
 - **DESELEZIONA** "Automatically run configuration scripts"
 - Li eseguiremo noi manualmente, uno alla volta, per capire cosa fanno
 
-**Step 15 — Summary**:
-- Rivedi tutto e clicca **Install**
+**Step 15 — Prerequisite Checks**:
 
-### Esecuzione degli Script root
+![Step 15 - Prerequisite Checks - Ignorare RAM, ma risolvere ASM](./images/grid_prereq_checks.png)
+
+L'installer eseguirà un `cluvfy` interno. Ecco come interpretare i risultati:
+
+| Controllo | Risultato | Cosa fare |
+|---|---|---|
+| **Physical Memory** (PRVF-7530) | ⚠️ Warning | **Ignoralo**. Hai 7.5 GB invece di 8 GB. È normale in VirtualBox. |
+| **RPM Package Manager** (PRVG-11250) | ℹ️ Info | **Ignoralo**. Manca root per questo check. |
+| **Network Interface** (PRVG-1172) | ⚠️ Warning | **Ignoralo** solo se riguarda l'IP NAT `10.0.2.15`. |
+| 🛑 **Device Checks for ASM** (PRVG-11800) | ❌ **FAILED** | **DEVI RISOLVERLO!** (Vedi sotto) |
+
+> 🛠️ **Troubleshooting: Errore PRVG-11800 (Failed to discover any devices using ORCL:*)**
+> Se all'improvviso l'installer dice che non trova i dischi (nonostante tu li abbia appena selezionati allo Step 8!), è un problema noto di **"memoria sporca" dell'installer**.
+> 
+> **Causa:** Hai installato il pacchetto `oracleasmlib` *mentre l'installer era aperto*. L'interfaccia Java (GUI) ha caricato i dischi "al volo", ma il motore in background (`cluvfy`) è partito *prima* che tu installassi la libreria, e quindi non sa come leggere `ORCL:*`.
+> 
+> **Soluzione:**
+> 1. Clicca **Cancel → Yes** e chiudi completamente l'installer.
+> 2. Assicurati che `oracleasmlib` sia installato anche su `rac2`!
+> 3. Rilancia `./gridSetup.sh`. Ora che la libreria è presente *prima* dell'avvio, il check passerà.
+
+**Se tutti i FAILED sono risolti (e rimangono solo Warning):**
+- Spunta la casella **"Ignore All"** in alto a destra.
+- Clicca **Next → Yes** per proseguire.
 
 L'installer si ferma e chiede di eseguire 2 script come `root`. **ESEGUILI UNO ALLA VOLTA, prima su rac1, poi su rac2!**
 
