@@ -492,7 +492,17 @@ L'installer si fermerà allo **Step 17** e ti mostrerà un pop-up che chiede di 
 
 > Sul nodo 2, `root.sh` aggiungerà questo nodo al cluster esistente (creato dal nodo 1).
 
-Torna all'installer GUI e clicca **OK** per completare.
+Torna all'installer GUI e clicca **OK** per completare lo step.
+
+L'installer eseguirà un ultimo check automatico (`stage -post crsinst`).
+
+> 🛠️ **Troubleshooting: Errore PRVG-13606 (NTP/Chrony non sincronizzato)**
+> Se il check finale fallisce con l'errore `chrony daemon is not synchronized with any external time source`, è normalissimo su VirtualBox (l'orologio della VM fa fatica a stare dietro al PC fisico, specialmente se lo avevi ibernato).  
+> **Soluzione:**
+> 1. Apri un terminale `root` sul nodo indicato nell'errore (es. `rac2`).
+> 2. Esegui: `systemctl restart chronyd`
+> 3. Aspetta 10 secondi.
+> 4. Ritorna nell'installer GUI e clicca su **Retry** (o passa oltre e ignoralo, il cluster funziona lo stesso, ma provare a fixarlo costa zero).
 
 
 
