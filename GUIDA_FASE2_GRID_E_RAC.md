@@ -145,6 +145,37 @@ rpm -ivh /tmp/cvuqdisk-1.0.10-1.rpm
 
 ---
 
+## 2.3b Creare il file Oracle Inventory Pointer (`/etc/oraInst.loc`)
+
+> ⚠️ **Da fare su ENTRAMBI i nodi (`rac1` e `rac2`) come `root`**, altrimenti `cluvfy` fallisce con l'errore: `PRVG-10467: The default Oracle Inventory group could not be determined.`
+
+**Perché serve?** Oracle usa il file `/etc/oraInst.loc` per sapere dove salvare il suo "registro di installazione" (l'Inventory) e quale gruppo Linux lo possiede. Questo file normalmente viene creato automaticamente alla prima installazione Oracle — ma siccome non hai ancora installato nulla, non esiste! Dobbiamo crearlo a mano prima di lanciare il pre-check.
+
+**Su `rac1` E `rac2`, come utente `root`:**
+
+```bash
+# 1. Crea il file pointer che dice a Oracle dove sta l'Inventory
+cat > /etc/oraInst.loc <<'EOF'
+inventory_loc=/u01/app/oraInventory
+inst_group=oinstall
+EOF
+
+# 2. Permessi corretti sul file
+chown root:oinstall /etc/oraInst.loc
+chmod 644 /etc/oraInst.loc
+
+# 3. Crea la directory dell'Inventory (se non esiste già)
+mkdir -p /u01/app/oraInventory
+chown grid:oinstall /u01/app/oraInventory
+chmod 775 /u01/app/oraInventory
+
+# 4. Verifica
+cat /etc/oraInst.loc
+ls -ld /u01/app/oraInventory
+```
+
+---
+
 ## 2.4 Pre-Check con Cluster Verification Utility
 
 ```bash
