@@ -339,12 +339,21 @@ cd /u01/app/19.0.0/grid
 - Clicca **Test** per verificare la connettività
 
 **Step 5 — Network Interface Usage**:
-| Interface | Subnet | Use |
-|---|---|---|
-| eth0 | 192.168.1.0 | Public |
-| eth1 | 192.168.1.0  | ASM & Private |
 
-> L'Interconnect (Private) è la rete su cui transita Cache Fusion: le copie dei blocchi di dati tra i nodi. MAI mescolarla con la rete pubblica.
+> ⚠️ **ATTENZIONE**: Le interfacce si chiamano `enp0sX`, NON `eth0`/`eth1`! Configura così:
+
+| Interface | Subnet | Use for |
+|---|---|---|
+| `enp0s3` | 10.0.2.0 | ❌ **Do Not Use** (è la NAT VirtualBox) |
+| `enp0s8` | 192.168.56.0 | ✅ **Public** |
+| `enp0s9` | 192.168.1.0 | ✅ **ASM & Private** |
+
+![Step 5 - Network Interface Usage](./images/grid_network_interface_usage.png)
+
+> **Perché questa configurazione?**
+> - `enp0s8` (192.168.56.0) → È la rete **pubblica** (Host-Only). I client si connettono al database attraverso questa rete tramite SCAN.
+> - `enp0s9` (192.168.1.0) → È la rete **privata** (Internal Network). Qui transita **Cache Fusion**: le copie dei blocchi di dati tra i nodi. MAI mescolarla con la rete pubblica!
+> - `enp0s3` (10.0.2.0) → È la NAT di VirtualBox (per accesso Internet). Oracle non deve usarla: ogni VM ha lo stesso IP `10.0.2.15` e non possono comunicare tra loro su questa rete.
 
 **Step 6 — Storage Option**:
 - Seleziona: **Use Oracle Flex ASM for Storage**
