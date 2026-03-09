@@ -89,11 +89,34 @@ I 5 nuovi dischi che hai assegnato in VirtualBox sono "vergini". Devi partiziona
    *Se vedi i 5 dischi anche qui, lo storage condiviso dello standby è pronto!*
 
 ### Step 4: Ripeti Installazione Grid e Database (Fase 2)
-Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby:
-1. **Installazione Grid Infrastructure:** Segui la Fase 2 paro paro, ma inserisci come nodi `racstby1` e `racstby2`, e come SCAN name `racstby-scan.localdomain`.
-2. **Installazione Database (Software Only):** Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
+Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby.
 
-Fatto questo, hai un cluster RAC vuoto pronto per ricevere i dati dal primario. 
+**1. Installazione Grid Infrastructure:**
+Segui la Fase 2 paro paro, ma con queste differenze per lo standby:
+
+| Parametro Installer | Valore per lo Standby |
+|---|---|
+| Cluster Name | `racstby-cluster` |
+| SCAN Name | `racstby-scan.localdomain` |
+| Nodo 1 | `racstby1.localdomain` / VIP: `racstby1-vip.localdomain` |
+| Nodo 2 | `racstby2.localdomain` / VIP: `racstby2-vip.localdomain` |
+
+> ⚠️ **Allo Step 5 (Network Interface Usage)**, usa la stessa configurazione del primario:
+
+| Interface | Subnet | Use for |
+|---|---|---|
+| `enp0s3` | 10.0.2.0 | ❌ **Do Not Use** |
+| `enp0s8` | 192.168.56.0 | ✅ **Public** |
+| `enp0s9` | 192.168.2.0 | ✅ **ASM & Private** |
+
+> 💡 **Nota**: La subnet dell'interconnect sullo standby è `192.168.2.0` (non `192.168.1.0` come sul primario), perché nello Step 2 hai configurato gli IP privati sulla rete `192.168.2.x`.
+
+![Riferimento: Step 5 Network Interfaces](./images/grid_network_interface_usage.png)
+
+**2. Installazione Database (Software Only):**
+Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
+
+Fatto questo, hai un cluster RAC vuoto pronto per ricevere i dati dal primario.
 
 ---
 
