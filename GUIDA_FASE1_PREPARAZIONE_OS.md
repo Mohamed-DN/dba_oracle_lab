@@ -421,6 +421,37 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
 
 ---
 
+## 1.5b Configurare /tmp come Filesystem Dedicato (tmpfs)
+
+> 🛑 **Perché è importante?** Se lanci `df -hT /tmp` e vedi che `/tmp` è montato sulla partizione di root (`/`), il tuo `/tmp` **non** ha un filesystem dedicato. Questo è un problema per due motivi:
+> 1. **Oracle Prerequisito Ufficiale**: gli installer di Grid e Database (gridSetup.sh, runInstaller, dbca) usano `/tmp` massicciamente per estrarre file temporanei Java. Oracle richiede **almeno 1 GB libero** in `/tmp`. Se la partizione root si riempie (ad esempio con i log), **l'installer crasha a metà**.
+> 2. **Sicurezza e Performance**: `tmpfs` vive in RAM (non su disco), quindi è velocissimo. E al reboot si pulisce da solo!
+
+**Come utente `root`, copia e incolla questo blocco su `rac1`:**
+
+```bash
+# 1. Verifica la situazione attuale (probabilmente /tmp è su /)
+df -hT /tmp
+
+# 2. Aggiungi la riga tmpfs al file fstab per il montaggio permanente
+# Riserviamo 2 GB di RAM per /tmp (più che sufficiente per Oracle)
+echo "tmpfs  /tmp  tmpfs  defaults,size=2g,mode=1777  0 0" >> /etc/fstab
+
+# 3. Monta il nuovo tmpfs ADESSO (senza riavviare)
+mount -o remount /tmp 2>/dev/null || mount /tmp
+
+# 4. Verifica che ora /tmp sia su tmpfs
+df -hT /tmp
+# Deve mostrare: tmpfs    tmpfs   2.0G  ...  /tmp
+```
+
+> 💡 **Tip da DBA: Perché `size=2g` e `mode=1777`?**
+> - `size=2g`: Riserva 2 GB di RAM per `/tmp`. Oracle ne richiede minimo 1 GB, ma ne usiamo 2 per sicurezza. Questo spazio viene usato solo se ci scrivi dentro (non spreca RAM a vuoto).
+> - `mode=1777`: È lo "sticky bit" (`drwxrwxrwxt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
+> - `0 0`: Come per `/u01`, non serve né dump né fsck per un filesystem in RAM.
+
+---
+
 ## 1.6 Installazione Pacchetti Prerequisiti
 
 ```bash
