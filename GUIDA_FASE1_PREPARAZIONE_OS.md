@@ -87,8 +87,8 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 
 ```
                      ┌───────────────────────────────────────────┐
-                     │          RETE PUBBLICA (eth0)             │
-                     │       192.168.1.0/24 (Bridged)           │
+                     │        RETE PUBBLICA (enp0s8)             │
+                     │     192.168.56.0/24 (Host-Only)           │
       Client App     │                                           │
           │          │  ┌──────┐  ┌──────┐  ┌──────┐            │
           ▼          │  │SCAN  │  │SCAN  │  │SCAN  │            │
@@ -108,8 +108,8 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
          │           └─────────┼──────────────────┼─────────────┘
          │                     │                  │
          │           ┌─────────┼──────────────────┼─────────────┐
-         │           │         │  RETE PRIVATA    │   (eth1)    │
-         │           │         │  192.168.1.0/24   │  Host-Only  │
+         │           │         │  RETE PRIVATA    │  (enp0s9)   │
+         │           │         │  192.168.1.0/24   │  Internal   │
          │           │  ┌──────┴──────┐   ┌──────┴──────┐      │
          │           │  │ rac1-priv   │   │ rac2-priv   │      │
          │           │  │ 192.168.1.101  │◄═►│ 192.168.1.102  │      │
