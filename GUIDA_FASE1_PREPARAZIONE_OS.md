@@ -1170,29 +1170,58 @@ oracleasm listdisks
 
 ---
 
-## 1.17 Fix Tassativo per errore INS-06006 (Protocollo SCP)
+## 1.17 Fix per errore INS-06006 (Protocollo SCP)
 
-> 🛑 **Devo farlo per forza? SI, SU TUTTI I 4 NODI!** (`rac1`, `rac2`, `racstby1`, `racstby2`)
-> 
-> **Perché?** L'installer di Oracle 19c (che useremo in Fase 2) per copiare i file da `rac1` agli altri nodi durante il setup del cluster usa un vecchissimo comando `scp`. Nelle nuove versioni di Linux 7/8, `scp` è stato aggiornato segretamente per usare il protocollo *SFTP*, che manda in crash l'installer Oracle con un fatale **errore INS-06006**.
-> Questo geniale "workaround" rinomina il vero comando `scp` e ne crea uno finto che forza l'uso del vecchio protocollo (`-T`), ingannando Oracle e facendolo funzionare.
+> ⚠️ **Questo fix serve SOLO se usi Oracle Linux 8 o 9!**
+> Su **Oracle Linux 7** (il nostro caso nel lab), il comando `scp` usa già il vecchio protocollo e l'installer Oracle funziona perfettamente **senza modifiche**. Se applichi questo fix su OEL 7, **rompi il comando `scp`** perché il flag `-T` non esiste nella vecchia versione!
 
-**Come utente `root`, copia e incolla questo blocco su tutti e 4 i nodi:**
+### Come capire se ti serve il fix
 
 ```bash
-# 1. Rinominamo il vero comando scp per fare un backup
+# Lancia questo comando per vedere la versione del tuo OS:
+cat /etc/oracle-release
+```
+
+| Risultato | Azione |
+|---|---|
+| Oracle Linux Server release **7.x** | ❌ **NON FARE NULLA!** `scp` funziona già. Salta questa sezione. |
+| Oracle Linux Server release **8.x** o **9.x** | ✅ Applica il fix qui sotto su tutti i nodi. |
+
+### Il Fix (SOLO per Oracle Linux 8/9!)
+
+**Perché serve?** Nelle versioni recenti di Linux (OEL 8+), il comando `scp` è stato silenziosamente aggiornato per usare il protocollo SFTP. L'installer Oracle 19c, che è vecchio, non capisce SFTP e crasha con l'errore fatale **INS-06006**. Il workaround rinomina il vero `scp` e ne crea uno finto che forza il vecchio protocollo.
+
+```bash
+# ===== SOLO SU ORACLE LINUX 8/9! NON ESEGUIRE SU OEL 7! =====
+# Come utente root, su tutti i nodi:
+
+# 1. Backup del vero scp
 cp -p /usr/bin/scp /usr/bin/scp.bkp
 
-# 2. Creiamo un "finto" comando scp che forza il vecchio protocollo (-T)
+# 2. Creiamo il wrapper che forza il vecchio protocollo
 cat > /usr/bin/scp <<'EOF'
-/usr/bin/scp.bkp -T $*
+#!/bin/bash
+/usr/bin/scp.bkp -T "$@"
 EOF
 
-# 3. Diamo i permessi di esecuzione per farlo funzionare
+# 3. Permessi di esecuzione
 chmod +x /usr/bin/scp
 
-# 4. Verifica che abbia funzionato (dovrebbe stampare il comando col -T)
+# 4. Verifica
 cat /usr/bin/scp
+```
+
+### 🚨 Hai già applicato il fix su Oracle Linux 7 per errore?
+
+Se hai già eseguito il fix e ora `scp` non funziona più (errore `unknown option -- T`), ripristina il comando originale:
+
+```bash
+# Ripristina il backup del vero scp
+cp -p /usr/bin/scp.bkp /usr/bin/scp
+
+# Verifica che funzioni
+scp --help
+# Non deve più dare "unknown option -- T"
 ```
 
 ---
