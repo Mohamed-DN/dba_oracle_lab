@@ -363,31 +363,40 @@ cd /u01/app/19.0.0/grid
 
 **Step 8 — Create ASM Disk Group** (per OCR e Voting Disk):
 
-![Step 8 - Create ASM Disk Group](./images/grid_asm_disk_group.png)
-
-> 🛑 **Se la lista dei dischi è VUOTA** (come nello screenshot sopra), è perché il Discovery Path punta a `/dev/sd*`. Noi usiamo **ASMLib**, quindi Oracle deve cercare i dischi con il prefisso `ORCL:`.
+![Step 8 - Create ASM Disk Group — Tutti i 5 dischi ASMLib visibili](./images/grid_asm_disk_group.png)
 
 **Procedura passo-passo:**
 
 1. **Disk Group Name**: `CRS`
 2. **Redundancy**: seleziona **Normal**
 3. **Allocation Unit Size**: lascia `4 MB` (default)
-4. **Clicca "Change Discovery Path..."** e cambia da `/dev/sd*` a:
-   ```
-   ORCL:*
-   ```
-5. Ora i dischi appariranno! Seleziona **tutti e 3**: `ORCL:CRS1`, `ORCL:CRS2`, `ORCL:CRS3`
-6. **NON selezionare** "Configure Oracle ASM Filter Driver" (usiamo ASMLib, non AFD)
-7. Clicca **Next**
+4. **Discovery Path**: deve mostrare `ORCL:*`. Se non lo è, clicca **"Change Discovery Path..."** e scrivi `ORCL:*`
+5. **Seleziona SOLO questi 3 dischi** (metti la spunta ☑️):
+   - ☑️ `ORCL:CRS1` (2047 MB)
+   - ☑️ `ORCL:CRS2` (2047 MB)
+   - ☑️ `ORCL:CRS3` (2047 MB)
+6. **NON selezionare** `ORCL:DATA` e `ORCL:RECO`! Li userai dopo per creare disk group separati
+7. **NON selezionare** "Configure Oracle ASM Filter Driver" (usiamo ASMLib, non AFD)
+8. Clicca **Next**
+
+> ⚠️ **Perché NON selezionare DATA e RECO qui?**
+> Questo step crea il disk group `CRS` che conterrà **solo** i metadati del cluster (OCR e Voting Disk). I disk group `DATA` (per i datafile del database) e `RECO` (per i backup RMAN e gli archived log) verranno creati separatamente dopo l'installazione Grid, con il tool `asmca` o tramite SQL. Mescolare tutto in un unico disk group è una violazione delle best practice Oracle!
 
 ### Perché queste scelte? (Best Practice Oracle)
 
-| Parametro | Scelta | Perché (Best Practice Oracle) |
+| Parametro | Scelta | Perché |
 |---|---|---|
-| **Disk Group Name** | `CRS` | Contiene OCR (Oracle Cluster Registry) e Voting Disk. Oracle raccomanda di separarli dai dati (MOS Doc 1373437.1) |
-| **Redundancy** | Normal | Oracle richiede **almeno 3 Voting Disk** per il quorum. Normal Redundancy su 3 dischi = se ne perdi 1, il cluster resta su (2 su 3 votano). High Redundancy vorrebbe 5 dischi. |
-| **Allocation Unit** | 4 MB | Default Oracle. Per i disk group piccoli come CRS (solo metadati), 4 MB è ottimale. Per DATA/RECO si può usare 4 MB (default e raccomandato per la maggior parte dei casi). |
-| **Discovery Path** | `ORCL:*` | Perché usiamo **ASMLib** come driver disco. Se usassimo `udev` rules, il path sarebbe `/dev/oracleasm/disks/*`. Se usassimo AFD, sarebbe `AFD:*`. |
+| **Disk Group** | `CRS` separato da `DATA` e `RECO` | Oracle raccomanda di separare i metadati del cluster dai dati del database (MOS Doc 1373437.1). Se il disk group DATA si corrompe, il cluster resta su. |
+| **Redundancy** | Normal | Oracle richiede **almeno 3 Voting Disk** per il quorum (votazione a maggioranza). Normal = 3 dischi, se ne perdi 1 il cluster resta su (2 su 3). High = 5 dischi. |
+| **Allocation Unit** | 4 MB | Default Oracle e raccomandato per disk group piccoli come CRS (contiene solo pochi MB di metadati). |
+| **Discovery Path** | `ORCL:*` | Perché usiamo **ASMLib**. Con `udev` sarebbe `/dev/oracleasm/disks/*`. Con AFD sarebbe `AFD:*`. |
+
+> 🛠️ **Troubleshooting: Lista dischi VUOTA nonostante `ORCL:*`?**
+> Se `oracleasm listdisks` mostra i dischi dalla riga di comando ma l'installer li ignora, controlla che il pacchetto **`oracleasmlib`** sia installato:
+> ```bash
+> rpm -qa | grep oracleasmlib
+> ```
+> Se non esce nulla, installalo (vedi Sezione 0.8). ASMLib ha bisogno di **3 pacchetti**: `kmod-oracleasm` (kernel), `oracleasm-support` (CLI), e `oracleasmlib` (libreria per l'installer).
 
 **Step 9 — ASM Password**:
 - Imposta la password per `SYS` e `ASMSNMP`
