@@ -10,26 +10,14 @@
 
 ## 5.0 Preparazione Macchina Target (`dbtarget`)
 
-> ⚠️ Se hai posticipato la creazione del Target per concentrarti sul RAC, è il momento di mettere in piedi la VM di destinazione.
+Nelle versioni precedenti di questo lab, costruivamo un terzo server VirtualBox per ospitare il database di destinazione. Tuttavia, questo richiedeva troppa RAM locale (portando il totale a 5 VM pesanti).
 
-1. **Crea la VM in VirtualBox**: 8GB RAM, 4 CPU, 50GB Disco, 2 Schede di rete (Scheda 1: NAT, Scheda 2: Host-Only 192.168.56.0).
-2. **Sistema Operativo**: Installa Oracle Linux 7.9 (minimale).
-3. **Imposta l'IP**: Dal terminale VirtualBox, fai login come root, avvia `nmtui`. Attiva il DHCP sulla scheda NAT e imposta l'IP manuale `192.168.56.150/24` (senza gateway) sulla scheda Host-Only. Riavvia la rete (`systemctl restart network`).
-4. **Hosts e DNS**: Collegati via MobaXterm a `192.168.56.150` come root e sovrascrivi `/etc/hosts`:
-   ```bash
-   cat > /etc/hosts <<EOF
-   127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-   ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-   192.168.56.150   dbtarget.localdomain   dbtarget
-   EOF
-   ```
-   > 💡 **LINK DI COMUNICAZIONE**: Affinché GoldenGate possa trasferire i file (Pump) dallo Standby verso il Target, **devi aggiungere l'IP del Target nel file `/etc/hosts` dei nodi Standby** (`racstby1` e `racstby2`):
-   > ```bash
-   > # Su racstby1 e racstby2 come root (fondamentale)
-   > echo "192.168.56.150   dbtarget.localdomain   dbtarget" >> /etc/hosts
-   > ```
-5. **Prerequisiti OS**: Ripeti gli step della [FASE 1](./GUIDA_FASE1_PREPARAZIONE_OS.md) (firewall, `oracle-database-preinstall-19c`, bash_profile, unzip oracle_sw).
-6. **Database Target**: Installa Oracle 19c (Solo Software DB) e crea un database Single Instance con `dbca` nominato `DBTAR`. Non installare Grid Infrastructure sul target.
+> ☁️ **IL NUOVO APPROCCIO (CLOUD FIRST)**
+> Al posto di una VM locale, useremo il tier gratuito (Always Free) di **Oracle Cloud Infrastructure (OCI)**. Creeremo una potente istanza ARM con ben 4 CPU e 24GB di RAM, su cui faremo girare il nuovissimo **Oracle Database 23ai Free** e **Oracle GoldenGate 23ai Free**.
+
+👉 **Smetti di leggere qui e segui la guida:** [**Setup OCI ARM come Target GoldenGate**](./GUIDA_GOLDENGATE_OCI_ARM.md).
+
+Torna a questo punto (Step 5.1) **solo dopo** aver completato la guida OCI e aver verificato che i due nodi Standby riescano a pingare il tuo nuovo IP pubblico OCI (tramite il record in `/etc/hosts` che configurerai).
 
 ---
 
@@ -210,15 +198,9 @@ cd fbo_ggs_Linux_x64_Oracle_shiphome/Disk1
 ./runInstaller -silent -responseFile /tmp/oggcore.rsp
 ```
 
-### Installazione sul Target (`dbtarget`)
+### Installazione sul Target OCI (Cloud)
 
-Stessa procedura, ma directory diversa se è una macchina diversa.
-
-```bash
-mkdir -p /u01/app/goldengate
-chown oracle:oinstall /u01/app/goldengate
-# ... stessi passi di scompattazione e installazione
-```
+L'installazione e la creazione del Service Manager sul Cloud sono interamente coperte dalla **[Nuova Guida OCI ARM](./GUIDA_GOLDENGATE_OCI_ARM.md)**. Se l'hai seguita, il tuo target è già pronto a ricevere i dati sulla porta 7809 e ha l'interfaccia Web attiva in HTTPS.
 
 ---
 
@@ -376,7 +358,6 @@ EXTRACT pump_racdb
 USERID ggadmin@RACDB_STBY, PASSWORD <password>
 RMTHOST dbtarget.localdomain, MGRPORT 7809
 RMTTRAIL ./dirdat/ra
-
 TABLE HR.*;
 ```
 
@@ -384,36 +365,27 @@ TABLE HR.*;
 
 ---
 
-## 5.9 Configurazione Replicat (sul Target)
+## 5.9 Configurazione Replicat (sul Target OCI)
 
-Il Replicat legge i trail ricevuti dal Pump e applica le modifiche al database target.
+A differenza dell'Extract locale, sul target in Cloud abbiamo installato **GoldenGate 23ai Microservices**. Non useremo `ggsci` da riga di comando, ma l'interfaccia grafica Web super reattiva!
 
-```bash
-# Sul target (dbtarget)
-cd $OGG_HOME
-./ggsci
-```
+1. Apri il browser e vai al Service Manager OCI: `https://<IP_PUBBLICO_CLOUD>:9011`
+2. Accedi con `admin` / `oracle` (o la password che hai scelto).
+3. Vai all'Administration Server (porta 9012).
+4. Nel menu laterale, seleziona **Credentials** e aggiungi le credenziali del database (Username: `ggadmin`, Password: `ggadmin`, Connect String: `//localhost:1521/FREEPDB1`).
+5. Vai su **Replicats** e clicca su **+ (Add Replicat)**.
+6. Scegli **Integrated Replicat** e usa questi parametri nel wizard:
+   - Replicat Name: `REPTAR`
+   - Trail Name: `./dirdat/ra`
+   - Parameter File (Mapping):
+     ```text
+     REPLICAT REPTAR
+     USERIDALIAS ggadminAlias
+     ASSUMETARGETDEFS
+     MAP HR.*, TARGET HR.*;
+     ```
 
-```
-GGSCI> DBLOGIN USERID ggadmin PASSWORD <password>
-
--- Aggiungi un checkpoint table
-GGSCI> ADD CHECKPOINTTABLE ggadmin.checkpoint
-
--- Aggiungi il Replicat (Integrated mode)
-GGSCI> ADD REPLICAT rep_racdb, INTEGRATED, EXTTRAIL ./dirdat/ra, CHECKPOINTTABLE ggadmin.checkpoint
-
-GGSCI> EDIT PARAMS rep_racdb
-```
-
-```
-REPLICAT rep_racdb
-USERID ggadmin, PASSWORD <password>
-ASSUMETARGETDEFS
-DISCARDFILE ./dirrpt/rep_racdb.dsc, APPEND, MEGABYTES 50
-
-MAP HR.*, TARGET HR.*;
-```
+> **Microservices vs Classic:** In GG 23ai, il credential store si nasconde dietro un *Alias* (es. `ggadminAlias`) gestito dalla Web UI, quindi nel file dei parametri non si scrive più la password in chiaro rispetto all'architettura Classic di 19c.
 
 > **Spiegazione parametri:**
 > - `ASSUMETARGETDEFS`: Assume che la struttura delle tabelle sul target sia identica al source. Se le tabelle fossero diverse, useresti un file `DEFGEN`.
@@ -442,14 +414,22 @@ SELECT current_scn FROM v$database;
 expdp ggadmin/<password>@RACDB_STBY schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_export.log flashback_scn=3456789
 ```
 
-### Step 3: Trasferisci e Importa sul Target
+### Step 3: Trasferisci e Importa sul Target OCI
+
+Dato che il sistema remoto è su Oracle Cloud, l'utente per l'SSH è `opc`.
 
 ```bash
-# Trasferisci il dump
-scp /u01/app/oracle/admin/RACDB_STBY/dpdump/hr_initial.dmp oracle@dbtarget:/u01/app/oracle/admin/DBTAR/dpdump/
+# Sullo Standby - trasferisci il dump nel cloud (assicurati che la SSH key funzioni da qui!)
+# Metti l'IP corretto del cloud:
+scp /u01/app/oracle/admin/RACDB_STBY/dpdump/hr_initial.dmp opc@130.x.x.x:/tmp/
 
-# Sul Target - importa
-impdp ggadmin/<password> schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_import.log
+# Nel terminale MobaXterm collegato al Cloud (dbtarget-arm):
+sudo su - oracle
+# Sposta il dump nella directory DataPump di Oracle 23ai Free
+mv /tmp/hr_initial.dmp /opt/oracle/admin/FREE/dpdump/
+
+# Importa i dati nel Pluggable Database (FREEPDB1)
+impdp ggadmin/<password>@localhost:1521/FREEPDB1 schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_import.log
 ```
 
 > 💡 **Il trucco del DBA**: Avendo importato i dati fermi all'SCN `3456789`, diremo al Replicat di ignorare tutte le transazioni precedenti a quel momento e di applicare solo le novità!
@@ -470,10 +450,9 @@ GGSCI> START EXTRACT ext_racdb
 -- 3. Avvia il Data Pump sullo Standby
 GGSCI> START EXTRACT pump_racdb
 
--- 4. Avvia il Replicat sul Target (Fondamentale l'uso del CSN!)
--- Questo dice a GG di scartare le transazioni vecchie e applicare solo quelle DOPO l'esportazione:
--- Sul target:
-GGSCI> START REPLICAT rep_racdb, AFTERCSN 3456789
+-- 4. Avvia il Replicat sul Target OCI (Dall'interfaccia WEB Microservices)
+-- Dato che stiamo usando la Web UI, vai su Replicats -> Action -> Start con opzione "After CSN"
+-- e inserisci lì il tuo CSN (es. 3456789).
 ```
 
 ### Verifica
@@ -487,12 +466,9 @@ MANAGER     RUNNING
 EXTRACT     RUNNING     ext_racdb   00:00:02      00:00:05
 EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
 
--- Sul Target
-GGSCI> INFO ALL
-
-Program     Status      Group       Lag at Chkpt  Time Since Chkpt
-MANAGER     RUNNING
-REPLICAT    RUNNING     rep_racdb   00:00:03      00:00:04
+-- Sul Target OCI (Microservices)
+-- Dalla Home Page web (porta 9011), naviga in Administration Server (9012)
+-- Il Replicat `REPTAR` deve avere la spunta verde (Running) e un ritardo minimo.
 ```
 
 > Se tutti i processi sono `RUNNING` con lag minimo, hai un sistema di replica funzionante! 🎉
@@ -570,5 +546,3 @@ GGSCI> LAG REPLICAT rep_racdb
 ---
 
 **→ Prossimo: [FASE 6: Test di Verifica](./GUIDA_FASE6_TEST_VERIFICA.md)**
-
-> 🌐 **Variante Cloud**: Se vuoi replicare verso Oracle Cloud Infrastructure (OCI) ARM Free Tier invece del dbtarget locale, consulta la **[GUIDA_CLOUD_GOLDENGATE.md](./GUIDA_CLOUD_GOLDENGATE.md)** — usa SSH tunnel e binari ARM (aarch64).
