@@ -399,6 +399,8 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 | `swap` | 8 GB | swap |
 | `/` | Resto (~41 GB) | xfs |
 
+> 💡 **E `/tmp`?** Non serve creare una partizione disco per `/tmp` durante l'installazione. In Fase 1 (Sezione 1.5b) lo monteremo come `tmpfs` — un filesystem velocissimo che vive direttamente in RAM e si pulisce automaticamente ad ogni riavvio.
+
 ![Partizionamento Disco OS](./images/os_install_partitions.png)
 
 > 💡 **Oracle Best Practices: Quanta Swap serve davvero?**
@@ -420,9 +422,9 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 4. Al termine → **Reboot**
 5. Accetta la licenza al primo avvio
 
-> 📸 **SNAPSHOT — "SNAP-01: OS Installato"**
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-01_OS_Installato"
+> 📸 **SNAPSHOT — "SNAP-01: OS_Base_Installato"**
+> ```bash
+> VBoxManage snapshot "rac1" take "SNAP-01: OS_Base_Installato"
 > ```
 
 ---
@@ -592,11 +594,8 @@ oracleasm init
 > `setenforce 0`
 > E poi ripeti il comando `oracleasm init`.
 
-> 📸 **SNAPSHOT — "SNAP-02: Base VM Ready" ⭐ MILESTONE**
-> Hai finito la Fase 0! L'hardware, i dischi, la rete di base e ASMLib sono pronti. Fai uno snapshot adesso. Se fai disastri in Fase 1, potrai tornare qui e ripartire con una macchina pulita in 10 secondi invece di reinstallare l'OS.
-> ```
-> VBoxManage snapshot "rac1" take "SNAP-02_Base_VM_Ready"
-> ```
+> 📸 **NOTA SNAPSHOT:**
+> *Il vecchio "SNAP-02" qui è stato rimosso per ottimizzare lo spazio. Prenderemo l'importante snapshot "SNAP-02: Golden_Image_Pronta" alla fine della Fase 1, quando rac1 avrà tutto (utenti, rete, pacchetti).*
 
 ---
 
@@ -619,10 +618,10 @@ Per costruire il nostro Data Guard, abbiamo bisogno di uno storage separato per 
 3.  Impostali tutti come **Condivisibile (Shareable)**.
 > **IMPORTANTE**: I dischi ASM dello standby sono dischi **FISICAMENTE DIVERSI** da quelli del primario!
 
-### 💡 Il Trucco del DBA: Clonare dalla Golden Image (SNAP-04)
+### 💡 Il Trucco del DBA: Clonare dalla Golden Image (SNAP-02)
 
 Perché reinstallare il sistema operativo da zero e rifare tutta la preparazione OS (Fase 1) per i nodi standby? Non ha senso ed è prono ad errori (typo, pacchetti dimenticati)! 
-L'approccio più intelligente (e veloce) è aspettare di aver finito la **Fase 1 completa su `rac1`**, creare lo snapshot **SNAP-04_Prerequisiti_Cloni_Pronti**, e usare quello snapshot come "Golden Image" da clonare.
+L'approccio più intelligente (e veloce) è aspettare di aver finito la **Fase 1 completa su `rac1`** e creare lo snapshot **SNAP-02: Golden_Image_Pronta**. Usa quello snapshot come "Golden Image" da clonare.
 
 Alla fine della Fase 1, dal tuo `rac1` spento, eseguirai queste clonazioni in cascata, generando sempre **nuovi indirizzi MAC**:
 1. `rac1` -> Clona in `rac2` (come spiegato nella Sezione 1.14).
