@@ -370,12 +370,15 @@ cd /u01/app/19.0.0/grid
 1. **Disk Group Name**: `CRS`
 2. **Redundancy**: seleziona **Normal**
 3. **Allocation Unit Size**: lascia `4 MB` (default)
-4. **Discovery Path**: deve mostrare `ORCL:*`. Se non lo è, clicca **"Change Discovery Path..."** e scrivi `ORCL:*`
+4. **Discovery Path**: clicca **"Change Discovery Path..."** e scrivi:
+   ```text
+   /dev/oracleasm/disks/*
+   ```
 5. **Seleziona SOLO questi 3 dischi** (metti la spunta ☑️):
-   - ☑️ `ORCL:CRS1` (2047 MB)
-   - ☑️ `ORCL:CRS2` (2047 MB)
-   - ☑️ `ORCL:CRS3` (2047 MB)
-6. **NON selezionare** `ORCL:DATA` e `ORCL:RECO`! Li userai dopo per creare disk group separati
+   - ☑️ `/dev/oracleasm.../CRS1` (2047 MB)
+   - ☑️ `/dev/oracleasm.../CRS2` (2047 MB)
+   - ☑️ `/dev/oracleasm.../CRS3` (2047 MB)
+6. **NON selezionare** `DATA` e `RECO`! Li userai dopo per creare disk group separati
 7. **NON selezionare** "Configure Oracle ASM Filter Driver" (usiamo ASMLib, non AFD)
 8. Clicca **Next**
 
@@ -389,14 +392,7 @@ cd /u01/app/19.0.0/grid
 | **Disk Group** | `CRS` separato da `DATA` e `RECO` | Oracle raccomanda di separare i metadati del cluster dai dati del database (MOS Doc 1373437.1). Se il disk group DATA si corrompe, il cluster resta su. |
 | **Redundancy** | Normal | Oracle richiede **almeno 3 Voting Disk** per il quorum (votazione a maggioranza). Normal = 3 dischi, se ne perdi 1 il cluster resta su (2 su 3). High = 5 dischi. |
 | **Allocation Unit** | 4 MB | Default Oracle e raccomandato per disk group piccoli come CRS (contiene solo pochi MB di metadati). |
-| **Discovery Path** | `ORCL:*` | Perché usiamo **ASMLib**. Con `udev` sarebbe `/dev/oracleasm/disks/*`. Con AFD sarebbe `AFD:*`. |
-
-> 🛠️ **Troubleshooting: Lista dischi VUOTA nonostante `ORCL:*`?**
-> Se `oracleasm listdisks` mostra i dischi dalla riga di comando ma l'installer li ignora, controlla che il pacchetto **`oracleasmlib`** sia installato:
-> ```bash
-> rpm -qa | grep oracleasmlib
-> ```
-> Se non esce nulla, installalo (vedi Sezione 0.8). ASMLib ha bisogno di **3 pacchetti**: `kmod-oracleasm` (kernel), `oracleasm-support` (CLI), e `oracleasmlib` (libreria per l'installer).
+| **Discovery Path** | `/dev/oracleasm/disks/*` | Usiamo il path fisico del sistema operativo invece dell'alias `ORCL:*`. Questo aggira un bug noto dell'installer (PRVG-11800) dove il check `cluvfy` in background fallisce nel caricare la libreria `oracleasmlib` da remoto. Passando il path OS diretto, l'installer usa i permessi standard Linux (`grid:asmadmin`) e non fallisce mai. |
 
 **Step 9 — ASM Password**:
 
