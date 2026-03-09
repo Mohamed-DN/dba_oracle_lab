@@ -22,28 +22,30 @@
 
 ---
 
-## 2. Configurazione Rete OCI (Security List)
+## 2. Architettura di Rete: Locale ↔ Cloud
 
-Di default, Oracle Cloud blocca tutto il traffico in ingresso tranne la porta SSH (22). Dobbiamo aprire le porte per far comunicare il tuo RAC locale con il nuovo Target.
+> 💡 **La Domanda del DBA:** "Come facciamo comunicare un server di casa (VirtualBox) con un server nel Cloud in modo sicuro?"
 
-1. Dalla pagina della tua Istanza, clicca sul link della **Subnet** (nella sezione *Instance information*).
-2. Clicca sulla **Default Security List**.
-3. Clicca su **Add Ingress Rules**.
-4. Inserisci una regola per il DB e GoldenGate:
-   - **Source CIDR:** Il tuo **Indirizzo IP Pubblico di casa** (cercalo su *mio-ip.it*). Aggiungi `/32` alla fine (es. `93.45.122.5/32`) per permettere l'accesso *solo* a te. *Se hai un IP dinamico, potresti dover aggiornare questa regola ogni tanto, oppure mettere `0.0.0.0/0` (molto insicuro, sconsigliato per il DB!).*
-   - **IP Protocol:** `TCP`
-   - **Destination Port Range:** `1521, 7809` (1521 per il DB, 7809 per il manager di GoldenGate Classic).
-   - **Description:** `Accesso DB e GoldenGate dal Lab Locale`
-5. Clicca **Add Ingress Rules**.
+In un ambiente di lavoro reale (**Enterprise**), collegheresti il tuo data center locale ad Oracle Cloud tramite:
+1. **IPsec Site-to-Site VPN:** Un tunnel crittografato tra il firewall aziendale e OCI.
+2. **Oracle FastConnect:** Una linea in fibra ottica privata e dedicata (costosa, ma ad altissime prestazioni).
+In entrambi i casi, le macchine si parlerebbero tramite **IP Privati**.
+
+Per il nostro **Lab**, esporre il database o le porte di GoldenGate (1521, 9011-9014) sull'IP pubblico di Internet, anche se filtrato, **NON è una Best Practice**.
+
+### La Soluzione Lab Ottimale: Tailscale (WireGuard)
+Useremo **Tailscale**, una VPN mesh basata su WireGuard estremamente leggera. Permetterà alle macchine VirtualBox e alla VM OCI di vedersi su una rete privata virtuale (es. `100.x.x.x`), crittografando tutto il traffico (i "Trail" di GoldenGate) in transito su Internet. Proprio come una vera VPN Site-to-Site aziendale!
 
 ---
 
-## 3. Connessione MobaXterm e Setup OS
+## 3. Connessione Iniziale MobaXterm e Setup OS
 
-Apri MobaXterm sul tuo PC e crea una nuova sessione SSH:
+Prima di installare la VPN, connettiti all'IP **Pubblico** temporaneo di OCI per preparare la macchina.
+
+Apri MobaXterm sul tuo PC e crea una sessione SSH:
 - **Remote host:** L'IP Pubblico OCI.
-- **Specify username:** `opc` (l'utente di default su OCI, *non* root).
-- **Advanced SSH settings:** Spunta `Use private key` e seleziona il file della chiave privata che hai scaricato nello step 1.
+- **Specify username:** `opc` (l'utente di default su OCI).
+- **Advanced SSH...\*: Spunta `Use private key` e seleziona il file chiave scaricato.
 
 Appena dentro, esegui questi comandi per preparare il sistema operativo:
 
@@ -59,11 +61,18 @@ mkswap /swapfile
 swapon /swapfile
 echo "/swapfile   swap    swap    sw  0 0" >> /etc/fstab
 
-# 2. Apri il firewall interno di Linux (firewalld) per Oracle e GG
-firewall-cmd --permanent --zone=public --add-port=1521/tcp
-firewall-cmd --permanent --zone=public --add-port=7809/tcp
+# 2. Configura il firewall: permettiamo l'accesso a DB e GG *solo* dall'interfaccia VPN!
+firewall-cmd --permanent --zone=trusted --add-interface=tailscale0
 firewall-cmd --reload
 ```
+
+### Installazione Tailscale (Cloud)
+Sempre sull'istanza OCI (come root):
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up
+```
+*Copia il link di autenticazione che appare a schermo, incollalo nel browser del tuo PC fisso e fai il login con il tuo account (es. Google/GitHub). La macchina Cloud otterrà un IP del tipo `100.x.x.C`.*
 
 ---
 
@@ -166,49 +175,56 @@ chown -R oracle:oinstall /opt/oracle/gg_*
 
 ### Aprire le Porte Web (Microservices)
 
-GoldenGate Microservices usa HTTPS. Dobbiamo aprire le porte nel firewall Linux e nella Security List di OCI.
-
-1. **Firewall Linux (come root):**
+1. **Firewall Linux interno (come root):**
    ```bash
    # Service Manager (Porta default 9011)
-   firewall-cmd --permanent --zone=public --add-port=9011/tcp
+   firewall-cmd --permanent --zone=trusted --add-port=9011/tcp
    # Administration Server (Porta default 9012)
-   firewall-cmd --permanent --zone=public --add-port=9012/tcp
+   firewall-cmd --permanent --zone=trusted --add-port=9012/tcp
    # Distribution Server (Porta default 9013)
-   firewall-cmd --permanent --zone=public --add-port=9013/tcp
+   firewall-cmd --permanent --zone=trusted --add-port=9013/tcp
    # Receiver Server (Porta default 9014 - FONDAMENTALE per ricevere i dati!)
-   firewall-cmd --permanent --zone=public --add-port=9014/tcp
+   firewall-cmd --permanent --zone=trusted --add-port=9014/tcp
    firewall-cmd --reload
    ```
 
-2. **Security List OCI (Torna al Browser):**
-   Come fatto nello Step 2 della guida, vai nella tua Security List su Oracle Cloud e aggiungi una regola per le porte Web di GoldenGate:
-   - **Source CIDR:** Il tuo IP di casa (es. `93.45.122.5/32`)
-   - **Destination Port Range:** `9011-9014`
-   - **Description:** `GoldenGate Microservices Web UI`
+> 🔒 **Sicurezza Assoluta!** Non abbiamo bisogno di aprire NESSUNA di queste porte nella "Security List" di Oracle Cloud. Tutto il traffico passerà invisibile attraverso il tunnel crittografato di Tailscale sulla porta UDP 41641.
 
-**Testa l'accesso!** Apri il browser dal tuo PC e vai su:
-👉 `https://<IP_PUBBLICO_CLOUD>:9011`
+**Testa l'accesso!** Dal PC fisso dove hai installato Tailscale, apri il browser e vai al tuo nuovo IP privato:
+👉 `https://100.x.x.C:9011` (Sostituisci con l'IP Tailscale del Cloud)
 Accedi con utente `admin` e password `oracle`.
 
 ---
 
 ## 6. Il Ponte Magico: Collegare il Locale al Cloud
 
-Sui tuoi due nodi RAC locali (in VirtualBox), GoldenGate ("Pump") dovrà spedire i file di log ("Trail") a questa macchina in Cloud.
+Sui tuoi due nodi RAC locali (in VirtualBox), dobbiamo installare Tailscale affinché possano "vedere" la macchina Cloud.
 
-Per farlo, apri MobaXterm, collegati a **`rac1`** e **`rac2`** come root e aggiungi semplicemente l'IP pubblico del Cloud al file `/etc/hosts`:
+**Sui nodi RAC Locali (`rac1`, `rac2`, `racstby1`):**
 
-```bash
-# SU RAC1 (Root)
-# Sostituisci 130.x.x.x con il VERO IP PUBBLICO della tua macchina OCI!
-echo "130.x.x.x   dbtarget.localdomain   dbtarget" >> /etc/hosts
+1. Installazione Tailscale (come root):
+   ```bash
+   curl -fsSL https://tailscale.com/install.sh | sh
+   tailscale up
+   ```
+   *Autenticati nel browser con lo stesso account usato prima. Questi nodi otterranno IP del tipo `100.x.x.R1`, `100.x.x.R2`.*
 
-# SU RAC2 (Root)
-echo "130.x.x.x   dbtarget.localdomain   dbtarget" >> /etc/hosts
-```
+2. Aggiungi l'IP VPN del Cloud al file `/etc/hosts` locale:
 
-Da questo momento, quando installeremo GoldenGate sul Primario Locale (Fase 5) e gli diremo *"Spedisci i dati a `dbtarget`"*, i dati viaggeranno in modo trasparente dal tuo PC casalingo dritto al tuo DB 23ai nell'Always Free Cloud di Oracle (sulla porta 7809)!
+   ```bash
+   # Scopri l'IP Tailscale della macchina Cloud
+   # (Vai nella dashboard web di Tailscale o esegui 'tailscale status' sul Cloud)
+   
+   # SU RAC1 e RAC2 (Root)
+   # Sostituisci 100.x.x.C con l'IP TAILSCALE della tua macchina OCI!
+   echo "100.x.x.C   dbtarget.localdomain   dbtarget" >> /etc/hosts
+   ```
+
+   # Su RAC 2 (Root)
+   echo "100.x.x.C   dbtarget.localdomain   dbtarget" >> /etc/hosts
+   ```
+
+Da questo momento, quando installeremo GoldenGate sul Primario Locale (Fase 5) e gli diremo *"Spedisci i dati a `dbtarget`"*, i dati viaggeranno in modo trasparente dal tuo PC casalingo dritto al tuo DB 23ai nell'Always Free Cloud di Oracle (sulla porta 7809) all'interno del tunnel crittografato Tailscale!
 
 ---
 ## ✨ Prossimi Passi
