@@ -438,17 +438,16 @@ L'installer eseguirà un `cluvfy` interno. Ecco come interpretare i risultati:
 | **Physical Memory** (PRVF-7530) | ⚠️ Warning | **Ignoralo**. Hai 7.5 GB invece di 8 GB. È normale in VirtualBox. |
 | **RPM Package Manager** (PRVG-11250) | ℹ️ Info | **Ignoralo**. Manca root per questo check. |
 | **Network Interface** (PRVG-1172) | ⚠️ Warning | **Ignoralo** solo se riguarda l'IP NAT `10.0.2.15`. |
-| 🛑 **Device Checks for ASM** (PRVG-11800) | ❌ **FAILED** | **DEVI RISOLVERLO!** (Vedi sotto) |
+| 🛑 **Device Checks for ASM** (PRVG-11800) | ❌ Se **FAILED** | **DEVI RISOLVERLO!** (Vedi sotto) |
 
-> 🛠️ **Troubleshooting: Errore PRVG-11800 (Failed to discover any devices using ORCL:*)**
-> Se all'improvviso l'installer dice che non trova i dischi (nonostante tu li abbia appena selezionati allo Step 8!), è un problema noto di **"memoria sporca" dell'installer**.
+> 🛠️ **Troubleshooting: Errore PRVG-11800 (Failed to discover any devices...)**
+> Se hai seguito la guida ma ottieni comunque questo FAILED, sei incappato in un **bug noto dell'installer su Oracle Linux 7**: il check in background (`cluvfy`) a volte non riesce a caricare la libreria `libasm.so` per risolvere l'alias `ORCL:*`, anche se la GUI te li ha fatti vedere allo Step 8!
 > 
-> **Causa:** Hai installato il pacchetto `oracleasmlib` *mentre l'installer era aperto*. L'interfaccia Java (GUI) ha caricato i dischi "al volo", ma il motore in background (`cluvfy`) è partito *prima* che tu installassi la libreria, e quindi non sa come leggere `ORCL:*`.
-> 
-> **Soluzione:**
-> 1. Clicca **Cancel → Yes** e chiudi completamente l'installer.
-> 2. Assicurati che `oracleasmlib` sia installato anche su `rac2`!
-> 3. Rilancia `./gridSetup.sh`. Ora che la libreria è presente *prima* dell'avvio, il check passerà.
+> **La soluzione (workaround ufficiale):**
+> 1. Clicca **Back** fino a tornare allo **Step 8 (Create ASM Disk Group)**.
+> 2. Clicca **"Change Discovery Path..."** e scrivi il percorso nativo Linux: `/dev/oracleasm/disks/*`
+> 3. Clicca OK. I dischi appariranno con il nuovo path. Seleziona SOLO i tre CRS1, CRS2, CRS3.
+> 4. Vai **Next** fino a tornare a questo Step 15. Ora il check passerà usando i permessi nativi del filesystem!
 
 **Se tutti i FAILED sono risolti (e rimangono solo Warning):**
 - Spunta la casella **"Ignore All"** in alto a destra.
