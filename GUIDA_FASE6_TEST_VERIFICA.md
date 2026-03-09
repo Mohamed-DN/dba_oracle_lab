@@ -395,7 +395,7 @@ GGSCI> INFO ALL
 | Problema | Causa Probabile | Soluzione |
 |---|---|---|
 | `crsctl check crs` fallisce | CRS non partito correttamente | `crsctl start crs` (come root) |
-| Un nodo si "evict" dal cluster | Interconnect down o heartbeat perso | Controlla `ifconfig eth1`, ping nodo remoto |
+| Un nodo si "evict" dal cluster | Interconnect down o heartbeat perso | Controlla `ip addr show enp0s9`, ping nodo remoto |
 | VIP non migra | Network mask errata | Verifica subnet VIP con `srvctl config vip -n rac1` |
 | ORA-29702: error occurred | ocssd.log errori networking | Controlla `/u01/app/19.0.0/grid/log/<host>/ocssd/ocssd.log` |
 
