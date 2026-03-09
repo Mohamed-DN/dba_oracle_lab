@@ -423,7 +423,16 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
 
 ## 1.5b Configurare /tmp come Filesystem Dedicato (tmpfs)
 
-> 🛑 **Perché è importante?** Se lanci `df -hT /tmp` e vedi che `/tmp` è montato sulla partizione di root (`/`), il tuo `/tmp` **non** ha un filesystem dedicato. Questo è un problema perché gli installer Oracle (`gridSetup.sh`, `runInstaller`, `dbca`) e il tool di patching (`opatchauto`) scrivono diversi GB di file temporanei in `/tmp` durante il loro lavoro. Oracle richiede ufficialmente **almeno 1 GB libero** in `/tmp`.
+> 🛑 **Cosa dice Oracle ufficialmente su `/tmp`?**
+> La documentazione Oracle 19c dà requisiti diversi a seconda del contesto:
+> 
+> | Documento Oracle Ufficiale | Requisito `/tmp` |
+> |---|---|
+> | Grid Infrastructure Installation Checklist | **Almeno 1 GB** libero |
+> | Server Configuration Checklist for Oracle Database | **Almeno 5 GB** di spazio |
+> | Best Practice per ambienti RAC complessi (MOS) | **Consigliati 10 GB** |
+> 
+> Il nostro lab con 8 GB di RAM si posiziona nel mezzo. Useremo **4 GB**, che supera ampiamente il requisito minimo di 1 GB ed è in linea con i 5 GB raccomandati, senza sprecare RAM preziosa per il database.
 
 ### 💡 Ma cos'è `tmpfs`? RAM o Storage? — Spiegazione Completa
 
@@ -457,8 +466,23 @@ Domanda fondamentale! La risposta ha **due parti**:
 **Parte 1: La RAM si usa SOLO per i file effettivamente presenti.**
 `tmpfs` NON pre-alloca tutta la memoria. Se `/tmp` contiene 200 MB di file → usa 200 MB di RAM. Se è vuoto → usa 0 MB. Il `size=4g` è solo il **tetto massimo** (come un limite di carta di credito: puoi spendere *fino a* 4000€, ma se compri un panino paghi solo 5€).
 
-**Parte 2: Quanto dare a `/tmp` se ho poca RAM?**
-Nella nostra VM abbiamo **8 GB di RAM totali**, e la dobbiamo dividere tra diversi inquilini:
+**Parte 2: Quanto dare a `/tmp` in base alla RAM che hai?**
+Non esiste una risposta unica. La dimensione dipende dalla RAM totale della tua VM:
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║     GUIDA DI DIMENSIONAMENTO /tmp (tmpfs) PER ORACLE 19c       ║
+╠════════════════════╦════════════════════╦════════════════════════╣
+║ RAM della VM       ║ Dimensione /tmp    ║ Note                  ║
+╠════════════════════╬════════════════════╬════════════════════════╣
+║ 8 GB  (il nostro!) ║ size=4g            ║ OK per lab didattico  ║
+║ 16 GB              ║ size=6g            ║ Confortevole          ║
+║ 32 GB              ║ size=10g           ║ Enterprise standard   ║
+║ 64 GB+             ║ size=10g           ║ 10 GB bastano sempre  ║
+╚════════════════════╩════════════════════╩════════════════════════╝
+```
+
+Nel nostro caso con **8 GB di RAM totali**, la dobbiamo dividere tra diversi inquilini:
 
 ```
 ╔══════════════════════════════════════════════════════════╗
@@ -475,7 +499,7 @@ Nella nostra VM abbiamo **8 GB di RAM totali**, e la dobbiamo dividere tra diver
 ╚══════════════════════════════════════════════════════════╝
 ```
 
-Ecco perché scegliamo **4 GB** e non di più: in un lab con soli 8 GB, non possiamo permetterci di rischiare. Nella pratica, `/tmp` non arriverà mai a usare tutti e 4 i GB (l'installer Oracle ne usa al massimo 1-2 GB di picco), ma il tetto ci protegge da sorprese.
+Ecco perché scegliamo **4 GB**: supera di 4 volte il minimo Oracle (1 GB), è vicino alla best practice (5 GB), e non toglie troppa RAM al DB. Nella pratica, `/tmp` non arriverà mai a usare tutti e 4 i GB (l'installer Oracle ne usa al massimo 1-2 GB di picco), ma il tetto ci protegge da sorprese.
 
 > 📘 **E se la RAM si riempie per davvero?** Linux è furbo: quando la RAM scarseggia, il kernel sposta automaticamente i file "freddi" di `tmpfs` nella **swap** (che è su disco). Ecco perché nella Fase 0 abbiamo creato 8 GB di swap — servono anche come "rete di sicurezza" per `tmpfs`! Quindi il ciclo è: RAM → Swap (disco) → e quando servono di nuovo, Linux li riporta in RAM. Tutto trasparente.
 >
