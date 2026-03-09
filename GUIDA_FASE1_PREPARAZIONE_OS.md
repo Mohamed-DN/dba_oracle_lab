@@ -423,9 +423,53 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
 
 ## 1.5b Configurare /tmp come Filesystem Dedicato (tmpfs)
 
-> 🛑 **Perché è importante?** Se lanci `df -hT /tmp` e vedi che `/tmp` è montato sulla partizione di root (`/`), il tuo `/tmp` **non** ha un filesystem dedicato. Questo è un problema per due motivi:
-> 1. **Oracle Prerequisito Ufficiale**: gli installer di Grid e Database (gridSetup.sh, runInstaller, dbca) usano `/tmp` massicciamente per estrarre file temporanei Java. Oracle richiede **almeno 1 GB libero** in `/tmp`. Se la partizione root si riempie (ad esempio con i log), **l'installer crasha a metà**.
-> 2. **Sicurezza e Performance**: `tmpfs` vive in RAM (non su disco), quindi è velocissimo. E al reboot si pulisce da solo!
+> 🛑 **Perché è importante?** Se lanci `df -hT /tmp` e vedi che `/tmp` è montato sulla partizione di root (`/`), il tuo `/tmp` **non** ha un filesystem dedicato. Questo è un problema perché gli installer Oracle (`gridSetup.sh`, `runInstaller`, `dbca`) e il tool di patching (`opatchauto`) scrivono diversi GB di file temporanei in `/tmp` durante il loro lavoro. Oracle richiede ufficialmente **almeno 1 GB libero** in `/tmp`.
+
+### 💡 Ma cos'è `tmpfs`? RAM o Storage? — Spiegazione Completa
+
+Questa è una delle cose più eleganti di Linux. Normalmente, quando scrivi un file, il percorso è:
+
+```
+Applicazione → Kernel Linux → Controller Disco → Disco Fisico (HDD/SSD)
+                                                    ↑ LENTO (millisecondi)
+```
+
+Con `tmpfs`, il percorso diventa:
+
+```
+Applicazione → Kernel Linux → RAM
+                                ↑ VELOCISSIMO (nanosecondi, ~1000x più veloce!)
+```
+
+**`tmpfs` è un filesystem che vive interamente nella RAM del server, NON su disco.** Quando monti `/tmp` come `tmpfs`, ogni file che ci scrivi dentro va dritto nella memoria RAM. Ecco le conseguenze pratiche:
+
+| Caratteristica | `/tmp` su disco (XFS/EXT4) | `/tmp` su `tmpfs` (RAM) |
+|---|---|---|
+| **Velocità** | Lenta (dipende dal disco) | ⚡ Velocissima (~1000x) |
+| **Persistenza** | I file sopravvivono al reboot | ❌ **Tutto sparisce al reboot** |
+| **Spazio occupato** | Occupa spazio su disco fisso | Occupa spazio in RAM |
+| **Rischio di riempire il disco root** | ✅ Sì! `/tmp` e `/` condividono lo spazio | ❌ No, sono separati |
+
+### ⚠️ Ma se `/tmp` usa la RAM, non mi ruba memoria per Oracle?
+
+**No!** Ed ecco il trucco geniale di `tmpfs`: la RAM viene occupata **solo da quello che ci scrivi effettivamente**, non dalla dimensione massima dichiarata.
+
+Esempio pratico con `size=10g`:
+```
+Momento              | File in /tmp | RAM usata da tmpfs | RAM libera (su 8 GB)
+---------------------|--------------|--------------------|-----------------------
+Appena montato       | 0 file       | ~0 MB              | ~8 GB ← tutta libera!
+Durante gridSetup    | 2 GB di .jar | ~2 GB              | ~6 GB
+Dopo il reboot       | 0 file       | ~0 MB              | ~8 GB ← torna tutta!
+```
+
+Il `size=10g` è solo un **tetto massimo di sicurezza** (come dire: "Non lasciare che qualcuno scriva più di 10 GB in /tmp"). Se nessuno scrive in `/tmp`, la RAM consumata è **ZERO**.
+
+> 📘 **Per i curiosi:** E se la RAM si riempie per davvero? Linux è furbo: quando la RAM scarseggia, il kernel sposta automaticamente i file di `tmpfs` nella **swap** (che è su disco). Ecco perché nella Fase 0 abbiamo creato 8 GB di swap — servono anche come "rete di sicurezza" per `tmpfs`! Il ciclo completo è: RAM → Swap → e quando serve, Linux li riporta in RAM. Tutto trasparente per l'applicazione.
+
+---
+
+### Comandi da eseguire
 
 **Come utente `root`, copia e incolla questo blocco su `rac1`:**
 
@@ -434,8 +478,7 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
 df -hT /tmp
 
 # 2. Aggiungi la riga tmpfs al file fstab per il montaggio permanente
-# Riserviamo 10 GB di RAM per /tmp (Oracle ne richiede minimo 1 GB,
-# ma opatchauto e gridSetup possono usarne molto di più durante il patching)
+# Riserviamo 10 GB per /tmp (tetto massimo, la RAM si usa solo per i file reali)
 echo "tmpfs  /tmp  tmpfs  defaults,size=10g,mode=1777  0 0" >> /etc/fstab
 
 # 3. Monta il nuovo tmpfs ADESSO (senza riavviare)
@@ -444,11 +487,15 @@ mount -o remount /tmp 2>/dev/null || mount /tmp
 # 4. Verifica che ora /tmp sia su tmpfs
 df -hT /tmp
 # Deve mostrare: tmpfs    tmpfs   10G  ...  /tmp
+
+# 5. Verifica che la RAM NON sia stata "rubata"
+free -h
+# La colonna "available" deve mostrare ancora quasi tutta la RAM libera!
 ```
 
 > 💡 **Tip da DBA: Perché `size=10g` e `mode=1777`?**
-> - `size=10g`: Riserva 10 GB di RAM per `/tmp`. Oracle ne richiede minimo 1 GB, ma durante il patching (`opatchauto`) e l'installazione Grid, lo spazio utilizzato può arrivare a diversi GB. Tranquillo: `tmpfs` è intelligente — i 10 GB sono un **tetto massimo**, la RAM viene occupata solo quando effettivamente ci scrivi dentro.
-> - `mode=1777`: È lo "sticky bit" (`drwxrwxrwxt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
+> - `size=10g`: Tetto massimo di 10 GB. Oracle ne richiede minimo 1 GB, ma `opatchauto` e `gridSetup` possono usarne molto di più durante il patching. Ricorda: **la RAM si consuma SOLO per i file effettivamente presenti in /tmp**.
+> - `mode=1777`: È lo "sticky bit" (`drwxrwxrwt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
 > - `0 0`: Come per `/u01`, non serve né dump né fsck per un filesystem in RAM.
 
 ---
