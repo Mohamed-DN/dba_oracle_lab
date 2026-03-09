@@ -174,6 +174,91 @@ cat /etc/oraInst.loc
 ls -ld /u01/app/oraInventory
 ```
 
+## 2.3c Pulizia Interfacce di Rete "Fantasma" (Pre-Requisito per cluvfy)
+
+> 🛑 **Questo step è OBBLIGATORIO prima di lanciare il pre-check cluvfy!**
+> Se non lo fai, cluvfy segnalerà errori di connettività che non hanno nulla a che fare con il tuo RAC: interfacce virtuali con IP duplicati, IPv6 non raggiungibile, bridge inutil. Questi errori confondono e spaventano, ma la soluzione è semplice.
+
+### Il Problema: Cosa vede cluvfy (e cosa NON dovrebbe vedere)
+
+Quando lanci `cluvfy`, Oracle scansiona **TUTTE** le interfacce di rete del sistema, non solo quelle che userà il RAC. Nella nostra VM, dopo il clone, ci sono **4 interfacce attive**, ma Oracle ne usa solo 2:
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                INTERFACCE DI RETE SULLA VM                             ║
+╠═══════════╦══════════════════╦═══════════════════════════╦═════════════╣
+║ Interfac. ║ IP               ║ Ruolo                     ║ Serve a RAC?║
+╠═══════════╬══════════════════╬═══════════════════════════╬═════════════╣
+║ enp0s8    ║ 192.168.56.x     ║ 🌐 Rete PUBBLICA         ║ ✅ SÌ       ║
+║ enp0s9    ║ 192.168.1.x      ║ 🔗 INTERCONNECT privata  ║ ✅ SÌ       ║
+╠═══════════╬══════════════════╬═══════════════════════════╬═════════════╣
+║ enp0s3    ║ 10.0.2.15        ║ NAT VirtualBox (internet) ║ ❌ NO       ║
+║ virbr0    ║ 192.168.122.1    ║ Bridge libvirt (KVM)      ║ ❌ NO       ║
+╚═══════════╩══════════════════╩═══════════════════════════╩═════════════╝
+```
+
+Le due interfacce "inutili" causano 3 errori specifici:
+
+| Errore cluvfy | Causa | Interfaccia |
+|---|---|---|
+| `PRVG-1172`: IP duplicato su più nodi | La NAT di VirtualBox dà `10.0.2.15` a TUTTE le VM | `enp0s3` |
+| `PRVG-1172`: IP duplicato su più nodi | `libvirtd` crea `192.168.122.1` su TUTTE le VM | `virbr0` |
+| `PRVG-11891`: IPv6 non raggiungibile | IPv6 auto-configurato sulla NAT non sa raggiungere l'altra VM | `enp0s3` (IPv6) |
+
+### È Best Practice Oracle? SÌ!
+
+La documentazione Oracle (MOS Doc ID 1585184.1 — "Grid Infrastructure Preinstallation Steps") raccomanda esplicitamente:
+- **Disabilitare le interfacce di rete non necessarie** prima dell'installazione Grid
+- **Disabilitare IPv6** se non viene utilizzato nel cluster (il 99% dei lab non lo usa)
+- **Rimuovere i bridge virtuali** come `virbr0` che non partecipano al cluster
+
+Il motivo è che durante l'installazione, Grid Infrastructure **enumera tutte le interfacce** per decidere quali usare per il Cluster Interconnect e quali per la rete pubblica. Interfacce extra con IP duplicati o irraggiungibili possono causare **errori non solo nel pre-check, ma anche nell'installer stesso**.
+
+### Comandi da eseguire
+
+**Su `rac1` e `rac2`, come utente `root`:**
+
+```bash
+# ============================================================
+# 1. ELIMINA virbr0 (bridge di libvirt/KVM — non serve a RAC)
+# ============================================================
+# virbr0 è creato dal demone libvirtd, che serve per gestire
+# macchine virtuali KVM *dentro* la VM stessa.
+# Nel nostro lab non faremo mai VM-in-VM, quindi lo disabilitiamo.
+systemctl stop libvirtd
+systemctl disable libvirtd
+ip link set virbr0 down
+brctl delbr virbr0 2>/dev/null
+
+# Verifica: virbr0 non deve più comparire
+ip addr show virbr0 2>&1
+# Deve dire: "Device virbr0 does not exist."
+
+# ============================================================
+# 2. DISABILITA IPv6 SULLA NAT (enp0s3)
+# ============================================================
+# L'IPv6 auto-configurato sulla NAT di VirtualBox genera indirizzi
+# IPv6 diversi su ogni VM, ma NON sono raggiungibili tra di loro
+# perché la NAT è isolata. Cluvfy prova a fare ping IPv6 e fallisce.
+echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
+sysctl -p
+
+# Verifica: enp0s3 non deve più mostrare indirizzi "inet6"
+ip -6 addr show enp0s3
+# Deve essere vuoto o mostrare solo link-local
+
+# ============================================================
+# 3. (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
+# ============================================================
+# L'interfaccia enp0s3 (10.0.2.15) serve per dare internet alla
+# VM (download pacchetti, yum update). NON la disabilitiamo
+# perché ci serve, ma cluvfy darà comunque un WARNING perché
+# entrambe le VM hanno lo stesso IP 10.0.2.15 sulla NAT.
+# Questo WARNING è HARMLESS: Oracle non userà mai questa rete.
+```
+
+> 💡 **Perché non disabilitiamo anche `enp0s3`?** Perché è l'unica interfaccia che dà accesso a Internet alle VM (per `yum install`, download patch, ecc.). Il Warning di cluvfy sull'IP duplicato `10.0.2.15` è innocuo: durante l'installazione Grid, sceglieremo manualmente `enp0s8` come rete pubblica e `enp0s9` come interconnect. Oracle non toccherà mai la NAT.
+
 ---
 
 ## 2.4 Pre-Check con Cluster Verification Utility
@@ -181,22 +266,29 @@ ls -ld /u01/app/oraInventory
 ```bash
 # Come utente grid su rac1
 su - grid
-
 cd /u01/app/19.0.0/grid
 
+# Il flag -ignorePrefail ignora i check non bloccanti
+# (come la RAM a 7.49 GB invece di 8 GB)
 ./runcluvfy.sh stage -pre crsinst \
     -n rac1,rac2 \
-    -verbose
+    -verbose \
+    -ignorePrefail
 ```
 
-> **Perché cluvfy?** Questo strumento verifica TUTTI i prerequisiti prima dell'installazione: DNS, SSH, swap, kernel params, dischi, NTP... Se cluvfy passa con tutti PASSED, l'installazione andrà liscia. Se ci sono FAILED, risolvili PRIMA di procedere.
+> **Perché `-ignorePrefail`?** La nostra VM ha 7.49 GB di RAM visibili al SO (il kernel Linux riserva ~500 MB per sé). Oracle ne vuole 8 GB pieni. In un lab questo non è un problema reale — Oracle funziona perfettamente con 7.5 GB. Il flag dice a cluvfy di segnalare il problema ma continuare con la verifica.
+>
+> **Se puoi permettertelo**, aumenta la RAM delle VM a **9216 MB (9 GB)** in VirtualBox per eliminare anche questo warning. Altrimenti, anche l'installer Grid mostrerà lo stesso avviso ma ti lascerà proseguire.
 
+### Errori da risolvere vs Warning da ignorare
 
-
-Errori comuni e soluzioni:
-- **PRVG-11250 (RPM Database)**: Ignorabile (è un WARNING informativo).
-- **PRVF-4664 (NTP)**: Configura chrony correttamente (vedi Fase 1).
-- **SSH user equivalence FAILED**: Ripeti il setup SSH (Fase 1.12).
+| Errore | Tipo | Azione |
+|---|---|---|
+| `PRVF-7530`: RAM insufficiente | ⚠️ Warning | Ignora con `-ignorePrefail` (o alza la RAM) |
+| `PRVG-1172`: IP 10.0.2.15 duplicato | ⚠️ Warning | Innocuo — è la NAT VirtualBox, Oracle non la usa |
+| `PRVG-11250`: RPM Database check | ℹ️ Info | Ignorabile (serve root per questo check) |
+| `PRVF-4664`: NTP non configurato | ❌ Errore | Configura chrony (vedi Fase 1) |
+| SSH user equivalence FAILED | ❌ Errore | Ripeti il setup SSH (Fase 1.12) |
 
 ---
 
