@@ -434,19 +434,20 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
 df -hT /tmp
 
 # 2. Aggiungi la riga tmpfs al file fstab per il montaggio permanente
-# Riserviamo 2 GB di RAM per /tmp (più che sufficiente per Oracle)
-echo "tmpfs  /tmp  tmpfs  defaults,size=2g,mode=1777  0 0" >> /etc/fstab
+# Riserviamo 10 GB di RAM per /tmp (Oracle ne richiede minimo 1 GB,
+# ma opatchauto e gridSetup possono usarne molto di più durante il patching)
+echo "tmpfs  /tmp  tmpfs  defaults,size=10g,mode=1777  0 0" >> /etc/fstab
 
 # 3. Monta il nuovo tmpfs ADESSO (senza riavviare)
 mount -o remount /tmp 2>/dev/null || mount /tmp
 
 # 4. Verifica che ora /tmp sia su tmpfs
 df -hT /tmp
-# Deve mostrare: tmpfs    tmpfs   2.0G  ...  /tmp
+# Deve mostrare: tmpfs    tmpfs   10G  ...  /tmp
 ```
 
-> 💡 **Tip da DBA: Perché `size=2g` e `mode=1777`?**
-> - `size=2g`: Riserva 2 GB di RAM per `/tmp`. Oracle ne richiede minimo 1 GB, ma ne usiamo 2 per sicurezza. Questo spazio viene usato solo se ci scrivi dentro (non spreca RAM a vuoto).
+> 💡 **Tip da DBA: Perché `size=10g` e `mode=1777`?**
+> - `size=10g`: Riserva 10 GB di RAM per `/tmp`. Oracle ne richiede minimo 1 GB, ma durante il patching (`opatchauto`) e l'installazione Grid, lo spazio utilizzato può arrivare a diversi GB. Tranquillo: `tmpfs` è intelligente — i 10 GB sono un **tetto massimo**, la RAM viene occupata solo quando effettivamente ci scrivi dentro.
 > - `mode=1777`: È lo "sticky bit" (`drwxrwxrwxt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
 > - `0 0`: Come per `/u01`, non serve né dump né fsck per un filesystem in RAM.
 
