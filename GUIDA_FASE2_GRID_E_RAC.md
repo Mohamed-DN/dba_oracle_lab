@@ -121,12 +121,27 @@ unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
 
 ## 2.3 Installazione CVU Disk Package
 
+> ⚠️ **ATTENZIONE**: Il file `cvuqdisk` si trova dentro la GRID_HOME che hai appena scompattato. Siccome lo zip è stato estratto **solo su `rac1`**, il path `/u01/app/19.0.0/grid/` **NON ESISTE ancora su `rac2`!** Devi quindi copiare il file RPM da `rac1` a `rac2` prima di installarlo.
+
+**Step 1: Su `rac1` (come `root`) — Installa direttamente:**
 ```bash
-# Come root su ENTRAMBI i nodi
+# Su rac1 il file esiste già perché hai scompattato il Grid qui
 rpm -ivh /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm
 ```
 
-> **Perché cvuqdisk?** È il pacchetto del Cluster Verification Utility per la discovery dei dischi. Senza questo, il `runcluvfy.sh` e il Grid installer non riescono a trovare i dischi condivisi.
+**Step 2: Copia il file RPM su `rac2`:**
+```bash
+# Ancora da rac1, spedisci il file a rac2 via scp
+scp /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm root@rac2:/tmp/
+```
+
+**Step 3: Su `rac2` (come `root`) — Installa dalla copia in /tmp:**
+```bash
+# Su rac2, installa dalla copia che hai appena trasferito
+rpm -ivh /tmp/cvuqdisk-1.0.10-1.rpm
+```
+
+> **Perché cvuqdisk?** È il pacchetto del Cluster Verification Utility per la discovery dei dischi. Senza questo, il `runcluvfy.sh` e il Grid installer non riescono a trovare i dischi condivisi. L'installer di Grid copierà poi automaticamente tutti i binari su `rac2` durante l'installazione — ma `cvuqdisk` serve **PRIMA** dell'installazione per il pre-check.
 
 ---
 
