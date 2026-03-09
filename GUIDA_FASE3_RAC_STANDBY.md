@@ -61,6 +61,13 @@ Accendi **UNA VM ALLA VOLTA** (dalla console nera di VirtualBox, non usare MobaX
 - Lancia `nmtui` e cambia Scheda Privata (Interconnect) a **`192.168.2.112`**
 - Riavvia (`reboot`)
 
+### Step 2b: Applicare il Fix Systemd (CRITICO!)
+Anche se le VM sono clonate, è bene assicurarsi che il fix per il bug IPC di Oracle Linux 7 sia applicato. Fallo su **entrambi** i nodi standby come `root`:
+```bash
+echo "RemoveIPC=no" >> /etc/systemd/logind.conf
+systemctl restart systemd-logind
+```
+
 ### Step 3: Inizializzazione Dischi ASM per lo Standby (SOLO su `racstby1`)
 I 5 nuovi dischi che hai assegnato in VirtualBox sono "vergini". Devi partizionarli e renderli dischi ASMLib, esattamente come hai fatto in Fase 0 e Fase 2 per il primario.
 
@@ -113,6 +120,11 @@ Segui la Fase 2 paro paro, ma con queste differenze per lo standby:
 
 ![Riferimento: Step 5 Network Interfaces](./images/grid_network_interface_usage.png)
 
+> 🛑 **RICORDA IL WORKAROUND ASMLIB (Step 8):**
+> Nello step di creazione del disk group `CRS`, **devi** cambiare il Discovery Path da `ORCL:*` a:
+> `/dev/oracleasm/disks/*`
+> Altrimenti l'installer si bloccherà con l'errore `PRVG-11800` come è successo sul primario! Seleziona solo `CRS1`, `CRS2`, `CRS3`.
+
 **2. Installazione Database (Software Only):**
 Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
 
@@ -124,9 +136,9 @@ Fatto questo, hai un cluster RAC vuoto pronto per ricevere i dati dal primario.
 
 Per verificare di essere pronto per proseguire con Data Guard, fai questa check-list sui nodi standby:
 - ✅ **Fase 1 completa** tramite la clonazione (OS, DNS, utenti, SSH) su `racstby1` e `racstby2`.
-- ✅ **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6) su `racstby1` e `racstby2`
+- ✅ **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6, **incluso il fix al Discovery Path**) su `racstby1` e `racstby2`
 - ✅ **Software Database installato** (Fase 2.8, solo Software Only, NESSUN database creato) su `racstby1` e `racstby2`
-- ✅ I Disk Group **DATA** e **FRA** devono esistere sullo standby con gli stessi nomi del primario
+- ✅ I Disk Group **DATA** e **RECO** devono esistere sullo standby con gli stessi nomi del primario e creati usando il path `/dev/oracleasm/disks/*`
 
 > **Perché stessi nomi dei Disk Group?** RMAN Duplicate cerca i disk group per nome. Se sul primario i datafile sono in `+DATA` e sullo standby non esiste `+DATA`, il duplicate fallisce.
 
