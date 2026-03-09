@@ -132,6 +132,67 @@ exit;
 
 ---
 
+## 6. Installazione Oracle GoldenGate 23ai Free (Microservices)
+
+Su Oracle Linux 8 (ARM), anche GoldenGate 23ai Free è disponibile direttamente dai repository ufficiali `yum`. Non c'è bisogno di scaricare file zip dal sito Oracle! GoldenGate 23ai usa esclusivamente la **Microservices Architecture (MA)** (interfaccia web sicura), avendo deprecato la vecchia architettura Classic a riga di comando.
+
+Esegui questi comandi come `root` sull'istanza cloud:
+
+```bash
+# 1. Installa il pacchetto software di GoldenGate 23ai Free
+dnf install -y oracle-goldengate-free-23ai
+
+# 2. Il pacchetto crea un utente 'ogg' di default, ma noi vogliamo 
+# usare l'utente 'oracle' per semplificare il lab. Creiamo le directory:
+mkdir -p /opt/oracle/gg_home
+mkdir -p /opt/oracle/gg_deploy
+chown -R oracle:oinstall /opt/oracle/gg_*
+
+# 3. Lancia lo script di configurazione interattiva (come root)
+# Attenzione: Questo script crea il "Service Manager" e il primo "Deployment"
+/opt/oracle/goldengate/bin/oggca.sh \
+  -silent \
+  -responseFile /opt/oracle/goldengate/response/oggca.rsp \
+  -showProgress \
+  oggDeploy.deploymentName=Target \
+  oggDeploy.deploymentDirectory=/opt/oracle/gg_deploy \
+  oggDeploy.administratorUser=admin \
+  oggDeploy.administratorPassword=oracle \
+  oggDeploy.dbVersion=Oracle \
+  oggSoftwareHome=/opt/oracle/goldengate
+  
+# (Nota: In un ambiente reale non si usa la password "oracle" in chiaro negli script!)
+```
+
+### Aprire le Porte Web (Microservices)
+
+GoldenGate Microservices usa HTTPS. Dobbiamo aprire le porte nel firewall Linux e nella Security List di OCI.
+
+1. **Firewall Linux (come root):**
+   ```bash
+   # Service Manager (Porta default 9011)
+   firewall-cmd --permanent --zone=public --add-port=9011/tcp
+   # Administration Server (Porta default 9012)
+   firewall-cmd --permanent --zone=public --add-port=9012/tcp
+   # Distribution Server (Porta default 9013)
+   firewall-cmd --permanent --zone=public --add-port=9013/tcp
+   # Receiver Server (Porta default 9014 - FONDAMENTALE per ricevere i dati!)
+   firewall-cmd --permanent --zone=public --add-port=9014/tcp
+   firewall-cmd --reload
+   ```
+
+2. **Security List OCI (Torna al Browser):**
+   Come fatto nello Step 2 della guida, vai nella tua Security List su Oracle Cloud e aggiungi una regola per le porte Web di GoldenGate:
+   - **Source CIDR:** Il tuo IP di casa (es. `93.45.122.5/32`)
+   - **Destination Port Range:** `9011-9014`
+   - **Description:** `GoldenGate Microservices Web UI`
+
+**Testa l'accesso!** Apri il browser dal tuo PC e vai su:
+👉 `https://<IP_PUBBLICO_CLOUD>:9011`
+Accedi con utente `admin` e password `oracle`.
+
+---
+
 ## 6. Il Ponte Magico: Collegare il Locale al Cloud
 
 Sui tuoi due nodi RAC locali (in VirtualBox), GoldenGate ("Pump") dovrà spedire i file di log ("Trail") a questa macchina in Cloud.
