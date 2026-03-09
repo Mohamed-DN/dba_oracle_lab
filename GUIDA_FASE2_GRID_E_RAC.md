@@ -552,31 +552,64 @@ CRS-4533: Event Manager is online
 
 ---
 
-## 2.7 Creazione Disk Group DATA e FRA
+## 2.6b 📸 Snapshot di Sicurezza (MILESTONE: SNAP-05)
 
-Ora che il cluster è attivo, creiamo i disk group per il database:
+Questo è il momento perfetto per "congelare" la macchina. Hai un cluster Oracle 19c formattato e funzionante, ma ancora senza database. Se fai un errore nella creazione dei disk group dati o del database, potrai tornare qui e riprovare senza dover reinstallare tutto il Grid.
+
+**Procedura per lo Snapshot a caldo/freddo:**
+
+1. **Spegni il cluster in modo pulito (su `rac1` come root):**
+   ```bash
+   /u01/app/19.0.0/grid/bin/crsctl stop cluster -all
+   ```
+   *Attendi che tutti i servizi (ASM, GNS, VIP, ecc.) vadano offline su entrambi i nodi.*
+
+2. **Spegni le macchine:**
+   ```bash
+   # Su rac1
+   shutdown -h now
+   # Su rac2
+   shutdown -h now
+   ```
+
+3. **In VirtualBox, crea lo snapshot per ENTRAMBE le VM:**
+   - Nome: `SNAP-05: Grid_Install_OK`
+   - Descrizione: "Grid Infrastructure 19c installato con successo. CRS attivo su 3 dischi. Nessun database creato."
+
+4. **Riaccendi le macchine** e attendi qualche minuto che il cluster riparta in automatico al boot.
+
+---
+
+## 2.7 Creazione Disk Group DATA e RECO
+
+Ora che il cluster è attivo (e protetto da snapshot), creiamo i disk group per ospitare i dati veri e propri del database:
 
 ```bash
-# Come utente grid
+# Come utente grid (puoi farlo da un nodo qualsiasi, es. rac1)
 su - grid
 asmca
 ```
 
-Oppure da linea di comando:
+*(Con `asmca` l'interfaccia grafica ti guiderà nella creazione. Ricordati di selezionare i dischi usando il Discovery Path `/dev/oracleasm/disks/*` se non li vedi!).*
+
+**Oppure da linea di comando sqlplus (più veloce):**
 
 ```sql
--- Connettiti ad ASM come SYSASM
+# Come utente grid
+su - grid
+
+-- Connettiti all'istanza ASM locale (+ASM1)
 sqlplus / as sysasm
 
--- Crea disk group DATA
+-- Crea disk group DATA (Usiamo il path fisico come fatto nell'installer!)
 CREATE DISKGROUP DATA EXTERNAL REDUNDANCY
-  DISK 'ORCL:DATA'
+  DISK '/dev/oracleasm/disks/DATA'
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
 -- Crea disk group RECO
 CREATE DISKGROUP RECO EXTERNAL REDUNDANCY
-  DISK 'ORCL:RECO'
+  DISK '/dev/oracleasm/disks/RECO'
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
