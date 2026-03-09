@@ -362,11 +362,32 @@ cd /u01/app/19.0.0/grid
 - Seleziona: **No** (non ci serve il GIMR per un lab)
 
 **Step 8 — Create ASM Disk Group** (per OCR e Voting Disk):
-- Disk Group Name: `CRS`
-- Redundancy: **Normal** (abbiamo 3 dischi per CRS)
-- Seleziona i dischi: `ORCL:CRS1`, `ORCL:CRS2`, `ORCL:CRS3`
 
-> **Perché Normal Redundancy?** Oracle raccomanda di usare 3 Voting Disk per formare un quorum (2 sopravvissuti su 3). Usando Normal Redundancy su 3 dischi fisici separati, se ne perdi uno il cluster rimane operativo!
+![Step 8 - Create ASM Disk Group](./images/grid_asm_disk_group.png)
+
+> 🛑 **Se la lista dei dischi è VUOTA** (come nello screenshot sopra), è perché il Discovery Path punta a `/dev/sd*`. Noi usiamo **ASMLib**, quindi Oracle deve cercare i dischi con il prefisso `ORCL:`.
+
+**Procedura passo-passo:**
+
+1. **Disk Group Name**: `CRS`
+2. **Redundancy**: seleziona **Normal**
+3. **Allocation Unit Size**: lascia `4 MB` (default)
+4. **Clicca "Change Discovery Path..."** e cambia da `/dev/sd*` a:
+   ```
+   ORCL:*
+   ```
+5. Ora i dischi appariranno! Seleziona **tutti e 3**: `ORCL:CRS1`, `ORCL:CRS2`, `ORCL:CRS3`
+6. **NON selezionare** "Configure Oracle ASM Filter Driver" (usiamo ASMLib, non AFD)
+7. Clicca **Next**
+
+### Perché queste scelte? (Best Practice Oracle)
+
+| Parametro | Scelta | Perché (Best Practice Oracle) |
+|---|---|---|
+| **Disk Group Name** | `CRS` | Contiene OCR (Oracle Cluster Registry) e Voting Disk. Oracle raccomanda di separarli dai dati (MOS Doc 1373437.1) |
+| **Redundancy** | Normal | Oracle richiede **almeno 3 Voting Disk** per il quorum. Normal Redundancy su 3 dischi = se ne perdi 1, il cluster resta su (2 su 3 votano). High Redundancy vorrebbe 5 dischi. |
+| **Allocation Unit** | 4 MB | Default Oracle. Per i disk group piccoli come CRS (solo metadati), 4 MB è ottimale. Per DATA/RECO si può usare 4 MB (default e raccomandato per la maggior parte dei casi). |
+| **Discovery Path** | `ORCL:*` | Perché usiamo **ASMLib** come driver disco. Se usassimo `udev` rules, il path sarebbe `/dev/oracleasm/disks/*`. Se usassimo AFD, sarebbe `AFD:*`. |
 
 **Step 9 — ASM Password**:
 - Imposta la password per `SYS` e `ASMSNMP`
