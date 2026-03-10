@@ -882,10 +882,12 @@ mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp
 unzip -q p6880880_190000_Linux-x86-64.zip -d $ORACLE_HOME/
 
 # 2. Applica RU alla Grid Home (come root)
-$GRID_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $GRID_HOME
+chown -R grid:oinstall /u01/app/patch
+$GRID_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $GRID_HOME
 
 # 3. Applica RU alla DB Home (come root)
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
+chown -R oracle:oinstall /u01/app/patch
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 
 # 4. Applica datapatch (come oracle)
 $ORACLE_HOME/OPatch/datapatch -verbose
