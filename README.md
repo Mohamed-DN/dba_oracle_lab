@@ -100,6 +100,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 13 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
 | 14 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
 | 15 | **Listener + Services** | [GUIDA_LISTENER_DBA](./GUIDA_LISTENER_SERVICES_DBA.md) | Listener RAC, SCAN, Services, DBA Toolkit |
+| 🔬 | **Attività Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
 
 ---
 
