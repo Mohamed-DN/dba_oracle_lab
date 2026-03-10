@@ -1,0 +1,51 @@
+drop table DBA_OP.MVIEWS_CONFIG cascade constraints purge;
+create table DBA_OP.MVIEWS_CONFIG
+(
+MVIEW_NAME 	VARCHAR2 (50),
+ENABLED 	VARCHAR2 (40)
+)
+TABLESPACE DBA_OP_DATA;
+
+grant create any materialized view to DBA_OP;
+GRANT ALTER ANY MATERIALIZED VIEW to DBA_OP;
+
+
+CREATE OR REPLACE PROCEDURE DBA_OP.MVIEW_REFRESH (N_TAB in varchar2,REFRESH_TYPE in varchar2 , atomic in BOOLEAN default TRUE)
+IS
+
+V_CHECK                  VARCHAR2 (40);
+
+BEGIN
+  
+   BEGIN
+        SELECT ENABLED INTO V_CHECK FROM DBA_OP.MVIEWS_CONFIG where mview_name=N_TAB;
+    EXCEPTION
+        WHEN NO_DATA_FOUND
+        THEN
+            raise_application_error(-20101,'ATTENZIONE !!!! MVIEW non presente nella tabella di configurazione');
+    END;
+
+   BEGIN
+    IF V_CHECK = 'Y'
+    THEN
+        DBMS_MVIEW.REFRESH(list=> N_TAB, method => REFRESH_TYPE, atomic_refresh=> atomic);
+	ELSE
+		raise_application_error(-20101,'ATTENZIONE !!!! MVIEW non abilitata nella tabella di configurazione');
+	end if;
+   END;
+   
+END;
+/
+
+
+-- inserimento tabelle di configurazione
+-- insert into DBA_OP.MVIEWS_CONFIG values (&SCHEMA.&TABLE_NAME,'Y');
+-- commit;
+
+
+execute DBA_OP.MVIEW_REFRESH(&SCHEMA.&TABLE_NAME, 'C');
+
+-- grant a ruoli applicativo
+-- grant execute on DBA_OP.MVIEW_REFRESH to &role_rw;
+
+

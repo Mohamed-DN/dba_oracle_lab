@@ -129,6 +129,29 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | **Da Lab a Produzione** | [GUIDA_PRODUZIONE](./GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security, monitoring |
 | **Validazione Oracle BP** | [VALIDAZIONE_BP](./VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98%, GUI vs CLI |
 | **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ANALISI_ORACLEBASE_VAGRANT.md) | Confronto con Oracle Base Vagrant |
+| **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
+
+---
+
+### 📚 Enterprise DBA Toolkit (Studio AI)
+
+> Raccolta di script e procedure operative reali da ambienti Enterprise di produzione.
+> Estratti e organizzati dalla cartella `studio/` con appunti operativi Nexi.
+
+| # | Area | Descrizione |
+|---|---|---|
+| 01 | [ASM & Storage](./studio_ai/01_asm_storage/) | Aggiunta/rimozione dischi ASM, migrazione LUN (ASMLib + AFD) |
+| 02 | [Data Guard](./studio_ai/02_dataguard/) | Configurazione DG, Active DG, verifica GAP, recovery DR |
+| 03 | [Script Monitoring](./studio_ai/03_monitoring_scripts/) | 48 script SQL: sessioni, lock, CPU, I/O, ASH, ASM |
+| 04 | [Gestione Utenti](./studio_ai/04_user_management/) | Template creazione utenti, policy password, Vault |
+| 05 | [Patching](./studio_ai/05_patching/) | Patching Oracle, Golden Images (OHCTL) |
+| 06 | [Backup & Recovery](./studio_ai/06_backup_recovery/) | Flashback, Restore Point, verifiche RMAN |
+| 07 | [Performance & Tuning](./studio_ai/07_performance_tuning/) | SPM, analisi AWR, gestione statistiche |
+| 08 | [TDE & Sicurezza](./studio_ai/08_tde_security/) | Transparent Data Encryption, Oracle Vault |
+| 09 | [Compressione](./studio_ai/09_compression/) | DBMS_REDEFINITION online, near-zero downtime |
+| 10 | [Partition Manager](./studio_ai/10_partition_manager/) | Package gestione automatica partizioni |
+| 11 | [Template SQL](./studio_ai/11_sql_templates/) | Template DDL/DML standard con error handling |
+| 12 | [Utility](./studio_ai/12_utilities/) | Monitor TEMP/UNDO, MView refresh, DBA utility package |
 
 ---
 

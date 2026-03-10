@@ -1,0 +1,15 @@
+
+
+
+lunghezza pass = 12, cambia il numero per avere una pass più lunga o più corta
+
+# Solo caratteri   -- Esempio: TPBahbBuHLqL
+cat /dev/urandom | tr -dc '[:alpha:]' | head -c${1:-12}; echo;
+
+# Solo numeri      -- Esempio: 767933767552
+cat /dev/urandom | tr -dc '[:digit:]' | head -c${1:-12}; echo;
+
+
+# Alpha numerici    -- Esempio: zVVRIsEUfFX2
+cat /dev/urandom | tr -dc '[:alnum:]' | head -c${1:-12}; echo;
+

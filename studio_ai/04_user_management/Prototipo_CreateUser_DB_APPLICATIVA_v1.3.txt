@@ -1,0 +1,64 @@
+-- Vers: 1.3
+
+-- Fare la replace di xxx con UTENTE per generare uno script secondo standard.
+-- Occorre soltanto prevedere di cambiare il nome del diskgroup DATA e le 2 password degli utenti
+-- con il Vault create user da utente dvmanager 
+
+
+set echo on
+
+-- TABLESPACES DATA
+CREATE BIGFILE TABLESPACE xxx_DATA
+    DATAFILE '+DATA' SIZE 1G AUTOEXTEND ON NEXT 1G MAXSIZE 20G
+    DEFAULT NOCOMPRESS NO INMEMORY
+    ONLINE
+    SEGMENT SPACE MANAGEMENT AUTO
+    EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+
+-- TABLESPACES DATA
+CREATE BIGFILE TABLESPACE xxx_INDX
+    DATAFILE '+DATA' SIZE 1G AUTOEXTEND ON NEXT 1G MAXSIZE 10G
+    DEFAULT NOCOMPRESS NO INMEMORY
+    ONLINE
+    SEGMENT SPACE MANAGEMENT AUTO
+    EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+
+
+-- Creazione Ruoli READONLY e READWRITE
+CREATE ROLE             xxx_RO NOT IDENTIFIED;
+CREATE ROLE             xxx_RW NOT IDENTIFIED;
+
+
+-- Creazione Utente OBJ
+CREATE USER             xxx_OBJ
+IDENTIFIED BY           "&Pass"
+DEFAULT TABLESPACE      xxx_DATA
+TEMPORARY TABLESPACE TEMP;
+
+ALTER USER              xxx_OBJ QUOTA UNLIMITED ON xxx_DATA;
+ALTER USER              xxx_OBJ QUOTA UNLIMITED ON xxx_INDX;
+
+-- L utenet OBJ non deve avere il ruolo CONNECT e il privilegio CREATE SESSION
+GRANT       RESOURCE TO xxx_OBJ;
+
+
+-- Creazione Utente SV
+CREATE USER             xxx_SV
+IDENTIFIED BY           "&Pass"
+DEFAULT TABLESPACE      xxx_DATA
+TEMPORARY TABLESPACE TEMP;
+
+GRANT CONNECT        TO xxx_SV;
+GRANT CREATE SESSION TO xxx_SV;
+GRANT xxx_RW         TO xxx_SV;
+GRANT CREATE SYNONYM TO xxx_SV;
+
+
+-- Vault
+EXEC DBMS_MACADM.ADD_AUTH_TO_REALM ('Realm TOTALE','&USERNAME');
+EXEC DBMS_MACADM.ADD_AUTH_TO_REALM ('Realm PAN','&USERNAME');
+EXEC DBMS_MACADM.ADD_AUTH_TO_REALM ('Realm MOV','&USERNAME');
+EXEC DBMS_MACADM.ADD_AUTH_TO_REALM ('Realm ANAG','&USERNAME');
+
+   
+   
