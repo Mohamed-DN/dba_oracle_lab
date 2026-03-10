@@ -389,7 +389,7 @@ Sett 8:                                     ██████████ 🎯 
 │                                                              │
 │  Progetto Lab: Architettura enterprise ibrida con            │
 │  RAC → Data Guard → GoldenGate → OCI Cloud → PostgreSQL   │
-│  su 7+ nodi                                                  │
+│  su 6+ nodi                                                  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -408,7 +408,6 @@ Sett 8:                                     ██████████ 🎯 
 | **Sett. 4** (Giorno 19: Listener) | Dopo Listener/Services | [04_user_management/](../studio_ai/04_user_management/) |
 | **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [03_monitoring_scripts/](../studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](../studio_ai/07_performance_tuning/) |
 | **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](../studio_ai/08_tde_security/) |
-| **Bonus** | In qualsiasi momento | [11_sql_templates/](../studio_ai/11_sql_templates/) + [12_utilities/](../studio_ai/12_utilities/) |
 
 ---
 
