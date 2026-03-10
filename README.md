@@ -74,6 +74,8 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 2 | **Comandi DBA** | [GUIDA_COMANDI_DBA](./GUIDA_COMANDI_DBA.md) | 100+ query SQL, script Oracle Base, health check |
 | 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
 | 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 25 giorni x 3h/giorno (5 settimane), tips CV |
+| 🏆 | **Top 50 Script DBA** | [TOP_50_SCRIPT](./TOP_50_SCRIPT_DBA.md) | I 50 script più utili ogni giorno — lock, AWR, tuning, ASM, I/O |
+| 🔬 | **Attività Lab RAC** | [ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici: health check, AWR, switchover, GG test |
 
 ---
 
