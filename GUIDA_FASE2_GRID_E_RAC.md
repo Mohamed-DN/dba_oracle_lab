@@ -688,6 +688,7 @@ $ORACLE_HOME/OPatch/opatch version
 mkdir -p /u01/app/patch
 cd /u01/app/patch
 unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
+chown -R grid:oinstall /u01/app/patch
 
 # Ripeti l'estrazione su rac2!
 # (La cartella /u01 non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
@@ -695,6 +696,7 @@ ssh rac2
 mkdir -p /u01/app/patch
 cd /u01/app/patch
 unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
+chown -R grid:oinstall /u01/app/patch
 exit
 ```
 
@@ -862,6 +864,9 @@ $ORACLE_HOME/OPatch/opatch version
 # Come root su rac1
 su - root
 
+# Cambia ownership della patch directory a oracle, altrimenti opatchauto fallisce (OPATCHAUTO-72083)
+chown -R oracle:oinstall /u01/app/patch
+
 # Backup DB Home (Best Practice)
 tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
 
@@ -877,6 +882,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 
 ```bash
 # Ripeti su rac2
+ssh rac2 "chown -R oracle:oinstall /u01/app/patch"
 ssh rac2
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
@@ -891,11 +897,13 @@ Il patch OJVM (Oracle Java Virtual Machine) è separato dalla RU e si applica co
 su - root
 cd /u01/app/patch
 unzip -q /tmp/p33803476_190000_Linux-x86-64.zip
+chown -R oracle:oinstall /u01/app/patch
 
 # Scompatta anche su rac2!
 ssh rac2
 cd /u01/app/patch
 unzip -q /tmp/p33803476_190000_Linux-x86-64.zip
+chown -R oracle:oinstall /u01/app/patch
 exit
 
 # Come utente oracle su rac1
