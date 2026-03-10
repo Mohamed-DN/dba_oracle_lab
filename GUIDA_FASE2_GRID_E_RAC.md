@@ -706,10 +706,6 @@ exit
 > 3. **Backup dell'ORACLE_HOME** — per poter fare rollback in caso di problemi
 
 ```bash
-# FERMA il database prima del patching (come oracle)
-su - oracle
-srvctl stop database -d RACDB
-
 # Come root su rac1
 su - root
 
@@ -751,7 +747,7 @@ $ORACLE_HOME/OPatch/opatch lspatches
 # Ripeti su rac2 come root
 ssh rac2
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 
 # Verifica
 crsctl check crs
