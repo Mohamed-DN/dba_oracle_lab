@@ -694,13 +694,33 @@ ls -la
 
 ### Step 3: Applica la RU alla Grid Home con opatchauto
 
+> ⚠️ **Best Practice Oracle (MOS 2632107.1)**: Prima di applicare qualsiasi patch, esegui SEMPRE:
+> 1. **Conflict check** — verifica che non ci siano conflitti con patch già applicate
+> 2. **Space check** — verifica spazio disco sufficiente  
+> 3. **Backup dell'ORACLE_HOME** — per poter fare rollback in caso di problemi
+
 ```bash
 # FERMA il database prima del patching (come oracle)
 su - oracle
 srvctl stop database -d RACDB
 
-# Come root su rac1 — opatchauto patcha sia Grid che ASM automaticamente
+# Come root su rac1
+su - root
+
+# --- BEST PRACTICE 1: Verifica spazio disco (servono almeno 15 GB in /u01) ---
+df -h /u01
+# Se hai meno di 15 GB liberi, libera spazio prima di proseguire!
+
+# --- BEST PRACTICE 2: Backup dell'ORACLE_HOME (per rollback) ---
+tar czf /tmp/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
+
+# --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
 export ORACLE_HOME=/u01/app/19.0.0/grid
+$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME -analyze
+# Se mostra errori di conflitto, risolvili PRIMA di applicare!
+# Se mostra "Patch analysis is complete" → puoi proseguire.
+
+# --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
 $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 ```
 
@@ -838,8 +858,16 @@ $ORACLE_HOME/OPatch/opatch version
 
 ```bash
 # Come root su rac1
-# Usiamo opatchauto anche per la DB Home (metodo RAC)
+su - root
+
+# Backup DB Home (Best Practice)
+tar czf /tmp/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
+
+# Pre-check (dry run)
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME -analyze
+
+# Se analyze OK → applica
 $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 ```
 
