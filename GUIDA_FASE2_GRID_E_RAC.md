@@ -1078,6 +1078,23 @@ SELECT force_logging FROM v$database;
 
 ---
 
+## 2.14 Pulizia File Temporanei e Patch
+
+I file delle patch che abbiamo scompattato in `/u01/app/patch` e `/tmp` occupano diversi GB. Una volta che le patch sono applicate e il database è creato, **non servono più** e possono essere eliminati per liberare spazio prezioso sul disco virtuale.
+
+```bash
+# Come root su rac1
+rm -rf /u01/app/patch
+rm -f /tmp/p*.zip
+
+# Come root su rac2
+ssh rac2 "rm -rf /u01/app/patch && rm -f /tmp/p*.zip"
+```
+
+> **Nota sui backup**: NON cancellare invece i backup dell'ORACLE_HOME (`/u01/app/*_backup_*.tar.gz`) che hai creato come best practice. Quelli ti serviranno se in futuro dovessi fare un rollback di una patch difettosa!
+
+---
+
 ## ✅ Checklist Fine Fase 2
 
 ```bash
