@@ -681,17 +681,19 @@ $ORACLE_HOME/OPatch/opatch version
 
 ### Step 2: Scompatta la Release Update
 
+> ⚠️ **ATTENZIONE**: NON scompattare la patch in `/tmp`! Nelle nostre VM, `/tmp` è un disco RAM (tmpfs) di soli 4GB. La patch estratta occupa più di 3GB, riempendo `/tmp` al 100% e bloccando il nodo. Usa sempre `/u01` che ha 50GB di spazio!
+
 ```bash
 # Scompatta su rac1 (come root o oracle/grid con permessi)
-mkdir -p /tmp/patch
-cd /tmp/patch
+mkdir -p /u01/app/patch
+cd /u01/app/patch
 unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
 
 # Ripeti l'estrazione su rac2!
-# (La cartella /tmp non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
+# (La cartella /u01 non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
 ssh rac2
-mkdir -p /tmp/patch
-cd /tmp/patch
+mkdir -p /u01/app/patch
+cd /u01/app/patch
 unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
 exit
 ```
@@ -716,16 +718,16 @@ df -h /u01
 # Se hai meno di 15 GB liberi, libera spazio prima di proseguire!
 
 # --- BEST PRACTICE 2: Backup dell'ORACLE_HOME (per rollback) ---
-tar czf /tmp/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
+tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
 
 # --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME -analyze
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME -analyze
 # Se mostra errori di conflitto, risolvili PRIMA di applicare!
 # Se mostra "Patch analysis is complete" → puoi proseguire.
 
 # --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 ```
 
 > **Perché opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
@@ -865,14 +867,14 @@ $ORACLE_HOME/OPatch/opatch version
 su - root
 
 # Backup DB Home (Best Practice)
-tar czf /tmp/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
+tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
 
 # Pre-check (dry run)
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME -analyze
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME -analyze
 
 # Se analyze OK → applica
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 ```
 
 > **Nota**: `opatchauto` riconosce automaticamente che è una DB Home in un cluster RAC e gestisce il patching di conseguenza.
@@ -881,7 +883,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 # Ripeti su rac2
 ssh rac2
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
 ```
 
 ### Step 3: Applica il Patch OJVM (p33803476)
@@ -889,20 +891,27 @@ $ORACLE_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $ORACLE_HOME
 Il patch OJVM (Oracle Java Virtual Machine) è separato dalla RU e si applica con `opatch apply` standard.
 
 ```bash
-# Scompatta il patch OJVM
-cd /tmp/patch
+# Scompatta il patch OJVM su rac1
+su - root
+cd /u01/app/patch
 unzip -q /tmp/p33803476_190000_Linux-x86-64.zip
+
+# Scompatta anche su rac2!
+ssh rac2
+cd /u01/app/patch
+unzip -q /tmp/p33803476_190000_Linux-x86-64.zip
+exit
 
 # Come utente oracle su rac1
 su - oracle
-cd /tmp/patch/33803476
+cd /u01/app/patch/33803476
 $ORACLE_HOME/OPatch/opatch apply
 
 # Quando chiede "Is the local system ready for patching?" rispondi: y
 # Ripeti su rac2
 ssh rac2
 su - oracle
-cd /tmp/patch/33803476
+cd /u01/app/patch/33803476
 $ORACLE_HOME/OPatch/opatch apply
 ```
 
