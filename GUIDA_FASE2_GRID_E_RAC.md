@@ -646,28 +646,36 @@ I patch che ti servono (già presenti nei tuoi download):
 OPatch è lo strumento che applica le patch. La versione fornita con il software base 19.3 è troppo vecchia. Devi aggiornarla PRIMA di applicare qualsiasi patch.
 
 ```bash
-# Come utente grid su rac1
-su - grid
+# ⚠️ Come ROOT su rac1 (la directory OPatch ha owner root dopo l'installazione!)
+su - root
 
 # Backup del vecchio OPatch
-mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp.$(date +%Y%m%d)
+mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
 
 # Scompatta il nuovo OPatch
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d $ORACLE_HOME/
+unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
 
-# Verifica la versione
+# Rimetti i permessi corretti all'utente grid
+chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
+
+# Verifica la versione (torna a grid)
+su - grid
 $ORACLE_HOME/OPatch/opatch version
 # Deve mostrare: OPatch Version: 12.2.0.1.43 (o superiore)
 ```
 
+> **Perché come root?** Dopo l'installazione di Grid Infrastructure, lo script `root.sh` cambia l'ownership di alcune directory della Grid Home a `root`. La directory `OPatch` è tra queste, quindi il `mv` come utente `grid` fallirà con "Permission denied".
+
 > **Perché la versione 230000?** Il p6880880_**230000** è la versione di OPatch compatibile con Oracle 19c e le RU recenti. La versione nel nome (23.x) indica la build di OPatch, non la versione del database.
 
 ```bash
-# Ripeti su rac2
+# Ripeti su rac2 (sempre come root!)
 ssh rac2
+su - root
+mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
+unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 su - grid
-mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp.$(date +%Y%m%d)
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d $ORACLE_HOME/
 $ORACLE_HOME/OPatch/opatch version
 ```
 
@@ -800,23 +808,29 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 ### Step 1: Aggiorna OPatch nella DB Home
 
 ```bash
-# Come utente oracle su rac1
-su - oracle
+# ⚠️ Come ROOT su rac1 (anche la DB Home OPatch può avere owner root dopo root.sh)
+su - root
 
 # Backup del vecchio OPatch
-mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp.$(date +%Y%m%d)
+mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
 
 # Scompatta il nuovo OPatch
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d $ORACLE_HOME/
+unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
 
-# Verifica
+# Rimetti i permessi corretti all'utente oracle  
+chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
+
+# Verifica (torna a oracle)
+su - oracle
 $ORACLE_HOME/OPatch/opatch version
 
-# Ripeti su rac2
+# Ripeti su rac2 (come root!)
 ssh rac2
+su - root
+mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
+unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
 su - oracle
-mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp.$(date +%Y%m%d)
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d $ORACLE_HOME/
 $ORACLE_HOME/OPatch/opatch version
 ```
 
