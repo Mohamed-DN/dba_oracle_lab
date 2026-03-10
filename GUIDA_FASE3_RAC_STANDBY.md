@@ -95,11 +95,46 @@ I 5 nuovi dischi che hai assegnato in VirtualBox sono "vergini". Devi partiziona
    ```
    *Se vedi i 5 dischi anche qui, lo storage condiviso dello standby è pronto!*
 
-### Step 4: Ripeti Installazione Grid e Database (Fase 2)
-Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti, devi **ripetere esattamente i passaggi della FASE 2**, ma applicati allo standby.
+### Step 4: Installazione e Patching Grid e Database (Fase 2 Adattata per Standby)
 
-**1. Installazione Grid Infrastructure:**
-Segui la Fase 2 paro paro, ma con queste differenze per lo standby:
+Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti, dobbiamo ricreare l'infrastruttura Oracle. **Eseguiamo ESATTAMENTE i passaggi robusti che abbiamo usato sul primario**, adattando i nomi per lo standby.
+
+#### 4.1 Preparazione Binari e Prerequisiti
+1. **Scompatta Grid (`racstby1`)**:
+   ```bash
+   su - grid
+   unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
+   ```
+2. **Setup CVU Disk (`racstby1` e `racstby2` come root)**:
+   ```bash
+   # racstby1
+   rpm -ivh /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm
+   scp /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm root@racstby2:/tmp/
+   # racstby2
+   ssh racstby2 "rpm -ivh /tmp/cvuqdisk-1.0.10-1.rpm"
+   ```
+3. **Pointers Inventory (`racstby1` e `racstby2` come root)**:
+   ```bash
+   # Esegui su entrambi i nodi
+   cat > /etc/oraInst.loc <<'EOF'
+inventory_loc=/u01/app/oraInventory
+inst_group=oinstall
+EOF
+   chown root:oinstall /etc/oraInst.loc && chmod 644 /etc/oraInst.loc
+   mkdir -p /u01/app/oraInventory && chown grid:oinstall /u01/app/oraInventory && chmod 775 /u01/app/oraInventory
+   ```
+4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
+   ```bash
+   # Esegui su entrambi i nodi per non far fallire cluvfy
+   systemctl stop libvirtd && systemctl disable libvirtd
+   ip link set virbr0 down && brctl delbr virbr0 2>/dev/null
+   echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
+   sysctl -p
+   ```
+
+#### 4.2 Installazione Grid Infrastructure (GUI)
+
+Avvia `gridSetup.sh` su `racstby1` (come `grid`, via MobaXterm con X11). Segui i passi, prestando attenzione a queste **differenze fondamentali** per lo standby:
 
 | Parametro Installer | Valore per lo Standby |
 |---|---|
@@ -108,27 +143,114 @@ Segui la Fase 2 paro paro, ma con queste differenze per lo standby:
 | Nodo 1 | `racstby1.localdomain` / VIP: `racstby1-vip.localdomain` |
 | Nodo 2 | `racstby2.localdomain` / VIP: `racstby2-vip.localdomain` |
 
-> ⚠️ **Allo Step 5 (Network Interface Usage)**, usa la stessa configurazione del primario:
+> ⚠️ **Allo Step 5 (Network Interface Usage)**, usa la stessa configurazione: `enp0s8` (Pubblica), `enp0s9` (ASM & Private - 192.168.2.0), `enp0s3` (Do Not Use).
+>
+> 🛑 **Allo Step 8 (ASM Disk Group 'CRS') RICORDA IL WORKAROUND ASMLIB:**
+> Cambia il Discovery Path in `/dev/oracleasm/disks/*`. Seleziona SOLO `CRS1`, `CRS2`, `CRS3`.
 
-| Interface | Subnet | Use for |
-|---|---|---|
-| `enp0s3` | 10.0.2.0 | ❌ **Do Not Use** |
-| `enp0s8` | 192.168.56.0 | ✅ **Public** |
-| `enp0s9` | 192.168.2.0 | ✅ **ASM & Private** |
+Procedi fino in fondo, ignora i warning su IP Duplicato (`enp0s3`) e RAM.  
+Esegui gli script **COME ROOT** su `racstby1` (`orainstRoot.sh`, poi `root.sh`), e attendi la fine prima di farli su `racstby2`.
 
-> 💡 **Nota**: La subnet dell'interconnect sullo standby è `192.168.2.0` (non `192.168.1.0` come sul primario), perché nello Step 2 hai configurato gli IP privati sulla rete `192.168.2.x`.
+#### 4.3 Creazione Disk Group DATA e RECO (Standby)
+Dopo che il cluster è online, crea i disk group per lo standby via `asmca` o SQL:
+```sql
+-- Su racstby1 come grid (sqlplus / as sysasm)
+CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/DATA' ATTRIBUTE 'compatible.asm'='19.0', 'compatible.rdbms'='19.0';
+CREATE DISKGROUP RECO EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/RECO' ATTRIBUTE 'compatible.asm'='19.0', 'compatible.rdbms'='19.0';
+```
+> **NOTA BENE**: I disk group si chiamano ESATTAMENTE come sul primario (`+DATA`, `+RECO`). Questo è fondamentale per l'RMAN Duplicate!
 
-![Riferimento: Step 5 Network Interfaces](./images/grid_network_interface_usage.png)
+#### 4.4 Patching Grid Infrastructure (RU) sullo Standby
+Applica subito la stessa Release Update che hai sul primario.
 
-> 🛑 **RICORDA IL WORKAROUND ASMLIB (Step 8):**
-> Nello step di creazione del disk group `CRS`, **devi** cambiare il Discovery Path da `ORCL:*` a:
-> `/dev/oracleasm/disks/*`
-> Altrimenti l'installer si bloccherà con l'errore `PRVG-11800` come è successo sul primario! Seleziona solo `CRS1`, `CRS2`, `CRS3`.
+1. **Aggiorna OPatch (su `racstby1` e `racstby2` come root):**
+   ```bash
+   # racstby1
+   su - root
+   mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp
+   unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+   chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
+   
+   # racstby2
+   ssh racstby2 "mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp && unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/ && chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch"
+   ```
 
-**2. Installazione Database (Software Only):**
-Installa i binari Oracle 19c su `racstby1` e `racstby2`. **NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il motore spento.
+2. **Scompatta RU e Applica con Opatchauto (come root):**
+   ```bash
+   # racstby1
+   mkdir -p /u01/app/patch
+   cd /u01/app/patch
+   unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
+   chown -R grid:oinstall /u01/app/patch
+   
+   export ORACLE_HOME=/u01/app/19.0.0/grid
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
+   
+   # racstby2
+   ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p37957391_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh \$ORACLE_HOME"
+   ```
 
-Fatto questo, hai un cluster RAC vuoto pronto per ricevere i dati dal primario.
+#### 4.5 Installazione Software Database (Software Only)
+```bash
+# Scompatta su rac1 come oracle
+su - oracle
+unzip -q /tmp/LINUX.X64_193000_db_home.zip -d $ORACLE_HOME
+
+# Avvia l'installer (MobaXterm)
+cd $ORACLE_HOME && ./runInstaller
+```
+Seleziona **Set Up Software Only** → **Oracle RAC database installation** (seleziona `racstby1` e `racstby2`) → **Enterprise Edition**.
+Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `racstby1` e poi su `racstby2`.
+**⚠️ NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il software (motore spento) perché i dati li cloneremo via rete.
+
+#### 4.6 Patching Database Home (RU + OJVM) sullo Standby
+1. **Aggiorna OPatch DB Home (su `racstby1` e `racstby2` come root):**
+   ```bash
+   # racstby1
+   su - root
+   mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp
+   unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+   chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
+   
+   # racstby2
+   ssh racstby2 "mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp && unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/ && chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch"
+   ```
+
+2. **Applica RU alla DB Home (come root):**
+   ```bash
+   # racstby1
+   chown -R oracle:oinstall /u01/app/patch
+   export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
+   
+   # racstby2
+   ssh racstby2 "chown -R oracle:oinstall /u01/app/patch"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh \$ORACLE_HOME"
+   ```
+
+3. **Applica Patch OJVM alla DB Home (come utente oracle):**
+   ```bash
+   # Come root su racstby1 scompatta e dai diritti
+   cd /u01/app/patch && unzip -q /tmp/p33803476_190000_Linux-x86-64.zip && chown -R oracle:oinstall /u01/app/patch
+   ssh racstby2 "cd /u01/app/patch && unzip -q /tmp/p33803476_190000_Linux-x86-64.zip && chown -R oracle:oinstall /u01/app/patch"
+   
+   # Come oracle su racstby1
+   su - oracle
+   cd /u01/app/patch/33803476
+   $ORACLE_HOME/OPatch/opatch apply
+   
+   # Ripeti come oracle su racstby2
+   ssh racstby2 "cd /u01/app/patch/33803476; \$ORACLE_HOME/OPatch/opatch apply -silent"
+   ```
+
+4. **Pulizia Patch (come root):**
+   ```bash
+   rm -rf /u01/app/patch && rm -f /tmp/p*.zip
+   ssh racstby2 "rm -rf /u01/app/patch && rm -f /tmp/p*.zip"
+   ```
+
+A questo punto, l'infrastruttura Standby (motore Grid + RDBMS patchato) è identica al cluster Primario. Siamo pronti a connettere il database.
 
 ---
 
