@@ -879,7 +879,7 @@ ALTER TABLESPACE sensitive_data ENCRYPTION ONLINE ENCRYPT;
 # Workflow patching RAC
 # 1. Aggiorna OPatch
 mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bkp
-unzip -q p6880880_230000_Linux-x86-64.zip -d $ORACLE_HOME/
+unzip -q p6880880_190000_Linux-x86-64.zip -d $ORACLE_HOME/
 
 # 2. Applica RU alla Grid Home (come root)
 $GRID_HOME/OPatch/opatchauto apply /tmp/patch/37957391 -oh $GRID_HOME
