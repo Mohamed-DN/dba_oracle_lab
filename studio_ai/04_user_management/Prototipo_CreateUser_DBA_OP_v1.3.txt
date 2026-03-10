@@ -1,0 +1,59 @@
+--######## CREAZIONE UTENTE DBA_OP nel caso in cui non esista ######## 
+-- Vers: 1.3
+
+
+--######## CREAZIONE TABLESPACE DBA_OP ######## 
+-- Modificare il DG dei dati in base alle configurazioni del DB
+set lines 200
+col NAME for a30
+col FILE_NAME for a80
+select 'USING FOR ASM' NAME,
+       substr(file_name,1,instr(file_name,'/')-1) file_name,
+       null Mb,
+       null autoextensible,
+       null MaxMb
+from dba_Data_files where tablespace_name in ('SYSTEM')
+union
+select 'USING FOR FILESYSTEM' NAME,
+       substr(file_name,1,instr(file_name,'.')-1) file_name,
+       null Mb,
+       null autoextensible,
+       null MaxMb
+from dba_Data_files where tablespace_name in ('SYSTEM')
+union all
+select tablespace_name NAME,
+       file_name,
+       bytes/1024/1024 Mb,
+       autoextensible,
+       maxbytes/1024/1024 MaxMb
+from dba_Data_files where tablespace_name in ('DBA_OP_DATA');
+
+# Se la tablespace non esiste crearla e ripeterte la query del punto sopra per constatare la corretta creazione
+CREATE BIGFILE TABLESPACE DBA_OP_DATA DATAFILE '&FILENAME' SIZE 1024M AUTOEXTEND ON NEXT 128M MAXSIZE 32767m LOGGING;
+# Ripetere query sopra
+
+
+# Controllare l'esistenza dell'utente. Se lo username non esiste crearlo
+col username for a8
+col ACCOUNT_STATUS for a10
+col default_tablespace for a15
+select username,account_status,default_tablespace  from dba_users where username = 'DBA_OP';
+
+		# Se il default tablespace non è DBA_OP_DATA modificarlo
+		# Entrare con dvmanager/oracle_123 in caso di Db Vault abilitato
+		alter user DBA_OP default tablespace DBA_OP_DATA;
+
+# Se l'utente non esiste crearlo
+CREATE USER DBA_OP
+  IDENTIFIED BY iCBPi4Ev3r
+  DEFAULT TABLESPACE DBA_OP_DATA
+  TEMPORARY TABLESPACE TEMP
+  ACCOUNT UNLOCK;
+  -- 
+  GRANT CONNECT TO DBA_OP;               -- DvManager                  
+  GRANT RESOURCE TO DBA_OP;              -- Utenza Dba Nominale 
+  REM --  GRANT DBA TO DBA_OP;
+  -- ALTER USER DBA_OP DEFAULT ROLE ALL; -- DvManager, non concederlo
+  -- 
+  GRANT UNLIMITED TABLESPACE TO DBA_OP;  -- Utenza Dba Nominale
+  GRANT SELECT ANY DICTIONARY TO DBA_OP; -- Utenza Dba Nominale
