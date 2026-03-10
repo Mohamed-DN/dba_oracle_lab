@@ -653,7 +653,7 @@ su - root
 mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
 
 # Scompatta il nuovo OPatch
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
 
 # Rimetti i permessi corretti all'utente grid
 chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
@@ -666,14 +666,14 @@ $ORACLE_HOME/OPatch/opatch version
 
 > **Perché come root?** Dopo l'installazione di Grid Infrastructure, lo script `root.sh` cambia l'ownership di alcune directory della Grid Home a `root`. La directory `OPatch` è tra queste, quindi il `mv` come utente `grid` fallirà con "Permission denied".
 
-> **Perché la versione 230000?** Il p6880880_**230000** è la versione di OPatch compatibile con Oracle 19c e le RU recenti. La versione nel nome (23.x) indica la build di OPatch, non la versione del database.
+> **Come scaricare da MOS**: Vai su [support.oracle.com](https://support.oracle.com) → Patches & Updates → cerca **6880880** → seleziona la piattaforma (`Linux x86-64`) e la versione **19.0.0.0**. Il numero `190000` nel nome file indica la versione del database (19c). Non confondere con p6880880_**230000** che è per Oracle **23c**!
 
 ```bash
 # Ripeti su rac2 (sempre come root!)
 ssh rac2
 su - root
 mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
 chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 su - grid
 $ORACLE_HOME/OPatch/opatch version
@@ -682,14 +682,18 @@ $ORACLE_HOME/OPatch/opatch version
 ### Step 2: Scompatta la Release Update
 
 ```bash
-# Come root (o oracle/grid con permessi)
-# Scompatta la RU in una directory temporanea
+# Scompatta su rac1 (come root o oracle/grid con permessi)
 mkdir -p /tmp/patch
 cd /tmp/patch
 unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
 
-# Vedrai una directory con il numero del patch, es: 37957391/
-ls -la
+# Ripeti l'estrazione su rac2!
+# (La cartella /tmp non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
+ssh rac2
+mkdir -p /tmp/patch
+cd /tmp/patch
+unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
+exit
 ```
 
 ### Step 3: Applica la RU alla Grid Home con opatchauto
@@ -835,7 +839,7 @@ su - root
 mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
 
 # Scompatta il nuovo OPatch
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
 
 # Rimetti i permessi corretti all'utente oracle  
 chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
@@ -848,7 +852,7 @@ $ORACLE_HOME/OPatch/opatch version
 ssh rac2
 su - root
 mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
-unzip -q /tmp/p6880880_230000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
 chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
 su - oracle
 $ORACLE_HOME/OPatch/opatch version
