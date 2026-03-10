@@ -139,7 +139,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 ### 📚 Enterprise DBA Toolkit (Studio AI)
 
 > Raccolta di script e procedure operative reali da ambienti Enterprise di produzione.
-> Estratti e organizzati dalla cartella `studio/` con appunti operativi Nexi.
+> Estratti e organizzati dalla cartella `studio/` con appunti operativi.
 
 | # | Area | Descrizione |
 |---|---|---|
