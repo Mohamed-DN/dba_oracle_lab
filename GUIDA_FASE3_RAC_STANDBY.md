@@ -160,8 +160,8 @@ CREATE DISKGROUP RECO EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/RECO' ATTRI
 ```
 > **NOTA BENE**: I disk group si chiamano ESATTAMENTE come sul primario (`+DATA`, `+RECO`). Questo è fondamentale per l'RMAN Duplicate!
 
-#### 4.4 Patching Grid Infrastructure (RU) sullo Standby
-Applica subito la stessa Release Update che hai sul primario.
+#### 4.4 Patching Grid Infrastructure (Combo Patch) sullo Standby
+Applica subito la stessa Combo Patch (RU + OJVM) scaricata per il primario.
 
 1. **Aggiorna OPatch (su `racstby1` e `racstby2` come root):**
    ```bash
@@ -175,20 +175,21 @@ Applica subito la stessa Release Update che hai sul primario.
    ssh racstby2 "mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp && unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/ && chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch"
    ```
 
-2. **Scompatta RU e Applica con Opatchauto (come root):**
+2. **Scompatta Combo Patch e Applica RU con Opatchauto (come root):**
    ```bash
    # racstby1
    mkdir -p /u01/app/patch
    cd /u01/app/patch
-   unzip -q /tmp/p37957391_190000_Linux-x86-64.zip
+   unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
    chown -R grid:oinstall /u01/app/patch
    
+   # Identifica l'ID della RU dentro la Combo (es. 38640822) e applica
    export ORACLE_HOME=/u01/app/19.0.0/grid
-   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
    
    # racstby2
-   ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p37957391_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
-   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh \$ORACLE_HOME"
+   ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh \$ORACLE_HOME"
    ```
 
 #### 4.5 Installazione Software Database (Software Only)
@@ -204,7 +205,7 @@ Seleziona **Set Up Software Only** → **Oracle RAC database installation** (sel
 Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `racstby1` e poi su `racstby2`.
 **⚠️ NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il software (motore spento) perché i dati li cloneremo via rete.
 
-#### 4.6 Patching Database Home (RU + OJVM) sullo Standby
+#### 4.6 Patching Database Home (Combo Patch) sullo Standby
 1. **Aggiorna OPatch DB Home (su `racstby1` e `racstby2` come root):**
    ```bash
    # racstby1
@@ -222,32 +223,31 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
    # racstby1
    chown -R oracle:oinstall /u01/app/patch
    export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh $ORACLE_HOME
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
    
    # racstby2
    ssh racstby2 "chown -R oracle:oinstall /u01/app/patch"
-   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/37957391 -oh \$ORACLE_HOME"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh \$ORACLE_HOME"
    ```
 
 3. **Applica Patch OJVM alla DB Home (come utente oracle):**
    ```bash
-   # Come root su racstby1 scompatta e dai diritti
-   cd /u01/app/patch && unzip -q /tmp/p33803476_190000_Linux-x86-64.zip && chown -R oracle:oinstall /u01/app/patch
-   ssh racstby2 "cd /u01/app/patch && unzip -q /tmp/p33803476_190000_Linux-x86-64.zip && chown -R oracle:oinstall /u01/app/patch"
-   
+   # La Combo Patch è già scompattata in /u01/app/patch, usa l'ID OJVM (es. 38561639)
    # Come oracle su racstby1
    su - oracle
-   cd /u01/app/patch/33803476
+   cd /u01/app/patch/38658588/38561639
    $ORACLE_HOME/OPatch/opatch apply
    
    # Ripeti come oracle su racstby2
-   ssh racstby2 "cd /u01/app/patch/33803476; \$ORACLE_HOME/OPatch/opatch apply -silent"
+   ssh racstby2 "cd /u01/app/patch/38658588/38561639; \$ORACLE_HOME/OPatch/opatch apply -silent"
    ```
 
 4. **Pulizia Patch (come root):**
    ```bash
-   rm -rf /u01/app/patch && rm -f /tmp/p*.zip
-   ssh racstby2 "rm -rf /u01/app/patch && rm -f /tmp/p*.zip"
+   su - root
+   rm -rf /u01/app/patch/*
+   rm -f /tmp/p*.zip
+   ssh racstby2 "rm -rf /u01/app/patch/* && rm -f /tmp/p*.zip"
    ```
 
 A questo punto, l'infrastruttura Standby (motore Grid + RDBMS patchato) è identica al cluster Primario. Siamo pronti a connettere il database.
