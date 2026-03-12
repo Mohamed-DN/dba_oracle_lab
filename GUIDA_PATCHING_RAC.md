@@ -89,6 +89,7 @@ chown -R grid:oinstall /u01/app/patch/
 Usa l'ID della cartella della RU Grid/DB.
 ```bash
 # Come root
+cd /u01/app/patch/38658588/38629535
 export GRID_HOME=/u01/app/19.0.0/grid
 $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HOME
 # Ripeti su rac2
@@ -97,6 +98,7 @@ $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HO
 ### Step 3: Applicazione alla DB Home (`opatchauto`)
 ```bash
 # Come root
+cd /u01/app/patch/38658588/38629535
 chown -R oracle:oinstall /u01/app/patch/
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
