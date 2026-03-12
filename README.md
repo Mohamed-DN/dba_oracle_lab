@@ -1,4 +1,4 @@
-﻿# Oracle RAC + Data Guard + GoldenGate + Cloud - Guida Definitiva
+# Oracle RAC + Data Guard + GoldenGate + Cloud - Guida Definitiva
 
 > Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
 > **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
@@ -101,7 +101,8 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 12 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
 | 13 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
 | 14 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
-| 15 | **Listener + Services** | [GUIDA_LISTENER_DBA](./GUIDA_LISTENER_SERVICES_DBA.md) | Listener RAC, SCAN, Services, DBA Toolkit |
+| 15 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
+| 16 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
 | 🔬 | **Attività Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
 
 ---
