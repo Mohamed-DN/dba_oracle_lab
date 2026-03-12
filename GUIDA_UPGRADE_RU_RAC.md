@@ -2,6 +2,9 @@
 
 Questa guida spiega come gestire il passaggio da una RU esistente (es. r19.25) a una più recente (es. r19.30) utilizzando il formato **Combo Patch** e l'automazione di **opatchauto**.
 
+> [!WARNING]
+> La Release Update di **Gennaio 2026** richiede obbligatoriamente **OPatch 12.2.0.1.48** o superiore. Assicurati di aggiornare l'utility OPatch in tutte le Home prima di iniziare l'upgrade.
+
 ---
 
 ## 1. Logica di Upgrade di Oracle 19c
@@ -33,15 +36,15 @@ chown -R grid:oinstall /u01/app/patch
 ```
 
 ### Step 2: Identificazione dei Sotto-Patch
-La Combo Patch estrarrà due directory. Esempio per Jan 2026:
-- `38640822`: La Release Update (RU) principale.
-- `38561639`: La OJVM Release Update.
+La Combo Patch estrarrà due directory. Per Jan 2026:
+- `38629535`: La Release Update (RU) principale.
+- `38523609`: La OJVM Release Update.
 
 ### Step 3: Upgrade della Grid Home (Nodi 1 e 2)
 ```bash
 # Come root
 export GRID_HOME=/u01/app/19.0.0/grid
-$GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $GRID_HOME
+$GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HOME
 ```
 *`opatchauto` rileverà la versione precedente (es. Jan 2025), farà rollback e applicherà la Jan 2026.*
 
@@ -49,7 +52,7 @@ $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $GRID_HO
 ```bash
 # Come root
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```
 
 ### Step 5: Upgrade OJVM (Oracle Home)
@@ -58,7 +61,7 @@ La patch OJVM si applica sopra la vecchia con `opatch apply`.
 ```bash
 # Come oracle su rac1
 su - oracle
-cd /u01/app/patch/38658588/38561639
+cd /u01/app/patch/38658588/38523609
 $ORACLE_HOME/OPatch/opatch apply
 ```
 

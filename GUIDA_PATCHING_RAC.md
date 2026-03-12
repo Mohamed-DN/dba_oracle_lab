@@ -2,6 +2,10 @@
 
 Questa guida è un riferimento "day-2" per l'amministrazione del tuo cluster RAC. Ti spiega come gestire gli aggiornamenti trimestrali (Release Update), come passare da una versione all'altra, cos'è una *Combo Patch* e come tenere pulito il filesystem per non esaurire lo spazio.
 
+> [!IMPORTANT]
+> **REQUISITO MINIMO OPATCH (Patch Gennaio 2026)**
+> Se stai applicando la Combo Patch di Gennaio 2026 (p38658588) o successive, devi utilizzare **OPatch versione 12.2.0.1.48** o superiore. Le versioni precedenti (come la .47 o .43) falliranno i pre-requisiti di `opatchauto`.
+
 ---
 
 ## 1. Che cos'è una "Combo Patch"?
@@ -12,10 +16,10 @@ Spesso su Oracle Support (MOS) troverai due tipi di download per le patch trimes
 
 ### Come si usa una Combo Patch?
 È semplicissimo: quando scompatti lo zip della Combo Patch, verranno create due sottocartelle numeriche. Ad esempio, estraendo la `p38658588` potresti trovarti:
-- `/u01/app/patch/38658588/38640822` (che è la vera GI/DB RU)
-- `/u01/app/patch/38658588/38561639` (che è la vera OJVM RU)
+- `/u01/app/patch/38658588/38629535` (che è la vera GI/DB RU)
+- `/u01/app/patch/38658588/38523609` (che è la vera OJVM RU)
 
-A quel punto, usi `opatchauto` puntando alla primac cartella, e `opatch apply` puntando alla seconda cartella. La Combo Patch è solo un "contenitore" per convenienza di download.
+A quel punto, usi `opatchauto` puntando alla prima cartella, e `opatch apply` puntando alla seconda cartella. La Combo Patch è solo un "contenitore" per convenienza di download.
 
 ---
 
@@ -73,20 +77,20 @@ unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
 
 # Trova i due ID interni:
 ls -l /u01/app/patch/38658588/
-# Esempio output (i numeri esatti dipendono dal mese):
-# drwxr-x--- 38561639  (questa è la OJVM)
-# drwxr-x--- 38640822  (questa è la RU di DB/Grid)
+# Esempio output (i numeri reali trovati):
+# drwxr-xr-x 38523609  (questa è la OJVM)
+# drwxr-x--- 38629535  (questa è la RU di DB/Grid)
 
 # Assegna diritti corretti
 chown -R grid:oinstall /u01/app/patch/
 ```
 
 ### Step 2: Applicazione alla Grid Home (`opatchauto`)
-Usa l'ID della cartella della RU Grid/DB (non della cartella radice della combo, né di quella OJVM).
+Usa l'ID della cartella della RU Grid/DB.
 ```bash
 # Come root
 export GRID_HOME=/u01/app/19.0.0/grid
-$GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $GRID_HOME
+$GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HOME
 # Ripeti su rac2
 ```
 
@@ -95,7 +99,7 @@ $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $GRID_HO
 # Come root
 chown -R oracle:oinstall /u01/app/patch/
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 # Ripeti su rac2
 ```
 
@@ -103,7 +107,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACL
 ```bash
 # Come oracle
 su - oracle
-cd /u01/app/patch/38658588/38561639
+cd /u01/app/patch/38658588/38523609
 $ORACLE_HOME/OPatch/opatch apply
 # Rispondi 'y' quando richiesto
 # Ripeti su rac2
@@ -125,13 +129,13 @@ Se una patch applicata causa problemi gravissimi e vuoi rimuoverla, puoi tornare
 ```bash
 # Come root
 export ORACLE_HOME=/u01/app/19.0.0/grid   # o dbhome_1
-$ORACLE_HOME/OPatch/opatchauto rollback -id 38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto rollback -id 38629535 -oh $ORACLE_HOME
 ```
 
 **Per la patch OJVM (DB Home):**
 ```bash
 # Come oracle
-$ORACLE_HOME/OPatch/opatch rollback -id 38561639
+$ORACLE_HOME/OPatch/opatch rollback -id 38523609
 ```
 
 ---

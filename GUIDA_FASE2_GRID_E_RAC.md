@@ -660,10 +660,12 @@ chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 # Verifica la versione (torna a grid)
 su - grid
 $ORACLE_HOME/OPatch/opatch version
-# Deve mostrare: OPatch Version: 12.2.0.1.43 (o superiore)
+# Deve mostrare: OPatch Version: 12.2.0.1.48 (o superiore per patch Gennaio 2026)
 ```
 
 > **Perché come root?** Dopo l'installazione di Grid Infrastructure, lo script `root.sh` cambia l'ownership di alcune directory della Grid Home a `root`. La directory `OPatch` è tra queste, quindi il `mv` come utente `grid` fallirà con "Permission denied".
+
+> **⚠️ ATTENZIONE (Patch Gennaio 2026)**: Se stai applicando la Release Update di Gennaio 2026 (o successive), l'utility `opatch` **deve** essere almeno versione **12.2.0.1.48**. Se usi una versione precedente (es. .43 o .47), `opatchauto` fallirà con errore `CheckMinimumOPatchVersion`.
 
 > **Come scaricare da MOS**: Vai su [support.oracle.com](https://support.oracle.com) → Patches & Updates → cerca **6880880** → seleziona la piattaforma (`Linux x86-64`) e la versione **19.0.0.0**. Il numero `190000` nel nome file indica la versione del database (19c). Non confondere con p6880880_**230000** che è per Oracle **23c**!
 
@@ -691,8 +693,8 @@ chown -R grid:oinstall /u01/app/patch
 
 # Identifica gli ID delle RU all'interno della Combo Patch:
 ls -l /u01/app/patch/38658588
-# Vedrai due cartelle numeriche: una per OJVM (es. 38561639) e una per la vera e propria RU (es. 38640822).
-# Se la RU è la 38640822, useremo quel path per opatchauto! 
+# Vedrai due cartelle numeriche: una per OJVM (38523609) e una per la vera e propria RU (38629535).
+# Useremo il path 38629535 per opatchauto! 
 
 # Ripeti l'estrazione su rac2!
 # (La cartella /u01 non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
@@ -724,13 +726,13 @@ tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid
 
 # --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME -analyze
-# Sostituisci 38640822 con l'ID reale della RU che hai trovato nello step 2!
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
+# Sostituisci 38629535 con l'ID reale della RU che hai trovato nello step 2!
 # Se mostra errori di conflitto, risolvili PRIMA di applicare!
 # Se mostra "Patch analysis is complete" → puoi proseguire.
 
 # --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```
 
 > **Perché opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
@@ -754,7 +756,7 @@ $ORACLE_HOME/OPatch/opatch lspatches
 # Ripeti su rac2 come root
 ssh rac2
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 
 # Verifica
 crsctl check crs
@@ -877,10 +879,10 @@ tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product
 
 # Pre-check (dry run)
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME -analyze
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
 
 # Se analyze OK → applica
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```
 
 > **Nota**: `opatchauto` riconosce automaticamente che è una DB Home in un cluster RAC e gestisce il patching di conseguenza.
@@ -890,7 +892,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACL
 ssh rac2 "chown -R oracle:oinstall /u01/app/patch"
 ssh rac2
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```
 
 ### Step 3: Applica il Patch OJVM
@@ -900,7 +902,7 @@ Il patch OJVM è raggruppato all'interno della Combo Patch. Abbiamo già scompat
 ```bash
 # Come utente oracle su rac1
 su - oracle
-cd /u01/app/patch/38658588/38561639   # Usa l'ID reale della cartella OJVM trovato prima
+cd /u01/app/patch/38658588/38523609   # Usa l'ID reale della cartella OJVM trovato prima
 $ORACLE_HOME/OPatch/opatch apply
 
 # Quando chiede "Is the local system ready for patching?" rispondi: y
@@ -908,7 +910,7 @@ $ORACLE_HOME/OPatch/opatch apply
 # Ripeti su rac2
 ssh rac2
 su - oracle
-cd /u01/app/patch/38658588/38561639
+cd /u01/app/patch/38658588/38523609
 $ORACLE_HOME/OPatch/opatch apply
 ```
 
@@ -923,8 +925,8 @@ $ORACLE_HOME/OPatch/opatch lspatches
 
 Output atteso:
 ```
-38640822;Database Release Update : 19.x.0.0.xxxxxx 
-38561639;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx 
+38629535;Database Release Update : 19.x.0.0.xxxxxx 
+38523609;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx 
 ```
 
 Una volta terminato, ricordati di liberare spazio su disco eliminando la patch scompattata come `root`:
