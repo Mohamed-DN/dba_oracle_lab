@@ -725,6 +725,7 @@ df -h /u01
 tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
 
 # --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
+cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/19.0.0/grid
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
 # Sostituisci 38629535 con l'ID reale della RU che hai trovato nello step 2!
@@ -755,6 +756,7 @@ $ORACLE_HOME/OPatch/opatch lspatches
 ```bash
 # Ripeti su rac2 come root
 ssh rac2
+cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/19.0.0/grid
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 
@@ -878,6 +880,7 @@ chown -R oracle:oinstall /u01/app/patch
 tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
 
 # Pre-check (dry run)
+cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
 
@@ -891,6 +894,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 # Ripeti su rac2
 ssh rac2 "chown -R oracle:oinstall /u01/app/patch"
 ssh rac2
+cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```

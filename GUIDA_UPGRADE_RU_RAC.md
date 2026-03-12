@@ -43,6 +43,7 @@ La Combo Patch estrarrà due directory. Per Jan 2026:
 ### Step 3: Upgrade della Grid Home (Nodi 1 e 2)
 ```bash
 # Come root
+cd /u01/app/patch/38658588/38629535
 export GRID_HOME=/u01/app/19.0.0/grid
 $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HOME
 ```
@@ -51,6 +52,7 @@ $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HO
 ### Step 4: Upgrade della Database Home (Nodi 1 e 2)
 ```bash
 # Come root
+cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```

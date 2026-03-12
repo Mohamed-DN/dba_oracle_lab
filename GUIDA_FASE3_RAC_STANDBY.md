@@ -183,13 +183,14 @@ Applica subito la stessa Combo Patch (RU + OJVM) scaricata per il primario.
    unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
    chown -R grid:oinstall /u01/app/patch
    
-   # Identifica l'ID della RU dentro la Combo (es. 38629535) e applica
-   export ORACLE_HOME=/u01/app/19.0.0/grid
-   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
-   
-   # racstby2
-   ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
-   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
+    # Identifica l'ID della RU dentro la Combo (es. 38629535) e applica
+    cd /u01/app/patch/38658588/38629535
+    export ORACLE_HOME=/u01/app/19.0.0/grid
+    $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+    
+    # racstby2
+    ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
+    ssh racstby2 "cd /u01/app/patch/38658588/38629535; export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
    ```
 
 #### 4.5 Installazione Software Database (Software Only)
