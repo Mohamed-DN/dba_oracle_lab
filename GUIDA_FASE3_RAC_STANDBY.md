@@ -183,13 +183,13 @@ Applica subito la stessa Combo Patch (RU + OJVM) scaricata per il primario.
    unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
    chown -R grid:oinstall /u01/app/patch
    
-   # Identifica l'ID della RU dentro la Combo (es. 38640822) e applica
+   # Identifica l'ID della RU dentro la Combo (es. 38629535) e applica
    export ORACLE_HOME=/u01/app/19.0.0/grid
-   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
    
    # racstby2
    ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
-   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh \$ORACLE_HOME"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
    ```
 
 #### 4.5 Installazione Software Database (Software Only)
@@ -223,23 +223,23 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
    # racstby1
    chown -R oracle:oinstall /u01/app/patch
    export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh $ORACLE_HOME
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
    
    # racstby2
    ssh racstby2 "chown -R oracle:oinstall /u01/app/patch"
-   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38640822 -oh \$ORACLE_HOME"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
    ```
 
 3. **Applica Patch OJVM alla DB Home (come utente oracle):**
    ```bash
-   # La Combo Patch è già scompattata in /u01/app/patch, usa l'ID OJVM (es. 38561639)
+   # La Combo Patch è già scompattata in /u01/app/patch, usa l'ID OJVM (es. 38523609)
    # Come oracle su racstby1
    su - oracle
-   cd /u01/app/patch/38658588/38561639
+   cd /u01/app/patch/38658588/38523609
    $ORACLE_HOME/OPatch/opatch apply
    
    # Ripeti come oracle su racstby2
-   ssh racstby2 "cd /u01/app/patch/38658588/38561639; \$ORACLE_HOME/OPatch/opatch apply -silent"
+   ssh racstby2 "cd /u01/app/patch/38658588/38523609; \$ORACLE_HOME/OPatch/opatch apply -silent"
    ```
 
 4. **Pulizia Patch (come root):**
