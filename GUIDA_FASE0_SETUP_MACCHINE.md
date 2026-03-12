@@ -95,7 +95,7 @@
 
 | Patch | MOS Patch ID | Come Trovarlo | Note |
 |---|---|---|---|
-| **OPatch** (utility) | **6880880** | [Scarica qui](https://updates.oracle.com/Orion/PatchDetails/process_form?patch_num=6880880) | Aggiorna SEMPRE prima di ogni RU |
+| **OPatch** (utility) | **6880880** | [Scarica qui](https://updates.oracle.com/Orion/PatchDetails/process_form?patch_num=6880880) | Aggiorna SEMPRE prima di ogni RU. **Nota**: Per patch Gennaio 2026 serve v12.2.0.1.48+ |
 | **Combo Patch (GI/DB RU + OJVM)** | Cambia ogni trimestre (es. **38658588**) | MOS → Patches & Updates → cerca `"Combo of OJVM Component Release Update 19... + Grid Infrastructure ..."` | Un singolo file .zip che include sia la RU per il motore Grid/DB sia la RU per Java (OJVM) |
 
 > **Come trovare l'ultima RU**: Vai su MOS (Doc ID **2118136.2**) → tabella con TUTTE le Release Update per ogni versione.
