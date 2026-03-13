@@ -24,6 +24,19 @@
 
 ---
 
+## Catalogo Script Top 20
+
+Per avere una vista ordinata degli script (con Top 20 per categoria dove possibile), usa:
+
+- [CATALOGO_SCRIPT_TOP20_PER_CATEGORIA.md](./CATALOGO_SCRIPT_TOP20_PER_CATEGORIA.md)
+
+Il catalogo include:
+- volume script per ciascuna categoria
+- raggruppamento operativo (monitoring, tuning, backup, security, ecc.)
+- Top script consigliati per studio e uso quotidiano
+
+---
+
 ## 🎯 Come Usare Questa Raccolta
 
 1. **Studia**: Leggi il README di ogni cartella per capire il *perché* di ogni procedura.
