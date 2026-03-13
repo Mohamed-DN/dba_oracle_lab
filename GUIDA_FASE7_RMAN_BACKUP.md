@@ -4,6 +4,36 @@
 
 ---
 
+## 7.0 Ingresso da Fase 6 (gate operativo)
+
+Prima di impostare la strategia RMAN, il sistema deve essere stabile:
+
+```bash
+# Data Guard
+dgmgrl sys/<password>@RACDB "show configuration;"
+
+# GoldenGate standby side
+cd $OGG_HOME && ./ggsci
+INFO ALL
+```
+
+```sql
+-- Spazio FRA (primario e standby)
+sqlplus / as sysdba
+SELECT name, space_limit/1024/1024 mb_limit, space_used/1024/1024 mb_used
+FROM v$recovery_file_dest;
+```
+
+Check minimi:
+
+- DGMGRL `SUCCESS`
+- processi GG standby `RUNNING` (e replicat target `REPTAR` attivo)
+- FRA non satura (idealmente < 80%)
+
+Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e aggiorna solo retention/schedule.
+
+---
+
 ## 7.1 La Strategia di Backup
 
 ### Backup su TUTTI e 3 i Database
@@ -688,7 +718,7 @@ Aggiungi al cron su TUTTI i database:
 ## ✅ Checklist Fine Fase 7
 
 ```bash
-# 1. BCT attivo su standby e target
+# 1. BCT attivo sui DB dove esegui incrementali
 sqlplus -s / as sysdba <<< "SELECT status FROM v\$block_change_tracking;"
 
 # 2. Backup eseguito con successo
@@ -703,9 +733,13 @@ rman TARGET / <<< "RESTORE DATABASE VALIDATE;"
 
 ---
 
-## 🎉 Congratulazioni!
+**→ Prossimo consigliato: [FASE 8: Enterprise Manager Cloud Control](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)**
 
-Hai completato l'intera architettura Oracle:
+---
+
+## 🎉 Congratulazioni (Core Stack Completato)
+
+Hai completato il core dell'architettura Oracle (HA + DR + replica + backup):
 
 ```
 RAC Primary (RACDB)
@@ -724,3 +758,5 @@ Hai imparato:
 4. **RMAN**: Backup & Recovery professionale su TUTTI i database.
 5. **Statistiche & Maintenance**: Health check, statistiche dell'ottimizzatore, monitoraggio proattivo.
 6. **Patching**: OPatch, opatchauto, datapatch per Grid e Database.
+
+Passo successivo naturale: centralizzare monitoraggio e governance con Enterprise Manager (Fase 8).
