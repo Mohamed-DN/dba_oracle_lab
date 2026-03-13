@@ -11,6 +11,50 @@
 
 ---
 
+## Architettura Lab (Vista Grafica)
+
+```mermaid
+flowchart LR
+  subgraph HOST["VirtualBox Host"]
+    dns["dnsnode\n192.168.56.50\nDnsmasq"]
+    em["emcc1\nEnterprise Manager 13.5"]
+
+    subgraph PRIM["RAC Primary (RACDB)"]
+      rac1["rac1\n192.168.56.101\nVIP .103"]
+      rac2["rac2\n192.168.56.102\nVIP .104"]
+      pscan["rac-scan\n.105/.106/.107"]
+    end
+
+    subgraph STBY["RAC Standby (RACDB_STBY)"]
+      st1["racstby1\n192.168.56.111\nVIP .113"]
+      st2["racstby2\n192.168.56.112\nVIP .114"]
+      sscan["racstby-scan\n.115/.116/.117"]
+    end
+
+    tgt["dbtarget / OCI\nOracle or PostgreSQL"]
+  end
+
+  rac1 <-- "Cache Fusion" --> rac2
+  st1 <-- "Cache Fusion" --> st2
+  rac1 -->|"Data Guard Redo (LGWR ASYNC)"| st1
+  st1 -->|"GoldenGate Extract/Pump/Replicat"| tgt
+
+  dns --- rac1
+  dns --- rac2
+  dns --- st1
+  dns --- st2
+
+  em --- rac1
+  em --- rac2
+  em --- st1
+  em --- st2
+  em --- tgt
+```
+
+> In basso trovi anche la sezione **Architettura Complessiva** in formato ASCII con dettagli rete/dischi.
+
+---
+
 ## Da Dove Iniziare (Percorso Consigliato)
 
 ### 1) Teoria iniziale (2 ore)
@@ -78,12 +122,15 @@ Questa roadmap sintetica allinea il README al piano aggiornato in [PIANO_STUDIO_
 
 ### Mock exam Oracle (allineamento pratico)
 
-Valori verificati su Oracle Japan (13 marzo 2026):
+Riferimento esami in inglese (Oracle University, verificato il 14 marzo 2026):
 
-- `1Z0-082-JPN`: 120 minuti, 72 domande, passing score 60%
-- `1Z0-083-JPN`: 120 minuti, 68 domande, passing score 57%
-- fonte 1Z0-082: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
-- fonte 1Z0-083: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-ii-1z0-083-exam/
+- `1Z0-082` (Oracle Database Administration I)
+- `1Z0-083` (Oracle Database Administration II)
+- pagina esame EN 1Z0-082: https://education.oracle.com/oracle-database-administration-i/pexam_1Z0-082
+- pagina esame EN 1Z0-083: https://education.oracle.com/oracle-database-administration-ii/pexam_1Z0-083
+- catalogo certificazioni Oracle (EN): https://education.oracle.com/sites/default/files/2026-02/Oracle%20Certification%20Catalog.pdf
+
+Nota: numero domande e passing score possono cambiare per lingua/track; verifica sempre nel portale Oracle prima della prenotazione.
 
 Calendario consigliato:
 
