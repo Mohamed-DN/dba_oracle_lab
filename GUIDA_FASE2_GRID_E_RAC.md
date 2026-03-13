@@ -1009,6 +1009,7 @@ dbca
 **Step 6**: Storage:
 - Use following for the database storage: **Automatic Storage Management (ASM)**
 - Database Area: `+DATA`
+<img width="790" height="619" alt="image" src="https://github.com/user-attachments/assets/d5138491-8638-41fc-bb84-88a4145d5fdf" />
 
 **Step 7**: Fast Recovery Area:
 - Recovery Area: `+RECO`
