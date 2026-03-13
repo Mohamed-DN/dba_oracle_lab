@@ -1005,6 +1005,7 @@ dbca
 **Step 5**: Database Identification:
 - Global Database Name: `RACDB`
 - SID Prefix: `RACDB` (diventerà RACDB1 su rac1, RACDB2 su rac2)
+<img width="795" height="587" alt="image" src="https://github.com/user-attachments/assets/6abf8a34-a666-45cf-b121-e5d580e27e75" />
 
 **Step 6**: Storage:
 - Use following for the database storage: **Automatic Storage Management (ASM)**
@@ -1015,6 +1016,7 @@ dbca
 - Recovery Area: `+RECO`
 - Size: `10000` MB (o quanto hai disponibile)
 - ✅ **Enable archiving** (FONDAMENTALE per Data Guard!)
+<img width="793" height="628" alt="image" src="https://github.com/user-attachments/assets/13321d51-fd29-4ec9-b234-3a3bdd48a96c" />
 
 > **Perché Enable Archiving?** Senza archivelog mode, Data Guard non funziona. L'archivelog è il "diario" di tutte le modifiche. È quello che viene spedito allo standby.
 
@@ -1029,6 +1031,7 @@ dbca
 - SGA: almeno 1500 MB
 - PGA: almeno 500 MB
 - Character Set: **AL32UTF8** (consigliato)
+<img width="797" height="627" alt="image" src="https://github.com/user-attachments/assets/fcbaf6da-cbbe-42f4-9811-b80c62bb3551" />
 
 **Step 11**: Management Options:
 - Deseleziona EM Express per semplicità
@@ -1042,6 +1045,7 @@ dbca
 - ✅ Generate Database Creation Scripts (utile per imparare!)
 
 **Step 14**: Rivedi Summary → **Finish**
+<img width="862" height="1389" alt="image" src="https://github.com/user-attachments/assets/70fa2936-2362-4f38-a113-9082fe158675" />
 
 L'installazione richiederà 15-30 minuti a seconda dell'hardware.
 
