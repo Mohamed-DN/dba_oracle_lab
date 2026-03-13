@@ -411,10 +411,6 @@ Sett 8:                                     ██████████ 🎯 
 
 ---
 
-> 💡 **Suggerimento finale**: Quando fai un colloquio, non dire "ho seguito una guida". Dì "ho progettato e implementato da zero un'architettura Oracle RAC con Data Guard e GoldenGate su 6 nodi, inclusa integrazione cloud con OCI". È la verità — la guida l'hai letta, ma i comandi li hai eseguiti tu, gli errori li hai risolti tu, e la comprensione è tua.
-
----
-
 ## Addendum Operativo: Sprint GoldenGate Esteso (40 test)
 
 Per stressare il lab GoldenGate con piu casi possibili, usa come riferimento principale [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md).
