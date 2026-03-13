@@ -838,6 +838,9 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 
 ## 2.11 Patching Database Home (Release Update + OJVM)
 
+> [!IMPORTANT]
+> **ORDINE DELLE OPERAZIONI**: Devi aggiornare l'utility OPatch **PRIMA** di lanciare `opatchauto apply`. Se provi ad applicare la RU di Gennaio 2026 con un OPatch vecchio (versione < 12.2.0.1.48), l'operazione fallirà.
+
 ### Step 1: Aggiorna OPatch nella DB Home
 
 ```bash

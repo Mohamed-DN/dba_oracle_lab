@@ -161,6 +161,10 @@ CREATE DISKGROUP RECO EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/RECO' ATTRI
 > **NOTA BENE**: I disk group si chiamano ESATTAMENTE come sul primario (`+DATA`, `+RECO`). Questo è fondamentale per l'RMAN Duplicate!
 
 #### 4.4 Patching Grid Infrastructure (Combo Patch) sullo Standby
+
+> [!IMPORTANT]
+> **ORDINE DELLE OPERAZIONI**: Devi aggiornare l'utility OPatch **PRIMA** di lanciare `opatchauto apply`. Se provi ad applicare la RU di Gennaio 2026 con un OPatch vecchio (versione < 12.2.0.1.48), l'operazione fallirà.
+
 Applica subito la stessa Combo Patch (RU + OJVM) scaricata per il primario.
 
 1. **Aggiorna OPatch (su `racstby1` e `racstby2` come root):**
@@ -207,6 +211,10 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
 **⚠️ NON USARE DBCA! NON CREARE IL DATABASE!** Ci serve solo il software (motore spento) perché i dati li cloneremo via rete.
 
 #### 4.6 Patching Database Home (Combo Patch) sullo Standby
+
+> [!IMPORTANT]
+> **ORDINE DELLE OPERAZIONI**: Anche per la DB Home, devi aggiornare OPatch alla versione **12.2.0.1.48** (o superiore) prima di applicare la combo patch.
+
 1. **Aggiorna OPatch DB Home (su `racstby1` e `racstby2` come root):**
    ```bash
    # racstby1
