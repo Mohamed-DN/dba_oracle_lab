@@ -8,6 +8,33 @@
 
 ---
 
+## 5.0A Ingresso da Fase 4 (check obbligatorio)
+
+GoldenGate in questa architettura presuppone Data Guard stabile e standby usabile.
+
+```bash
+dgmgrl sys/<password>@RACDB
+SHOW CONFIGURATION;
+SHOW DATABASE RACDB_STBY;
+```
+
+```sql
+-- Sullo standby
+sqlplus / as sysdba
+SELECT open_mode, database_role FROM v$database;
+SELECT process, status FROM v$managed_standby WHERE process='MRP0';
+```
+
+Devi avere:
+
+- `Configuration Status: SUCCESS` in DGMGRL
+- standby `PHYSICAL STANDBY` e preferibilmente `READ ONLY WITH APPLY`
+- `MRP0` in stato `APPLYING_LOG`
+
+Se non sei in questo stato, rientra in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
+
+---
+
 ## 5.0 Preparazione Macchina Target (`dbtarget`)
 
 Nelle versioni precedenti di questo lab, costruivamo un terzo server VirtualBox per ospitare il database di destinazione. Tuttavia, questo richiedeva troppa RAM locale (portando il totale a 5 VM pesanti).
@@ -18,6 +45,8 @@ Nelle versioni precedenti di questo lab, costruivamo un terzo server VirtualBox 
 👉 **Smetti di leggere qui e segui la guida:** [**Setup OCI ARM come Target GoldenGate**](./GUIDA_GOLDENGATE_OCI_ARM.md).
 
 Torna a questo punto (Step 5.1) **solo dopo** aver completato la guida OCI e aver verificato che i due nodi Standby riescano a pingare il tuo nuovo IP pubblico OCI (tramite il record in `/etc/hosts` che configurerai).
+
+Se invece hai gia un target locale funzionante (`dbtarget`) con listener e DB attivi, puoi saltare la parte OCI e proseguire direttamente da `5.1`.
 
 ---
 
@@ -487,60 +516,187 @@ EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
 
 ## 5.12 Monitoraggio Continuo
 
+### Sullo Standby (Classic GGSCI)
+
 ```
--- Statistiche dettagliate dell'Extract
+GGSCI> INFO ALL
 GGSCI> STATS EXTRACT ext_racdb, LATEST
-
--- Statistiche del Replicat
-GGSCI> STATS REPLICAT rep_racdb, LATEST
-
--- Lag dell'Extract
+GGSCI> STATS EXTRACT pump_racdb, LATEST
 GGSCI> LAG EXTRACT ext_racdb
-
--- Report dettagliato
+GGSCI> LAG EXTRACT pump_racdb
 GGSCI> VIEW REPORT ext_racdb
-GGSCI> VIEW REPORT rep_racdb
+GGSCI> VIEW REPORT pump_racdb
+```
+
+### Sul Target OCI (Microservices 23ai)
+
+Controlla da Web UI (Administration Server):
+
+- stato `Running` del replicat `REPTAR`
+- checkpoint che avanza nel tempo
+- lag stabile sotto soglia
+- assenza errori nella sezione diagnostics
+
+Soglie operative consigliate lab:
+
+- `Lag <= 10 sec` in carico normale
+- `Lag <= 60 sec` durante test di stress
+
+---
+
+## 5.13 GoldenGate Test Matrix Estesa (Lab Avanzato)
+
+Esegui i test in questo ordine. Ogni test va marcato `PASS/FAIL` con timestamp.
+
+| ID | Scenario | Cosa testare | Esito atteso |
+|---|---|---|---|
+| GG-01 | DML base INSERT | Inserisci 10 righe su source | 10 righe replicate su target |
+| GG-02 | DML UPDATE | Aggiorna 10 righe | Aggiornamenti identici su target |
+| GG-03 | DML DELETE | Elimina 5 righe | Delete replicate senza residue |
+| GG-04 | Transazione multi-tabella | Commit unico su 2-3 tabelle | Ordine e atomicita mantenuti |
+| GG-05 | Bulk DML | 50k+ righe (batch) | Replicazione completa, lag sotto controllo |
+| GG-06 | LOB/CLOB | Insert/update CLOB/BLOB | LOB coerenti tra source e target |
+| GG-07 | Update chiave | Update su PK/UK (se consentito) | Nessun out-of-sync o duplicate key |
+| GG-08 | Commit frequenti | 1000 tx piccole | Nessun abend, throughput stabile |
+| GG-09 | DDL add column | `ALTER TABLE ADD COLUMN` | Comportamento coerente con mapping/config |
+| GG-10 | DDL rename/index | DDL non DML | Validare policy DDL del lab |
+| GG-11 | TRUNCATE | Truncate tabella test | Verificare applicazione/gestione evento |
+| GG-12 | Network outage breve | Interrompi rete pump->target 2-5 min | Coda trail cresce, poi rientra senza perdita |
+| GG-13 | Stop/start Manager | Restart manager su standby | Processi ripartono e checkpoint prosegue |
+| GG-14 | Stop/start Extract | Restart `ext_racdb` | Ripresa dal checkpoint corretto |
+| GG-15 | Stop/start Pump | Restart `pump_racdb` | Nessun buco nei trail remoti |
+| GG-16 | Stop/start Replicat | Restart `REPTAR` | Ripresa coerente, nessun missing txn |
+| GG-17 | Trail space pressure | Simula spazio basso su trail | Alert tempestivo, recovery operativo |
+| GG-18 | Lag stress | Carico elevato 10-15 min | Lag cresce e rientra senza abend |
+| GG-19 | Switchover DG | Switchover e ripresa GG | Replicazione continua post-switch |
+| GG-20 | Failover DG | Failover controllato + restore servizi | GG ripristinato con downtime minimo |
+| GG-21 | Re-instantiate da CSN | Nuovo initial load e start after CSN | Allineamento completo senza duplicate |
+| GG-22 | Drift detection | Confronto rowcount/checksum | Nessuna divergenza non giustificata |
+| GG-23 | Error handling | Simula errore applicativo target | Evento intercettato e risolto con runbook |
+| GG-24 | End-to-end 60 min | Flusso completo a carico misto | Processi stabili, lag entro soglia |
+| GG-25 | Long transaction | 1 tx lunga (es. 100k righe, commit finale) | Nessun abend, apply completo post-commit |
+| GG-26 | Concorrenza multi-sessione | 10 sessioni SQL in parallelo | Throughput stabile, zero collisioni inattese |
+| GG-27 | Integrita referenziale | DML parent/child con FK | Ordine applicativo corretto, nessun orphan |
+| GG-28 | Insert con sequence | Dati generati da sequence source | Valori target coerenti con source |
+| GG-29 | Time zone | `TIMESTAMP WITH TIME ZONE` | Valori temporalmente equivalenti |
+| GG-30 | Caratteri multibyte | Accenti/simboli/UTF-8 in colonne testuali | Nessuna corruzione caratteri |
+| GG-31 | DDL esclusa | DDL su schema/tabella non mappata | Nessun impatto sui processi GG principali |
+| GG-32 | Mapping avanzato | FILTER/COLMAP/REMAP su tabella test | Trasformazione dati conforme alla regola |
+| GG-33 | Restart DB target | Stop/start database target | Replicat riprende da checkpoint corretto |
+| GG-34 | Relocation RAC source | Sposta servizio su altra istanza RAC | Extract continua senza perdita dati |
+| GG-35 | Reboot host standby | Riavvio VM che ospita Extract/Pump | Recovery operativo con downtime controllato |
+| GG-36 | Retention/Purge trail | Purge file trail con policy corretta | Nessun trail richiesto eliminato prematuramente |
+| GG-37 | Rotazione credenziali | Cambio password alias GG | Processi riavviati con nuove credenziali |
+| GG-38 | Kill processo GG | Terminazione forzata process e restart | Ripartenza clean senza gap |
+| GG-39 | Patch/restart controllato | Restart ordinato processi post-manutenzione | Nessuna regressione funzionale |
+| GG-40 | Dress rehearsal finale | Carico misto 120 min + report finale | Stabilita operativa dimostrata |
+
+Se hai risorse VM limitate, esegui prima `GG-01..GG-24`, poi completa `GG-25..GG-40` in due sessioni separate.
+
+---
+
+## 5.14 Script Test Raccomandati (pronti per lab)
+
+### DML smoke test
+
+```sql
+-- Source (schema HR o schema di test)
+INSERT INTO HR.GG_TEST (ID, TXT, TS) VALUES (1001, 'SMOKE_INS', SYSTIMESTAMP);
+UPDATE HR.GG_TEST SET TXT = 'SMOKE_UPD' WHERE ID = 1001;
+DELETE FROM HR.GG_TEST WHERE ID = 1001;
+COMMIT;
+```
+
+### Bulk test
+
+```sql
+BEGIN
+  FOR i IN 1..50000 LOOP
+    INSERT INTO HR.GG_TEST (ID, TXT, TS)
+    VALUES (200000+i, 'BULK_'||i, SYSTIMESTAMP);
+    IF MOD(i,1000)=0 THEN COMMIT; END IF;
+  END LOOP;
+  COMMIT;
+END;
+/
+```
+
+### Count/checksum compare (source vs target)
+
+```sql
+SELECT COUNT(*) AS cnt, MIN(ID) AS min_id, MAX(ID) AS max_id FROM HR.GG_TEST;
+```
+
+Per dataset grandi, usa anche checksum logica applicativa per chunk di ID.
+
+### Template test log (obbligatorio)
+
+Template pronto nel repository: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
+
+```markdown
+| Data/Ora | ID Test | Scenario | Esito | Lag max (sec) | Evidenza (screenshot/log) | Note/Fix |
+|---|---|---|---|---:|---|---|
+| 2026-03-13 21:00 | GG-01 | DML base INSERT | PASS | 1 | SNAP-GG-01.png | - |
 ```
 
 ---
 
-## 🚨 TROUBLESHOOTING: L'Extract o il Replicat vanno in ABENDED?
+## 5.15 Criteri di Successo GoldenGate (Go-Live Lab)
 
-Se lanci `INFO ALL` e vedi che un processo è in stato `ABENDED` invece di `RUNNING`, qualcosa è andato storto. Non andare nel panico, GoldenGate registra tutto dettagliatamente.
+Considera la Fase 5 completa solo se:
 
-**Come capire l'errore:**
-1. **Controlla il file di log generale (ggserr.log)**:
-   ```bash
-   # Dalla directory $OGG_HOME
-   tail -n 50 ggserr.log
-   ```
-   > Questo file ti dirà il motivo ad alto livello del crash (es. "OGG-00446: Could not find archived log", oppure errori di permessi su Oracle).
-
-2. **Controlla il report specifico del processo**:
-   ```
-   GGSCI> VIEW REPORT ext_racdb
-   # Oppure
-   GGSCI> VIEW REPORT rep_racdb
-   ```
-   > Scorri fino in fondo al report. Lì troverai la query SQL esatta che ha bloccato il Replicat (es. violazione di chiave primaria sul target) o il motivo per cui l'Extract si è fermato sul source. Nella maggior parte dei casi troverai un codice ORA-XXXXX.
+1. almeno `32/40` test della matrice sono `PASS`
+2. i test obbligatori (`GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`) sono `PASS`
+3. nessun processo resta `ABENDED` oltre 10 minuti
+4. lag stabile entro soglia per almeno 120 minuti cumulativi di test
+5. esiste test log versionato (data, scenario, esito, lag max, fix)
+6. almeno un test di recovery reale (restart/reboot/failover) e documentato
 
 ---
 
-## ✅ Checklist Fine Fase 5
+## 5.16 Troubleshooting Rapido: Processi in ABENDED
+
+Se `INFO ALL` mostra `ABENDED`, usa questa sequenza:
+
+1. Leggi errore generale:
+```bash
+tail -n 100 $OGG_HOME/ggserr.log
+```
+2. Leggi report processo:
+```
+GGSCI> VIEW REPORT ext_racdb
+GGSCI> VIEW REPORT pump_racdb
+```
+3. Sul target microservices, apri diagnostics del replicat `REPTAR`.
+4. Correggi causa (permessi, oggetto mancante, vincolo, rete).
+5. Riavvia solo il processo coinvolto e verifica checkpoint/lag.
+
+Errori frequenti da presidiare:
+
+- ORA-xxxxx su oggetti target (DDL drift o mapping non coerente)
+- trail non leggibile per spazio/permessi
+- network intermittente tra pump e target
+- credenziali/alias invalidi in microservices
+
+---
+
+## 5.17 Checklist Fine Fase 5 (versione avanzata)
 
 ```
--- Sullo Standby
+-- Standby
 GGSCI> INFO ALL
--- ext_racdb: RUNNING
--- pump_racdb: RUNNING
+-- ext_racdb RUNNING
+-- pump_racdb RUNNING
 
--- Sul Target
-GGSCI> INFO ALL
--- rep_racdb: RUNNING
+-- Target OCI
+-- REPTAR RUNNING (Web UI microservices)
 
--- Lag < 10 secondi
+-- Lag entro soglia
 GGSCI> LAG EXTRACT ext_racdb
-GGSCI> LAG REPLICAT rep_racdb
+GGSCI> LAG EXTRACT pump_racdb
+
+-- Test matrix
+-- almeno 32/40 PASS
 ```
 
 ---

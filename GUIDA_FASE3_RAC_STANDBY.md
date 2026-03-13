@@ -35,7 +35,41 @@
 
 ---
 
-## 3.0 Creazione Macchine Standby e Setup Base (Il Metodo Golden Image)
+## 3.0A Se hai gia preparato lo Standby in Fase 2
+
+Se durante la Fase 2 hai gia installato anche su `racstby1`/`racstby2`:
+
+- Grid Infrastructure
+- disk group `+DATA` e `+RECO`
+- DB Home software only (senza DBCA)
+- patch RU/OJVM su Grid e DB Home
+
+allora **non rifare** la sezione 3.0B. Esegui solo questo smoke-check e poi vai direttamente a `3.2`.
+
+```bash
+# Come grid su racstby1
+crsctl check cluster -all
+olsnodes -n
+asmcmd lsdg
+
+# Verifica patch Grid su entrambi i nodi
+export ORACLE_HOME=/u01/app/19.0.0/grid
+$ORACLE_HOME/OPatch/opatch lspatches
+ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatch lspatches"
+
+# Verifica patch DB Home su entrambi i nodi
+export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+$ORACLE_HOME/OPatch/opatch lspatches
+ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatch lspatches"
+
+# Verifica che NON esista un database standby gia creato
+srvctl config database -d RACDB_STBY
+# Se non esiste ancora, e normale in questa fase.
+```
+
+---
+
+## 3.0B Creazione Macchine Standby e Setup Base (Il Metodo Golden Image)
 
 Prima di poter configurare Data Guard, devi **costruire fisicamente** il cluster Standby. Come spiegato in Fase 0, **non re-installare Linux da zero**. Usa `rac1` (esattamente allo stato post-Fase 1, prima di installare Grid) come tua **Golden Image**.
 
@@ -132,6 +166,16 @@ EOF
    sysctl -p
    ```
 
+#### 4.1b Pre-check cluvfy (stesso standard della Fase 2)
+
+```bash
+# Su racstby1 come grid
+export ORACLE_HOME=/u01/app/19.0.0/grid
+$ORACLE_HOME/runcluvfy.sh stage -pre crsinst -n racstby1,racstby2 -verbose
+```
+
+Risolvi eventuali `FAILED` bloccanti prima di avviare `gridSetup.sh`. I warning noti su NAT (`enp0s3`) possono essere ignorati se hai gia impostato correttamente la rete pubblica/interconnect.
+
 #### 4.2 Installazione Grid Infrastructure (GUI)
 
 Avvia `gridSetup.sh` su `racstby1` (come `grid`, via MobaXterm con X11). Segui i passi, prestando attenzione a queste **differenze fondamentali** per lo standby:
@@ -150,6 +194,15 @@ Avvia `gridSetup.sh` su `racstby1` (come `grid`, via MobaXterm con X11). Segui i
 
 Procedi fino in fondo, ignora i warning su IP Duplicato (`enp0s3`) e RAM.  
 Esegui gli script **COME ROOT** su `racstby1` (`orainstRoot.sh`, poi `root.sh`), e attendi la fine prima di farli su `racstby2`.
+
+Verifica immediata post-installazione:
+
+```bash
+# Come grid su racstby1
+crsctl check cluster -all
+olsnodes -n
+asmcmd lsdg
+```
 
 #### 4.3 Creazione Disk Group DATA e RECO (Standby)
 Dopo che il cluster è online, crea i disk group per lo standby via `asmca` o SQL:
@@ -179,27 +232,34 @@ Applica subito la stessa Combo Patch (RU + OJVM) scaricata per il primario.
    ssh racstby2 "mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp && unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/ && chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch"
    ```
 
-2. **Scompatta Combo Patch e Applica RU con Opatchauto (come root):**
+2. **Scompatta Combo Patch, fai analyze e poi apply (come root):**
    ```bash
    # racstby1
    mkdir -p /u01/app/patch
    cd /u01/app/patch
    unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
    chown -R grid:oinstall /u01/app/patch
-   
-    # Identifica l'ID della RU dentro la Combo (es. 38629535) e applica
-    cd /u01/app/patch/38658588/38629535
-    export ORACLE_HOME=/u01/app/19.0.0/grid
-    $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
     
-    # racstby2
-    ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
-    ssh racstby2 "cd /u01/app/patch/38658588/38629535; export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
+   # Identifica l'ID della RU dentro la Combo (es. 38629535)
+   cd /u01/app/patch/38658588/38629535
+   export ORACLE_HOME=/u01/app/19.0.0/grid
+   $ORACLE_HOME/OPatch/opatchauto analyze /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+   $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+     
+   # racstby2
+   ssh racstby2 "mkdir -p /u01/app/patch && cd /u01/app/patch && unzip -q /tmp/p38658588_190000_Linux-x86-64.zip && chown -R grid:oinstall /u01/app/patch"
+   ssh racstby2 "cd /u01/app/patch/38658588/38629535; export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto analyze /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
+   ssh racstby2 "cd /u01/app/patch/38658588/38629535; export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
+
+   # Verifica patch Grid
+   export ORACLE_HOME=/u01/app/19.0.0/grid
+   $ORACLE_HOME/OPatch/opatch lspatches
+   ssh racstby2 "export ORACLE_HOME=/u01/app/19.0.0/grid; \$ORACLE_HOME/OPatch/opatch lspatches"
    ```
 
 #### 4.5 Installazione Software Database (Software Only)
 ```bash
-# Scompatta su rac1 come oracle
+# Scompatta su racstby1 come oracle
 su - oracle
 unzip -q /tmp/LINUX.X64_193000_db_home.zip -d $ORACLE_HOME
 
@@ -232,10 +292,12 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
    # racstby1
    chown -R oracle:oinstall /u01/app/patch
    export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+   $ORACLE_HOME/OPatch/opatchauto analyze /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
    $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
    
    # racstby2
    ssh racstby2 "chown -R oracle:oinstall /u01/app/patch"
+   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto analyze /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
    ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh \$ORACLE_HOME"
    ```
 
@@ -251,6 +313,13 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
    ssh racstby2 "cd /u01/app/patch/38658588/38523609; \$ORACLE_HOME/OPatch/opatch apply -silent"
    ```
 
+   Verifica patch DB Home su entrambi i nodi:
+   ```bash
+   export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+   $ORACLE_HOME/OPatch/opatch lspatches
+   ssh racstby2 "export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1; \$ORACLE_HOME/OPatch/opatch lspatches"
+   ```
+
 4. **Pulizia Patch (come root):**
    ```bash
    su - root
@@ -261,15 +330,20 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
 
 A questo punto, l'infrastruttura Standby (motore Grid + RDBMS patchato) è identica al cluster Primario. Siamo pronti a connettere il database.
 
+> Nota importante: in questa fase standby **non** devi eseguire `DBCA` e **non** devi eseguire `datapatch` sullo standby. Il dictionary patchato arrivera dal primario tramite redo dopo il duplicate.
+
 ---
 
 ## 3.1 Prerequisiti sui Nodi Standby
 
 Per verificare di essere pronto per proseguire con Data Guard, fai questa check-list sui nodi standby:
-- ✅ **Fase 1 completa** tramite la clonazione (OS, DNS, utenti, SSH) su `racstby1` e `racstby2`.
-- ✅ **Grid Infrastructure installata** (stesso procedimento della Fase 2.1-2.6, **incluso il fix al Discovery Path**) su `racstby1` e `racstby2`
-- ✅ **Software Database installato** (Fase 2.8, solo Software Only, NESSUN database creato) su `racstby1` e `racstby2`
-- ✅ I Disk Group **DATA** e **RECO** devono esistere sullo standby con gli stessi nomi del primario e creati usando il path `/dev/oracleasm/disks/*`
+- ✅ **Fase 1 completa** tramite clonazione (OS, DNS, utenti, SSH) su `racstby1` e `racstby2`.
+- ✅ **Grid Infrastructure installata** (allineata ai passi Fase 2: 2.3-2.7) su `racstby1` e `racstby2`.
+- ✅ **Patch Grid RU/OJVM applicate** (allineamento Fase 2: 2.8) e verificabili con `opatch lspatches`.
+- ✅ **Software Database installato** (allineamento Fase 2: 2.9, solo Software Only, nessun DBCA).
+- ✅ **Patch DB Home RU/OJVM applicate** (allineamento Fase 2: 2.11) e verificabili con `opatch lspatches`.
+- ✅ I Disk Group **DATA** e **RECO** esistono sullo standby con gli stessi nomi del primario e discovery path `/dev/oracleasm/disks/*`.
+- ✅ Nessun database standby creato via DBCA; verrà creato solo via RMAN Duplicate.
 
 > **Perché stessi nomi dei Disk Group?** RMAN Duplicate cerca i disk group per nome. Se sul primario i datafile sono in `+DATA` e sullo standby non esiste `+DATA`, il duplicate fallisce.
 
@@ -896,6 +970,9 @@ sqlplus -s / as sysdba <<< "SELECT * FROM v\$archive_gap;"
 
 # 4. Sequence primario == standby
 # Sul primario:
+sqlplus -s / as sysdba <<< "SELECT thread#, max(sequence#) FROM v\$archived_log WHERE archived='YES' GROUP BY thread#;"
+
+# Sullo standby:
 sqlplus -s / as sysdba <<< "SELECT thread#, max(sequence#) FROM v\$archived_log WHERE applied='YES' GROUP BY thread#;"
 
 # 5. SPFILE in ASM (non locale!)
