@@ -66,9 +66,30 @@ rm -f /u01/app/patch/*.zip
 
 ## 4. Procedura di Patching con la Combo Patch (Esempio)
 
-Hai scaricato la Combo Patch `p38658588_190000_Linux-x86-64.zip` in `/tmp/` su entrambi i nodi. Ecco il flusso:
+Hai scaricato la Combo Patch `p38658588_190000_Linux-x86-64.zip` e l'ultima patch OPatch `p6880880_190000_Linux-x86-64.zip` in `/tmp/` su entrambi i nodi.
 
-### Step 1: Estrazione (Entrambi i nodi)
+### ⚠️ Step 0: Aggiorna l'utility OPatch (OBBLIGATORIO)
+
+Prima di applicare qualsiasi patch RU, devi aggiornare l'utility OPatch in **ogni** Home (Grid e Database) su **tutti** i nodi. Se non lo fai, `opatchauto` fallirà con errore `CheckMinimumOPatchVersion`.
+
+```bash
+# Come root su rac1
+su - root
+
+# 1. Aggiorna OPatch per la Grid Home
+mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
+
+# 2. Aggiorna OPatch per la Database Home
+mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
+
+# Ripeti gli stessi comandi su rac2!
+```
+
+### Step 1: Estrazione Combo Patch (Entrambi i nodi)
 ```bash
 su - root
 mkdir -p /u01/app/patch/

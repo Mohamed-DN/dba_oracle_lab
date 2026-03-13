@@ -20,9 +20,23 @@ In Oracle 19c, l'applicazione di una nuova Release Update (RU) sopra una preesis
 
 ---
 
-## 2. Workflow con Combo Patch
-
 Le Combo Patch (come la `p38658588`) contengono sia la **Database/Grid RU** sia la **OJVM RU**. Ecco il workflow per l'upgrade su un sistema già patchato.
+
+### ⚠️ Step 0: Aggiornamento OPatch (OBBLIGATORIO)
+
+Prima di iniziare l'upgrade della RU, devi aggiornare l'utility OPatch in **tutte le Home** (Grid e Database) su **tutti i nodi**. Senza la versione minima (es. `.48` per Jan 2026), l'upgrade fallirà.
+
+```bash
+# Come root su rac1
+mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
+chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
+
+mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp
+unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
+chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
+# Ripeti su rac2
+```
 
 ### Step 1: Pulizia e Preparazione
 Prima di scompattare la nuova patch, libera spazio su `/u01/app/patch` (che è la nostra area di lavoro da 50GB, dato che `/tmp` è troppo piccola nelle nostre VM).
