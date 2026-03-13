@@ -91,6 +91,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 9 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target |
 | 10 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
 | 11 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
+| 11b | **RMAN Completa** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Runbook RMAN completo + test lab: config, backup, validate, recovery, catalog |
 
 ---
 
@@ -134,6 +135,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | **Validazione Oracle BP** | [VALIDAZIONE_BP](./VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98%, GUI vs CLI |
 | **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ANALISI_ORACLEBASE_VAGRANT.md) | Confronto con Oracle Base Vagrant |
 | **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
+| **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
 
 ---
 
