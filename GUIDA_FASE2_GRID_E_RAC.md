@@ -783,7 +783,10 @@ su - oracle
 
 # Scompatta il DB nella ORACLE_HOME
 unzip -q /tmp/LINUX.X64_193000_db_home.zip -d $ORACLE_HOME
-
+#Controllare i gruppi del utenza oracle e'nel caso assegnare i gruppi mancanti
+id oracle 
+usermod -g oinstall -G dba,asmdba,backupdba,dgdba,kmdba,racdba,oper oracle
+id oracle
 # Avvia l'installer
 cd $ORACLE_HOME
 export DISPLAY=<IP_del_tuo_PC>:0.0
