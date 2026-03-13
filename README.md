@@ -23,7 +23,7 @@ STEP 0: LEGGI PRIMA LA TEORIA (2 ore)
   |  3. PIANO_STUDIO_GIORNALIERO.md    <-- Il TUO piano: 40 giorni x 3h
   |
   v
-STEP 1-7: COSTRUISCI IL LAB (Settimane 1-4)
+STEP 1-8: COSTRUISCI IL LAB (Settimane 1-4)
   |
   |  4. FASE 0 --> Setup Macchine VirtualBox (DNS, RAC, Storage)
   |  5. FASE 1 --> Preparazione OS (rete, DNS, utenti, SSH)
@@ -33,28 +33,29 @@ STEP 1-7: COSTRUISCI IL LAB (Settimane 1-4)
   |  9. FASE 5 --> GoldenGate (Extract, Pump, Replicat)
   | 10. FASE 6 --> Test e Verifica end-to-end
   | 11. FASE 7 --> RMAN Backup Strategy
+  | 12. FASE 8 --> Enterprise Manager Cloud Control 13.5
   |
   v
-STEP 8-11: OPERAZIONI AVANZATE (Settimana 4)
+STEP 9-12: OPERAZIONI AVANZATE (Settimana 4)
   |
-  | 12. Switchover Data Guard
-  | 13. Failover + Reinstate
-  | 14. Migrazione zero-downtime con GoldenGate
-  | 15. Listener, Services, DBA Toolkit
-  |
-  v
-STEP 12-14: CLOUD + DBA PRO (Settimana 5)
-  |
-  | 16. Cloud GoldenGate su OCI ARM Free Tier
-  | 17. Attivita DBA (Batch, AWR, Patching, DataPump, Security)
-  | 18. MAA Best Practices + Validazione
+  | 13. Switchover Data Guard
+  | 14. Failover + Reinstate
+  | 15. Migrazione zero-downtime con GoldenGate
+  | 16. Listener, Services, DBA Toolkit
   |
   v
-STEP 15-17: POSTGRES + ESAMI (Settimane 6-8)
+STEP 13-15: CLOUD + DBA PRO (Settimana 5)
   |
-  | 19. Migrazione Oracle -> PostgreSQL con GoldenGate
-  | 20. Ripasso per Esame 1Z0-082 (Admin I + SQL)
-  | 21. Ripasso per Esame 1Z0-083 (DBA Professional 2)
+  | 17. Cloud GoldenGate su OCI ARM Free Tier
+  | 18. Attivita DBA (Batch, AWR, Patching, DataPump, Security)
+  | 19. MAA Best Practices + Validazione
+  |
+  v
+STEP 16-18: POSTGRES + ESAMI (Settimane 6-8)
+  |
+  | 20. Migrazione Oracle -> PostgreSQL con GoldenGate
+  | 21. Ripasso per Esame 1Z0-082 (Admin I + SQL)
+  | 22. Ripasso per Esame 1Z0-083 (DBA Professional 2)
   |
   v
 COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
@@ -74,8 +75,8 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 2 | **Comandi DBA** | [GUIDA_COMANDI_DBA](./GUIDA_COMANDI_DBA.md) | 100+ query SQL, script Oracle Base, health check |
 | 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
 | 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 25 giorni x 3h/giorno (5 settimane), tips CV |
-| 🏆 | **Top 100 Script DBA** | [TOP_100_SCRIPT](./TOP_100_SCRIPT_DBA.md) | I 100 script più utili ogni giorno — lock, AWR, tuning, ASM, I/O |
-| 🔬 | **Attività Lab RAC** | [ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici: health check, AWR, switchover, GG test |
+| 5 | **Top 100 Script DBA** | [TOP_100_SCRIPT](./TOP_100_SCRIPT_DBA.md) | I 100 script piu utili ogni giorno - lock, AWR, tuning, ASM, I/O |
+| 6 | **Attivita Lab RAC** | [ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici: health check, AWR, switchover, GG test |
 
 ---
 
@@ -83,15 +84,16 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Fase | File | Cosa Fai |
 |---|---|---|---|
-| 4 | **Fase 0** | [SETUP MACCHINE](./GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS Dnsmasq, dischi ASM oracleasm, installa OL 7.9 |
-| 5 | **Fase 1** | [PREPARAZIONE OS](./GUIDA_FASE1_PREPARAZIONE_OS.md) | Configura rete, DNS, utenti, SSH, kernel |
-| 6 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
-| 7 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
-| 8 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard |
-| 9 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target |
-| 10 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
-| 11 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
-| 11b | **RMAN Completa** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Runbook RMAN completo + test lab: config, backup, validate, recovery, catalog |
+| 7 | **Fase 0** | [SETUP MACCHINE](./GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS Dnsmasq, dischi ASM oracleasm, installa OL 7.9 |
+| 8 | **Fase 1** | [PREPARAZIONE OS](./GUIDA_FASE1_PREPARAZIONE_OS.md) | Configura rete, DNS, utenti, SSH, kernel |
+| 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
+| 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
+| 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard |
+| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target |
+| 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
+| 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
+| 15 | **Fase 8** | [ENTERPRISE MANAGER](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
+| 16 | **RMAN Completa** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Runbook RMAN completo + test lab: config, backup, validate, recovery, catalog |
 
 ---
 
@@ -99,12 +101,12 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 12 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
-| 13 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
-| 14 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
-| 15 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
-| 16 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
-| 🔬 | **Attività Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
+| 17 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
+| 18 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
+| 19 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
+| 20 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
+| 21 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
+| 22 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
 
 ---
 
@@ -112,9 +114,9 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 16 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI Free Tier ARM, setup ibrido 23ai Free, SSH tunnel |
-| 17 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
-| 18 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
+| 23 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI Free Tier ARM, setup ibrido 23ai Free, SSH tunnel |
+| 24 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
+| 25 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
 
 ---
 
@@ -122,8 +124,8 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 19 | **Ripasso Esame** | [GUIDA_ESAME_REVIEW](./GUIDA_ESAME_REVIEW.md) | Tutti gli argomenti 1Z0-082 + 1Z0-083 (Admin + SQL + DBA Pro 2) |
-| 20 | **Oracle → PostgreSQL** | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione Oracle→PostgreSQL con GoldenGate, ora2pg, ODBC |
+| 26 | **Ripasso Esame** | [GUIDA_ESAME_REVIEW](./GUIDA_ESAME_REVIEW.md) | Tutti gli argomenti 1Z0-082 + 1Z0-083 (Admin + SQL + DBA Pro 2) |
+| 27 | **Oracle -> PostgreSQL** | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione Oracle->PostgreSQL con GoldenGate, ora2pg, ODBC |
 
 ---
 
@@ -136,6 +138,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ANALISI_ORACLEBASE_VAGRANT.md) | Confronto con Oracle Base Vagrant |
 | **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
 | **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
+| **Guida Fase 8 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
 
 ---
 
@@ -215,6 +218,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | Oracle Grid Infrastructure | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle Database | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle GoldenGate | 19c o 21c | [eDelivery](https://edelivery.oracle.com) |
+| Oracle Enterprise Manager | 13.5 | [Oracle Software Delivery Cloud](https://edelivery.oracle.com) |
 | VirtualBox | Ultimo | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |
 
 > Scarica TUTTO prima di iniziare! Guarda la lista completa in [FASE 0](./GUIDA_FASE0_SETUP_MACCHINE.md).
@@ -241,3 +245,4 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 - [Oracle Base - RAC 19c on VirtualBox](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox)
 - [Oracle MAA Best Practices](https://www.oracle.com/database/technologies/high-availability/maa.html)
 - [My Oracle Support](https://support.oracle.com) - Doc ID 2118136.2 per le Release Update
+
