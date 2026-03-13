@@ -35,4 +35,4 @@ Procedura di recovery quando il Data Guard si rompe dopo un reboot del server.
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)
+Vedi anche: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../GUIDA_FASE4_DATAGUARD_DGMGRL.md)

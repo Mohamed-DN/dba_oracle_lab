@@ -1,47 +1,23 @@
-# 04 — User Management (Gestione Utenti)
+# 04 - User Management (Gestione Utenti)
 
-> Procedure per la creazione e gestione degli utenti Oracle in ambiente Enterprise.
-> Include prototipi per utenti nominali, applicativi, DBA operativi, e integrazione con ServiceNow.
+Procedure operative per la creazione e gestione utenti Oracle nel lab.
 
----
+## File presenti in questa cartella
 
-## Tipologie di Utenti in un Ambiente Enterprise
+- `Prototipo_CreateUser_Nominale_v1.4.txt` - template utenza nominale
+- `Prototipo_CreateUser_DBA_OP_v1.3.txt` - template utenza DBA operativa
+- `Prototipo_CreateUser_DB_APPLICATIVA_v1.3.txt` - template utenza applicativa
+- `Verify Function PWD.txt` - regole verifica password
+- `GeneraPass_Random_da_Bash.txt` - generazione password random
 
-| Tipo | Descrizione | Esempio |
-|---|---|---|
-| **Nominale** | Utente personale del DBA/sviluppatore | `MROSSI` |
-| **DBA Operativo** | Account DBA con ruoli elevati | `DBA_OP` |
-| **Applicativo** | Account usato dalle applicazioni | `APP_PAYMENTS` |
-| **Profilo 0** | Account di servizio con tracking automatico | `SVC_BATCH` |
+## Uso consigliato
 
----
+1. Parti dal template piu vicino al tuo caso.
+2. Adatta tablespace/profile/quote al DB target.
+3. Applica naming convention standard del team.
+4. Registra ticket/change-id nel commento script.
 
-## File Contenuti
+## Riferimenti
 
-### Prototipi per Creazione Utenti
-- `Prototipo_CreateUser_Nominale_v1.4.txt` — Template per utenti nominali (ultima versione)
-- `Prototipo_CreateUser_DBA_OP_v1.3.txt` — Template per DBA operativi
-- `Prototipo_CreateUser_DB_APPLICATIVA_v1.3.txt` — Template per utenti applicativi
-- `Prototipo_CreateUser_DBA_v1.1.txt` — Template per utenti DBA
-
-### Gestione Password e Profili
-- `Verify Function PWD.txt` — Funzione di verifica complessità password
-- `GeneraPass_Random_da_Bash.txt` — Script bash per generare password random sicure
-
-### Profilo 0 (Tracking Automatico)
-- `PROFILO_0_create_table.sql` — Tabella di tracciamento utenze
-- `PROFILO_0_create_procedure.sql` — Procedura di purge automatica
-- `PROFILO_0_crea_script_USER.sql` — Script di creazione utente Profilo 0
-
-### Integrazione ServiceNow
-- `Creazione_utenze_tutti_i_case.sql` — Tutti i casi di creazione utenze via ticket
-- `creazione_utenza_sv.sql` — Creazione utenza da ServiceNow
-- `droppare_utenza.sql` — Drop utenza completa
-
-### Package User Remote
-- `pkg_user_remote_v1.8.sql` — Package per gestione utenti remoti (produzione)
-
----
-
-## 🔗 Collegamento
-Vedi anche: [GUIDE_CDB_PDB_USERS.md](../../GUIDE_CDB_PDB_USERS.md)
+- [GUIDA_CDB_PDB_UTENTI.md](../../GUIDA_CDB_PDB_UTENTI.md)
+- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)

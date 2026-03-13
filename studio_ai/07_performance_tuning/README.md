@@ -51,4 +51,4 @@ FROM v$sql WHERE sql_id = '&sql_id';
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDE_DBA_COMMANDS.md](../../GUIDE_DBA_COMMANDS.md)
+Vedi anche: [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)

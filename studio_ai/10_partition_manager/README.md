@@ -47,4 +47,4 @@ EXEC DBA_OP.PKG_PARTITION_MANAGER.REGISTER_TABLE('SCHEMA', 'TABLE_NAME', 'RANGE'
 ---
 
 ## 🔗 Collegamento
-Le partizioni sono trattate anche nella [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md) nella sezione batch/manutenzione.
+Le partizioni sono trattate anche nella [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md) nella sezione batch/manutenzione.

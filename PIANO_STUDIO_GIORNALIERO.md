@@ -401,13 +401,13 @@ Sett 8:                                     ██████████ 🎯 
 
 | Settimana | Quando Usare | Cartella studio_ai |
 |---|---|---|
-| **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](../studio_ai/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](../GUIDA_AGGIUNTA_DISCHI_ASM.md) |
-| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](../studio_ai/05_patching/) |
-| **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](../studio_ai/02_dataguard/) |
-| **Sett. 3** (Giorno 15: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](../studio_ai/06_backup_recovery/) |
-| **Sett. 4** (Giorno 19: Listener) | Dopo Listener/Services | [04_user_management/](../studio_ai/04_user_management/) |
-| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [03_monitoring_scripts/](../studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](../studio_ai/07_performance_tuning/) |
-| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](../studio_ai/08_tde_security/) |
+| **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](./studio_ai/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) |
+| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](./studio_ai/05_patching/) |
+| **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](./studio_ai/02_dataguard/) |
+| **Sett. 3** (Giorno 15: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./studio_ai/06_backup_recovery/) |
+| **Sett. 4** (Giorno 19: Listener) | Dopo Listener/Services | [04_user_management/](./studio_ai/04_user_management/) |
+| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](./studio_ai/07_performance_tuning/) |
+| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](./studio_ai/08_tde_security/) |
 
 ---
 
