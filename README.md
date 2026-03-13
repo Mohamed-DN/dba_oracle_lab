@@ -11,61 +11,100 @@
 
 ---
 
-## DA DOVE INIZIARE
+## Da Dove Iniziare (Percorso Consigliato)
 
-**PERCORSO DI STUDIO**
+### 1) Teoria iniziale (2 ore)
 
-```
-STEP 0: LEGGI PRIMA LA TEORIA (2 ore)
-  |
-  |  1. GUIDA_ARCHITETTURA_ORACLE.md   <-- SGA, PGA, Redo, Undo, Temp, ASM
-  |  2. GUIDA_COMANDI_DBA.md           <-- Query SQL essenziali, script DBA
-  |  3. PIANO_STUDIO_GIORNALIERO.md    <-- Il TUO piano: 40 giorni x 3h
-  |
-  v
-STEP 1-8: COSTRUISCI IL LAB (Settimane 1-4)
-  |
-  |  4. FASE 0 --> Setup Macchine VirtualBox (DNS, RAC, Storage)
-  |  5. FASE 1 --> Preparazione OS (rete, DNS, utenti, SSH)
-  |  6. FASE 2 --> Grid Infrastructure + RAC Database
-  |  7. FASE 3 --> RAC Standby (RMAN Duplicate)
-  |  8. FASE 4 --> Data Guard (DGMGRL, ADG)
-  |  9. FASE 5 --> GoldenGate (Extract, Pump, Replicat)
-  | 10. FASE 6 --> Test e Verifica end-to-end
-  | 11. FASE 7 --> RMAN Backup Strategy
-  | 12. FASE 8 --> Enterprise Manager Cloud Control 13.5
-  |
-  v
-STEP 9-12: OPERAZIONI AVANZATE (Settimana 4)
-  |
-  | 13. Switchover Data Guard
-  | 14. Failover + Reinstate
-  | 15. Migrazione zero-downtime con GoldenGate
-  | 16. Listener, Services, DBA Toolkit
-  |
-  v
-STEP 13-15: CLOUD + DBA PRO (Settimana 5)
-  |
-  | 17. Cloud GoldenGate su OCI ARM Free Tier
-  | 18. Attivita DBA (Batch, AWR, Patching, DataPump, Security)
-  | 19. MAA Best Practices + Validazione
-  |
-  v
-STEP 16-18: POSTGRES + ESAMI (Settimane 6-8)
-  |
-  | 20. Migrazione Oracle -> PostgreSQL con GoldenGate
-  | 21. Ripasso per Esame 1Z0-082 (Admin I + SQL)
-  | 22. Ripasso per Esame 1Z0-083 (DBA Professional 2)
-  |
-  v
-COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
-```
+1. [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md)
+2. [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md)
+3. [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md)
 
-> **Consiglio**: Segui il [Piano di Studio Giornaliero](./PIANO_STUDIO_GIORNALIERO.md) -- ti dice esattamente cosa fare ogni giorno in 3 ore.
+### 2) Esegui il lab base in ordine (Fasi 0 -> 8)
+
+1. [GUIDA_FASE0_SETUP_MACCHINE.md](./GUIDA_FASE0_SETUP_MACCHINE.md)
+2. [GUIDA_FASE1_PREPARAZIONE_OS.md](./GUIDA_FASE1_PREPARAZIONE_OS.md)
+3. [GUIDA_FASE2_GRID_E_RAC.md](./GUIDA_FASE2_GRID_E_RAC.md)
+4. [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md)
+5. [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+6. [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+7. [GUIDA_FASE6_TEST_VERIFICA.md](./GUIDA_FASE6_TEST_VERIFICA.md)
+8. [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
+9. [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)
+
+### 3) Sprint GoldenGate esteso (40 test)
+
+- Guida principale: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- Template log test: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
+- Pianificazione giornaliera: [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md) (addendum operativo GoldenGate)
+
+### 4) Operazioni avanzate + Cloud + esami
+
+1. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
+2. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
+3. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+
+> **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
 ---
 
-## Indice Completo - Tutte le Guide
+## Roadmap Studio Ribilanciata (8 settimane, 3h/giorno)
+
+Questa roadmap sintetica allinea il README al piano aggiornato in [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md).
+
+### Pattern settimanale consigliato
+
+| Giorno | Intensita | Focus |
+|---|---|---|
+| 1 | HIGH | Nuovo tema + lab nuovo |
+| 2 | HIGH | Continuazione + troubleshooting |
+| 3 | MEDIUM | Consolidamento + test guidati |
+| 4 | HIGH | Nuovo blocco tecnico |
+| 5 | LIGHT | Ripasso attivo + backlog fix + documentazione |
+| 6 (opzionale) | BUFFER | Recupero task o test extra |
+| 7 | OFF | Riposo tecnico (max 30 min lettura leggera) |
+
+### Carico per fase (vista rapida)
+
+| Settimana | Focus | Uscita minima |
+|---|---|---|
+| 1 | OS + Grid + ASM | Grid stabile + prerequisiti chiusi |
+| 2 | RAC + standby prep | RAC operativo + standby pronto |
+| 3 | Data Guard + RMAN + GG base | broker ok + backup validato + GG base |
+| 4 | GG avanzato + HA test | almeno 24 test GG chiusi |
+| 5 | Enterprise Manager + monitoraggio + cloud | OMS/Agent attivi + alerting base funzionante |
+| 6 | Migrazione Oracle -> PostgreSQL | flusso end-to-end completato |
+| 7 | Preparazione 1Z0-082 | 2 mock exam + revisione errori |
+| 8 | Preparazione 1Z0-083 | 2 mock exam + runbook finali |
+
+### Mock exam Oracle (allineamento pratico)
+
+Valori verificati su Oracle Japan (13 marzo 2026):
+
+- `1Z0-082-JPN`: 120 minuti, 72 domande, passing score 60%
+- `1Z0-083-JPN`: 120 minuti, 68 domande, passing score 57%
+- fonte 1Z0-082: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
+- fonte 1Z0-083: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-ii-1z0-083-exam/
+
+Calendario consigliato:
+
+- settimana 7: 2 simulazioni da 120 minuti
+- settimana 8: 2 simulazioni da 120 minuti
+- dopo ogni mock: 40-60 minuti di error review per categoria
+
+### Sprint GoldenGate (40 test) senza overload
+
+- settimana 3: `GG-01..GG-16`
+- settimana 4: `GG-17..GG-32`
+- buffer settimana 4/5: `GG-33..GG-40` + retest fail
+
+Materiale operativo:
+
+- guida: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- template testlog: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
+
+---
+
+## Indice Completo
 
 ### Teoria (Leggi PRIMA di costruire)
 
@@ -74,7 +113,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 1 | **Architettura Oracle** | [GUIDA_ARCHITETTURA](./GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, Temp, ASM, Cache Fusion |
 | 2 | **Comandi DBA** | [GUIDA_COMANDI_DBA](./GUIDA_COMANDI_DBA.md) | 100+ query SQL, script Oracle Base, health check |
 | 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
-| 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 25 giorni x 3h/giorno (5 settimane), tips CV |
+| 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 8 settimane (40 giorni) x 3h/giorno, roadmap e milestone |
 | 5 | **Top 100 Script DBA** | [TOP_100_SCRIPT](./TOP_100_SCRIPT_DBA.md) | I 100 script piu utili ogni giorno - lock, AWR, tuning, ASM, I/O |
 | 6 | **Attivita Lab RAC** | [ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici: health check, AWR, switchover, GG test |
 
@@ -89,7 +128,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
 | 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
 | 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard |
-| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target |
+| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target + test matrix estesa (40 scenari) |
 | 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
 | 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
 | 15 | **Fase 8** | [ENTERPRISE MANAGER](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
@@ -120,7 +159,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 
 ---
 
-### Esame + Migrazione PostgreSQL (Settimana 6)
+### Esame + Migrazione PostgreSQL (Settimane 6-8)
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
@@ -139,6 +178,7 @@ COMPLETATO! --> Leggi GUIDA_DA_LAB_A_PRODUZIONE.md per il sizing reale
 | **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
 | **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
 | **Guida Fase 8 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
+| **Template Test GoldenGate** | [TESTLOG_GG_TEMPLATE](./TESTLOG_GOLDENGATE_TEMPLATE.md) | Template pronto per tracciare PASS/FAIL, lag, evidenze e fix |
 
 ---
 

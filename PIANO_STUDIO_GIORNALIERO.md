@@ -412,3 +412,124 @@ Sett 8:                                     ██████████ 🎯 
 ---
 
 > 💡 **Suggerimento finale**: Quando fai un colloquio, non dire "ho seguito una guida". Dì "ho progettato e implementato da zero un'architettura Oracle RAC con Data Guard e GoldenGate su 6 nodi, inclusa integrazione cloud con OCI". È la verità — la guida l'hai letta, ma i comandi li hai eseguiti tu, gli errori li hai risolti tu, e la comprensione è tua.
+
+---
+
+## Addendum Operativo: Sprint GoldenGate Esteso (40 test)
+
+Per stressare il lab GoldenGate con piu casi possibili, usa come riferimento principale [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md).
+
+### Piano pratico (Settimana 3 -> Settimana 4)
+
+1. Giorno 13: esegui `GG-01..GG-08` (DML, LOB, transazioni, commit storm).
+2. Giorno 14: esegui `GG-09..GG-18` (DDL policy, rete, restart processi, lag stress).
+3. Giorno 15: esegui `GG-19..GG-28` (switchover/failover DG, re-instantiate, long tx, concorrenza).
+4. Giorno 16-17: esegui `GG-29..GG-40` (charset/timezone, restart DB/host, purge trail, credenziali, dress rehearsal 120 minuti).
+
+### KPI di uscita (obbligatori)
+
+- almeno `32/40` test in stato `PASS`
+- pass dei test critici: `GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`
+- nessun processo `ABENDED` oltre 10 minuti
+- lag entro soglia in finestra test prolungata
+
+### Deliverable da creare nel repo
+
+1. `TESTLOG_GOLDENGATE.md` con colonne: Data/Ora, ID Test, Scenario, Esito, Lag max, Evidenza, Note/Fix (partendo da `TESTLOG_GOLDENGATE_TEMPLATE.md`).
+2. Cartella screenshot/log con evidenze di `INFO ALL`, `LAG`, `VIEW REPORT`, query count/checksum.
+3. Mini-runbook per ogni fail: sintomo, root cause, fix, validazione post-fix.
+
+### Regola tempo/risorse per lab domestico
+
+- Se hai poco tempo, chiudi prima `GG-01..GG-24` durante la settimana.
+- Completa `GG-25..GG-40` nel weekend o in due sessioni dedicate.
+
+---
+
+## Addendum 2026: Carico Studio Ribilanciato (consigliato)
+
+Questo blocco aggiorna il piano esistente per distribuire meglio fatica mentale, pratica lab e ripasso.
+La regola resta **3 ore al giorno**, ma con intensita diverse.
+
+### 1) Modello giornaliero fisso (3 ore)
+
+- `Blocco A (50 min)`: teoria mirata su un solo tema
+- `Pausa (10 min)`
+- `Blocco B (50 min)`: lab pratico sullo stesso tema
+- `Pausa (10 min)`
+- `Blocco C (50 min)`: verifica attiva (quiz, comandi a memoria, mini runbook)
+
+### 2) Pattern settimanale consigliato
+
+| Giorno | Intensita | Uso consigliato |
+|---|---|---|
+| Giorno 1 | HIGH | Nuovo argomento + lab nuovo |
+| Giorno 2 | HIGH | Continuazione + troubleshooting |
+| Giorno 3 | MEDIUM | Consolidamento e test guidati |
+| Giorno 4 | HIGH | Nuovo blocco tecnico |
+| Giorno 5 | LIGHT | Ripasso attivo + documentazione + backlog fix |
+| Giorno 6 (opzionale) | BUFFER | Recupero task slittati o test extra |
+| Giorno 7 | OFF | Stop tecnico (solo lettura leggera, max 30 min) |
+
+### 3) Ripasso distribuito (spaced repetition)
+
+Per ogni argomento nuovo fatto in `D0`, pianifica:
+
+- `D+1`: 20 minuti di recall senza appunti
+- `D+3`: 20 minuti di quiz + 1 test pratico rapido
+- `D+7`: 30 minuti di mini simulazione + correzione errori
+
+### 4) Carico ribilanciato per le 8 settimane
+
+| Settimana | Focus | Giorni HIGH | Giorni MEDIUM | Giorni LIGHT/BUFFER | Uscita minima |
+|---|---|---|---|---|---|
+| 1 | OS + Grid + ASM | 3 | 1 | 1 + buffer opzionale | Grid stabile + checklist prerequisiti |
+| 2 | RAC + standby prep | 3 | 1 | 1 + buffer opzionale | RAC operativo + standby pronto |
+| 3 | Data Guard + RMAN + GG base | 2 | 2 | 1 + buffer opzionale | broker ok + backup validato + GG base |
+| 4 | GG avanzato + HA test | 3 | 1 | 1 + buffer opzionale | almeno 24 test GG chiusi |
+| 5 | EM + monitoraggio + cloud | 2 | 2 | 1 + buffer opzionale | OMS/agent attivi + dashboard utili |
+| 6 | Migrazione Oracle->PostgreSQL | 2 | 2 | 1 + buffer opzionale | flusso migrazione end-to-end |
+| 7 | Esame 1Z0-082 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + error log classificato |
+| 8 | Esame 1Z0-083 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + runbook finali |
+
+### 5) Regole anti-overload (pratiche)
+
+- Mai fare due task "nuovi e critici" nello stesso giorno.
+- Se un blocco supera 30 minuti di troubleshooting senza progresso, spostalo in backlog e passa al blocco successivo.
+- Mantieni un solo obiettivo tecnico "must close" al giorno.
+- Chiudi sempre con evidenza scritta: 5-10 righe di cosa ha funzionato, cosa no, prossimo step.
+
+### 6) Cadenza mock exam (allineata a Oracle)
+
+Valori verificati su Oracle Japan (consultati il 13 marzo 2026):
+
+- `1Z0-082-JPN`: `120 minuti`, `72 domande`, `passing score 60%`
+- `1Z0-083-JPN`: `120 minuti`, `68 domande`, `passing score 57%`
+
+Uso pratico nel lab:
+
+- Settimana 7: 2 simulazioni da 120 minuti (giorno 3 e giorno 5)
+- Settimana 8: 2 simulazioni da 120 minuti (giorno 2 e giorno 5)
+- Dopo ogni mock: 40-60 minuti di "error review" per categoria (SQL, backup, HA, security, tuning)
+
+### 7) Riallocazione GoldenGate (piu casi, meno stress)
+
+Per i 40 test GoldenGate:
+
+- settimana 3: `GG-01..GG-16`
+- settimana 4: `GG-17..GG-32`
+- buffer settimana 4/5: `GG-33..GG-40` + retest dei fail
+
+Criterio: almeno `8 test` per settimana devono essere "difficili" (failover, lag, restart, recovery trail).
+
+### 8) Fonti usate (internet + Oracle ufficiale)
+
+- Oracle University Japan, `1Z0-082-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
+- Oracle University Japan, `1Z0-083-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-ii-1z0-083-exam/
+- Oracle exam registration FAQ: https://education.oracle.com/oracle-certification-exams-registration-faq
+- Oracle Database 19c Administrator's Guide: https://docs.oracle.com/en/database/oracle/oracle-database/19/admin/index.html
+- Oracle Database 19c Backup and Recovery User's Guide: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/index.html
+- Oracle Data Guard Broker 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/index.html
+- Oracle RAC Installation Guide 19c (Linux/UNIX): https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/index.html
+- Karpicke et al., retrieval practice and retention (PubMed): https://pubmed.ncbi.nlm.nih.gov/20951630/
+- Cepeda et al., distributed practice review (PubMed): https://pubmed.ncbi.nlm.nih.gov/16719566/
