@@ -4,6 +4,36 @@
 
 ---
 
+## 6.0 Ingresso da Fase 5 (preflight)
+
+Questa fase e un test di sistema: non partire se la Fase 5 non e stabile.
+
+Checklist minima:
+
+```bash
+# Data Guard
+dgmgrl sys/<password>@RACDB "show configuration;"
+
+# GoldenGate su standby
+cd $OGG_HOME && ./ggsci
+INFO ALL
+```
+
+```sql
+-- Standby deve essere utilizzabile da GG
+sqlplus / as sysdba
+SELECT open_mode, database_role FROM v$database;
+```
+
+Requisiti:
+
+- DGMGRL in `SUCCESS`
+- Extract/Pump `RUNNING` su standby
+- Replicat target (`REPTAR`) `RUNNING` su UI Microservices
+- standby in stato coerente con i test (tipicamente `READ ONLY WITH APPLY`)
+
+Per test avanzati usa la matrice completa in [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md) sezione 5.13.
+
 ## 6.1 Test Data Guard — Verifica Redo Transport
 
 ### Sul Primario: Genera traffico
@@ -109,7 +139,7 @@ COMMIT;
 
 ```sql
 -- Verifica sul NUOVO standby (RACDB, ora in mount/read only)
-sqlplus / as sysdba @RACDB
+sqlplus / as sysdba
 
 SELECT * FROM testdg.test_replica;
 -- Devi vedere la riga con id=3
@@ -149,19 +179,14 @@ EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
 
 ### Sul Target: Verifica stato Replicat
 
-```bash
-cd $OGG_HOME
-./ggsci
+Sul target OCI con GoldenGate Microservices non usare `ggsci` classico.
 
-INFO ALL
-```
+Controlla da Web UI (Administration Server):
 
-Output atteso:
-```
-Program     Status      Group       Lag at Chkpt  Time Since Chkpt
-MANAGER     RUNNING
-REPLICAT    RUNNING     rep_racdb   00:00:03      00:00:04
-```
+- replicat `REPTAR` in stato `Running`
+- checkpoint in avanzamento
+- lag basso/stabile
+- nessun errore in diagnostics
 
 ### Genera traffico e verifica
 
@@ -196,8 +221,8 @@ GGSCI> STATS EXTRACT ext_racdb, LATEST
 GGSCI> STATS EXTRACT pump_racdb, LATEST
 
 -- Sul Target
-GGSCI> STATS REPLICAT rep_racdb, LATEST
--- Mostra le tabelle e il numero di operazioni applicate
+-- verifica statistiche dal pannello del replicat REPTAR (Microservices UI)
+-- e dalla sezione diagnostics / performance
 ```
 
 ---
@@ -220,7 +245,7 @@ END;
 ```
 -- Monitora il lag in tempo reale su GoldenGate
 GGSCI> LAG EXTRACT ext_racdb
-GGSCI> LAG REPLICAT rep_racdb
+-- Sul target verifica lag del replicat REPTAR da UI Microservices
 ```
 
 ```sql
@@ -276,7 +301,7 @@ SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
 | 7 | DELETE → replicato su Target | GG | Riga cancellata su target | |
 | 8 | Stress 1000 righe → tutte su Target | GG | COUNT(*) identico | |
 | 9 | Lag GG Extract < 10s | GG | LAG EXTRACT | |
-| 10 | Lag GG Replicat < 10s | GG | LAG REPLICAT | |
+| 10 | Lag GG Replicat < 10s | GG | Lag REPTAR da UI Microservices | |
 
 ---
 
@@ -414,7 +439,7 @@ GGSCI> INFO ALL
 | Problema | Causa Probabile | Soluzione |
 |---|---|---|
 | Extract ABENDED | Redo log non disponibile | `GGSCI> ALTER EXTRACT ext_racdb, BEGIN NOW` |
-| Replicat ABENDED | Conflitto duplicato (PK) | `GGSCI> ALTER REPLICAT rep_racdb, BEGIN NOW`, risolvere il conflitto |
+| Replicat ABENDED | Conflitto duplicato (PK) | Riavvia `REPTAR` da UI/AdminClient, risolvi conflitto e riparti dal checkpoint corretto |
 | Lag alto Extract | LogMiner lento | Verifica `v$goldengate_capture` per colli di bottiglia |
 | Lag alto Replicat | Batch troppo piccolo | Aumenta `BATCHSQL` nel param Replicat |
 | Trail pieno su disco | Pump non trasmette | Verifica rete, `INFO EXTRACT pump_racdb` |
@@ -467,7 +492,7 @@ tail -100 /u01/app/19.0.0/grid/log/$(hostname)/ocssd/ocssd.log
 
 # Log GoldenGate
 cat $OGG_HOME/dirrpt/ext_racdb.rpt
-cat $OGG_HOME/dirrpt/rep_racdb.rpt
+# Per il replicat target (REPTAR) usa diagnostics/report dalla UI Microservices
 ```
 
 ---
@@ -485,7 +510,7 @@ cat $OGG_HOME/dirrpt/rep_racdb.rpt
 | 7 | DELETE → replicato su Target | GG | Riga cancellata su target | |
 | 8 | Stress 1000 righe → tutte su Target | GG | COUNT(*) identico | |
 | 9 | Lag GG Extract < 10s | GG | LAG EXTRACT | |
-| 10 | Lag GG Replicat < 10s | GG | LAG REPLICAT | |
+| 10 | Lag GG Replicat < 10s | GG | Lag REPTAR da UI Microservices | |
 | 11 | **Crash nodo rac2** → rac1 continua | RAC | DB OPEN su rac1, VIP migrato | |
 | 12 | **Rejoin nodo rac2** → cluster intatto | RAC | Entrambe le istanze OPEN | |
 | 13 | **GG dopo switchover** → replica intatta | DG+GG | Extract RUNNING, dati replicati | |

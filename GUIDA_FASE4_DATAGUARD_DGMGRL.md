@@ -31,6 +31,37 @@
 
 ---
 
+## 4.0 Ingresso da Fase 3 (allineamento rapido)
+
+Prima di toccare DGMGRL, verifica che la Fase 3 sia davvero chiusa.
+
+```sql
+-- Sul primario
+sqlplus / as sysdba
+SELECT name, open_mode, database_role, db_unique_name FROM v$database;
+
+-- Sullo standby
+sqlplus / as sysdba
+SELECT name, open_mode, database_role, db_unique_name FROM v$database;
+SELECT process, status FROM v$managed_standby WHERE process='MRP0';
+```
+
+```bash
+# Verifica TNS dal primario
+tnsping RACDB
+tnsping RACDB_STBY
+```
+
+Criteri minimi:
+
+- primario `READ WRITE` con ruolo `PRIMARY`
+- standby `PHYSICAL STANDBY` con `MRP0` attivo
+- connettivita TNS ok su entrambi gli alias
+
+Se questi check falliscono, rientra in [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md) prima di continuare.
+
+---
+
 ## 4.1 Abilitare Data Guard Broker
 
 Esegui su **TUTTI** i nodi (primario e standby):
@@ -55,6 +86,16 @@ ps -ef | grep dmon
 ---
 
 ## 4.2 Creazione della Configurazione Broker
+
+Se in passato hai gia creato una configurazione Broker (test precedenti), pulisci prima di ricreare:
+
+```bash
+dgmgrl sys/<password>@RACDB
+SHOW CONFIGURATION;
+-- Se esiste una configurazione precedente:
+DISABLE CONFIGURATION;
+REMOVE CONFIGURATION;
+```
 
 Connettiti a `dgmgrl` dal **nodo primario**:
 
@@ -265,8 +306,10 @@ Active Data Guard (ADG) permette di aprire lo standby in **READ ONLY** mentre co
 -- Sullo standby come sysdba
 sqlplus / as sysdba
 
--- Apri in read only
+-- Sequenza sicura: cancel apply -> open read only -> riabilita apply realtime
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ALTER DATABASE OPEN READ ONLY;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
 
 -- Verifica
 SELECT open_mode FROM v$database;

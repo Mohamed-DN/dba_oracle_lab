@@ -11,6 +11,43 @@ Questa fase aggiunge una console centralizzata per monitorare e governare tutto 
 - alerting, incident management, notification, jobs, blackout
 - monitoraggio backup RMAN
 
+## 8.0A Ingresso da Fase 7 (preflight)
+
+Prima di installare EM, verifica che il lab Oracle sia stabile:
+
+```bash
+dgmgrl sys/<password>@RACDB "show configuration;"
+```
+
+```sql
+-- Sul DB principale che userai come repository EM
+sqlplus / as sysdba
+SELECT name, open_mode, log_mode FROM v$database;
+SELECT value FROM v$parameter WHERE name='compatible';
+```
+
+```bash
+# Dal nodo emcc1: risoluzione DNS e reachability target
+getent hosts rac1 rac2 racstby1 racstby2 dbtarget
+```
+
+Gate minimo:
+
+- Data Guard in `SUCCESS`
+- repository DB raggiungibile da `emcc1`
+- spazio disco e RAM adeguati su `emcc1`
+
+## 8.0B Se OMS e gia installato
+
+Se hai gia un OMS funzionante (test precedenti), non reinstallare:
+
+```bash
+$OMS_HOME/bin/emctl status oms -details
+$AGENT_HOME/bin/emctl status agent
+```
+
+Se `OMS Up` e `Agent Up`, vai direttamente a `8.7` (deploy agent target) oppure `8.8` (onboarding target).
+
 ## 8.1 Obiettivo operativo
 
 A fine fase devi avere:
@@ -73,7 +110,7 @@ Apri almeno:
 - 3872 (agent)
 - 4903, 4904 (OMS internal)
 - 1521 (repository DB)
-- 5500 o porta custom console HTTPS OMS
+- 7803 (console HTTPS OMS default, oppure porta custom scelta in installazione)
 
 Usa DNS risolvibile per:
 
