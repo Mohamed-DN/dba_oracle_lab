@@ -2,7 +2,16 @@
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
-### 📸 Architettura Data Guard
+> 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
+> Questa fase, come la Fase 2, richiede uso continuo di shell + GUI Oracle (`gridSetup.sh`, `runInstaller`) e copia/incolla preciso dei comandi.
+>
+> **Tabella IP di Riferimento (Rete Pubblica):**
+> - `rac1`: 192.168.56.101
+> - `rac2`: 192.168.56.102
+> - `racstby1`: 192.168.56.111
+> - `racstby2`: 192.168.56.112
+
+### 📸 Riferimenti Visivi
 
 ![Architettura Data Guard RAC Primary → RAC Standby](./images/dataguard_architecture.png)
 
@@ -33,11 +42,31 @@
                                      └──────────────────┘
 ```
 
+### Ordine di Installazione in Questa Fase (stile Fase 2)
+
+```text
+Passo 1:  Golden Image clone standby        ━━━━━━━━━━━━━━━━━━━▶ racstby1/racstby2 pronti
+Passo 2:  Rete + hostname + fix systemd     ━━━━━━━━━━━━━━━━━━━▶ nodi stabili e raggiungibili
+Passo 3:  ASM dischi standby                ━━━━━━━━━━━━━━━━━━━▶ CRS/DATA/RECO visibili
+Passo 4:  Grid Infrastructure standby       ━━━━━━━━━━━━━━━━━━━▶ cluster standby online
+Passo 5:  Patch Grid RU                     ━━━━━━━━━━━━━━━━━━━▶ allineamento con primario
+Passo 6:  DB Home Software Only             ━━━━━━━━━━━━━━━━━━━▶ motore DB installato
+Passo 7:  Patch DB Home RU + OJVM           ━━━━━━━━━━━━━━━━━━━▶ home standby allineata
+Passo 8:  Config DG network/listener/TNS    ━━━━━━━━━━━━━━━━━━━▶ connettivita primaria-standby
+Passo 9:  RMAN Duplicate Active Database    ━━━━━━━━━━━━━━━━━━━▶ RACDB_STBY creato
+Passo 10: OCR registration + MRP apply      ━━━━━━━━━━━━━━━━━━━▶ standby sincronizzato
+```
+
+### Percorso da seguire in pratica
+
+1. **Percorso consigliato (default):** esegui la sezione `3.0B` (Golden Image) e poi continua da `3.1`.
+2. **Percorso alternativo:** usa `3.0A` solo se lo standby era già stato preparato in Fase 2 e devi fare solo smoke-check.
+
 ---
 
-## 3.0A Se hai gia preparato lo Standby in Fase 2
+## 3.0A Percorso Alternativo: Se hai già preparato lo Standby in Fase 2
 
-Se durante la Fase 2 hai gia installato anche su `racstby1`/`racstby2`:
+Se durante la Fase 2 hai già installato anche su `racstby1`/`racstby2`:
 
 - Grid Infrastructure
 - disk group `+DATA` e `+RECO`
@@ -69,9 +98,9 @@ srvctl config database -d RACDB_STBY
 
 ---
 
-## 3.0B Creazione Macchine Standby e Setup Base (Il Metodo Golden Image)
+## 3.0B Percorso Consigliato (Default): Creazione Macchine Standby da Golden Image
 
-Prima di poter configurare Data Guard, devi **costruire fisicamente** il cluster Standby. Come spiegato in Fase 0, **non re-installare Linux da zero**. Usa `rac1` (esattamente allo stato post-Fase 1, prima di installare Grid) come tua **Golden Image**.
+Questo è il percorso principale della Fase 3. Prima di poter configurare Data Guard, devi **costruire fisicamente** il cluster Standby. Come spiegato in Fase 0, **non re-installare Linux da zero**. Usa `rac1` (esattamente allo stato post-Fase 1, prima di installare Grid) come tua **Golden Image**.
 
 ### Step 1: Clona le Macchine dalla Golden Image
 1. Assicurati che `rac1` sia spento.
@@ -346,17 +375,6 @@ Per verificare di essere pronto per proseguire con Data Guard, fai questa check-
 - ✅ Nessun database standby creato via DBCA; verrà creato solo via RMAN Duplicate.
 
 > **Perché stessi nomi dei Disk Group?** RMAN Duplicate cerca i disk group per nome. Se sul primario i datafile sono in `+DATA` e sullo standby non esiste `+DATA`, il duplicate fallisce.
-
----
-
-> 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
-> Per tutte le operazioni seguenti (modifiche file, RMAN, etc.) è **obbligatorio** usare MobaXterm per poter fare copia-incolla e avere X11 funzionante. Assicurati di aprire sessioni SSH separate per ciascuna VM di cui avrai bisogno.
->
-> **Tabella IP di Riferimento (Rete Pubblica):**
-> - `rac1`: 192.168.56.101
-> - `rac2`: 192.168.56.102
-> - `racstby1`: 192.168.56.111
-> - `racstby2`: 192.168.56.112
 
 ---
 
