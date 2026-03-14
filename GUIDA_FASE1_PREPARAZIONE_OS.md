@@ -873,10 +873,11 @@ chronyc sources
 > **COSA FARE ORA**: Salta questo passaggio e vai direttamente al punto 1.13. Genereremo chiavi uniche per ogni nodo nella **Sezione 1.15**, subito dopo la clonazione.
 
 > 🛠️ **OPS! HAI GIÀ GENERATO LE CHIAVI?**
-> Se hai già lanciato i comandi ed è comparsa la "randomart image", non preoccuparti. Per tornare alla Golden Image "pulita" ed evitare chiavi duplicate, lancia questi due comandi da root:
+> Se hai già lanciato i comandi ed è comparsa la "randomart image", non preoccuparti. Per tornare alla Golden Image "pulita" ed evitare chiavi duplicate, lancia questi comandi da root:
 > ```bash
 > rm -rf /home/grid/.ssh
 > rm -rf /home/oracle/.ssh
+> rm -rf /root/.ssh
 > ```
 > Fatto! Ora la tua macchina è di nuovo vergine e pronta per essere clonata correttamente.
 
@@ -1050,7 +1051,7 @@ ping -c 2 google.com
 
 ## 1.15 Configurazione Post-Clonazione: SSH Trust (Chiavi UNICHE)
 
-> 💡 **Nodi: rac1 E rac2** | **Utente: grid / oracle**
+> 💡 **Nodi: rac1 E rac2** | **Utente: grid / oracle / root**
 > Ora che entrambi i nodi sono vivi e hanno IP diversi, creiamo le loro identità digitali uniche e facciamoli "fidare" l'uno dell'altro.
 
 ### STEP 1: Generazione Chiavi (Esegui su ENTRAMBI i nodi)
@@ -1065,6 +1066,12 @@ ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 **Come utente `oracle`:**
 ```bash
 su - oracle
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+```
+
+**Come utente `root`:**
+```bash
+su - root
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 ```
 
@@ -1095,6 +1102,25 @@ ssh-copy-id oracle@rac2
 # Da rac2
 ssh-copy-id oracle@rac1
 ssh-copy-id oracle@rac2
+
+# Test finale (NON deve chiedere password)
+ssh oracle@rac1 date
+ssh oracle@rac2 date
+```
+
+#### Per l'utente `root`:
+```bash
+# Da rac1
+ssh-copy-id root@rac1
+ssh-copy-id root@rac2
+
+# Da rac2
+ssh-copy-id root@rac1
+ssh-copy-id root@rac2
+
+# Test finale (NON deve chiedere password)
+ssh root@rac1 date
+ssh root@rac2 date
 ```
 
 > 💡 **PERCHÉ ORA?** Facendolo in questo momento, ogni macchina genera la sua chiave specifica. Se lo avessimo fatto nella Golden Image, `rac1` e `rac2` sarebbero stati "gemelli identici" a livello di sicurezza SSH (stessa chiave privata), il che è sconsigliato.
@@ -1258,10 +1284,11 @@ ping -c 1 rac1 && ping -c 1 rac2 && ping -c 1 rac1-priv && ping -c 1 rac2-priv
 # 3. DNS SCAN funzionante (Deve tornare 3 IP)
 nslookup rac-scan.localdomain
 
-# 4. SSH senza password (grid e oracle)
+# 4. SSH senza password (grid, oracle e root)
 # Su rac1 prova a entrare in rac2
 su - grid -c "ssh rac2 hostname"
 su - oracle -c "ssh rac2 hostname"
+su - root -c "ssh rac2 hostname"
 
 # 5. Firewall e SELinux (Devono essere disabled/Permissive)
 systemctl is-active firewalld || echo "Firewall OK (Disabled)"
