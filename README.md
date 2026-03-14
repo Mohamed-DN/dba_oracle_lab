@@ -13,42 +13,45 @@
 
 ## Architettura Lab (Vista Grafica)
 
-```mermaid
-flowchart LR
-  subgraph HOST["VirtualBox Host"]
-    dns["dnsnode\n192.168.56.50\nDnsmasq"]
-    em["emcc1\nEnterprise Manager 13.5"]
-
-    subgraph PRIM["RAC Primary (RACDB)"]
-      rac1["rac1\n192.168.56.101\nVIP .103"]
-      rac2["rac2\n192.168.56.102\nVIP .104"]
-      pscan["rac-scan\n.105/.106/.107"]
-    end
-
-    subgraph STBY["RAC Standby (RACDB_STBY)"]
-      st1["racstby1\n192.168.56.111\nVIP .113"]
-      st2["racstby2\n192.168.56.112\nVIP .114"]
-      sscan["racstby-scan\n.115/.116/.117"]
-    end
-
-    tgt["dbtarget / OCI\nOracle or PostgreSQL"]
-  end
-
-  rac1 <-- "Cache Fusion" --> rac2
-  st1 <-- "Cache Fusion" --> st2
-  rac1 -->|"Data Guard Redo (LGWR ASYNC)"| st1
-  st1 -->|"GoldenGate Extract/Pump/Replicat"| tgt
-
-  dns --- rac1
-  dns --- rac2
-  dns --- st1
-  dns --- st2
-
-  em --- rac1
-  em --- rac2
-  em --- st1
-  em --- st2
-  em --- tgt
+```text
+╔════════════════════════════════════════════════════════════════════════════════════╗
+║                           IL TUO PC (HOST VIRTUALBOX)                             ║
+║                                                                                    ║
+║  ┌──────────────────────────────────────────────────────────────────────────────┐  ║
+║  │              Rete Host-Only #1 (192.168.56.0/24)                             │  ║
+║  │                   "Pubblica" per cluster, DNS e management                    │  ║
+║  └──┬──────────┬──────────┬────────────┬────────────┬─────────────┬────────────┘  ║
+║     │          │          │            │            │             │               ║
+║  ┌──┴──────┐ ┌─┴───────┐ ┌┴─────────┐ ┌┴──────────┐ ┌┴──────────┐ ┌┴───────────┐  ║
+║  │ dnsnode │ │  rac1   │ │  rac2    │ │ racstby1  │ │ racstby2  │ │   emcc1    │  ║
+║  │ .56.50  │ │ .56.101 │ │ .56.102  │ │ .56.111   │ │ .56.112   │ │ EM 13.5    │  ║
+║  │ 1GB/1CPU│ │ 8GB/4CPU│ │ 8GB/4CPU │ │ 8GB/4CPU  │ │ 8GB/4CPU  │ │ OMS+Agent  │  ║
+║  └─────────┘ └───┬─────┘ └────┬─────┘ └────┬──────┘ └────┬──────┘ └────────────┘  ║
+║                  │            │            │             │                           ║
+║             ┌────┴────────────┴───┐   ┌────┴─────────────┴───┐                       ║
+║             │ Host-Only #2         │   │ Host-Only #3         │                       ║
+║             │ 192.168.1.0/24       │   │ 192.168.2.0/24       │                       ║
+║             │ Interconnect PRIMARY │   │ Interconnect STANDBY │                       ║
+║             └──────────────────────┘   └──────────────────────┘                       ║
+║                                                                                    ║
+║  Flussi logici:                                                                    ║
+║  - Cache Fusion: rac1 <-> rac2  |  racstby1 <-> racstby2                           ║
+║  - Data Guard: RACDB (primary) -> RACDB_STBY (LGWR ASYNC)                          ║
+║  - GoldenGate: Extract/Pump su standby -> Replicat su dbtarget/OCI                 ║
+║  - Enterprise Manager (emcc1): monitora tutti i nodi + target                      ║
+║                                                                                    ║
+║  Dischi Condivisi (Shareable VDI):                                                 ║
+║  ┌──────────────────────────────┐     ┌──────────────────────────────┐              ║
+║  │ rac1 + rac2 (PRIMARY)        │     │ racstby1 + racstby2 (STBY)   │              ║
+║  │ asm-crs-disk1    2GB         │     │ asm-stby-crs-1      2GB      │              ║
+║  │ asm-crs-disk2    2GB         │     │ asm-stby-crs-2      2GB      │              ║
+║  │ asm-crs-disk3    2GB         │     │ asm-stby-crs-3      2GB      │              ║
+║  │ asm-data-disk1  20GB         │     │ asm-stby-data      20GB      │              ║
+║  │ asm-reco-disk1  15GB         │     │ asm-stby-reco      15GB      │              ║
+║  └──────────────────────────────┘     └──────────────────────────────┘              ║
+║                                                                                    ║
+║  Target esterno: dbtarget (OCI/Cloud) per replica Oracle oppure PostgreSQL         ║
+╚════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
 > In basso trovi anche la sezione **Architettura Complessiva** in formato ASCII con dettagli rete/dischi.
