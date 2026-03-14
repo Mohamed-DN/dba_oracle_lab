@@ -193,35 +193,179 @@ SUCCESS
 
 ## 4.4 Configurazione Protection Mode
 
-Oracle Data Guard offre 3 modalità di protezione:
+Questa sezione ti dice:
+1. come scegliere la modalita corretta;
+2. quali prerequisiti Oracle sono obbligatori;
+3. come impostare davvero `MaxPerformance`, `MaxAvailability`, `MaxProtection`;
+4. come verificare e tornare indietro senza rompere la configurazione.
+
+### 4.4.1 Capire le 3 modalita (in pratica)
 
 ```
-╔═══════════════════╦══════════════════╦══════════════╦═══════════════════════╗
-║ Mode              ║ Data Loss?       ║ Performance  ║ Se lo standby muore? ║
-╠═══════════════════╬══════════════════╬══════════════╬═══════════════════════╣
-║ Max Performance   ║ Possibile        ║ ⚡ Alta       ║ Il primario continua ║
-║ (ASYNC - default) ║ (pochi secondi)  ║              ║ senza problemi       ║
-╠═══════════════════╬══════════════════╬══════════════╬═══════════════════════╣
-║ Max Availability  ║ Zero (se standby ║ ⚡⚡ Media    ║ Fallback ad ASYNC,   ║
-║ (SYNC + fallback) ║ raggiungibile)   ║              ║ primario continua    ║
-╠═══════════════════╬══════════════════╬══════════════╬═══════════════════════╣
-║ Max Protection    ║ Zero (assoluto!) ║ 🐢 Bassa    ║ ⛔ IL PRIMARIO SI    ║
-║ (SYNC obbligato)  ║                  ║              ║    FERMA!!!          ║
-╚═══════════════════╩══════════════════╩══════════════╩═══════════════════════╝
+╔═══════════════════╦═══════════════════════════════════════════════════════════╦══════════════╗
+║ Mode              ║ RPO / comportamento commit                               ║ Impatto       ║
+╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
+║ MaxPerformance    ║ Commit locale immediato, redo spedito ASYNC             ║ Minimo        ║
+║ (default)         ║ (possibile perdita secondi in disastro)                 ║              ║
+╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
+║ MaxAvailability   ║ Obiettivo zero data loss quando standby sincronizzato;   ║ Medio         ║
+║                   ║ se standby non risponde, primario resta disponibile      ║              ║
+╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
+║ MaxProtection     ║ Zero data loss prioritario assoluto; se non puo          ║ Alto          ║
+║                   ║ proteggere i commit, il primario si ferma                ║              ║
+╚═══════════════════╩═══════════════════════════════════════════════════════════╩══════════════╝
 ```
 
-> **Per il lab** → usiamo **Maximum Performance** (default). In produzione la scelta dipende dal RPO (Recovery Point Objective) dell'azienda.
+Regola veloce:
+- se vuoi priorita performance: `MaxPerformance`
+- se vuoi zero data loss sul primo fault ma senza bloccare il primario: `MaxAvailability`
+- se vuoi zero data loss assoluto e accetti fermo primario: `MaxProtection`
+
+Nota RAC:
+- in `MaxAvailability`, se una sola istanza RAC perde la connettivita verso standby sincronizzato puo bloccarsi quella istanza; se tutte le istanze perdono connettivita, il database continua in comportamento equivalente a `MaxPerformance`.
+
+### 4.4.2 Prerequisiti tecnici obbligatori (best practice Oracle)
+
+Prima di cambiare mode, verifica:
+1. `FORCE LOGGING` attivo sul primario.
+2. Standby Redo Log (SRL) presenti su standby e anche sul primario (per role change/FSFO).
+3. Standby in real-time apply.
+4. Broker in `SUCCESS` e senza gap redo.
+5. Per `MaxAvailability`/`MaxProtection`: almeno uno standby con redo transport `SYNC` o `FASTSYNC` (broker).
+6. `Fast-Start Failover` disabilitato quando cambi protection mode (vincolo broker).
+7. In RAC, `LOG_ARCHIVE_DEST_n` coerenti su tutte le istanze e net service con address list di tutti i nodi standby.
+8. Se usi `SYNC`, configura timeout/retry coerenti (`NET_TIMEOUT`, `REOPEN`) per evitare stalli lunghi su fault di rete.
+
+### 4.4.3 Pre-check operativo (prima del cambio mode)
+
+```bash
+dgmgrl sys/<password>@RACDB
+```
 
 ```
 DGMGRL> SHOW CONFIGURATION;
--- Deve mostrare "Protection Mode: MaxPerformance"
+DGMGRL> SHOW DATABASE VERBOSE RACDB;
+DGMGRL> SHOW DATABASE VERBOSE RACDB_STBY;
 ```
 
-Se volessi cambiare (esempio Maximum Availability):
+```sql
+sqlplus / as sysdba
+SELECT protection_mode, protection_level, database_role FROM v$database;
+SELECT process, status FROM v$managed_standby WHERE process='MRP0';
+SELECT dest_id, status, error FROM v$archive_dest_status WHERE dest_id IN (1,2);
+```
+
+### 4.4.4 Procedura A - Tenere/Impostare Maximum Performance (default lab)
+
+Usala quando vuoi impatto minimo sul primario.
 
 ```
-DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MaxAvailability;
+DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='ASYNC';
+DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='ASYNC';
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXPERFORMANCE;
+DGMGRL> SHOW CONFIGURATION;
 ```
+
+### 4.4.5 Procedura B - Passare a Maximum Availability (zero data loss sul primo fault)
+
+Usala quando vuoi un equilibrio serio tra protezione e disponibilita.
+
+Opzione standard (piu protettiva):
+```
+DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='SYNC';
+DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='SYNC';
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
+```
+
+Opzione ottimizzata latenza (FASTSYNC):
+```
+DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='FASTSYNC';
+DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='FASTSYNC';
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
+```
+
+Nota pratica:
+- `SYNC` (con `AFFIRM`) protegge di piu, ma costa piu latenza.
+- `FASTSYNC` (equivale a `SYNC/NOAFFIRM`) riduce impatto, ma in scenari multipli estremi puo esporre a perdita dati.
+
+### 4.4.6 Procedura C - Passare a Maximum Protection (solo se consapevole dell'impatto)
+
+Attenzione:
+- da `MAXPERFORMANCE` non puoi passare direttamente a `MAXPROTECTION`;
+- devi fare prima `MAXAVAILABILITY`;
+- con un solo standby, la perdita di quello standby puo fermare il primario.
+
+```
+-- Step 1: assicurati che transport sia SYNC (non FASTSYNC)
+DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='SYNC';
+DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='SYNC';
+
+-- Step 2: passaggio intermedio obbligatorio
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
+
+-- Step 3: upgrade finale
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXPROTECTION;
+DGMGRL> SHOW CONFIGURATION;
+```
+
+### 4.4.7 Rollback sicuro (downgrade)
+
+Se vuoi tornare indietro:
+1. prima abbassa la protection mode;
+2. poi cambia il transport mode.
+
+Esempio ritorno a `MaxPerformance`:
+```
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXPERFORMANCE;
+DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='ASYNC';
+DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='ASYNC';
+DGMGRL> SHOW CONFIGURATION;
+```
+
+### 4.4.8 Verifica post-change (obbligatoria)
+
+```sql
+SELECT protection_mode, protection_level, database_role
+FROM   v$database;
+```
+
+```bash
+dgmgrl sys/<password>@RACDB
+```
+
+```
+DGMGRL> SHOW CONFIGURATION;
+DGMGRL> SHOW DATABASE RACDB_STBY;
+```
+
+Output atteso:
+- `Protection Mode` coerente con quello impostato;
+- `Configuration Status: SUCCESS`;
+- lag trasporto/apply vicino a zero nel lab.
+
+### 4.4.9 Best practice Oracle (riassunto operativo)
+
+1. Usa sempre Broker (`DGMGRL` o EM) per gestione mode e role transition.
+2. Configura SRL su tutti i standby e anche sul primario.
+3. In `MaxProtection`, Oracle raccomanda almeno 2 standby sincronizzati.
+4. Usa real-time apply per rilevare prima eventuali corruzioni e ridurre lag.
+5. In RAC, mantieni stesso `LOG_ARCHIVE_DEST_n` su tutte le istanze e usa net service con indirizzi multipli dello standby.
+6. Misura latenza/rete prima di imporre `SYNC`; se RTT e alta valuta `FASTSYNC` o torna `ASYNC`.
+7. Con `SYNC`, usa timeout/retry (`NET_TIMEOUT`, `REOPEN`) per rientro automatico dopo fault brevi.
+8. Monitora continuamente protection level/lag e chiudi subito anomalie di trasporto.
+
+### 4.4.10 Riferimenti Oracle ufficiali (consultati)
+
+- Data Guard Concepts and Administration 19c (Protection Modes):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-protection-modes.html
+- Data Guard Broker 19c PDF (Managing Data Protection Modes):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/data-guard-broker.pdf
+- Data Guard Broker command reference (`EDIT CONFIGURATION ... PROTECTION MODE`):
+  https://docs.oracle.com/en/database/oracle/oracle-database/21/dgbkr/oracle-data-guard-broker-commands.html
+- Data Guard Concepts and Administration 19c (Redo Transport Services):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-redo-transport-services.html
+- MAA Best Practices for Oracle Database 19c (Data Guard):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/overview-oracle-maximum-availability-architecture-best-practices.html
 
 ---
 
@@ -351,7 +495,7 @@ DISABLE DATABASE RACDB_STBY;
 ENABLE DATABASE RACDB_STBY;
 
 -- Cambiare la proprietà di trasporto
-EDIT DATABASE RACDB_STBY SET PROPERTY LogXptMode='SYNC';  -- o 'ASYNC'
+EDIT DATABASE RACDB_STBY SET PROPERTY LogXptMode='SYNC';  -- o 'ASYNC' / 'FASTSYNC'
 ```
 
 ---
