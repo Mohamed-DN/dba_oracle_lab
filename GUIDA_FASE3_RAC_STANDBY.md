@@ -227,10 +227,27 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
      echo "virbr0 non presente: OK (nessuna azione)"
    fi
 
-   # 2) Disabilita IPv6 solo sulla NAT enp0s3
-   cat > /etc/sysctl.d/99-rac-disable-ipv6-enp0s3.conf <<'EOF'
-   net.ipv6.conf.enp0s3.disable_ipv6 = 1
-   EOF
+# ============================================================
+# 2. DISABILITA IPv6 SULLA NAT (enp0s3)
+# ============================================================
+# L'IPv6 auto-configurato sulla NAT di VirtualBox genera indirizzi
+# IPv6 diversi su ogni VM, ma NON sono raggiungibili tra di loro
+# perché la NAT è isolata. Cluvfy prova a fare ping IPv6 e fallisce.
+echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
+sysctl -p
+
+# Verifica: enp0s3 non deve più mostrare indirizzi "inet6"
+ip -6 addr show enp0s3
+# Deve essere vuoto o mostrare solo link-local
+
+# ============================================================
+# 3. (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
+# ============================================================
+# L'interfaccia enp0s3 (10.0.2.15) serve per dare internet alla
+# VM (download pacchetti, yum update). NON la disabilitiamo
+# perché ci serve, ma cluvfy darà comunque un WARNING perché
+# entrambe le VM hanno lo stesso IP 10.0.2.15 sulla NAT.
+# Questo WARNING è HARMLESS: Oracle non userà mai questa rete.
    sysctl --system | grep -E "enp0s3.disable_ipv6|Applying"
 
    # 3) Verifica rete cluster
