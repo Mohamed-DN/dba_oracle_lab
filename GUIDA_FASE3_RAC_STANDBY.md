@@ -124,6 +124,24 @@ Accendi **UNA VM ALLA VOLTA** (dalla console nera di VirtualBox, non usare MobaX
 - Lancia `nmtui` e cambia Scheda Privata (Interconnect) a **`192.168.2.112`**
 - Riavvia (`reboot`)
 
+> Se in `nmtui` non vedi il profilo `enp0s9` (oppure `nmcli ... | grep ':enp0s9'` non restituisce nulla), crea il profilo manualmente:
+```bash
+# racstby1
+nmcli con add type ethernet ifname enp0s9 con-name stby-interconnect \
+  ipv4.method manual ipv4.addresses 192.168.2.111/24 \
+  ipv4.never-default yes ipv6.method ignore connection.autoconnect yes
+nmcli con up stby-interconnect
+
+# racstby2
+nmcli con add type ethernet ifname enp0s9 con-name stby-interconnect \
+  ipv4.method manual ipv4.addresses 192.168.2.112/24 \
+  ipv4.never-default yes ipv6.method ignore connection.autoconnect yes
+nmcli con up stby-interconnect
+
+# verifica
+ip -4 addr show enp0s9
+```
+
 ### Step 2b: Applicare il Fix Systemd (CRITICO!)
 Anche se le VM sono clonate, è bene assicurarsi che il fix per il bug IPC di Oracle Linux 7 sia applicato. Fallo su **entrambi** i nodi standby come `root`:
 ```bash
