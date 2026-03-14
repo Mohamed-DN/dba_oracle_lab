@@ -841,16 +841,27 @@ su - oracle
 cat > $ORACLE_HOME/network/admin/tnsnames.ora <<'EOF'
 RACDB =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = rac-scan.localdomain)(PORT = 1521))
+    (FAILOVER=ON)
+    (LOAD_BALANCE=OFF)
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = rac1.localdomain)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = rac2.localdomain)(PORT = 1521))
+    )
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = RACDB)
+      (UR=A)
     )
   )
 
 RACDB_STBY =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = racstby-scan.localdomain)(PORT = 1521))
+    (FAILOVER=ON)
+    (LOAD_BALANCE=OFF)
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = racstby1.localdomain)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = racstby2.localdomain)(PORT = 1521))
+    )
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = RACDB_STBY)
@@ -898,6 +909,8 @@ RACDB2_STBY =
 EOF
 ```
 
+> **Best practice Oracle RAC per Data Guard transport**: usa lo stesso net service name su tutti i nodi e fallo risolvere a un `ADDRESS_LIST` con tutti i listener dello standby (e del primario per i role switch). In questo modo eviti single point of failure e riduci errori tipo `ORA-12514` durante registrazione/ripartenza istanze.
+
 > **Perché tnsnames.ora identico ovunque?** Data Guard usa questi alias TNS per comunicare tra primario e standby. Se manca un'entry su un nodo, il redo shipping fallisce.
 
 > **Cos'è `(UR=A)`?** "Use Role = Any" — permette la connessione anche quando il database è in stato NOMOUNT o MOUNT (non solo OPEN). Essenziale per lo standby che non è mai in READ WRITE. Senza `UR=A`, `tnsping` funziona ma `sqlplus sys@RACDB_STBY as sysdba` fallisce con timeout.
@@ -913,6 +926,19 @@ tnsping RACDB_STBY
 tnsping RACDB1
 tnsping RACDB
 ```
+
+```bash
+# Test SQL reale (piu affidabile di tnsping)
+sqlplus 'sys/<password>@RACDB_STBY as sysdba'
+sqlplus 'sys/<password>@RACDB as sysdba'
+```
+
+### Riferimenti Oracle ufficiali (best practice rete/redo transport)
+
+- Data Guard Concepts and Administration 19c (redo transport services):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-redo-transport-services.html
+- Data Guard Broker 19c (RAC best practices per `LOG_ARCHIVE_DEST_n` e net service):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/data-guard-broker.pdf
 
 ---
 
@@ -959,7 +985,7 @@ ALTER SYSTEM SET log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)' SCOPE=BOTH SI
 
 ALTER SYSTEM SET log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SCOPE=BOTH SID='*';
 
-ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET log_archive_dest_state_1=ENABLE SCOPE=BOTH SID='*';
 ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
@@ -971,6 +997,21 @@ ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET db_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/' SCOPE=SPFILE SID='*';
 ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/RACDB_STBY/','+FRA/RACDB/' SCOPE=SPFILE SID='*';
+```
+
+```sql
+-- Verifica operativa subito dopo il settaggio
+SELECT dest_id, status, target, valid_role, error
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
+
+-- Se db_file_name_convert/log_file_name_convert sono SCOPE=SPFILE,
+-- verifica il valore su SPFILE (non solo in memoria)
+SELECT name, value
+FROM   v$spparameter
+WHERE  name IN ('db_file_name_convert','log_file_name_convert')
+AND    value IS NOT NULL;
 ```
 
 ### Spiegazione dettagliata (comando per comando)
@@ -990,12 +1031,13 @@ Questa e la spina dorsale di Data Guard: stai dicendo al primario chi e lo stand
    - Comandi:
    ```sql
    ALTER SYSTEM SET log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SCOPE=BOTH SID='*';
-   ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
    ```
    - `dest_1` locale: archivia sempre in FRA, sia in ruolo `PRIMARY` sia in ruolo `STANDBY`.
    - `dest_2` remota:
      - `SERVICE=RACDB_STBY`: usa alias TNS dello standby.
      - `LGWR ASYNC`: spedizione asincrona (modalita tipica `Maximum Performance`).
+     - `REOPEN=15`: se il link cade, ritenta automaticamente ogni 15 secondi.
      - `VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE)`: invia redo solo quando questo DB e primario.
 
 3. **Attivazione destinazioni (`log_archive_dest_state_n`)**
@@ -1390,11 +1432,66 @@ WHERE applied='YES' GROUP BY thread#;
 | Problema | Causa | Soluzione |
 |---|---|---|
 | `ORA-01017` su `sqlplus sys@RACDB_STBY` | Password file errato | Verifica nome = `orapw<SID>`, owner = `oracle` |
+| `ORA-12514` su `V$ARCHIVE_DEST` (`DEST_ID=2`) | Service standby non registrato/raggiungibile | Esegui runbook `Fix ORA-12514` qui sotto |
 | `ORA-12528: TNS:listener: all ... blocked` | DB in NOMOUNT senza `UR=A` | Aggiungi `(UR=A)` nel TNS dello standby |
 | `ORA-16055: FAL request rejected` | `log_archive_dest` errato | Correggi su ENTRAMBI i lati (vedi sotto) |
 | RMAN Duplicate timeout/hang | Rete lenta o sessione SSH caduta | Usa `nohup` o `screen`, verifica rete |
 | MRP non parte: `ORA-00270` | FRA piena sullo standby | Pulisci archivelog: `DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';` |
 | `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB' SCOPE=BOTH;` → FAL recupera automaticamente |
+
+### Fix ORA-12514 su `DEST_ID=2` (redo transport verso standby)
+
+Sintomo tipico:
+
+```sql
+SELECT dest_id, status, error
+FROM   v$archive_dest
+WHERE  dest_id = 2;
+-- STATUS = ERROR
+-- ERROR  = ORA-12514: listener does not currently know of service requested
+```
+
+Procedura rapida:
+
+```sql
+-- 1) Sul primario, metti in pausa la destinazione remota mentre correggi
+ALTER SYSTEM SET log_archive_dest_state_2=DEFER SCOPE=BOTH SID='*';
+```
+
+```bash
+# 2) Su racstby1/racstby2 (come grid): verifica servizi esposti dal listener
+lsnrctl status | grep -Ei "RACDB_STBY|RACDB_STBY_DGMGRL|READY|UNKNOWN"
+```
+
+```bash
+# 3) Dal primario testa il service standby con SQL (piu affidabile di tnsping)
+sqlplus 'sys/<password>@RACDB_STBY as sysdba'
+```
+
+Se il test SQL fallisce:
+1. ricontrolla `tnsnames.ora` con `ADDRESS_LIST` su `racstby1` + `racstby2`;
+2. verifica `listener.ora` statico su entrambi gli standby (`GLOBAL_DBNAME = RACDB_STBY`);
+3. riavvia listener standby:
+
+```bash
+srvctl stop listener
+srvctl start listener
+```
+
+Quando il test SQL passa, riabilita il transport:
+
+```sql
+ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
+
+SELECT dest_id, status, target, error
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
+```
+
+Atteso:
+- `DEST_ID=2` con `STATUS=VALID`
+- colonna `ERROR` vuota
 
 ### Fix ORA-16055 (Comune!)
 
@@ -1404,14 +1501,14 @@ WHERE applied='YES' GROUP BY thread#;
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
   VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SID='*' SCOPE=BOTH;
 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_STBY ASYNC
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_STBY LGWR ASYNC REOPEN=15
   VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SID='*' SCOPE=BOTH;
 
 -- Fix sullo STANDBY:
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
   VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY' SID='*' SCOPE=BOTH;
 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB ASYNC
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB LGWR ASYNC REOPEN=15
   VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB' SID='*' SCOPE=BOTH;
 ```
 
