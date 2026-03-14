@@ -1224,13 +1224,33 @@ mkdir -p /u01/app/oracle/admin/RACDB/adump
 
 ## 3.9 Avvio Istanza Standby in NOMOUNT
 
+Prima del comando `STARTUP`, fai sempre questi pre-check (best practice):
+
+```bash
+# Su racstby1 come oracle
+echo "ORACLE_HOME=$ORACLE_HOME"
+export ORACLE_SID=RACDB1
+echo "ORACLE_SID=$ORACLE_SID"
+
+# Il file deve esistere PRIMA di startup nomount
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+```
+
+Se il file non esiste, torna al passo `3.7` e ricopia il pfile:
+
+```bash
+scp /tmp/initRACDB_stby.ora oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+```
+
 ```bash
 # Su racstby1 come oracle
 export ORACLE_SID=RACDB1
 sqlplus / as sysdba
-STARTUP NOMOUNT PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
+STARTUP NOMOUNT PFILE='/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora';
 EXIT;
 ```
+
+> Nota: in questo punto della guida si usa **NOMOUNT** (non MOUNT) per permettere il `RMAN DUPLICATE`.
 
 ---
 
@@ -1327,6 +1347,10 @@ SHOW PARAMETER spfile;
 ```
 
 > **Perché SPFILE in ASM?** In un RAC, i parametri devono essere condivisi tra tutti i nodi. Se l'SPFILE è nel filesystem locale di racstby1, racstby2 non lo troverà! Mettendolo in ASM, è accessibile da entrambi i nodi.
+
+> Best practice operativa:
+> - prima del duplicate, startup manuale con `PFILE` e `NOMOUNT`;
+> - dopo registrazione in OCR (passo `3.12`), usa `srvctl` per start/stop dello standby invece di `startup` manuale.
 
 ---
 
@@ -1431,6 +1455,8 @@ WHERE applied='YES' GROUP BY thread#;
 
 | Problema | Causa | Soluzione |
 |---|---|---|
+| `ORA-01078` + `LRM-00109` su startup standby | File `initRACDB1.ora` assente o path errato | Esegui runbook `Fix ORA-01078/LRM-00109` qui sotto |
+| `ORA-01034` + `SP2-1545` su `show pdbs` | Istanza standby non avviata oppure standby in MOUNT | Avvia istanza (NOMOUNT/MOUNT) e usa query `v$database` invece di `show pdbs` |
 | `ORA-01017` su `sqlplus sys@RACDB_STBY` | Password file errato | Verifica nome = `orapw<SID>`, owner = `oracle` |
 | `ORA-12514` su `V$ARCHIVE_DEST` (`DEST_ID=2`) | Service standby non registrato/raggiungibile | Esegui runbook `Fix ORA-12514` qui sotto |
 | `ORA-12528: TNS:listener: all ... blocked` | DB in NOMOUNT senza `UR=A` | Aggiungi `(UR=A)` nel TNS dello standby |
@@ -1438,6 +1464,53 @@ WHERE applied='YES' GROUP BY thread#;
 | RMAN Duplicate timeout/hang | Rete lenta o sessione SSH caduta | Usa `nohup` o `screen`, verifica rete |
 | MRP non parte: `ORA-00270` | FRA piena sullo standby | Pulisci archivelog: `DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';` |
 | `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB' SCOPE=BOTH;` → FAL recupera automaticamente |
+
+### Fix ORA-01078 / LRM-00109 su standby (parameter file mancante)
+
+Sintomo tipico:
+
+```text
+ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '.../dbs/initRACDB1.ora'
+```
+
+Procedura:
+
+```bash
+# 1) Su racstby1, come oracle
+export ORACLE_SID=RACDB1
+echo "ORACLE_HOME=$ORACLE_HOME"
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+```
+
+Se il file manca:
+
+```bash
+# 2) Ricopia il pfile generato al passo 3.7
+scp /tmp/initRACDB_stby.ora oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+```
+
+```bash
+# 3) Riparti con NOMOUNT (fase pre-duplicate)
+sqlplus / as sysdba <<EOF
+STARTUP NOMOUNT PFILE='/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora';
+EXIT;
+EOF
+```
+
+Se sei gia nella fase post-duplicate e hai SPFILE in ASM:
+
+```bash
+# 4) Crea/ricrea il pointer locale
+echo "SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'" > /u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+```
+
+```sql
+-- 5) Avvia e verifica
+STARTUP MOUNT;
+SHOW PARAMETER spfile;
+SELECT name, open_mode, database_role FROM v$database;
+```
 
 ### Fix ORA-12514 su `DEST_ID=2` (redo transport verso standby)
 
