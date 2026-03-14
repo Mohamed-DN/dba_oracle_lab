@@ -217,7 +217,15 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
    ```
 4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
    ```bash
-   # Esegui su entrambi i nodi per non far fallire cluvfy
+```bash
+# ============================================================
+# 1. ELIMINA virbr0 (bridge di libvirt/KVM — non serve a RAC)
+# ============================================================
+# virbr0 è creato dal demone libvirtd, che serve per gestire
+# macchine virtuali KVM *dentro* la VM stessa.
+# Nel nostro lab non faremo mai VM-in-VM, quindi lo disabilitiamo.
+
+# Esegui su entrambi i nodi per non far fallire cluvfy
    # 1) Libvirt/virbr0: se non esiste e' gia OK
    systemctl disable --now libvirtd 2>/dev/null || true
    if ip link show virbr0 >/dev/null 2>&1; then
@@ -226,6 +234,10 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
    else
      echo "virbr0 non presente: OK (nessuna azione)"
    fi
+
+# Verifica: virbr0 non deve più comparire
+ip addr show virbr0 2>&1
+# Deve dire: "Device virbr0 does not exist."
 
 # ============================================================
 # 2. DISABILITA IPv6 SULLA NAT (enp0s3)
@@ -241,13 +253,14 @@ ip -6 addr show enp0s3
 # Deve essere vuoto o mostrare solo link-local
 
 # ============================================================
-# 3. (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
+# (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
 # ============================================================
 # L'interfaccia enp0s3 (10.0.2.15) serve per dare internet alla
 # VM (download pacchetti, yum update). NON la disabilitiamo
 # perché ci serve, ma cluvfy darà comunque un WARNING perché
 # entrambe le VM hanno lo stesso IP 10.0.2.15 sulla NAT.
 # Questo WARNING è HARMLESS: Oracle non userà mai questa rete.
+
    sysctl --system | grep -E "enp0s3.disable_ipv6|Applying"
 
    # 3) Verifica rete cluster
