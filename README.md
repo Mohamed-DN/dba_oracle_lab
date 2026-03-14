@@ -226,6 +226,7 @@ Materiale operativo:
 | **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ANALISI_ORACLEBASE_VAGRANT.md) | Confronto con Oracle Base Vagrant |
 | **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
 | **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
+| **Guida SSH Keys RAC** | [GUIDA_SSH_KEYS](./GUIDA_SSH_KEYS_RAC.md) | User equivalence per `grid`/`oracle`/`root`, reset rapido e troubleshooting `PRVG-2019` |
 | **Guida Fase 8 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
 | **Template Test GoldenGate** | [TESTLOG_GG_TEMPLATE](./TESTLOG_GOLDENGATE_TEMPLATE.md) | Template pronto per tracciare PASS/FAIL, lag, evidenze e fix |
 
