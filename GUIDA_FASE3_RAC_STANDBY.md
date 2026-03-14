@@ -329,7 +329,86 @@ su - root   -c "ssh racstby1 hostname"
 su - root   -c "ssh racstby2 hostname"
 ```
 
-#### 4.1b Pre-check cluvfy (stesso standard della Fase 2)
+#### 4.1b Pre-Grid: Blocco sincronizzazione host + hardening Chrony (OBBLIGATORIO)
+
+Prima di installare Grid sullo standby, blocca la sincronizzazione oraria imposta dall'hypervisor e lascia il controllo del tempo a `chronyd`.
+
+Perche:
+1. `chronyd` sincronizza la VM con NTP.
+2. VirtualBox Guest Additions puo forzare il clock guest al reboot.
+3. I salti orari fanno fallire i check NTP di `cluvfy` e possono sporcare il pre-check Grid.
+
+VirtualBox-first su `racstby1` e `racstby2` (come `root`):
+
+```bash
+# Disabilita i servizi VBox che possono forzare il clock guest
+if systemctl list-unit-files | grep -q '^vboxadd-service.service'; then
+  systemctl disable --now vboxadd-service
+fi
+
+if systemctl list-unit-files | grep -q '^vboxservice.service'; then
+  systemctl disable --now vboxservice
+fi
+
+# Verifica (se non esistono e normale)
+systemctl is-enabled vboxadd-service 2>/dev/null || true
+systemctl is-active vboxadd-service 2>/dev/null || true
+systemctl is-enabled vboxservice 2>/dev/null || true
+systemctl is-active vboxservice 2>/dev/null || true
+```
+
+Nota rapida altri hypervisor:
+- VMware: disattiva "Synchronize guest time with host" nelle opzioni VM.
+- Proxmox/KVM: disabilita il time sync guest-side equivalente, poi usa solo `chronyd`.
+
+Hardening Chrony su `racstby1` e `racstby2` (come `root`):
+
+```bash
+# Imposta makestep per correggere subito drift >1s nei primi 3 update
+if grep -q '^makestep' /etc/chrony.conf; then
+  sed -i 's/^makestep.*/makestep 1.0 3/' /etc/chrony.conf
+else
+  echo 'makestep 1.0 3' >> /etc/chrony.conf
+fi
+
+systemctl enable chronyd
+systemctl restart chronyd
+sleep 8
+
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+Test persistenza al reboot (obbligatorio su entrambi i nodi):
+
+```bash
+reboot
+```
+
+Dopo il login:
+
+```bash
+# Verifica che VBox time sync resti disattivo
+systemctl is-active vboxadd-service 2>/dev/null || true
+systemctl is-active vboxservice 2>/dev/null || true
+
+# Verifica sync Chrony
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+Criterio PASS/FAIL:
+- PASS: `chronyc tracking` mostra `Leap status     : Normal`.
+- PASS: `chronyc sources -v` mostra almeno una sorgente valida (`*` o `+`).
+- FAIL: `Leap status : Not synchronised` su uno dei due nodi.
+
+Gate di avanzamento:
+- vai alla sezione `4.1c` e poi `4.2` solo quando entrambi i nodi sono sincronizzati;
+- warning NAT duplicata `10.0.2.15` su `enp0s3` e benigno nel lab VirtualBox.
+
+#### 4.1c Pre-check cluvfy (stesso standard della Fase 2)
 
 ```bash
 # Su racstby1 come grid
@@ -345,43 +424,11 @@ Interpretazione output (allineata alla Fase 2):
 |---|---|---|
 | `PRVF-7530` (Physical Memory < 8GB) | Warning | In lab puoi procedere; opzionale aumentare RAM a 9 GB |
 | `PRVG-1172` / `PRVG-11067` su `10.0.2.15` (`enp0s3`) | Warning | NAT duplicata VirtualBox: ignorabile se `enp0s3` e `Do Not Use` in installer |
-| `PRVG-13606` (chrony non sync) | Warning/Fastidio | Prova restart `chronyd` e rilancia check; in lab puoi proseguire se resta solo questo |
+| `PRVG-13606` (chrony non sync) | Errore da chiudere | Torna a `4.1b`, verifica `makestep 1.0 3`, sincronizza e rilancia cluvfy |
 | `PRVG-11250` (RPM DB check) | Info | Ignora o rilancia con `-method root` |
 | `PRVG-2019` (User Equivalence) | Errore reale | Correggi SSH (`4.1a`) prima di continuare |
 
-Fix rapido chrony (su entrambi i nodi come `root`):
-
-```bash
-systemctl restart chronyd
-sleep 5
-chronyc makestep
-chronyc sources -v
-chronyc tracking
-```
-
-Se `PRVG-13606` resta su `racstby2`, fai pulizia completa:
-
-```bash
-# 1) Verifica config base
-grep -E '^(server|pool)' /etc/chrony.conf
-
-# 2) Se mancano sorgenti, aggiungi almeno queste
-cat >> /etc/chrony.conf <<'EOF'
-server 0.pool.ntp.org iburst
-server 1.pool.ntp.org iburst
-EOF
-
-# 3) Riavvia e forza sync
-systemctl enable chronyd
-systemctl restart chronyd
-sleep 8
-chronyc makestep
-chronyc sources -v
-chronyc tracking
-timedatectl
-```
-
-Poi rilancia `runcluvfy.sh`. Se resta solo `PRVG-13606` in lab puoi proseguire con `Ignore All`.
+Se compare `PRVG-13606`, non proseguire con l'installer: chiudi prima la sincronizzazione tempo in `4.1b` e rilancia `runcluvfy.sh`.
 
 #### 4.2 Installazione Grid Infrastructure (GUI)
 
@@ -399,8 +446,8 @@ Avvia `gridSetup.sh` su `racstby1` (come `grid`, via MobaXterm con X11). Segui i
 > 🛑 **Allo Step 8 (ASM Disk Group 'CRS') RICORDA IL WORKAROUND ASMLIB:**
 > Cambia il Discovery Path in `/dev/oracleasm/disks/*`. Seleziona SOLO `CRS1`, `CRS2`, `CRS3`.
 
-Procedi fino in fondo. In schermata Prerequisite puoi ignorare warning su RAM, NAT (`enp0s3`) e chrony sync (se hai gia provato il restart).  
-Non ignorare errori reali su SSH equivalence o discovery ASM.
+Procedi fino in fondo. In schermata Prerequisite puoi ignorare warning su RAM e NAT (`enp0s3`).  
+Non ignorare errori reali su SSH equivalence, discovery ASM o chrony sync.
 Esegui gli script **COME ROOT** su `racstby1` (`orainstRoot.sh`, poi `root.sh`), e attendi la fine prima di farli su `racstby2`.
 
 Verifica immediata post-installazione:
@@ -926,10 +973,85 @@ ALTER SYSTEM SET db_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/' SCOPE=S
 ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/RACDB_STBY/','+FRA/RACDB/' SCOPE=SPFILE SID='*';
 ```
 
-> **Spiegazione parametri chiave:**
-> - `log_archive_dest_2`: Dice al primario "spedisci i redo allo standby tramite LGWR ASYNC". LGWR = Log Writer (più veloce di ARCH). ASYNC = non aspettare la conferma dallo standby (performance migliore, possibile perdita minima di dati).
-> - `fal_server/fal_client`: "Fetch Archive Log" — se lo standby scopre un gap nei redo, sa dove andarli a prendere.
-> - `standby_file_management=AUTO`: Se crei un tablespace sul primario, lo standby lo crea automaticamente.
+### Spiegazione dettagliata (comando per comando)
+
+Questa e la spina dorsale di Data Guard: stai dicendo al primario chi e lo standby, dove spedire i redo e come comportarsi in caso di switchover/failover.
+
+1. **Definizione perimetro Data Guard (`log_archive_config`)**
+   - Comando:
+   ```sql
+   ALTER SYSTEM SET log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)' SCOPE=BOTH SID='*';
+   ```
+   - Cosa fa: autorizza solo i database con `DB_UNIQUE_NAME` `RACDB` e `RACDB_STBY` a partecipare alla configurazione.
+   - Perche serve: evita spedizioni/accettazioni redo verso target non previsti.
+   - Nota RAC: `SID='*'` applica il parametro a tutte le istanze (`rac1`, `rac2`).
+
+2. **Destinazioni archivelog locale e remota (`log_archive_dest_1`/`_2`)**
+   - Comandi:
+   ```sql
+   ALTER SYSTEM SET log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
+   ```
+   - `dest_1` locale: archivia sempre in FRA, sia in ruolo `PRIMARY` sia in ruolo `STANDBY`.
+   - `dest_2` remota:
+     - `SERVICE=RACDB_STBY`: usa alias TNS dello standby.
+     - `LGWR ASYNC`: spedizione asincrona (modalita tipica `Maximum Performance`).
+     - `VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE)`: invia redo solo quando questo DB e primario.
+
+3. **Attivazione destinazioni (`log_archive_dest_state_n`)**
+   - Comandi:
+   ```sql
+   ALTER SYSTEM SET log_archive_dest_state_1=ENABLE SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
+   ```
+   - Cosa fa: abilita operativamente le destinazioni appena definite.
+   - Se resta `DEFER`, la configurazione e corretta ma la spedizione non parte.
+
+4. **Gestione gap redo (`fal_server` / `fal_client`)**
+   - Comandi:
+   ```sql
+   ALTER SYSTEM SET fal_server='RACDB_STBY' SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET fal_client='RACDB' SCOPE=BOTH SID='*';
+   ```
+   - Cosa fa: prepara il meccanismo FAL (Fetch Archive Log) per recuperare automaticamente archivelog mancanti.
+   - Perche anche sul primario: in caso di switchover i ruoli si invertono, quindi i parametri devono essere gia pronti.
+
+5. **Creazione automatica file su standby (`standby_file_management=AUTO`)**
+   - Comando:
+   ```sql
+   ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH SID='*';
+   ```
+   - Cosa fa: quando aggiungi datafile/tablespace sul primario, lo standby li gestisce automaticamente.
+   - Rischio con `MANUAL`: apply puo fermarsi a ogni modifica strutturale.
+
+6. **Conversione path file (`db_file_name_convert`, `log_file_name_convert`)**
+   - Comandi:
+   ```sql
+   ALTER SYSTEM SET db_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/' SCOPE=SPFILE SID='*';
+   ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/RACDB_STBY/','+FRA/RACDB/' SCOPE=SPFILE SID='*';
+   ```
+   - Cosa fa: mappa i path ASM tra primario e standby per datafile/redofile quando cambia il ruolo.
+   - Perche `SCOPE=SPFILE`: questi parametri sono statici e richiedono restart istanza per entrare in vigore.
+
+### Check rapidi dopo la configurazione
+
+```sql
+SHOW PARAMETER log_archive_config;
+SHOW PARAMETER log_archive_dest_1;
+SHOW PARAMETER log_archive_dest_2;
+SHOW PARAMETER fal_server;
+SHOW PARAMETER fal_client;
+SHOW PARAMETER standby_file_management;
+SHOW PARAMETER db_file_name_convert;
+SHOW PARAMETER log_file_name_convert;
+```
+
+```sql
+SELECT DEST_ID, STATUS, TARGET, VALID_ROLE, ERROR
+FROM   V$ARCHIVE_DEST
+WHERE  DEST_ID IN (1,2)
+ORDER  BY DEST_ID;
+```
 
 ### Come Funziona il Redo Shipping
 
