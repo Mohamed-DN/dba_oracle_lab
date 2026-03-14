@@ -216,7 +216,6 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
    ls -ld /u01/app/oraInventory
    ```
 4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
-   ```bash
 ```bash
 # ============================================================
 # 1. ELIMINA virbr0 (bridge di libvirt/KVM — non serve a RAC)
