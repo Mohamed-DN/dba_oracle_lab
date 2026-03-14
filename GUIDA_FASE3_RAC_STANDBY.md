@@ -267,8 +267,48 @@ ip -6 addr show enp0s3
    ip -4 addr show enp0s8
    ip -4 addr show enp0s9
    ip -6 addr show enp0s3
-   ```
+    ```
    > Se `enp0s9` non mostra un IPv4 (`192.168.2.111` su `racstby1`, `192.168.2.112` su `racstby2`), configura subito l'interconnect con `nmtui` prima di proseguire con `cluvfy`.
+
+#### 4.1a User Equivalence SSH (OBBLIGATORIO) - `grid`, `oracle`, `root`
+
+L'errore `PRVG-2019` durante `cluvfy` indica che la trust SSH non è pronta.
+Configura l'equivalenza utenti su **entrambi i nodi** per tutte le utenze operative:
+
+```bash
+# ESEGUI SU racstby1 E racstby2 (ripeti per grid, oracle, root)
+for U in grid oracle root; do
+  echo "=== setup SSH per utente: $U ==="
+  su - $U -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+  su - $U -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+  su - $U -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+  su - $U -c "[ -f ~/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+  su - $U -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+  su - $U -c "chmod 600 ~/.ssh/known_hosts"
+done
+```
+
+Poi completa la trust bidirezionale:
+
+```bash
+# Da racstby1
+su - grid   -c "ssh-copy-id grid@racstby2"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+su - root   -c "ssh-copy-id root@racstby2"
+
+# Da racstby2
+su - grid   -c "ssh-copy-id grid@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby1"
+su - root   -c "ssh-copy-id root@racstby1"
+```
+
+Verifica finale (deve entrare senza password):
+
+```bash
+su - grid   -c "ssh racstby2 hostname"
+su - oracle -c "ssh racstby2 hostname"
+su - root   -c "ssh racstby2 hostname"
+```
 
 #### 4.1b Pre-check cluvfy (stesso standard della Fase 2)
 
