@@ -1192,6 +1192,40 @@ Utente fa COMMIT
                                               └──────────────┘
 ```
 
+### Spiegazione scritta (passo-passo)
+
+1. Sul primario, quando un utente fa `COMMIT`, il processo `LGWR` scrive prima nei redo log locali.
+2. Con `LOG_ARCHIVE_DEST_2` attivo, lo stesso redo viene spedito allo standby usando il net service (`RACDB_STBY_DG`).
+3. Sullo standby, il redo in arrivo non va subito nei datafile: entra prima negli `Standby Redo Log` (SRL).
+4. Il processo `MRP` (Managed Recovery Process) legge gli SRL e applica le modifiche ai datafile standby.
+5. Finche `MRP` e attivo (`APPLYING_LOG`), lo standby resta allineato al primario con lag minimo.
+
+In questa guida usiamo `LGWR ASYNC` (modalita `Maximum Performance`):
+- il primario non aspetta l'ack dello standby prima di confermare il commit;
+- massime prestazioni, ma in caso di crash simultaneo primario+rete puo esserci perdita minima degli ultimi redo non ancora arrivati.
+
+### Come verificare che il flusso e sano
+
+```sql
+-- Primario: transport verso standby
+SELECT dest_id, status, error
+FROM   v$archive_dest
+WHERE  dest_id = 2;
+
+-- Standby: apply attivo
+SELECT process, status, thread#, sequence#
+FROM   v$managed_standby
+WHERE  process IN ('RFS','MRP0');
+```
+
+Atteso:
+- `DEST_ID=2` con `STATUS=VALID` e `ERROR` nullo sul primario;
+- `MRP0` in stato `APPLYING_LOG` sullo standby.
+
+Se `DEST_ID=2` va in `ERROR`:
+- `ORA-12514`: problema service/listener/TNS;
+- `ORA-01034`: standby non disponibile (tipico pre-duplicate o istanza giu).
+
 ---
 
 ## 3.6 Creazione Password File e Copia
