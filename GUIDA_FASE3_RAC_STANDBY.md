@@ -1,4 +1,4 @@
-﻿# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
+# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
