@@ -984,6 +984,8 @@ sqlplus 'sys/<password>@RACDB_DG as sysdba'
   https://docs.oracle.com/en/database/oracle/oracle-database/21/rilin/about-connecting-to-an-oracle-rac-database-using-scans.html
 - Oracle MAA 19c (configure/deploy Data Guard):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/configure-and-deploy-oracle-data-guard.html
+- Oracle Data Guard 19c (creazione Physical Standby con RMAN duplicate):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/creating-oracle-data-guard-physical-standby.html
 
 ---
 
@@ -1057,6 +1059,24 @@ SELECT name, value
 FROM   v$spparameter
 WHERE  name IN ('db_file_name_convert','log_file_name_convert')
 AND    value IS NOT NULL;
+```
+
+> **Atteso in questa fase (pre-duplicate):**
+> - se lo standby non e ancora in piedi con istanza disponibile, `DEST_ID=2` puo mostrare `ERROR` con `ORA-01034` oppure `ORA-12514`;
+> - non e un blocco, e normale finche non completi `3.9` (startup standby) e `3.10` (RMAN duplicate).
+>
+> **Gate corretto:**
+> - **prima** del duplicate: `DEST_ID=1=VALID`, `DEST_ID=2` puo essere `ERROR`;
+> - **dopo** duplicate + apply attivo: `DEST_ID=2` deve diventare `VALID` con `ERROR` nullo.
+>
+> **Best practice Oracle:** sullo standby non usare DBCA in questo flusso; il database standby si crea con `RMAN DUPLICATE ... FOR STANDBY FROM ACTIVE DATABASE`.
+
+```sql
+-- Re-check obbligatorio post-duplicate (quando standby e in MOUNT + apply)
+SELECT dest_id, status, target, valid_role, error
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
 ```
 
 ### Spiegazione dettagliata (comando per comando)
