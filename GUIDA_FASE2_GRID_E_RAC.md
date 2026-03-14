@@ -261,6 +261,96 @@ ip -6 addr show enp0s3
 
 ---
 
+## 2.3d Pre-Grid: Blocco sincronizzazione host + hardening Chrony (OBBLIGATORIO)
+
+Prima di creare il software Grid, blocca la sincronizzazione oraria imposta dall'hypervisor e lascia il controllo del tempo a `chronyd`.
+
+Perche: nel lab c'e una "guerra del tempo":
+1. `chronyd` dentro Linux sincronizza l'ora con NTP.
+2. VirtualBox Guest Additions prova a riallineare l'ora al clock dell'host.
+3. Dopo reboot vince l'hypervisor, l'ora salta e `cluvfy`/Grid possono segnalare errori NTP.
+
+### 1) VirtualBox-first: disabilita time sync guest su `rac1` e `rac2`
+
+Esegui su entrambi i nodi come `root`:
+
+```bash
+# Disabilita i servizi VBox che possono forzare il clock guest
+if systemctl list-unit-files | grep -q '^vboxadd-service.service'; then
+  systemctl disable --now vboxadd-service
+fi
+
+if systemctl list-unit-files | grep -q '^vboxservice.service'; then
+  systemctl disable --now vboxservice
+fi
+
+# Verifica (se non esistono e normale)
+systemctl is-enabled vboxadd-service 2>/dev/null || true
+systemctl is-active vboxadd-service 2>/dev/null || true
+systemctl is-enabled vboxservice 2>/dev/null || true
+systemctl is-active vboxservice 2>/dev/null || true
+```
+
+Nota rapida altri hypervisor:
+- VMware: disattiva "Synchronize guest time with host" nelle opzioni VM.
+- Proxmox/KVM: disabilita policy time sync guest-side equivalente, poi lascia solo `chronyd`.
+
+### 2) Hardening Chrony su `rac1` e `rac2`
+
+Esegui su entrambi i nodi come `root`:
+
+```bash
+# Imposta makestep per correggere subito drift >1s nei primi 3 update
+if grep -q '^makestep' /etc/chrony.conf; then
+  sed -i 's/^makestep.*/makestep 1.0 3/' /etc/chrony.conf
+else
+  echo 'makestep 1.0 3' >> /etc/chrony.conf
+fi
+
+systemctl enable chronyd
+systemctl restart chronyd
+sleep 8
+
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+### 3) Test persistenza dopo reboot (OBBLIGATORIO)
+
+Su `rac1` e `rac2`:
+
+```bash
+reboot
+```
+
+Dopo il login su ogni nodo:
+
+```bash
+# Verifica che VBox time sync resti disattivo
+systemctl is-active vboxadd-service 2>/dev/null || true
+systemctl is-active vboxservice 2>/dev/null || true
+
+# Verifica sync Chrony
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+Criterio PASS/FAIL:
+- PASS: `chronyc tracking` mostra `Leap status     : Normal`.
+- PASS: `chronyc sources -v` mostra almeno una sorgente valida (`*` o `+`).
+- FAIL: `Leap status : Not synchronised` su uno dei due nodi.
+
+### 4) Gate di avanzamento verso Grid
+
+Vai avanti con `2.4` (cluvfy) e `2.5` (installazione Grid) solo se entrambi i nodi sono sincronizzati.
+
+Nota importante:
+- warning su NAT duplicata `10.0.2.15` (`enp0s3`) e benigno nel lab VirtualBox ed e separato dal problema NTP.
+
+---
+
 ## 2.4 Pre-Check con Cluster Verification Utility
 
 ```bash
@@ -278,6 +368,7 @@ cd /u01/app/19.0.0/grid
 > - **IP duplicato 10.0.2.15** — è la NAT di VirtualBox, identica su ogni VM per design
 >
 > **Questi warning NON sono bloccanti!** Il `cluvfy` è solo un "consulente" che ti avvisa. Il vero cancello è l'installer (`gridSetup.sh`), che ti mostrerà gli stessi avvisi ma avrà una **checkbox "Ignore All"** in basso a sinistra per proseguire.
+> **Importante**: questo vale per RAM/NAT; gli errori NTP (`PRVF-4664`) e SSH equivalence vanno risolti prima della Grid.
 >
 > **Se puoi permettertelo**, aumenta la RAM delle VM a **9216 MB (9 GB)** in VirtualBox per eliminare il warning sulla RAM.
 
@@ -288,7 +379,7 @@ cd /u01/app/19.0.0/grid
 | `PRVF-7530`: RAM insufficiente | ⚠️ Warning | Procedi — l'installer ha "Ignore All" (o alza la RAM a 9 GB) |
 | `PRVG-1172`: IP 10.0.2.15 duplicato | ⚠️ Warning | Innocuo — è la NAT VirtualBox, Oracle non la usa |
 | `PRVG-11250`: RPM Database check | ℹ️ Info | Ignorabile (serve root per questo check) |
-| `PRVF-4664`: NTP non configurato | ❌ Errore | Configura chrony (vedi Fase 1) |
+| `PRVF-4664`: NTP non configurato | ❌ Errore | Applica `2.3d` (blocco sync host + hardening Chrony) e rilancia cluvfy |
 | SSH user equivalence FAILED | ❌ Errore | Ripeti il setup SSH (Fase 1.12) |
 
 ---
@@ -497,12 +588,13 @@ Torna all'installer GUI e clicca **OK** per completare lo step.
 L'installer eseguirà un ultimo check automatico (`stage -post crsinst`).
 
 > 🛠️ **Troubleshooting: Errore PRVG-13606 (NTP/Chrony non sincronizzato)**
-> Se il check finale fallisce con l'errore `chrony daemon is not synchronized with any external time source`, è normalissimo su VirtualBox (l'orologio della VM fa fatica a stare dietro al PC fisico, specialmente se lo avevi ibernato).  
+> Se il check finale fallisce con l'errore `chrony daemon is not synchronized with any external time source`, torna alla sezione `2.3d` e riallinea prima il tempo.  
 > **Soluzione:**
 > 1. Apri un terminale `root` sul nodo indicato nell'errore (es. `rac2`).
-> 2. Esegui: `systemctl restart chronyd`
-> 3. Aspetta 10 secondi.
-> 4. Ritorna nell'installer GUI e clicca su **Retry** (o passa oltre e ignoralo, il cluster funziona lo stesso, ma provare a fixarlo costa zero).
+> 2. Verifica che in `/etc/chrony.conf` ci sia `makestep 1.0 3`.
+> 3. Esegui: `systemctl restart chronyd` e poi `chronyc tracking`.
+> 4. Conferma `Leap status : Normal`.
+> 5. Ritorna nell'installer GUI e clicca su **Retry**.
 
 
 
