@@ -1,4 +1,4 @@
-# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
+﻿# FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
@@ -216,15 +216,7 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
    ls -ld /u01/app/oraInventory
    ```
 4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
-```bash
-# ============================================================
-# 1. ELIMINA virbr0 (bridge di libvirt/KVM — non serve a RAC)
-# ============================================================
-# virbr0 è creato dal demone libvirtd, che serve per gestire
-# macchine virtuali KVM *dentro* la VM stessa.
-# Nel nostro lab non faremo mai VM-in-VM, quindi lo disabilitiamo.
-
-# Esegui su entrambi i nodi per non far fallire cluvfy
+   ```bash
    # 1) Libvirt/virbr0: se non esiste e' gia OK
    systemctl disable --now libvirtd 2>/dev/null || true
    if ip link show virbr0 >/dev/null 2>&1; then
@@ -234,79 +226,124 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
      echo "virbr0 non presente: OK (nessuna azione)"
    fi
 
-# Verifica: virbr0 non deve più comparire
-ip addr show virbr0 2>&1
-# Deve dire: "Device virbr0 does not exist."
+   # 2) Disabilita IPv6 sulla NAT enp0s3
+   grep -q '^net.ipv6.conf.enp0s3.disable_ipv6 = 1$' /etc/sysctl.conf \
+     || echo 'net.ipv6.conf.enp0s3.disable_ipv6 = 1' >> /etc/sysctl.conf
+   sysctl -p
 
-# ============================================================
-# 2. DISABILITA IPv6 SULLA NAT (enp0s3)
-# ============================================================
-# L'IPv6 auto-configurato sulla NAT di VirtualBox genera indirizzi
-# IPv6 diversi su ogni VM, ma NON sono raggiungibili tra di loro
-# perché la NAT è isolata. Cluvfy prova a fare ping IPv6 e fallisce.
-echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
-sysctl -p
-
-# Verifica: enp0s3 non deve più mostrare indirizzi "inet6"
-ip -6 addr show enp0s3
-# Deve essere vuoto o mostrare solo link-local
-
-# ============================================================
-# (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
-# ============================================================
-# L'interfaccia enp0s3 (10.0.2.15) serve per dare internet alla
-# VM (download pacchetti, yum update). NON la disabilitiamo
-# perché ci serve, ma cluvfy darà comunque un WARNING perché
-# entrambe le VM hanno lo stesso IP 10.0.2.15 sulla NAT.
-# Questo WARNING è HARMLESS: Oracle non userà mai questa rete.
-
-   sysctl --system | grep -E "enp0s3.disable_ipv6|Applying"
-
-   # 3) Verifica rete cluster
+   # 3) Verifiche
+   ip addr show virbr0 2>&1
    ip -4 addr show enp0s8
    ip -4 addr show enp0s9
    ip -6 addr show enp0s3
-    ```
+   ```
+   > `Cannot find device "virbr0"` e OK: significa che `virbr0` non esiste.
    > Se `enp0s9` non mostra un IPv4 (`192.168.2.111` su `racstby1`, `192.168.2.112` su `racstby2`), configura subito l'interconnect con `nmtui` prima di proseguire con `cluvfy`.
+   > L'IP NAT `10.0.2.15` su `enp0s3` puo dare warning CVU non bloccanti.
 
 #### 4.1a User Equivalence SSH (OBBLIGATORIO) - `grid`, `oracle`, `root`
 
-L'errore `PRVG-2019` durante `cluvfy` indica che la trust SSH non è pronta.
-Configura l'equivalenza utenti su **entrambi i nodi** per tutte le utenze operative:
+L'errore `PRVG-2019` durante `cluvfy` indica che la trust SSH non e pronta.
+Questa sezione e in stile Fase 1: passi lineari per utente.
+
+##### Step 0 (opzionale): Riparti pulito se hai fatto tentativi
+
+Esegui su `racstby1` e `racstby2` come `root`:
 
 ```bash
-# ESEGUI SU racstby1 E racstby2 (ripeti per grid, oracle, root)
-for U in grid oracle root; do
-  echo "=== setup SSH per utente: $U ==="
-  su - $U -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-  su - $U -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
-  su - $U -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
-  su - $U -c "[ -f ~/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
-  su - $U -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
-  su - $U -c "chmod 600 ~/.ssh/known_hosts"
-done
+rm -rf /home/grid/.ssh
+rm -rf /home/oracle/.ssh
+rm -rf /root/.ssh
 ```
 
-Poi completa la trust bidirezionale:
+##### Step 1: Generazione chiavi su entrambi i nodi
+
+Su `racstby1` e `racstby2`:
 
 ```bash
-# Da racstby1
-su - grid   -c "ssh-copy-id grid@racstby2"
-su - oracle -c "ssh-copy-id oracle@racstby2"
-su - root   -c "ssh-copy-id root@racstby2"
+su - grid   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - oracle -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - root   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+```
 
-# Da racstby2
-su - grid   -c "ssh-copy-id grid@racstby1"
+##### Step 2: Scambio chiavi (trust bidirezionale)
+
+Non devi lanciare "6 volte" lo stesso script: esegui i blocchi una volta da `racstby1` e una volta da `racstby2`.
+
+Per `grid`:
+
+```bash
+# da racstby1
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+
+# da racstby2
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+
+# test finale
+su - grid -c "ssh racstby1 hostname"
+su - grid -c "ssh racstby2 hostname"
+```
+
+Per `oracle`:
+
+```bash
+# da racstby1
 su - oracle -c "ssh-copy-id oracle@racstby1"
-su - root   -c "ssh-copy-id root@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+
+# da racstby2
+su - oracle -c "ssh-copy-id oracle@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+
+# test finale
+su - oracle -c "ssh racstby1 hostname"
+su - oracle -c "ssh racstby2 hostname"
 ```
 
-Verifica finale (deve entrare senza password):
+Per `root`:
 
 ```bash
-su - grid   -c "ssh racstby2 hostname"
-su - oracle -c "ssh racstby2 hostname"
-su - root   -c "ssh racstby2 hostname"
+# da racstby1
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
+
+# da racstby2
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
+
+# test finale
+su - root -c "ssh racstby1 hostname"
+su - root -c "ssh racstby2 hostname"
+```
+
+Se `ssh-copy-id` fallisce solo per `grid` o `oracle` (password rifiutata), usa `root` come piano B:
+
+Prima prova questo controllo rapido:
+
+```bash
+# su entrambi i nodi, come root
+passwd grid
+passwd oracle
+```
+
+Poi riprova i comandi `ssh-copy-id` per `grid`/`oracle`. Se ancora falliscono, usa il piano B qui sotto.
+
+```bash
+# da racstby1 -> racstby2
+cat /home/grid/.ssh/id_rsa.pub | ssh root@racstby2 \
+"install -d -m 700 -o grid -g oinstall /home/grid/.ssh; cat >> /home/grid/.ssh/authorized_keys; chown grid:oinstall /home/grid/.ssh/authorized_keys; chmod 600 /home/grid/.ssh/authorized_keys"
+
+cat /home/oracle/.ssh/id_rsa.pub | ssh root@racstby2 \
+"install -d -m 700 -o oracle -g oinstall /home/oracle/.ssh; cat >> /home/oracle/.ssh/authorized_keys; chown oracle:oinstall /home/oracle/.ssh/authorized_keys; chmod 600 /home/oracle/.ssh/authorized_keys"
+
+# da racstby2 -> racstby1
+cat /home/grid/.ssh/id_rsa.pub | ssh root@racstby1 \
+"install -d -m 700 -o grid -g oinstall /home/grid/.ssh; cat >> /home/grid/.ssh/authorized_keys; chown grid:oinstall /home/grid/.ssh/authorized_keys; chmod 600 /home/grid/.ssh/authorized_keys"
+
+cat /home/oracle/.ssh/id_rsa.pub | ssh root@racstby1 \
+"install -d -m 700 -o oracle -g oinstall /home/oracle/.ssh; cat >> /home/oracle/.ssh/authorized_keys; chown oracle:oinstall /home/oracle/.ssh/authorized_keys; chmod 600 /home/oracle/.ssh/authorized_keys"
 ```
 
 #### 4.1b Pre-check cluvfy (stesso standard della Fase 2)
