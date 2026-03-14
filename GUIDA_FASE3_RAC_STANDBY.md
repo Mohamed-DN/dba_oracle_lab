@@ -354,11 +354,34 @@ Fix rapido chrony (su entrambi i nodi come `root`):
 ```bash
 systemctl restart chronyd
 sleep 5
-chronyc sources
+chronyc makestep
+chronyc sources -v
 chronyc tracking
 ```
 
-Poi rilancia `runcluvfy.sh`.
+Se `PRVG-13606` resta su `racstby2`, fai pulizia completa:
+
+```bash
+# 1) Verifica config base
+grep -E '^(server|pool)' /etc/chrony.conf
+
+# 2) Se mancano sorgenti, aggiungi almeno queste
+cat >> /etc/chrony.conf <<'EOF'
+server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+EOF
+
+# 3) Riavvia e forza sync
+systemctl enable chronyd
+systemctl restart chronyd
+sleep 8
+chronyc makestep
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+Poi rilancia `runcluvfy.sh`. Se resta solo `PRVG-13606` in lab puoi proseguire con `Ignore All`.
 
 #### 4.2 Installazione Grid Infrastructure (GUI)
 
