@@ -50,13 +50,15 @@ SELECT process, status FROM v$managed_standby WHERE process='MRP0';
 # Verifica TNS dal primario
 tnsping RACDB
 tnsping RACDB_STBY
+tnsping RACDB_DG
+tnsping RACDB_STBY_DG
 ```
 
 Criteri minimi:
 
 - primario `READ WRITE` con ruolo `PRIMARY`
 - standby `PHYSICAL STANDBY` con `MRP0` attivo
-- connettivita TNS ok su entrambi gli alias
+- connettivita TNS ok sia alias SCAN (`RACDB`,`RACDB_STBY`) sia alias redo transport (`RACDB_DG`,`RACDB_STBY_DG`)
 
 Se questi check falliscono, rientra in [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md) prima di continuare.
 
@@ -127,6 +129,33 @@ ENABLE CONFIGURATION;
 > - `CONNECT IDENTIFIER IS RACDB`: Usa l'alias TNS `RACDB` per connettersi.
 > - `ADD DATABASE ... MAINTAINED AS PHYSICAL`: Aggiunge lo standby come Physical Standby (non Logical).
 > - `ENABLE CONFIGURATION`: Attiva tutto. Da questo momento, Broker gestisce il redo shipping.
+
+### 4.2a Best practice Broker: DGConnectIdentifier esplicito
+
+In RAC, e buona pratica usare alias dedicati al trasporto redo anche nel Broker.
+
+```bash
+dgmgrl sys/<password>@RACDB
+```
+
+```
+DGMGRL> SHOW DATABASE VERBOSE RACDB;
+DGMGRL> SHOW DATABASE VERBOSE RACDB_STBY;
+```
+
+Verifica il valore di `DGConnectIdentifier`. Se non e coerente con gli alias `_DG`, impostalo esplicitamente:
+
+```
+DGMGRL> EDIT DATABASE RACDB SET PROPERTY DGConnectIdentifier='RACDB_DG';
+DGMGRL> EDIT DATABASE RACDB_STBY SET PROPERTY DGConnectIdentifier='RACDB_STBY_DG';
+```
+
+Poi riesegui:
+
+```
+DGMGRL> VALIDATE DATABASE RACDB;
+DGMGRL> VALIDATE DATABASE RACDB_STBY;
+```
 
 ---
 
