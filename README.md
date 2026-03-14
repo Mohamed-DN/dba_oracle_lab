@@ -131,7 +131,6 @@ Riferimento esami in inglese (Oracle University, verificato il 14 marzo 2026):
 - `1Z0-083` (Oracle Database Administration II)
 - pagina esame EN 1Z0-082: https://education.oracle.com/oracle-database-administration-i/pexam_1Z0-082
 - pagina esame EN 1Z0-083: https://education.oracle.com/oracle-database-administration-ii/pexam_1Z0-083
-- catalogo certificazioni Oracle (EN): https://education.oracle.com/sites/default/files/2026-02/Oracle%20Certification%20Catalog.pdf
 
 Nota: numero domande e passing score possono cambiare per lingua/track; verifica sempre nel portale Oracle prima della prenotazione.
 
