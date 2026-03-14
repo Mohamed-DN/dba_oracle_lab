@@ -334,10 +334,31 @@ su - root   -c "ssh racstby2 hostname"
 ```bash
 # Su racstby1 come grid
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/runcluvfy.sh stage -pre crsinst -n racstby1,racstby2 -verbose
+$ORACLE_HOME/runcluvfy.sh stage -pre crsinst -n racstby1,racstby2 -verbose -method root
 ```
 
-Risolvi eventuali `FAILED` bloccanti prima di avviare `gridSetup.sh`. I warning noti su NAT (`enp0s3`) possono essere ignorati se hai gia impostato correttamente la rete pubblica/interconnect.
+Se non usi `-method root`, vedrai `PRVG-11250` (RPM check non eseguito): e solo informativo.
+
+Interpretazione output (allineata alla Fase 2):
+
+| Errore | Tipo | Azione |
+|---|---|---|
+| `PRVF-7530` (Physical Memory < 8GB) | Warning | In lab puoi procedere; opzionale aumentare RAM a 9 GB |
+| `PRVG-1172` / `PRVG-11067` su `10.0.2.15` (`enp0s3`) | Warning | NAT duplicata VirtualBox: ignorabile se `enp0s3` e `Do Not Use` in installer |
+| `PRVG-13606` (chrony non sync) | Warning/Fastidio | Prova restart `chronyd` e rilancia check; in lab puoi proseguire se resta solo questo |
+| `PRVG-11250` (RPM DB check) | Info | Ignora o rilancia con `-method root` |
+| `PRVG-2019` (User Equivalence) | Errore reale | Correggi SSH (`4.1a`) prima di continuare |
+
+Fix rapido chrony (su entrambi i nodi come `root`):
+
+```bash
+systemctl restart chronyd
+sleep 5
+chronyc sources
+chronyc tracking
+```
+
+Poi rilancia `runcluvfy.sh`.
 
 #### 4.2 Installazione Grid Infrastructure (GUI)
 
@@ -355,7 +376,8 @@ Avvia `gridSetup.sh` su `racstby1` (come `grid`, via MobaXterm con X11). Segui i
 > 🛑 **Allo Step 8 (ASM Disk Group 'CRS') RICORDA IL WORKAROUND ASMLIB:**
 > Cambia il Discovery Path in `/dev/oracleasm/disks/*`. Seleziona SOLO `CRS1`, `CRS2`, `CRS3`.
 
-Procedi fino in fondo, ignora i warning su IP Duplicato (`enp0s3`) e RAM.  
+Procedi fino in fondo. In schermata Prerequisite puoi ignorare warning su RAM, NAT (`enp0s3`) e chrony sync (se hai gia provato il restart).  
+Non ignorare errori reali su SSH equivalence o discovery ASM.
 Esegui gli script **COME ROOT** su `racstby1` (`orainstRoot.sh`, poi `root.sh`), e attendi la fine prima di farli su `racstby2`.
 
 Verifica immediata post-installazione:
