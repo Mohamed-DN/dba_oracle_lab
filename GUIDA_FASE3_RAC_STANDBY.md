@@ -200,11 +200,27 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
 4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
    ```bash
    # Esegui su entrambi i nodi per non far fallire cluvfy
-   systemctl stop libvirtd && systemctl disable libvirtd
-   ip link set virbr0 down && brctl delbr virbr0 2>/dev/null
-   echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
-   sysctl -p
+   # 1) Libvirt/virbr0: se non esiste e' gia OK
+   systemctl disable --now libvirtd 2>/dev/null || true
+   if ip link show virbr0 >/dev/null 2>&1; then
+     ip link set virbr0 down
+     brctl delbr virbr0 2>/dev/null || true
+   else
+     echo "virbr0 non presente: OK (nessuna azione)"
+   fi
+
+   # 2) Disabilita IPv6 solo sulla NAT enp0s3
+   cat > /etc/sysctl.d/99-rac-disable-ipv6-enp0s3.conf <<'EOF'
+   net.ipv6.conf.enp0s3.disable_ipv6 = 1
+   EOF
+   sysctl --system | grep -E "enp0s3.disable_ipv6|Applying"
+
+   # 3) Verifica rete cluster
+   ip -4 addr show enp0s8
+   ip -4 addr show enp0s9
+   ip -6 addr show enp0s3
    ```
+   > Se `enp0s9` non mostra un IPv4 (`192.168.2.111` su `racstby1`, `192.168.2.112` su `racstby2`), configura subito l'interconnect con `nmtui` prima di proseguire con `cluvfy`.
 
 #### 4.1b Pre-check cluvfy (stesso standard della Fase 2)
 
