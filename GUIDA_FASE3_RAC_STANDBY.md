@@ -276,37 +276,56 @@ Configura l'equivalenza utenti su **entrambi i nodi** per tutte le utenze operat
 Per reset completo e troubleshooting (Permission denied, Host key verification failed), vedi anche: [GUIDA_SSH_KEYS_RAC](./GUIDA_SSH_KEYS_RAC.md).
 
 ```bash
-# ESEGUI SU racstby1 E racstby2 (ripeti per grid, oracle, root)
-for U in grid oracle root; do
-  echo "=== setup SSH per utente: $U ==="
-  su - $U -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-  su - $U -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
-  su - $U -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
-  su - $U -c "[ -f ~/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
-  su - $U -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
-  su - $U -c "chmod 600 ~/.ssh/known_hosts"
-done
+# Step 0 (opzionale) reset totale chiavi su entrambi i nodi
+rm -rf /home/grid/.ssh
+rm -rf /home/oracle/.ssh
+rm -rf /root/.ssh
 ```
 
-Poi completa la trust bidirezionale:
+Generazione chiavi su entrambi i nodi:
 
 ```bash
-# Da racstby1
-su - grid   -c "ssh-copy-id grid@racstby2"
-su - oracle -c "ssh-copy-id oracle@racstby2"
-su - root   -c "ssh-copy-id root@racstby2"
+su - grid   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - oracle -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - root   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+```
 
-# Da racstby2
-su - grid   -c "ssh-copy-id grid@racstby1"
+Scambio chiavi manuale (trust bidirezionale):
+
+```bash
+# Per grid
+# da racstby1
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+# da racstby2
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+
+# Per oracle
+# da racstby1
 su - oracle -c "ssh-copy-id oracle@racstby1"
-su - root   -c "ssh-copy-id root@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+# da racstby2
+su - oracle -c "ssh-copy-id oracle@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+
+# Per root
+# da racstby1
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
+# da racstby2
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
 ```
 
 Verifica finale (deve entrare senza password):
 
 ```bash
+su - grid   -c "ssh racstby1 hostname"
 su - grid   -c "ssh racstby2 hostname"
+su - oracle -c "ssh racstby1 hostname"
 su - oracle -c "ssh racstby2 hostname"
+su - root   -c "ssh racstby1 hostname"
 su - root   -c "ssh racstby2 hostname"
 ```
 

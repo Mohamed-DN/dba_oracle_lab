@@ -31,42 +31,81 @@ Utenti:
 
 ---
 
-## 3) Procedura standard (rapida)
+## 3) Procedura standard (manuale)
 
-Esegui questo blocco su **entrambi** i nodi come `root`.
+### Step 0 - Reset (opzionale, consigliato se hai gia fatto tentativi)
+
+Esegui su `racstby1` e `racstby2` come `root`:
 
 ```bash
-# ESEGUI SU racstby1 E racstby2 (ripeti per grid, oracle, root)
-for U in grid oracle root; do
-  echo "=== setup SSH per utente: $U ==="
-  su - $U -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-  su - $U -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
-  su - $U -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
-  su - $U -c "[ -f ~/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
-  su - $U -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
-  su - $U -c "chmod 600 ~/.ssh/known_hosts"
-done
+rm -rf /home/grid/.ssh
+rm -rf /home/oracle/.ssh
+rm -rf /root/.ssh
 ```
 
-Poi completa la trust bidirezionale:
+### Step 1 - Generazione chiavi su entrambi i nodi
 
 ```bash
-# Da racstby1
-su - grid   -c "ssh-copy-id grid@racstby2"
-su - oracle -c "ssh-copy-id oracle@racstby2"
-su - root   -c "ssh-copy-id root@racstby2"
+su - grid   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - oracle -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+su - root   -c "ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa"
+```
 
-# Da racstby2
-su - grid   -c "ssh-copy-id grid@racstby1"
+### Step 2 - Aggiorna known_hosts su entrambi i nodi
+
+```bash
+su - grid   -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - grid   -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - grid   -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - grid   -c "chmod 600 ~/.ssh/known_hosts"
+
+su - oracle -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - oracle -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - oracle -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - oracle -c "chmod 600 ~/.ssh/known_hosts"
+
+su - root   -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - root   -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - root   -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - root   -c "chmod 600 ~/.ssh/known_hosts"
+```
+
+### Step 3 - Trust bidirezionale
+
+```bash
+# grid
+# da racstby1
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+# da racstby2
+su - grid -c "ssh-copy-id grid@racstby1"
+su - grid -c "ssh-copy-id grid@racstby2"
+
+# oracle
+# da racstby1
 su - oracle -c "ssh-copy-id oracle@racstby1"
-su - root   -c "ssh-copy-id root@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+# da racstby2
+su - oracle -c "ssh-copy-id oracle@racstby1"
+su - oracle -c "ssh-copy-id oracle@racstby2"
+
+# root
+# da racstby1
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
+# da racstby2
+su - root -c "ssh-copy-id root@racstby1"
+su - root -c "ssh-copy-id root@racstby2"
 ```
 
-Verifica finale:
+### Step 4 - Verifica finale
 
 ```bash
+su - grid   -c "ssh racstby1 hostname"
 su - grid   -c "ssh racstby2 hostname"
+su - oracle -c "ssh racstby1 hostname"
 su - oracle -c "ssh racstby2 hostname"
+su - root   -c "ssh racstby1 hostname"
 su - root   -c "ssh racstby2 hostname"
 ```
 
@@ -93,12 +132,20 @@ Poi riparti da sezione 3.
 La host key salvata non coincide piu (tipico dopo clone/snapshot).
 
 ```bash
-for U in grid oracle root; do
-  su - $U -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
-  su - $U -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
-  su - $U -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
-  su - $U -c "chmod 600 ~/.ssh/known_hosts"
-done
+su - grid   -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - grid   -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - grid   -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - grid   -c "chmod 600 ~/.ssh/known_hosts"
+
+su - oracle -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - oracle -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - oracle -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - oracle -c "chmod 600 ~/.ssh/known_hosts"
+
+su - root   -c "ssh-keygen -R racstby1 >/dev/null 2>&1 || true"
+su - root   -c "ssh-keygen -R racstby2 >/dev/null 2>&1 || true"
+su - root   -c "ssh-keyscan -H racstby1 racstby2 >> ~/.ssh/known_hosts"
+su - root   -c "chmod 600 ~/.ssh/known_hosts"
 ```
 
 ### 5.2 `Permission denied (publickey,...)` su `grid`/`oracle`
@@ -168,4 +215,3 @@ cat /home/oracle/.ssh/id_rsa.pub | ssh root@racstby1 \
 - `ssh racstby1 hostname` e `ssh racstby2 hostname` senza password per `grid`, `oracle`, `root`
 - nessun errore `PRVG-2019` in `cluvfy`
 - file `known_hosts` e `authorized_keys` con owner/permessi corretti
-
