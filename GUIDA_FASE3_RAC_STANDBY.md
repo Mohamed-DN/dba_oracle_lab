@@ -178,13 +178,24 @@ Ora che i nodi standby esistono, la rete funziona e i dischi ASMLib sono pronti,
    ```
 3. **Pointers Inventory (`racstby1` e `racstby2` come root)**:
    ```bash
-   # Esegui su entrambi i nodi
+   # 1. Crea il file pointer che dice a Oracle dove sta l'Inventory
    cat > /etc/oraInst.loc <<'EOF'
-inventory_loc=/u01/app/oraInventory
-inst_group=oinstall
-EOF
-   chown root:oinstall /etc/oraInst.loc && chmod 644 /etc/oraInst.loc
-   mkdir -p /u01/app/oraInventory && chown grid:oinstall /u01/app/oraInventory && chmod 775 /u01/app/oraInventory
+   inventory_loc=/u01/app/oraInventory
+   inst_group=oinstall
+   EOF
+
+   # 2. Permessi corretti sul file
+   chown root:oinstall /etc/oraInst.loc
+   chmod 644 /etc/oraInst.loc
+
+   # 3. Crea la directory dell'Inventory (se non esiste già)
+   mkdir -p /u01/app/oraInventory
+   chown grid:oinstall /u01/app/oraInventory
+   chmod 775 /u01/app/oraInventory
+
+   # 4. Verifica
+   cat /etc/oraInst.loc
+   ls -ld /u01/app/oraInventory
    ```
 4. **Pulizia Reti Fantasma (`racstby1` e `racstby2` come root)**:
    ```bash
