@@ -56,6 +56,33 @@ Concetto chiave:
 - l'istanza e' volatile;
 - il database e' persistente.
 
+Blocco visivo:
+
+```text
+           STARTUP
+              |
+              v
+   +-----------------------+
+   | NOMOUNT               |
+   | SGA + processi attivi |
+   | nessun control file   |
+   +-----------------------+
+              |
+              v
+   +-----------------------+
+   | MOUNT                 |
+   | control file aperto   |
+   | struttura nota        |
+   +-----------------------+
+              |
+              v
+   +-----------------------+
+   | OPEN                  |
+   | datafile e redo aperti|
+   | utenti ammessi        |
+   +-----------------------+
+```
+
 ---
 
 ## 2. Ciclo di Vita del Database: NOMOUNT, MOUNT, OPEN
@@ -137,6 +164,22 @@ Oracle usa due grandi aree di memoria:
 
 1. `SGA` condivisa;
 2. `PGA` privata.
+
+Schema rapido:
+
+```text
++-------------------------------------------------------------------+
+|                           ORACLE INSTANCE                          |
+|                                                                   |
+|  +--------------------------- SGA -------------------------------+ |
+|  | Buffer Cache | Shared Pool | Redo Buffer | Large/Java/Streams| |
+|  +---------------------------------------------------------------+ |
+|                                                                   |
+|  +--------------------------- PGA -------------------------------+ |
+|  | memoria privata del singolo processo: sort, hash, stack      | |
+|  +---------------------------------------------------------------+ |
++-------------------------------------------------------------------+
+```
 
 ### 3.1 SGA: memoria condivisa dell'istanza
 
@@ -365,6 +408,23 @@ Flusso semplificato.
 8. Fetch righe al client
 ```
 
+Disegno mentale:
+
+```text
+Client
+  |
+  v
+Listener -> Service -> Istanza
+  |
+  v
+Server Process
+  |
+  +--> Parse
+  +--> Bind
+  +--> Execute
+  +--> Fetch
+```
+
 ### 5.1 Parse
 
 Il parse non e' solo analisi sintattica.
@@ -408,6 +468,34 @@ Importante:
 ---
 
 ## 6. Transazioni, SCN, Redo, Undo e Consistenza
+
+Schema del commit:
+
+```text
+Sessione
+  |
+  | UPDATE
+  v
+Server process
+  |
+  +--> modifica blocco in Buffer Cache
+  +--> genera UNDO
+  +--> genera REDO
+               |
+               v
+        Redo Log Buffer
+               |
+               v
+             LGWR
+               |
+               v
+      Online Redo Log su disco
+               |
+               v
+           COMMIT OK
+
+DBWn scrive i datafile dopo.
+```
 
 Questa e' la parte che separa chi usa Oracle da chi lo capisce.
 
@@ -711,6 +799,27 @@ Questo e' il flusso da sapere a memoria.
 10. DBWn scrivera' il blocco dirty sul datafile piu' tardi
 ```
 
+Vista step-by-step:
+
+```text
+UPDATE
+  |
+  +--> blocco letto o gia' in cache
+  +--> undo generato
+  +--> redo generato
+  +--> blocco diventa dirty
+
+COMMIT
+  |
+  +--> LGWR forza il redo su disco
+  +--> Oracle conferma il commit
+
+POST-COMMIT
+  |
+  +--> CKPT aggiorna checkpoint info
+  +--> DBWn scarica il dirty block piu' tardi
+```
+
 Regola d'oro:
 
 - redo prima dei datafile;
@@ -719,6 +828,23 @@ Regola d'oro:
 ---
 
 ## 10. Oracle Net, Listener, Services e Registrazione Dinamica
+
+Blocco visivo:
+
+```text
+Applicazione / sqlplus
+        |
+        v
+     Listener
+        |
+        | usa SERVICE_NAME
+        v
+   Service registration
+        |
+        +--> instance 1
+        +--> instance 2
+        +--> role-based service Data Guard
+```
 
 ### 10.1 Listener
 
@@ -772,6 +898,21 @@ Serve per forzare la registrazione immediata dopo start listener o cambi service
 ## 11. Architettura Multitenant: CDB e PDB
 
 Dal punto di vista 19c, l'architettura multitenant e' centrale.
+
+Schema CDB/PDB:
+
+```text
++---------------------------------------------------------------+
+|                           CDB ROOT                            |
+|  processi, memoria, redo, undo, dizionario comune            |
+|                                                               |
+|  +----------------+  +----------------+  +----------------+   |
+|  | PDB$SEED       |  | APP_PDB1       |  | APP_PDB2       |   |
+|  | template       |  | dati app 1     |  | dati app 2     |   |
+|  | read only      |  | utenti locali  |  | utenti locali  |   |
+|  +----------------+  +----------------+  +----------------+   |
++---------------------------------------------------------------+
+```
 
 ### 11.1 Componenti
 
@@ -853,11 +994,47 @@ Perche' ASM e' importante:
 - supporta OMF;
 - si integra bene con RAC, RMAN, Data Guard.
 
+Blocco visivo:
+
+```text
+Database / Grid
+      |
+      v
+   ASM instance
+      |
+   +--+----------------------+
+   |                         |
+   v                         v
++DATA                     +RECO
+datafile                  archivelog
+controlfile               backup pieces
+online redo               flashback logs
+spfile/password file      copies
+```
+
 ---
 
 ## 13. RAC: Architettura Cluster
 
 RAC significa piu' istanze che aprono lo stesso database condiviso.
+
+Schema RAC:
+
+```text
+             +---------------- Shared Storage ----------------+
+             | Datafiles / Controlfiles / Redo / SPFILE / ASM |
+             +-------------------+-----------------------------+
+                                 ^
+                                 |
+        +------------------------+------------------------+
+        |                                                 |
+        v                                                 v
++---------------------+                         +---------------------+
+| Instance RACDB1     |<-- Cache Fusion / GCS ->| Instance RACDB2     |
+| Node rac1           |                         | Node rac2           |
+| SGA + PGA + proc    |                         | SGA + PGA + proc    |
++---------------------+                         +---------------------+
+```
 
 ### 13.1 Cosa condividono le istanze RAC
 
@@ -912,6 +1089,26 @@ I services permettono di decidere:
 ## 14. Data Guard: Architettura di Protezione
 
 Data Guard protegge il database con uno o piu' standby.
+
+Schema redo transport:
+
+```text
+PRIMARY (RACDB)                               STANDBY (RACDB_STBY)
+
+Utente COMMIT
+     |
+     v
+   LGWR  -------------------- redo transport -------------------->
+     |                                                           |
+     v                                                           v
+Online Redo Log                                            Standby Redo Log
+                                                                |
+                                                                v
+                                                        MRP0 / Redo Apply
+                                                                |
+                                                                v
+                                                          Datafile standby
+```
 
 ### 14.1 Componenti concettuali
 
