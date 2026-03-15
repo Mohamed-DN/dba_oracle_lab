@@ -1783,6 +1783,27 @@ La sequenza corretta e':
 rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB1_STBY
 ```
 
+Nota importante:
+
+- `<password>` e' un placeholder documentale
+- NON devi scrivere i caratteri `<` e `>` nel comando reale
+- Bash interpreta `<password>` come redirezione input e prova ad aprire un file chiamato `password`
+- la password Oracle e' case-sensitive, quindi `Root_1234` e `root_1234` NON sono la stessa cosa
+
+Esempio reale:
+
+```bash
+rman TARGET "sys/Root_1234@RACDB" AUXILIARY "sys/Root_1234@RACDB1_STBY"
+```
+
+Se vuoi evitare di lasciare la password nella command history, entra prima in RMAN e poi fai le connect:
+
+```bash
+rman
+RMAN> CONNECT TARGET sys/Root_1234@RACDB;
+RMAN> CONNECT AUXILIARY sys/Root_1234@RACDB1_STBY;
+```
+
 > **Per database grandi (>50 GB)**, lancia con `nohup` o in un `screen`/`tmux` per evitare che un timeout SSH interrompa l'operazione:
 > ```bash
 > nohup rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB1_STBY <<EOF > /tmp/duplicate.log 2>&1 &
