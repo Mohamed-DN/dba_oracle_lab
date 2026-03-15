@@ -1230,76 +1230,225 @@ Se `DEST_ID=2` va in `ERROR`:
 
 ## 3.6 Creazione Password File e Copia
 
-### Se il password file è su ASM (caso più comune in RAC)
+### Cosa stiamo facendo davvero
+
+In questo punto non stai "creando ASM". Stai facendo due operazioni diverse:
+
+1. leggere o estrarre il password file del database dal posto in cui e' salvato sul primario;
+2. mettere una copia identica sui nodi standby, con il nome giusto per ogni istanza.
+
+In RAC il password file del database e' spesso salvato in ASM, quindi:
+
+- per entrare in ASM usi `grid` + `~/.grid_env`
+- per lavorare nel database home usi `oracle` + `~/.db_env`
+
+Questa e' la logica corretta:
+
+- `grid` gestisce Grid Infrastructure e ASM
+- `oracle` gestisce il database home e i file sotto `$ORACLE_HOME/dbs`
+
+Il password file e' un file del database, ma se si trova in `+DATA/...` devi prima passare da ASM per tirarlo fuori. Ecco perche' in questo step inizi come `grid`.
+
+### Perche' Data Guard ha bisogno del password file
+
+Data Guard e RMAN usano il password file per autenticare le connessioni amministrative remote (`SYS`, redo transport, duplicate, broker).
+
+Regole da ricordare:
+
+- il contenuto del password file deve essere coerente tra primario e standby
+- il file locale sullo standby deve avere il nome giusto per l'istanza
+- nel tuo lab, prima del `RMAN DUPLICATE`, lo standby parte da file locali nel database home
+
+Se il file e' sbagliato o manca, puoi vedere errori tipo:
+
+- `ORA-01017`
+- `ORA-01031`
+- `ORA-17627`
+- `ORA-19909`
+
+### Passo 1 - Capire dove sta il password file sul primario
+
+Metodo raccomandato in RAC + ASM:
 
 ```bash
-# Sul primario (rac1) come grid: ASM è gestito con l'environment Grid
-# In Fase 1 hai creato /home/grid/.grid_env, non "grid.env"
-su - grid
-. ~/.grid_env
-asmcmd
-ASMCMD> cd +DATA/RACDB/PASSWORD
-ASMCMD> ls
-pwdracdb.256.1188432663
-ASMCMD> pwcopy pwdracdb.256.1188432663 /tmp/orapwRACDB1
-ASMCMD> exit
-```
-
-Se vuoi verificare l'environment attivo prima di entrare in `asmcmd`:
-
-```bash
+# Su rac1 come grid
 su - grid
 . ~/.grid_env
 echo $ORACLE_SID
 echo $ORACLE_HOME
 which asmcmd
+asmcmd pwget --dbuniquename RACDB
 ```
 
-Output atteso su `rac1`:
+Output atteso:
 
 ```text
 +ASM1
 /u01/app/19.0.0/grid
 /u01/app/19.0.0/grid/bin/asmcmd
++DATA/RACDB/PASSWORD/pwdracdb.256.1188432663
 ```
 
-Nota pratica:
-- `oracle` usa `/home/oracle/.db_env` per il database
-- `grid` usa `/home/grid/.grid_env` per ASM/Grid Infrastructure
-- il comando `. grid.env` è sbagliato per due motivi:
-  - manca il prefisso `~/` e il nome corretto è `.grid_env`
-  - stavi usando l'utente `oracle`, ma per `asmcmd` in questo passaggio è più corretto `grid`
+Se `pwget` restituisce un path ASM (`+DATA/...`), il password file e' in ASM e devi usare il flusso del passo 2.
 
-### Se il password file è nel filesystem
+Se invece non trovi nulla in ASM, verifica lato database home:
 
 ```bash
-# Sul primario (rac1) come oracle
-cd $ORACLE_HOME/dbs
+su - oracle
+. ~/.db_env
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+```
+
+### Passo 2 - Se il password file e' in ASM, copialo da ASM al filesystem
+
+```bash
+# Su rac1 come grid
+su - grid
+. ~/.grid_env
+asmcmd
+ASMCMD> pwget --dbuniquename RACDB
+ASMCMD> pwcopy +DATA/RACDB/PASSWORD/pwdracdb.256.1188432663 /tmp/orapwRACDB1
+ASMCMD> exit
+
+# Verifica il file estratto sul filesystem
+ls -l /tmp/orapwRACDB1
+chmod 640 /tmp/orapwRACDB1
+chgrp oinstall /tmp/orapwRACDB1
+```
+
+Perche' qui usi `grid`?
+
+- `asmcmd` vive nel Grid home
+- ASM e' amministrato dalla Grid Infrastructure
+- Oracle documenta `pwcopy` e `pwget` come comandi ASMCMD per password file ASM/database
+
+### Passo 3 - Se il password file e' gia nel filesystem sul primario
+
+In questo caso non ti serve `grid`. Lavori direttamente come `oracle`.
+
+Se il file esiste gia':
+
+```bash
+su - oracle
+. ~/.db_env
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+```
+
+Se invece devi crearne uno nuovo sul filesystem:
+
+```bash
+su - oracle
+. ~/.db_env
+cd /u01/app/oracle/product/19.0.0/dbhome_1/dbs
 orapwd file=orapwRACDB1 password=<tua_password_sys> entries=10 force=y
 ```
 
-### Copia sullo standby (IMPORTANTE: nome = orapw<SID>)
+### Passo 4 - Copiare il file sui nodi standby
+
+Prima del duplicate vuoi un password file locale nel DB home di ciascun nodo standby.
+
+Nel tuo lab:
+
+- `racstby1` usa `ORACLE_SID=RACDB1`
+- `racstby2` usa `ORACLE_SID=RACDB2`
+
+Quindi i nomi devono essere:
+
+- `orapwRACDB1` su `racstby1`
+- `orapwRACDB2` su `racstby2`
+
+I due file hanno contenuto equivalente, ma nome diverso perche' ogni istanza legge `orapw$ORACLE_SID`.
 
 ```bash
-# Se il file è stato copiato da ASM in /tmp come utente grid,
-# rendilo leggibile da oracle prima dello scp
-ls -l /tmp/orapwRACDB1
-chmod 640 /tmp/orapwRACDB1
-
-# Il nome del password file DEVE essere orapw<SID>!
-# Se il SID è RACDB1 → il file deve chiamarsi orapwRACDB1
-
+# Su rac1 come oracle
 su - oracle
 . ~/.db_env
-scp /tmp/orapwRACDB1 oracle@racstby1:$ORACLE_HOME/dbs/orapwRACDB1
-scp /tmp/orapwRACDB1 oracle@racstby2:$ORACLE_HOME/dbs/orapwRACDB2
 
-# Verifica owner e permessi (DEVE essere oracle:oinstall)
-ls -la $ORACLE_HOME/dbs/orapw*
-# -rw-r----- 1 oracle oinstall 2048 ... orapwRACDB1
+scp /tmp/orapwRACDB1 oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+scp /tmp/orapwRACDB1 oracle@racstby2:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2
 ```
 
-> **Perché copiare il password file?** Data Guard usa il password file per autenticare la connessione redo transport tra primario e standby. Le password SYS devono essere identiche. Se ricevi `ORA-01017: invalid username/password`, controlla che il nome del file sia `orapw<SID>` e che l'owner sia l'utente oracle.
+### Passo 5 - Verifica sullo standby
+
+```bash
+# Su racstby1 come oracle
+su - oracle
+. ~/.db_env
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+
+# Su racstby2 come oracle
+su - oracle
+. ~/.db_env
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2
+```
+
+Atteso:
+
+```text
+-rw-r----- 1 oracle oinstall 2048 ... orapwRACDB1
+-rw-r----- 1 oracle oinstall 2048 ... orapwRACDB2
+```
+
+### Passo 6 - Come si collega ai passi successivi
+
+Subito dopo userai:
+
+- il `pfile` locale in `dbs/initRACDB1.ora`
+- il password file locale in `dbs/orapwRACDB1`
+
+per fare:
+
+- `STARTUP NOMOUNT`
+- `RMAN DUPLICATE FOR STANDBY`
+
+Quindi in questa fase non ti serve ancora rimettere il password file dello standby in ASM. Il file locale nel DB home va bene per partire.
+
+### Passo 7 - Nota best practice post-duplicate
+
+Dopo che lo standby RAC sara' creato e registrato correttamente, potrai decidere di riallineare anche il password file dello standby in ASM.
+
+Questo e' un passo successivo, non obbligatorio per sbloccare il duplicate.
+
+Esempio concettuale:
+
+```bash
+# Esempio post-duplicate, non farlo adesso se non hai ancora creato lo standby
+su - grid
+. ~/.grid_env
+asmcmd
+ASMCMD> pwcopy --dbuniquename RACDB_STBY /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1 +DATA/RACDB_STBY/PASSWORD/orapwRACDB_STBY -f
+ASMCMD> exit
+```
+
+### Procedura rapida da seguire adesso nel lab
+
+Se vuoi solo andare avanti senza perderti:
+
+```bash
+# 1) Su rac1 come grid
+su - grid
+. ~/.grid_env
+asmcmd pwget --dbuniquename RACDB
+asmcmd
+# dentro ASMCMD:
+# pwcopy +DATA/RACDB/PASSWORD/pwdracdb.256.1188432663 /tmp/orapwRACDB1
+# exit
+
+# 2) Sempre su rac1
+ls -l /tmp/orapwRACDB1
+chmod 640 /tmp/orapwRACDB1
+chgrp oinstall /tmp/orapwRACDB1
+
+# 3) Su rac1 come oracle
+su - oracle
+. ~/.db_env
+scp /tmp/orapwRACDB1 oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+scp /tmp/orapwRACDB1 oracle@racstby2:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2
+
+# 4) Verifica su entrambi gli standby
+ssh oracle@racstby1 'ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1'
+ssh oracle@racstby2 'ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2'
+```
 
 ---
 
