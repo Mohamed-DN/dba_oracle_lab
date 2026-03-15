@@ -3,6 +3,13 @@
 > Indice curato delle attivita DBA avanzate gia presenti nel repository.
 > Non sostituisce il percorso base Fase 0 -> Fase 8: lo estende dopo che il lab e stabile.
 
+## Documenti principali della cartella
+
+| Documento | Quando usarlo | File |
+|---|---|---|
+| **Catalogo completo attivita DBA** | Quando vuoi vedere tutto il perimetro del lavoro DBA Oracle, organizzato per dominio operativo | [GUIDA_CATALOGO_ATTIVITA_DBA.md](./GUIDA_CATALOGO_ATTIVITA_DBA.md) |
+| **Checklist operativa DBA** | Quando vuoi una sequenza pratica giornaliera, settimanale, mensile, trimestrale e pre/post change | [GUIDA_CHECKLIST_ATTIVITA_DBA.md](./GUIDA_CHECKLIST_ATTIVITA_DBA.md) |
+
 ## Come usare questa area
 
 - Completa prima il lab base e tieni il Data Guard in `MaxPerformance`.
