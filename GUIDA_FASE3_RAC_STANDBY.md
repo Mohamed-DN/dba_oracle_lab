@@ -1552,7 +1552,7 @@ Nel pfile standby devi fare tre cose:
 
 ```ini
 *.audit_file_dest='/u01/app/oracle/admin/RACDB_STBY/adump'
-*.cluster_database=TRUE
+*.cluster_database=FALSE
 *.db_name='RACDB'
 *.db_unique_name='RACDB_STBY'
 *.db_create_file_dest='+DATA'
@@ -1617,13 +1617,14 @@ Nota critica sui convert:
 - nel pfile standby la direzione corretta e' `PRIMARY -> STANDBY`
 - quindi `RACDB` va convertito in `RACDB_STBY`
 - se lasci il verso invertito, RMAN e lo startup dello standby puntano ai path sbagliati
+- durante il duplicate RAC, tieni `cluster_database=FALSE` sull'auxiliary; lo riporterai a `TRUE` dopo il duplicate, quando passerai allo SPFILE condiviso e alla registrazione OCR
 
 ### Template pulito pronto da incollare
 
 ```ini
 *.audit_file_dest='/u01/app/oracle/admin/RACDB_STBY/adump'
 *.audit_trail='db'
-*.cluster_database=TRUE
+*.cluster_database=FALSE
 *.compatible='19.0.0'
 *.db_block_size=8192
 *.db_create_file_dest='+DATA'
@@ -1745,6 +1746,37 @@ EXIT;
 > Nota: in questo punto della guida si usa **NOMOUNT** (non MOUNT) per permettere il `RMAN DUPLICATE`.
 > Nota 2: `racstby2` NON va avviato adesso. Verra' gestito dopo il duplicate.
 
+Pre-check obbligatorio prima di entrare in RMAN:
+
+```bash
+# Su racstby1 come oracle
+su - oracle
+. ~/.db_env
+export ORACLE_SID=RACDB1
+
+sqlplus / as sysdba <<'EOF'
+startup force nomount pfile='/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora';
+select instance_name, status from v$instance;
+show parameter cluster_database;
+exit
+EOF
+
+lsnrctl status | grep -Ei "RACDB1|RACDB_STBY|UNKNOWN|READY"
+
+sqlplus 'sys/<password>@RACDB1_STBY as sysdba'
+```
+
+Atteso:
+
+- `v$instance.status = STARTED`
+- `cluster_database = FALSE` durante la fase di duplicate
+- login remoto su `RACDB1_STBY` riuscito
+
+Se il login remoto fallisce con:
+
+- `ORA-01034`: l'istanza auxiliary non e' realmente partita in `NOMOUNT`
+- `ORA-12514` o `ORA-12528`: problema listener statico / alias TNS / `(UR=A)`
+
 ---
 
 ## 3.10 RMAN Duplicate da Active Database
@@ -1819,7 +1851,7 @@ DUPLICATE TARGET DATABASE
   DORECOVER
   SPFILE
     SET db_unique_name='RACDB_STBY'
-    SET cluster_database='TRUE'
+    SET cluster_database='FALSE'
     SET remote_listener='racstby-scan.localdomain:1521'
     SET fal_server='RACDB_DG'
     SET log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
@@ -1867,6 +1899,14 @@ CREATE SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
   FROM PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
 
 -- Shutdown
+SHUTDOWN IMMEDIATE;
+```
+
+```sql
+-- Rimetti il database in modalita' RAC solo DOPO il duplicate
+-- (durante il duplicate deve restare FALSE)
+STARTUP NOMOUNT PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
+ALTER SYSTEM SET cluster_database=TRUE SCOPE=SPFILE SID='*';
 SHUTDOWN IMMEDIATE;
 ```
 
