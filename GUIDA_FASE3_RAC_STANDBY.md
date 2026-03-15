@@ -2145,19 +2145,67 @@ RMAN> SHOW ARCHIVELOG DELETION POLICY;
 ## 3.15 Verifica Sincronizzazione
 
 ```sql
--- Sul PRIMARIO: esegui alcuni log switch per testare
-ALTER SYSTEM SWITCH LOGFILE;   -- Thread 1
+-- Sul PRIMARIO: forza attivita' redo su entrambi i thread RAC
 ALTER SYSTEM SWITCH LOGFILE;
+ALTER SYSTEM ARCHIVE LOG CURRENT;
 
--- Sul PRIMARIO: verifica ultimo sequence archiviato
-SELECT thread#, MAX(sequence#) FROM v$archived_log
-WHERE archived='YES' GROUP BY thread#;
+-- Verifica che la destinazione Data Guard sia sana
+SELECT dest_id, status, error
+FROM   v$archive_dest
+WHERE  dest_id = 2;
+```
 
--- Sullo STANDBY: verifica ultimo sequence applicato
-SELECT thread#, MAX(sequence#) FROM v$archived_log
-WHERE applied='YES' GROUP BY thread#;
+```sql
+-- Sullo STANDBY (racstby1): verifica ruolo e stato
+SELECT open_mode, database_role
+FROM   v$database;
+```
 
--- I numeri DEVONO corrispondere!
+```sql
+-- Sullo STANDBY (racstby1): verifica transport/apply lag
+SELECT name, value, unit
+FROM   v$dataguard_stats
+WHERE  name IN ('transport lag','apply lag','apply finish time');
+```
+
+```sql
+-- Sullo STANDBY (racstby1): verifica processo di apply
+SELECT process, status, thread#, sequence#
+FROM   v$managed_standby
+WHERE  process IN ('MRP0','RFS');
+```
+
+```sql
+-- Sullo STANDBY (racstby1): confronto corretto tra ultimo log ricevuto e ultimo log applicato
+SELECT thread#,
+       MAX(sequence#) AS last_received,
+       MAX(CASE WHEN applied = 'YES' THEN sequence# END) AS last_applied
+FROM   v$archived_log
+GROUP  BY thread#
+ORDER  BY thread#;
+```
+
+Come leggere correttamente questi risultati:
+
+- `database_role` deve essere `PHYSICAL STANDBY`
+- `open_mode` deve essere `MOUNTED`
+- `MRP0` deve essere presente su `racstby1`, con stato `APPLYING_LOG` oppure `WAIT_FOR_LOG`
+- `DEST_ID=2` sul primario deve risultare `VALID` e senza errore
+- `transport lag` e `apply lag` devono essere nulli o molto bassi
+
+Nota importante:
+
+- non usare come unico criterio la query `MAX(sequence#)` tra primario e standby
+- in Real-Time Apply, uno scarto di 1 sequence puo' essere normale per pochi secondi
+- il primario puo' aver gia' aperto il sequence successivo mentre lo standby sta ancora ricevendo o applicando il precedente
+- il confronto corretto e' `last_received` vs `last_applied` sullo standby, insieme a `MRP0` e `v$dataguard_stats`
+
+Shell one-liner utili:
+
+```bash
+sqlplus -s / as sysdba <<< "SELECT process, status, thread#, sequence# FROM v\$managed_standby WHERE process IN ('MRP0','RFS');"
+sqlplus -s / as sysdba <<< "SELECT thread#, MAX(sequence#) AS last_received, MAX(CASE WHEN applied='YES' THEN sequence# END) AS last_applied FROM v\$archived_log GROUP BY thread# ORDER BY thread#;"
+sqlplus -s / as sysdba <<< "SELECT name, value, unit FROM v\$dataguard_stats WHERE name IN ('transport lag','apply lag','apply finish time');"
 ```
 
 ---
@@ -2313,21 +2361,21 @@ sqlplus -s / as sysdba <<< "SELECT process, status FROM v\$managed_standby WHERE
 sqlplus -s / as sysdba <<< "SELECT * FROM v\$archive_gap;"
 # (nessuna riga = tutto OK)
 
-# 4. Sequence primario == standby
-# Sul primario:
-sqlplus -s / as sysdba <<< "SELECT thread#, max(sequence#) FROM v\$archived_log WHERE archived='YES' GROUP BY thread#;"
+# 4. Apply attivo e lag basso
+sqlplus -s / as sysdba <<< "SELECT process, status, thread#, sequence# FROM v\$managed_standby WHERE process IN ('MRP0','RFS');"
+sqlplus -s / as sysdba <<< "SELECT name, value, unit FROM v\$dataguard_stats WHERE name IN ('transport lag','apply lag','apply finish time');"
 
-# Sullo standby:
-sqlplus -s / as sysdba <<< "SELECT thread#, max(sequence#) FROM v\$archived_log WHERE applied='YES' GROUP BY thread#;"
+# 5. Confronto corretto last_received vs last_applied sullo standby
+sqlplus -s / as sysdba <<< "SELECT thread#, MAX(sequence#) AS last_received, MAX(CASE WHEN applied='YES' THEN sequence# END) AS last_applied FROM v\$archived_log GROUP BY thread# ORDER BY thread#;"
 
-# 5. SPFILE in ASM (non locale!)
+# 6. SPFILE in ASM (non locale!)
 SHOW PARAMETER spfile;
 # +DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora
 
-# 6. Archivelog deletion policy configurata
+# 7. Archivelog deletion policy configurata
 rman target / <<< "SHOW ARCHIVELOG DELETION POLICY;"
 
-# 7. Errori nel alert log?
+# 8. Errori nel alert log?
 adrci
 SHOW ALERT -tail 30
 ```
