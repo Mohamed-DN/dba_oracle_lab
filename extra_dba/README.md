@@ -24,6 +24,7 @@
 | **Switchover** | Quando vuoi testare role transition pianificata senza data loss | [GUIDA_SWITCHOVER_COMPLETO.md](../GUIDA_SWITCHOVER_COMPLETO.md) |
 | **Failover + Reinstate** | Quando vuoi simulare perdita del primary e recupero controllato | [GUIDA_FAILOVER_E_REINSTATE.md](../GUIDA_FAILOVER_E_REINSTATE.md) |
 | **Active Data Guard** | Quando vuoi tenere lo standby in `READ ONLY WITH APPLY`, anche per GoldenGate | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
+| **PDB propagation + services** | Quando vuoi creare un PDB sul primary, verificarne la comparsa sullo standby e pubblicare servizi RAC corretti | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
 
 ### Nota pratica sul cambio modalita
 
@@ -38,6 +39,7 @@ La guida tecnica resta in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAG
 | Attivita | Quando usarla | Guida |
 |---|---|---|
 | **Listener e Services** | Quando devi capire SCAN, listener statici, servizi RAC e troubleshooting `ORA-12514` | [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
+| **PDB services role-based** | Quando vuoi pubblicare servizi PDB sul primary e, con Active Data Guard, sullo standby read-only | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
 | **Patching RAC** | Quando devi applicare RU/OJVM o ripulire l'home dopo il patching | [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md) |
 | **Upgrade RU workflow** | Quando vuoi simulare upgrade RU piu strutturati e rollback | [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md) |
 

@@ -44,6 +44,12 @@ SELECT name, open_mode, database_role, db_unique_name FROM v$database;
 sqlplus / as sysdba
 SELECT name, open_mode, database_role, db_unique_name FROM v$database;
 SELECT process, status FROM v$managed_standby WHERE process='MRP0';
+SHOW PARAMETER spfile;
+```
+
+```bash
+# Sullo standby
+srvctl status database -d RACDB_STBY -v
 ```
 
 ```bash
@@ -58,7 +64,14 @@ Criteri minimi:
 
 - primario `READ WRITE` con ruolo `PRIMARY`
 - standby `PHYSICAL STANDBY` con `MRP0` attivo
+- standby registrato nel cluster e montato su `racstby1` / `racstby2`
+- SPFILE standby in ASM, non in `dbs/spfileRACDB1.ora`
 - connettivita TNS ok sia alias SCAN (`RACDB`,`RACDB_STBY`) sia alias redo transport (`RACDB_DG`,`RACDB_STBY_DG`)
+
+Nota RAC:
+
+- in physical standby RAC e normale vedere `MRP0` su una sola istanza;
+- non usare l'assenza di `MRP0` su `racstby2` come criterio di errore.
 
 Se questi check falliscono, rientra in [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md) prima di continuare.
 
@@ -66,7 +79,10 @@ Se questi check falliscono, rientra in [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE
 
 ## 4.1 Abilitare Data Guard Broker
 
-Esegui su **TUTTI** i nodi (primario e standby):
+In RAC basta eseguire il settaggio una volta per database:
+
+- da `rac1` per `RACDB`
+- da `racstby1` per `RACDB_STBY`
 
 ```sql
 sqlplus / as sysdba
@@ -84,6 +100,47 @@ EXIT;
 ps -ef | grep dmon
 # Devi vedere un processo dmon_RACDB (o simile)
 ```
+
+### 4.1a Best practice RAC: file Broker condivisi in ASM
+
+In RAC, `DG_BROKER_CONFIG_FILE1` e `DG_BROKER_CONFIG_FILE2` non devono stare nel filesystem locale del singolo nodo. Devono stare su storage condiviso.
+
+Verifica prima i parametri:
+
+```sql
+sqlplus / as sysdba
+SHOW PARAMETER dg_broker_config_file;
+```
+
+Se vedi path locali sotto `$ORACLE_HOME/dbs`, normalizzali prima di proseguire.
+
+Sul primary (`rac1`):
+
+```sql
+sqlplus / as sysdba
+
+ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_config_file1='+DATA/RACDB/dr1RACDB.dat' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_config_file2='+RECO/RACDB/dr2RACDB.dat' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
+```
+
+Sullo standby (`racstby1`):
+
+```sql
+sqlplus / as sysdba
+
+ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_config_file1='+DATA/RACDB_STBY/dr1RACDB_STBY.dat' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_config_file2='+RECO/RACDB_STBY/dr2RACDB_STBY.dat' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
+```
+
+Questa normalizzazione e coerente con la Fase 3:
+
+- SPFILE condiviso in ASM;
+- database standby registrato in OCR;
+- configurazione RAC piena su entrambi i nodi.
 
 ---
 
@@ -208,6 +265,7 @@ SUCCESS
 > - **Transport Lag**: Quanto ritardo c'è nella spedizione dei redo dal primario allo standby. Idealmente 0.
 > - **Apply Lag**: Quanto ritardo c'è nell'applicazione dei redo sullo standby. Idealmente 0 o pochi secondi.
 > - **Apply Rate**: La velocità di applicazione.
+> - In RAC standby e normale che il Broker mostri una sola `apply instance` attiva.
 
 > 📸 **SNAPSHOT — "SNAP-09: DGMGRL_Configurato" ⭐ MILESTONE**
 > Data Guard Broker è operativo con STATUS = SUCCESS. Hai un vero sito di Disaster Recovery.
