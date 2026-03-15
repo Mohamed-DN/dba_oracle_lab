@@ -1419,19 +1419,44 @@ Atteso:
 -rw-r----- 1 oracle oinstall 2048 ... orapwRACDB2
 ```
 
-### Passo 6 - Come si collega ai passi successivi
+### Passo 6 - Cosa esiste gia' e cosa NON esiste ancora
+
+Nel tuo lab, a questo punto:
+
+- esistono gia' i server standby `racstby1` e `racstby2`
+- esiste gia' la Grid Infrastructure standby
+- esiste gia' la DB Home standby
+- esistono gia' ASM, listener, rete e storage standby
+
+Ma NON esiste ancora il database standby `RACDB_STBY` come database fisico duplicato.
+
+Questo e' il punto chiave:
+
+- lo standby come infrastruttura esiste gia'
+- lo standby come database Oracle deve ancora essere creato da RMAN
 
 Subito dopo userai:
 
 - il `pfile` locale in `dbs/initRACDB1.ora`
 - il password file locale in `dbs/orapwRACDB1`
 
-per fare:
+per avviare UNA sola istanza auxiliary:
 
-- `STARTUP NOMOUNT`
+- nodo `racstby1`
+- istanza `RACDB1`
+- stato `NOMOUNT`
+
+e poi lanciare:
+
 - `RMAN DUPLICATE FOR STANDBY`
 
-Quindi in questa fase non ti serve ancora rimettere il password file dello standby in ASM. Il file locale nel DB home va bene per partire.
+Quindi, in questa fase:
+
+- `racstby1` viene usato per creare il database standby
+- `racstby2` non va ancora avviato come istanza database
+- `orapwRACDB2` su `racstby2` lo prepari in anticipo per il passo successivo
+
+Per questo motivo non ti serve ancora rimettere il password file dello standby in ASM. Il file locale nel DB home va bene per partire con l'istanza auxiliary.
 
 ### Passo 7 - Nota best practice post-duplicate
 
@@ -1484,8 +1509,24 @@ ssh oracle@racstby2 'ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACD
 
 ## 3.7 Creazione del PFILE per lo Standby
 
+### Obiettivo reale del passo 3.7
+
+Qui non stai ancora configurando tutto il RAC standby.
+
+Stai creando un `pfile` temporaneo per avviare SOLO la prima istanza standby:
+
+- nodo `racstby1`
+- istanza `RACDB1`
+- stato `NOMOUNT`
+
+Questo basta a RMAN per usare `racstby1` come `AUXILIARY` e costruire il database standby.
+
+`racstby2` entrera' in gioco dopo, quando il duplicate sara' finito e il database standby verra' registrato nel cluster.
+
 ```bash
 # Sul primario come oracle
+su - oracle
+. ~/.db_env
 sqlplus / as sysdba
 CREATE PFILE='/tmp/initRACDB_stby.ora' FROM SPFILE;
 EXIT;
@@ -1518,12 +1559,20 @@ RACDB2.undo_tablespace='UNDOTBS2'
 Copia sullo standby:
 
 ```bash
-scp /tmp/initRACDB_stby.ora oracle@racstby1:$ORACLE_HOME/dbs/initRACDB1.ora
+# Copia SOLO su racstby1: per il duplicate basta una sola istanza auxiliary
+scp /tmp/initRACDB_stby.ora oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
 ```
+
+Nota importante:
+
+- in questo passo NON copiare ancora `initRACDB2.ora` su `racstby2`
+- il secondo nodo verra' allineato dopo il duplicate, quando creerai lo `SPFILE` condiviso in ASM e il pointer file per `RACDB2`
 
 ---
 
 ## 3.8 Creazione Cartelle Audit sullo Standby
+
+Queste directory le prepari su entrambi i nodi per evitare errori quando, piu' avanti, monterai anche la seconda istanza standby.
 
 ```bash
 # Su racstby1 e racstby2 come oracle
@@ -1535,16 +1584,34 @@ mkdir -p /u01/app/oracle/admin/RACDB/adump
 
 ## 3.9 Avvio Istanza Standby in NOMOUNT
 
+### Obiettivo reale del passo 3.9
+
+Qui NON stai avviando il RAC standby completo.
+
+Stai avviando solo:
+
+- `racstby1`
+- istanza `RACDB1`
+- con `PFILE` locale
+- in stato `NOMOUNT`
+
+Questo e' il prerequisito richiesto da `RMAN DUPLICATE FROM ACTIVE DATABASE`.
+
+`racstby2` in questo momento resta fermo. E' normale.
+
 Prima del comando `STARTUP`, fai sempre questi pre-check (best practice):
 
 ```bash
 # Su racstby1 come oracle
+su - oracle
+. ~/.db_env
 echo "ORACLE_HOME=$ORACLE_HOME"
 export ORACLE_SID=RACDB1
 echo "ORACLE_SID=$ORACLE_SID"
 
 # Il file deve esistere PRIMA di startup nomount
 ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
 ```
 
 Se il file non esiste, torna al passo `3.7` e ricopia il pfile:
@@ -1553,8 +1620,12 @@ Se il file non esiste, torna al passo `3.7` e ricopia il pfile:
 scp /tmp/initRACDB_stby.ora oracle@racstby1:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora
 ```
 
+Se manca invece il password file, torna al passo `3.6` e ricopialo da `rac1`.
+
 ```bash
 # Su racstby1 come oracle
+su - oracle
+. ~/.db_env
 export ORACLE_SID=RACDB1
 sqlplus / as sysdba
 STARTUP NOMOUNT PFILE='/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB1.ora';
@@ -1562,12 +1633,29 @@ EXIT;
 ```
 
 > Nota: in questo punto della guida si usa **NOMOUNT** (non MOUNT) per permettere il `RMAN DUPLICATE`.
+> Nota 2: `racstby2` NON va avviato adesso. Verra' gestito dopo il duplicate.
 
 ---
 
 ## 3.10 RMAN Duplicate da Active Database
 
 Questa è la magia! RMAN copia il database dal primario allo standby **in tempo reale**, senza bisogno di backup fisici.
+
+### Cosa sta facendo davvero RMAN qui
+
+RMAN usa:
+
+- il database primario `RACDB` come `TARGET`
+- la sola istanza `RACDB1` su `racstby1` come `AUXILIARY`
+
+Quindi il duplicate, in questa fase, e' un'operazione single-instance su nodo 1, anche se lo standby finale sara' RAC a due nodi.
+
+La sequenza corretta e':
+
+1. costruisci il database standby usando `racstby1`
+2. metti `SPFILE` in ASM
+3. registri il database standby in OCR
+4. avvii anche `RACDB2` su `racstby2`
 
 > 📸 **SNAPSHOT — "SNAP-07: Standby_Grid_e_OS_Pronti" 🔴 CRITICO**
 > L'RMAN Duplicate è l'operazione più delicata. Se fallisce (e succede spesso la prima volta), torni qui e risparmi MOLTO tempo.
@@ -1581,6 +1669,7 @@ Questa è la magia! RMAN copia il database dal primario allo standby **in tempo 
 
 ```bash
 # Da racstby1 come oracle
+# Qui l'auxiliary e' solo la prima istanza standby
 rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB1_STBY
 ```
 
@@ -1613,6 +1702,12 @@ DUPLICATE TARGET DATABASE
 > - `SPFILE SET ...`: Sovrascrive i parametri nel SPFILE dello standby.
 > - `NOFILENAMECHECK`: Non verificare che i path dei file siano diversi (utile perché usiamo gli stessi nomi ASM).
 
+Stato atteso a fine passo:
+
+- il database standby esiste
+- `racstby1` e' il nodo usato per costruirlo
+- `racstby2` non e' ancora partito come seconda istanza database
+
 L'operazione può richiedere 20-60 minuti a seconda della dimensione del DB.
 
 ---
@@ -1620,6 +1715,14 @@ L'operazione può richiedere 20-60 minuti a seconda della dimensione del DB.
 ## 3.11 Creazione SPFILE in ASM e Pointer File
 
 Dopo il duplicate, l'SPFILE potrebbe essere nel filesystem locale. Per un RAC, deve stare in ASM (condiviso tra i nodi).
+
+Questo e' il passaggio in cui trasformi lo standby appena creato da:
+
+- standby costruito usando una sola istanza (`racstby1`)
+
+a:
+
+- standby pronto a funzionare come RAC condiviso tra `racstby1` e `racstby2`
 
 ```sql
 -- Su racstby1 come sysdba
@@ -1643,7 +1746,7 @@ mv initRACDB1.ora initRACDB1.ora.bkp   # Backup del pfile
 echo "SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'" > initRACDB1.ora
 
 # Crea pointer file su racstby2
-scp initRACDB1.ora oracle@racstby2:$ORACLE_HOME/dbs/initRACDB2.ora
+scp initRACDB1.ora oracle@racstby2:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB2.ora
 
 # Verifica
 more $ORACLE_HOME/dbs/initRACDB1.ora
@@ -1661,6 +1764,7 @@ SHOW PARAMETER spfile;
 
 > Best practice operativa:
 > - prima del duplicate, startup manuale con `PFILE` e `NOMOUNT`;
+> - durante il duplicate, usa solo `racstby1` come auxiliary;
 > - dopo registrazione in OCR (passo `3.12`), usa `srvctl` per start/stop dello standby invece di `startup` manuale.
 
 ---
@@ -1680,8 +1784,11 @@ srvctl add database -d RACDB_STBY \
 srvctl add instance -d RACDB_STBY -instance RACDB1 -node racstby1
 srvctl add instance -d RACDB_STBY -instance RACDB2 -node racstby2
 
-# Copia password file su racstby2
-scp $ORACLE_HOME/dbs/orapwRACDB1 oracle@racstby2:$ORACLE_HOME/dbs/orapwRACDB2
+# Il password file di racstby2 dovrebbe essere gia' presente dal passo 3.6.
+# Qui fai solo una verifica. Se manca, ricopialo adesso.
+ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1
+ssh oracle@racstby2 "ls -l /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2" || \
+scp /u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB1 oracle@racstby2:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/orapwRACDB2
 
 # Avvia il database (entrambe le istanze)
 srvctl start database -d RACDB_STBY
