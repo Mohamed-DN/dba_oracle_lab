@@ -1070,6 +1070,11 @@ AND    value IS NOT NULL;
 > - **dopo** duplicate + apply attivo: `DEST_ID=2` deve diventare `VALID` con `ERROR` nullo.
 >
 > **Best practice Oracle:** sullo standby non usare DBCA in questo flusso; il database standby si crea con `RMAN DUPLICATE ... FOR STANDBY FROM ACTIVE DATABASE`.
+>
+> **Nota critica per evitare `BAD PARAM` sullo standby:**
+> - i comandi di questo blocco sono del **primario**;
+> - sullo standby, `log_archive_dest_1` deve usare `DB_UNIQUE_NAME=RACDB_STBY`, non `RACDB`;
+> - se copi sullo standby `log_archive_dest_1 ... DB_UNIQUE_NAME=RACDB`, `V$ARCHIVE_DEST.STATUS` puo diventare `BAD PARAM` e l'alert log puo mostrare `ARCn: Archiving not possible: error count exceeded`.
 
 ```sql
 -- Re-check obbligatorio post-duplicate (quando standby e in MOUNT + apply)
@@ -2279,6 +2284,32 @@ Intervieni davvero solo se succede almeno uno di questi casi:
 - `DEST_ID=2` va in `ERROR`;
 - compaiono ORA espliciti su FRA piena, ASM, archivelog destination o file create;
 - il lag cresce stabilmente e non rientra.
+
+Caso tipico nel lab:
+
+- standby con `MRP0` sano;
+- primary con `DEST_ID=2` `VALID`;
+- standby con `DEST_ID=1` `BAD PARAM`;
+- `log_archive_dest_1` configurato con `DB_UNIQUE_NAME=RACDB` invece di `RACDB_STBY`.
+
+Fix corretto sullo standby:
+
+```sql
+ALTER SYSTEM SET log_archive_dest_1=
+'LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY'
+SCOPE=BOTH SID='*';
+
+ALTER SYSTEM SET log_archive_dest_state_1=ENABLE SCOPE=BOTH SID='*';
+```
+
+Poi verifica:
+
+```sql
+SELECT dest_id, status, error, destination
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
+```
 
 ### Fix ORA-01078 / LRM-00109 su standby (parameter file mancante)
 
