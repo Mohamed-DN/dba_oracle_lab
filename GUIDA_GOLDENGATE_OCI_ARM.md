@@ -1,232 +1,350 @@
-# GUIDA EXTRA: Setup OCI ARM (Always Free) come Target GoldenGate
+# Guida OCI: Target Database per GoldenGate e Migrazione dal Lab Locale
 
-> 🚀 **Obiettivo:** Invece di creare un'ennesima macchina virtuale pesante sul tuo PC locale per il Target di GoldenGate (rischiando di esaurire la RAM), sfrutteremo il **Tier Always Free di Oracle Cloud (OCI)**. 
-> Installeremo un'istanza ARM potentissima (4 OCPU, 24GB RAM - gratis per sempre!) e ci metteremo sopra **Oracle Database 23ai Free** con un solo comando. Questo database nel cloud sarà il bersaglio remoto (Replicat) per i dati estratti dal tuo RAC 19c on-premise!
-
----
-
-## 1. Creazione dell'Istanza ARM su Oracle Cloud
-
-1. Accedi alla tua console **Oracle Cloud Infrastructure (OCI)**.
-2. Vai su **Compute** -> **Instances** -> **Create Instance**.
-3. Compila i campi chiave:
-   - **Name:** `dbtarget-arm`
-   - **Image and shape:** 
-     - **Image:** `Oracle Linux 8` (Assicurati che sia la versione 8, non 9).
-     - **Shape:** Clicca `Change Shape` -> `Virtual Machine` -> `Ampere` -> Seleziona **`VM.Standard.A1.Flex`**. Imposta **4 OCPU** e **24 GB Memory**. (È sempre "Always Free").
-   - **Networking:** Lascia le impostazioni di default (Crea una nuova VCN se non ne hai o usane una esistente). Assicurati che **Assign a public IPv4 address** sia su `Yes`.
-   - **SSH Keys:** Seleziona `Generate a key pair for me` e scarica la **Private Key** (ti servirà per MobaXterm!).
-   - **Boot volume:** Puoi lasciare 50 GB.
-4. Clicca su **Create** e aspetta che l'istanza diventi verde (**RUNNING**).
-5. **Copia l'Indirizzo IP Pubblico** (es. `130.x.x.x`).
+> Questa guida spiega come costruire un target Oracle su Oracle Cloud Infrastructure (OCI) in modo coerente con il lab locale. Il focus non e solo creare una VM, ma scegliere un target e un modello di rete che siano davvero compatibili con GoldenGate e con il tuo RAC 19c locale.
 
 ---
 
-## 2. Architettura di Rete: Locale ↔ Cloud
+## 1. Decisione Iniziale: Quale Target Cloud Vuoi Davvero
 
-> 💡 **La Domanda del DBA:** "Come facciamo comunicare un server di casa (VirtualBox) con un server nel Cloud in modo sicuro?"
+Prima di creare risorse OCI, devi scegliere il percorso corretto.
 
-In un ambiente di lavoro reale (**Enterprise**), collegheresti il tuo data center locale ad Oracle Cloud tramite:
-1. **IPsec Site-to-Site VPN:** Un tunnel crittografato tra il firewall aziendale e OCI.
-2. **Oracle FastConnect:** Una linea in fibra ottica privata e dedicata (costosa, ma ad altissime prestazioni).
-In entrambi i casi, le macchine si parlerebbero tramite **IP Privati**.
+### Percorso A - Validazione gratuita e leggera
 
-Per il nostro **Lab**, esporre il database o le porte di GoldenGate (1521, 9011-9014) sull'IP pubblico di Internet, anche se filtrato, **NON è una Best Practice**.
+- OCI Always Free Compute
+- Oracle AI Database Free sul target
+- eventuale GoldenGate Free sul target
 
-### La Soluzione Lab Ottimale: Tailscale (WireGuard)
-Useremo **Tailscale**, una VPN mesh basata su WireGuard estremamente leggera. Permetterà alle macchine VirtualBox e alla VM OCI di vedersi su una rete privata virtuale (es. `100.x.x.x`), crittografando tutto il traffico (i "Trail" di GoldenGate) in transito su Internet. Proprio come una vera VPN Site-to-Site aziendale!
+Quando usarlo:
+
+- per imparare OCI;
+- per testare listener, TNS, rete, initial load, schema replication in mini-lab;
+- per un ambiente di prova separato e piccolo.
+
+Limiti forti:
+
+- GoldenGate Free e limitato a database Oracle <= 20 GB;
+- interagisce solo con altre istanze GoldenGate Free;
+- non include entitlement ADG o downstream capture.
+
+Conclusione:
+
+- questo percorso non e quello giusto per una replica formalmente supportata dal tuo RAC 19c + Data Guard locale verso cloud se sul source usi GoldenGate Core/licensed.
+
+### Percorso B - Migrazione locale -> OCI coerente col lab enterprise
+
+- OCI Compute come target Oracle
+- DB target Oracle installato su compute
+- GoldenGate Core/licensed o equivalente supportato su source e target
+
+Quando usarlo:
+
+- per la vera migrazione dal lab locale 19c verso cloud;
+- per un flusso credibile da DBA enterprise.
+
+Questo e il percorso che considero `corretto` per il tuo lab principale.
 
 ---
 
-## 3. Connessione Iniziale MobaXterm e Setup OS
+## 2. Stato delle Offering Verificate
 
-Prima di installare la VPN, connettiti all'IP **Pubblico** temporaneo di OCI per preparare la macchina.
+Verifica fatta il `15 marzo 2026` su fonti Oracle ufficiali.
 
-Apri MobaXterm sul tuo PC e crea una sessione SSH:
-- **Remote host:** L'IP Pubblico OCI.
-- **Specify username:** `opc` (l'utente di default su OCI).
-- **Advanced SSH...\*: Spunta `Use private key` e seleziona il file chiave scaricato.
+### OCI Always Free Compute
 
-Appena dentro, esegui questi comandi per preparare il sistema operativo:
+Oracle documenta per `VM.Standard.A1.Flex` Always Free:
+
+- fino a `4 OCPU` Ampere A1;
+- fino a `24 GB` RAM totale;
+- fino a `200 GB` di block volume totale Always Free.
+
+### Oracle AI Database Free
+
+Oracle documenta che il pacchetto attuale disponibile e `Oracle AI Database Free 26ai`, installabile su Linux x86-64 e Arm.
+
+Punti pratici:
+
+- su ARM il database usa `SID FREE`;
+- crea `FREE` e `FREEPDB1`;
+- listener su `1521`;
+- installazione RPM supportata.
+
+### GoldenGate Free
+
+Oracle documenta che GoldenGate Free:
+
+- e pensato per database Oracle <= `20 GB`;
+- puo interagire solo con altre istanze GoldenGate Free;
+- non include entitlement `Active Data Guard`;
+- non supporta downstream capture.
+
+Questo punto da solo impone disciplina architetturale.
+
+---
+
+## 3. Architettura Raccomandata per il Repo
+
+Per il tuo repo consiglio di separare nettamente due casi.
+
+### Caso 1 - Lab principale
+
+- `source`: RAC 19c locale
+- `Data Guard`: DR locale
+- `GoldenGate capture`: sul primary, non sullo standby
+- `target`: OCI Compute Oracle DB
+- `rete`: pubblico ristretto o VPN
+
+### Caso 2 - Lab free-only separato
+
+- `source`: Oracle AI Database Free locale o piccolo single instance
+- `target`: Oracle AI Database Free su OCI
+- `GoldenGate Free`: su entrambi i lati
+
+Questo secondo caso e utile per imparare la UX di GoldenGate Free, ma non deve confondersi con il lab RAC 19c principale.
+
+---
+
+## 4. Rete: Prima Decidi il Modello
+
+Segui prima [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md).
+
+Per il target OCI puoi scegliere:
+
+1. `IP pubblico ristretto` al tuo IP di casa: piu rapido.
+2. `Site-to-Site VPN`: piu corretto e piu vicino a un ambiente reale.
+3. `Overlay VPN`: opzionale da laboratorio.
+
+Se non hai ancora deciso il modello di rete, non andare oltre con GoldenGate.
+
+---
+
+## 5. Build del Target OCI Compute
+
+### 5.1 Creazione istanza
+
+Nel portale OCI:
+
+1. `Compute` -> `Instances` -> `Create instance`
+2. `Shape`: `VM.Standard.A1.Flex`
+3. imposta, se disponibile in quota Always Free:
+   - `4 OCPU`
+   - `24 GB RAM`
+4. immagine consigliata:
+   - `Oracle Linux 8` se vuoi il percorso piu lineare con Database Free RPM su Arm
+5. assegna public IP solo se usi il modello pubblico ristretto
+6. metti l'istanza in una subnet con NSG dedicato
+
+### 5.2 Porte minime
+
+Apri solo quelle coerenti col modello scelto:
+
+- `22/tcp` SSH
+- `1521/tcp` listener DB
+- `7809/tcp` se usi GG classic/core manager
+- `9011-9014/tcp` solo se usi microservices
+
+Sorgente raccomandata:
+
+- il tuo `IP pubblico /32`
+- oppure la subnet privata locale via VPN
+
+---
+
+## 6. Bootstrap del Sistema Operativo
+
+Esempio iniziale come `root`:
 
 ```bash
-# Diventa root
-sudo su -
+sudo -s
 
-# 1. Le istanze OCI non hanno swap di default, il DB Oracle lo pretende!
-# Creiamo 4GB di Swap
-dd if=/dev/zero of=/swapfile count=4096 bs=1MiB
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-echo "/swapfile   swap    swap    sw  0 0" >> /etc/fstab
+dnf -y update
+hostnamectl set-hostname dbtarget
 
-# 2. Configura il firewall: permettiamo l'accesso a DB e GG *solo* dall'interfaccia VPN!
-firewall-cmd --permanent --zone=trusted --add-interface=tailscale0
+dnf -y install oraclelinux-developer-release-el8
 firewall-cmd --reload
 ```
 
-### Installazione Tailscale (Cloud)
-Sempre sull'istanza OCI (come root):
+Swap raccomandato se fai lab su VM free piccola:
+
 ```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-tailscale up
+fallocate -l 4G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
 ```
-*Copia il link di autenticazione che appare a schermo, incollalo nel browser del tuo PC fisso e fai il login con il tuo account (es. Google/GitHub). La macchina Cloud otterrà un IP del tipo `100.x.x.C`.*
 
 ---
 
-## 4. Installazione "Magica" di Oracle Database 23ai Free
+## 7. Installazione Database Target: Due Opzioni
 
-Il bello dell'ambiente ARM su OCI con Oracle Linux 8 è che Oracle ha reso l'installazione del Database una passeggiata. Non serve scaricare archivi pesanti, decomprimere o usare `dbca`. È tutto nei repository `yum` ufficiali!
+### 7.1 Opzione pratica Always Free: Oracle AI Database Free 26ai
 
-Sempre come utente `root`, lancia:
+Questa opzione e la piu semplice da costruire su ARM.
+
+Sequenza documentata da Oracle:
 
 ```bash
-# 1. Installa i prerequisiti (crea utente oracle, gruppi, sysctl)
-dnf install -y oracle-database-preinstall-23ai
+sudo -s
 
-# 2. Installa e configura il software del Database (ci metterà un paio di minuti)
-dnf install -y oracle-database-free-23ai
+dnf -y install oracle-ai-database-preinstall-26ai
+# scarica l'RPM corretto aarch64 dal sito Oracle
+# poi installa l'RPM locale
+# esempio nome file ufficiale documentato:
+# oracle-database-free-26ai-23.26.0-1.el8.aarch64.rpm
 
-# 3. Crea e avvia il database! 
-# Ti chiederà di inserire una password per sys/system. (es. metti "oracle")
-/etc/init.d/oracle-free-23ai configure
+dnf -y install ./oracle-database-free-26ai-23.26.0-1.el8.aarch64.rpm
+/etc/init.d/oracle-free-26ai configure
 ```
 
-### Configurazione Ambiente Utente `oracle`
+Cosa crea:
 
-Passiamo all'utente `oracle` appena creato per configurare le variabili d'ambiente:
+- `ORACLE_HOME` sotto `/opt/oracle/product/26ai/dbhomeFree`
+- `FREE`
+- `FREEPDB1`
+- listener `1521`
+
+Nota importante:
+
+- questo target e ottimo per lab, ma non va automaticamente confuso con un target supportato per il lab RAC 19c + GG principale.
+
+### 7.2 Opzione coerente con migrazione enterprise
+
+Se vuoi una migrazione davvero coerente con il source RAC 19c, usa sul target OCI:
+
+- un Oracle Database versione certificata per il tuo percorso GG;
+- GoldenGate Core/licensed o servizio OCI GoldenGate, non GoldenGate Free.
+
+Questa opzione richiede media/licensing o un percorso di evaluation non sempre disponibile nel Free Tier.
+
+---
+
+## 8. Configurazione Base del Target Database
+
+### 8.1 Variabili ambiente oracle
 
 ```bash
-# Cambia utente
 su - oracle
-
-# Aggiungi le variabili al profilo
-cat >> ~/.bash_profile <<EOF
+cat >> ~/.bash_profile <<'EOF'
 export ORACLE_BASE=/opt/oracle
-export ORACLE_HOME=/opt/oracle/product/23ai/dbhomeFree
+export ORACLE_HOME=/opt/oracle/product/26ai/dbhomeFree
 export ORACLE_SID=FREE
-export PATH=\$PATH:\$ORACLE_HOME/bin
+export PATH=$PATH:$ORACLE_HOME/bin
 EOF
-
-# Caricale
 source ~/.bash_profile
-
-# Verifica che il DB sia su
-sqlplus sys/oracle as sysdba
 ```
 
-Vittoria! Hai un DB 23ai su ARM up & running in 5 minuti. Questo DB ha il Container (`FREE`) e un Pluggable Database di default (`FREEPDB1`).
+### 8.2 Test listener e database
 
----
+```bash
+lsnrctl status
+sqlplus / as sysdba
+show pdbs;
+```
 
-## 5. Preparazione del Target per GoldenGate
-
-Ora che il database è su, gli diciamo di prepararsi a ricevere dati da GoldenGate. Dal prompt di `sqlplus sys/oracle as sysdba` sull'istanza cloud:
+### 8.3 Creazione utente target per lab
 
 ```sql
--- Cambia modalità sul Pluggable Database dove scriverai i dati
+sqlplus / as sysdba
 ALTER SESSION SET CONTAINER=FREEPDB1;
 
--- Crea l'utente per GoldenGate (ggadmin)
-CREATE USER ggadmin IDENTIFIED BY ggadmin QUOTA UNLIMITED ON users;
+CREATE USER ggadmin IDENTIFIED BY <password>
+  DEFAULT TABLESPACE USERS
+  TEMPORARY TABLESPACE TEMP
+  QUOTA UNLIMITED ON USERS;
 
--- In 21c/23ai, GoldenGate ha un ruolo nativo comodissimo
-GRANT DBA TO ggadmin;
-GRANT OGG_APPLY TO ggadmin;
-
-exit;
+GRANT CREATE SESSION, RESOURCE TO ggadmin;
+GRANT SELECT ANY DICTIONARY TO ggadmin;
 ```
+
+Se il target fara il ruolo di Replicat Oracle:
+
+```sql
+GRANT DBA TO ggadmin;
+```
+
+Nel lab va bene. In ambienti seri si riducono i privilegi.
 
 ---
 
-## 6. Installazione Oracle GoldenGate 23ai Free (Microservices)
+## 9. GoldenGate sul Target: Regola di Compatibilita
 
-Su Oracle Linux 8 (ARM), anche GoldenGate 23ai Free è disponibile direttamente dai repository ufficiali `yum`. Non c'è bisogno di scaricare file zip dal sito Oracle! GoldenGate 23ai usa esclusivamente la **Microservices Architecture (MA)** (interfaccia web sicura), avendo deprecato la vecchia architettura Classic a riga di comando.
+### Se usi GoldenGate Core/licensed nel lab principale
 
-Esegui questi comandi come `root` sull'istanza cloud:
+Il target OCI deve usare un deployment GoldenGate compatibile e supportato.
+
+### Se usi GoldenGate Free
+
+Ricorda i limiti Oracle ufficiali:
+
+- solo con altri GoldenGate Free;
+- no ADG entitlement;
+- no downstream capture;
+- workload piccolo.
+
+Conclusione pratica:
+
+- per migrare dal tuo RAC 19c locale a OCI con GoldenGate nel lab principale, non fare affidamento su GoldenGate Free come percorso `ufficiale` della guida base.
+
+---
+
+## 10. Test di Rete Prima di GoldenGate
+
+Dai nodi locali:
 
 ```bash
-# 1. Installa il pacchetto software di GoldenGate 23ai Free
-dnf install -y oracle-goldengate-free-23ai
-
-# 2. Il pacchetto crea un utente 'ogg' di default, ma noi vogliamo 
-# usare l'utente 'oracle' per semplificare il lab. Creiamo le directory:
-mkdir -p /opt/oracle/gg_home
-mkdir -p /opt/oracle/gg_deploy
-chown -R oracle:oinstall /opt/oracle/gg_*
-
-# 3. Lancia lo script di configurazione interattiva (come root)
-# Attenzione: Questo script crea il "Service Manager" e il primo "Deployment"
-/opt/oracle/goldengate/bin/oggca.sh \
-  -silent \
-  -responseFile /opt/oracle/goldengate/response/oggca.rsp \
-  -showProgress \
-  oggDeploy.deploymentName=Target \
-  oggDeploy.deploymentDirectory=/opt/oracle/gg_deploy \
-  oggDeploy.administratorUser=admin \
-  oggDeploy.administratorPassword=oracle \
-  oggDeploy.dbVersion=Oracle \
-  oggSoftwareHome=/opt/oracle/goldengate
-  
-# (Nota: In un ambiente reale non si usa la password "oracle" in chiaro negli script!)
+ping dbtarget
+nc -vz dbtarget 1521
+# se usi GG classic/core
+nc -vz dbtarget 7809
+# se usi microservices
+nc -vz dbtarget 9011
+nc -vz dbtarget 9014
+tnsping DBTARGET
 ```
 
-### Aprire le Porte Web (Microservices)
-
-1. **Firewall Linux interno (come root):**
-   ```bash
-   # Service Manager (Porta default 9011)
-   firewall-cmd --permanent --zone=trusted --add-port=9011/tcp
-   # Administration Server (Porta default 9012)
-   firewall-cmd --permanent --zone=trusted --add-port=9012/tcp
-   # Distribution Server (Porta default 9013)
-   firewall-cmd --permanent --zone=trusted --add-port=9013/tcp
-   # Receiver Server (Porta default 9014 - FONDAMENTALE per ricevere i dati!)
-   firewall-cmd --permanent --zone=trusted --add-port=9014/tcp
-   firewall-cmd --reload
-   ```
-
-> 🔒 **Sicurezza Assoluta!** Non abbiamo bisogno di aprire NESSUNA di queste porte nella "Security List" di Oracle Cloud. Tutto il traffico passerà invisibile attraverso il tunnel crittografato di Tailscale sulla porta UDP 41641.
-
-**Testa l'accesso!** Dal PC fisso dove hai installato Tailscale, apri il browser e vai al tuo nuovo IP privato:
-👉 `https://100.x.x.C:9011` (Sostituisci con l'IP Tailscale del Cloud)
-Accedi con utente `admin` e password `oracle`.
+Se uno di questi test fallisce, fermati li.
 
 ---
 
-## 6. Il Ponte Magico: Collegare il Locale al Cloud
+## 11. Quale Percorso Useremo nel Repo
 
-Sui tuoi due nodi RAC locali (in VirtualBox), dobbiamo installare Tailscale affinché possano "vedere" la macchina Cloud.
+Nel repo fisso questa regola:
 
-**Sui nodi RAC Locali (`rac1`, `rac2`, `racstby1`):**
-
-1. Installazione Tailscale (come root):
-   ```bash
-   curl -fsSL https://tailscale.com/install.sh | sh
-   tailscale up
-   ```
-   *Autenticati nel browser con lo stesso account usato prima. Questi nodi otterranno IP del tipo `100.x.x.R1`, `100.x.x.R2`.*
-
-2. Aggiungi l'IP VPN del Cloud al file `/etc/hosts` locale:
-
-   ```bash
-   # Scopri l'IP Tailscale della macchina Cloud
-   # (Vai nella dashboard web di Tailscale o esegui 'tailscale status' sul Cloud)
-   
-   # SU RAC1 e RAC2 (Root)
-   # Sostituisci 100.x.x.C con l'IP TAILSCALE della tua macchina OCI!
-   echo "100.x.x.C   dbtarget.localdomain   dbtarget" >> /etc/hosts
-   ```
-
-   # Su RAC 2 (Root)
-   echo "100.x.x.C   dbtarget.localdomain   dbtarget" >> /etc/hosts
-   ```
-
-Da questo momento, quando installeremo GoldenGate sul Primario Locale (Fase 5) e gli diremo *"Spedisci i dati a `dbtarget`"*, i dati viaggeranno in modo trasparente dal tuo PC casalingo dritto al tuo DB 23ai nell'Always Free Cloud di Oracle (sulla porta 7809) all'interno del tunnel crittografato Tailscale!
+1. Fase 5 base: GoldenGate supportato con capture sul primary locale.
+2. Target: locale o OCI Compute.
+3. OCI Free: ottimo per target DB e networking lab.
+4. GoldenGate Free: trattato come variante separata e non come presupposto del lab RAC 19c principale.
 
 ---
-## ✨ Prossimi Passi
-Ora hai completato la **Fase "0" per GoldenGate Cloud**. 
-Quando arriverai alla [FASE 5 - Configurazione GoldenGate](./GUIDA_FASE5_GOLDENGATE.md), salterai lo "Step 5.0" (perché l'hai appena fatto nel cloud in modo molto più smart!) e inizierai direttamente scaricando il software di GoldenGate. Suggerimento: scarica **Oracle GoldenGate 23ai Free per Linux ARM** per l'istanza OCI!
+
+## 12. Cosa Devi Avere Prima di Automatizzare OCI
+
+Per creare davvero il DB nel tuo tenancy OCI servono:
+
+- accesso al tuo account OCI;
+- quota disponibile nel compartment corretto;
+- scelta reale di regione/shape/subnet;
+- chiavi SSH o `oci cli` configurati se vuoi automatizzare.
+
+Senza questi prerequisiti, il repo puo spiegare il percorso corretto ma non puo sostituire il provisioning reale nel tuo tenancy.
+
+---
+
+## 13. Fonti Oracle Ufficiali
+
+- OCI Always Free resources: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
+- Oracle AI Database Free install guide: https://docs.oracle.com/en/database/oracle/oracle-database-free/get-started/installing-oracle-database-free.html
+- GoldenGate Free overview and limitations: https://docs.oracle.com/en/middleware/goldengate/free/23/overview/index.html
+- GoldenGate Free FAQ and limits: https://docs.oracle.com/en/middleware/goldengate/free/23/overview/oracle-goldengate-free-faq.html
+- OCI network security groups: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm
+
+---
+
+## 14. Passo Successivo Corretto
+
+Il passo corretto dopo questa guida e:
+
+1. completare Fase 4 Broker bene;
+2. fissare il modello di rete con [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md);
+3. scegliere se il target cloud e solo `free validation` o `migration target` vero;
+4. poi seguire Fase 5 per GoldenGate con capture sul primary.

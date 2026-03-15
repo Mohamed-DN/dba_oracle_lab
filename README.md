@@ -37,7 +37,7 @@
 ║  Flussi logici:                                                                    ║
 ║  - Cache Fusion: rac1 <-> rac2  |  racstby1 <-> racstby2                           ║
 ║  - Data Guard: RACDB (primary) -> RACDB_STBY (LGWR ASYNC)                          ║
-║  - GoldenGate: Extract/Pump su standby -> Replicat su dbtarget/OCI                 ║
+║  - GoldenGate: Extract/Pump sul primary -> Replicat su dbtarget/OCI                ║
 ║  - Enterprise Manager (emcc1): monitora tutti i nodi + target                      ║
 ║                                                                                    ║
 ║  Dischi Condivisi (Shareable VDI):                                                 ║
@@ -91,7 +91,7 @@
 3. PDB propagation + services: [extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md)
 4. Domande DBA Oracle: [extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md](./extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md)
 5. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
-6. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
+6. Cloud, rete e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
 7. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
@@ -181,7 +181,7 @@ Materiale operativo:
 | 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
 | 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
 | 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard, Protection Mode (`MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`) |
-| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target + test matrix estesa (40 scenari) |
+| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract integrato sul primary, Pump, Replicat target locale/OCI + varianti avanzate documentate |
 | 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
 | 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
 | 15 | **Fase 8** | [ENTERPRISE MANAGER](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
@@ -219,9 +219,10 @@ Materiale operativo:
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 23 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI Free Tier ARM, setup ibrido 23ai Free, SSH tunnel |
-| 24 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
-| 25 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
+| 23 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI compute target, scelta tra free validation e migration target coerente |
+| 24 | **Rete lab + OCI** | [GUIDA_RETE_OCI](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | Host-only, NAT, IP pubblico, VPN, NSG, listener e porte GoldenGate |
+| 25 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
+| 26 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
 
 ---
 
