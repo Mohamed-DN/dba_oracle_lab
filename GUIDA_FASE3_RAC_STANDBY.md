@@ -2489,6 +2489,93 @@ set homepath diag/rdbms/racdb_stby/RACDB1
 show alert -tail 30
 ```
 
+### Cos'e ADRCI e come usarlo davvero
+
+`ADRCI` significa `Automatic Diagnostic Repository Command Interpreter`.
+E' la shell Oracle per leggere e navigare i file diagnostici:
+
+- alert log;
+- trace file;
+- incidenti;
+- homes diagnostiche di database, listener, ASM e Clusterware.
+
+Perche' ti serve nel lab:
+
+- in RAC hai piu' istanze e quindi piu' alert log;
+- in Data Guard vuoi leggere rapidamente il lato giusto (`RACDB1`, `RACDB2`, `RACDB_STBY`, listener, ASM);
+- `adrci` e' piu' preciso di un semplice `tail -f` quando hai piu' home diagnostiche nello stesso host.
+
+Concetti chiave:
+
+- `ADR base`: radice del repository diagnostico, nel tuo lab tipicamente `/u01/app/oracle`
+- `ADR home`: singola area diagnostica concreta, per esempio:
+  - `diag/rdbms/racdb/RACDB1`
+  - `diag/rdbms/racdb/RACDB2`
+  - `diag/rdbms/racdb_stby/RACDB1`
+  - `diag/tnslsnr/rac1/listener`
+
+Sequenza standard di uso:
+
+```bash
+adrci
+set base /u01/app/oracle
+show homes
+set homepath diag/rdbms/racdb_stby/RACDB1
+show alert -tail 30
+```
+
+Comandi utili:
+
+```bash
+show homes
+show alert -tail 50
+show alert -term
+show incident
+show problem
+purge -age 1440 -type alert
+```
+
+Quando usare cosa:
+
+- `show alert -tail 30`: ultimi messaggi rapidi
+- `show alert -term`: streaming in terminale
+- `show incident`: elenco incidenti Oracle registrati
+- `show problem`: raggruppamento per problema
+
+Regola pratica nel tuo lab:
+
+- per errori standby usa prima `diag/rdbms/racdb_stby/RACDB1`
+- per errori primario usa `diag/rdbms/racdb/RACDB1`
+- se il problema sembra di rete o registrazione service, controlla anche la home del listener
+
+Differenza rispetto a `tail -f`:
+
+- `tail -f` e' ottimo se sai gia' il file esatto
+- `adrci` e' migliore quando devi prima capire quale home diagnostica guardare
+
+Errori comuni ADRCI:
+
+- `DIA-48449`: hai piu' home e non ne hai scelta una
+- `DIA-48494`: non hai ancora impostato `ADR base` / `homepath`
+
+Mini runbook RAC/Data Guard:
+
+```bash
+# Standby instance alert log
+adrci
+set base /u01/app/oracle
+set homepath diag/rdbms/racdb_stby/RACDB1
+show alert -tail 50
+
+# Primary instance alert log
+set homepath diag/rdbms/racdb/RACDB1
+show alert -tail 50
+
+# Listener alert log
+set homepath diag/tnslsnr/racstby1/listener
+show alert -tail 50
+```
+
 > 📸 **SNAPSHOT — "SNAP-08: RMAN_Duplicate_Finito" ⭐ MILESTONE**
 > Lo standby è operativo con MRP attivo e 0 gap! Questo è probabilmente lo snapshot più importante dopo la creazione del primario.
 > ```bash
