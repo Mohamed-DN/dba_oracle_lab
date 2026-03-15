@@ -2088,23 +2088,37 @@ crsctl stat res -t | grep -A2 RACDB_STBY
 -- Su racstby1 come sysdba
 sqlplus / as sysdba
 
--- Avvia il Managed Recovery Process (MRP)
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+-- Prima verifica se MRP e' gia' attivo
+SELECT process, status, thread#, sequence#
+FROM   v$managed_standby
+WHERE  process IN ('MRP0','RFS');
 
--- Verifica che MRP sia attivo
-SELECT process, status, thread#, sequence# FROM v$managed_standby WHERE process = 'MRP0';
--- STATUS deve essere APPLYING_LOG
+-- Se NON vedi MRP0, avvia il Managed Recovery Process (MRP)
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+-- Verifica finale
+SELECT process, status, thread#, sequence#
+FROM   v$managed_standby
+WHERE  process IN ('MRP0','RFS');
+-- MRP0 deve risultare APPLYING_LOG o WAIT_FOR_LOG
 ```
 
-> **Perché `USING CURRENT LOGFILE`?** Questo abilita il **Real-Time Apply**: lo standby applica i redo APPENA arrivano, senza aspettare che l'archivelog sia completo. Il ritardo è tipicamente di pochi secondi.
+Regola pratica:
+
+- se `MRP0` e' gia' presente, non rilanciare il comando
+- se `MRP0` non c'e', lancialo una volta su `racstby1`
+- il fatto che le istanze risultino `Mounted (Closed)` non prova che il redo apply sia attivo: prova solo che lo standby e' su e registrato nel cluster
+
+Nota Oracle 19c:
+
+- in 19c il Real-Time Apply e' abilitato durante Redo Apply senza dover scrivere `USING CURRENT LOGFILE`
+- la clausola `USING CURRENT LOGFILE` e' deprecata da 12.1 e non e' piu' necessaria
+- se hai gli Standby Redo Log configurati correttamente, `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;` basta
 
 ```sql
 -- Comandi utili per gestire MRP
--- Fermare MRP:
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
-
--- Verificare MRP a livello OS:
--- ps -ef | grep mrp
+SELECT process, status, thread#, sequence# FROM v$managed_standby WHERE process IN ('MRP0','RFS');
 ```
 
 ---
