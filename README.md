@@ -72,7 +72,7 @@
 2. [GUIDA_FASE1_PREPARAZIONE_OS.md](./GUIDA_FASE1_PREPARAZIONE_OS.md)
 3. [GUIDA_FASE2_GRID_E_RAC.md](./GUIDA_FASE2_GRID_E_RAC.md)
 4. [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md)
-5. [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+5. [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) - include anche `Protection Mode`, `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`
 6. [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
 7. [GUIDA_FASE6_TEST_VERIFICA.md](./GUIDA_FASE6_TEST_VERIFICA.md)
 8. [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
@@ -86,9 +86,11 @@
 
 ### 4) Operazioni avanzate + Cloud + esami
 
-1. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
-2. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
-3. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+1. Protection Mode / switch modalita: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+2. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
+3. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
+4. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
+5. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
@@ -176,7 +178,7 @@ Materiale operativo:
 | 8 | **Fase 1** | [PREPARAZIONE OS](./GUIDA_FASE1_PREPARAZIONE_OS.md) | Configura rete, DNS, utenti, SSH, kernel |
 | 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
 | 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
-| 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard |
+| 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard, Protection Mode (`MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`) |
 | 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract sullo Standby, Pump, Replicat Target + test matrix estesa (40 scenari) |
 | 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
 | 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
@@ -189,12 +191,21 @@ Materiale operativo:
 
 | # | Documento | File | Cosa Impari |
 |---|---|---|---|
-| 17 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
-| 18 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
-| 19 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
-| 20 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
-| 21 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
-| 22 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
+| 17 | **Protection Mode** | [GUIDA_FASE4_DG](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Cambio modalita Data Guard: `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC` |
+| 18 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
+| 19 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
+| 20 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
+| 21 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
+| 22 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
+| 23 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
+
+### Extra DBA (Post-lab)
+
+| Documento | File | Descrizione |
+|---|---|---|
+| **Indice Extra DBA** | [EXTRA_DBA](./extra_dba/README.md) | Attivita extra laboratorio gia presenti nel repo: Data Guard avanzato, RAC operations, backup/recovery, monitoring e day-2 |
+
+> `extra_dba` e `studio_ai` restano separati: `extra_dba` e un indice di percorsi avanzati del lab, `studio_ai` resta la libreria operativa di script e note reali.
 
 ---
 
