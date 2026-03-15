@@ -2224,6 +2224,62 @@ sqlplus -s / as sysdba <<< "SELECT name, value, unit FROM v\$dataguard_stats WHE
 | MRP non parte: `ORA-00270` | FRA piena sullo standby | Pulisci archivelog: `DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';` |
 | `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB_DG' SCOPE=BOTH;` → FAL recupera automaticamente |
 
+### Valutazione `ARCn: Archiving not possible: error count exceeded`
+
+Sintomo tipico nel `alert.log` dello standby:
+
+```text
+ARC1 (PID:...): Archiving not possible: error count exceeded
+PR00 (PID:...): Media Recovery Waiting for T-1.S-30 (in transit)
+rfs  (PID:...): Selected LNO:...
+```
+
+Come leggerlo correttamente:
+
+- se nello stesso periodo vedi anche `MRP0` in `APPLYING_LOG` o `WAIT_FOR_LOG`, il redo apply sta comunque funzionando;
+- la presenza di `RFS` e messaggi `Media Recovery Waiting for ... (in transit)` indica tipicamente che il trasporto redo e' vivo;
+- questo warning, da solo, non significa che hai rotto Data Guard.
+
+Controlli da fare sullo standby (`racstby1`):
+
+```sql
+SELECT process, status, thread#, sequence#
+FROM   v$managed_standby
+WHERE  process IN ('MRP0','RFS');
+
+SELECT name, value, unit
+FROM   v$dataguard_stats
+WHERE  name IN ('transport lag','apply lag','apply finish time');
+
+SELECT dest_id, status, type, valid_type, valid_role, error, destination
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
+```
+
+Controllo da fare sul primary:
+
+```sql
+SELECT dest_id, status, error
+FROM   v$archive_dest
+WHERE  dest_id = 2;
+```
+
+Interpretazione corretta:
+
+- se `MRP0` e' attivo;
+- se `transport lag` e `apply lag` sono nulli o bassi;
+- se sul primary `DEST_ID=2` e' `VALID`;
+
+allora il warning ARCn e' secondario e non richiede azioni immediate.
+
+Intervieni davvero solo se succede almeno uno di questi casi:
+
+- `MRP0` sparisce o non e' piu' in apply;
+- `DEST_ID=2` va in `ERROR`;
+- compaiono ORA espliciti su FRA piena, ASM, archivelog destination o file create;
+- il lag cresce stabilmente e non rientra.
+
 ### Fix ORA-01078 / LRM-00109 su standby (parameter file mancante)
 
 Sintomo tipico:
