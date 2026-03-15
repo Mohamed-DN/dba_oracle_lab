@@ -89,9 +89,10 @@
 1. Protection Mode / switch modalita: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 2. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
 3. PDB propagation + services: [extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md)
-4. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
-5. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
-6. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+4. Colloquio DBA Oracle: [extra_dba/GUIDA_COLLOQUIO_DBA_ORACLE.md](./extra_dba/GUIDA_COLLOQUIO_DBA_ORACLE.md)
+5. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
+6. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
+7. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
@@ -208,6 +209,7 @@ Materiale operativo:
 | **Indice Extra DBA** | [EXTRA_DBA](./extra_dba/README.md) | Attivita extra laboratorio gia presenti nel repo: Data Guard avanzato, RAC operations, backup/recovery, monitoring e day-2 |
 | **Catalogo attivita DBA** | [CATALOGO_DBA](./extra_dba/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attivita Oracle DBA reali: availability, backup, performance, security, TDE, HA/DR, multitenant, patching |
 | **Checklist operativa DBA** | [CHECKLIST_DBA](./extra_dba/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero, settimanale, mensile, trimestrale, pre-change e post-incident |
+| **Guida colloquio DBA Oracle** | [COLLOQUIO_DBA](./extra_dba/GUIDA_COLLOQUIO_DBA_ORACLE.md) | Domande tecniche, risposte chiare, follow-up e scenari realistici per colloqui Oracle DBA |
 
 > `extra_dba` e `studio_ai` restano separati: `extra_dba` e un indice di percorsi avanzati del lab, `studio_ai` resta la libreria operativa di script e note reali.
 
