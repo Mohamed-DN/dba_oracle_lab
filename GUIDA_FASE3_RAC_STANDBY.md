@@ -2375,9 +2375,31 @@ SHOW PARAMETER spfile;
 # 7. Archivelog deletion policy configurata
 rman target / <<< "SHOW ARCHIVELOG DELETION POLICY;"
 
-# 8. Errori nel alert log?
+# 8. Errori nel alert log? In ADRCI devi selezionare una singola home
 adrci
-SHOW ALERT -tail 30
+set base /u01/app/oracle
+show homes
+# scegli una home rdbms, ad esempio:
+# set homepath diag/rdbms/racdb_stby/RACDB1
+# oppure sul primario:
+# set homepath diag/rdbms/racdb/RACDB1
+show alert -tail 30
+```
+
+Nota pratica su ADRCI:
+
+- `DIA-48449: Tail alert can only apply to single ADR home` significa che sei in un host RAC con piu' ADR home disponibili
+- `DIA-48494: ADR home is not set` significa che devi prima impostare `set base` e poi `set homepath`
+- `show homes` ti restituisce il valore esatto da usare in `set homepath`
+
+Esempio rapido:
+
+```bash
+adrci
+set base /u01/app/oracle
+show homes
+set homepath diag/rdbms/racdb_stby/RACDB1
+show alert -tail 30
 ```
 
 > 📸 **SNAPSHOT — "SNAP-08: RMAN_Duplicate_Finito" ⭐ MILESTONE**
