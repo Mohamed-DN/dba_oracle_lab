@@ -44,8 +44,10 @@ select username,account_status,default_tablespace  from dba_users where username
 		alter user DBA_OP default tablespace DBA_OP_DATA;
 
 # Se l'utente non esiste crearlo
+undefine DbaOpPassword
+accept DbaOpPassword hide prompt "Inserire password iniziale DBA_OP: "
 CREATE USER DBA_OP
-  IDENTIFIED BY <password>
+  IDENTIFIED BY "&&DbaOpPassword"
   DEFAULT TABLESPACE DBA_OP_DATA
   TEMPORARY TABLESPACE TEMP
   ACCOUNT UNLOCK;

@@ -165,8 +165,13 @@ EOF
 unset JAVA_HOME
 
 REPO_OWNER=scott
-REPO_PWD=<password>
+# Do not store repository passwords in the script.
+REPO_PWD="${REPO_PWD:-<set_me>}"
 REPO_CONN="//localhost:1521/ORCL"
+if [[ "${REPO_PWD}" == "<set_me>" ]] ; then
+        echo "Set REPO_PWD before running this script"
+        exit 1
+fi
 REPO_CREDENTIALS=${REPO_OWNER}/${REPO_PWD}@${REPO_CONN}
 
 PRODUCT_INSTALL_PATH="/u01/app/oracle/product"
