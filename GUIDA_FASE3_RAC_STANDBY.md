@@ -1316,6 +1316,36 @@ chmod 640 /tmp/orapwRACDB1
 chgrp oinstall /tmp/orapwRACDB1
 ```
 
+Che cosa fa `chgrp oinstall /tmp/orapwRACDB1`?
+
+- non cambia il proprietario del file
+- cambia solo il gruppo Unix associato al file in `oinstall`
+
+In pratica:
+
+- owner resta `grid`
+- group diventa `oinstall`
+
+Questo aiuta nel lab perche':
+
+- l'utente `oracle` appartiene al gruppo `oinstall`
+- con `chmod 640`, il gruppo puo' leggere il file
+- quindi `oracle` riesce a fare `scp` del password file senza dover usare `root`
+
+Verifica attesa:
+
+```bash
+ls -l /tmp/orapwRACDB1
+```
+
+Output tipico:
+
+```text
+-rw-r----- 1 grid oinstall ... /tmp/orapwRACDB1
+```
+
+Se preferisci evitare ogni dubbio sui permessi, puoi anche fare la copia come `grid` e poi sistemare owner/perms sul nodo standby come `oracle`.
+
 Perche' qui usi `grid`?
 
 - `asmcmd` vive nel Grid home
