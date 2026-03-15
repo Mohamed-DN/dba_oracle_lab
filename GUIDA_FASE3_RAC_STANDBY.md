@@ -1911,65 +1911,111 @@ L'operazione può richiedere 20-60 minuti a seconda della dimensione del DB.
 
 ## 3.11 Creazione SPFILE in ASM e Pointer File
 
-Dopo il duplicate, l'SPFILE potrebbe essere nel filesystem locale. Per un RAC, deve stare in ASM (condiviso tra i nodi).
+Dopo il duplicate, lo standby puo' trovarsi in uno di questi stati:
 
-Questo e' il passaggio in cui trasformi lo standby appena creato da:
+- usa ancora un `spfileRACDB1.ora` locale in `$ORACLE_HOME/dbs`
+- usa un `PFILE` locale `initRACDB1.ora`
+- hai gia' creato uno `SPFILE` in ASM, ma Oracle continua comunque a leggere quello locale
 
-- standby costruito usando una sola istanza (`racstby1`)
+L'obiettivo finale per RAC e' uno solo:
 
-a:
+- SPFILE condiviso in ASM
+- file `initRACDB1.ora` e `initRACDB2.ora` ridotti a semplici pointer file
+- `cluster_database=TRUE` scritto nello SPFILE condiviso
 
-- standby pronto a funzionare come RAC condiviso tra `racstby1` e `racstby2`
+### Regola importante: ordine di ricerca dei parameter file
+
+Quando fai `STARTUP` senza specificare `PFILE=...`, Oracle cerca i file in questo ordine:
+
+1. `spfile<SID>.ora`
+2. `spfile.ora`
+3. `init<SID>.ora`
+
+Quindi, se esiste ancora `$ORACLE_HOME/dbs/spfileRACDB1.ora`, Oracle usera' quello e ignorera' il pointer file `initRACDB1.ora`.
+
+Questo spiega esattamente il caso in cui:
+
+- hai creato `initRACDB1.ora` con `SPFILE='+DATA/...'`
+- ma `SHOW PARAMETER spfile` continua a mostrare `/u01/app/oracle/product/19.0.0/dbhome_1/dbs/spfileRACDB1.ora`
+
+### Sequenza corretta e completa
 
 ```sql
 -- Su racstby1 come sysdba
 sqlplus / as sysdba
 
--- Verifica dove si trova lo SPFILE attuale
+-- 1) Verifica quale file Oracle sta usando davvero
 SHOW PARAMETER spfile;
 
--- Se è locale, spostalo in ASM:
+-- 2) Crea un PFILE di sicurezza partendo dallo SPFILE corrente
+CREATE PFILE='/tmp/racdb_stby_after_duplicate.ora' FROM SPFILE;
+
+-- 3) Crea o ricrea lo SPFILE condiviso in ASM con i parametri correnti
 CREATE SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
-  FROM PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
+  FROM PFILE='/tmp/racdb_stby_after_duplicate.ora';
 
--- Shutdown
-SHUTDOWN IMMEDIATE;
-```
-
-```sql
--- Rimetti il database in modalita' RAC solo DOPO il duplicate
--- (durante il duplicate deve restare FALSE)
-STARTUP NOMOUNT PFILE='$ORACLE_HOME/dbs/initRACDB1.ora';
-ALTER SYSTEM SET cluster_database=TRUE SCOPE=SPFILE SID='*';
+-- 4) Arresta l'istanza
 SHUTDOWN IMMEDIATE;
 ```
 
 ```bash
-# Crea pointer file su racstby1
+# Su racstby1 come oracle
+. ~/.db_env
 cd $ORACLE_HOME/dbs
-mv initRACDB1.ora initRACDB1.ora.bkp   # Backup del pfile
+
+# 5) Metti da parte il vecchio spfile locale: finche' resta qui, Oracle ha precedenza su questo file
+mv spfileRACDB1.ora spfileRACDB1.ora.bkp
+
+# 6) Metti da parte anche il vecchio pfile, se presente
+mv initRACDB1.ora initRACDB1.ora.bkp 2>/dev/null || true
+
+# 7) Crea il pointer file verso ASM
 echo "SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'" > initRACDB1.ora
 
-# Crea pointer file su racstby2
+# 8) Copia il pointer file anche al secondo nodo standby
 scp initRACDB1.ora oracle@racstby2:/u01/app/oracle/product/19.0.0/dbhome_1/dbs/initRACDB2.ora
 
-# Verifica
-more $ORACLE_HOME/dbs/initRACDB1.ora
+# 9) Verifica
+cat $ORACLE_HOME/dbs/initRACDB1.ora
 # SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
 ```
 
 ```sql
--- Riavvia e verifica
-STARTUP MOUNT;
+-- Torna in sqlplus su racstby1
+sqlplus / as sysdba
+
+-- 10) Riavvia SENZA specificare PFILE: cosi' Oracle usera' il pointer file
+STARTUP NOMOUNT;
+
+-- 11) Adesso SHOW PARAMETER spfile deve mostrare il path ASM
 SHOW PARAMETER spfile;
--- Deve mostrare il path ASM: +DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora
+
+-- 12) Solo ora scrivi cluster_database=TRUE nello SPFILE condiviso
+ALTER SYSTEM SET cluster_database=TRUE SCOPE=SPFILE SID='*';
+
+-- 13) Da NOMOUNT, SHUTDOWN IMMEDIATE puo' mostrare ORA-01507: e' normale
+SHUTDOWN IMMEDIATE;
+
+-- 14) Riavvia in MOUNT per proseguire con la fase RAC
+STARTUP MOUNT;
+
+SHOW PARAMETER cluster_database;
+SHOW PARAMETER spfile;
 ```
 
-> **Perché SPFILE in ASM?** In un RAC, i parametri devono essere condivisi tra tutti i nodi. Se l'SPFILE è nel filesystem locale di racstby1, racstby2 non lo troverà! Mettendolo in ASM, è accessibile da entrambi i nodi.
+Stato atteso a fine passo:
+
+- `SHOW PARAMETER spfile` mostra `+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora`
+- `cluster_database` risulta `TRUE`
+- `racstby1` monta il database usando lo SPFILE condiviso
+- `racstby2` ha gia' il pointer file pronto per il passo successivo
+
+> Perche' SPFILE in ASM? In RAC, i parametri devono essere condivisi tra tutti i nodi. Se lasci lo SPFILE nel filesystem locale di `racstby1`, `racstby2` non lo vede. In ASM, invece, il file e' condiviso e coerente per tutto il cluster standby.
 
 > Best practice operativa:
 > - prima del duplicate, startup manuale con `PFILE` e `NOMOUNT`;
 > - durante il duplicate, usa solo `racstby1` come auxiliary;
+> - subito dopo il duplicate, sposta la configurazione su SPFILE condiviso in ASM;
 > - dopo registrazione in OCR (passo `3.12`), usa `srvctl` per start/stop dello standby invece di `startup` manuale.
 
 ---
