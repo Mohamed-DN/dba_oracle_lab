@@ -204,7 +204,7 @@ Materiale operativo:
 | Documento | File | Descrizione |
 |---|---|---|
 | **Indice Extra DBA** | [EXTRA_DBA](./extra_dba/README.md) | Attivita extra laboratorio gia presenti nel repo: Data Guard avanzato, RAC operations, backup/recovery, monitoring e day-2 |
-| **Catalogo attivita DBA** | [CATALOGO_DBA](./extra_dba/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attivita Oracle DBA reali: availability, backup, performance, security, HA/DR, multitenant, patching |
+| **Catalogo attivita DBA** | [CATALOGO_DBA](./extra_dba/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attivita Oracle DBA reali: availability, backup, performance, security, TDE, HA/DR, multitenant, patching |
 | **Checklist operativa DBA** | [CHECKLIST_DBA](./extra_dba/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero, settimanale, mensile, trimestrale, pre-change e post-incident |
 
 > `extra_dba` e `studio_ai` restano separati: `extra_dba` e un indice di percorsi avanzati del lab, `studio_ai` resta la libreria operativa di script e note reali.

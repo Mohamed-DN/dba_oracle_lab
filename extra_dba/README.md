@@ -56,11 +56,25 @@ La guida tecnica resta in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAG
 | **Attivita DBA essenziali** | Quando vuoi runbook su AWR/ADDM/ASH, Data Pump, security e patching | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
 | **MAA best practices** | Quando vuoi confrontare il lab con raccomandazioni Oracle HA/DR | [GUIDA_MAA_BEST_PRACTICES.md](../GUIDA_MAA_BEST_PRACTICES.md) |
 
+## 5. Security e encryption
+
+| Attivita | Quando usarla | Guida |
+|---|---|---|
+| **TDE / keystore / wallet** | Quando vuoi configurare Transparent Data Encryption, capire il ruolo del wallet e ricordarti il backup del keystore | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
+| **Toolkit TDE e audit** | Quando vuoi script pratici per audit trail, controlli sicurezza e note operative riusabili | [studio_ai/08_tde_security](../studio_ai/08_tde_security/) |
+
+### Nota pratica su TDE
+
+- nel repo la parte piu concreta oggi sta in [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), sezione `5.3 Transparent Data Encryption (TDE)`;
+- il punto critico non e solo creare la master key, ma gestire bene `keystore`, backup wallet e utenti amministrativi (`SYSKM`);
+- `TDE` protegge i dati a riposo, non sostituisce backup, auditing o network encryption.
+
 ## Percorso consigliato post-lab
 
 1. Protection Mode
 2. Switchover
 3. Failover + Reinstate
 4. RMAN completo
-5. Enterprise Manager
-6. MAA review finale
+5. TDE / wallet / security review
+6. Enterprise Manager
+7. MAA review finale

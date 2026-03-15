@@ -1,6 +1,6 @@
-﻿-- Vers: 1.3
+-- Vers: 1.3
 -- Le utenze nominali hanno il formato COxxxx per esterni e D0xxxx per gli interni e vengono comunicati da Security Governance
--- Controllare il campo Attività del Hp Service Manager
+-- Controllare il campo Attivit� del Hp Service Manager
 
 #####Creazione Profile single pluggable DB#####
 create profile PROFILO_USER limit
@@ -30,9 +30,11 @@ create profile C##PROFILO_USER limit
 ## Creazione utenza nominale su single pluggable con VAULT attivo: 
 conn dvmanager/&pass
 undefine Utente
+undefine PasswordIniziale
 accept Utente prompt "Inserire nome Utente: " 
+accept PasswordIniziale hide prompt "Inserire password iniziale temporanea: "
 CREATE USER &&Utente
-        IDENTIFIED BY "<password>"
+        IDENTIFIED BY "&&PasswordIniziale"
    DEFAULT TABLESPACE USERS
  TEMPORARY TABLESPACE TEMP
               PROFILE PROFILO_USER
@@ -51,8 +53,10 @@ GRANT VAULT_TOTALE_PARTICIPANT to &&Utente;
 
 ## Creazione utenza nominale su pluggable senza VAULT: 
 undefine Utente
+undefine PasswordIniziale
 accept Utente prompt "Inserire nome Utente: " 
-CREATE USER &&Utente IDENTIFIED BY "<password>" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE C##PROFILO_USER ACCOUNT UNLOCK PASSWORD EXPIRE;          
+accept PasswordIniziale hide prompt "Inserire password iniziale temporanea: "
+CREATE USER &&Utente IDENTIFIED BY "&&PasswordIniziale" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE C##PROFILO_USER ACCOUNT UNLOCK PASSWORD EXPIRE;          
 
 GRANT        CONNECT TO &&Utente;
 GRANT CREATE SESSION TO &&Utente;
