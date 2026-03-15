@@ -1958,6 +1958,34 @@ CREATE SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
 SHUTDOWN IMMEDIATE;
 ```
 
+Se ricevi:
+
+- `ORA-17502`
+- `ORA-15173: entry 'PARAMETERFILE' does not exist in directory 'RACDB_STBY'`
+
+significa che in ASM manca ancora la directory alias per il parameter file. Creala prima di rilanciare `CREATE SPFILE`:
+
+```bash
+# Su racstby1 come grid
+su - grid
+. ~/.grid_env
+asmcmd
+
+ASMCMD> ls +DATA
+ASMCMD> mkdir +DATA/RACDB_STBY
+ASMCMD> mkdir +DATA/RACDB_STBY/PARAMETERFILE
+ASMCMD> exit
+```
+
+Poi rientra come `oracle` e rilancia:
+
+```sql
+sqlplus / as sysdba
+CREATE SPFILE='+DATA/RACDB_STBY/PARAMETERFILE/spfileRACDB_STBY.ora'
+  FROM PFILE='/tmp/racdb_stby_after_duplicate.ora';
+SHUTDOWN IMMEDIATE;
+```
+
 ```bash
 # Su racstby1 come oracle
 . ~/.db_env
