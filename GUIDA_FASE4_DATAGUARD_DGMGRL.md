@@ -75,6 +75,12 @@ Nota RAC:
 
 Se questi check falliscono, rientra in [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md) prima di continuare.
 
+Nota per la Fase 5:
+
+- quando passerai a GoldenGate, il percorso base del repo usera il `primary` come sorgente di capture;
+- Data Guard rimane la piattaforma di DR e role transition;
+- eventuali varianti con offload dal redo o dallo standby sono trattate come avanzate, non come flusso base.
+
 ---
 
 ## 4.1 Abilitare Data Guard Broker

@@ -54,6 +54,29 @@
 
 ---
 
+## Scenario del Repo: Locale RAC 19c -> OCI
+
+Per il tuo lab, lo scenario piu realistico non e un generico `source -> target`, ma questo:
+
+- `source`: RAC 19c locale
+- `HA/DR`: Data Guard locale
+- `capture GG`: sul primary locale
+- `target`: database Oracle su OCI compute
+- `rete`: IP pubblico ristretto oppure VPN, in base a [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+
+Documenti da leggere prima del cutover:
+
+1. [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+2. [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
+3. [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+
+Regola importante:
+
+- il target OCI `Always Free` va bene per imparare OCI e target Oracle;
+- ma la migrazione GG realmente coerente con il lab principale richiede un target e una versione GG compatibili con il source 19c, non una scorciatoia confusa con `GoldenGate Free`.
+
+---
+
 ## Step-by-Step: Migrazione Oracle → Oracle
 
 ### Prerequisiti

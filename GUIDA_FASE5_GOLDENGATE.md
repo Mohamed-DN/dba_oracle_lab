@@ -1,245 +1,275 @@
-# FASE 5: Configurazione GoldenGate su Standby (Extract) verso Terzo DB (Replicat)
+# FASE 5: Oracle GoldenGate verso Target Locale o OCI
 
-> In questa fase configuriamo Oracle GoldenGate per catturare le modifiche dal database standby (Active Data Guard) e replicarle verso un terzo database target indipendente (`dbtarget`).
+> In questa fase configuriamo GoldenGate in modo coerente con il lab reale. La scelta base e supportata e questa: `Integrated Extract sul primary RACDB`, Data Pump verso target, Replicat sul target. Data Guard resta la tua piattaforma di DR e HA, non il punto di capture predefinito per GoldenGate.
 
-### 📸 Flusso GoldenGate
+---
 
-![GoldenGate: Extract → Pump → Replicat](./images/goldengate_flow.png)
+## 5.0 Decisione Architetturale Prima di Partire
+
+La documentazione Oracle impone una distinzione netta.
+
+### Percorso base del repo
+
+- `source capture`: `RACDB` primary
+- `capture mode`: `Integrated Extract`
+- `transport`: Data Pump GoldenGate
+- `target`: `dbtarget` locale oppure OCI compute target
+- `Data Guard`: continua a proteggere il source, ma non e il punto di capture base
+
+### Perche ho corretto il flusso
+
+Nel draft precedente il lab assumeva `Integrated Extract` sullo standby Active Data Guard. Questo non e il percorso base supportato da Oracle.
+
+Punti tecnici chiave:
+
+- `Integrated Extract` non cattura da uno standby fisico;
+- `GoldenGate Free` non e il percorso corretto per il lab RAC 19c + DG principale;
+- il target OCI free va separato dal percorso enterprise/licensed.
+
+Conclusione pragmatica:
+
+- Fase 5 base = capture sul primary;
+- varianti con offload dal redo o standby = sezione avanzata, non flusso principale.
+
+Schema:
+
+```text
+PRIMARY RAC (RACDB)
+     |
+     | Integrated Extract
+     v
+  Local Trail
+     |
+     | Data Pump
+     v
+TARGET
+  - dbtarget locale
+  - OCI compute target
+
+Data Guard continua in parallelo come DR.
+```
 
 ---
 
 ## 5.0A Ingresso da Fase 4 (check obbligatorio)
 
-GoldenGate in questa architettura presuppone Data Guard stabile e standby usabile.
+GoldenGate ha senso solo se Fase 4 e stabile.
 
 ```bash
 dgmgrl sys/<password>@RACDB
 SHOW CONFIGURATION;
+SHOW DATABASE RACDB;
 SHOW DATABASE RACDB_STBY;
 ```
 
 ```sql
--- Sullo standby
 sqlplus / as sysdba
-SELECT open_mode, database_role FROM v$database;
-SELECT process, status FROM v$managed_standby WHERE process='MRP0';
+SELECT name, open_mode, database_role, db_unique_name FROM v$database;
+SELECT force_logging, supplemental_log_data_min FROM v$database;
 ```
 
-Devi avere:
+Criteri minimi:
 
-- `Configuration Status: SUCCESS` in DGMGRL
-- standby `PHYSICAL STANDBY` e preferibilmente `READ ONLY WITH APPLY`
-- `MRP0` in stato `APPLYING_LOG`
+- Broker `SUCCESS` o warning gia compresi;
+- primary `READ WRITE` e ruolo `PRIMARY`;
+- standby sano e apply attivo;
+- source stabile prima di toccare GoldenGate.
 
-Se non sei in questo stato, rientra in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
+Se Fase 4 non e chiusa, torna a [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
 
 ---
 
-## 5.0 Preparazione Macchina Target (`dbtarget`)
+## 5.0B Scegli il Target: Locale o OCI
 
-Nelle versioni precedenti di questo lab, costruivamo un terzo server VirtualBox per ospitare il database di destinazione. Tuttavia, questo richiedeva troppa RAM locale (portando il totale a 5 VM pesanti).
+### Opzione 1 - `dbtarget` locale
 
-> ☁️ **IL NUOVO APPROCCIO (CLOUD FIRST)**
-> Al posto di una VM locale, useremo il tier gratuito (Always Free) di **Oracle Cloud Infrastructure (OCI)**. Creeremo una potente istanza ARM con ben 4 CPU e 24GB di RAM, su cui faremo girare il nuovissimo **Oracle Database 23ai Free** e **Oracle GoldenGate 23ai Free**.
+Usala se vuoi:
 
-👉 **Smetti di leggere qui e segui la guida:** [**Setup OCI ARM come Target GoldenGate**](./GUIDA_GOLDENGATE_OCI_ARM.md).
+- ridurre variabili di rete;
+- imparare GoldenGate prima del cloud;
+- avere debug piu semplice.
 
-Torna a questo punto (Step 5.1) **solo dopo** aver completato la guida OCI e aver verificato che i due nodi Standby riescano a pingare il tuo nuovo IP pubblico OCI (tramite il record in `/etc/hosts` che configurerai).
+### Opzione 2 - target OCI compute
 
-Se invece hai gia un target locale funzionante (`dbtarget`) con listener e DB attivi, puoi saltare la parte OCI e proseguire direttamente da `5.1`.
+Usala se vuoi:
 
----
+- imparare una migrazione locale -> cloud;
+- allenarti su listener, rete, NSG e target remoto.
 
-## 5.1 Architettura GoldenGate con ADG Standby
+Prima di usare OCI leggi:
 
-L'architettura che implementiamo è chiamata **Downstream Integrated Extract**:
-
-```
-┌────────────────┐      Redo Shipping       ┌──────────────────┐
-│  RAC PRIMARY   │ ─────────────────────────→│  RAC STANDBY     │
-│  (RACDB)       │                           │  (RACDB_STBY)    │
-│                │                           │  Active DG       │
-└────────────────┘                           │                  │
-                                             │  ┌────────────┐  │
-                                             │  │ GG Extract │  │     Trails
-                                             │  │ (Integrated│──│──────────────→ ┌────────────────────┐
-                                             │  │  Capture)  │  │                │  TARGET VMS        │
-                                             │  └────────────┘  │                │  ┌───────────────┐ │
-                                             └──────────────────┘                │  │ GG Replicat   │ │
-                                                                                 │  │ (Oracle dbtar)│ │
-                                                                                 │  └───────────────┘ │
-                                                                                 │  ┌───────────────┐ │
-                                                                                 │  │ GG Replicat   │ │
-                                                                                 │  │ (PostgreSQL)  │ │
-                                                                                 │  └───────────────┘ │
-                                                                                 └────────────────────┘
-```
-
-> **Perché estrarre dallo standby e non dal primario?**
-> 1. **Zero impatto sul primario**: L'Extract legge i redo log sullo standby, non tocca il primario.
-> 2. **Ridondanza**: Se il primario muore, l'Extract continua a lavorare sullo standby (che diventa primario dopo failover).
-> 3. **Best practice Oracle**: Consigliato per ambienti mission-critical.
+- [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+- [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
 
 ---
 
-## 5.2 Prerequisiti Database
+## 5.1 Rete e Naming
 
-### Sul Primario (RACDB) — Abilitare GoldenGate Replication
+Qualunque target tu scelga, il source deve risolvere e raggiungere il target.
+
+### Per il target locale
+
+Assumi `dbtarget.localdomain` raggiungibile da `rac1`.
+
+### Per il target OCI
+
+Assumi `dbtarget.localdomain` o `dbtarget` puntato all'IP corretto nel file `/etc/hosts` oppure nel DNS usato dal lab.
+
+Test obbligatori da `rac1`:
+
+```bash
+ping dbtarget
+nc -vz dbtarget 1521
+# se target GG classic/core
+nc -vz dbtarget 7809
+# se target GG microservices
+nc -vz dbtarget 9011
+nc -vz dbtarget 9014
+tnsping DBTARGET
+```
+
+Se questi test falliscono, non partire con GG.
+
+---
+
+## 5.2 Architettura Supportata del Lab
+
+Flusso base:
+
+```text
+rac1/rac2 (PRIMARY RACDB)
+   |
+   | Integrated Extract on primary
+   v
+Local trail
+   |
+   | Pump
+   v
+Target DB
+   |
+   +--> locale
+   +--> OCI compute
+```
+
+Perche il primary e il default giusto:
+
+- e il percorso Oracle piu lineare e supportato per `Integrated Extract`;
+- riduce ambiguita con Active Data Guard;
+- semplifica troubleshooting e inizializzazione.
+
+---
+
+## 5.3 Prerequisiti Database sul Source
+
+Sul primary `RACDB`:
 
 ```sql
 sqlplus / as sysdba
 
--- Abilita GoldenGate
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH SID='*';
-
--- Abilita supplemental logging minimale
+ALTER DATABASE FORCE LOGGING;
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
-
--- Abilita supplemental logging per le tabelle che vuoi replicare
--- Per TUTTE le tabelle (approccio semplice per lab):
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
--- Verifica
-SELECT supplemental_log_data_min, supplemental_log_data_all FROM v$database;
--- Deve mostrare: YES / YES
+SELECT force_logging,
+       supplemental_log_data_min,
+       supplemental_log_data_all
+FROM   v$database;
 ```
 
-> **Perché Supplemental Logging?** GoldenGate ha bisogno di informazioni aggiuntive nei redo log per ricostruire correttamente le operazioni DML. Senza supplemental logging, GG non sa quali colonne sono state modificate in un UPDATE.
+Atteso:
 
-### Sullo Standby (RACDB_STBY)
+- `FORCE_LOGGING = YES`
+- `SUPPLEMENTAL_LOG_DATA_MIN = YES`
+- `SUPPLEMENTAL_LOG_DATA_ALL = YES`
+
+Nota:
+
+- `FORCE LOGGING` e importante per Data Guard e GoldenGate, per evitare buchi di redo non loggato.
+
+---
+
+## 5.4 Prerequisiti sul Target
+
+Sul target Oracle:
 
 ```sql
 sqlplus / as sysdba
-
-ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH SID='*';
-```
-
-### Sul Target (dbtarget)
-
-```sql
-sqlplus / as sysdba
-
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
 ```
 
+Se il target e multitenant:
+
+- crea o scegli il PDB target;
+- definisci un service dedicato;
+- verifica listener e `tnsping`.
+
 ---
 
-## 5.3 Creazione Utente GoldenGate
+## 5.5 Creazione Utente GoldenGate
 
-### Sul Primario (replicato automaticamente sullo standby da DG):
+### Sul source
 
 ```sql
 sqlplus / as sysdba
 
--- Crea utente GoldenGate
 CREATE USER ggadmin IDENTIFIED BY <password>
-    DEFAULT TABLESPACE USERS
-    TEMPORARY TABLESPACE TEMP
-    QUOTA UNLIMITED ON USERS;
+  DEFAULT TABLESPACE USERS
+  TEMPORARY TABLESPACE TEMP
+  QUOTA UNLIMITED ON USERS;
 
--- Assegna privilegi necessari
-GRANT DBA TO ggadmin;
+GRANT CREATE SESSION, RESOURCE, ALTER SESSION TO ggadmin;
 GRANT SELECT ANY DICTIONARY TO ggadmin;
 GRANT SELECT ANY TABLE TO ggadmin;
-GRANT CREATE SESSION TO ggadmin;
-GRANT ALTER SESSION TO ggadmin;
-GRANT RESOURCE TO ggadmin;
-
--- Privilegi specifici GoldenGate
+GRANT FLASHBACK ANY TABLE TO ggadmin;
+GRANT EXECUTE ON DBMS_LOCK TO ggadmin;
 EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
 ```
 
-### Sul Target (dbtarget):
+### Sul target
 
 ```sql
 sqlplus / as sysdba
 
 CREATE USER ggadmin IDENTIFIED BY <password>
-    DEFAULT TABLESPACE USERS
-    TEMPORARY TABLESPACE TEMP
-    QUOTA UNLIMITED ON USERS;
+  DEFAULT TABLESPACE USERS
+  TEMPORARY TABLESPACE TEMP
+  QUOTA UNLIMITED ON USERS;
 
-GRANT DBA TO ggadmin;
+GRANT CREATE SESSION, RESOURCE, ALTER SESSION TO ggadmin;
 GRANT SELECT ANY DICTIONARY TO ggadmin;
-GRANT CREATE SESSION TO ggadmin;
-GRANT ALTER SESSION TO ggadmin;
-GRANT RESOURCE TO ggadmin;
-
+GRANT DBA TO ggadmin;
 EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
 ```
 
+Nel lab va bene essere larghi con i privilegi. In produzione li restringi.
+
 ---
 
-## 5.4 Download e Installazione GoldenGate
+## 5.6 Installazione Software GoldenGate
 
-Scarica Oracle GoldenGate 19c (o 21c) da [Oracle eDelivery](https://edelivery.oracle.com):
-- Per lo Standby: **Oracle GoldenGate 19c for Oracle Database on Linux x86-64**
-- Per il Target ARM (se OCI ARM): **Oracle GoldenGate for Oracle Database on Linux ARM**
+### Sul source
 
-> 📸 **SNAPSHOT — "SNAP-10: Pre_GoldenGate" 🔴 CRITICO**
-> Fai snapshot PRIMA di installare GoldenGate. Se GG crea problemi, torni al tuo ambiente DG perfettamente funzionante.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-10: Pre_GoldenGate"
-> VBoxManage snapshot "rac2" take "SNAP-10: Pre_GoldenGate"
-> VBoxManage snapshot "racstby1" take "SNAP-10: Pre_GoldenGate"
-> VBoxManage snapshot "racstby2" take "SNAP-10: Pre_GoldenGate"
-> VBoxManage snapshot "dbtarget" take "SNAP-10: Pre_GoldenGate"
-> ```
+Installa GoldenGate nel nodo da cui gestirai l'Extract, tipicamente `rac1`.
 
-### Installazione sullo Standby (`racstby1`)
+Percorso esempio:
 
 ```bash
-# Come root (crea la directory)
 mkdir -p /u01/app/goldengate
 chown oracle:oinstall /u01/app/goldengate
-
-# Come oracle
-su - oracle
-cd /u01/app/goldengate
-
-# Scompatta GoldenGate
-unzip /tmp/fbo_ggs_Linux_x64_Oracle_shiphome.zip
-cd fbo_ggs_Linux_x64_Oracle_shiphome/Disk1
-
-# Lancia l'installer (GUI)
-> ⚠️ **ATTENZIONE MOBAXTERM**: Questo comando avvia una GUI. Devi essere connesso con **MobaXterm** e **X11-Forwarding** attivo (vedi Fase 0.12).
-# Il DISPLAY di solito viene settato in automatico da MobaXterm.
-./runInstaller
 ```
 
-**Installer Steps:**
-1. Software Location: `/u01/app/goldengate/ogg`
-2. Database Location: Point al tuo ORACLE_HOME
-3. Seleziona **Oracle GoldenGate for Oracle Database 19c**
+Poi installa il software GoldenGate coerente con il database source.
 
-Oppure **installazione silente**:
+### Sul target
 
-```bash
-cat > /tmp/oggcore.rsp <<'EOF'
-oracle.install.responseFileVersion=/oracle/install/rspfmt_ogginstall_response_schema_v19_1_0
-INSTALL_OPTION=ORA19c
-SOFTWARE_LOCATION=/u01/app/goldengate/ogg
-INVENTORY_LOCATION=/u01/app/oraInventory
-UNIX_GROUP_NAME=oinstall
-EOF
+- se target locale: installa GoldenGate sul server target;
+- se target OCI: segui [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md) per capire se stai usando un target `free validation` o un target realmente coerente con il lab principale.
 
-cd fbo_ggs_Linux_x64_Oracle_shiphome/Disk1
-./runInstaller -silent -responseFile /tmp/oggcore.rsp
-```
-
-### Installazione sul Target OCI (Cloud)
-
-L'installazione e la creazione del Service Manager sul Cloud sono interamente coperte dalla **[Nuova Guida OCI ARM](./GUIDA_GOLDENGATE_OCI_ARM.md)**. Se l'hai seguita, il tuo target è già pronto a ricevere i dati sulla porta 7809 e ha l'interfaccia Web attiva in HTTPS.
-
----
-
-## 5.5 Configurazione Variabili d'Ambiente GoldenGate
-
-Su ogni macchina dove GG è installato:
+### Variabili ambiente
 
 ```bash
 cat >> /home/oracle/.bash_profile <<'EOF'
-# GoldenGate Environment
 export OGG_HOME=/u01/app/goldengate/ogg
 export PATH=$OGG_HOME:$PATH
 export LD_LIBRARY_PATH=$OGG_HOME/lib:$ORACLE_HOME/lib:$LD_LIBRARY_PATH
@@ -250,455 +280,371 @@ source /home/oracle/.bash_profile
 
 ---
 
-## 5.6 Configurazione Manager (su Standby e Target)
+## 5.7 Configurazione Manager
 
-Il Manager è il processo "supervisore" di GoldenGate: gestisce tutti gli altri processi.
-
-### Sullo Standby (`racstby1`)
+### Sul source
 
 ```bash
 cd $OGG_HOME
 ./ggsci
 ```
 
-```
+```text
 GGSCI> CREATE SUBDIRS
-
 GGSCI> EDIT PARAMS MGR
+```
 
--- Inserisci:
+Parametri esempio:
+
+```text
 PORT 7809
 DYNAMICPORTLIST 7810-7820
 AUTORESTART EXTRACT *, RETRIES 3, WAITMINUTES 5, RESETMINUTES 60
 PURGEOLDEXTRACTS ./dirdat/*, USECHECKPOINTS, MINKEEPHOURS 24
 ```
 
-> **Spiegazione parametri MGR:**
-> - `PORT 7809`: Porta TCP su cui il Manager ascolta.
-> - `DYNAMICPORTLIST`: Range di porte per i processi Extract/Pump/Replicat.
-> - `AUTORESTART`: Se un Extract crasha, il Manager lo riavvia automaticamente (max 3 tentativi, aspetta 5 minuti tra un tentativo e l'altro).
-> - `PURGEOLDEXTRACTS`: Pulisce automaticamente i trail file vecchi.
-
-```
+```text
 GGSCI> START MGR
 GGSCI> INFO MGR
--- Output: Manager is running (port 7809).
 ```
 
-### Sul Target (`dbtarget`)
+### Sul target
 
-```
-GGSCI> CREATE SUBDIRS
-GGSCI> EDIT PARAMS MGR
-
-PORT 7809
-DYNAMICPORTLIST 7810-7820
-AUTORESTART REPLICAT *, RETRIES 3, WAITMINUTES 5, RESETMINUTES 60
-PURGEOLDEXTRACTS ./dirdat/*, USECHECKPOINTS, MINKEEPHOURS 24
-
-GGSCI> START MGR
-```
+Manager analogo, adattando `AUTORESTART REPLICAT *`.
 
 ---
 
-## 5.7 Configurazione Extract (sullo Standby)
+## 5.8 Configurazione Extract sul Primary
 
-L'Extract cattura le modifiche dai redo log. Usiamo **Integrated Capture** che sfrutta il LogMiner interno di Oracle — è il metodo più robusto e supportato.
+### 5.8.1 Login e registrazione
 
-### Preparazione Database per Integrated Extract
-
-```sql
--- Sullo standby come sysdba
-sqlplus / as sysdba
-
--- Registra lo schema di heartbeat GoldenGate
-@$OGG_HOME/admin_setup.sql
--- Quando richiesto:
--- Tablespace for GoldenGate: USERS
--- Temp tablespace: TEMP
-```
-
-### Creazione e Configurazione Extract
+Su `rac1` come `oracle`:
 
 ```bash
 cd $OGG_HOME
 ./ggsci
 ```
 
-```
--- Login al database
-GGSCI> DBLOGIN USERID ggadmin@RACDB_STBY PASSWORD <password>
-
--- Registra l'Integrated Extract nel database
-GGSCI> REGISTER EXTRACT ext_racdb DATABASE
-
--- Aggiungi l'Extract
-GGSCI> ADD EXTRACT ext_racdb, INTEGRATED TRANLOG, BEGIN NOW
-
--- Aggiungi il Trail locale (dove l'Extract scrive le modifiche catturate)
-GGSCI> ADD EXTTRAIL ./dirdat/ea, EXTRACT ext_racdb, MEGABYTES 100
+```text
+GGSCI> DBLOGIN USERID ggadmin PASSWORD <password>
+GGSCI> REGISTER EXTRACT ext_rac DATABASE
+GGSCI> ADD EXTRACT ext_rac, INTEGRATED TRANLOG, BEGIN NOW
+GGSCI> ADD EXTTRAIL ./dirdat/er, EXTRACT ext_rac, MEGABYTES 200
 ```
 
-> **Perché `INTEGRATED TRANLOG`?** A differenza del Classic Extract che legge direttamente i redo file, l'Integrated Extract usa il LogMiner Server integrato nel database. Questo è più efficiente, supporta più data types, e funziona nativamente con RAC/ADG.
+### 5.8.2 Parametri Extract
 
-### Creazione Parameter File dell'Extract
-
-```
-GGSCI> EDIT PARAMS ext_racdb
+```text
+GGSCI> EDIT PARAMS ext_rac
 ```
 
-```
-EXTRACT ext_racdb
-USERID ggadmin@RACDB_STBY, PASSWORD <password>
-EXTTRAIL ./dirdat/ea
+Esempio base:
+
+```text
+EXTRACT ext_rac
+USERID ggadmin, PASSWORD <password>
+EXTTRAIL ./dirdat/er
 LOGALLSUPCOLS
 UPDATERECORDFORMAT COMPACT
+DDL INCLUDE MAPPED
+TRANLOGOPTIONS INTEGRATEDPARAMS (MAX_SGA_SIZE 256)
 
--- Specifica lo schema e le tabelle da replicare
--- Esempio: replicare tutto lo schema HR
 TABLE HR.*;
-
--- Oppure per tabelle specifiche:
--- TABLE HR.EMPLOYEES;
--- TABLE HR.DEPARTMENTS;
+TABLE APP.*;
 ```
 
-> **Spiegazione parametri:**
-> - `LOGALLSUPCOLS`: Include tutte le colonne supplemental log nel trail (necessario per conflitti e CDC).
-> - `UPDATERECORDFORMAT COMPACT`: Riduce la dimensione dei trail file includendo solo le colonne modificate.
-> - `TABLE HR.*`: Cattura tutte le tabelle dello schema HR.
+Nota pratica:
+
+- in RAC il capture e logico sul database, ma l'istanza da cui amministri e `rac1`;
+- usa servizi corretti per il login Oracle e per gli oggetti replicati.
 
 ---
 
-## 5.8 Configurazione Data Pump (sullo Standby)
+## 5.9 Configurazione Data Pump
 
-Il Data Pump legge i trail locali e li trasmette via rete al Target.
-
-```
-GGSCI> ADD EXTRACT pump_racdb, EXTTRAILSOURCE ./dirdat/ea
-
-GGSCI> ADD RMTTRAIL ./dirdat/ra, EXTRACT pump_racdb, MEGABYTES 100
-
-GGSCI> EDIT PARAMS pump_racdb
+```text
+GGSCI> ADD EXTRACT pump_rac, EXTTRAILSOURCE ./dirdat/er
+GGSCI> ADD RMTTRAIL ./dirdat/rt, EXTRACT pump_rac, MEGABYTES 200
+GGSCI> EDIT PARAMS pump_rac
 ```
 
-```
-EXTRACT pump_racdb
-USERID ggadmin@RACDB_STBY, PASSWORD <password>
-RMTHOST dbtarget.localdomain, MGRPORT 7809
-RMTTRAIL ./dirdat/ra
+Esempio:
+
+```text
+EXTRACT pump_rac
+USERID ggadmin, PASSWORD <password>
+RMTHOST dbtarget, MGRPORT 7809
+RMTTRAIL ./dirdat/rt
+PASSTHRU
+
 TABLE HR.*;
+TABLE APP.*;
 ```
 
-> **Perché un Data Pump?** È un livello di indirezione: l'Extract scrive localmente, il Pump trasmette via rete. Se la rete cade, l'Extract non si ferma — il Pump accumula i trail e li spedisce quando la rete torna. Senza Pump, un problema di rete fermerebbe l'Extract.
+Se usi microservices sul target, sostituisci il modello `RMTHOST/MGRPORT` con il percorso Distribution/Receiver coerente col deployment scelto.
 
 ---
 
-## 5.9 Configurazione Replicat (sul Target OCI)
+## 5.10 Initial Load (Instanziazione)
 
-A differenza dell'Extract locale, sul target in Cloud abbiamo installato **GoldenGate 23ai Microservices**. Non useremo `ggsci` da riga di comando, ma l'interfaccia grafica Web super reattiva!
+GoldenGate non sostituisce l'initial load. Prima carichi i dati, poi applichi il delta.
 
-1. Apri il browser e vai al Service Manager OCI: `https://<IP_PUBBLICO_CLOUD>:9011`
-2. Accedi con `admin` / `oracle` (o la password che hai scelto).
-3. Vai all'Administration Server (porta 9012).
-4. Nel menu laterale, seleziona **Credentials** e aggiungi le credenziali del database (Username: `ggadmin`, Password: `ggadmin`, Connect String: `//localhost:1521/FREEPDB1`).
-5. Vai su **Replicats** e clicca su **+ (Add Replicat)**.
-6. Scegli **Integrated Replicat** e usa questi parametri nel wizard:
-   - Replicat Name: `REPTAR`
-   - Trail Name: `./dirdat/ra`
-   - Parameter File (Mapping):
-     ```text
-     REPLICAT REPTAR
-     USERIDALIAS ggadminAlias
-     ASSUMETARGETDEFS
-     MAP HR.*, TARGET HR.*;
-     ```
-
-> **Microservices vs Classic:** In GG 23ai, il credential store si nasconde dietro un *Alias* (es. `ggadminAlias`) gestito dalla Web UI, quindi nel file dei parametri non si scrive più la password in chiaro rispetto all'architettura Classic di 19c.
-
-> **Spiegazione parametri:**
-> - `ASSUMETARGETDEFS`: Assume che la struttura delle tabelle sul target sia identica al source. Se le tabelle fossero diverse, useresti un file `DEFGEN`.
-> - `DISCARDFILE`: Se una transazione non può essere applicata (es. conflitto chiave), viene scritta qui invece di fermare il Replicat.
-> - `MAP ... TARGET`: Mappa le tabelle source alle tabelle target. `HR.* -> HR.*` significa "stesse tabelle".
-
----
-
-## 5.10 Initial Load (Instanziazione) tramite CSN
-
-Prima di avviare la replica continua, devi caricare i dati esistenti sul target. La **Best Practice Oracle** è usare Data Pump (`expdp`/`impdp`) sincronizzato tramite un **SCN (System Change Number)** specifico. Senza questo, il Replicat applicherebbe modifiche sovrapposte al dump, causando errori di violazione chiave primaria!
-
-### Step 1: Trova l'SCN corrente sullo Standby
+### Step 1 - Prendi SCN consistente sul source
 
 ```sql
--- Su racstby1 (come sysdba)
 sqlplus / as sysdba
 SELECT current_scn FROM v$database;
--- Annota questo numero! Es: 3456789
 ```
 
-### Step 2: Esporta i dati congelati a quell'SCN
+### Step 2 - Export consistente
 
 ```bash
-# Sullo Standby - esporta specificando l'SCN
-expdp ggadmin/<password>@RACDB_STBY schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_export.log flashback_scn=3456789
+expdp ggadmin/<password> \
+  SCHEMAS=HR,APP \
+  DIRECTORY=DATA_PUMP_DIR \
+  DUMPFILE=gg_init_%U.dmp \
+  FILESIZE=2G \
+  PARALLEL=4 \
+  FLASHBACK_SCN=<SCN>
 ```
 
-### Step 3: Trasferisci e Importa sul Target OCI
-
-Dato che il sistema remoto è su Oracle Cloud, l'utente per l'SSH è `opc`.
+### Step 3 - Import sul target
 
 ```bash
-# Sullo Standby - trasferisci il dump nel cloud (assicurati che la SSH key funzioni da qui!)
-# Metti l'IP corretto del cloud:
-scp /u01/app/oracle/admin/RACDB_STBY/dpdump/hr_initial.dmp opc@130.x.x.x:/tmp/
-
-# Nel terminale MobaXterm collegato al Cloud (dbtarget-arm):
-sudo su - oracle
-# Sposta il dump nella directory DataPump di Oracle 23ai Free
-mv /tmp/hr_initial.dmp /opt/oracle/admin/FREE/dpdump/
-
-# Importa i dati nel Pluggable Database (FREEPDB1)
-impdp ggadmin/<password>@localhost:1521/FREEPDB1 schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_initial.dmp logfile=hr_import.log
+impdp ggadmin/<password> \
+  SCHEMAS=HR,APP \
+  DIRECTORY=DATA_PUMP_DIR \
+  DUMPFILE=gg_init_%U.dmp \
+  PARALLEL=4 \
+  TABLE_EXISTS_ACTION=REPLACE
 ```
 
-> 💡 **Il trucco del DBA**: Avendo importato i dati fermi all'SCN `3456789`, diremo al Replicat di ignorare tutte le transazioni precedenti a quel momento e di applicare solo le novità!
+### Step 4 - Allinea Extract allo stesso SCN
+
+```text
+GGSCI> DELETE EXTRACT ext_rac
+GGSCI> ADD EXTRACT ext_rac, INTEGRATED TRANLOG, SCN <SCN>
+GGSCI> ADD EXTTRAIL ./dirdat/er, EXTRACT ext_rac, MEGABYTES 200
+```
+
+Poi rimetti il parameter file `ext_rac`.
+
+Questa e la logica corretta per evitare buchi o duplicati durante il bootstrap.
 
 ---
 
-## 5.11 Avvio dei Processi
+## 5.11 Configurazione Replicat sul Target
 
-### Sequenza di avvio (ORDINE IMPORTANTE):
+Sul target:
 
-```
--- 1. Avvia Manager (su entrambi, se non già attivo)
--- Già fatto in 5.6
-
--- 2. Avvia l'Extract sullo Standby
-GGSCI> START EXTRACT ext_racdb
-
--- 3. Avvia il Data Pump sullo Standby
-GGSCI> START EXTRACT pump_racdb
-
--- 4. Avvia il Replicat sul Target OCI (Dall'interfaccia WEB Microservices)
--- Dato che stiamo usando la Web UI, vai su Replicats -> Action -> Start con opzione "After CSN"
--- e inserisci lì il tuo CSN (es. 3456789).
+```bash
+cd $OGG_HOME
+./ggsci
 ```
 
-### Verifica
-
+```text
+GGSCI> DBLOGIN USERID ggadmin PASSWORD <password>
+GGSCI> ADD CHECKPOINTTABLE ggadmin.ggchkpt
+GGSCI> ADD REPLICAT rep_rac, INTEGRATED, EXTTRAIL ./dirdat/rt
+GGSCI> EDIT PARAMS rep_rac
 ```
--- Sullo Standby
+
+Esempio:
+
+```text
+REPLICAT rep_rac
+USERID ggadmin, PASSWORD <password>
+ASSUMETARGETDEFS
+DISCARDFILE ./dirrpt/rep_rac.dsc, APPEND, MEGABYTES 100
+HANDLECOLLISIONS
+
+MAP HR.*, TARGET HR.*;
+MAP APP.*, TARGET APP.*;
+```
+
+Nota:
+
+- `HANDLECOLLISIONS` serve solo nella fase iniziale;
+- dopo la convergenza, lo rimuovi e riavvii Replicat.
+
+---
+
+## 5.12 Ordine di Avvio
+
+Ordine consigliato:
+
+1. `START MGR` sul source
+2. `START MGR` sul target
+3. `START EXTRACT ext_rac`
+4. `START EXTRACT pump_rac`
+5. `START REPLICAT rep_rac`
+
+Verifica:
+
+```text
 GGSCI> INFO ALL
-
-Program     Status      Group       Lag at Chkpt  Time Since Chkpt
-MANAGER     RUNNING
-EXTRACT     RUNNING     ext_racdb   00:00:02      00:00:05
-EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
-
--- Sul Target OCI (Microservices)
--- Dalla Home Page web (porta 9011), naviga in Administration Server (9012)
--- Il Replicat `REPTAR` deve avere la spunta verde (Running) e un ritardo minimo.
+GGSCI> STATS EXTRACT ext_rac, TOTAL
+GGSCI> STATS EXTRACT pump_rac, TOTAL
+GGSCI> STATS REPLICAT rep_rac, TOTAL
+GGSCI> LAG EXTRACT ext_rac
+GGSCI> LAG REPLICAT rep_rac
 ```
-
-> Se tutti i processi sono `RUNNING` con lag minimo, hai un sistema di replica funzionante! 🎉
-
-> 📸 **SNAPSHOT — "SNAP-11: GoldenGate_Running" ⭐ MILESTONE FINALE**
-> L'intero ambiente è operativo: RAC + Data Guard + GoldenGate! Questo è il tuo punto di partenza "gold".
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-11: GoldenGate_Running"
-> VBoxManage snapshot "rac2" take "SNAP-11: GoldenGate_Running"
-> VBoxManage snapshot "racstby1" take "SNAP-11: GoldenGate_Running"
-> VBoxManage snapshot "racstby2" take "SNAP-11: GoldenGate_Running"
-> VBoxManage snapshot "dbtarget" take "SNAP-11: GoldenGate_Running"
-> ```
 
 ---
 
-## 5.12 Monitoraggio Continuo
+## 5.13 Criteri di Successo Fase 5
 
-### Sullo Standby (Classic GGSCI)
+La fase e considerata chiusa se hai tutti questi punti:
 
+- source primary stabile;
+- target raggiungibile via rete e TNS;
+- initial load completato;
+- Extract `RUNNING`;
+- Pump `RUNNING`;
+- Replicat `RUNNING`;
+- `lag` basso e controllato;
+- DML di test replicato correttamente;
+- Data Guard ancora sana dopo l'abilitazione GG.
+
+Check Data Guard post-GG:
+
+```sql
+SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id = 2;
 ```
-GGSCI> INFO ALL
-GGSCI> STATS EXTRACT ext_racdb, LATEST
-GGSCI> STATS EXTRACT pump_racdb, LATEST
-GGSCI> LAG EXTRACT ext_racdb
-GGSCI> LAG EXTRACT pump_racdb
-GGSCI> VIEW REPORT ext_racdb
-GGSCI> VIEW REPORT pump_racdb
-```
-
-### Sul Target OCI (Microservices 23ai)
-
-Controlla da Web UI (Administration Server):
-
-- stato `Running` del replicat `REPTAR`
-- checkpoint che avanza nel tempo
-- lag stabile sotto soglia
-- assenza errori nella sezione diagnostics
-
-Soglie operative consigliate lab:
-
-- `Lag <= 10 sec` in carico normale
-- `Lag <= 60 sec` durante test di stress
 
 ---
 
-## 5.13 GoldenGate Test Matrix Estesa (Lab Avanzato)
-
-Esegui i test in questo ordine. Ogni test va marcato `PASS/FAIL` con timestamp.
-
-| ID | Scenario | Cosa testare | Esito atteso |
-|---|---|---|---|
-| GG-01 | DML base INSERT | Inserisci 10 righe su source | 10 righe replicate su target |
-| GG-02 | DML UPDATE | Aggiorna 10 righe | Aggiornamenti identici su target |
-| GG-03 | DML DELETE | Elimina 5 righe | Delete replicate senza residue |
-| GG-04 | Transazione multi-tabella | Commit unico su 2-3 tabelle | Ordine e atomicita mantenuti |
-| GG-05 | Bulk DML | 50k+ righe (batch) | Replicazione completa, lag sotto controllo |
-| GG-06 | LOB/CLOB | Insert/update CLOB/BLOB | LOB coerenti tra source e target |
-| GG-07 | Update chiave | Update su PK/UK (se consentito) | Nessun out-of-sync o duplicate key |
-| GG-08 | Commit frequenti | 1000 tx piccole | Nessun abend, throughput stabile |
-| GG-09 | DDL add column | `ALTER TABLE ADD COLUMN` | Comportamento coerente con mapping/config |
-| GG-10 | DDL rename/index | DDL non DML | Validare policy DDL del lab |
-| GG-11 | TRUNCATE | Truncate tabella test | Verificare applicazione/gestione evento |
-| GG-12 | Network outage breve | Interrompi rete pump->target 2-5 min | Coda trail cresce, poi rientra senza perdita |
-| GG-13 | Stop/start Manager | Restart manager su standby | Processi ripartono e checkpoint prosegue |
-| GG-14 | Stop/start Extract | Restart `ext_racdb` | Ripresa dal checkpoint corretto |
-| GG-15 | Stop/start Pump | Restart `pump_racdb` | Nessun buco nei trail remoti |
-| GG-16 | Stop/start Replicat | Restart `REPTAR` | Ripresa coerente, nessun missing txn |
-| GG-17 | Trail space pressure | Simula spazio basso su trail | Alert tempestivo, recovery operativo |
-| GG-18 | Lag stress | Carico elevato 10-15 min | Lag cresce e rientra senza abend |
-| GG-19 | Switchover DG | Switchover e ripresa GG | Replicazione continua post-switch |
-| GG-20 | Failover DG | Failover controllato + restore servizi | GG ripristinato con downtime minimo |
-| GG-21 | Re-instantiate da CSN | Nuovo initial load e start after CSN | Allineamento completo senza duplicate |
-| GG-22 | Drift detection | Confronto rowcount/checksum | Nessuna divergenza non giustificata |
-| GG-23 | Error handling | Simula errore applicativo target | Evento intercettato e risolto con runbook |
-| GG-24 | End-to-end 60 min | Flusso completo a carico misto | Processi stabili, lag entro soglia |
-| GG-25 | Long transaction | 1 tx lunga (es. 100k righe, commit finale) | Nessun abend, apply completo post-commit |
-| GG-26 | Concorrenza multi-sessione | 10 sessioni SQL in parallelo | Throughput stabile, zero collisioni inattese |
-| GG-27 | Integrita referenziale | DML parent/child con FK | Ordine applicativo corretto, nessun orphan |
-| GG-28 | Insert con sequence | Dati generati da sequence source | Valori target coerenti con source |
-| GG-29 | Time zone | `TIMESTAMP WITH TIME ZONE` | Valori temporalmente equivalenti |
-| GG-30 | Caratteri multibyte | Accenti/simboli/UTF-8 in colonne testuali | Nessuna corruzione caratteri |
-| GG-31 | DDL esclusa | DDL su schema/tabella non mappata | Nessun impatto sui processi GG principali |
-| GG-32 | Mapping avanzato | FILTER/COLMAP/REMAP su tabella test | Trasformazione dati conforme alla regola |
-| GG-33 | Restart DB target | Stop/start database target | Replicat riprende da checkpoint corretto |
-| GG-34 | Relocation RAC source | Sposta servizio su altra istanza RAC | Extract continua senza perdita dati |
-| GG-35 | Reboot host standby | Riavvio VM che ospita Extract/Pump | Recovery operativo con downtime controllato |
-| GG-36 | Retention/Purge trail | Purge file trail con policy corretta | Nessun trail richiesto eliminato prematuramente |
-| GG-37 | Rotazione credenziali | Cambio password alias GG | Processi riavviati con nuove credenziali |
-| GG-38 | Kill processo GG | Terminazione forzata process e restart | Ripartenza clean senza gap |
-| GG-39 | Patch/restart controllato | Restart ordinato processi post-manutenzione | Nessuna regressione funzionale |
-| GG-40 | Dress rehearsal finale | Carico misto 120 min + report finale | Stabilita operativa dimostrata |
-
-Se hai risorse VM limitate, esegui prima `GG-01..GG-24`, poi completa `GG-25..GG-40` in due sessioni separate.
-
----
-
-## 5.14 Script Test Raccomandati (pronti per lab)
+## 5.14 Test Minimi Obbligatori
 
 ### DML smoke test
 
 ```sql
--- Source (schema HR o schema di test)
-INSERT INTO HR.GG_TEST (ID, TXT, TS) VALUES (1001, 'SMOKE_INS', SYSTIMESTAMP);
-UPDATE HR.GG_TEST SET TXT = 'SMOKE_UPD' WHERE ID = 1001;
-DELETE FROM HR.GG_TEST WHERE ID = 1001;
+INSERT INTO HR.REGIONS (REGION_ID, REGION_NAME) VALUES (500, 'GG_TEST');
+COMMIT;
+UPDATE HR.REGIONS SET REGION_NAME='GG_TEST_UPD' WHERE REGION_ID=500;
+COMMIT;
+DELETE FROM HR.REGIONS WHERE REGION_ID=500;
 COMMIT;
 ```
 
 ### Bulk test
 
-```sql
-BEGIN
-  FOR i IN 1..50000 LOOP
-    INSERT INTO HR.GG_TEST (ID, TXT, TS)
-    VALUES (200000+i, 'BULK_'||i, SYSTIMESTAMP);
-    IF MOD(i,1000)=0 THEN COMMIT; END IF;
-  END LOOP;
-  COMMIT;
-END;
-/
-```
+- insert massivo in tabella di test;
+- update di massa;
+- delete di massa;
+- verifica lag e throughput.
 
-### Count/checksum compare (source vs target)
+### DDL policy test
+
+Se hai abilitato DDL replication, prova:
 
 ```sql
-SELECT COUNT(*) AS cnt, MIN(ID) AS min_id, MAX(ID) AS max_id FROM HR.GG_TEST;
-```
-
-Per dataset grandi, usa anche checksum logica applicativa per chunk di ID.
-
-### Template test log (obbligatorio)
-
-Template pronto nel repository: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
-
-```markdown
-| Data/Ora | ID Test | Scenario | Esito | Lag max (sec) | Evidenza (screenshot/log) | Note/Fix |
-|---|---|---|---|---:|---|---|
-| 2026-03-13 21:00 | GG-01 | DML base INSERT | PASS | 1 | SNAP-GG-01.png | - |
+CREATE TABLE HR.GG_DDL_TEST (ID NUMBER, TXT VARCHAR2(30));
+DROP TABLE HR.GG_DDL_TEST PURGE;
 ```
 
 ---
 
-## 5.15 Criteri di Successo GoldenGate (Go-Live Lab)
+## 5.15 Varianti Avanzate e Limiti
 
-Considera la Fase 5 completa solo se:
+### Variante A - Offload dal redo o standby
 
-1. almeno `32/40` test della matrice sono `PASS`
-2. i test obbligatori (`GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`) sono `PASS`
-3. nessun processo resta `ABENDED` oltre 10 minuti
-4. lag stabile entro soglia per almeno 120 minuti cumulativi di test
-5. esiste test log versionato (data, scenario, esito, lag max, fix)
-6. almeno un test di recovery reale (restart/reboot/failover) e documentato
+Non e il percorso base del repo.
 
----
+Perche:
 
-## 5.16 Troubleshooting Rapido: Processi in ABENDED
+- `Integrated Extract` non cattura direttamente da physical standby;
+- `Classic Extract` su Active Data Guard e un tema avanzato con limiti importanti;
+- in ambienti multitenant o moderni e facile finire in combinazioni poco pulite.
 
-Se `INFO ALL` mostra `ABENDED`, usa questa sequenza:
+### Variante B - Downstream mining database
 
-1. Leggi errore generale:
-```bash
-tail -n 100 $OGG_HOME/ggserr.log
-```
-2. Leggi report processo:
-```
-GGSCI> VIEW REPORT ext_racdb
-GGSCI> VIEW REPORT pump_racdb
-```
-3. Sul target microservices, apri diagnostics del replicat `REPTAR`.
-4. Correggi causa (permessi, oggetto mancante, vincolo, rete).
-5. Riavvia solo il processo coinvolto e verifica checkpoint/lag.
+Questa e la variante piu pulita se vuoi offload serio dal source:
 
-Errori frequenti da presidiare:
+- source continua a generare redo;
+- redo viene spedito a un mining database dedicato;
+- GoldenGate legge li.
 
-- ORA-xxxxx su oggetti target (DDL drift o mapping non coerente)
-- trail non leggibile per spazio/permessi
-- network intermittente tra pump e target
-- credenziali/alias invalidi in microservices
+E un caso avanzato, non la Fase 5 base.
+
+### Variante C - GoldenGate Free
+
+Usalo solo in un sotto-lab dedicato `Free-to-Free`.
+
+Non usarlo come fondazione implicita del lab RAC 19c principale.
 
 ---
 
-## 5.17 Checklist Fine Fase 5 (versione avanzata)
+## 5.16 Troubleshooting Rapido
 
-```
--- Standby
-GGSCI> INFO ALL
--- ext_racdb RUNNING
--- pump_racdb RUNNING
+### `ORA-12514`
 
--- Target OCI
--- REPTAR RUNNING (Web UI microservices)
+- service non registrato;
+- alias TNS errato;
+- target non nello stato giusto.
 
--- Lag entro soglia
-GGSCI> LAG EXTRACT ext_racdb
-GGSCI> LAG EXTRACT pump_racdb
+### `ORA-01017`
 
--- Test matrix
--- almeno 32/40 PASS
-```
+- password file/credenziali errate;
+- utente GG non corretto.
+
+### Extract `ABENDED`
+
+- supplemental logging mancante;
+- `enable_goldengate_replication` mancante;
+- privilege GG incompleti;
+- log mining issue.
+
+### Replicat `ABENDED`
+
+- oggetto assente sul target;
+- collisioni non gestite;
+- datatype mapping errato;
+- constraint o chiavi non coerenti.
+
+### Lag alto
+
+- rete lenta;
+- target lento;
+- trail saturi;
+- redo generation alta;
+- parallelismo o sizing insufficienti.
 
 ---
 
-**→ Prossimo: [FASE 6: Test di Verifica](./GUIDA_FASE6_TEST_VERIFICA.md)**
+## 5.17 Collegamento con la Migrazione Locale -> OCI
+
+Per usare questa fase come migrazione cloud reale:
+
+1. costruisci il target OCI con [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
+2. chiarisci la rete con [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+3. usa [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md) per il cutover
+
+Sequenza corretta:
+
+- initial load al target cloud;
+- delta continuo con GG;
+- validazione conteggi/checksum;
+- freeze applicativo;
+- convergenza a lag 0;
+- cutover del service applicativo verso cloud.
+
+---
+
+## 5.18 Fonti Oracle Ufficiali
+
+- Integrated Extract cannot capture from standby: https://docs.oracle.com/en/middleware/goldengate/core/21.3/ggcab/overview-capture-active-data-guard-only-mode.html
+- Active Data Guard only mode and classic capture notes: https://docs.oracle.com/en/middleware/goldengate/core/21.3/coredoc/extract-oracle-active-data-guard-only-mode.html
+- Downstream capture overview: https://docs.oracle.com/en/middleware/goldengate/core/21.3/coredoc/extract-create-logmining-server-downstream-mining-database.html
+- GoldenGate Free FAQ: https://docs.oracle.com/en/middleware/goldengate/free/23/overview/oracle-goldengate-free-faq.html
+
+---
+
+## 5.19 Conclusione Operativa
+
+La Fase 5 del repo ora ha una regola semplice:
+
+- Data Guard protegge;
+- GoldenGate migra e replica;
+- il capture base parte dal primary;
+- OCI si aggancia come target solo dopo che rete e compatibilita sono state chiarite.

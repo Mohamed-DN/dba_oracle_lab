@@ -18,7 +18,7 @@
 ║  2 (G 6-10) ║ Database + Standby RAC                ║ RMAN Duplicate OK       ║
 ║  3 (G11-15) ║ Data Guard + GoldenGate + RMAN        ║ DG + GG + Backup OK     ║
 ║  4 (G16-20) ║ Switch/Failover + Migrazione + DBA    ║ HA completa testata     ║
-║  5 (G21-25) ║ Cloud OCI + DBA Pro + MAA             ║ 🏆 LAB COMPLETATO!     ║
+║  5 (G21-25) ║ OCI target + rete + MAA             ║ 🏆 LAB COMPLETATO!     ║
 ╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
 ║             ║  ═══ MILESTONE: LAB FINITO ═══         ║                         ║
 ╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
@@ -106,6 +106,12 @@
 
 > **Obiettivo**: Configurare DGMGRL, installare GoldenGate, configurare RMAN backup.
 
+Aggiornamento del percorso GG:
+
+- il flusso base corretto usa `Integrated Extract` sul `primary`, non sullo standby;
+- `dbtarget` locale resta opzionale;
+- se scegli OCI, devi prima chiudere rete e target seguendo `GUIDA_RETE_LAB_OCI_GOLDENGATE.md` e `GUIDA_GOLDENGATE_OCI_ARM.md`.
+
 ```
 ╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
 ║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
@@ -116,12 +122,12 @@
 ║           ║                                       ║ 📸 SNAP-14 ⭐            ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 30min: Active Data Guard (ADG)    ║                           ║
-║ Giorno 12 ║ 💻 1h: Crea VM dbtarget + OS         ║ dbtarget pronto           ║
+║ Giorno 12 ║ 💻 1h: Scegli target: dbtarget o OCI         ║ target deciso           ║
 ║           ║ 💻 1.5h: DB Software + DBCA target   ║ DB target creato          ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1.5h: Installa GG su standby +   ║                           ║
+║           ║ 💻 1.5h: Installa GG su primary +   ║                           ║
 ║ Giorno 13 ║   target, configura Manager          ║ GG installato             ║
-║           ║ 💻 1.5h: Extract + Data Pump +        ║ Processi configurati      ║
+║           ║ 💻 1.5h: Extract su primary +        ║ Processi configurati      ║
 ║           ║   Replicat                            ║ 📸 SNAP-16               ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 1h: Initial Load (expdp/impdp)    ║                           ║
@@ -180,20 +186,26 @@
 
 ## 🗓️ SETTIMANA 5: Cloud + MAA + Ripasso Finale (Giorni 21-25)
 
-> **Obiettivo**: Setup OCI Cloud, validazione MAA, ripasso e preparazione CV.
+> **Obiettivo**: costruire il target OCI, chiarire la rete, preparare la migrazione GG verso cloud e validare MAA.
+
+Aggiornamento del percorso cloud:
+
+- il target OCI del lab principale non va confuso con `GoldenGate Free` come percorso base;
+- il focus e: `compute target`, `listener`, `porte`, `NSG o VPN`, `initial load`, `cutover`;
+- `GoldenGate Free` resta una variante separata per mini-lab `Free-to-Free`, non la base del lab RAC 19c.
 
 ```
 ╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
 ║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 📖 30min: Leggi GUIDA_CLOUD_GG       ║                           ║
-║ Giorno 21 ║ 💻 1.5h: Crea account OCI, VCN,     ║ VM ARM creata su OCI      ║
+║ Giorno 21 ║ 💻 1.5h: Crea OCI, VCN, NSG e     ║ VM ARM creata su OCI      ║
 ║           ║   Security List, VM ARM               ║ SSH funzionante           ║
-║           ║ 💻 1h: Installa Oracle 19c ARM        ║ DB CLOUDDB creato         ║
+║           ║ 💻 1h: Installa target Oracle coerente        ║ DB CLOUDDB creato         ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Installa GG ARM + Manager     ║                           ║
-║ Giorno 22 ║ 💻 1h: SSH Tunnel + TNS config       ║ GG Replicat su OCI OK     ║
-║           ║ 💻 1h: Pump + Replicat cloud          ║ Primary→Cloud ✅         ║
+║           ║ 💻 1h: Verifica modello GG target     ║                           ║
+║ Giorno 22 ║ 💻 1h: TNS, porte, NSG o VPN       ║ GG Replicat su OCI OK     ║
+║           ║ 💻 1h: Initial load + Replicat cloud          ║ Primary→Cloud ✅         ║
 ║           ║   test INSERT → OCI                   ║                           ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 📖 30min: Leggi GUIDA_MAA             ║                           ║
@@ -529,3 +541,5 @@ Criterio: almeno `8 test` per settimana devono essere "difficili" (failover, lag
 - Oracle RAC Installation Guide 19c (Linux/UNIX): https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/index.html
 - Karpicke et al., retrieval practice and retention (PubMed): https://pubmed.ncbi.nlm.nih.gov/20951630/
 - Cepeda et al., distributed practice review (PubMed): https://pubmed.ncbi.nlm.nih.gov/16719566/
+
+
