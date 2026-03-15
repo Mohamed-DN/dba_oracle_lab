@@ -1538,23 +1538,133 @@ Modifica il pfile per lo standby:
 vi /tmp/initRACDB_stby.ora
 ```
 
-Modifica questi parametri:
+### Come ripulire il pfile esportato dal primario
 
-```
+Il `CREATE PFILE FROM SPFILE` ti genera un file "sporco" di parametri del primario.
+
+Nel pfile standby devi fare tre cose:
+
+1. cambiare i parametri che identificano il ruolo standby
+2. correggere i convert `PRIMARY -> STANDBY`
+3. togliere i parametri automatici o troppo specifici del primario
+
+### Parametri da cambiare sicuramente
+
+```ini
+*.audit_file_dest='/u01/app/oracle/admin/RACDB_STBY/adump'
+*.cluster_database=TRUE
+*.db_name='RACDB'
 *.db_unique_name='RACDB_STBY'
-*.fal_server='RACDB_DG'
+*.db_create_file_dest='+DATA'
+*.db_recovery_file_dest='+RECO'
+*.db_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/'
 *.fal_client='RACDB_STBY'
+*.fal_server='RACDB_DG'
+*.log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)'
 *.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY'
 *.log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
+*.log_archive_dest_state_1='ENABLE'
+*.log_archive_dest_state_2='ENABLE'
+*.log_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/','+RECO/RACDB/','+RECO/RACDB_STBY/'
+*.remote_listener='racstby-scan.localdomain:1521'
+*.remote_login_passwordfile='exclusive'
+*.standby_file_management='AUTO'
 RACDB1.instance_number=1
 RACDB2.instance_number=2
 RACDB1.thread=1
 RACDB2.thread=2
 RACDB1.undo_tablespace='UNDOTBS1'
 RACDB2.undo_tablespace='UNDOTBS2'
-*.cluster_database=TRUE
-*.remote_listener='racstby-scan.localdomain:1521'
 ```
+
+### Parametri da lasciare uguali
+
+```ini
+*.compatible='19.0.0'
+*.db_block_size=8192
+*.db_recovery_file_dest_size=10794m
+*.diagnostic_dest='/u01/app/oracle'
+*.enable_pluggable_database=TRUE
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.pga_aggregate_target=767m
+*.processes=320
+*.sga_target=2300m
+```
+
+### Parametri da rimuovere dal pfile temporaneo
+
+Togli tutto cio' che e':
+
+- auto-tuned (`__...`)
+- specifico del primario
+- generato dal clusterware e non adatto al bootstrap manuale
+
+Da rimuovere, se presenti:
+
+```ini
+RACDB1.__...
+RACDB2.__...
+*.control_files=...
+*.local_listener='-oraagent-dummy-'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=RACDBXDB)'
+family:dw_helper.instance_mode='read-only'
+```
+
+Nota critica sui convert:
+
+- nel pfile standby la direzione corretta e' `PRIMARY -> STANDBY`
+- quindi `RACDB` va convertito in `RACDB_STBY`
+- se lasci il verso invertito, RMAN e lo startup dello standby puntano ai path sbagliati
+
+### Template pulito pronto da incollare
+
+```ini
+*.audit_file_dest='/u01/app/oracle/admin/RACDB_STBY/adump'
+*.audit_trail='db'
+*.cluster_database=TRUE
+*.compatible='19.0.0'
+*.db_block_size=8192
+*.db_create_file_dest='+DATA'
+*.db_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/'
+*.db_name='RACDB'
+*.db_unique_name='RACDB_STBY'
+*.db_recovery_file_dest='+RECO'
+*.db_recovery_file_dest_size=10794m
+*.diagnostic_dest='/u01/app/oracle'
+*.enable_pluggable_database=TRUE
+*.fal_client='RACDB_STBY'
+*.fal_server='RACDB_DG'
+*.log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)'
+*.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY'
+*.log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
+*.log_archive_dest_state_1='ENABLE'
+*.log_archive_dest_state_2='ENABLE'
+*.log_archive_format='%t_%s_%r.dbf'
+*.log_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/','+RECO/RACDB/','+RECO/RACDB_STBY/'
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.pga_aggregate_target=767m
+*.processes=320
+*.remote_listener='racstby-scan.localdomain:1521'
+*.remote_login_passwordfile='exclusive'
+*.sga_target=2300m
+*.standby_file_management='AUTO'
+RACDB1.instance_number=1
+RACDB2.instance_number=2
+RACDB1.thread=1
+RACDB2.thread=2
+RACDB1.undo_tablespace='UNDOTBS1'
+RACDB2.undo_tablespace='UNDOTBS2'
+```
+
+Nota operativa:
+
+- in questo pfile temporaneo evita `*.control_files`
+- con ASM + OMF (`db_create_file_dest` / FRA) e `RMAN DUPLICATE`, e' meglio lasciare che Oracle/RMAN costruiscano i control file dello standby
+- il pfile qui serve solo a portare su `racstby1` in `NOMOUNT` in modo pulito
 
 Copia sullo standby:
 
