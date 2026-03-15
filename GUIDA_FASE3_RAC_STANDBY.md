@@ -1233,9 +1233,10 @@ Se `DEST_ID=2` va in `ERROR`:
 ### Se il password file è su ASM (caso più comune in RAC)
 
 ```bash
-# Sul primario (rac1) come oracle — prima trova il file in ASM
-su - oracle
-. grid.env
+# Sul primario (rac1) come grid: ASM è gestito con l'environment Grid
+# In Fase 1 hai creato /home/grid/.grid_env, non "grid.env"
+su - grid
+. ~/.grid_env
 asmcmd
 ASMCMD> cd +DATA/RACDB/PASSWORD
 ASMCMD> ls
@@ -1243,6 +1244,31 @@ pwdracdb.256.1188432663
 ASMCMD> pwcopy pwdracdb.256.1188432663 /tmp/orapwRACDB1
 ASMCMD> exit
 ```
+
+Se vuoi verificare l'environment attivo prima di entrare in `asmcmd`:
+
+```bash
+su - grid
+. ~/.grid_env
+echo $ORACLE_SID
+echo $ORACLE_HOME
+which asmcmd
+```
+
+Output atteso su `rac1`:
+
+```text
++ASM1
+/u01/app/19.0.0/grid
+/u01/app/19.0.0/grid/bin/asmcmd
+```
+
+Nota pratica:
+- `oracle` usa `/home/oracle/.db_env` per il database
+- `grid` usa `/home/grid/.grid_env` per ASM/Grid Infrastructure
+- il comando `. grid.env` è sbagliato per due motivi:
+  - manca il prefisso `~/` e il nome corretto è `.grid_env`
+  - stavi usando l'utente `oracle`, ma per `asmcmd` in questo passaggio è più corretto `grid`
 
 ### Se il password file è nel filesystem
 
@@ -1255,9 +1281,16 @@ orapwd file=orapwRACDB1 password=<tua_password_sys> entries=10 force=y
 ### Copia sullo standby (IMPORTANTE: nome = orapw<SID>)
 
 ```bash
+# Se il file è stato copiato da ASM in /tmp come utente grid,
+# rendilo leggibile da oracle prima dello scp
+ls -l /tmp/orapwRACDB1
+chmod 640 /tmp/orapwRACDB1
+
 # Il nome del password file DEVE essere orapw<SID>!
 # Se il SID è RACDB1 → il file deve chiamarsi orapwRACDB1
 
+su - oracle
+. ~/.db_env
 scp /tmp/orapwRACDB1 oracle@racstby1:$ORACLE_HOME/dbs/orapwRACDB1
 scp /tmp/orapwRACDB1 oracle@racstby2:$ORACLE_HOME/dbs/orapwRACDB2
 
