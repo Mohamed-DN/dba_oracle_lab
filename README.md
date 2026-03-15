@@ -88,9 +88,10 @@
 
 1. Protection Mode / switch modalita: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 2. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
-3. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
-4. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
-5. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+3. PDB propagation + services: [extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md)
+4. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
+5. Cloud e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
+6. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
@@ -197,7 +198,8 @@ Materiale operativo:
 | 20 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
 | 21 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
 | 22 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
-| 23 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
+| 23 | **PDB + Services + DG** | [GUIDA_PDB_DG](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md) | Creazione PDB sul primary, propagazione sullo standby, servizi RAC e listener |
+| 24 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
 
 ### Extra DBA (Post-lab)
 
