@@ -1865,6 +1865,40 @@ DUPLICATE TARGET DATABASE
 > - `SPFILE SET ...`: Sovrascrive i parametri nel SPFILE dello standby.
 > - `NOFILENAMECHECK`: Non verificare che i path dei file siano diversi (utile perché usiamo gli stessi nomi ASM).
 
+### Warning RMAN attesi con ASM / OMF
+
+Durante il duplicate potresti vedere warning come:
+
+- `RMAN-05538: warning: implicitly using DB_FILE_NAME_CONVERT`
+- `RMAN-05529: warning: DB_FILE_NAME_CONVERT resulted in invalid ASM names; names changed to disk group only`
+- `RMAN-05158: WARNING: auxiliary file name ... conflicts with a file used by the target database`
+
+Nel tuo lab questi warning sono normalmente benigni se valgono tutte queste condizioni:
+
+- primario e standby sono su storage ASM separato
+- i disk group hanno gli stessi nomi (`+DATA`, `+RECO`) ma NON sono gli stessi dischi condivisi tra i due cluster
+- il duplicate continua a creare/restore i file senza fermarsi con errore fatale
+
+Perche' compaiono:
+
+- RMAN vede nomi OMF del primario come `+DATA/RACDB/...`
+- prova a usare `DB_FILE_NAME_CONVERT`
+- con ASM + OMF il risultato puo' non essere un nome ASM valido completo
+- allora Oracle riduce il nome al solo disk group e genera automaticamente il nome OMF corretto sullo standby
+
+Quindi:
+
+- `RMAN-05529` in questo contesto e' spesso solo informativo
+- `RMAN-05158` segnala un conflitto "logico di nome", non necessariamente un conflitto reale di storage
+- con `NOFILENAMECHECK` e storage standby separato, puoi normalmente lasciare proseguire il duplicate
+
+Quando invece devi fermarti e correggere:
+
+- se il duplicate si arresta con errori successivi di restore/create file
+- se standby e primario stanno davvero usando gli stessi dischi ASM
+- se hai lasciato i convert nel verso sbagliato
+- se `db_create_file_dest` / `db_recovery_file_dest` non puntano ai disk group corretti sullo standby
+
 Stato atteso a fine passo:
 
 - il database standby esiste
