@@ -49,6 +49,25 @@ Questo e il percorso che considero `corretto` per il tuo lab principale.
 
 Verifica fatta il `15 marzo 2026` su fonti Oracle ufficiali.
 
+### Regione consigliata per questo repo
+
+Per il lab fissiamo questa scelta:
+
+- `Italy Northwest (Milan)`
+- region identifier: `eu-milan-1`
+
+Perche scelgo Milano:
+
+- e una regione OCI italiana `live`;
+- Oracle la pubblica come `eu-milan-1`;
+- gli `Always Free` si creano nella `home region` della tenancy, quindi conviene scegliere una regione italiana gia stabile e matura per il lab;
+- Torino (`eu-turin-1`) e stata annunciata piu di recente e non e la scelta base del repo.
+
+Decisione pratica:
+
+- se crei una tenancy nuova per questo lab, usa `Milan / eu-milan-1` come home region;
+- se hai gia una tenancy con home region diversa, puoi ancora usare il repo, ma il percorso `Always Free` segue le regole della tua home region.
+
 ### OCI Always Free Compute
 
 Oracle documenta per `VM.Standard.A1.Flex` Always Free:
@@ -124,14 +143,15 @@ Se non hai ancora deciso il modello di rete, non andare oltre con GoldenGate.
 Nel portale OCI:
 
 1. `Compute` -> `Instances` -> `Create instance`
-2. `Shape`: `VM.Standard.A1.Flex`
-3. imposta, se disponibile in quota Always Free:
+2. verifica di essere in regione `Italy Northwest (Milan) / eu-milan-1`
+3. `Shape`: `VM.Standard.A1.Flex`
+4. imposta, se disponibile in quota Always Free:
    - `4 OCPU`
    - `24 GB RAM`
-4. immagine consigliata:
+5. immagine consigliata:
    - `Oracle Linux 8` se vuoi il percorso piu lineare con Database Free RPM su Arm
-5. assegna public IP solo se usi il modello pubblico ristretto
-6. metti l'istanza in una subnet con NSG dedicato
+6. assegna public IP solo se usi il modello pubblico ristretto
+7. metti l'istanza in una subnet con NSG dedicato
 
 ### 5.2 Porte minime
 
