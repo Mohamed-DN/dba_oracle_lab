@@ -1,6 +1,6 @@
-# Guida Colloquio DBA Oracle
+# Guida Domande DBA Oracle
 
-> Documento pensato per preparare colloqui tecnici da Oracle DBA in modo serio. Le domande sono state curate da piu fonti pubbliche usate comunemente per interview prep, ma le risposte sono state riallineate alla terminologia e ai concetti Oracle ufficiali, con focus pratico su 19c, RAC, Data Guard, ASM, RMAN, multitenant e troubleshooting.
+> Raccolta strutturata di domande, risposte e scenari tecnici su Oracle DBA. Le domande sono state curate da piu fonti pubbliche, ma le risposte sono state riallineate alla terminologia e ai concetti Oracle ufficiali, con focus pratico su 19c, RAC, Data Guard, ASM, RMAN, multitenant e troubleshooting.
 
 ---
 
@@ -163,7 +163,7 @@ Risposta chiara:
 - `PFILE` e testo leggibile e modificabile a mano;
 - `SPFILE` e binario, gestito da Oracle, supporta `ALTER SYSTEM ... SCOPE=SPFILE/BOTH`.
 
-Best practice da colloquio:
+Nota pratica:
 
 - in single instance spesso va bene uno `SPFILE` locale;
 - in RAC lo `SPFILE` deve stare tipicamente in ASM o shared storage.
@@ -804,7 +804,7 @@ Risposta chiara:
 - verifico autoextend, spazio reale, crescita, segmenti maggiori, business impact;
 - poi aggiungo spazio, estendo file o faccio pulizia solo se supportata.
 
-### 8.7 Un nodo RAC cade. Come rispondi in colloquio?
+### 8.7 Un nodo RAC cade. Come rispondi in modo corretto?
 
 Risposta chiara:
 
@@ -861,7 +861,7 @@ Risposta chiara:
 - `READ ONLY`: aperto in sola lettura ma senza apply nel caso semplice;
 - `READ ONLY WITH APPLY`: Active Data Guard, query e apply insieme.
 
-### 8.15 Se il colloquio entra su produzione critica, cosa cambi nel tuo approccio?
+### 8.15 Se il tema entra su produzione critica, cosa cambi nel tuo approccio?
 
 Risposta chiara:
 
@@ -926,7 +926,7 @@ Risposta chiara:
 - quando il primary e ancora sano e la role transition e pianificabile;
 - per manutenzioni, test DR o migrazione con rischio ridotto.
 
-### 9.8 Come dimostri maturita tecnica in colloquio?
+### 9.8 Come dimostri maturita tecnica?
 
 Risposta chiara:
 
@@ -1024,13 +1024,13 @@ Se vuoi passare da junior a intermedio, devi anche saper fare a voce:
 
 ### 13.1 Fonti per la copertura delle domande
 
-Domande curate e ripulite a partire da piu sorgenti pubbliche di interview prep:
+Domande curate e ripulite a partire da piu sorgenti pubbliche di raccolta tecnica:
 
-- InterviewBit Oracle DBA Interview Questions: https://www.interviewbit.com/oracle-dba-interview-questions/
-- GeeksforGeeks Oracle interview preparation: https://www.geeksforgeeks.org/oracle-topics-for-interview-preparation/
-- GeeksforGeeks Oracle interview questions: https://www.geeksforgeeks.org/to-50-oracle-interview-questions-and-answers-for-2024/
+- InterviewBit Oracle DBA question set: https://www.interviewbit.com/oracle-dba-interview-questions/
+- GeeksforGeeks Oracle topic roundup: https://www.geeksforgeeks.org/oracle-topics-for-interview-preparation/
+- GeeksforGeeks Oracle question roundup: https://www.geeksforgeeks.org/to-50-oracle-interview-questions-and-answers-for-2024/
 - GeekInterview Oracle DBA question bank: https://www.geekinterview.com/Interview-Questions/Oracle/Database-Administration/
-- Oracle DBA interview guide article: https://www.oracledbaonlinetraining.com/post/oracle-dba-interview-guide-questions-answers
+- Oracle DBA question guide article: https://www.oracledbaonlinetraining.com/post/oracle-dba-interview-guide-questions-answers
 
 ### 13.2 Fonti Oracle ufficiali usate per riallineare le risposte
 
@@ -1053,10 +1053,12 @@ Domande curate e ripulite a partire da piu sorgenti pubbliche di interview prep:
 
 ## 14. Sintesi Finale
 
-Se vuoi essere convincente a colloquio, devi dimostrare tre cose:
+Se vuoi essere convincente in una discussione tecnica, devi dimostrare tre cose:
 
 1. sai i concetti di base senza confonderli;
 2. sai collegare il concetto a un comando, una vista o un errore reale;
 3. sai ragionare in modalita operativa, non solo definitoria.
 
 Una risposta forte da DBA non e lunga. E precisa, gerarchica e verificabile.
+
+

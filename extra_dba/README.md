@@ -9,7 +9,7 @@
 |---|---|---|
 | **Catalogo completo attivita DBA** | Quando vuoi vedere tutto il perimetro del lavoro DBA Oracle, organizzato per dominio operativo | [GUIDA_CATALOGO_ATTIVITA_DBA.md](./GUIDA_CATALOGO_ATTIVITA_DBA.md) |
 | **Checklist operativa DBA** | Quando vuoi una sequenza pratica giornaliera, settimanale, mensile, trimestrale e pre/post change | [GUIDA_CHECKLIST_ATTIVITA_DBA.md](./GUIDA_CHECKLIST_ATTIVITA_DBA.md) |
-| **Guida colloquio DBA Oracle** | Quando vuoi prepararti a colloqui tecnici con domande, risposte chiare, scenario question e follow-up tipici | [GUIDA_COLLOQUIO_DBA_ORACLE.md](./GUIDA_COLLOQUIO_DBA_ORACLE.md) |
+| **Guida domande DBA Oracle** | Quando vuoi ripassare domande tecniche, risposte chiare, scenari realistici e follow-up tipici | [GUIDA_DOMANDE_DBA_ORACLE.md](./GUIDA_DOMANDE_DBA_ORACLE.md) |
 
 ## Come usare questa area
 
@@ -58,7 +58,7 @@ La guida tecnica resta in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAG
 | **Enterprise Manager 13.5** | Quando vuoi monitorare OMS, agent, target RAC/Data Guard e job operativi | [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) |
 | **Attivita DBA essenziali** | Quando vuoi runbook su AWR/ADDM/ASH, Data Pump, security e patching | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
 | **MAA best practices** | Quando vuoi confrontare il lab con raccomandazioni Oracle HA/DR | [GUIDA_MAA_BEST_PRACTICES.md](../GUIDA_MAA_BEST_PRACTICES.md) |
-| **Preparazione colloquio DBA** | Quando vuoi allenarti su architettura, recovery, Data Guard, RAC, ASM, performance e troubleshooting | [GUIDA_COLLOQUIO_DBA_ORACLE.md](./GUIDA_COLLOQUIO_DBA_ORACLE.md) |
+| **Domande DBA Oracle** | Quando vuoi consolidare architettura, recovery, Data Guard, RAC, ASM, performance e troubleshooting | [GUIDA_DOMANDE_DBA_ORACLE.md](./GUIDA_DOMANDE_DBA_ORACLE.md) |
 
 ## 5. Security e encryption
 
@@ -82,3 +82,4 @@ La guida tecnica resta in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAG
 5. TDE / wallet / security review
 6. Enterprise Manager
 7. MAA review finale
+
