@@ -1,19 +1,19 @@
 # 10 — Partition Manager
 
-> Package PL/SQL per la gestione automatica delle partizioni Oracle.
+> PL/SQL package for automatic management of Oracle partitions.
 > Versioni dalla v2.31 alla v2.36, sviluppate e mantenute dal team DBA Nexi.
 
 ---
 
 ## Panoramica
 
-Il **Partition Manager** è un package PL/SQL che automatizza:
-- Creazione di nuove partizioni (es. mensili/giornaliere)
-- Rotazione delle partizioni vecchie (drop o merge)
+The **Partition Manager** is a PL/SQL package that automates:
+- Creation of new partitions (e.g. monthly/daily)
+- Rotating old partitions (drop or merge)
 - Exchange partition per caricamenti fast
-- Monitoraggio dello stato delle partizioni
+- Partition status monitoring
 
-In un ambiente Enterprise con migliaia di tabelle partizionate, l'automazione è **indispensabile**.
+In an Enterprise environment with thousands of partitioned tables, automation is **a must**.
 
 ---
 
@@ -24,12 +24,12 @@ In un ambiente Enterprise con migliaia di tabelle partizionate, l'automazione è
 | `Script_Creazione_Partition_Manager_v2_36.sql` | v2.36 | **Ultima versione** — usare questa |
 | `Script_Creazione_Partition_Manager_v2_35.sql` | v2.35 | Precedente |
 | `Script_Creazione_Partition_Manager_v2_34.sql` | v2.34 | Standard + versione NORDICS |
-| `dba_op_user_setup.sql` | — | Setup utente DBA_OP per il Partition Manager |
-| `INSTANCE_ORA014097_Exchange_Partitions.sql` | — | Esempio exchange partition reale |
+| `dba_op_user_setup.sql` | — | DBA_OP user setup for the Partition Manager |
+| `INSTANCE_ORA014097_Exchange_Partitions.sql` | — | Real exchange partition example |
 
 ---
 
-## Come Funziona
+## How It Works
 
 ```sql
 -- 1. Installare il package (eseguire lo script come DBA_OP)
@@ -47,4 +47,4 @@ EXEC DBA_OP.PKG_PARTITION_MANAGER.REGISTER_TABLE('SCHEMA', 'TABLE_NAME', 'RANGE'
 ---
 
 ## 🔗 Collegamento
-Le partizioni sono trattate anche nella [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md) nella sezione batch/manutenzione.
+Partitions are also covered in [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md) in the batch/maintenance section.

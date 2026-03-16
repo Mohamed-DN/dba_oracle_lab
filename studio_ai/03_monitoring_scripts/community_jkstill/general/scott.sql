@@ -15,7 +15,7 @@
 -- START demobld.sql
 
 SET TERMOUT ON
-PROMPT Building demonstration tables. Please wait.
+prompt Building demonstration tables. Please wait.
 SET TERMOUT ON
 
 DROP TABLE EMP;
@@ -112,13 +112,13 @@ INSERT INTO DUMMY VALUES (0);
 COMMIT;
 
 SET TERMOUT ON
-PROMPT Demonstration table build is complete.
+prompt Demonstration table build is complete.
 
 
 ----- end of DEMOBLD.SQL -----
 
 ----- DEMODROP.SQL -----rem
-rem $Header: v7demodrop.sql 1.1 92/07/21 15:50:42 jpau Osd<unix> $ demodrop.sql Copyr (c) 1991 Oracle
+REM $Header: v7demodrop.sql 1.1 92/07/21 15:50:42 jpau Osd<unix> $ demodrop.sql Copyr (c) 1991 Oracle
 rem
 -- DROP TABLE EMP;
 -- DROP TABLE DEPT;

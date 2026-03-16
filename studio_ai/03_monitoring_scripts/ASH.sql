@@ -104,7 +104,7 @@ select * from v$sgastat where name like 'ASH buffers';
 
 select inst_id, min(sample_time), max(sample_time) from gv$active_session_history group by inst_id order by 1;
 
--- SQL più attivo negli ultimi 5 minuti
+-- Most active SQL in the last 5 minutes
 
 select inst_id, sql_id, count(*), round(100*count(*)/sum(count(*)) over (), 2) pctload
 from gv$active_session_history
@@ -133,7 +133,7 @@ and ASH.SQL_ID = SQLT.SQL_ID
 and SAMPLE_TIME > SYSDATE-4/24
 order by SAMPLE_TIME;
 
--- SQL che ha speso più tempo in I/O
+-- SQL that spent more time on I/O
 
 select inst_id, ash.sql_id, count(*)
 from gv$active_session_history ash, v$event_name evt
@@ -185,7 +185,7 @@ order by sample_time;
 
 DBMS_LOB.SUBSTR(sql_text,1,30)
 
-### Attività che comporti User I/O
+### AttivitÃ  che comporti User I/O
 
 select inst_id, ash.sql_id, count(*)
 from gv$active_session_history ash, v$event_name evt

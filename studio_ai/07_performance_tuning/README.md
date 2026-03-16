@@ -1,34 +1,34 @@
 # 07 — Performance & Tuning
 
-> Procedure e script per l'analisi delle performance Oracle e il tuning SQL.
+> Procedures and scripts for Oracle performance analysis and SQL tuning.
 
 ---
 
 ## Panoramica
 
-Il tuning delle performance è un'attività quotidiana per il DBA Enterprise. Gli strumenti principali sono:
-- **AWR** (Automatic Workload Repository): snapshot periodiche delle statistiche
-- **ASH** (Active Session History): campionamento real-time delle sessioni attive
+Performance tuning is a daily task for the Enterprise DBA. The main tools are:
+- **AWR** (Automatic Workload Repository): periodic snapshots of statistics
+- **ASH** (Active Session History): real-time sampling of active sessions
 - **ADDM** (Automatic Database Diagnostic Monitor): analisi automatica
-- **SPM** (SQL Plan Management): gestione dei piani di esecuzione stabili
+- **SPM** (SQL Plan Management): management of stable execution plans
 
 ---
 
 ## File Contenuti
 
-### [controllo_statistiche.md](./controllo_statistiche.md)
-Procedure per il controllo e la gestione delle statistiche Oracle (optimizer statistics).
-Include: verifica, raccolta manuale, lock/unlock, e troubleshooting.
+### [statistics_check.md](./statistics_check.md)
+Procedures for controlling and managing Oracle statistics (optimizer statistics).
+Includes: verification, manual collection, lock/unlock, and troubleshooting.
 
 ### [spm_guide.md](./spm_guide.md)
-Guida completa su SQL Plan Management: come catturare, verificare, e forzare piani di esecuzione stabili.
+Complete guide on SQL Plan Management: how to capture, verify, and force stable execution plans.
 
 ### Script di Analisi
-Vedi anche la sezione [03_monitoring_scripts](../03_monitoring_scripts/) per gli script ASH, CPU, I/O.
+See also section [03_monitoring_scripts](../03_monitoring_scripts/) for ASH, CPU, I/O scripts.
 
 ---
 
-## Quick Reference: Comandi Essenziali
+## Quick Reference: Essential Commands
 
 ```sql
 -- Generare un report AWR
@@ -51,4 +51,4 @@ FROM v$sql WHERE sql_id = '&sql_id';
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+See also: [GUIDE_DBA_COMMANDS.md](../../GUIDE_DBA_COMMANDS.md)

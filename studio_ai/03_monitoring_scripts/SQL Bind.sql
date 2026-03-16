@@ -50,7 +50,7 @@ select sql_id,name, position, value_string,snap_id from
  where bind_data is not null and sql_id='6129566gyvx21') x,
  table(dbms_sqltune.extract_binds(x.bind_data)) xx;
  
--- SQL simili (con lo stesso piano d'accesso)
+-- Similar SQLs (with the same access plan)
 
 select plan_hash_value, count(1)
 from gv$sqlarea

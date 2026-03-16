@@ -1,6 +1,6 @@
 # Active Data Guard (READ ONLY WITH APPLY)
 
-Comandi tipici:
+Typical commands:
 
 ```sql
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
@@ -16,4 +16,4 @@ SELECT process, status, sequence# FROM v$managed_standby;
 
 Approfondimento:
 
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)

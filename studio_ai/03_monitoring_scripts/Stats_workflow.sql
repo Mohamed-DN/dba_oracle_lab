@@ -238,7 +238,7 @@ select NOTES,count(1) from DBA_SUBPART_COL_STATISTICS where OWNER='MKT' and TABL
 -- ### STALE_PERCENT CHANGE ###
 -- ############################
 
--- Utile in caso di grosse partizioni mensili, per evitare di ricalcolare le stats ogni giorno durante i primi giorni del mese
+-- Useful in case of large monthly partitions, to avoid recalculating the stats every day during the first days of the month
 
 exec dbms_stats.set_table_prefs('MKT','TBMK2_AU_AUTORIZZ','STALE_PERCENT','20');
 

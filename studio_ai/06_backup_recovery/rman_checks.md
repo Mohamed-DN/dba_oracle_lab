@@ -10,5 +10,5 @@ Query principali in questa cartella:
 
 Riferimenti principali:
 
-- [GUIDA_FASE7_RMAN_BACKUP.md](../../GUIDA_FASE7_RMAN_BACKUP.md)
-- [GUIDA_RMAN_COMPLETA_19C.md](../../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDE_PHASE7_RMAN_BACKUP.md](../../GUIDE_PHASE7_RMAN_BACKUP.md)
+- [GUIDE_RMAN_COMPLETE_19C.md](../../GUIDE_RMAN_COMPLETE_19C.md)

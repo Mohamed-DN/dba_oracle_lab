@@ -4,7 +4,7 @@ Script e note operative per audit e sicurezza Oracle nel toolkit.
 
 ## Contenuto disponibile
 
-Questa area contiene script SQL orientati a audit trail e controlli sessione, ad esempio:
+This area contains SQL scripts oriented towards audit trails and session controls, for example:
 
 - `dba_audit_trail.sql`
 - `dba_audit_session.sql`
@@ -17,9 +17,9 @@ Questa area contiene script SQL orientati a audit trail e controlli sessione, ad
 
 - verificare eventi audit e accessi privilegiati
 - controllare volumi log audit
-- impostare routine di cleanup
+- set up cleanup routines
 
 ## Riferimenti
 
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_MAA_BEST_PRACTICES.md](../../GUIDA_MAA_BEST_PRACTICES.md)
+- [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)
+- [GUIDE_MAA_BEST_PRACTICES.md](../../GUIDE_MAA_BEST_PRACTICES.md)

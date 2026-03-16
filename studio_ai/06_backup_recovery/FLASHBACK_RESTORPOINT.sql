@@ -1,5 +1,5 @@
---In Caso il rilascio fallisce come eseguire il flashback
---PRIMARIO:
+--In case the release fails how to flash back
+--PRIMARY:
  
 alter pluggable database P1RISKIPHP close immediate instances=all;
  

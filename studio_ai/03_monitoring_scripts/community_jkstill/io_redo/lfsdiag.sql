@@ -42,11 +42,11 @@ set pages 100
 set verify off
 alter session set optimizer_features_enable = '10.2.0.4';
 
-PROMPT LFSDIAG DATA FOR &&dbname&&timestamp
-PROMPT Note: All timings are in milliseconds (1000 milliseconds = 1 second)
+prompt LFSDIAG DATA FOR &&dbname&&timestamp
+prompt Note: All timings are in milliseconds (1000 milliseconds = 1 second)
 
 PROMPT
-PROMPT IMPORTANT PARAMETERS RELATING TO LOG FILE SYNC WAITS:
+prompt IMPORTANT PARAMETERS RELATING TO LOG FILE SYNC WAITS:
 column name format a40 wra
 column value format a40 wra
 select inst_id, name, value from gv$parameter
@@ -57,12 +57,12 @@ and value = 'enable') or name = 'log_archive_format')
 order by 1,2,3;
 
 PROMPT
-PROMPT ASH THRESHOLD...
+prompt ASH THRESHOLD...
 PROMPT
-PROMPT This will be the threshold in milliseconds for average log file sync
-PROMPT times. This will be used for the next queries to look for the worst
-PROMPT 'log file sync' minutes. Any minutes that have an average log file
-PROMPT sync time greater than the threshold will be analyzed further.
+prompt This will be the threshold in milliseconds for average log file sync
+prompt times. This will be used for the next queries to look for the worst
+prompt 'log file sync' minutes. Any minutes that have an average log file
+prompt sync time greater than the threshold will be analyzed further.
 column threshold_in_ms new_value threshold format 999999999.999
 select min(threshold_in_ms) threshold_in_ms
 from (select inst_id, to_char(sample_time,'Mondd_hh24mi') minute,
@@ -74,10 +74,10 @@ order by 3 desc)
 where rownum <= 10;
 
 PROMPT
-PROMPT ASH WORST MINUTES FOR LOG FILE SYNC WAITS:
+prompt ASH WORST MINUTES FOR LOG FILE SYNC WAITS:
 PROMPT
-PROMPT APPROACH: These are the minutes where the avg log file sync time
-PROMPT was the highest (in milliseconds).
+prompt APPROACH: These are the minutes where the avg log file sync time
+prompt was the highest (in milliseconds).
 column minute format a12 tru
 column event format a30 tru
 column program format a40 tru
@@ -93,13 +93,13 @@ having avg(time_waited)/1000 > &&threshold
 order by 1,2;
 
 PROMPT
-PROMPT ASH LFS BACKGROUND PROCESS WAITS DURING WORST MINUTES:
+prompt ASH LFS BACKGROUND PROCESS WAITS DURING WORST MINUTES:
 PROMPT
-PROMPT APPROACH: What is LGWR doing when 'log file sync' waits
-PROMPT are happening? LMS info may be relevent for broadcast
-PROMPT on commit and LNS data may be relevant for dataguard.
-PROMPT If more details are needed see the ASH DETAILS FOR WORST
-PROMPT MINUTES section at the bottom of the report.
+prompt APPROACH: What is LGWR doing when 'log file sync' waits
+prompt are happening? LMS info may be relevent for broadcast
+prompt on commit and LNS data may be relevant for dataguard.
+prompt If more details are needed see the ASH DETAILS FOR WORST
+prompt MINUTES section at the bottom of the report.
 column inst format 999
 column minute format a12 tru
 column event format a30 tru
@@ -119,11 +119,11 @@ group by to_char(sample_time,'Mondd_hh24mi'), inst_id, program, event
 order by 1,2,3,5 desc, 4;
 
 PROMPT
-PROMPT HISTOGRAM DATA FOR LFS AND OTHER RELATED WAITS:
+prompt HISTOGRAM DATA FOR LFS AND OTHER RELATED WAITS:
 PROMPT
-PROMPT APPROACH: Look at the wait distribution for log file sync waits
-PROMPT by looking at "wait_time_milli". Look at the high wait times then
-PROMPT see if you can correlate those with other related wait events.
+prompt APPROACH: Look at the wait distribution for log file sync waits
+prompt by looking at "wait_time_milli". Look at the high wait times then
+prompt see if you can correlate those with other related wait events.
 column event format a40 wra
 select inst_id, event, wait_time_milli, wait_count
 from gv$event_histogram
@@ -135,7 +135,7 @@ event like '%LGWR%' or event like '%LNS%'
 order by 2 desc,1,3;
 
 PROMPT
-PROMPT ORDERED BY WAIT_TIME_MILLI
+prompt ORDERED BY WAIT_TIME_MILLI
 select inst_id, event, wait_time_milli, wait_count
 from gv$event_histogram
 where event in ('log file sync','gcs log flush sync',
@@ -146,11 +146,11 @@ or event like '%LGWR%' or event like '%LNS%'
 order by 3,1,2 desc;
 
 PROMPT
-PROMPT REDO WRITE STATS
+prompt REDO WRITE STATS
 PROMPT
-PROMPT "redo write time" in centiseconds (100 per second)
-PROMPT 11.1: "redo write broadcast ack time" in centiseconds (100 per second)
-PROMPT 11.2: "redo write broadcast ack time" in microseconds (1000 per millisecond)
+prompt "redo write time" in centiseconds (100 per second)
+prompt 11.1: "redo write broadcast ack time" in centiseconds (100 per second)
+prompt 11.2: "redo write broadcast ack time" in microseconds (1000 per millisecond)
 column value format 99999999999999999999
 column milliseconds format 99999999999999.999
 select v.version, ss.inst_id, ss.name, ss.value,
@@ -165,10 +165,10 @@ where name like 'redo write%' and value > 0
 order by 1,2,3;
 
 PROMPT
-PROMPT AWR WORST AVG LOG FILE SYNC SNAPS:
+prompt AWR WORST AVG LOG FILE SYNC SNAPS:
 PROMPT
-PROMPT APPROACH: These are the AWR snaps where the average 'log file sync'
-PROMPT times were the highest.
+prompt APPROACH: These are the AWR snaps where the average 'log file sync'
+prompt times were the highest.
 column begin format a12 tru
 column end format a12 tru
 column name format a13 tru
@@ -188,11 +188,11 @@ where rownum < 4)
 order by 1,2;
 
 PROMPT
-PROMPT AWR REDO WRITE STATS
+prompt AWR REDO WRITE STATS
 PROMPT
-PROMPT "redo write time" in centiseconds (100 per second)
-PROMPT 11.1: "redo write broadcast ack time" in centiseconds (100 per second)
-PROMPT 11.2: "redo write broadcast ack time" in microseconds (1000 per millisecond)
+prompt "redo write time" in centiseconds (100 per second)
+prompt 11.1: "redo write broadcast ack time" in centiseconds (100 per second)
+prompt 11.2: "redo write broadcast ack time" in microseconds (1000 per millisecond)
 column stat_name format a30 tru
 select v.version, ss.snap_id, ss.instance_number inst, sn.stat_name, ss.value,
 decode(substr(version,1,4),
@@ -213,10 +213,10 @@ where rownum < 4)
 order by 1,2,3;
 
 PROMPT
-PROMPT AWR LFS AND OTHER RELATED WAITS FOR WORST LFS AWRs:
+prompt AWR LFS AND OTHER RELATED WAITS FOR WORST LFS AWRs:
 PROMPT
-PROMPT APPROACH: These are the AWR snaps where the average 'log file sync'
-PROMPT times were the highest. Look at related waits at those times.
+prompt APPROACH: These are the AWR snaps where the average 'log file sync'
+prompt times were the highest. Look at related waits at those times.
 column name format a40 tru
 select se.snap_id, se.instance_number inst, en.name,
 se.total_waits, se.time_waited_micro/1000 total_wait_time,
@@ -237,12 +237,12 @@ where rownum < 4)
 order by 1, 6 desc;
 
 PROMPT
-PROMPT AWR HISTOGRAM DATA FOR LFS AND OTHER RELATED WAITS FOR WORST LFS AWRs:
-PROMPT Note: This query won't work on 10.2 - ORA-942
+prompt AWR HISTOGRAM DATA FOR LFS AND OTHER RELATED WAITS FOR WORST LFS AWRs:
+prompt Note: This query won't work on 10.2 - ORA-942
 PROMPT
-PROMPT APPROACH: Look at the wait distribution for log file sync waits
-PROMPT by looking at "wait_time_milli". Look at the high wait times then
-PROMPT see if you can correlate those with other related wait events.
+prompt APPROACH: Look at the wait distribution for log file sync waits
+prompt by looking at "wait_time_milli". Look at the high wait times then
+prompt see if you can correlate those with other related wait events.
 select eh.snap_id, eh.instance_number inst, en.name, eh.wait_time_milli, eh.wait_count
 from wrh$_event_histogram eh, v$event_name en
 where eh.event_id = en.event_id and
@@ -260,8 +260,8 @@ where rownum < 4)
 order by 1,3 desc,2,4;
 
 PROMPT
-PROMPT ORDERED BY WAIT_TIME_MILLI
-PROMPT Note: This query won't work on 10.2 - ORA-942
+prompt ORDERED BY WAIT_TIME_MILLI
+prompt Note: This query won't work on 10.2 - ORA-942
 select eh.snap_id, eh.instance_number inst, en.name, eh.wait_time_milli, eh.wait_count
 from wrh$_event_histogram eh, v$event_name en
 where eh.event_id = en.event_id and
@@ -279,13 +279,13 @@ where rownum < 4)
 order by 1,4,2,3 desc;
 
 PROMPT
-PROMPT ASH DETAILS FOR WORST MINUTES:
+prompt ASH DETAILS FOR WORST MINUTES:
 PROMPT
-PROMPT APPROACH: If you cannot determine the problem from the data
-PROMPT above, you may need to look at the details of what each session
-PROMPT is doing during each 'bad' snap. Most likely you will want to
-PROMPT note the times of the high log file sync waits, look at what
-PROMPT LGWR is doing at those times, and go from there...
+prompt APPROACH: If you cannot determine the problem from the data
+prompt above, you may need to look at the details of what each session
+prompt is doing during each 'bad' snap. Most likely you will want to
+prompt note the times of the high log file sync waits, look at what
+prompt LGWR is doing at those times, and go from there...
 column program format a45 wra
 column sample_time format a25 tru
 column event format a30 tru
@@ -310,6 +310,6 @@ select to_char(sysdate,'Mondd hh24:mi:ss') TIME from dual;
 spool off
 
 PROMPT
-PROMPT OUTPUT FILE IS: lfsdiag_&&dbname&&timestamp&&suffix
+prompt OUTPUT FILE IS: lfsdiag_&&dbname&&timestamp&&suffix
 PROMPT
 

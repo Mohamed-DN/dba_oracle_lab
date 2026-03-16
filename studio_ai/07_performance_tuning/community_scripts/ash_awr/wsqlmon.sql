@@ -46,7 +46,7 @@ col plan_operation format a50
 BREAK ON asqlmon_plan_hash_value SKIP 1 ON asqlmon_sql_id SKIP 1 ON asqlmon_sql_child SKIP 1 ON asqlmon_sample_time SKIP 1 DUP ON asqlmon_operation
 
 PROMPT
-PROMPT -- ASQLMon v1.1 - by Tanel Poder ( http://blog.tanelpoder.com ) - Display SQL execution plan line level activity breakdown from ASH
+prompt -- ASQLMon v1.1 - by Tanel Poder ( http://blog.tanelpoder.com ) - Display SQL execution plan line level activity breakdown from ASH
 
 WITH  sample_times AS (
     select * from dual

@@ -1,4 +1,4 @@
---- Script per Creazione Package Svecchiamento Tabelle
+--- Script for Creating Table Renewal Packages
 
 set define off
 set serveroutput on
@@ -197,7 +197,7 @@ CREATE SEQUENCE DBA_OP.PARTITIONS_LOG_SEQ
 
 
   
----- Creazione Tabella di Configurazione
+---- Creation of Configuration Table
 
 DECLARE 
 
@@ -285,7 +285,7 @@ TABLESPACE DBA_OP_DATA;
 
 BEGIN
  
-   -- Droppo la tabella
+   -- I drop the table
    execute immediate('DROP TABLE DBA_OP.TEMP_MAINT_PARTITIONS_GRANT CASCADE CONSTRAINTS');
  
 EXCEPTION
@@ -297,7 +297,7 @@ END;
 
 
 BEGIN
-   -- Prima di droppare la tabelle, ricavo le grant date ad altri utenti 
+   -- Before dropping the tables, I get the grants given to other users 
    execute immediate ('CREATE GLOBAL TEMPORARY TABLE DBA_OP.TEMP_MAINT_PARTITIONS_GRANT ON COMMIT PRESERVE ROWS AS	select ''GRANT '' || PRIVILEGE || '' ON '' || OWNER || ''.'' || TABLE_NAME || '' TO '' || GRANTEE as GRANT_CMD from dba_tab_privs where owner = ''DBA_OP'' and table_name = ''MAINT_PARTITIONS''');
 
 EXCEPTION
@@ -314,7 +314,7 @@ END;
 
 BEGIN
  
-   -- Droppo la tabella
+   -- I drop the table
    execute immediate('DROP TABLE DBA_OP.MAINT_PARTITIONS CASCADE CONSTRAINTS');
  
 EXCEPTION
@@ -416,7 +416,7 @@ END IF;
 	
 	IF v_count = 0 THEN
 	
---  Inserisco Il record di svecchiamento relativo alla tabella dei log che tiene 6 mesi di retention
+--  I insert the aging record relating to the log table that holds 6 months of retention
 		Insert into DBA_OP.MAINT_PARTITIONS
 		   (TABLE_ID,TABLE_NAME, ENABLED, PARTITION_RETENTION_UNIT, PARTITION_RETENTION_UNIT_COUNT, 
 			PARALLEL_DEGREE, ACTION_EXPORT_DATA, ACTION_COMPRESS_PART, PARTITION_COMPRESS_TYPE, ACTION_ADD_PART, 
@@ -471,7 +471,7 @@ BEGIN
 		
 		IF v_count = 0 THEN
 		
-		--  Inserisco Il record di svecchiamento relativo alla tabella dei log che tiene 6 mesi di retention
+		--  I insert the aging record relating to the log table that holds 6 months of retention
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
@@ -901,7 +901,7 @@ ALTER TABLE DBA_OP.MAINT_PARTITIONS ADD (
   ENABLE NOVALIDATE);
 
 
----- Creazione Tabella di LOG  
+---- Creation of LOG Table  
 
 
 BEGIN
@@ -1060,111 +1060,111 @@ IS
 
       20190903      versione 1.0       Start Version
 
-      20190908      versione 1.1       Aggiunta gestione di partizioni non data
+      20190908 version 1.1 Added management of undate partitions
 
-      20190909      versione 1.2       Aggiunta gestione delle partizioni tramite Package Esterno
+      20190909 version 1.2 Added partition management via External Package
 
       20190910      versione 1.3       Aggiunto check sull'esistenza di una sola partizione.
                                        Bug Fix su Interval Partitioned Tables
                                        Se l'esecuzione e' di DryRun, non vengono modificate la last_run_date e la next_run_date
 
-      20190912      versione 1.4       Fix su ArchivedRow. Aggiunta gestione save excpetions nel caso di errori in insert/delete
-                                       Aggiunta possibilita' di cancellare le righe senza archiviarle su altra tabella
+      20190912 version 1.4 Fix on ArchivedRow. Added save exceptions management in case of errors in insert/delete
+                                       Added ability to delete rows without storing them in another table
                                        Fixed valori constant di login
-                                       Fixed Exception handler della create exchange partition table
-                                       Fixed Error Messages tutti in inglese
-                                       Tolta limitazione sulla tablella di destinazione per l'archive with query
+                                       Fixed Exception handler of the create exchange partition table
+                                       Fixed Error Messages all in English
+                                       Removed limitation on the destination table for the archive with query
 
-      20190916      versione 1.5       Aggiunta gestione segnalazioni via mail da dbserver
-                                       Fixed creazione primary key su ExchangeTable
+      20190916 version 1.5 Added management of email reports from dbserver
+                                       Fixed primary key creation on ExchangeTable
                                        Creata procedure AlignExchangeTableIndex
-                                       Aggiunta possibilita' di gestire indicizzazione primary key diverse tra tabella sorgente e target di exchnage partitions
-                                       Modificata procedure MovePartition tablespace per eseguire la Move sulla tabella di exchange invece che sulla tabella finale
+                                       Added ability to manage different primary key indexing between source and target tables of exchange partitions
+                                       Modified MovePartition tablespace procedure to perform the Move on the exchange table instead of the final table
 
       20190924      versione 1.6       Fixed Calcolo Partizioni da rimuovere/comprimere quando retention_unit e' una funzione
-                                       Aggiunta spedizione mail
+                                       Added email forwarding
                                        Fixed logging in Create Partition
                                        Eliminato PARALLEL 4 di default nella exchange partition
-                                       Fixed comportamento con partitioni Settimanali
-                                       Fixed MovePartitionTablespace per evitare di fare rebuild degli indici legati ai lob
+                                       Fixed behavior with Weekly partitions
+                                       Fixed MovePartitionTablespace to avoid rebuilding indexes linked to lobs
 
-      20191010      versione 1.7       Adeguato package con Type esterni
-                                       Modificata possibilita' di avviare PM anche se tabelle e' disabled ( solo con modalita con tabelle passata come argomento)
+      20191010 version 1.7 Adequate package with external Types
+                                       Changed possibility to start PM even if tables is disabled (only with table mode passed as argument)
                                        Eseguite modifiche per installare PM su Oracle 11R2
-                                       Fixed Calculate PartitionName con derivazione del LUNEDI in funzione della lingua
+                                       Fixed Calculate PartitionName with MONDAY derivation depending on the language
                                        Fixed Rename Indexes
                                        Fixed split partition aggiunto update global indexes
-                                       Fixed gestione partizione cestino
+                                       Fixed trash partition management
                                        Fixed Index partition name in RenamePartitions
                                        Fixed partition name string lenght in CalculatePartitionName
-                                       Aggiunto inpunt TableName alla funzione GetCurrentPartitionHV come da richiesta di ICTEAM
+                                       Added inpunt TableName to GetCurrentPartitionHV function as per ICTEAM request
 
       20191013      versione 1.8       Fixed bug in GetPartitionListToAdd quando l'unica partizione presete e' quella cestino
-                                       Aggiunta gestione Email
-                                       Aggiunta procedura SendTestEmail per testare l'invio notifiche con una o piu email server configurati
-                                       Aggiunto Stato : RUNNING quando la tabella e' in corso di maintenance dal package
+                                       Added Email management
+                                       Added SendTestEmail procedure to test sending notifications with one or more configured email servers
+                                       Added Status: RUNNING when the table is being maintained by the package
 
-      20191031      versione 1.9       Fixed RenamePartition nel caso di partition key con char
+      20191031 version 1.9 Fixed RenamePartition in the case of partition key with char
             Fixed calcolo del RUNNING
-            Fixed query per estrazione Indici i cui partition name sono da rinominare nel caso di partition key come varchar2
-            Fix RenamePartitions che nel caso di partition key come varchar deve prendere la porzione della data relativa al formato RetentionUnit
+            Fixed query for extracting indices whose partition names are to be renamed in the case of partition key such as varchar2
+            Fix RenamePartitions which in the case of partition key as varchar must take the portion of the date relating to the RetentionUnit format
                                        Fix utilizzo MAXVALUE nel caso di partition column varchar2
                                        Fixed CreatePartition if there is a default parttion with function as partition_retention_unit
             Fixed AlignExchangeTable per droppare il Pk constraint se e' di troppo nella exchnage table
 
-      20191114      versione 2.0       Modificata gestione della clausola online su versioni database >= 12.1 nella CompressPartition
-                                       Modificata la function di split sostituendo "update GLOBAL indexes" con "update indexes"
-                                       Modificata rebuild ONLINE degli indici nel caso in cui la tabellanon sia partizionata
+      20191114 version 2.0 Changed management of the online clause on database versions >= 12.1 in the CompressPartition
+                                       Modified the split function by replacing "update GLOBAL indexes" with "update indexes"
+                                       Modified ONLINE rebuild of indexes in case the table is not partitioned
 
-      20191128      versione 2.1       Gestito errore 14758 anche nella drop relativa alla exchange partition
+      20191128 version 2.1 Error 14758 also handled in the drop relating to the exchange partition
                                        Modificata procedure CreateExchangeTable per creare indici sull'owner corretto
-                                       Modificata Create ExchangeTable / AlignExchnageTable per creare gli indici sull'owner corretto quanto la tabella e la sua exchange sono su schema diversi
-                                       Modificata AlignExchangeTable e CreateExchnageTable per limitare la dimensione massima dei nomi degli indici creati automaticamente
+                                       Modified Create ExchangeTable / AlignExchnageTable to create indexes on the correct owner when the table and its exchange are on different schemas
+                                       Changed AlignExchangeTable and CreateExchnageTable to limit the maximum size of automatically created index names
 
-      20191202      versione 2.2       Modificata CreateExchangeTable per creare gli indici con i campi nell'ordine corretto
-                                       Modificata AlignExchangeTable per creare gli indici con i campi nell'ordine corretto
-                                       Modificata StartMaintenance e ProcessTable per settare la gRunDate fissa al posto della SYSDATE
+      20191202 version 2.2 Changed CreateExchangeTable to create indexes with fields in the correct order
+                                       Modified AlignExchangeTable to create indexes with fields in the correct order
+                                       Modified StartMaintenance and ProcessTable to set the fixed gRunDate instead of the SYSDATE
 
       20191213      versione 2.3       Scommentata SendMail
-                                       Modificato loggin con tablename invece del PartitionName
-                                       Aggiunto check che gli indici siano unusable prima di fare la rebuild in ogni caso
-                                       Aggiunta gestione delle tabelle sottopartizionate nella compression CompressSubPartition + IsIndexSubpartitionUnusable
-                                       Eliminato Return da ProcessTable perche' impediva spedizione della mailin caso di errore
+                                       Changed loggin with tablename instead of PartitionName
+                                       Added check that indexes are unusable before rebuilding anyway
+                                       Added management of subpartitioned tables in compression CompressSubPartition + IsIndexSubpartitionUnusable
+                                       Removed Return from ProcessTable because it prevented the mailing from being sent in the event of an error
 
       20191217      versione 2.4       Creata funzione RenameIntervalpartitions per evitare di fare reload ad ogni exchange partition che ha creato problemi di performance
-                                       Gestione last range partiton su exchnage per evitare che vanga fatta ad ogni run
-                                       Modificata SendMail in modo da non spedire mail di tabelle che non sono state oggetto di modifica nell'ultimo run anche se il loro stato e' in errore
-                                       Modificata DropPartitionList in modo che tronchi la last range partition di una tabella invece di dropparla ( perche' non e' possibile dropparla !! )
-                                       Modificata ExchangePartitionList in modo che se la partizione di una interval partitioned table e' una range ed e' vuota , non procedo con l'exchnage
-                                       perche' richierei di buttare via i dati presenti invece nella tabella di storico dovuti ad un giro di exchnage precedente
+                                       Management of last range partition on exchange to avoid spalling done at every run
+                                       Modified SendMail so as not to send emails from tables that have not been modified in the last run even if their status is in error
+                                       Changed DropPartitionList so that it truncates the last range partition of a table instead of dropping it (because it's not possible to drop it!!)
+                                       Changed ExchangePartitionList so that if the partition of an interval partitioned table is a range and is empty, I don't proceed with the exchange
+                                       because I would require throwing away the data present in the history table due to a previous exchange round
                                        Aumentato logging in ExchangePartitionList
 
       20191219      versione 2.5       Modificato GetPartitionListToAdd e GetNetxtPartitionWithRetention per le partizioni annuali e mensili nel cso di column type di tipo date o timestamp
 
       20200110      versione 2.6       Fix Millennium Bug
-                                       Modificato GetPartitionListToAdd per corretta creazione numero di partizioni con PART_ADD_COUNT = 1
-                                       Modificata procedura DropPartitionList in modo che esporti solo partizioni non vuote
+                                       Changed GetPartitionListToAdd to correctly create number of partitions with PART_ADD_COUNT = 1
+                                       Changed DropPartitionList procedure so that it only exports non-empty partitions
                                        Modificato logging ExportPartitionData
-                                       Modificata RenamePartition Per gestire correttamente HighValue = DEFAULT nel caso di retention unit come funzione
-                                       Modificata GetPartitionListToCompress per inserire solo le partizioni esistenti ( nel caso di function retention potrebbero non esistere )
-                                       Modificata GetPartitionListToRemove per inserire solo le partizioni esistenti   ( nel caso di function retention potrebbero non esistere )
-                                       Creata IsPartitionCompressed per capire se la partizione e' compressa analizzando anche le sottopartizioni
-                                       Modificata GetPartitionListToRemove per gestire il check della compressione anche a livello di subpartition
+                                       Modified RenamePartition to correctly handle HighValue = DEFAULT in the case of retention unit as a function
+                                       Modified GetPartitionListToCompress to insert only existing partitions (in the case of function retention they may not exist)
+                                       Modified GetPartitionListToRemove to insert only existing partitions (in the case of function retention they may not exist)
+                                       Created IsPartitionCompressed to understand if the partition is compressed by also analyzing the subpartitions
+                                       Modified GetPartitionListToRemove to manage the compression check also at subpartition level
                                        Fixed dimensione varchar2 ritornato dalla function CanBeOnline
-                                       Modificata CreatePartition per gestire correttamente lo split nel caso di retention function e nel caso esista una partizione cestino con retention standard tipo data
-                                       Modificata CalculateNextPartitionName per rinominare la DefaultPartition con il formato data 99990101
+                                       CreatePartition modified to correctly manage the split in the case of retention function and in the case of a trash partition with standard data type retention
+                                       Changed CalculateNextPartitionName to rename the DefaultPartition with the date format 99990101
                                        Modificato cursore cCurIdxToDrop in AlignExchangeTable per eliminare union ridondante
-                                       Modificata AlignExchnageTableIndex per creare indici sulla tabella di exchnage che abbiamo un nome con 4 cifre casuali
-                                       Modificata CalculateNextRunDate per calcolo corretto del NextDate nel caso di esecuzione nel giorno stesso della schedulazione
+                                       Modified AlignExchnageTableIndex to create indexes on the exchnage table that we have a name with 4 random digits
+                                       Modified CalculateNextRunDate for correct calculation of the NextDate in the case of execution on the same day as the scheduling
 
-       20200204      versione 2.7      Modificata CompressSubPartition per fare check degli indici unusable correttamente
-                                       Modificata CompressSubPartition per eseguire rebuild delle sottopartizioni di indice correttamente
+       20200204 version 2.7 Modified CompressSubPartition to check unusable indexes correctly
+                                       Modified CompressSubPartition to rebuild index subpartitions correctly
 
-       20200221      versione 2.8      Modificata CreatePartition per gestire correttamente l'add partition nel caso di retention_unit come function
-                                       Modificata funzione GetPartitionListToAdd per fixare la creazione di una partizione in piu' rispetto al dovuto sia nel caso TIMESTAMP/Date
+       20200221 version 2.8 CreatePartition modified to correctly manage the add partition in the case of retention_unit as a function
+                                       Modified GetPartitionListToAdd function to fix the creation of one more partition than necessary in both the TIMESTAMP/Date case
                                        che nel caso di funzione esterna
-                                       Modificata LogFacility per introdurre trunc del campo MESSAGE a 4000 ed evitare errori in fase di inserimento
-                                       Enhancement sul logging di tutte le procedure del package. Trasformate in INFO alcuni DEBUG e migliorate le info riportate nel log
+                                       Modified LogFacility to introduce trunc of the MESSAGE field to 4000 and avoid errors during insertion
+                                       Enhancement on logging of all package procedures. Transformed some DEBUGS into INFO and improved the information reported in the log
 
        20200317      versione 2.9      Modificata CreatePartition per gestire correttamente l'add partition nel caso di retention_unit annuale
 
@@ -1178,7 +1178,7 @@ IS
 
     20201001      versione 2.14     Modificata ExchangePartitionList per gestire disabilitazione FK in caso di exchnage partition
 
-    20201001      versione 2.15     Create IstableEmpty per gestire il check sulla tabelle non partizionate
+    20201001 version 2.15 Create IstableEmpty to manage checks on non-partitioned tables
 
     20201105      versione 2.16     Modificato trigger per impedire utilizzo Compressioni non HCC o BASIC
 
@@ -1186,48 +1186,48 @@ IS
 
     20210714      versione 2.18     Modificata procedure CompressPartition e CompressSubpartition per introdurre il FOR nella clausola compress nel caso di HCC
 
-    20211001      versione 2.20     Modificata CreatePartition per fix sulla partizione creata dalla split
+    20211001 version 2.20 Modified CreatePartition to fix the partition created by the split
 
     20211103      versione 2.21     Modificata GetPartitionListToRemove per bug che si e' presentato su ECGP quando le partizioni non esistono. Spostato il vPartCount + 1 dentro la IF PART exists
 
-    20220211      versione 2.22     Introdotta prima della create table as select , alter session necessaria per exchange partiion ORA-01497.
+    20220211 version 2.22 Introduced before create table as select , alter session required for exchange partition ORA-01497.
             ExportPartitionData  fix bug per versioni inferiori alla 12.1
 
     20220309      versione 2.23     Modificata RenamePartition per evitare di rinominare la partizioni di indice dell'ultima partizione ( che presumibilemente e' quella "attiva"
-            Fixato problema della CreatePartition che nel caso di partizione Cestino creaca la parzione di default con lo steso nome della nuova partizione
+            Fixed CreatePartition problem which, in the case of a Recycle Bin partition, creates the default partition with the same name as the new partition
             Modificata SendMail per abbasssare priorit������ a WARn nel caso in cui il mail server non sia raggiungibile
 
     20220314      versione 2.24     Modificata CanBeOnline per riattivare la possibilit������ di fare lavori in online attivando Advanced Compression
-                                       Modificata CompressPartition per rebuildare partitioni di indice non valide a seguito della compress della partizione
+                                       Modified CompressPartition to rebuild invalid index partitions following partition compression
                                        Modificata CompressPartition per permettere la compressione OLTP ( il default resta BASIC )
                                        Modificato Trigger di check per permettere la compress oltp
 
-       20220329      versione 2.25     Modificata ExchangePartitionList per errore nella gestione della create partition su tabelle partizionate week
+       20220329 version 2.25 Changed ExchangePartitionList due to error in managing the create partition on week partitioned tables
                                        Modificata GetNextPartitionWithRetention per aggiungere un +7 nella partizione restituita
 
-       20220405      versione 2.26     Modificato Trigger per gestione Compress for BASIC.
-            Modificato Script di instalazione per restorare le grant precedenti al drop della tabella.
+       20220405 version 2.26 Modified Trigger for Compress for BASIC management.
+            Changed installation script to restore grants prior to table drop.
 
        20220413      versione 2.27     Permesso valore di compressione COMPRESS ADVANCED
 
-    20220623      versione 2.28     Cambiata gestione del trigger che calcola il TABLE_ID
-            Eliminata sequence per gestione TABLE_ID
+    20220623 version 2.28 Changed management of the trigger that calculates the TABLE_ID
+            Deleted sequence for TABLE_ID management
 
-    20220801      versione 2.29     Fix per algoritmo in StartMaintenance che sceglie le righe delle tabelle da eseguire
+    20220801 version 2.29 Fix for algorithm in StartMaintenance that chooses table rows to execute
 
-    20220915      versione 2.30     Improvement per gestione su exchange table dei bitmap indexes
+    20220915 version 2.30 Improvement for management of bitmap indexes on the exchange table
 
-    20231020      versione 2.31     Introdotta nuova action per gestire svecchiamento con insert as select + drop partition
-                                       Modifica della commit per funzionalita ArchiveQuery
+    20231020 version 2.31 New action introduced to manage rejuvenation with insert as select + drop partition
+                                       Change of commit for ArchiveQuery functionality
                                        Modificata clausola di start in caso si specifichi Table	_Name in modo che il record debba essere enabled per essere eseguito
 
     20231114      versione 2.32     Fix trigger di compatibilit�� logiche
 
     20240214   versione 2.33     Fix enable/disable fk per logica append
 
-	20240314   versione 2.34     Aggiunta exception nella clausola di export per partitione gi�� lavorata
+	20240314 version 2.34 Added exception in the export clause for partition already processed
 
-	20241004	versione 2.35    Aggiunta modifica a select in procedure "StartMaintenance" per evitare errore "ORA-01555: snapshot too old"
+	20241004 version 2.35 Added change to select in procedure "StartMaintenance" to avoid error "ORA-01555: snapshot too old"
 
    */
 
@@ -1379,7 +1379,7 @@ IS
       v_ret_val              BOOLEAN;
       vStmt                  LONG;
    BEGIN
-      -- Per considerare una partizione come compressa e' necessario che tutte le partizioni e le sottopartizioni siano compresse, altrimenti non lo e'
+      -- To consider a partition as compressed it is necessary that all partitions and subpartitions are compressed, otherwise it is not
       vStmt :=
             'select sum(SEG_NOT_COMPRESSED) from (select count(*) SEG_NOT_COMPRESSED from dba_tab_partitions tp where 1=1 and tp.compression <> ''ENABLED'' AND tp.subpartition_count = 0 and tp.table_owner || ''.'' || tp.table_name = '''
          || pTableName
@@ -1476,9 +1476,9 @@ IS
       --
       -- Esempi di utilizzo
       --
-      -- TABELLA PARTIZIONATA    : export_data('MP_STORICO.BIGLIETTO_QF_SPORT','P200508');
-      -- TABELLA NON PARTIZIONATA: export_data('MP_STORICO.AVVENIMENTO','MESE200508','where dataora_avv between...');
-      -- per importare puo' essere necessaria password
+      -- PARTITIONED TABLE : export_data('MP_HISTORY.TICKET_QF_SPORT','P200508');
+      -- NON-PARTITIONED TABLE: export_data('MP_HISTORY.AVVENTION','MONTH200508','where dataora_avv between...');
+      -- Password may be required to import
       -- code history
 
       h1                       NUMBER;
@@ -1524,7 +1524,7 @@ IS
 
       LogFacility (LOG_SEV_INFO, 'Starting Export Table data', pTable);
       --
-      -- pTable deve avere il formato schema.tavola
+      -- pTable must have the format schema.table
       --
       schema_name := REGEXP_REPLACE (pTable, '\..*', '');
       export_table_name := REGEXP_REPLACE (pTable, '.*\.', '');
@@ -1579,7 +1579,7 @@ IS
          || separatore
          || lancio;
       log_name := base_name || '.log';
-      -- job_name viene troncato a 30...
+      -- job_name is truncated to 30...
       job_name :=
          export_table_name || separatore || partition_name || '.' || lancio;
       history_log := 'export.history';
@@ -1650,7 +1650,7 @@ IS
       UTL_FILE.fclose (log_handle);
 
       --
-      -- creazione e definizione del job
+      -- creation and definition of the job
       --
       LogFacility (LOG_SEV_DEBUG, 'Starting export job ' || job_name, pTable);
 
@@ -1695,7 +1695,7 @@ IS
 
 
       --
-      -- avvio, attesa completamento
+      -- starting, waiting for completion
       --
       DBMS_DATAPUMP.start_job (h1, 0);
       DBMS_DATAPUMP.wait_for_job (h1, job_state);
@@ -1703,7 +1703,7 @@ IS
       fine := SYSDATE;
 
       --
-      -- verifica job completato, esistenza log file
+      -- verify job completed, log file existence
       --
       LogFacility (LOG_SEV_DEBUG,
                    'Checking that job...' || job_name || ' is completed',
@@ -1753,7 +1753,7 @@ IS
                          1000);
 
       -- se no-errori imposto OK e continuo; warning-cifratura imposto OK e continuo; altro-ORA- imposto KO e interrompo loop
-      -- (il KO non deve essere ricopribile da successivi warning...)
+      -- (the KO must not be covered by subsequent warnings...)
       --
       esito := '??';
 
@@ -1825,7 +1825,7 @@ IS
       END;
 
       --
-      -- aggiunta di una riga riassuntiva dei tempi alla fine del log
+      -- adding a summary line of times at the end of the log
       --
       log_handle :=
          UTL_FILE.fopen (directory_object,
@@ -1845,7 +1845,7 @@ IS
       --
       -- interruzione in caso di errore
       --
-      /*  vecchia versione
+      /*  old version
       IF  l_text NOT LIKE '%successfully completed%'
       AND l_text NOT LIKE '%completato in%'
       */
@@ -1866,7 +1866,7 @@ IS
          pTable);
 
       --
-      -- esecuzione terminata con successo, registrazione nell'history_log
+      -- execution completed successfully, recorded in the history_log
       --
       UTL_FILE.fgetattr (directory_object,
                          file_name,
@@ -2052,7 +2052,7 @@ IS
 
       vPartCount := 1;
 
-      -- Per come e' fatto il loop while sotto, devo fare il calcolo con Partition_Add_Count -1 altrimenti creo una partizione in piu' non voluta
+      -- As the while loop below is done, I have to do the calculation with Partition_Add_Count -1 otherwise I create an unwanted extra partition
       WHILE (vPartDate < vPartDateWithRetention)
       LOOP
          IF IsFunction (pEntry.PARTITION_RETENTION_UNIT) = FALSE
@@ -2836,7 +2836,7 @@ IS
                   END LOOP;
                /*
                     -- Now checking that two partitions got the same rows
-                    vStmt := 'with prima as ( select COUNT(*) cnt from ' || pEntry.Table_Name || ' PARTITION ( '|| vPartName || ' )),seconda as (select count(*) cnt from ' || pEntry.Partition_Archive_Table_Name || ' PARTITION ( ' || vPartName || ' )) select prima.cnt - seconda.cnt as DIFF from prima,seconda' ;
+                    vStmt := 'with first as ( select COUNT(*) cnt from ' || pEntry.Table_Name || ' PARTITION ( '|| vPartName || ' )), second as (select count(*) cnt from ' || pEntry.Partition_Archive_Table_Name || ' PARTITION ( ' || vPartName || ' )) select first.cnt - second.cnt as DIFF from first,second' ;
                     ExecSqlCommandInto(vStmt, pEntry.TABLE_NAME , vRecordDiff) ;
 
                     IF vRecordDiff = 0 THEN
@@ -2965,7 +2965,7 @@ IS
           WHERE     UPPER (table_owner || '.' || table_name) =
                        UPPER (pTableName)
                 AND partition_name NOT LIKE pEntry.PARTITION_NAME_PREFIX;
-   /* non possibile, faccio affidamento su partition name per fare dei ragionamenti, deve essere corretta
+   /* not possible, I rely on partition name to make my reasoning, it must be correct
    and partition_position < ( select
                                   max(partition_position)
                               FROM dba_tab_partitions
@@ -3043,7 +3043,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred during rename of interval partition '
@@ -3119,7 +3119,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred renaming interval partition '
@@ -3143,7 +3143,7 @@ IS
    EXCEPTION
       WHEN OTHERS
       THEN
-         -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+         -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
          LogFacility (
             LOG_SEV_WARNING,
                'An error occurred renaming partition '
@@ -3201,7 +3201,7 @@ IS
                      FROM dba_tab_partitions
                     WHERE UPPER (table_owner || '.' || table_name) =
                              UPPER (pTableName)
-                 /* non possibile, faccio affidamento su partition name per fare dei ragionamenti, deve essere corretta
+                 /* not possible, I rely on partition name to make my reasoning, it must be correct
                 and partition_position < ( select
                                                max(partition_position)
                                            FROM dba_tab_partitions
@@ -3219,14 +3219,14 @@ IS
                   high_value
              FROM dba_tab_partitions
             WHERE UPPER (table_owner || '.' || table_name) = UPPER (pTableName)
-         /* non possibile, faccio affidamento su partition name per fare dei ragionamenti, deve essere corretta
+         /* not possible, I rely on partition name to make my reasoning, it must be correct
           and partition_position < ( select
                                         max(partition_position)
                                      FROM dba_tab_partitions
                                      where upper(table_owner || '.' || table_name) = upper(pTableName) )*/
          ORDER BY partition_name ASC;
 
-      -- Rinomino tutte le partizioni di indice tranne quella con partition position piu alta per evitare library cache lock
+      -- I rename all index partitions except the one with the highest partition position to avoid library cache lock
       CURSOR cIndPartNotDate
       IS
          WITH IDX_NAME
@@ -3261,7 +3261,7 @@ IS
           WHERE     idx.partition_position < mp.mx_pos
                 AND idx.index_name = mp.index_name;
 
-      -- Rinomino tutte le partizioni di indice tranne quella con partition position piu alta per evitare library cache lock
+      -- I rename all index partitions except the one with the highest partition position to avoid library cache lock
       CURSOR cIndPartDate
       IS
          WITH IDX_NAME
@@ -3404,7 +3404,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred during rename of partition '
@@ -3475,7 +3475,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred renaming partition '
@@ -3560,7 +3560,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred renaming partition '
@@ -3633,7 +3633,7 @@ IS
             EXCEPTION
                WHEN OTHERS
                THEN
-                  -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+                  -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred renaming partition '
@@ -3656,7 +3656,7 @@ IS
    EXCEPTION
       WHEN OTHERS
       THEN
-         -- Se ho errori sulla rename delle partizioni proseguo il processing del resto, queste rename non sono indispensabili
+         -- If I have errors when renaming the partitions, I continue processing the rest, these renames are not essential
          LogFacility (
             LOG_SEV_WARNING,
                'An error occurred renaming partition '
@@ -4118,7 +4118,7 @@ IS
 
       IF vconto > 0
       THEN
-         -- la tabella contiene dati
+         -- the table contains data
          LogFacility (
             LOG_SEV_DEBUG,
             'IsTableEmpty return 0 for not empty table : ' || pTavola,
@@ -4354,7 +4354,7 @@ IS
       V_DBVER      NUMBER := 0;
       V_ISONLINE   VARCHAR2 (20) := ' ';
    BEGIN
-      -- Possiamo utilizzare la clausola online solo per versioni superiori ( e non comprese ) alla 11.2
+      -- We can only use the online clause for versions higher than (and not including) 11.2
 
       SELECT REPLACE (version, '.', '')
         INTO V_DBVER
@@ -4441,7 +4441,7 @@ IS
          IF IsIndexPartitionUnusable (pTable, pName) = TRUE
          THEN
             /*
-                -- La rebuild di salvaguardia viene fatta sotto in modalit������ NON online, percui la sostituisco con un rebuild costruito
+                -- The safeguard rebuild is done below in NOT online mode, so I replace it with a built rebuild
                 -- Questa e' una rebuild di salvaguardia, non dovrebbe mai essere eseguita
                 LogFacility(LOG_SEV_INFO, 'After compression of partition : ' || pName || ' some indexes were found unusable. Rebuilding...' , pTable);
 
@@ -4517,7 +4517,7 @@ IS
             || CanBeOnline ('MOVE');
          ExecSqlCommand (vStmt, pTable);
 
-         -- Nelle versioni al momento presenti su Nexi, possiamo permetterci il rebuild online degli indici
+         -- In the versions currently present on Nexi, we can afford to rebuild the indexes online
          FOR rCurIndex
             IN (SELECT    'ALTER INDEX '
                        || OWNER
@@ -4852,7 +4852,7 @@ IS
             pTableName);
          vRetVal := FALSE;
       ELSE
-         -- Ci interessa fare il check solo se non sto archiviando i dati con una query. in quel caso la tabella puo' essere di qualunque tipo partizionata o no.
+         -- We're only interested in checking if I'm not storing the data with a query. in that case the table can be of any type, partitioned or not.
          IF B_ARCHIVE_WITH_QUERY = 0
          THEN
             LogFacility (LOG_SEV_INFO, 'Table is partitioned ', pTableName);
@@ -5033,7 +5033,7 @@ IS
                   -- Now dropping empty exchanged partition that should be already empty
                   DropEmptyPartition (pEntry.TABLE_NAME, vPartName);
 
-                  -- Prima di skippare i prox step, riabilito le constraint di FK se mai fossero state disabilitate
+                  -- Before skipping the next steps, I re-enable the FK constraints if they had ever been disabled
 
                   -- 20121108 esegui enable
                   FOR vCmdCount IN 1 .. comandi_enable.COUNT
@@ -5238,8 +5238,8 @@ IS
                   END;
                END LOOP;
             END IF;
-         -- Non viene gestito volutamente l'errore perche' se una exchange partition fallisce puo 'accadere che la exchange table rimanga piena di record della partizione originaria che
-         -- quindi non puo' essere svuotata e serve intervento manuale
+         -- The error is deliberately not handled because if an exchange partition fails it may happen that the exchange table remains full of records from the original partition which
+         -- therefore it cannot be emptied and requires manual intervention
          ELSE
             LogFacility (
                LOG_SEV_INFO,
@@ -5299,7 +5299,7 @@ IS
          WHERE owner || '.' || table_name = pEntry.TABLE_NAME
       ORDER BY column_id;
 
-      -- La tabella target non deve essere partizionata. Se invece non viene specificata i record verrano eliminati senza spostarli da nessun parte. Avverto pero' l'utente
+      -- The target table does not need to be partitioned. If it is not specified, the records will be deleted without moving them anywhere. However, I warn the user
       --IF ( pEntry.Partition_Archive_Table_Name IS NULL OR (IsPartitionEmpty(pEntry.Partition_Archive_Table_Name, NULL) = 2 or isIntervalPartitionedTable(pEntry.Partition_Archive_Table_Name )))
       --THEN
 
@@ -5675,7 +5675,7 @@ IS
          -- Se siamo nella situazione di una partizione cestino
          IF SUBSTR (vPartNextSplitValue, 1, 4) = '9999'
          THEN
-            -- Nel caso ci sia una partizione cestino il nome della nuova partizione deve essere per default uguale alla piu vecchia partizione + 1
+            -- If there is a trash partition, the name of the new partition must by default be equal to the oldest partition + 1
             vPartNameToSplit := DefaultPartition (pTableName);
             --vNewPartDate      := GetNextPartitionWithRetention(pDate, pRetentionUnit , 0) ;
             --vNewPartName      := CalculatePartitionName(pDate, pRetentionUnit, pNamePrefix);
@@ -5689,8 +5689,8 @@ IS
                                        pNamePrefix);
          ELSIF vPartNextSplitValue IS NULL
          THEN
-            -- Solo per leggibilita' del codice
-            -- Questa e' la situazione in cui la tabella non ha un maxvalue e la partizione che si cerca di creare non deve essere splittata da una esistente , ma creata da 0
+            -- For code readability only
+            -- This is the situation in which the table does not have a maxvalue and the partition you are trying to create must not be split from an existing one, but created from 0
             NULL;
          ELSIF     vPartNextSplitValue IS NOT NULL
                AND SUBSTR (vPartNextSplitValue, 1, 4) <> '9999'
@@ -5700,7 +5700,7 @@ IS
             NULL;
          END IF;
       ELSE
-         -- Siamo nel caso di una retention unit con function
+         -- We are in the case of a retention unit with function
          vPartNameToSplit := DefaultPartition (pTableName);
 
          -- Se non ho una partizione cestino, potrei avere una partizione piu' grande di quella che voglio creare, vediamo se e' cosi...
@@ -5717,12 +5717,12 @@ IS
                NULL,
                vPartNextSplitValue);
 
-            -- Rispetto all High Value che voglio creare, calcolo lo split high value della partizione subito successiva
-            -- la funzione retention_unit restituisce sempre un vPartNameToSplit, anche se la partizione non esiste
+            -- Compared to the High Value I want to create, I calculate the split high value of the immediately following partition
+            -- the retention_unit function always returns a vPartNameToSplit, even if the partition does not exist
             -- la IF sotto e' sempre verificata
             IF vPartNextSplitValue IS NOT NULL
             THEN
-               -- la funzione retention_unit restituisce sempre un vPartNameToSplit, anche se la partizione non esiste, percui devo controllare se esiste o meno
+               -- the retention_unit function always returns a vPartNameToSplit, even if the partition does not exist, so I have to check whether it exists or not
                ExecSqlCommandInto (
                      'SELECT '
                   || pRetentionUnit
@@ -5735,19 +5735,19 @@ IS
                   vPartNameToSplit);
 
                -- devo controllare se la partizione esiste o meno
-               -- Se  non esiste, allora devo fare solo ADD Parttion e non split
+               -- If it doesn't exist, then I need to do only ADD Partition and not split
                IF NOT PartitionExists (pTableName, vPartNameToSplit)
                THEN
                   vPartNameToSplit := NULL;
-               -- Se la partizione successiva esiste, allora devo splittare la partizione successiva. calcolata con la chiamata sopra alla GetPartitionNameFromHV
+               -- If the next partition exists, then I need to split the next partition. calculated with the above call to GetPartitionNameFromHV
                ELSE
-                  -- vPartNameToSplit e' valida quella della chiamata subito sopra
+                  -- vPartNameToSplit is valid as the call immediately above
                   NULL;
                END IF;
             END IF;
          ELSE
             -- questo e' il caso in cui ho una partizione cestino
-            -- Calcolo il nome della nuova partizione cestino
+            -- Calculate the name of the new trash partition
             --ExecSqlCommandInto('SELECT ' || pRetentionUnit || '.GetNextHV(''' || pTableName || ''' , ''' || pDate || ''',1 ) FROM DUAL',NULL,vPartNextSplitValue);
 
             -- Calcolo la partition name in base al partition value +1
@@ -5821,7 +5821,7 @@ IS
       vStmt := REGEXP_REPLACE (vStmt, ':table', TRIM (pTableName));
       vStmt := REGEXP_REPLACE (vStmt, ':partition', pPartName);
 
-      -- Se la nuova partizione cestino deve essere rinominata ( caso che accade nel caso di function come retention_unit )
+      -- If the new trash partition needs to be renamed (which happens in the case of functions like retention_unit)
       IF vNewDefPartName IS NOT NULL
       THEN
          vStmt := REGEXP_REPLACE (vStmt, ':new_split_part', vNewDefPartName);
@@ -5948,7 +5948,7 @@ IS
                       pTableName);
 
          BEGIN
-            -- Se siamo in Dryrun ma il comando eseguito e' una select, allora la eseguo lo stesso
+            -- If we are in Dryrun but the command executed is a select, then I execute it anyway
 
             -- Execute the commend only if this is not a DryRun Sesssion
             IF    gDryRun = 'N'
@@ -6447,7 +6447,7 @@ IS
 
             IF (ProcessTable (rwTable))
             THEN
-               -- Nel caso di DryRun non eseguo la modifica delle date e dell'ultimo risultato
+               -- In the case of DryRun I do not modify the dates and the last result
                IF gDryRun = 'N'
                THEN
                   UPDATE DBA_OP.MAINT_PARTITIONS
@@ -6459,9 +6459,9 @@ IS
             ELSE
                nErrorCount := nErrorCount + 1;
 
-               -- Nel caso di DryRun non eseguo la modifica delle date e dell'ultimo risultato
-               -- Nel caso di errore do la possibilita' il giorno dopo al job di ripartire
-               -- se settassi il next_date, a fronte di un errore potrebbe accadere che il job venga eseguito anche un anno dopo !!!!
+               -- In the case of DryRun I do not modify the dates and the last result
+               -- In the event of an error I give the job the opportunity to restart the next day
+               -- if you set the next_date, in the event of an error it could happen that the job is executed even a year later!!!!
                IF gDryRun = 'N'
                THEN
                   UPDATE DBA_OP.MAINT_PARTITIONS

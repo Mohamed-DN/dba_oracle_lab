@@ -82,8 +82,8 @@ col type form A4
 col lmode form 990
 col request form 990
 col objname form A25 Heading "Object Name"
-rem col id1 form 999999900
-rem col id2 form 999999900
+REM col id1 form 999999900
+REM col id2 form 999999900
 
 set lines 300
 
@@ -235,8 +235,8 @@ ORDER BY sid, type;
 
 
 
-/*Oppure posso lanciare la query seguente da dove 
-  vedo il pid e da dove vedo Lmode del lock  :
+/*Or I can launch the following query from where 
+  I see the pid and from where I see Lmode of the lock:
 --------------------------------------------------
 */
 

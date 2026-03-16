@@ -1,13 +1,13 @@
 --
--- Il JOB della PURGE_AM_TABLES NON viene creato in automatico dalo script
+-- The PURGE_AM_TABLES JOB is NOT created automatically by the script
 -- versione 1.01 : corretta schedulazione job "JOB_COLLECT_DB_GROWTH_JOB"
 
--- 28052022  Modificato Script per drop e creazione automatica job temp e undo usage
+-- 28052022 Modified Script for automatic drop and creation of job temp and undo usage
 
--- 28052022  Esecuzione su tutti i PDB di un CDB:
+-- 28052022 Execution on all PDBs of a CDB:
 --               $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/catcon.pl -d /tmp -l /tmp -C 'CDB$ROOT PDB$SEED NEXI_PDB_TEMPLATE' -b pkgdba /tmp/Install_pkg_Dba_Utility_20220531.sql
 
--- 31052022  Modificato timing dei job scelto randomicamente per evitare che partano allo stesso orario sui PDB
+-- 31052022 Changed the timing of the jobs chosen randomly to avoid them starting at the same time on the PDBs
 
 
 WHENEVER SQLERROR EXIT 1;
@@ -450,7 +450,7 @@ END;
 
 
 -- ====================================================================================
---  Inserimento delle configurazioni dello svecchiamento su PM 
+--  Insertion of the rejuvenation configurations on PM 
 
 
 
@@ -510,20 +510,20 @@ CREATE OR REPLACE PACKAGE DBA_OP.PKG_DBA_UTILITY AS
                                      Modified some error level returned by application
 
    20220713      versione v1.4       Eliminata differenza di calcolo tra PDB e DB Standalone
-                                     Bug Fix CheckForAutoextendDF che lavorava solo sui df non autoextensible
+                                     Bug Fix CheckForAutoextendDF which only worked on non-autoextensible dfs
 
-   20220718      versione v1.5       Introdotta Gestione errore nel loop ExtendTablespaceAuto
+   20220718 version v1.5 Introduced Error handling in ExtendTablespaceAuto loop
                                      Modificata query di generazione lista tablepace da estendere
-                                     Modificata Tabella MAINTENANCE_TABLESPACE_RESIZE
-                                     Modificata Procedure LogResize per introdurre condizioni di WAR o ERROR nella loggata della resize
+                                     Modified MAINTENANCE_TABLESPACE_RESIZE table
+                                     Modified LogResize Procedure to introduce WAR or ERROR conditions in the resize log
                                      Logging in tablespace resize even if just an autoextend of the datafile has been performed
-                                     Eliminata gestione resize UNDO tablespace
+                                     Resize UNDO tablespace management eliminated
 
-   20220721      versione v1.6       Modificato algoritmo per aggiunta spazio CalculateSpaceToAdd
+   20220721 version v1.6 Changed algorithm for adding space CalculateSpaceToAdd
 
-   20220801      versione v1.7       Improvement sulla purge_dba_recycle_bin per permettere di eseguire piu job con configurazioni differenti per schema differenti
+   20220801 version v1.7 Improvement on purge_dba_recycle_bin to allow running multiple jobs with different configurations for different schemas
 
-   20220828      versione v1.8       Fix ExtendTablespace su Warning message "Added maximum number of 10" che viene loggato senza un reale motivo
+   20220828 version v1.8 Fix ExtendTablespace on Warning message "Added maximum number of 10" that is logged for no real reason
    
    20220928      versione v1.9       CanTablespaceBeExtended fixed ricerca ultimo evento di modifica spazi
                                      ExtendTablespaceAuto modificata per non eseguire nessuna estenzione nel caso in cui non ci sia spazio su ASM
@@ -1030,7 +1030,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
 
                     IF vOmfEnabled = 'ASM' THEN
 
-                      -- Devo fare il controllo sullo spazio totale dal verificare, percui lo posso fare solo ora
+                      -- I have to check the total space since the check, so I can only do it now
                       IF NOT checkFreeAsmSpace(vMBToAdd)
                         THEN
                          -- dbms_output.put_line('INFO : Free ASM Space cannot accomodate ' || vMBToAdd || 'M added to tablespace' || vTableSpaceName );
@@ -1674,24 +1674,24 @@ END;
 
 
 PROCEDURE PURGE_TABLE_AM_OBJ( p_dryrun VARCHAR2 DEFAULT 'Y' )
--- COMMENTARE la stringa di   AUTHID SE IL JOB VIENE CREATO non in ambiente VAULT con owner SYS
+-- COMMENT the AUTHID string IF THE JOB IS CREATED not in a VAULT environment with owner SYS
 is
--- PROCEDURA PURGE TABELLE UTENZE PROFILI 0
+-- PURGE PROCEDURE USER TABLES PROFILES 0
 --
--- Procedura di cancellazione tabelle AM_OBJ destinate alla cancellazione per un massimo periodo
+-- Procedure for deleting AM_OBJ tables intended for deletion for a maximum period
 -- di giacienza stabilito nelle seguanti modalita :
--- Le tabelle avranno i seguenti suffissi che ne determinano il tempo di permanenza massimo sul DB :
--- "DAY_" 	 - Un giorno di permanenza
--- "WEEK_" 	 - Una settimana di permanenza
+-- The tables will have the following suffixes which determine their maximum time spent on the DB:
+-- "DAY_" - One day of stay
+-- "WEEK_" - One week stay
 -- "MONTH_"  - Un mese di permanenza
 -- "MONTH3_" - Tre mesi ( 90 day )
--- ATTENZIONE !!!! Le tabelle create con questi suffissi, verranno mantenute per il periodo stabilito
--- TUTTE le altre che non manterranno questo standard, verranno CANCELLATE IMMEDIATAMENTE !!!!
+-- ATTENTION !!!! The tables created with these suffixes will be maintained for the established period
+-- ALL others that do not maintain this standard will be CANCELED IMMEDIATELY!!!!
 --
 -- !!!!!!!!!!!!!!
 -- NOTA ATTENZIONE !!!!!
--- Gli schemi che sono sottoposti a tale procedura , dovranno essere esplicitati DIRETTAMENTE in questa procedura
--- che stara di conseguenza AUTOCONSISTENTE per la gestione degli schemi stessi !!!!!!!!
+-- The schemes that are subjected to this procedure must be explained DIRECTLY in this procedure
+-- which will consequently be SELF-CONSISTENT for the management of the schemes themselves !!!!!!!!
 
 --
 -- !!!!!!!!!!
@@ -1713,13 +1713,13 @@ for drop_am_table in
  ( select 'drop table "'||owner||'"."'||object_name||'" cascade constraint purge'  command,
            owner,object_name,created ,trunc (sysdate) - trunc(created) day
 from (
--- Tabelle datate > Un Giorno
+-- Dated tables > One Day
 select owner,object_name,created from dba_objects
  where object_type ='TABLE'
    and object_name like 'DAY/_%' escape '/'
    and trunc (sysdate) - trunc(created) > 0
 union
--- Tabelle datate > Una Settimana
+-- Dated tables > One Week
 select owner,object_name,created from dba_objects
  where object_type ='TABLE'
    and object_name like 'WEEK/_%' escape '/'
@@ -1731,12 +1731,12 @@ select owner,object_name,created from dba_objects
    and object_name like 'MONTH/_%' escape '/'
    and trunc (sysdate) - trunc(created) > 30
 union
--- Tabelle datate > 90 giorni
+-- Tables dated > 90 days
 select owner,object_name,created from dba_objects
  where object_type ='TABLE'
    and object_name like 'MONTH3/_%' escape '/'
    and trunc (sysdate) - trunc(created)> 90
--- Tabelle senza suffisso non autorizzate
+-- Unauthorized tables without suffix
 --- Abilitato il 6/7/2018
 union
 select owner,object_name,created from dba_objects
@@ -1882,7 +1882,7 @@ SELECT * FROM (
         
 
 
--- JOB Di gestione automatica dei Tablespace
+-- JOB Automatic management of Tablespaces
 BEGIN
   SYS.DBMS_SCHEDULER.DROP_JOB
     (job_name  => 'DBA_OP.MAINT_TABLESPACE_JOB');

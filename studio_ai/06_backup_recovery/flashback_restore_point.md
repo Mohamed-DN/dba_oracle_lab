@@ -8,9 +8,9 @@ Script utili presenti in cartella:
 Checklist:
 
 1. Conferma FRA dimensionata.
-2. Crea restore point garantito prima di attivita rischiose.
-3. Elimina restore point dopo validazione.
+2. Create guaranteed restore points before risky activities.
+3. Delete restore point after validation.
 
-Guida completa RMAN:
+Complete RMAN Guide:
 
-- [GUIDA_RMAN_COMPLETA_19C.md](../../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDE_RMAN_COMPLETE_19C.md](../../GUIDE_RMAN_COMPLETE_19C.md)

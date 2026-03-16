@@ -9,7 +9,7 @@
 /*
                                                                                              CPU     Host
                                                                                          Seconds      CPU
-          Inst   CON                                             Elapsed         CPU         Per      Per               Net Bytes      Redo Bytes      Redo Bytes  Sess ID
+          Inst WITH Elapsed CPU For For Net Bytes Redo Bytes Redo Bytes Sess ID
  Snap ID   Num    ID BEGIN_TIME          END_TIME                Seconds     Seconds   Container   Second        AAS   Per Second      Per Second         Per Txn    Count
 -------- ----- ----- ------------------- ------------------- ----------- ----------- ----------- -------- ---------- ------------ --------------- --------------- --------
     5330     1     0 2023-10-23 19:16:31 2023-10-23 19:17:32       61.00        0.00        0.00     0.24       0.05          243         772,067         217,595      186

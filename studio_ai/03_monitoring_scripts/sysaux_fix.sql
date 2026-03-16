@@ -59,7 +59,7 @@ alter table WRH$_CON_SYSTEM_EVENT enable row movement;
 alter table WRH$_CON_SYSTEM_EVENT shrink space cascade;
 alter table WRH$_CON_SYSTEM_EVENT disable row movement;
 
--- WRI$_OPTSTAT_HISTGRM_HISTORY non può essere shrinkata... dovrebbe contenere 1 mese di dati
+-- WRI$_OPTSTAT_HISTGRM_HISTORY cannot be shrinked... should contain 1 month of data
 
 select min(SAVTIME) from SYS.WRI$_OPTSTAT_HISTGRM_HISTORY;
 alter index I_WRI$_OPTSTAT_H_OBJ#_ICOL#_ST shrink space;

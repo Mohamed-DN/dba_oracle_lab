@@ -1,6 +1,6 @@
 # TESTLOG GoldenGate Template
 
-Usa questo file come base per tracciare tutti i test della matrice GoldenGate.
+Use this file as the basis for plotting all GoldenGate matrix tests.
 
 ## Metadati sessione
 
@@ -25,12 +25,12 @@ Usa questo file come base per tracciare tutti i test della matrice GoldenGate.
 | 2026-03-13 21:15 | GG-02 | DML UPDATE | PASS | 2 | SNAP-GG-02.png | - |
 | 2026-03-13 21:30 | GG-03 | DML DELETE | PASS | 1 | SNAP-GG-03.png | - |
 
-## Runbook fail (compila solo se FAIL)
+## Runbook fail (compile only if FAIL)
 
 ### ID Test
 
 - Sintomo:
 - Root cause:
 - Fix applicato:
-- Verifica post-fix:
+- Post-fix verification:
 - Tempo totale recovery:

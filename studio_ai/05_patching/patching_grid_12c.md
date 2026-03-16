@@ -1,10 +1,10 @@
 # Patching Grid 12c (legacy reference)
 
-Questa nota e mantenuta solo come riferimento storico.
+This note is kept for historical reference only.
 
 Per il laboratorio attuale Oracle 19c usare:
 
-- [GUIDA_PATCHING_RAC.md](../../GUIDA_PATCHING_RAC.md)
-- [GUIDA_FASE2_GRID_E_RAC.md](../../GUIDA_FASE2_GRID_E_RAC.md)
+- [GUIDE_RAC_PATCHING.md](../../GUIDE_RAC_PATCHING.md)
+- [GUIDE_PHASE2_GRID_AND_RAC.md](../../GUIDE_PHASE2_GRID_AND_RAC.md)
 
-Nota: evita procedure 12c in ambienti 19c senza validazione MOS.
+Note: Avoid 12c procedures in 19c environments without MOS validation.

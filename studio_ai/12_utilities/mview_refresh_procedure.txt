@@ -22,7 +22,7 @@ BEGIN
     EXCEPTION
         WHEN NO_DATA_FOUND
         THEN
-            raise_application_error(-20101,'ATTENZIONE !!!! MVIEW non presente nella tabella di configurazione');
+            raise_application_error(-20101,'ATTENTION !!!! MVIEW is not present in the configuration table');
     END;
 
    BEGIN
@@ -30,7 +30,7 @@ BEGIN
     THEN
         DBMS_MVIEW.REFRESH(list=> N_TAB, method => REFRESH_TYPE, atomic_refresh=> atomic);
 	ELSE
-		raise_application_error(-20101,'ATTENZIONE !!!! MVIEW non abilitata nella tabella di configurazione');
+		raise_application_error(-20101,'WARNING !!!! MVIEW not enabled in configuration table');
 	end if;
    END;
    
@@ -38,7 +38,7 @@ END;
 /
 
 
--- inserimento tabelle di configurazione
+-- insertion of configuration tables
 -- insert into DBA_OP.MVIEWS_CONFIG values (&SCHEMA.&TABLE_NAME,'Y');
 -- commit;
 

@@ -6,7 +6,7 @@ Contenuto sorgente originale:
 
 - [golden_images_ohctl.txt](./golden_images_ohctl.txt)
 
-Guida patching RAC corrente del lab:
+Lab's current RAC patching guide:
 
-- [GUIDA_PATCHING_RAC.md](../../GUIDA_PATCHING_RAC.md)
-- [GUIDA_UPGRADE_RU_RAC.md](../../GUIDA_UPGRADE_RU_RAC.md)
+- [GUIDE_RAC_PATCHING.md](../../GUIDE_RAC_PATCHING.md)
+- [GUIDE_RAC_RU_UPGRADE.md](../../GUIDE_RAC_RU_UPGRADE.md)

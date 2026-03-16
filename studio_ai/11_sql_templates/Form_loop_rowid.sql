@@ -1,5 +1,5 @@
  
--- creazione tabella rowid
+-- rowid table creation
 create table FPAD_RSS_OBJ.rowid_trx tablespace FPAD_RSS_data as select /*+ PARALLEL(16) +*/ rowid "RECORD" from FPAD_RSS_OBJ.trx_test where CONDIZIONI;
  
 create index fpad_rss_obj.rowid_trx_idx on fpad_rss_obj.rowid_trx (record) tablespace fpad_rss_indx parallel 16;
@@ -7,7 +7,7 @@ create index fpad_rss_obj.rowid_trx_idx on fpad_rss_obj.rowid_trx (record) table
 alter index fpad_rss_obj.rowid_trx_idx noparallel;
 
 
--- esecuzione procedura di update
+-- execution of update procedure
 set serveroutput on;
 DECLARE
   MAX_RECORDS CONSTANT INTEGER := 20000;

@@ -7,7 +7,7 @@
 -- ===========================================================================================   
 2. Check log listeners per bombardamento da parte di Microservizi / Application 
 
-   -- vedere in generale quale servizio bombarda di piu' e capire perche non viene utilizzato un ConnPOol o perche si ritrova a aprire e chiudere conn in continuazione
+   -- see in general which service bombs the most and understand why a ConnPOol is not used or why it finds itself opening and closing conn continuously
    tail -1000 /u01/app/orabase/diag/tnslsnr/poddb01-sec-01/listener/trace/listener.log | grep SERVICE_NAME | cut -f 7 -d '=' | cut -f 1 -d ")"  | sort -n | uniq -c
 
      11 oracle
@@ -32,7 +32,7 @@
 	where LOCK_TIME > INTERVAL '10' MINUTE
 	order by 2
 	
-	-- vedere cosa stava facendo la sessione bloccata e la bloccante
+	-- see what the blocked session and the blocker were doing
 	select *
 	from dba_hist_active_sess_history
 	where sql_exec_id = &sql_exc_id
@@ -85,8 +85,8 @@
 	FROM gv$sqlarea s
 	WHERE executions > 100
 	and parsing_schema_name like '%' --not in ('SYS','SYSMAN','DBSNMP','NAGIOS')
-	-- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABELLA')
-	-- and upper(sql_text) like '%TABELLA%'
+	-- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABLE')
+	-- and upper(sql_text) like '%TABLE%'
 	and ROUND((elapsed_time/1000)/executions,3) > 300
 	ORDER BY elapsed_time/executions DESC;
 
@@ -101,8 +101,8 @@
 	FROM gv$sqlarea s
 	WHERE executions > 100
 	and parsing_schema_name not in ('SYS','SYSMAN','DBSNMP','NAGIOS')
-	-- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABELLA')
-	-- and upper(sql_text) like '%TABELLA%'
+	-- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABLE')
+	-- and upper(sql_text) like '%TABLE%'
 	and ROUND((elapsed_time/1000)/executions,3) < 60000
 	and px_servers_executions > 0
 	ORDER BY elapsed_time/executions DESC;
@@ -154,8 +154,8 @@
 11. Check sulla dimensione degli indici ed eventuale rebuild
 
     --
-    -- Check che gli indici abbiamo una dimenzione inferiore al 50% del size della tabella.
-	-- Prendo in considerazione solo le tabelle piu' grandi di 10MB, altrimenti l'initial puo' creare falsi positivi
+    -- Check that the indexes are less than 50% of the size of the table.
+	-- I only take into account tables larger than 10MB, otherwise the initial can create false positives
 	--
 	
 	with tab_part_size as (

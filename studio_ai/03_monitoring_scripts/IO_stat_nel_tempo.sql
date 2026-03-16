@@ -104,7 +104,7 @@ SELECT min.snap_id,
       8865 21/02/2012 23:00:34                 57838      5077110         87.78156       86550      18463380         213.32617
       8866 22/02/2012 00:00:43                 20024      1944850         97.12595       80711      23328560         289.03817
 
----> Se si vuole un intervallo di tempo più stretto mettere :
+---> If you want a narrower time interval put:
 
 AND s.BEGIN_INTERVAL_TIME > to_date('23-feb-2012 17:50:00', 'dd-mon-yyyy hh24:mi:ss')
 AND s.BEGIN_INTERVAL_TIME < to_date('23-feb-2012 20:00:00', 'dd-mon-yyyy hh24:mi:ss')
@@ -179,7 +179,7 @@ SELECT min.snap_id,
 WHERE MAX.snap_id - 1 = MIN.snap_id
 ORDER by 1 desc;
 
----> Se si vuole un intervallo di tempo più stretto mettere :
+---> If you want a narrower time interval put:
 
 AND s.SNAP_TIME > to_date('23-feb-2012 17:50:00', 'dd-mon-yyyy hh24:mi:ss')
 AND s.SNAP_TIME < to_date('23-feb-2012 20:00:00', 'dd-mon-yyyy hh24:mi:ss')

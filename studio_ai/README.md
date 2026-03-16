@@ -1,53 +1,53 @@
-# 📚 Studio AI — Raccolta Operativa DBA Oracle
+# 📚 AI Studio — Oracle DBA Operational Collection
 
 > Questa directory contiene procedure operative, script SQL, e guide tecniche basate su esperienza DBA Enterprise.
-> Ogni sezione è organizzata per argomento e contiene un README dedicato che spiega il contesto e l'uso di ciascuno script.
+> Each section is organized by topic and contains a dedicated README that explains the context and use of each script.
 
 ---
 
-## 📂 Struttura delle Cartelle
+## 📂 Folder Structure
 
 | # | Cartella | Contenuto | Livello |
 |---|---|---|---|
-| 01 | [ASM & Storage](./01_asm_storage/) | Aggiunta dischi ASM (ASMLib + AFD), deallocazione, migrazione storage | ⭐⭐⭐ Fondamentale |
-| 02 | [Data Guard](./02_dataguard/) | Configurazione DG, Active DG, Service Read-Only, verifica GAP, DR recovery | ⭐⭐⭐ Fondamentale |
+| 01 | [ASM & Storage](./01_asm_storage/) | Added ASM disks (ASMLib + AFD), deallocation, storage migration | ⭐⭐⭐ Fondamentale |
+| 02 | [Data Guard](./02_dataguard/) | DG configuration, Active DG, Service Read-Only, GAP verification, DR recovery | ⭐⭐⭐ Fondamentale |
 | 03 | [Monitoring Scripts](./03_monitoring_scripts/) | 48 script SQL per monitoraggio: sessioni, lock, CPU, I/O, ASM, ASH, AWR, Redo | ⭐⭐⭐ Uso Quotidiano |
-| 04 | [User Management](./04_user_management/) | Creazione utenti (nominali, DB, applicativi), profili, password, Vault | ⭐⭐ Importante |
+| 04 | [User Management](./04_user_management/) | Creation of users (nominal, DB, applications), profiles, passwords, Vault | ⭐⭐ Importante |
 | 05 | [Patching](./05_patching/) | Procedure patching Oracle, Golden Images (OHCTL), Release Update | ⭐⭐ Importante |
 | 06 | [Backup & Recovery](./06_backup_recovery/) | Flashback, Restore Point, RMAN checks | ⭐⭐ Importante |
 | 07 | [Performance & Tuning](./07_performance_tuning/) | SQL Plan Management (SPM), AWR analysis, statistiche | ⭐⭐⭐ Uso Quotidiano |
 | 08 | [TDE & Security](./08_tde_security/) | Transparent Data Encryption, Oracle Vault | ⭐⭐ Importante |
 | 09 | [Compression (HCC)](./09_compression/) | DBMS_REDEFINITION online, compressione near-zero downtime | ⭐ Avanzato |
-| 10 | [Partition Manager](./10_partition_manager/) | Package gestione partizioni automatiche | ⭐ Avanzato |
+| 10 | [Partition Manager](./10_partition_manager/) | Automatic partition management package | ⭐ Avanzato |
 | 11 | [SQL Templates](./11_sql_templates/) | Template DDL/DML standard: CREATE TABLE, INDEX, VIEW, TRIGGER, PACKAGE, ecc. | ⭐⭐ Importante |
 | 12 | [Utilities](./12_utilities/) | TEMP/UNDO monitor, MView refresh, truncate procedure, profili UNIX | ⭐ Supporto |
 
 ---
 
-## Catalogo Script Top 20
+## Top 20 Script Catalog
 
-Per avere una vista ordinata degli script (con Top 20 per categoria dove possibile), usa:
+To have a sorted view of the scripts (with Top 20 by category where possible), use:
 
-- [CATALOGO_SCRIPT_TOP20_PER_CATEGORIA.md](./CATALOGO_SCRIPT_TOP20_PER_CATEGORIA.md)
+- [TOP20_SCRIPT_CATALOG_BY_CATEGORY.md](./TOP20_SCRIPT_CATALOG_BY_CATEGORY.md)
 
-Il catalogo include:
+The catalog includes:
 - volume script per ciascuna categoria
-- raggruppamento operativo (monitoring, tuning, backup, security, ecc.)
-- Top script consigliati per studio e uso quotidiano
+- operational grouping (monitoring, tuning, backup, security, etc.)
+- Top recommended scripts for study and daily use
 
 ---
 
-## 🎯 Come Usare Questa Raccolta
+## 🎯 How to Use This Collection
 
-1. **Studia**: Leggi il README di ogni cartella per capire il *perché* di ogni procedura.
+1. **Study**: Read the README of each folder to understand the *why* of each procedure.
 2. **Pratica**: Replica gli script nel tuo laboratorio RAC (adattando nomi di host/DB).
-3. **Confronta**: Ogni procedura qui riflette pratiche Enterprise reali — confrontala con le guide teoriche nel progetto principale.
+3. **Compare**: Each procedure here reflects real Enterprise practices — compare it to the theoretical guides in the main project.
 
 ---
 
 ## 🔗 Collegamento al Progetto Principale
 
 Questa raccolta arricchisce il progetto Oracle RAC principale:
-- Le procedure ASM integrano la [Guida Aggiunta Dischi](../GUIDA_AGGIUNTA_DISCHI_ASM.md)
-- Gli script di monitoring completano la [Guida Comandi DBA](../GUIDA_COMANDI_DBA.md)
-- Le procedure DataGuard si collegano alla [Fase 4](../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- The ASM procedures integrate the [Adding Disks Guide](../GUIDE_ADD_ASM_DISK.md)
+- The monitoring scripts complete the [DBA Command Guide](../GUIDE_DBA_COMMANDS.md)
+- DataGuard procedures link to [Phase 4](../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)

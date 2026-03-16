@@ -1,39 +1,39 @@
 # 01 — ASM & Storage Management
 
-> Procedure operative per la gestione dello storage Oracle ASM in ambiente Enterprise RAC.
+> Operating procedures for managing Oracle ASM storage in an Enterprise RAC environment.
 > Include sia il metodo **ASMLib** che **AFD** (ASM Filter Driver).
 
 ---
 
 ## Panoramica
 
-In un ambiente Oracle RAC Enterprise, lo storage è gestito da ASM (Automatic Storage Management).
-Le operazioni più frequenti sono:
-- **Aggiunta di nuove LUN** per espandere i Disk Group (es. `+DATA`, `+FRA`)
-- **Deallocazione di dischi** durante migrazioni storage (es. da VMAX a Pure Storage)
-- **Migrazione dello storage** tra diversi tipi di array
+In an Oracle RAC Enterprise environment, storage is managed by Automatic Storage Management (ASM).
+The most frequent operations are:
+- **Add new LUNs** to expand Disk Groups (e.g. `+DATA`, `+FRA`)
+- **Disk deallocation** during storage migrations (e.g. from VMAX to Pure Storage)
+- **Storage migration** between different array types
 
 ---
 
-## File Contenuti in Questa Sezione
+## Files Contained in This Section
 
 ### 📋 Procedure Operative
 
-#### [procedura_aggiunta_dischi_asm.md](./procedura_aggiunta_dischi_asm.md)
-Procedura completa passo-passo per aggiungere un disco a un Disk Group esistente.
-Copre: SCSI rescan, partizionamento, creazione disco ASMLib/AFD, ADD DISK SQL, verifica rebalance.
+#### [asm_disk_add_procedure.md](./asm_disk_add_procedure.md)
+Complete step-by-step procedure to add a disk to an existing Disk Group.
+Covers: SCSI rescan, partitioning, ASMLib/AFD disk creation, ADD DISK SQL, rebalance verification.
 
-#### [guida_completa_add_lun.md](./guida_completa_add_lun.md)
-Guida completa unificata per l'aggiunta di LUN, con procedure parallele ASMLib e AFD.
-Include: LUN scan, partizionamento con `parted`, labels ASMLib/AFD, ADD DISK, e note sulla FRA.
+#### [complete_add_lun_guide.md](./complete_add_lun_guide.md)
+Complete unified guide for adding LUNs, with parallel ASMLib and AFD procedures.
+Includes: LUN scan, partitioning with `parted`, ASMLib/AFD labels, ADD DISK, and FRA notes.
 
-#### [deallocazione_dischi_asm.md](./deallocazione_dischi_asm.md)
-Procedura per rimuovere dischi da un Disk Group ASM (es. durante migrazione array).
+#### [asm_disk_deallocation.md](./asm_disk_deallocation.md)
+Procedure for removing disks from an ASM Disk Group (e.g. during array migration).
 
-#### [esempio_aggiunta_afd_produzione.md](./esempio_aggiunta_afd_produzione.md)
-Esempio reale di aggiunta dischi AFD in produzione (database P1NDREHP).
+#### [production_afd_add_example.md](./production_afd_add_example.md)
+Real example of adding AFD disks in production (P1NDREHP database).
 
 ---
 
 ## 🔗 Collegamento
-Vedi anche la guida formativa: [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../GUIDA_AGGIUNTA_DISCHI_ASM.md)
+See also the training guide: [GUIDE_ADD_ASM_DISK.md](../../GUIDE_ADD_ASM_DISK.md)

@@ -21,10 +21,10 @@ Sono presenti script aggiuntivi per:
 
 ## Note operative
 
-- valida sempre gli script in ambiente lab prima di usarli su ambienti critici
+- Always validate scripts in a lab environment before using them on critical environments
 - adatta path, owner e privilegi al tuo DB
 
 ## Riferimenti
 
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+- [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)
+- [GUIDE_DBA_COMMANDS.md](../../GUIDE_DBA_COMMANDS.md)

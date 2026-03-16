@@ -11,8 +11,8 @@ SELECT ROUND(disk_reads/executions) "DSK/EX", ROUND(buffer_gets/executions) "BFF
 FROM gv$sqlarea s
 WHERE executions > 100
 and parsing_schema_name not in ('SYS','SYSMAN','DBSNMP','NAGIOS')
--- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABELLA')
--- and upper(sql_text) like '%TABELLA%'
+-- and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABLE')
+-- and upper(sql_text) like '%TABLE%'
 and sql_text not like 'SELECT /* DS_SVC */%'
 and sql_text not like '/* SQL Analyze%'
 and executions<disk_reads
@@ -135,7 +135,7 @@ and u.username not in ('DBSNMP','SYS','MONITOR','ORACLE_OCM')
 and sql_id='&1'
 ORDER BY disk_reads/executions DESC;
 
--- STATEMENTS CON COSTI ELEVATI
+-- STATEMENTS WITH HIGH COSTS
 
 select SQL_ID, PLAN_HASH_VALUE, max(cost) from v$sql_plan where cost>10000 group by SQL_ID, PLAN_HASH_VALUE order by 3;
 

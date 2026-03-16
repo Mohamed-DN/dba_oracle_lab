@@ -1,0 +1,67 @@
+-- Vers: 1.3
+-- Le utenze nominali hanno il formato COxxxx per esterni e D0xxxx per gli interni e vengono comunicati da Security Governance
+-- Check the HP Service Manager Activity field
+
+#####Creation of single pluggable DB profiles#####
+create profile PROFILO_USER limit
+                 idle_time  15
+     failed_login_attempts   5
+        password_life_time  80
+       password_reuse_time 450
+        password_reuse_max   5
+        password_lock_time  30
+       password_grace_time  10
+  password_verify_function  VERIFY_FUNCTION;
+
+
+#####Creation of GLOBAL pluggable DB profiles#####
+create profile C##PROFILO_USER limit
+                 idle_time  15
+     failed_login_attempts   5
+        password_life_time  80
+       password_reuse_time 450
+        password_reuse_max   5
+        password_lock_time  30
+       password_grace_time  10
+  password_verify_function  VERIFY_FUNCTION
+  container=ALL;
+
+
+## Creation of nominal user on single pluggable with VAULT active: 
+conn dvmanager/&pass
+undefine User
+undefine PasswordIniziale
+accept User prompt "Enter Username: " 
+accept InitialPassword hide prompt "Enter temporary initial password: "
+CREATE USER &&User
+        IDENTIFIED BY "&&PasswordIniziale"
+   DEFAULT TABLESPACE USERS
+ TEMPORARY TABLESPACE TEMP
+              PROFILE PROFILO_USER
+ ACCOUNT UNLOCK
+ PASSWORD EXPIRE;
+
+GRANT CONNECT TO &&User;
+GRANT CREATE SESSION TO &&User;
+ALTER USER &&User DEFAULT ROLE ALL; 
+
+conn &DBA/&pass
+GRANT CREATE SYNONYM TO &&User;
+GRANT VAULT_TOTALE_PARTICIPANT to &&User;
+
+
+
+## Creation of nominal user on pluggable without VAULT: 
+undefine User
+undefine PasswordIniziale
+accept User prompt "Enter Username: " 
+accept InitialPassword hide prompt "Enter temporary initial password: "
+CREATE USER &&User IDENTIFIED BY "&&InitialPassword" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE C##USER_PROFILE ACCOUNT UNLOCK PASSWORD EXPIRE;          
+
+GRANT CONNECT TO &&User;
+GRANT CREATE SESSION TO &&User;
+ALTER USER &&User DEFAULT ROLE ALL; 
+
+conn &DBA/&pass
+GRANT CREATE SYNONYM TO &&User;
+GRANT VAULT_TOTALE_PARTICIPANT to &&User;

@@ -58,7 +58,7 @@ order by norm_stddev;
 -- ### SQL AREA ###
 -- ################
 
--- Email "Idee per controllo sql_id con piani di esecuzioni multipli"
+-- Email "Ideas for sql_id control with multiple execution plans"
 
 select * from (
 select sql_id,sum(execs), min(avg_etime) min_etime, max(avg_etime) max_etime, stddev_etime/min(avg_etime) norm_stddev
@@ -117,7 +117,7 @@ select plan_hash_value,executions,ROUND((elapsed_time/1000000)/executions,0) fro
 
 --- in SQLAREA:
 
---	sql_id in v$sqlarea con più di un piano associato e :
+--	sql_id in v$sqlarea with more than one associated plan and :
 -- 	tempo esecuzione medio maggiore di X millisecondi
 --  numero esecuzione totale maggiore di X volte
 SELECT sql_id, count(plan_hash_value)
@@ -129,7 +129,7 @@ SELECT sql_id, count(plan_hash_value)
 	
 	
 	
--- Email "dati statistici sui cambi di piano" da Maria Bagnato del 14/10/2021 15:03
+-- Email "statistical data on plan changes" from Maria Bagnato dated 10/14/2021 3:03 pm
 
 select
            a.sql_id sql_id

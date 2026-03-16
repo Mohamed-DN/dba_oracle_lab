@@ -22,7 +22,7 @@ break on grantee on privtype
 
 
 col cuser noprint new_value WhichUser
-PROMPT "Roles/Privileges for which user or role? - ";
+prompt "Roles/Privileges for which user or role? - ";
 prompt ( Wildcards OK )
 set term off feed off
 select '&1' cuser from dual;

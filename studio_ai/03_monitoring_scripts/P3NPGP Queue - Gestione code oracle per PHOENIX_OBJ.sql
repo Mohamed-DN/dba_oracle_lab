@@ -1,7 +1,7 @@
 Ciao, NPG è tornata sulla gestione delle code Oracle (rimpiazzate dal modello Kafka, che dopo il deploy di oggi non funziona come da attese)
 
 
--- grant da dare anche all'utente OWNER delle queue tables per corretto funzionamento
+-- grant to also be given to the OWNER user of the queue tables for correct functioning
 grant AQ_ADMINISTRATOR_ROLE      to dba_change;
 grant execute on DBMS_AQ         to dba_change;
 grant execute on DBMS_AQADM      to dba_change;
@@ -14,7 +14,7 @@ grant execute on DBMS_AQ_BQVIEW  to phoenix_obj;
 grant execute on DBMS_LOCK       to phoenix_obj;
 
 
--- query per visualizzare lo stato delle code
+-- query to view the status of the queues
 set lines 500;
 col queue for a70;
 col queue_table for a40
@@ -41,7 +41,7 @@ order by 1;
 
 
 
--- comandi per start/stop delle code
+-- commands to start/stop queues
 
 -- exec DBMS_AQADM.START_QUEUE(QUEUE_NAME,ENQUEUE,DEQUEUE);  
 
@@ -53,7 +53,7 @@ exec DBMS_AQADM.STOP_QUEUE('PHOENIX_OBJ.TRXDENORMALIZATIONERRORQ');
 
 
 
--- purge della queue table associata alla queue
+-- purges the queue table associated with the queue
 DECLARE
 po_t dbms_aqadm.aq$_purge_options_t;
 BEGIN
@@ -63,8 +63,8 @@ END;
 
 
 
--- tabella di log delle eccezioni in fase di enqueue/dequeue generale per PHOENIX_OBJ.
--- con questa select vengono visualizzati tutti gli errori più recenti 
+-- general enqueue/dequeue exception log table for PHOENIX_OBJ.
+-- with this select all the most recent errors are displayed 
 
 select * from PHOENIX_OBJ.ERROR_LOG
 where error_time > trunc(sysdate)

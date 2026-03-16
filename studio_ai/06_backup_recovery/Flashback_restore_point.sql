@@ -14,7 +14,7 @@ How To Flashback Primary Database In Standby Configuration (Doc ID 728374.1)
 commentare script
 
 -- STOP APPLY
--- Per avere una seconda modalità di restore già pronta
+-- To have a second restore mode ready
 
 dgmgrl
 connect sys
@@ -29,11 +29,11 @@ show parameter reco
 show parameter flashback
 alter database flashback on;
 
--- su DB primario
+-- on primary DB
 
 alter system archive log current;
 
--- su DB standby
+-- on standby DB
 
 select flashback_on from v$database;
 select * from V$FLASHBACK_DATABASE_LOG;
@@ -83,9 +83,9 @@ Created guaranteed restore point BEFORE_FIX
 ...
 ...
 
--- CHECK RICEZIONE ARCHIVELOGS SU STANDBY
--- CHECK FRA SU STANDBY
--- CHECK FRA SU PRIMARIO
+-- CHECK RECEIPT OF ARCHIVELOGS ON STANDBY
+-- CHECK BETWEEN ON STANDBY
+-- CHECK BETWEEN PRIMARY
 
 -------------------------
 -- RIMOZIONE FLASHBACK --
@@ -96,7 +96,7 @@ Created guaranteed restore point BEFORE_FIX
 drop restore point before_fix;
 alter database flashback off;
 
--- RESTART APPLY SU STANDBY
+-- RESTART APPLY ON STANDBY
 
 dgmgrl
 connect sys
@@ -104,7 +104,7 @@ show configuration
 edit database 'INBDRDB' set state = 'APPLY-ON';
 exit
 
--- Rischedulare DELETE ARCHIVELOG sullo standby
+-- Reschedule DELETE ARCHIVELOG on standby
 
 --------------------------
 -- IN CASO DI FLASHBACK --

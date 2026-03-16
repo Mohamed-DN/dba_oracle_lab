@@ -1,6 +1,6 @@
 -- HISTORICAL SQL STATISTICS
--- I tempi sono espressi in secondi, per esprimerli in millisecondi utilizzare "/1000" anzichè "/1000000", per esprimerli in microsecondi rimuovere "/1000000"
--- Scommentare le righe commentate nel caso si vogliano avere evidenze delle altre classi di attese
+-- The times are expressed in seconds, to express them in milliseconds use "/1000" instead of "/1000000", to express them in microseconds remove "/1000000"
+-- Uncomment the commented lines in case you want to have evidence of the other classes of expectations
 
 -- LEGENDA
 -- DSK/EX: disk reads per execution
@@ -22,7 +22,7 @@ where sq.dbid = sn.dbid and sq.instance_number = sn.instance_number and sq.snap_
 order by 3,1 asc;
 
 -- HISTORICAL SQL PLANS
--- La prima query mostra tutti i piani d'accesso presenti in AWR, la seconda mostra solo quello specificato
+-- The first query shows all the access plans present in AWR, the second shows only the specified one
 
 select * from table(DBMS_XPLAN.DISPLAY_AWR('&SQL_ID',format=>'TYPICAL'));
 

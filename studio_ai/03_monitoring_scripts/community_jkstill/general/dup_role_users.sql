@@ -14,7 +14,7 @@ prompt This script generates a script to duplicate all users that have
 prompt been granted a particular role of set of roles
 prompt
 prompt the default for the password is the same as the username
-prompt there is a line to uncomment that will use the real password
+prompt there is a line to comment that will use the real password
 prompt
 prompt This script will only do the table grants for a single schema owner
 prompt which is fine for most uses of this script

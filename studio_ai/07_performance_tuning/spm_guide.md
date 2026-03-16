@@ -9,9 +9,9 @@ Flusso tipico:
 
 1. Identifica SQL degradato.
 2. Cattura baseline.
-3. Valida piano candidato.
+3. Validate candidate plan.
 4. Esegui evoluzione baseline controllata.
 
-Consulta anche:
+See also:
 
-- [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+- [GUIDE_DBA_COMMANDS.md](../../GUIDE_DBA_COMMANDS.md)

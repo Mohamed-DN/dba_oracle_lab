@@ -1,13 +1,13 @@
-# Oracle RAC + Data Guard + GoldenGate + Cloud - Guida Definitiva
+# Oracle RAC + Data Guard + GoldenGate + Cloud - Ultimate Guide
 
-> Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
+> Complete step-by-step guide to building an Oracle Enterprise architecture in the lab.
 > **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
 
 ---
 
-> ⚠️ **REQUISITI HARDWARE CRITICI**: Per far girare l'intero ambiente (4 Nodi RAC + 1 Nodo DNS ) **sono necessari almeno 32GB di RAM fisica** sul tuo PC. Se hai 16GB, puoi fare solo metà del lab (es. 2 nodi RAC senza Standby).
+> ⚠️ **CRITICAL HARDWARE REQUIREMENTS**: To run the entire environment (4 RAC Nodes + 1 DNS Node) **at least 32GB of physical RAM** is required on your PC. If you have 16GB, you can only do half the lab (e.g. 2 RAC nodes without Standby).
 
-> 🤖 **AUTOMAZIONE DISPONIBILE**: Vuoi saltare i passaggi noiosi? Nella cartella `scripts/` troverai bash script pronti all'uso per autoconfigurare lo storage (`configure_storage.sh`) e installare il Grid (`install_grid.sh`). Le guide ti mostrano la strada manuale (per imparare), ma gli script sono a tua disposizione!
+> 🤖 **AUTOMATION AVAILABLE**: Want to skip the boring steps? In the `scripts/` folder you will find ready-to-use bash scripts to autoconfigure the storage (`configure_storage.sh`) and install the Grid (`install_grid.sh`). The guides show you the manual way (to learn), but the scripts are at your disposal!
 
 ---
 
@@ -18,7 +18,7 @@
 ║                           IL TUO PC (HOST VIRTUALBOX)                             ║
 ║                                                                                    ║
 ║  ┌──────────────────────────────────────────────────────────────────────────────┐  ║
-║  │              Rete Host-Only #1 (192.168.56.0/24)                             │  ║
+║ │ Host-Only Network #1 (192.168.56.0/24) │ ║
 ║  │                   "Pubblica" per cluster, DNS e management                    │  ║
 ║  └──┬──────────┬──────────┬────────────┬────────────┬─────────────┬────────────┘  ║
 ║     │          │          │            │            │             │               ║
@@ -31,16 +31,16 @@
 ║             ┌────┴────────────┴───┐   ┌────┴─────────────┴───┐                       ║
 ║             │ Host-Only #2         │   │ Host-Only #3         │                       ║
 ║             │ 192.168.1.0/24       │   │ 192.168.2.0/24       │                       ║
-║             │ Interconnect PRIMARY │   │ Interconnect STANDBY │                       ║
+║ │ Interconnect PRIMARY │ │ Interconnect STANDBY │ ║
 ║             └──────────────────────┘   └──────────────────────┘                       ║
 ║                                                                                    ║
 ║  Flussi logici:                                                                    ║
 ║  - Cache Fusion: rac1 <-> rac2  |  racstby1 <-> racstby2                           ║
 ║  - Data Guard: RACDB (primary) -> RACDB_STBY (LGWR ASYNC)                          ║
-║  - GoldenGate: Extract/Pump sul primary -> Replicat su dbtarget/OCI                ║
-║  - Enterprise Manager (emcc1): monitora tutti i nodi + target                      ║
+║ - GoldenGate: Extract/Pump on primary -> Replicat on dbtarget/OCI ║
+║ - Enterprise Manager (emcc1): monitor all nodes + targets ║
 ║                                                                                    ║
-║  Dischi Condivisi (Shareable VDI):                                                 ║
+║ Shared Disks (Shareable VDI): ║
 ║  ┌──────────────────────────────┐     ┌──────────────────────────────┐              ║
 ║  │ rac1 + rac2 (PRIMARY)        │     │ racstby1 + racstby2 (STBY)   │              ║
 ║  │ asm-crs-disk1    2GB         │     │ asm-stby-crs-1      2GB      │              ║
@@ -54,184 +54,184 @@
 ╚════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
-> In basso trovi anche la sezione **Architettura Complessiva** in formato ASCII con dettagli rete/dischi.
+> Below you will also find the **Overall Architecture** section in ASCII format with network/disk details.
 
 ---
 
-## Da Dove Iniziare (Percorso Consigliato)
+## Where to Start (Recommended Route)
 
 ### 1) Teoria iniziale (2 ore)
 
-1. [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md)
-2. [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md)
-3. [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md)
+1. [GUIDE_ORACLE_ARCHITECTURE.md](./GUIDE_ORACLE_ARCHITECTURE.md)
+2. [GUIDE_DBA_COMMANDS.md](./GUIDE_DBA_COMMANDS.md)
+3. [DAILY_STUDY_PLAN.md](./DAILY_STUDY_PLAN.md)
 
 ### 2) Esegui il lab base in ordine (Fasi 0 -> 8)
 
-1. [GUIDA_FASE0_SETUP_MACCHINE.md](./GUIDA_FASE0_SETUP_MACCHINE.md)
-2. [GUIDA_FASE1_PREPARAZIONE_OS.md](./GUIDA_FASE1_PREPARAZIONE_OS.md)
-3. [GUIDA_FASE2_GRID_E_RAC.md](./GUIDA_FASE2_GRID_E_RAC.md)
-4. [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md)
-5. [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) - include anche `Protection Mode`, `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`
-6. [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
-7. [GUIDA_FASE6_TEST_VERIFICA.md](./GUIDA_FASE6_TEST_VERIFICA.md)
-8. [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
-9. [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)
+1. [GUIDE_PHASE0_MACHINE_SETUP.md](./GUIDE_PHASE0_MACHINE_SETUP.md)
+2. [GUIDE_PHASE1_OS_PREPARATION.md](./GUIDE_PHASE1_OS_PREPARATION.md)
+3. [GUIDE_PHASE2_GRID_AND_RAC.md](./GUIDE_PHASE2_GRID_AND_RAC.md)
+4. [GUIDE_PHASE3_RAC_STANDBY.md](./GUIDE_PHASE3_RAC_STANDBY.md)
+5. [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](./GUIDE_PHASE4_DATAGUARD_DGMGRL.md) - also includes `Protection Mode`, `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`
+6. [GUIDE_PHASE5_GOLDENGATE.md](./GUIDE_PHASE5_GOLDENGATE.md)
+7. [GUIDE_PHASE6_TEST_VERIFY.md](./GUIDE_PHASE6_TEST_VERIFY.md)
+8. [GUIDE_PHASE7_RMAN_BACKUP.md](./GUIDE_PHASE7_RMAN_BACKUP.md)
+9. [GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md](./GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md)
 
 ### 3) Sprint GoldenGate esteso (40 test)
 
-- Guida principale: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- Main Guide: [GUIDE_PHASE5_GOLDENGATE.md](./GUIDE_PHASE5_GOLDENGATE.md)
 - Template log test: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
-- Pianificazione giornaliera: [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md) (addendum operativo GoldenGate)
+- Daily Schedule: [DAILY_STUDY_PLAN.md](./DAILY_STUDY_PLAN.md) (GoldenGate Operational Addendum)
 
-### 4) Operazioni avanzate + Cloud + esami
+### 4) Advanced operations + Cloud + exams
 
-1. Protection Mode / switch modalita: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
-2. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
-3. PDB propagation + services: [extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md)
-4. Domande DBA Oracle: [extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md](./extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md)
+1. Protection Mode / switch modalita: [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](./GUIDE_PHASE4_DATAGUARD_DGMGRL.md)
+2. Switchover / Failover / Migration: [GUIDE_FULL_SWITCHOVER.md](./GUIDE_FULL_SWITCHOVER.md), [GUIDE_FAILOVER_AND_REINSTATE.md](./GUIDE_FAILOVER_AND_REINSTATE.md), [GUIDE_GOLDENGATE_MIGRATION.md](./GUIDE_GOLDENGATE_MIGRATION.md)
+3. PDB propagation + services: [extra_dba/GUIDE_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDE_PDB_DATAGUARD_SERVICES.md)
+4. Oracle DBA Questions: [extra_dba/GUIDE_ORACLE_DBA_QUESTIONS.md](./extra_dba/GUIDE_ORACLE_DBA_QUESTIONS.md)
 5. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
-6. Cloud, rete e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
-7. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+6. Cloud, Network and MAA: [GUIDE_GOLDENGATE_OCI_ARM.md](Z./GUIDE_GOLDENGATE_OCI_ARM.md), [GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md), [GUIDE_MAA_BEST_PRACTICES.md](Z./GUIDE_MAA_BEST_PRACTICES.md)
+7. Exams and PostgreSQL: [GUIDE_EXAM_REVIEW.md](./GUIDE_EXAM_REVIEW.md), [GUIDE_ORACLE_TO_POSTGRES_MIGRATION.md](./GUIDE_ORACLE_TO_POSTGRES_MIGRATION.md)
 
-> **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
+> **Tip**: The complete and updated plan is at [DAILY_STUDY_PLAN.md](Z./DAILY_STUDY_PLAN.md), 8 weeks (40 days) at 3 hours/day.
 
 ---
 
-## Roadmap Studio Ribilanciata (8 settimane, 3h/giorno)
+## Rebalanced Studio Roadmap (8 weeks, 3h/day)
 
-Questa roadmap sintetica allinea il README al piano aggiornato in [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md).
+This condensed roadmap aligns the README with the plan updated in [DAILY_STUDY_PLAN.md](./DAILY_STUDY_PLAN.md).
 
-### Pattern settimanale consigliato
+### Recommended weekly pattern
 
-| Giorno | Intensita | Focus |
+| Day | Intensita | Focus |
 |---|---|---|
-| 1 | HIGH | Nuovo tema + lab nuovo |
+| 1 | HIGH | New theme + new lab |
 | 2 | HIGH | Continuazione + troubleshooting |
 | 3 | MEDIUM | Consolidamento + test guidati |
-| 4 | HIGH | Nuovo blocco tecnico |
-| 5 | LIGHT | Ripasso attivo + backlog fix + documentazione |
+| 4 | HIGH | New technical block |
+| 5 | LIGHT | Active review + backlog fix + documentation |
 | 6 (opzionale) | BUFFER | Recupero task o test extra |
 | 7 | OFF | Riposo tecnico (max 30 min lettura leggera) |
 
-### Carico per fase (vista rapida)
+### Load per phase (quick view)
 
-| Settimana | Focus | Uscita minima |
+| Week | Focus | Uscita minima |
 |---|---|---|
 | 1 | OS + Grid + ASM | Grid stabile + prerequisiti chiusi |
-| 2 | RAC + standby prep | RAC operativo + standby pronto |
+| 2 | RAC + standby prep | RAC operational + standby ready |
 | 3 | Data Guard + RMAN + GG base | broker ok + backup validato + GG base |
 | 4 | GG avanzato + HA test | almeno 24 test GG chiusi |
 | 5 | Enterprise Manager + monitoraggio + cloud | OMS/Agent attivi + alerting base funzionante |
-| 6 | Migrazione Oracle -> PostgreSQL | flusso end-to-end completato |
+| 6 | Oracle -> PostgreSQL migration | flusso end-to-end completato |
 | 7 | Preparazione 1Z0-082 | 2 mock exam + revisione errori |
 | 8 | Preparazione 1Z0-083 | 2 mock exam + runbook finali |
 
 ### Mock exam Oracle (allineamento pratico)
 
-Riferimento esami in inglese (Oracle University, verificato il 14 marzo 2026):
+Exam reference in English (Oracle University, verified March 14, 2026):
 
 - `1Z0-082` (Oracle Database Administration I)
 - `1Z0-083` (Oracle Database Administration II)
 - pagina esame EN 1Z0-082: https://education.oracle.com/oracle-database-administration-i/pexam_1Z0-082
 - pagina esame EN 1Z0-083: https://education.oracle.com/oracle-database-administration-ii/pexam_1Z0-083
 
-Nota: numero domande e passing score possono cambiare per lingua/track; verifica sempre nel portale Oracle prima della prenotazione.
+Note: number of questions and passing score may change per language/track; Always check the Oracle portal before booking.
 
-Calendario consigliato:
+Recommended calendar:
 
-- settimana 7: 2 simulazioni da 120 minuti
-- settimana 8: 2 simulazioni da 120 minuti
-- dopo ogni mock: 40-60 minuti di error review per categoria
+- week 7: 2 simulations of 120 minutes
+- week 8: 2 simulations of 120 minutes
+- after each mock: 40-60 minutes of error review per category
 
-### Sprint GoldenGate (40 test) senza overload
+### Sprint GoldenGate (40 tests) without overload
 
-- settimana 3: `GG-01..GG-16`
-- settimana 4: `GG-17..GG-32`
-- buffer settimana 4/5: `GG-33..GG-40` + retest fail
+- week 3: `GG-01..GG-16`
+- week 4: `GG-17..GG-32`
+- buffer week 4/5: `GG-33..GG-40` + retest fail
 
-Materiale operativo:
+Operational material:
 
-- guida: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- guide: [GUIDE_PHASE5_GOLDENGATE.md](./GUIDE_PHASE5_GOLDENGATE.md)
 - template testlog: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
 
 ---
 
-## Indice Completo
+## Full Index
 
-### Teoria (Leggi PRIMA di costruire)
+### Theory (Read BEFORE building)
 
-| # | Documento | File | Cosa Impari |
+| # | Documento | File | What You Learn |
 |---|---|---|---|
-| 1 | **Architettura Oracle** | [GUIDA_ARCHITETTURA](./GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, Temp, ASM, Cache Fusion |
-| 2 | **Comandi DBA** | [GUIDA_COMANDI_DBA](./GUIDA_COMANDI_DBA.md) | 100+ query SQL, script Oracle Base, health check |
-| 3 | **CDB/PDB, Utenti, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, utenti, ruoli, SQL Tuning |
-| 4 | **Piano di Studio** | [PIANO_STUDIO](./PIANO_STUDIO_GIORNALIERO.md) | 8 settimane (40 giorni) x 3h/giorno, roadmap e milestone |
-| 5 | **Top 100 Script DBA** | [TOP_100_SCRIPT](./TOP_100_SCRIPT_DBA.md) | I 100 script piu utili ogni giorno - lock, AWR, tuning, ASM, I/O |
-| 6 | **Attivita Lab RAC** | [ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici: health check, AWR, switchover, GG test |
+| 1 | **Architettura Oracle** | [GUIDA_ARCHITETTURA](./GUIDE_ORACLE_ARCHITECTURE.md) | SGA, PGA, Redo Log, Undo, Temp, ASM, Cache Fusion |
+| 2 | **DBA Commands** | [GUIDA_COMANDI_DBA](./GUIDE_DBA_COMMANDS.md) | 100+ query SQL, script Oracle Base, health check |
+| 3 | **CDB/PDB, Users, EM Express** | [GUIDA_CDB_PDB_UTENTI](./GUIDE_CDB_PDB_USERS.md) | Multitenant, PDB create/clone/plug, users, roles, SQL Tuning |
+| 4 | **Study Plan** | [PIANO_STUDIO](./DAILY_STUDY_PLAN.md) | 8 weeks (40 days) x 3h/day, roadmap and milestones |
+| 5 | **Top 100 Script DBA** | [TOP_100_SCRIPT](./TOP_100_SCRIPT_DBA.md) | The 100 most useful scripts every day - lock, AWR, tuning, ASM, I/O |
+| 6 | **RAC Lab Activities** | [ATTIVITA_LAB](./GUIDE_RAC_LAB_ACTIVITIES.md) | 10 practical exercises: health check, AWR, switchover, GG test |
 
 ---
 
 ### Costruzione Lab (Segui in ordine!)
 
-| # | Fase | File | Cosa Fai |
+| # | Phase | File | What are you doing |
 |---|---|---|---|
-| 7 | **Fase 0** | [SETUP MACCHINE](./GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS Dnsmasq, dischi ASM oracleasm, installa OL 7.9 |
-| 8 | **Fase 1** | [PREPARAZIONE OS](./GUIDA_FASE1_PREPARAZIONE_OS.md) | Configura rete, DNS, utenti, SSH, kernel |
-| 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
-| 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
-| 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard, Protection Mode (`MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`) |
-| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract integrato sul primary, Pump, Replicat target locale/OCI + varianti avanzate documentate |
-| 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
-| 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
-| 15 | **Fase 8** | [ENTERPRISE MANAGER](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
-| 16 | **RMAN Completa** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Runbook RMAN completo + test lab: config, backup, validate, recovery, catalog |
+| 7 | **Phase 0** | [SETUP MACCHINE](./GUIDE_PHASE0_MACHINE_SETUP.md) | Create VirtualBox VM, Dnsmasq DNS, oracleasm ASM disks, install OL 7.9 |
+| 8 | **Phase 1** | [PREPARAZIONE OS](./GUIDE_PHASE1_OS_PREPARATION.md) | Configure network, DNS, users, SSH, kernel |
+| 9 | **Phase 2** | [GRID + RAC](./GUIDE_PHASE2_GRID_AND_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
+| 10 | **Phase 3** | [RAC STANDBY](./GUIDE_PHASE3_RAC_STANDBY.md) | RMAN Duplicate, Static Listener, MRP |
+| 11 | **Phase 4** | [DATA GUARD](./GUIDE_PHASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard, Protection Mode (`MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`) |
+| 12 | **Phase 5** | [GOLDENGATE](./GUIDE_PHASE5_GOLDENGATE.md) | Integrated extract on primary, Pump, Replicat target local/OCI + advanced variants documented |
+| 13 | **Phase 6** | [VERIFICATION TEST](./GUIDE_PHASE6_TEST_VERIFY.md) | Test DG + GG + stress + node crash |
+| 14 | **Phase 7** | [RMAN BACKUP](./GUIDE_PHASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
+| 15 | **Phase 8** | [ENTERPRISE MANAGER](./GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
+| 16 | **RMAN Complete** | [GUIDA_RMAN_19C](./GUIDE_RMAN_COMPLETE_19C.md) | Complete RMAN runbook + test lab: config, backup, validate, recovery, catalog |
 
 ---
 
-### Operazioni Avanzate (Dopo il lab base)
+### Advanced Operations (After the basic lab)
 
-| # | Documento | File | Cosa Impari |
+| # | Documento | File | What You Learn |
 |---|---|---|---|
-| 17 | **Protection Mode** | [GUIDA_FASE4_DG](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Cambio modalita Data Guard: `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC` |
-| 18 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
-| 19 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
-| 20 | **Migrazione GG** | [GUIDA_MIGRAZIONE](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration con GoldenGate |
-| 21 | **Patching & RU** | [GUIDA_PATCHING](./GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, e pulizia filesystem |
-| 22 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDA_UPGRADE_RU_RAC.md) | Skip version, rollback auto, upgrade workflow |
-| 23 | **PDB + Services + DG** | [GUIDA_PDB_DG](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md) | Creazione PDB sul primary, propagazione sullo standby, servizi RAC e listener |
-| 24 | **Attivita Lab RAC** | [GUIDA_ATTIVITA_LAB](./GUIDA_ATTIVITA_LAB_RAC.md) | 10 esercizi pratici sul lab: health check, AWR, lock, switchover, GG test |
+| 17 | **Protection Mode** | [GUIDA_FASE4_DG](./GUIDE_PHASE4_DATAGUARD_DGMGRL.md) | Cambio modalita Data Guard: `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC` |
+| 18 | **Switchover** | [GUIDA_SWITCHOVER](./GUIDE_FULL_SWITCHOVER.md) | Step-by-step Switchover + Switchback |
+| 19 | **Failover + Reinstate** | [GUIDA_FAILOVER](./GUIDE_FAILOVER_AND_REINSTATE.md) | Failover emergenza, reinstate, FSFO |
+| 20 | **Migration GG** | [GUIDA_MIGRAZIONE](./GUIDE_GOLDENGATE_MIGRATION.md) | Zero-downtime migration with GoldenGate |
+| 21 | **Patching & RU** | [GUIDA_PATCHING](./GUIDE_RAC_PATCHING.md) | Combo Patch, OJVM, e pulizia filesystem |
+| 22 | **Upgrade RU** | [GUIDA_UPGRADE_RU](./GUIDE_RAC_RU_UPGRADE.md) | Skip version, rollback auto, upgrade workflow |
+| 23 | **PDB + Services + DG** | [GUIDA_PDB_DG](./extra_dba/GUIDE_PDB_DATAGUARD_SERVICES.md) | PDB creation on primary, propagation on standby, RAC and listener services |
+| 24 | **RAC Lab Activities** | [GUIDA_ATTIVITA_LAB](./GUIDE_RAC_LAB_ACTIVITIES.md) | 10 practical lab exercises: health check, AWR, lock, switchover, GG test |
 
 ### Extra DBA (Post-lab)
 
 | Documento | File | Descrizione |
 |---|---|---|
-| **Indice Extra DBA** | [EXTRA_DBA](./extra_dba/README.md) | Attivita extra laboratorio gia presenti nel repo: Data Guard avanzato, RAC operations, backup/recovery, monitoring e day-2 |
-| **Catalogo attivita DBA** | [CATALOGO_DBA](./extra_dba/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attivita Oracle DBA reali: availability, backup, performance, security, TDE, HA/DR, multitenant, patching |
-| **Checklist operativa DBA** | [CHECKLIST_DBA](./extra_dba/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero, settimanale, mensile, trimestrale, pre-change e post-incident |
-| **Guida domande DBA Oracle** | [DOMANDE_DBA](./extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande tecniche, risposte chiare, follow-up e scenari realistici su Oracle DBA |
+| **Indice Extra DBA** | [EXTRA_DBA](./extra_dba/README.md) | Extra laboratory activities already present in the repo: advanced Data Guard, RAC operations, backup/recovery, monitoring and day-2 |
+| **DBA Business Catalog** | [CATALOGO_DBA](./extra_dba/GUIDE_DBA_ACTIVITY_CATALOG.md) | Comprehensive overview of real Oracle DBA activities: availability, backup, performance, security, TDE, HA/DR, multitenant, patching |
+| **DBA Operational Checklist** | [CHECKLIST_DBA](./extra_dba/GUIDE_DBA_ACTIVITY_CHECKLIST.md) | Daily, weekly, monthly, quarterly, pre-change and post-incident runbook |
+| **Oracle DBA Question Guide** | [DOMANDE_DBA](./extra_dba/GUIDE_ORACLE_DBA_QUESTIONS.md) | Technical questions, clear answers, follow-ups and realistic scenarios on Oracle DBA |
 
-> `extra_dba` e `studio_ai` restano separati: `extra_dba` e un indice di percorsi avanzati del lab, `studio_ai` resta la libreria operativa di script e note reali.
-
----
-
-### Cloud e DBA Professionale (Settimana 5)
-
-| # | Documento | File | Cosa Impari |
-|---|---|---|---|
-| 23 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDA_GOLDENGATE_OCI_ARM.md) | OCI compute target, scelta tra free validation e migration target coerente |
-| 24 | **Rete lab + OCI** | [GUIDA_RETE_OCI](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | Host-only, NAT, IP pubblico, VPN, NSG, listener e porte GoldenGate |
-| 25 | **Attivita DBA** | [GUIDA_ATTIVITA_DBA](./GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
-| 26 | **MAA Best Practices** | [GUIDA_MAA](./GUIDA_MAA_BEST_PRACTICES.md) | Validazione lab vs Oracle MAA Gold |
+> `extra_dba` and `studio_ai` remain separate: `extra_dba` is an index of advanced lab paths, `studio_ai` remains the operational library of scripts and real notes.
 
 ---
 
-### Esame + Migrazione PostgreSQL (Settimane 6-8)
+### Cloud and Professional DBA (Week 5)
 
-| # | Documento | File | Cosa Impari |
+| # | Documento | File | What You Learn |
 |---|---|---|---|
-| 26 | **Ripasso Esame** | [GUIDA_ESAME_REVIEW](./GUIDA_ESAME_REVIEW.md) | Tutti gli argomenti 1Z0-082 + 1Z0-083 (Admin + SQL + DBA Pro 2) |
-| 27 | **Oracle -> PostgreSQL** | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione Oracle->PostgreSQL con GoldenGate, ora2pg, ODBC |
+| 23 | **Cloud GoldenGate** | [GUIDA_CLOUD_GG](./GUIDE_GOLDENGATE_OCI_ARM.md) | OCI compute target, scelta tra free validation e migration target coerente |
+| 24 | **Lab network + OCI** | [GUIDA_RETE_OCI](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md) | Host-only, NAT, public IP, VPN, NSG, listeners and GoldenGate ports |
+| 25 | **DBA Activities** | [GUIDA_ATTIVITA_DBA](./GUIDE_DBA_ACTIVITIES.md) | Batch Jobs, AWR/ADDM/ASH, Patching, DataPump, Security |
+| 26 | **MAA Best Practices** | [GUIDA_MAA](./GUIDE_MAA_BEST_PRACTICES.md) | Lab validation vs Oracle MAA Gold |
+
+---
+
+### Exam + PostgreSQL Migration (Weeks 6-8)
+
+| # | Documento | File | What You Learn |
+|---|---|---|---|
+| 26 | **Exam Review** | [GUIDA_ESAME_REVIEW](./GUIDE_EXAM_REVIEW.md) | All topics 1Z0-082 + 1Z0-083 (Admin + SQL + DBA Pro 2) |
+| 27 | **Oracle -> PostgreSQL** | [GUIDA_MIGRAZIONE_PG](./GUIDE_ORACLE_TO_POSTGRES_MIGRATION.md) | Oracle->PostgreSQL migration with GoldenGate, ora2pg, ODBC |
 
 ---
 
@@ -239,35 +239,35 @@ Materiale operativo:
 
 | Documento | File | Descrizione |
 |---|---|---|
-| **Da Lab a Produzione** | [GUIDA_PRODUZIONE](./GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security, monitoring |
-| **Validazione Oracle BP** | [VALIDAZIONE_BP](./VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98%, GUI vs CLI |
-| **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ANALISI_ORACLEBASE_VAGRANT.md) | Confronto con Oracle Base Vagrant |
-| **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
-| **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
-| **Guida SSH Keys RAC** | [GUIDA_SSH_KEYS](./GUIDA_SSH_KEYS_RAC.md) | User equivalence per `grid`/`oracle`/`root`, reset rapido e troubleshooting `PRVG-2019` |
-| **Guida Fase 8 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
+| **From Lab to Production** | [GUIDA_PRODUZIONE](./GUIDE_FROM_LAB_TO_PRODUCTION.md) | Sizing, HugePages, security, monitoring |
+| **Oracle BP Validation** | [VALIDAZIONE_BP](./BEST_PRACTICES_VALIDATION.md) | Audit 54 punti, scorecard 98%, GUI vs CLI |
+| **Analisi Oracle Base** | [ANALISI_ORACLEBASE](./ORACLEBASE_VAGRANT_ANALYSIS.md) | Comparison with Oracle Base Vagrant |
+| **ASM Disk Management** | [GUIDA_ASM_DISK](./GUIDE_ADD_ASM_DISK.md) | Add/Create ASM Disks (ASMLib + AFD) |
+| **Complete RMAN Guide 19c** | [GUIDA_RMAN_19C](./GUIDE_RMAN_COMPLETE_19C.md) | Backup, restore, recovery, Data Guard and practical tests with official Oracle sources |
+| **SSH Keys RAC Guide** | [GUIDA_SSH_KEYS](./GUIDE_RAC_SSH_KEYS.md) | User equivalence per `grid`/`oracle`/`root`, reset rapido e troubleshooting `PRVG-2019` |
+| **Enterprise Manager Phase 8 Guide** | [GUIDA_EM13C](./GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md) | Complete OEM Cloud Control 13.5 setup, operational monitoring and runbook testing |
 | **Template Test GoldenGate** | [TESTLOG_GG_TEMPLATE](./TESTLOG_GOLDENGATE_TEMPLATE.md) | Template pronto per tracciare PASS/FAIL, lag, evidenze e fix |
 
 ---
 
-### 📚 Enterprise DBA Toolkit (Studio AI)
+### 📚 Enterprise DBA Toolkit (AI Studio)
 
-> Raccolta di script e procedure operative reali da ambienti Enterprise di produzione.
-> Estratti e organizzati dalla cartella `studio/` con appunti operativi.
+> Collection of real scripts and operational procedures from production Enterprise environments.
+> Extracted and organized from the `studio/` folder with operational notes.
 
 | # | Area | Descrizione |
 |---|---|---|
-| 01 | [ASM & Storage](./studio_ai/01_asm_storage/) | Aggiunta/rimozione dischi ASM, migrazione LUN (ASMLib + AFD) |
-| 02 | [Data Guard](./studio_ai/02_dataguard/) | Configurazione DG, Active DG, verifica GAP, recovery DR |
+| 01 | [ASM & Storage](./studio_ai/01_asm_storage/) | Add/Remove ASM Disks, LUN Migration (ASMLib + AFD) |
+| 02 | [Data Guard](./studio_ai/02_dataguard/) | DG configuration, Active DG, GAP verification, DR recovery |
 | 03 | [Script Monitoring](./studio_ai/03_monitoring_scripts/) | 48 script SQL: sessioni, lock, CPU, I/O, ASH, ASM |
-| 04 | [Gestione Utenti](./studio_ai/04_user_management/) | Template creazione utenti, policy password, Vault |
+| 04 | [User Management](./studio_ai/04_user_management/) | User creation template, password policy, Vault |
 | 05 | [Patching](./studio_ai/05_patching/) | Patching Oracle, Golden Images (OHCTL) |
 | 06 | [Backup & Recovery](./studio_ai/06_backup_recovery/) | Flashback, Restore Point, verifiche RMAN |
-| 07 | [Performance & Tuning](./studio_ai/07_performance_tuning/) | SPM, analisi AWR, gestione statistiche |
+| 07 | [Performance & Tuning](./studio_ai/07_performance_tuning/) | SPM, AWR analysis, statistics management |
 | 08 | [TDE & Sicurezza](./studio_ai/08_tde_security/) | Transparent Data Encryption, Oracle Vault |
 | 09 | [Compressione](./studio_ai/09_compression/) | DBMS_REDEFINITION online, near-zero downtime |
-| 10 | [Partition Manager](./studio_ai/10_partition_manager/) | Package gestione automatica partizioni |
-| 11 | [Template SQL](./studio_ai/11_sql_templates/) | Template DDL/DML standard con error handling |
+| 10 | [Partition Manager](./studio_ai/10_partition_manager/) | Automatic partition management package |
+| 11 | [Template SQL](./studio_ai/11_sql_templates/) | Standard DDL/DML template with error handling |
 | 12 | [Utility](./studio_ai/12_utilities/) | Monitor TEMP/UNDO, MView refresh, DBA utility package |
 
 ---
@@ -279,8 +279,8 @@ Materiale operativo:
 |                      VIRTUALBOX HOST (Il tuo PC)                          |
 |                                                                           |
 |  Host-Only #1: 192.168.56.0/24 (Pubblica)                                |
-|  Host-Only #2: 192.168.1.0/24  (Interconnect Primario)                   |
-|  Host-Only #3: 192.168.2.0/24  (Interconnect Standby)                    |
+|  Host-Only #2: 192.168.1.0/24 (Primary Interconnect)                   |
+|  Host-Only #3: 192.168.2.0/24 (Interconnect Standby)                    |
 |                                                                           |
 |  +----------+   +----------+----------+   +----------+----------+        |
 |  | dnsnode  |   | rac1     | rac2     |   | racstby1 | racstby2 |        |
@@ -296,7 +296,7 @@ Materiale operativo:
 |                  +------------------+     +------------------+           |
 |                                                                           |
 |  SCAN Primary: rac-scan       --> 192.168.56.105, .106, .107             |
-|  SCAN Standby: racstby-scan   --> 192.168.56.115, .116, .117             |
+|  SCAN Standby: racstby-scan --> 192.168.56.115, .116, .117             |
 |                                                                           |
 |  +-------------------------------+   +-------------------------------+   |
 |  | RAC PRIMARY (RACDB)           |   | RAC STANDBY (RACDB_STBY)     |   |
@@ -310,7 +310,7 @@ Materiale operativo:
 |  +---------------------------------------------------------------+        |
 |  | TARGET ENVIRONMENT (dbtarget / Cloud OCI / Altra VM)          |        |
 |  | - Oracle Database Target (Replica Oracle-Oracle)              |        |
-|  | - PostgreSQL 16 Target   (Migrazione Oracle-PostgreSQL)       |        |
+|  | - PostgreSQL 16 Target (Oracle-PostgreSQL Migration)       |        |
 |  |   --> Riceve dati via GoldenGate Replicat                     |        |
 |  +---------------------------------------------------------------+        |
 +===========================================================================+
@@ -329,11 +329,11 @@ Materiale operativo:
 | Oracle Enterprise Manager | 13.5 | [Oracle Software Delivery Cloud](https://edelivery.oracle.com) |
 | VirtualBox | Ultimo | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |
 
-> Scarica TUTTO prima di iniziare! Guarda la lista completa in [FASE 0](./GUIDA_FASE0_SETUP_MACCHINE.md).
+> Download EVERYTHING before you start! See the full list in [PHASE 0](./GUIDE_PHASE0_MACHINE_SETUP.md).
 
 ---
 
-## Piano IP
+## IP plan
 
 | Hostname | IP Pubblica | IP Privata | IP VIP | Note |
 |---|---|---|---|---|
@@ -341,8 +341,8 @@ Materiale operativo:
 | rac1 | 192.168.56.101 | 192.168.1.101 | 192.168.56.103 | RAC Primary N.1 |
 | rac2 | 192.168.56.102 | 192.168.1.102 | 192.168.56.104 | RAC Primary N.2 |
 | rac-scan | 192.168.56.105-107 | -- | -- | SCAN (3 IP) |
-| racstby1 | 192.168.56.111 | 192.168.2.111 | 192.168.56.113 | Standby N.1 |
-| racstby2 | 192.168.56.112 | 192.168.2.112 | 192.168.56.114 | Standby N.2 |
+| racstby1 | 192.168.56.111 | 192.168.2.111 | 192.168.56.113 | Standby No.1 |
+| racstby2 | 192.168.56.112 | 192.168.2.112 | 192.168.56.114 | Standby No.2 |
 | racstby-scan | 192.168.56.115-117 | -- | -- | SCAN Standby (3 IP) |
 | dbtarget | Cloud OCI | -- | -- | GoldenGate Replicat |
 

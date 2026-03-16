@@ -3,8 +3,8 @@
 -- specify line width when calling
 -- eg @title 'report heading' 90
 
-rem TITLE.SQL   -     This SQL*Plus script builds a standard report 
-rem                   heading for database reports that are XX columns
+REM TITLE.SQL   -     This SQL*Plus script builds a standard report 
+REM                   heading for database reports that are XX columns
 rem
 column  TODAY		NEW_VALUE 	CURRENT_DATE		NOPRINT
 column  TIME            NEW_VALUE	CURRENT_TIME		NOPRINT

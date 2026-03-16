@@ -44,9 +44,9 @@ order by name, inst_id
 
 
 set head on
-prompt			
-prompt			
-prompt			
+prompt 		
+prompt 		
+prompt 		
 ttitle off
 
 undef 1

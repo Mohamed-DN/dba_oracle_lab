@@ -1,21 +1,21 @@
 # Recovery Data Guard Post-Reboot
 
-> **Problema**: Dopo un riavvio improvviso del server (es. crash, manutenzione HW), spesso il Data Guard Broker perde la sincronizzazione e il MRP (Managed Recovery Process) non riparte automaticamente.
+> **Problem**: After a sudden server restart (e.g. crash, HW maintenance), the Data Guard Broker often loses synchronization and the MRP (Managed Recovery Process) does not restart automatically.
 
 ---
 
 ## Sintomi
 
-- Lo standby è in stato `MOUNT` ma il MRP non è attivo
+- Standby is on `MOUNT` state but MRP is not active
 - Il Broker mostra `ORA-16766: Redo Apply is stopped`
-- GAP crescente tra primary e standby
+- Growing gap between primary and standby
 - I log archivi non vengono spediti
 
 ---
 
-## Procedura di Recovery
+## Recovery procedure
 
-### 1. Verifica lo stato del Broker
+### 1. Check the status of the Broker
 
 ```sql
 -- Sul PRIMARY o STANDBY
@@ -27,7 +27,7 @@ DGMGRL> show configuration;
 DGMGRL> show database 'NOME_DB_STANDBY';
 ```
 
-### 2. Verifica i log e il GAP
+### 2. Check the logs and GAP
 
 ```sql
 -- Sullo STANDBY
@@ -44,7 +44,7 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
 ```
 
-### 4. Se il Broker è corrotto, ricrealo
+### 4. If the Broker is corrupt, recreate it
 
 ```sql
 -- Disabilita e poi riabilita il Broker su entrambi i lati
@@ -58,7 +58,7 @@ ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 ```
 
-### 5. Riedita la configurazione nel Broker (se necessario)
+### 5. Re-edit the configuration in the Broker (if necessary)
 
 ```sql
 dgmgrl sys/<password>
@@ -68,4 +68,4 @@ DGMGRL> edit database 'NOME_DB' SET PROPERTY StaticConnectIdentifier='(DESCRIPTI
 ```
 
 > [!WARNING]
-> In RAC, il `StaticConnectIdentifier` deve puntare al **static listener** dedicato al Data Guard, NON al SCAN listener!
+> In RAC, the `StaticConnectIdentifier` must point to the **static listener** dedicated to the Data Guard, NOT the SCAN listener!

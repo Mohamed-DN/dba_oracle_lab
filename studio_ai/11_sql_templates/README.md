@@ -1,6 +1,6 @@
 # 11 — SQL Templates (DDL/DML Standard)
 
-> Template SQL standardizzati per le operazioni più comuni in ambiente Enterprise.
+> Standardized SQL templates for the most common operations in the Enterprise environment.
 > Ogni template include header, spool, error handling, e rollback.
 
 ---
@@ -9,47 +9,47 @@
 
 ### DDL (Data Definition Language)
 
-| Template | Cosa Fa |
+| Template | What He Does |
 |---|---|
-| `00X_Form_create_table.sql` | Creazione tabella con tutte le opzioni |
-| `00X_Form_alter_table.sql` | Modifica struttura tabella (ADD/MODIFY/DROP column) |
-| `00X_Form_drop_table.sql` | Drop tabella con verifica |
-| `00X_Form_create_index.sql` | Creazione indice (B-tree, bitmap, function-based) |
+| `00X_Form_create_table.sql` | Creation of table with all options |
+| `00X_Form_alter_table.sql` | Modify table structure (ADD/MODIFY/DROP column) |
+| `00X_Form_drop_table.sql` | Drop table with verification |
+| `00X_Form_create_index.sql` | Index creation (B-tree, bitmap, function-based) |
 | `00X_Form_alter_index.sql` | Rebuild/modifica indice |
-| `00X_Form_create_view.sql` | Creazione vista |
-| `00X_Form_primary_key.sql` | Aggiunta primary key |
-| `00X_Form_foreign_key.sql` | Aggiunta foreign key |
+| `00X_Form_create_view.sql` | View creation |
+| `00X_Form_primary_key.sql` | Added primary key |
+| `00X_Form_foreign_key.sql` | Added foreign key |
 
 ### DML (Data Manipulation Language)
 
-| Template | Cosa Fa |
+| Template | What He Does |
 |---|---|
-| `00X_Form_dml.sql` | INSERT/UPDATE/DELETE standard con COMMIT |
-| `00X_Form_loop_commit.sql` | Loop con COMMIT ogni N righe (per tabelle grandi) |
+| `00X_Form_dml.sql` | Standard INSERT/UPDATE/DELETE with COMMIT |
+| `00X_Form_loop_commit.sql` | Loop with COMMIT every N rows (for large tables) |
 | `Form_loop_rowid.sql` | Loop per ROWID range (performance) |
 
 ### Programmatic
 
-| Template | Cosa Fa |
+| Template | What He Does |
 |---|---|
-| `00X_Form_procedure.sql` | Creazione stored procedure |
-| `00X_Form_package.sql` | Creazione package (spec + body) |
-| `00X_Form_trigger.sql` | Creazione trigger |
-| `00X_Form_sequence.sql` | Creazione sequence |
-| `00X_Form_sinonimi.sql` | Creazione sinonimi |
+| `00X_Form_procedure.sql` | Creation of stored procedures |
+| `00X_Form_package.sql` | Package creation (spec + body) |
+| `00X_Form_trigger.sql` | Trigger creation |
+| `00X_Form_sequence.sql` | Sequence creation |
+| `00X_Form_sinonimi.sql` | Creation of synonyms |
 
 ### Permessi
 
-| Template | Cosa Fa |
+| Template | What He Does |
 |---|---|
 | `00X_Form_assign_grant.sql` | Assegnazione GRANT su oggetti |
 
 ---
 
-## Perché usare Template?
+## Why use Template?
 
-In un'azienda con decine di DBA e centinaia di sviluppatori, i template garantiscono:
-1. **Consistenza**: Tutti gli script hanno lo stesso formato
-2. **Tracciabilità**: Header con autore, data, ticket, e descrizione
+In a company with dozens of DBAs and hundreds of developers, templates ensure:
+1. **Consistency**: All scripts have the same format
+2. **Traceability**: Header with author, date, ticket, and description
 3. **Sicurezza**: Include spool e rollback automatico in caso di errore
 4. **Compliance**: Facilita l'audit e la review del codice

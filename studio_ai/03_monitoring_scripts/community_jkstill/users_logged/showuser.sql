@@ -14,7 +14,7 @@ col authentication_type head 'AUTH|TYPE' format a10
 col oracle_maintained head 'ORCL|MAINT' format a5
 
 col cuser noprint new_value WhichUser
-PROMPT "Info for which user? - ";
+prompt "Info for which user? - ";
 set term off feed off
 select '&1' cuser from dual;
 set term on feed on

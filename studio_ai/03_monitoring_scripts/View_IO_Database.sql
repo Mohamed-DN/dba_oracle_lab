@@ -2,7 +2,7 @@
 set pages 2000
 
 
---  Total|Small|IOPS"  questa colonna è quella da considerare per calcolare il numero di I/O al secondo fatti dal database.
+--  Total|Small|IOPS" this column is the one to be considered to calculate the number of I/Os per second made by the database.
 
 column sri head "Small|Read|IOPS"
 column swi head "Small|Write|IOPS"

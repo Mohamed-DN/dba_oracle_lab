@@ -7,17 +7,17 @@
 ## File Contenuti
 
 ### [flashback_restore_point.md](./flashback_restore_point.md)
-Guida sull'uso di Flashback Database e Guaranteed Restore Point per operazioni sicure (es. prima di un upgrade o deploy).
+Guide on using Flashback Database and Guaranteed Restore Point for secure operations (e.g. before an upgrade or deployment).
 
 ### [rman_checks.md](./rman_checks.md)
-Query SQL per il monitoraggio dello stato dei backup RMAN.
+SQL query for monitoring the status of RMAN backups.
 
 ---
 
 ## Concetti Chiave
 
 ### Guaranteed Restore Point
-Un "punto di ripristino garantito" che permette di tornare indietro nel tempo senza perdere dati:
+A "guaranteed restore point" that allows you to go back in time without losing data:
 ```sql
 -- Creazione (prima di un'attività rischiosa)
 CREATE RESTORE POINT BEFORE_UPGRADE GUARANTEE FLASHBACK DATABASE;
@@ -41,4 +41,4 @@ DROP RESTORE POINT BEFORE_UPGRADE;
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDA_FASE7_RMAN_BACKUP.md](../../GUIDA_FASE7_RMAN_BACKUP.md)
+See also: [GUIDE_PHASE7_RMAN_BACKUP.md](../../GUIDE_PHASE7_RMAN_BACKUP.md)

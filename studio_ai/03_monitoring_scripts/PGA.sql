@@ -1,8 +1,8 @@
 -- Limiting process size with database parameter PGA_AGGREGATE_LIMIT (Doc ID 1520324.1)
 -- How To Find Where The Memory Is Growing For A Process (Doc ID 822527.1)
 
--- PGA_AGGREGATE_TARGET (dinamico x tutte le sessioni insieme) (settato implica automatic & dynamic sizing SQL workarea)
--- WORKAREA_SIZE_POLICY => AUTO sistema automaticamente i parametri *_WORK_AREA
+-- PGA_AGGREGATE_TARGET (dynamic x all sessions together) (set implies automatic & dynamic sizing SQL workarea)
+-- WORKAREA_SIZE_POLICY => AUTO automatically adjusts the *_WORK_AREA parameters
 
 select inst_id, name, round(value/1024/1024) MB from gv$pgastat where unit='bytes' order by 1,2;
 

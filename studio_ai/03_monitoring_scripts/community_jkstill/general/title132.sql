@@ -1,5 +1,5 @@
-rem TITLE132.SQL -     This SQL*Plus script builds a standard report 
-rem                             heading for database reports that are 132 columns 
+REM TITLE132.SQL -     This SQL*Plus script builds a standard report 
+REM                             heading for database reports that are 132 columns 
 rem
 column  TODAY        NEW_VALUE      CURRENT_DATE   NOPRINT
 column  TIME           NEW_VALUE       CURRENT_TIME   NOPRINT

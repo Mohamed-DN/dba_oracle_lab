@@ -7,10 +7,10 @@
 
 ## Panoramica
 
-Il patching è un'attività **critica e ricorrente** per ogni DBA Enterprise. Oracle rilascia Release Update (RU) trimestrali che contengono fix di sicurezza e stabilità.
+Patching is a **critical and recurring** activity for every Enterprise DBA. Oracle releases quarterly Release Updates (RUs) that contain security and stability fixes.
 
 In un ambiente RAC, il patching segue un ordine preciso:
-1. **Grid Infrastructure** → `opatchauto` (come root)
+1. **Grid Infrastructure** → `opatchauto` (as root)
 2. **Database Home** → `opatchauto` + `opatch` per OJVM
 3. **datapatch** → Applica le patch al dizionario dati
 
@@ -19,10 +19,10 @@ In un ambiente RAC, il patching segue un ordine preciso:
 ## File Contenuti
 
 ### [golden_images_ohctl.md](./golden_images_ohctl.md)
-Script `OHCTL` per la gestione di Golden Images: creazione, rimozione, e gestione di Oracle Home tramite immagini pre-patchate.
+`OHCTL` script for managing Golden Images: creation, removal, and management of Oracle Home via pre-patched images.
 
 ### [patching_grid_12c.md](./patching_grid_12c.md)
-Esempio reale di patching Grid Infrastructure 12.1.0.2 (patch p28813884).
+Real example of Grid Infrastructure 12.1.0.2 patching (patch p28813884).
 
 ### [support_notes.md](./support_notes.md)
 Note di supporto Oracle per i casi comuni di patching.
@@ -30,4 +30,4 @@ Note di supporto Oracle per i casi comuni di patching.
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDA_FASE2_GRID_E_RAC.md](../../GUIDA_FASE2_GRID_E_RAC.md) - sezione patching.
+See also: [GUIDE_PHASE2_GRID_AND_RAC.md](../../GUIDE_PHASE2_GRID_AND_RAC.md) - patching section.

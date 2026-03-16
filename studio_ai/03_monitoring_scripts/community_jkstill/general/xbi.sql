@@ -362,4 +362,4 @@ FROM
 /
 
 set feedback on
-PROMPT 
+prompt 

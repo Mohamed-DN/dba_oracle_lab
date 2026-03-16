@@ -76,7 +76,7 @@ BEGIN
 
         -- debug 
         -- time_var := TO_CHAR(SYSDATE,'DD-MON-YY HH24:MI:SS');
-        -- DBMS_OUTPUT.PUT_LINE('Time: '||time_var||' - passo 1');
+        -- DBMS_OUTPUT.PUT_LINE('Time: '||time_var||' - step 1');
 
         -- Fetch from the cursor
         FOR riga IN cr_GROUPID

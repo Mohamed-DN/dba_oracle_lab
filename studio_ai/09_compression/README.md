@@ -1,13 +1,13 @@
 # 09 — Data Compression (HCC / DBMS_REDEFINITION)
 
-> Procedure per la compressione online dei dati con near-zero downtime usando DBMS_REDEFINITION.
+> Procedures for online data compression with near-zero downtime using DBMS_REDEFINITION.
 
 ---
 
-## Perché Comprimere?
+## Why Compress?
 
-In database Enterprise con tabelle da centinaia di GB, la compressione:
-- **Riduce lo spazio su disco** (risparmio 50-80% con HCC)
+In Enterprise databases with hundreds of GB tables, compression:
+- **Reduces disk space** (50-80% savings with HCC)
 - **Migliora le performance di lettura** (meno I/O)
 - **Riduce i costi storage** (meno LUN da acquistare)
 
@@ -24,9 +24,9 @@ Oracle offre diversi livelli di compressione:
 
 ---
 
-## Procedura: Compressione Online con DBMS_REDEFINITION
+## How to: Online Compression with DBMS_REDEFINITION
 
-Questa procedura permette di comprimere una tabella **senza downtime** (near-zero):
+This procedure allows you to compress a table **without downtime** (near-zero):
 
 ```sql
 -- 1. Verifica che la tabella sia ridefinibile
@@ -56,10 +56,10 @@ SELECT table_name, compression, compress_for FROM dba_tables WHERE table_name = 
 ---
 
 ## File Contenuti
-- `Get_DDL_RENAME_OBJECT.sql` — Genera DDL per rename degli oggetti durante la ridefinizione
-- `STEP_COMPRESS_DBMS_REDEFINITION.txt` — Procedura step-by-step completa
+- `Get_DDL_RENAME_OBJECT.sql` — Generate DDL to rename objects during redefinition
+- `STEP_COMPRESS_DBMS_REDEFINITION.txt` — Complete step-by-step procedure
 
 ---
 
 ## 🔗 Collegamento
-Questa tecnica è utile per le attività DBA di manutenzione periodica.
+This technique is useful for periodic maintenance DBA activities.

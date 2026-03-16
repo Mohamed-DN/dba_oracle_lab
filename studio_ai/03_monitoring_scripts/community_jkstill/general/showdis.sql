@@ -11,7 +11,7 @@ set verify off
 
 col cuser noprint new_value uuser
 set term on
-PROMPT "Show disabled constraints for which user? - ";
+prompt "Show disabled constraints for which user? - ";
 set term off feed off
 select '&1' cuser from dual;
 set term on feed on

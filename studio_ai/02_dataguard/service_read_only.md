@@ -1,11 +1,11 @@
-# Service READ ONLY su standby
+# Service READ ONLY on standby
 
-Linee guida:
+Guidelines:
 
 - crea service dedicato reportistica
-- abilita solo su ruolo standby
-- disabilita su switchover/failover dove non applicabile
+- enable only on standby role
+- disable on switchover/failover where not applicable
 
-Per configurazione completa (srvctl + broker):
+For full setup (srvctl + broker):
 
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)

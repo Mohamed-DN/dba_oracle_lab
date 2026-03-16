@@ -16,7 +16,7 @@ OBJECT (   object_type VARCHAR2(30),
 CREATE OR REPLACE TYPE ddl_ty_tb AS TABLE OF ddl_ty; 
 /
 
--- Dare i privilegi allo schema proprietario della funzione
+-- Give privileges to the schema that owns the function
 
 
 define user_schema=FSPADA

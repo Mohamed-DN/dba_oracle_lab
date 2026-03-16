@@ -1,4 +1,4 @@
--- # Mostra i dischi ASM
+-- # Show ASM disks
 select g.name DG, d.name DISK, d.total_mb, d.free_mb, d.header_status, d.path, d.GROUP_NUMBER, d.failgroup, d.DISK_NUMBER
 from v$asm_diskgroup g,
      v$asm_disk d

@@ -27,7 +27,7 @@ Here is an report from showlock2.sql for the aforementioned test case:
 
 SQL# @showlock2
 
-                     BLKING  CON  INST                      BLKING LOCK MODE
+                     BLKING WITH INST BLKING LOCK MODE
 LOCK_SID               SESS   ID    ID USERNAME               INST TYPE HELD            MY_SQL
 -------------------- ------ ---- ----- -------------------- ------ ---- --------------- --------------------------------------------------------------------------------
    00406                       3     2 SCOTT                       TM   Row-X (SX)      NA

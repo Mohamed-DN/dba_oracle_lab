@@ -1,4 +1,4 @@
--- NB: Le query sono applicabili solo per target database dalla 10g in poi
+-- NB: Queries are only applicable for target databases from 10g onwards
 -- How to Clean up The information in EM Backup Report (Doc ID 430601.1)
 
 alter session set nls_date_format='dd/mm/yyyy hh24:mi:ss';
@@ -46,7 +46,7 @@ select name from rman.rc_database order by 1;
 select name from rman19.rc_database order by 1;
 select name from rmanway4.rc_database order by 1;
 
--- CHECK SITI PRIMARI e STANDBY
+-- CHECK PRIMARY SITES and STANDBY
 
 select DB_UNIQUE_NAME,DATABASE_ROLE,SITE_KEY,DB_KEY from rman19.rc_site order by 1;
 
@@ -94,7 +94,7 @@ FROM v$rman_backup_job_details b
 WHERE b.input_type='DB INCR'
 ORDER BY start_time;
 
--- CHECK DI TUTTI I FALLIMENTI
+-- CHECK ALL FAILURES
 
 SELECT db_name, input_type, status, start_time, end_time
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -103,7 +103,7 @@ AND b.start_time > (SYSDATE - 15)
 AND b.status != 'COMPLETED'
 ORDER BY start_time;
 
--- CHECK DI TUTTI I BACKUP DI UN DB SPECIFICO
+-- CHECK ALL BACKUPS OF A SPECIFIC DB
 
 SELECT b.session_key, input_type, status, to_char(start_time,'DAY') as DAY, start_time, end_time, time_taken_display TIME_TAKEN,
 b.input_bytes_display INPUT_BYTES, b.input_bytes_per_sec_display "INPUT B/S",
@@ -156,7 +156,7 @@ ORDER BY 1;
 
 
 
-### Archivelog giorni feriali per un singolo DB: media elapsed e media quantit‡ di dati
+### Archivelog giorni feriali per un singolo DB: media elapsed e media quantit√† di dati
 
 SELECT to_char(start_time,'HH24'), round(avg(elapsed_seconds)/60) as minuti,round(avg(B.INPUT_BYTES)/1024/1024/1024,4) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -169,7 +169,7 @@ and to_char(start_time,'DAY') not like 'SABATO%'
 GROUP BY to_char(start_time,'HH24')
 order by 1;
 
-### Archivelog giorni festivi per un singolo DB: media elapsed e media quantit‡ di dati
+### Archivelog giorni festivi per un singolo DB: media elapsed e media quantit√† di dati
 
 SELECT to_char(start_time,'HH24'), round(avg(elapsed_seconds)/60) as minuti,round(avg(B.INPUT_BYTES)/1024/1024/1024,4) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -181,7 +181,7 @@ and (to_char(start_time,'DAY') like 'DOMENICA%' or to_char(start_time,'DAY') lik
 GROUP BY to_char(start_time,'HH24')
 order by 1;
 
-### Backup incrementali giorni feriali per un singolo DB: media elapsed e media quantit‡ di dati
+### Backup incrementali giorni feriali per un singolo DB: media elapsed e media quantit√† di dati
 
 SELECT to_char(start_time,'DAY'),round(avg(elapsed_seconds)/60) as minuti,round(avg(B.OUTPUT_BYTES)/1024/1024/1024,2) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -193,7 +193,7 @@ and to_char(start_time,'DAY') not like 'DOMENICA%'
 and to_char(start_time,'DAY') not like 'SABATO%'
 GROUP BY to_char(start_time,'DAY');
 
-### Backup incrementali giorni festivi per un singolo DB: media elapsed e media quantit‡ di dati
+### Backup incrementali giorni festivi per un singolo DB: media elapsed e media quantit√† di dati
 
 SELECT to_char(start_time,'DAY'),round(avg(elapsed_seconds)/60) as minuti,round(avg(B.OUTPUT_BYTES)/1024/1024/1024,2) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -218,8 +218,8 @@ order by 1;
 
 select db_name, to_char(start_time,'HH24') as start_time, to_char(start_time,'DAY') as start_day,round(avg(elapsed_seconds)/60) as minuti,round(avg(OUTPUT_BYTES)/1024/1024/1024,4) as GB
 FROM rman.rc_rman_backup_job_details
-where (to_char(start_time,'DAY') like '%LUNEDÃ%'
-or to_char(start_time,'DAY') like '%MARTEDÃ%')
+where (to_char(start_time,'DAY') like '%LUNED√å%'
+or to_char(start_time,'DAY') like '%MARTED√å%')
 AND input_type!='ARCHIVELOG'
 GROUP BY db_name, to_char(start_time,'HH24'), to_char(start_time,'DAY')
 order by 3,2;

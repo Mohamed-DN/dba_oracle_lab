@@ -1,16 +1,16 @@
-# 04 - User Management (Gestione Utenti)
+# 04 - User Management
 
-Procedure operative per la creazione e gestione utenti Oracle nel lab.
+Operating procedures for creating and managing Oracle users in the lab.
 
 ## File presenti in questa cartella
 
-- `Prototipo_CreateUser_Nominale_v1.4.txt` - template utenza nominale
-- `Prototipo_CreateUser_DBA_OP_v1.3.txt` - template utenza DBA operativa
-- `Prototipo_CreateUser_DB_APPLICATIVA_v1.3.txt` - template utenza applicativa
-- `Verify Function PWD.txt` - regole verifica password
-- `GeneraPass_Random_da_Bash.txt` - generazione password random
+- `Prototype_CreateUser_Named_User_v1.4.txt` - template utenza nominale
+- `Prototype_CreateUser_DBA_OP_v1.3.txt` - operational DBA user template
+- `Prototype_CreateUser_Application_DB_v1.3.txt` - template utenza applicativa
+- `Verify Function PWD.txt` - password verification rules
+- `GeneraPass_Random_da_Bash.txt` - random password generation
 
-## Uso consigliato
+## Recommended use
 
 1. Parti dal template piu vicino al tuo caso.
 2. Adatta tablespace/profile/quote al DB target.
@@ -19,5 +19,5 @@ Procedure operative per la creazione e gestione utenti Oracle nel lab.
 
 ## Riferimenti
 
-- [GUIDA_CDB_PDB_UTENTI.md](../../GUIDA_CDB_PDB_UTENTI.md)
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
+- [GUIDE_CDB_PDB_USERS.md](../../GUIDE_CDB_PDB_USERS.md)
+- [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)

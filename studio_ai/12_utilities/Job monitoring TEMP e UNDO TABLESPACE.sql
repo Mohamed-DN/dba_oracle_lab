@@ -1,13 +1,13 @@
-﻿######## CREAZIONE VISTE, TABLE E JOB ######## 
+######## CREAZIONE VISTE, TABLE E JOB ######## 
 
--- Connettersi con utenza DBA_OP
+-- Connect with DBA_OP user
 
 CREATE OR REPLACE VIEW dba_op.temp_use AS
 /* 
    ATTENZIONE la stima dei MB va corretta in base alle dimensioni del blocco *********************************
    sql da v$tempseg_usage e' lultimo eseguito, NON quello in esecuzione nella sesssione, li registro entrambi
    cfr http://yong321.freeshell.org/oranotes/v$sort_usage.txt
-   v$tempseg_usage è' un sinonimo di v$sort_usage
+   v$tempseg_usage is a synonym of v$sort_usage
 */ 
 SELECT SYSDATE data,  s.sid,  t.inst_id inst, 
    t.blocks used_tmp_blks, ROUND(t.blocks*ts.block_size/(1024*1024),0) MB, t.segtype, ts.TABLESPACE_NAME tablespace,  
@@ -64,7 +64,7 @@ CREATE TABLE dba_op.UNDO_USE_HISTORY AS SELECT * FROM dba_op.undo_use WHERE 1=0;
 GRANT SELECT ON dba_op.UNDO_USE_HISTORY TO PUBLIC;
 
 
--- CREAZIONE JOB
+-- JOB CREATION
 
 DECLARE
   X NUMBER;

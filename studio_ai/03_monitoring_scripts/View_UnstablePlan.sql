@@ -2,12 +2,12 @@ UNSTABLE PLAN STATEMENT
 -----------------------
 
 The first one can be used to show statements that have experienced significant variances in execution time
-(it can be modified to look for variances in the amount of logical i/o, but I’ll leave it as an exercise for the reader).
+(it can be modified to look for variances in the amount of logical i/o, but IÂ’ll leave it as an exercise for the reader).
 I called the script unstable_plans.sql.
 It uses an analytic function to calculate a standard deviation on the average elapsed time by plan.
 So the statements that have multiple plans with wild variations in the response time between plans will be returned by the script.
 The script prompts for a couple of values. The first is minimum number of standard deviations.
-The second is the minimum elapsed time (I usually don’t care if a statement executes sometimes in .005 seconds and sometimes in .02 seconds,
+The second is the minimum elapsed time (I usually donÂ’t care if a statement executes sometimes in .005 seconds and sometimes in .02 seconds,
 even though this is a large swing statistically).
 Both these inputs are defaulted by the way
 
@@ -638,7 +638,7 @@ ORDER BY ss.snap_id, ss.sql_id;
 *************
 Altra query Utile
 
-PROMPT enter start and end times in format DD-MON-YYYY [HH24:MI]
+prompt enter start and end times in format DD-MON-YYYY [HH24:MI]
 
 COLUMN sample_end FORMAT a21
 

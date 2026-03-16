@@ -5,7 +5,7 @@ col min format 999.99
 col  input_type for a15
 col start_time for a15
 col end_time for a15
----- Controllare parametero output dove si basa la vista :
+---- Check output parameter where view is based:
 -- CONFIGURE RMAN OUTPUT TO KEEP FOR 31 DAYS;
 
  
@@ -62,16 +62,16 @@ select
 ----------------------------------------------------------------------------------------------------------------------
 
 Viewing RMAN Jobs Status And Output
-by André Araújo August 26, 2011
+by AndrÃ© AraÃºjo August 26, 2011
 Posted in: Technical Track
 Tags: Group Blog Posts, Oracle, Technical Blog
-Yesterday I was discussing with a fellow DBA about ways to check the status of existing and/or past RMAN jobs. Good backup scripts usually write their output to some sort of log file so, checking the output is usually a straight-forward task. However, backup jobs can be scheduled in many different ways (crontab, Grid Control, Scheduled Tasks, etc) and finding the log file may be tricky if you don’t know the environment well.
+Yesterday I was discussing with a fellow DBA about ways to check the status of existing and/or past RMAN jobs. Good backup scripts usually write their output to some sort of log file so, checking the output is usually a straight-forward task. However, backup jobs can be scheduled in many different ways (crontab, Grid Control, Scheduled Tasks, etc) and finding the log file may be tricky if you donÂ’t know the environment well.
 Furthermore, log files may also have already been overwritten by the next backup or simply just deleted. An alternative way of accessing that information, thus, may come handy.
 
-Fortunately, RMAN keeps the backup metadata around for some time and it can be accessed through the database’s V$ views. Obviously, if you need this information because your database just crashed and needs to be restored, the method described here is useless.
+Fortunately, RMAN keeps the backup metadata around for some time and it can be accessed through the databaseÂ’s V$ views. Obviously, if you need this information because your database just crashed and needs to be restored, the method described here is useless.
 
 
-Backup Jobs’ Status And Metadata
+Backup JobsÂ’ Status And Metadata
 A lot of metadata about the RMAN backup jobs can be found in the V$RMAN_% views. These views show past RMAN jobs as well as jobs currently running. Once the jobs complete backup sets, metadata about the sets and pieces are also added to the control file and can be accessed through the V$BACKUP_% views.
 
 For the queries in this post I need only four of those views:
@@ -81,9 +81,9 @@ V$BACKUP_SET_DETAILS
 V$RMAN_BACKUP_JOB_DETAILS
 GV$RMAN_OUTPUT
 
-NOTE: I haven’t tested the below in Oracle 10g or earlier.
+NOTE: I havenÂ’t tested the below in Oracle 10g or earlier.
 
-In the query below I used these views to combine in a single query the information I’m usually interested in when verifying backup jobs:
+In the query below I used these views to combine in a single query the information IÂ’m usually interested in when verifying backup jobs:
 
 -- CF: Number of controlfile backups included in the backup set
 -- DF: Number of datafile full backups included in the backup set
@@ -174,10 +174,10 @@ order by d.start_time;
 
 
 Backup Job Output
-And finally, sometimes it may be helpful to retrieve the job’s output from the metadata kept by the instance.
+And finally, sometimes it may be helpful to retrieve the jobÂ’s output from the metadata kept by the instance.
 It might be that the original log on disk, if any, may have been overwritten by a more recent backup, or just that selecting it from a V$ view may be easier than connecting to a server to find out were the log file is.
 
-The tricky thing here, though, is that the view that contains the output, V$RMAN_OUTPUT, exists in memory only; the job’s output is not stored in the controlfile or anywhere else in the database. Thus, if the instance gets restarted, the contents of that view are reset.
+The tricky thing here, though, is that the view that contains the output, V$RMAN_OUTPUT, exists in memory only; the jobÂ’s output is not stored in the controlfile or anywhere else in the database. Thus, if the instance gets restarted, the contents of that view are reset.
 
 To retrieve the job output for a specific backup job, identified by the (SESSION_RECID, SESSION_STAMP) pair, you can use the following query:
 

@@ -57,7 +57,7 @@ set serveroutput on
 set define off
 
 
--- La sequence deve avere almeno cache 20
+-- The sequence must have at least cache 20
 CREATE SEQUENCE <owner>.<nomesequence>
  INCREMENT BY <val>
  START WITH   <val>

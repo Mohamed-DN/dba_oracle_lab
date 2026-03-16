@@ -1,9 +1,9 @@
--- Per fissare un piano in SPM bisogna prima verificare se il piano corretto è ancora presente nella GV$SQL, o se ad esempio è presente sull'altra istanza, perchè il cambio piano di è verificato solo su una istanza
+-- To set a plan in SPM you must first check whether the correct plan is still present in the GV$SQL, or if for example it is present on the other instance, because the change in plan occurs only on one instance
 
 select inst_id, address, hash_value, plan_hash_value from gv$sql where sql_id = '2wtx9ppg797s9';
 
 -- LOADING FROM CURSOR CACHE
--- Da eseguire sull'istanza dove il piano è ancora presente
+-- To be performed on the instance where the plan is still present
 
 set serveroutput on
 DECLARE
@@ -16,7 +16,7 @@ END;
 
 -- LOADING FROM AWR
 -- How to Create A SQL Plan Baseline From A Historical Execution Plan In The Automatic Workload Repository (AWR) [RDBMS Version 12.2 or Higher] (Doc ID 2885167.1)	
--- Vale solo dalla 12.2 in poi, in caso di release inferiori alla 12.2 utilizzare il file SPM_from_AWR_old_fashioned.sql
+-- Valid only from 12.2 onwards, in case of releases lower than 12.2 use the file SPM_from_AWR_old_fashioned.sql
 
 set serveroutput on
 variable x number
@@ -28,7 +28,7 @@ end;
 print x
 
 
--- se pluggable, eseguire se possibile la procedura all'interno del pluggable stesso
+-- if pluggable, if possible carry out the procedure within the pluggable itself
 
 select dbid, snap_id, to_char(end_interval_time, 'yyyy/mm/dd hh24:mi') getsnapshot_time, snap_level from DBA_HIST_SNAPSHOT order by dbid, snap_id;
 
@@ -42,8 +42,8 @@ end;
 print x
 
 -- LOADING FROM SQLSET
--- Utilizzare questa procedura nel caso si stiano trasferendo SQLSET da un db all'altro
--- E' possibile estrarre anche solo alcuni SQL_ID da un STS valorizzando basic_filter => 'sql_text like ''select /*LOAD_STS*/%''' or basic_filter => 'sql_id=''b62q7nc33gzwx'''.
+-- Use this procedure if you are transferring SQLSET from one database to another
+-- It is possible to extract even just some SQL_IDs from an STS by valuing basic_filter => 'sql_text like ''select /*LOAD_STS*/%''' or basic_filter => 'sql_id=''b62q7nc33gzwx'''.
 
 set serveroutput on
 DECLARE
@@ -76,8 +76,8 @@ END;
 /
 
 -- FLUSH
--- Si può forzare il flush di un SQL_ID dalla cache, nel caso in cui non riesce a cambiare subito il piano in uso, quando ci sono ancora molte sessioni in esecuzione del piano errato
--- La purge va eseguita su ogni istanza, utilizzando l'output della seguente query
+-- You can force flush a SQL_ID from the cache, in case it fails to immediately change the plan in use, when there are still many sessions running of the wrong plan
+-- The purge should be performed on each instance, using the output of the following query
 
 select inst_id, address, hash_value, plan_hash_value from gv$sqlarea where sql_id = '2wtx9ppg797s9';
 

@@ -11,7 +11,7 @@ Getting this info from the listener.log will include failed connections, making 
 ```
      ./oracle-connect-rate.sh
 
-     -f listener log file
+     -f log file listener
      -S service 
      -s summarize by second
      -m summarize by minute
@@ -39,7 +39,7 @@ If not specified, all connections are searched.
 ### per second
 
 ```
-./oracle-connect-rate.sh  -s -f listener.log -S orcl | head  >> README.md
+./oracle-connect-rate.sh -s -f listener.log -S orcl | head >> README.md
 16-OCT-2017 00:03:01,2
 16-OCT-2017 00:03:02,1
 16-OCT-2017 00:03:03,14
@@ -56,7 +56,7 @@ If not specified, all connections are searched.
 ### per minute
 
 ```
-./oracle-connect-rate.sh  -m -f listener.log -S orcl | head  >> README.md
+./oracle-connect-rate.sh -m -f listener.log -S orcl | head >> README.md
 16-OCT-2017 00:03:00,282
 16-OCT-2017 00:04:00,418
 16-OCT-2017 00:05:00,317
@@ -73,7 +73,7 @@ If not specified, all connections are searched.
 ### per hour
 
 ```
-./oracle-connect-rate.sh  -h -f listener.log -S orcl | head  >> README.md
+./oracle-connect-rate.sh -h -f listener.log -S orcl | head >> README.md
 16-OCT-2017 00:00:00,16403
 16-OCT-2017 01:00:00,14530
 16-OCT-2017 02:00:00,13200

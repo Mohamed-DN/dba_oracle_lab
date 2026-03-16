@@ -1,5 +1,5 @@
-rem TITLE80.SQL -     This SQL*Plus script builds a standard report 
-rem                   heading for database reports that are 80 columns
+REM TITLE80.SQL -     This SQL*Plus script builds a standard report 
+REM                   heading for database reports that are 80 columns
 rem
 column  TODAY		NEW_VALUE 	CURRENT_DATE		NOPRINT
 column  TIME            NEW_VALUE	CURRENT_TIME		NOPRINT
