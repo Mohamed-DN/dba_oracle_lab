@@ -4,7 +4,7 @@
 
 
 define  num_days     = 3;
-define  db_name      = 'Database';
+define db_name = 'Database';
 define  dbid         = 4;
 define  begin_snap   = 10;
 define  end_snap     = 11;

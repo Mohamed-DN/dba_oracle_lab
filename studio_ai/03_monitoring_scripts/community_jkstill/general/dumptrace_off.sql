@@ -10,7 +10,7 @@ prompt
 prompt Turn OFF SQL Trace for a current session
 prompt
 
-col csid noprint new_value usid
+with csid noprint new_value usid
 col cserial noprint new_value userial
 
 prompt Session ID (SID) ? 

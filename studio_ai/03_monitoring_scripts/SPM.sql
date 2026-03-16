@@ -65,7 +65,7 @@ BEGIN
 END;
 /
 
--- DROP SQL+PLAN specifico
+--DROP SQL+PLAN specific
 
 set serveroutput on
 DECLARE
@@ -90,7 +90,7 @@ exec dbms_shared_pool.purge ('000000040EFD8FB0,1584701193 ','C');
 
 select inst_id, plan_hash_value, sql_plan_baseline, executions from gv$sql where sql_id = '2wtx9ppg797s9';
 
--- USEFUL QUERIES
+--USEFUL QUERIES
 
 col SQL_HANDLE for a55
 col PLAN_NAME for a55
@@ -117,7 +117,7 @@ order by 1;
 
 set lines 150
 col sql_id for a15
-col signature for 999999999999999999999
+with signature for 999999999999999999999
 col PLAN_NAME for a50
 WITH
 FUNCTION compute_sql_id (sql_text IN CLOB)

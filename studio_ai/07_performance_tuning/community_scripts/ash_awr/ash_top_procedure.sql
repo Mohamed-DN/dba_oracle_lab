@@ -40,7 +40,7 @@ select
     ||
     decode(procs2.procedure_name,procs1.procedure_name,'',
         decode(procs2.procedure_name,'','',null,'','.')||procs2.procedure_name)
-    "calling_code"
+"calling_code"
 from v$active_session_history  ash,
      all_procedures procs1,
      all_procedures procs2

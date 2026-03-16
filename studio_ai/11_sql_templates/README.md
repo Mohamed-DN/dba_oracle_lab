@@ -5,7 +5,7 @@
 
 ---
 
-## Template Disponibili
+## Templates Available
 
 ### DDL (Data Definition Language)
 
@@ -15,7 +15,7 @@
 | `00X_Form_alter_table.sql` | Modify table structure (ADD/MODIFY/DROP column) |
 | `00X_Form_drop_table.sql` | Drop table with verification |
 | `00X_Form_create_index.sql` | Index creation (B-tree, bitmap, function-based) |
-| `00X_Form_alter_index.sql` | Rebuild/modifica indice |
+| `00X_Form_alter_index.sql` |Rebuild/edit index|
 | `00X_Form_create_view.sql` | View creation |
 | `00X_Form_primary_key.sql` | Added primary key |
 | `00X_Form_foreign_key.sql` | Added foreign key |
@@ -42,7 +42,7 @@
 
 | Template | What He Does |
 |---|---|
-| `00X_Form_assign_grant.sql` | Assegnazione GRANT su oggetti |
+| `00X_Form_assign_grant.sql` |GRANT assignment on objects|
 
 ---
 
@@ -51,5 +51,5 @@
 In a company with dozens of DBAs and hundreds of developers, templates ensure:
 1. **Consistency**: All scripts have the same format
 2. **Traceability**: Header with author, date, ticket, and description
-3. **Sicurezza**: Include spool e rollback automatico in caso di errore
-4. **Compliance**: Facilita l'audit e la review del codice
+3. **Security**: Includes spool and automatic rollback in case of error
+4. **Compliance**: Facilitates code auditing and review

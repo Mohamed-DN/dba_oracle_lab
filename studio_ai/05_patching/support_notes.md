@@ -1,8 +1,8 @@
 # Support Notes (indice)
 
-Raccolta note di supporto utili durante patching.
+Collection of support notes useful during patching.
 
-Documenti principali nel repo:
+Main documents in the repo:
 
 - [GUIDE_RAC_PATCHING.md](../../GUIDE_RAC_PATCHING.md)
 - [GUIDE_RAC_RU_UPGRADE.md](../../GUIDE_RAC_RU_UPGRADE.md)

@@ -63,7 +63,7 @@ with data_types as
 		)
 	)
 ),
-data_type_id as 
+data_type_id as
 (
 	select rownum id, column_value data_type_id 
 	from (

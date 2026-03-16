@@ -34,32 +34,32 @@
 |---|---|---|
 | **Versione** | 19c (nostro lab) | 16.x |
 | **Archivelog** | Already active (Phase 2) | N/A |
-| **Supplemental Logging** | Da abilitare | N/A |
+|**Supplemental Logging**|To be enabled| N/A |
 | **GoldenGate** | GG for Oracle 19c/21c | GG for PostgreSQL 21c |
 | **ODBC** | N/A | PostgreSQL ODBC driver |
-| **Tool DDL** | N/A | `ora2pg` per conversione schema |
+| **Tool DDL** | N/A | `ora2pg`for schema conversion|
 
 ---
 
 ## STEP 1: Oracle Preparation (Source)
 
-### 1.1 Abilita Supplemental Logging
+### 1.1 Enable Supplemental Logging
 
-GoldenGate requires supplemental logging to capture all changed columns:
+GoldenGate requires additional logging to capture all changed columns:
 
 ```sql
--- Come SYSDBA sul database Oracle (su rac1)
+--As SYSDBA on Oracle database (on rac1)
 sqlplus / as sysdba
 
--- Abilita supplemental logging a livello database
+--Enable supplemental logging at the database level
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 
--- Abilita per tutte le colonne sulle tabelle da migrare
+--Enable for all columns on the tables to be migrated
 ALTER TABLE hr.employees ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 ALTER TABLE hr.departments ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 ALTER TABLE hr.jobs ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
--- Verifica
+--Verify
 SELECT SUPPLEMENTAL_LOG_DATA_MIN, SUPPLEMENTAL_LOG_DATA_ALL FROM v$database;
 -- Deve mostrare YES
 ```
@@ -69,7 +69,7 @@ SELECT SUPPLEMENTAL_LOG_DATA_MIN, SUPPLEMENTAL_LOG_DATA_ALL FROM v$database;
 ### 1.2 Create GoldenGate Oracle User
 
 ```sql
--- Utente dedicato per GoldenGate
+--Dedicated user for GoldenGate
 CREATE USER ggadmin IDENTIFIED BY "GGadmin123!"
   DEFAULT TABLESPACE users TEMPORARY TABLESPACE temp;
 
@@ -84,15 +84,15 @@ GRANT EXECUTE ON DBMS_FLASHBACK TO ggadmin;
 
 ## STEP 2: PostgreSQL Installation (Target)
 
-### 2.1 Installa PostgreSQL 16
+### 2.1 Install PostgreSQL 16
 
 ```bash
-# Su una VM separata o sulla VM dbtarget (192.168.56.150)
+# On a separate VM or on the dbtarget VM (192.168.56.150)
 # Per Oracle Linux 7/8:
 yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 yum install -y postgresql16-server postgresql16-contrib
 
-# Inizializza e avvia
+# Initialize and boot
 /usr/pgsql-16/bin/postgresql-16-setup initdb
 systemctl enable postgresql-16
 systemctl start postgresql-16
@@ -101,17 +101,17 @@ systemctl start postgresql-16
 ### 2.2 Configura PostgreSQL per GoldenGate
 
 ```bash
-# Modifica postgresql.conf
+# Edit postgresql.conf
 vim /var/lib/pgsql/16/data/postgresql.conf
 
-# Aggiungi/modifica:
+# Add/edit:
 wal_level = logical              # CRITICO per GoldenGate
 max_replication_slots = 4
 max_wal_senders = 4
-track_commit_timestamp = on      # Per monitoraggio lag
-listen_addresses = '*'           # Accetta connessioni remote
+track_commit_timestamp = on # For lag tracking
+listen_addresses = '*' # Accept remote connections
 
-# Modifica pg_hba.conf per accesso remoto
+# Edit pg_hba.conf for remote access
 echo "host all ggadmin 192.168.56.0/24 md5" >> /var/lib/pgsql/16/data/pg_hba.conf
 
 # Riavvia
@@ -123,7 +123,7 @@ systemctl restart postgresql-16
 ```bash
 sudo -u postgres psql
 
--- Crea utente GoldenGate
+--Create GoldenGate user
 CREATE USER ggadmin WITH PASSWORD 'GGadmin123!' REPLICATION;
 ALTER USER ggadmin WITH SUPERUSER;
 
@@ -139,13 +139,13 @@ GRANT ALL ON SCHEMA hr TO ggadmin;
 ### 2.4 Convert Schema with ora2pg
 
 ```bash
-# Installa ora2pg
+# Install now2pg
 yum install -y perl-DBI perl-DBD-Pg
-# Scarica ora2pg da https://github.com/darold/ora2pg
+#Download now2pg fromhttps://github.com/darold/ora2pg
 tar xzf ora2pg-*.tar.gz && cd ora2pg-*
 perl Makefile.PL && make && make install
 
-# Configura ora2pg.conf
+# Configure ora2pg.conf
 cat > /etc/ora2pg/ora2pg.conf <<'EOF'
 ORACLE_DSN    dbi:Oracle:host=192.168.56.101;sid=RACDB;port=1521
 ORACLE_USER   ggadmin
@@ -164,17 +164,17 @@ ora2pg -c /etc/ora2pg/ora2pg.conf -t SEQUENCE -o /tmp/sequences.sql
 ora2pg -c /etc/ora2pg/ora2pg.conf -t INDEX -o /tmp/indexes.sql
 ora2pg -c /etc/ora2pg/ora2pg.conf -t CONSTRAINT -o /tmp/constraints.sql
 
-# Applica DDL al database PostgreSQL
+# Apply DDL to PostgreSQL database
 psql -U ggadmin -d app_db -f /tmp/tables.sql
 psql -U ggadmin -d app_db -f /tmp/sequences.sql
 ```
 
 > **Why ora2pg?** Oracle data types (NUMBER, VARCHAR2, DATE) are different from PostgreSQL (INTEGER, VARCHAR, TIMESTAMP). ora2pg does the automatic conversion and generates PostgreSQL compatible DDL.
 
-### 2.5 Configura REPLICA IDENTITY
+### 2.5 Configure REPLICA IDENTITY
 
 ```sql
--- Per ogni tabella nel target PostgreSQL
+--For each table in the PostgreSQL target
 ALTER TABLE hr.employees REPLICA IDENTITY FULL;
 ALTER TABLE hr.departments REPLICA IDENTITY FULL;
 ALTER TABLE hr.jobs REPLICA IDENTITY FULL;
@@ -187,8 +187,8 @@ ALTER TABLE hr.jobs REPLICA IDENTITY FULL;
 ### 3.1 GoldenGate per Oracle (Source — rac1)
 
 ```bash
-# Gia installato nella Fase 5 del lab!
-# Verifica
+#Already installed in Phase 5 of the lab!
+#Verify
 cd $OGG_HOME
 ./ggsci
 > INFO ALL
@@ -197,8 +197,8 @@ cd $OGG_HOME
 ### 3.2 GoldenGate per PostgreSQL (Target — dbtarget)
 
 ```bash
-# Scarica "Oracle GoldenGate for PostgreSQL" da Oracle eDelivery
-# ATTENZIONE: e un pacchetto DIVERSO da GoldenGate for Oracle!
+#Download "Oracle GoldenGate for PostgreSQL" from Oracle eDelivery
+# WARNING: this is a DIFFERENT package from GoldenGate for Oracle!
 
 mkdir -p /u01/app/ogg_pg
 cd /u01/app/ogg_pg
@@ -219,7 +219,7 @@ cd $OGG_HOME
 ### 3.3 Configura ODBC per PostgreSQL
 
 ```bash
-# Configura odbc.ini
+# Configure odbc.ini
 cat > $OGG_HOME/odbc.ini <<'EOF'
 [ODBC Data Sources]
 PG_APP = PostgreSQL
@@ -323,7 +323,7 @@ MAP hr.jobs, TARGET hr.jobs;
 expdp ggadmin/GGadmin123! SCHEMAS=hr DIRECTORY=dp_dir \
   DUMPFILE=hr_initial.dmp LOGFILE=hr_initial.log
 
-# Converti e carica su PostgreSQL con ora2pg
+# Convert and upload to PostgreSQL with ora2pg
 ora2pg -c /etc/ora2pg/ora2pg.conf -t INSERT -o /tmp/data.sql
 psql -U ggadmin -d app_db -f /tmp/data.sql
 ```
@@ -363,12 +363,12 @@ psql -U ggadmin -d app_db -f /tmp/data.sql
 ### 6.1 Pre-Cutover Verification
 
 ```bash
-# Verifica che il lag e zero
+#Check that the lag is zero
 ./ggsci
 > LAG REPLICAT REP_PG
 # Lag at Checkpoint: 00:00:00
 
-# Conta righe su entrambi i lati
+# Count rows on both sides
 # Oracle
 sqlplus ggadmin/GGadmin123!
 SELECT COUNT(*) FROM hr.employees;
@@ -380,25 +380,25 @@ psql -U ggadmin -d app_db -c "SELECT COUNT(*) FROM hr.employees;"
 ### 6.2 Cutover procedure
 
 ```
-1. Metti l'applicazione in READ-ONLY o maintenance mode
-2. Aspetta che il lag GoldenGate scenda a 0
+1. Put the application in READ-ONLY or maintenance mode
+2. Wait for the GoldenGate lag to drop to 0
 3. Ferma l'Extract su Oracle
 4. Check final counts (Oracle vs PostgreSQL)
-5. Cambia la connection string dell'applicazione:
+5. Change the application connection string:
    - DA: jdbc:oracle:thin:@rac-scan:1521/RACDB
    - A:  jdbc:postgresql://192.168.56.150:5432/app_db
-6. Rimuovi l'applicazione dalla maintenance mode
+6. Remove the application from maintenance mode
 7. Test with verification query
 ```
 
 ### 6.3 Rollback Plan
 
 ```
-Se qualcosa va storto:
+If something goes wrong:
 1. Cambia la connection string INDIETRO a Oracle
 2. Riavvia l'Extract su Oracle
-3. I dati scritti su PostgreSQL durante il test vengono ignorati
-4. Analizza il problema, correggi, riprova
+3. Data written to PostgreSQL during testing is ignored
+4. Analyze the problem, fix it, try again
 ```
 
 ---
@@ -406,13 +406,13 @@ Se qualcosa va storto:
 ## PHASE 7: Post-Migration Validation
 
 ```sql
--- Su PostgreSQL — verifica integrità
+--On PostgreSQL — check integrity
 SELECT schemaname, tablename, n_live_tup
 FROM pg_stat_all_tables
 WHERE schemaname = 'hr'
 ORDER BY tablename;
 
--- Confronta con Oracle
+--Compare with Oracle
 -- Su Oracle
 SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 ```
@@ -421,13 +421,13 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 
 | # | Check | Comando |
 |---|---|---|
-| 1 | Conteggio righe uguale | COUNT(*) on each table |
-| 2 | Checksum dati | Confronto hash su colonne chiave |
+| 1 |Equal row count| COUNT(*) on each table |
+| 2 | Checksum dati |Hash comparison on key columns|
 | 3 | Constraint attivi | `\d+ tablename` in psql |
-| 4 | Indici creati | `\di` in psql |
-| 5 | Sequences aggiornate | `SELECT last_value FROM seq_name` |
-| 6 | App funzionante | Test login + CRUD |
-| 7 | Performance accettabile | EXPLAIN ANALYZE su query critiche |
+| 4 |Indexes created| `\di` in psql |
+| 5 |Updated sequences| `SELECT last_value FROM seq_name` |
+| 6 |Working app| Test login + CRUD |
+| 7 |Acceptable performance| EXPLAIN ANALYZE su query critiche |
 
 ---
 
@@ -436,31 +436,31 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 | Oracle | PostgreSQL | Note |
 |---|---|---|
 | `NUMBER(p)` | `INTEGER` / `BIGINT` | p<=9 → INT, p<=18 → BIGINT |
-| `NUMBER(p,s)` | `NUMERIC(p,s)` | Mapping diretto |
+| `NUMBER(p,s)` | `NUMERIC(p,s)` |Direct mapping|
 | `NUMBER` | `NUMERIC` | Without precision |
-| `VARCHAR2(n)` | `VARCHAR(n)` | Identico |
-| `CHAR(n)` | `CHAR(n)` | Identico |
+| `VARCHAR2(n)` | `VARCHAR(n)` |Identical|
+| `CHAR(n)` | `CHAR(n)` |Identical|
 | `CLOB` | `TEXT` | PostgreSQL non ha limiti |
 | `BLOB` | `BYTEA` | Binary data |
 | `DATE` | `TIMESTAMP` | Oracle DATE include ore! |
-| `TIMESTAMP` | `TIMESTAMP` | Identico |
+| `TIMESTAMP` | `TIMESTAMP` |Identical|
 | `RAW(n)` | `BYTEA` | Binary data |
 | `ROWID` | Nessuno | Non esiste in PG |
-| `SYSDATE` | `NOW()` | Funzione diversa |
-| `NVL()` | `COALESCE()` | Equivalente SQL standard |
+| `SYSDATE` | `NOW()` |Different function|
+| `NVL()` | `COALESCE()` |Standard SQL equivalent|
 | `DECODE()` | `CASE WHEN` | Standard SQL |
 
 ---
 
 ## Troubleshooting Comuni
 
-| Problema | Soluzione |
+| Problema |Solution|
 |---|---|
-| Extract non parte | Verify supplemental logging: `SELECT SUPPLEMENTAL_LOG_DATA_MIN FROM v$database` |
+| Extract non parte |Verify additional logging:`SELECT SUPPLEMENTAL_LOG_DATA_MIN FROM v$database` |
 | ODBC connection refused | Check `pg_hba.conf` and `listen_addresses` |
-| Data type mismatch | Usa `COLMAP` nel Replicat per mapping esplicito |
+| Data type mismatch | Usa `COLMAP`in the Replicat for explicit mapping|
 | Performance lenta | Aumenta `GROUPTRANSOPS` nel Replicat (default 1000) |
-| Sequenze non sincronizzate | After initial load: `SELECT setval('seq_name', max_val)` |
+|Sequences not synchronized| After initial load: `SELECT setval('seq_name', max_val)` |
 
 ---
 

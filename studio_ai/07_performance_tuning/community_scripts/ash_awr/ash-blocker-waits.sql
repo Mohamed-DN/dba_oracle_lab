@@ -64,9 +64,9 @@ blockers as (
 )
 select
 	--sample_id
-	sample_time
+sample_time
 	, sql_id
-	, session_id
+, session_id
 	, blocking_session
 	, inst_id
 	, event_count

@@ -17,8 +17,8 @@ col sql_time format 999,999,999 head 'SQL TIME(s)'
 with sqldata as (
 select distinct
 	sql_id
-	,session_id
-	, session_serial#
+,session_id
+, session_serial#
 	, sql_exec_id
 	, count(*) over (partition by sql_id, session_id, session_serial#, sql_exec_id) sql_time
 from v$active_session_history h

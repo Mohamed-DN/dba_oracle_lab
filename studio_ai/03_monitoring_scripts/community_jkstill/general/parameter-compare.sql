@@ -47,7 +47,7 @@ with excluded_parms as (
 	from (
 		table(
 			sys.odcivarchar2list(
-				'control_files'
+'control_files'
 				,'cluster_database'
 				,'db_block_size'
 				,'db_create_file_dest'
@@ -59,13 +59,13 @@ with excluded_parms as (
 				,'dg_broker_config_file1'
 				,'dg_broker_config_file2'
 				,'dg_broker_start'
-				,'diagnostic_dest'
-				,'dispatchers'
-				,'fal_client'
+,'diagnostic_dest'
+,'dispatchers'
+,'fal_client'
 				,'fal_server'
 				,'instance_number'
 				,'log_archive_dest_1'
-				,'log_archive_config'
+,'log_archive_config'
 				,'log_archive_dest_2'
 				,'log_archive_dest_3'
 				,'log_archive_dest_state_1'
@@ -130,5 +130,5 @@ order by name
 spool off
 @clears
 
-ed parameter-compare.csv
+and parameter-compare.csv
 

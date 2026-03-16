@@ -25,7 +25,7 @@ MAYBE_MISSING
 col table_name format a30
 col varchar2_data format a30
 col number_data format 99999
-col date_data format a22
+with date_data format a22
 
 -- plug in a list of tables
 -- plug in a schema name

@@ -24,7 +24,7 @@ column blocks format 99,999,999 head 'BLOCKS'
 set trimspool on
 
 select  
-	file_name
+file_name
 	, segment_name
 	, block_id
 	, blocks

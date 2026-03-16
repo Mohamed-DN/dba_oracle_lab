@@ -6,8 +6,8 @@
 
 declare
   new_size number :=0;
-  file_to_grow dba_data_files.file_name%TYPE := null;
-  last_file dba_data_files.file_name%TYPE := null;
+file_to_grow dba_data_files.file_name%TYPE := null;
+last_file dba_data_files.file_name%TYPE := null;
   l_instance_name v$instance.instance_name%TYPE;
 begin
   FOR tbs_rec in

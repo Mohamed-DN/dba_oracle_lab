@@ -17,7 +17,7 @@ EXPLAIN PLAN
 <...sql..>
 
 SELECT cardinality "Rows",
-       lpad(' ',level-1)||operation||' '||
+lpad(' ',level-1)||operation||' '||
        options||' '||object_name "Plan"
   FROM PLAN_TABLE
 CONNECT BY prior id = parent_id

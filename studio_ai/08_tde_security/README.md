@@ -1,8 +1,8 @@
 # 08 - TDE & Security
 
-Script e note operative per audit e sicurezza Oracle nel toolkit.
+Oracle audit and security scripts and action notes in the toolkit.
 
-## Contenuto disponibile
+## Content available
 
 This area contains SQL scripts oriented towards audit trails and session controls, for example:
 
@@ -13,13 +13,13 @@ This area contains SQL scripts oriented towards audit trails and session control
 - `show_session_audit.sql`
 - `ua-audit-log-cleanup-job.sql`
 
-## Obiettivi pratici
+## Practical objectives
 
-- verificare eventi audit e accessi privilegiati
-- controllare volumi log audit
+- verify audit events and privileged access
+- check audit log volumes
 - set up cleanup routines
 
-## Riferimenti
+## References
 
 - [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_MAA_BEST_PRACTICES.md](../../GUIDE_MAA_BEST_PRACTICES.md)

@@ -2,7 +2,7 @@
 
 This note is kept for historical reference only.
 
-Per il laboratorio attuale Oracle 19c usare:
+For the current Oracle 19c lab use:
 
 - [GUIDE_RAC_PATCHING.md](../../GUIDE_RAC_PATCHING.md)
 - [GUIDE_PHASE2_GRID_AND_RAC.md](../../GUIDE_PHASE2_GRID_AND_RAC.md)

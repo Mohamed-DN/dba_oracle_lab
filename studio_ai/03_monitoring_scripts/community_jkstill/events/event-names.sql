@@ -52,7 +52,7 @@ where wait_class in (
 	, 'Cluster'
 	, 'Commit'
 	, 'Concurrency'
-	, 'Configuration'
+, 'Configuration'
 	, 'Idle'
 	, 'Network'
 	, 'Other'

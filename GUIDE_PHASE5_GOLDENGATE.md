@@ -6,7 +6,7 @@
 
 ## 5.0 Architectural Decision Before You Go
 
-La documentazione Oracle impone una distinzione netta.
+Oracle documentation imposes a clear distinction.
 
 ### Percorso base del repo
 
@@ -14,19 +14,19 @@ La documentazione Oracle impone una distinzione netta.
 - `capture mode`: `Integrated Extract`
 - `transport`: Data Pump GoldenGate
 - `target`: `dbtarget` locale oppure OCI compute target
-- `Data Guard`: continua a proteggere il source, ma non e il punto di capture base
+- `Data Guard`: continues to protect the source, but is not the base capture point
 
 ### Because I corrected the flow
 
 Nel draft precedente il lab assumeva `Integrated Extract` on Active Data Guard standby. This is not the base path supported by Oracle.
 
-Punti tecnici chiave:
+Key technical points:
 
 - `Integrated Extract` does not capture from a physical standby;
-- `GoldenGate Free` non e il percorso corretto per il lab RAC 19c + DG principale;
-- il target OCI free va separato dal percorso enterprise/licensed.
+- `GoldenGate Free`this is not the correct path for the RAC 19c + main DG lab;
+- the OCI free target must be separated from the enterprise/licensed path.
 
-Conclusione pragmatica:
+Pragmatic conclusion:
 
 - Phase 5 base = capture on primary;
 - variants with offload from redo or standby = advanced section, not main stream.
@@ -79,7 +79,7 @@ If Phase 4 is not closed, return to [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](./GUIDE_P
 
 ---
 
-## 5.0B Scegli il Target: Locale o OCI
+## 5.0B Choose Target: Local or OCI
 
 ### Opzione 1 - `dbtarget` locale
 
@@ -89,7 +89,7 @@ Usala se vuoi:
 - learn GoldenGate before the cloud;
 - avere debug piu semplice.
 
-### Opzione 2 - target OCI compute
+### Option 2 - target OCI compute
 
 Usala se vuoi:
 
@@ -107,15 +107,15 @@ Before using OCI read:
 
 Whatever target you choose, the source must resolve and reach the target.
 
-### Per il target locale
+### For the local target
 
-Assumi `dbtarget.localdomain` raggiungibile da `rac1`.
+Assumi `dbtarget.localdomain`reachable from`rac1`.
 
 ### Per il target OCI
 
-Assumi `dbtarget.localdomain` o `dbtarget` puntato all'IP corretto nel file `/etc/hosts` oppure nel DNS usato dal lab.
+Assumi `dbtarget.localdomain` o `dbtarget`pointed to the correct IP in the file`/etc/hosts`or in the DNS used by the lab.
 
-Test obbligatori da `rac1`:
+Tests required by`rac1`:
 
 ```bash
 ping dbtarget
@@ -132,7 +132,7 @@ Se questi test falliscono, non partire con GG.
 
 ---
 
-## 5.2 Architettura Supportata del Lab
+## 5.2 Supported Lab Architecture
 
 Flusso base:
 
@@ -153,9 +153,9 @@ Target DB
 
 Why primary is the right default:
 
-- e il percorso Oracle piu lineare e supportato per `Integrated Extract`;
+- is the most linear and supported Oracle path for`Integrated Extract`;
 - riduce ambiguita con Active Data Guard;
-- semplifica troubleshooting e inizializzazione.
+- simplifies troubleshooting and initialization.
 
 ---
 
@@ -172,8 +172,8 @@ ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 SELECT force_logging,
-       supplemental_log_data_min,
-       supplemental_log_data_all
+supplemental_log_data_min,
+supplemental_log_data_all
 FROM   v$database;
 ```
 
@@ -185,11 +185,11 @@ Atteso:
 
 Nota:
 
-- `FORCE LOGGING` e importante per Data Guard e GoldenGate, per evitare buchi di redo non loggato.
+- `FORCE LOGGING`and important for Data Guard and GoldenGate, to avoid unlogged redo holes.
 
 ---
 
-## 5.4 Prerequisiti sul Target
+## 5.4 Target prerequisites
 
 Sul target Oracle:
 
@@ -198,10 +198,10 @@ sqlplus / as sysdba
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
 ```
 
-Se il target e multitenant:
+If the target is multitenant:
 
-- crea o scegli il PDB target;
-- definisci un service dedicato;
+- create or choose the target PDB;
+- define a dedicated service;
 - check listener e `tnsping`.
 
 ---
@@ -259,14 +259,14 @@ mkdir -p /u01/app/goldengate
 chown oracle:oinstall /u01/app/goldengate
 ```
 
-Poi installa il software GoldenGate coerente con il database source.
+Then install the GoldenGate software consistent with the source database.
 
 ### Sul target
 
-- se target locale: installa GoldenGate sul server target;
-- se target OCI: segui [GUIDE_GOLDENGATE_OCI_ARM.md](./GUIDE_GOLDENGATE_OCI_ARM.md) per capire se stai usando un target `free validation` o un target realmente coerente con il lab principale.
+- if target local: install GoldenGate on the target server;
+- se target OCI: segui [GUIDE_GOLDENGATE_OCI_ARM.md](./GUIDE_GOLDENGATE_OCI_ARM.md) to understand if you are using a target`free validation`or a target truly consistent with the main lab.
 
-### Variabili ambiente
+### Environment variables
 
 ```bash
 cat >> /home/oracle/.bash_profile <<'EOF'
@@ -316,7 +316,7 @@ Manager analogo, adattando `AUTORESTART REPLICAT *`.
 
 ## 5.8 Extract configuration on the Primary
 
-### 5.8.1 Login e registrazione
+### 5.8.1 Login and registration
 
 Su `rac1` as `oracle`:
 
@@ -353,7 +353,7 @@ TABLE HR.*;
 TABLE APP.*;
 ```
 
-Nota pratica:
+Practical note:
 
 - in RAC the capture is logical on the database, but the instance from which you administer it is `rac1`;
 - use correct services for Oracle login and replicated objects.
@@ -381,11 +381,11 @@ TABLE HR.*;
 TABLE APP.*;
 ```
 
-Se usi microservices sul target, sostituisci il modello `RMTHOST/MGRPORT` con il percorso Distribution/Receiver coerente col deployment scelto.
+If you use microservices on the target, replace the template`RMTHOST/MGRPORT`with the Distribution/Receiver path consistent with the chosen deployment.
 
 ---
 
-## 5.10 Initial Load (Instanziazione)
+## 5.10 Initial Load (Instantiation)
 
 GoldenGate does not replace the initial load. First you load the data, then you apply the delta.
 
@@ -427,9 +427,9 @@ GGSCI> ADD EXTRACT ext_rac, INTEGRATED TRANLOG, SCN <SCN>
 GGSCI> ADD EXTTRAIL ./dirdat/er, EXTRACT ext_rac, MEGABYTES 200
 ```
 
-Poi rimetti il parameter file `ext_rac`.
+Then put the parameter file back`ext_rac`.
 
-Questa e la logica corretta per evitare buchi o duplicati durante il bootstrap.
+This is the correct logic to avoid holes or duplicates during bootstrapping.
 
 ---
 
@@ -498,12 +498,12 @@ The phase is considered closed if you have all these points:
 
 - source primary stabile;
 - target reachable via network and TNS;
-- initial load completato;
+- initial load completed;
 - Extract `RUNNING`;
 - Pump `RUNNING`;
 - Replicat `RUNNING`;
-- `lag` basso e controllato;
-- DML di test replicato correttamente;
+- `lag`low and controlled;
+- Test DML replicated correctly;
 - Data Guard still healthy after enabling GG.
 
 Check Data Guard post-GG:
@@ -530,13 +530,13 @@ COMMIT;
 ### Bulk test
 
 - massive insert in test table;
-- update di massa;
-- delete di massa;
+- mass update;
+- mass delete;
 - check lag and throughput.
 
 ### DDL policy test
 
-Se hai abilitato DDL replication, prova:
+If you have enabled DDL replication, try:
 
 ```sql
 CREATE TABLE HR.GG_DDL_TEST (ID NUMBER, TXT VARCHAR2(30));
@@ -545,23 +545,23 @@ DROP TABLE HR.GG_DDL_TEST PURGE;
 
 ---
 
-## 5.15 Varianti Avanzate e Limiti
+## 5.15 Advanced Variants and Limits
 
 ### Variant A - Offload from redo or standby
 
-Non e il percorso base del repo.
+It is not the basic repo path.
 
 Why:
 
 - `Integrated Extract` does not capture directly from physical standby;
-- `Classic Extract` su Active Data Guard e un tema avanzato con limiti importanti;
-- in ambienti multitenant o moderni e facile finire in combinazioni poco pulite.
+- `Classic Extract`on Active Data Guard and an advanced theme with important limitations;
+- in multi-tenant or modern environments it is easy to end up in unclean combinations.
 
 ### Variante B - Downstream mining database
 
-Questa e la variante piu pulita se vuoi offload serio dal source:
+This is the cleanest variant if you want serious offloading from source:
 
-- source continua a generare redo;
+- source continues to generate redo;
 - redo is sent to a dedicated mining database;
 - GoldenGate legge li.
 
@@ -569,7 +569,7 @@ It's an advanced case, not basic Phase 5.
 
 ### Variante C - GoldenGate Free
 
-Usalo solo in un sotto-lab dedicato `Free-to-Free`.
+Use it only in a dedicated sub-lab`Free-to-Free`.
 
 Do not use it as an implicit foundation of the main RAC 19c lab.
 
@@ -579,8 +579,8 @@ Do not use it as an implicit foundation of the main RAC 19c lab.
 
 ### `ORA-12514`
 
-- service non registrato;
-- alias TNS errato;
+- service not registered;
+- wrong TNS alias;
 - target not in the right state.
 
 ### `ORA-01017`
@@ -592,14 +592,14 @@ Do not use it as an implicit foundation of the main RAC 19c lab.
 
 - missing supplementary logging;
 - `enable_goldengate_replication` missing;
-- privilege GG incompleti;
+- incomplete GG privileges;
 - log mining issue.
 
 ### Replicat `ABENDED`
 
-- oggetto assente sul target;
-- collisioni non gestite;
-- datatype mapping errato;
+- object absent on the target;
+- unmanaged collisions;
+- incorrect datatype mapping;
 - constraints or inconsistent keys.
 
 ### Lag alto
@@ -607,8 +607,8 @@ Do not use it as an implicit foundation of the main RAC 19c lab.
 - slow network;
 - target lento;
 - trail saturi;
-- redo generation alta;
-- parallelismo o sizing insufficienti.
+- high redo generation;
+- insufficient parallelism or sizing.
 
 ---
 
@@ -616,22 +616,22 @@ Do not use it as an implicit foundation of the main RAC 19c lab.
 
 To use this phase as a real cloud migration:
 
-1. costruisci il target OCI con [GUIDE_GOLDENGATE_OCI_ARM.md](./GUIDE_GOLDENGATE_OCI_ARM.md)
+1. build the OCI target with [GUIDE_GOLDENGATE_OCI_ARM.md](./GUIDE_GOLDENGATE_OCI_ARM.md)
 2. clarify the network with [GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md)
 3. usa [GUIDE_GOLDENGATE_MIGRATION.md](./GUIDE_GOLDENGATE_MIGRATION.md) per il cutover
 
-Sequenza corretta:
+Correct sequence:
 
 - initial load al target cloud;
-- delta continuo con GG;
+- continuous delta with GG;
 - validation of counts/checksums;
-- freeze applicativo;
-- convergenza a lag 0;
-- cutover del service applicativo verso cloud.
+- application freeze;
+- convergence at lag 0;
+- cutover of the application service to the cloud.
 
 ---
 
-## 5.18 Fonti Oracle Ufficiali
+## 5.18 Official Oracle Sources
 
 - Integrated Extract cannot capture from standby: https://docs.oracle.com/en/middleware/goldengate/core/21.3/ggcab/overview-capture-active-data-guard-only-mode.html
 - Active Data Guard only mode and classic capture notes: https://docs.oracle.com/en/middleware/goldengate/core/21.3/coredoc/extract-oracle-active-data-guard-only-mode.html
@@ -644,7 +644,7 @@ Sequenza corretta:
 
 Phase 5 of the repo now has a simple rule:
 
-- Data Guard protegge;
+- Data Guard protects;
 - GoldenGate migra e replica;
-- il capture base parte dal primary;
+- the capture base starts from the primary;
 - OCI locks in as a target only after networking and compatibility have been clarified.

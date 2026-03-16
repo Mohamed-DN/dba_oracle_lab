@@ -6,15 +6,15 @@
 
 ## 1. How to Use This Document
 
-Per ogni domanda, costruisci la risposta in 3 strati:
+For each question, build the answer in 3 layers:
 
-1. definizione corretta in 1-2 frasi;
+1. correct definition in 1-2 sentences;
 2. why it matters in production;
 3. a working example, a `V$` view or a real command.
 
 Formula pratica:
 
-- `definizione`: che cos'e;
+- `definizione`: what is it;
 - `impatto`: because the business or DBA takes care of it;
 - `operativita`: How do you check or handle it.
 
@@ -24,22 +24,22 @@ Example:
 - weak answer: `Redo serve per recovery e undo per rollback.`
 - strong answer: `Redo registra le modifiche necessarie a riprodurre i cambiamenti durante recovery o replica Data Guard. Undo conserva la vecchia immagine logica dei dati per rollback e read consistency. Li verifico con il flusso commit, v$log, tablespace UNDO e casi ORA-01555.`
 
-Errore classico da evitare:
+Classic mistake to avoid:
 
 - talk only about theoretical definitions without citing a practical case;
 - naming tools without knowing when to use them;
-- confondere `instance`, `database`, `service`, `SID`, `redo`, `undo`, `restore`, `recover`, `RAC`, `Data Guard`.
+- confuse`instance`, `database`, `service`, `SID`, `redo`, `undo`, `restore`, `recover`, `RAC`, `Data Guard`.
 
 ---
 
-## 2. Architettura e Concetti Base
+## 2. Architecture and Basic Concepts
 
-### 2.1 Che differenza c'e tra instance e database?
+### 2.1 What is the difference between instance and database?
 
-Risposta chiara:
+Clear answer:
 
 - `instance` = memoria `SGA` + processi background e server;
-- `database` = file persistenti: datafile, control file, redo log, archived log, parameter file.
+- `database`= persistent files: datafile, control file, redo log, archived log, parameter file.
 
 Why it matters:
 
@@ -52,91 +52,91 @@ Follow-up forte:
 - `MOUNT` opens the control file;
 - `OPEN` opens datafiles.
 
-### 2.2 Qual e la differenza tra SGA e PGA?
+### 2.2 What is the difference between SGA and PGA?
 
-Risposta chiara:
+Clear answer:
 
 - `SGA` and memory shared between the processes of the instance;
-- `PGA` e memoria privata del singolo processo.
+- `PGA`and private memory of the single process.
 
-Dettagli utili:
+Useful details:
 
 - in `SGA` trovi `Buffer Cache`, `Shared Pool`, `Redo Log Buffer`;
 - in `PGA` you find sort area, hash area, stack, private state of the process.
 
-Domanda successiva tipica:
+Typical next question:
 
 - `Se manca memoria dove guardi?`
 - risposta: `AWR`, `v$sga_dynamic_components`, `v$pgastat`, `v$memory_target_advice`, wait events e paging OS.
 
 ### 2.3 What is the Buffer Cache for?
 
-Risposta chiara:
+Clear answer:
 
-- mantiene in memoria i blocchi letti o modificati;
+- keeps the blocks read or modified in memory;
 - riduce I/O fisico;
 - also contains dirty blocks not yet written to datafile.
 
-Punto importante da dire:
+Important point to say:
 
 - the `commit` does not wait for the block to be written to the datafile;
-- aspetta il redo su disco.
+- wait for the redo on disk.
 
 ### 2.4 Cos'e la Shared Pool?
 
-Risposta chiara:
+Clear answer:
 
 - and the area of ​​`SGA` which contains already parsed SQL and PL/SQL and dictionary metadata;
-- comprende soprattutto `Library Cache` e `Data Dictionary Cache`.
+- understands above all`Library Cache` e `Data Dictionary Cache`.
 
-Segnali di problema:
+Problem signs:
 
-- hard parse eccessivo;
+- hard parse excessive;
 - `ORA-04031`;
-- invalidazioni frequenti.
+- frequent invalidations.
 
-### 2.5 Che differenza c'e tra hard parse e soft parse?
+### 2.5 What is the difference between hard parse and soft parse?
 
-Risposta chiara:
+Clear answer:
 
 - `hard parse`: Oracle needs to do full parsing, optimization and creation of a new plan;
-- `soft parse`: Oracle riusa strutture gia esistenti in cache.
+- `soft parse`: Oracle reuses structures already existing in cache.
 
 Why it matters:
 
-- troppi hard parse aumentano CPU e latch/mutex contention;
+- too many hard parses increase CPU and latch/mutex contention;
 - le bind variables riducono hard parse inutili in molti workload OLTP.
 
 ### 2.6 What happens during a commit?
 
-Risposta chiara:
+Clear answer:
 
 - Oracle genera redo;
-- `LGWR` scrive il redo nei redo log online;
+- `LGWR`writes the redo in the online redo logs;
 - only then does it confirm the commit to the session.
 
 Punto da dire bene:
 
 - `DBWn` can write datafiles later;
-- e il principio del write-ahead logging.
+- and the principle of write-ahead logging.
 
-### 2.7 Redo e undo: differenza reale?
+### 2.7 Redo and undo: real difference?
 
-Risposta chiara:
+Clear answer:
 
-- `redo` descrive le modifiche per recovery e replica;
+- `redo`describes changes for recovery and replication;
 - `undo` preserves the previous state of the data for rollback and read consistency.
 
-Domanda-trabocchetto tipica:
+Typical trick question:
 
 - `Si puo fare recovery con il solo undo?`
 - No. Oracle recovery is based on redo.
 
 ### 2.8 Cos'e uno SCN?
 
-Risposta chiara:
+Clear answer:
 
-- `SCN` e il contatore logico del tempo interno Oracle;
+- `SCN`and the Oracle internal logical time counter;
 - serves to coordinate consistency, recovery, flashback and block synchronization.
 
 Why it's important:
@@ -146,76 +146,76 @@ Why it's important:
 
 ### 2.9 What are control files and why are they critical?
 
-Risposta chiara:
+Clear answer:
 
-- i control file contengono metadati strutturali del database;
-- Oracle li usa per sapere quali datafile, redo log, checkpoint e incarnazioni esistono.
+- control files contain structural metadata of the database;
+- Oracle uses them to know what datafiles, redo logs, checkpoints and incarnations exist.
 
-Se si perdono:
+If they get lost:
 
-- il database non monta;
-- servono restore/recreate e recovery accurati.
+- the database does not mount;
+- accurate restore/recreate and recovery are needed.
 
-### 2.10 SPFILE e PFILE: differenza?
+### 2.10 SPFILE and PFILE: difference?
 
-Risposta chiara:
+Clear answer:
 
-- `PFILE` e testo leggibile e modificabile a mano;
-- `SPFILE` e binario, gestito da Oracle, supporta `ALTER SYSTEM ... SCOPE=SPFILE/BOTH`.
+- `PFILE`and hand-readable and editable text;
+- `SPFILE`and binary, managed by Oracle, supports`ALTER SYSTEM ... SCOPE=SPFILE/BOTH`.
 
-Nota pratica:
+Practical note:
 
-- in single instance spesso va bene uno `SPFILE` locale;
+- in single instance one is often fine`SPFILE` locale;
 - in RAC lo `SPFILE` it must typically be in ASM or shared storage.
 
 ### 2.11 What does the password file do?
 
-Risposta chiara:
+Clear answer:
 
 - enable remote authentication for administrative users such as `SYS`, `SYSDG`, `SYSBACKUP`, `SYSKM`;
-- e controllato da `REMOTE_LOGIN_PASSWORDFILE`.
+- and controlled by`REMOTE_LOGIN_PASSWORDFILE`.
 
-Caso pratico:
+Practical case:
 
 - Data Guard uses consistent file passwords between primary and standby for remote administrative connections.
 
 ### 2.12 Why is the listener not the database?
 
-Risposta chiara:
+Clear answer:
 
 - the listener accepts network connections and forwards them to the correct service;
-- non esegue SQL e non contiene dati.
+- does not execute SQL and contains no data.
 
 Errore tipico:
 
 - think that restarting the listener restarts the database. It's not like that.
 
-### 2.13 Service name e SID: quale usi per le applicazioni?
+### 2.13 Service name and SID: which one do you use for applications?
 
-Risposta chiara:
+Clear answer:
 
-- per le applicazioni si usa il `service`;
+- for applications use the`service`;
 - the `SID` identifies a specific instance.
 
 Why it's a best practice:
 
 - services support load balancing, failover, role-based routing, PDB and RAC;
-- il `SID` e troppo rigido per ambienti HA.
+- il `SID`and too rigid for HA environments.
 
 ### 2.14 What are data blocks, extents, segments and table spaces?
 
-Risposta chiara:
+Clear answer:
 
-- `data block`: unita minima di I/O Oracle;
-- `extent`: gruppo di blocchi allocati insieme;
+- `data block`: minimum Oracle I/O unit;
+- `extent`: group of blocks allocated together;
 - `segment`: set of extents for an object such as table or index;
-- `tablespace`: contenitore logico di segmenti.
+- `tablespace`: logical container of segments.
 
-### 2.15 Che differenza c'e tra tempfiles e datafiles?
+### 2.15 What is the difference between tempfiles and datafiles?
 
-Risposta chiara:
+Clear answer:
 
-- i `datafile` contengono dati permanenti;
+- i `datafile`contain permanent data;
 - `tempfile` supports sort, hash and temporary operations, they are not recovered in the same way as datafiles.
 
 ---
@@ -224,129 +224,129 @@ Risposta chiara:
 
 ### 3.1 Why is RMAN preferable to manual OS backups?
 
-Risposta chiara:
+Clear answer:
 
-- conosce la struttura Oracle;
+- knows the Oracle structure;
 - manages consistent backups, block-level checks, restore, recover, cataloging, retention and integration with control file/catalog.
 
 What more to say:
 
-- sa leggere corruption a livello blocco;
+- knows how to read corruption at block level;
 - integra `validate`, `crosscheck`, `duplicate`, `block media recovery`.
-### 3.2 Che differenza c'e tra restore e recover?
+### 3.2 What is the difference between restore and recover?
 
-Risposta chiara:
+Clear answer:
 
-- `restore` = rimettere i file da backup;
+- `restore`= put files back from backup;
 - `recover` = apply redo/archivelog to bring them to a consistent state.
 
-Questa e una domanda base ma eliminatoria.
+This is a basic but preliminary question.
 
-### 3.3 Che differenza c'e tra backup set e image copy?
+### 3.3 What is the difference between backup set and image copy?
 
-Risposta chiara:
+Clear answer:
 
-- `backup set` e il formato RMAN compresso/logico piu comune;
-- `image copy` e una copia fisica molto simile al file originale.
+- `backup set`is the most common compressed/logical RMAN format;
+- `image copy`and a physical copy very similar to the original file.
 
-Quando citarli:
+When to cite them:
 
 - `backup set` per backup tradizionali;
 - `image copy` useful in incremental merge or rapid copy recovery strategies.
 
 ### 3.4 Are full backup and level 0 the same thing?
 
-Risposta chiara:
+Clear answer:
 
-- no, non sempre dal punto di vista concettuale RMAN;
-- `incremental level 0` e la base di una catena incrementale;
+- no, not always from the RMAN conceptual point of view;
+- `incremental level 0`and the basis of an incremental chain;
 - `full` is not used as the basis for incrementals `level 1` in the same way.
 
 ### 3.5 What are incremental level 1 differential and cumulative?
 
-Risposta chiara:
+Clear answer:
 
 - `differential`: saves blocks changed since the last incremental backup of a lower or equal level;
 - `cumulative`: Save the blocks changed since the last level 0.
 
-Impatto pratico:
+Practical impact:
 
-- differential = backup giornalieri piu piccoli;
+- differential = smaller daily backups;
 - cumulative = recovery piu semplice ma backup piu grandi.
 
 ### 3.6 What are `crosscheck`, `delete expired` and `delete obsolete` for?
 
-Risposta chiara:
+Clear answer:
 
 - `crosscheck` checks whether backups still exist on the media;
-- `expired` = backup attesi ma non piu trovati;
-- `obsolete` = backup non piu necessari secondo retention policy.
+- `expired`= backups expected but no longer found;
+- `obsolete`= backups no longer necessary according to retention policy.
 
-Errore comune:
+Common mistake:
 
 - confuse `expired` with `obsolete`.
 
 ### 3.7 What does `validate` do?
 
-Risposta chiara:
+Clear answer:
 
 - checks the integrity and readability of backup files or datafiles without performing a complete restore in production;
 - It is used to test whether the backups are really usable.
 
 ### 3.8 What is the control file autobackup for?
 
-Risposta chiara:
+Clear answer:
 
 - automatically protects control files and SPFILEs after structurally relevant backups;
 - and often the lifesaver when you lose control files and local catalog.
 
 ### 3.9 Catalog or nocatalog: what do you choose?
 
-Risposta chiara:
+Clear answer:
 
-- `nocatalog` va bene per ambienti semplici e piccoli;
+- `nocatalog`it is good for simple and small environments;
 - `recovery catalog` provides more history, reporting and centralized management, useful in enterprise environments.
 
 ### 3.10 Cos'e il block change tracking?
 
-Risposta chiara:
+Clear answer:
 
 - and a file that helps RMAN know which blocks have changed after level 0;
-- accelera gli incremental backup.
+- accelerates incremental backups.
 
 ### 3.11 How do you recover a lost datafile?
 
-Risposta chiara:
+Clear answer:
 
 - put the database/tablespace into the correct state if necessary;
 - `RESTORE DATAFILE ...`;
 - `RECOVER DATAFILE ...`;
-- poi rimetti online il file o apri il database a seconda del caso.
+- then put the file back online or open the database as appropriate.
 
 ### 3.12 How do you handle a crash with `shutdown abort`?
 
-Risposta chiara:
+Clear answer:
 
-- al successivo startup Oracle esegue `instance recovery`;
-- usa redo per rifare le modifiche committate non scritte nei datafile e undo per ripulire le transazioni incomplete.
+- at the next startup Oracle executes`instance recovery`;
+- use redo to redo committed changes not written to datafiles and undo to clean up incomplete transactions.
 
-### 3.13 `ARCHIVELOG` vs `NOARCHIVELOG`: differenza pratica?
+### 3.13 `ARCHIVELOG` vs `NOARCHIVELOG`: practical difference?
 
-Risposta chiara:
+Clear answer:
 
 - in `ARCHIVELOG` you can make online backups and more complete point-in-time media recovery;
-- in `NOARCHIVELOG` hai recovery piu limitata e normalmente backup offline per consistenza forte.
+- in `NOARCHIVELOG`you have more limited recovery and normally offline backups for strong consistency.
 
 ### 3.14 How do you recover SPFILE if you lose it?
 
-Risposta chiara:
+Clear answer:
 
 - you can use a `PFILE` di emergenza;
 - you can recover from RMAN autobackup or create one from memory/SPFILE backup if available.
 
 ### 3.15 Quando useresti `DUPLICATE`?
 
-Risposta chiara:
+Clear answer:
 
 - to create standby, clone/test, refresh, assisted migration or duplicate environments from active database.
 
@@ -356,7 +356,7 @@ Risposta chiara:
 
 ### 4.1 What is the difference between physical, logical and snapshot standby?
 
-Risposta chiara:
+Clear answer:
 
 - `physical standby`: apply redo physically to datafiles;
 - `logical standby`: apply logical SQL transformations;
@@ -366,106 +366,106 @@ In your lab the strong answer is: `uso physical standby per robustezza e allinea
 
 ### 4.2 What main processes do you need to know about in Data Guard?
 
-Risposta chiara:
+Clear answer:
 
-- lato transport: `LGWR`, `ARCn`, `LNS`, `RFS`;
+- transport side:`LGWR`, `ARCn`, `LNS`, `RFS`;
 - apply side: `MRP0` for physical standby.
 
 Follow-up forte:
 
 - `RFS` receives redo on standby;
-- `MRP0` applica redo;
+- `MRP0`apply redo;
 - with real-time apply the standby uses the `SRL`s without waiting for the archivelog to complete.
 
 ### 4.3 Why are standby redo logs needed?
 
-Risposta chiara:
+Clear answer:
 
 - they allow real-time apply and a more correct transport to standby;
-- sono necessari per molte configurazioni sane di Data Guard.
+- are required for many healthy Data Guard configurations.
 
-Regola pratica da ricordare:
+Rule of thumb to remember:
 
 - for each thread standby redo logs >= online redo logs of the primary + 1.
 
 ### 4.4 `SYNC` vs `ASYNC`: differenza?
 
-Risposta chiara:
+Clear answer:
 
 - `SYNC` requires acknowledgment for higher protection and greater potential impact on primary latency;
 - `ASYNC` prioritizes performance and throughput, with possible small data loss in the event of a sudden disaster.
 
-### 4.5 Qual e la differenza tra switchover e failover?
+### 4.5 What is the difference between switchover and failover?
 
-Risposta chiara:
+Clear answer:
 
 - `switchover` = role change planned and without expected data loss;
 - `failover` = emergency standby promotion after primary loss or switchover failure.
 
 ### 4.6 What is the Broker and why use it?
 
-Risposta chiara:
+Clear answer:
 
 - `Data Guard Broker` centralizes management and validation of Data Guard;
 - semplifica switchover, failover, fast-start failover, health checks e proprieta.
 
 ### 4.7 What are `transport lag` and `apply lag`?
 
-Risposta chiara:
+Clear answer:
 
 - `transport lag` = delay in redo transfer from primary to standby;
-- `apply lag` = ritardo tra redo ricevuto e redo applicato.
+- `apply lag`= delay between redo received and redo applied.
 
-Vista da citare:
+View to mention:
 
 - `v$dataguard_stats`.
 
-### 4.8 `db_name` e `db_unique_name`: differenza?
+### 4.8 `db_name` e `db_unique_name`: difference?
 
-Risposta chiara:
+Clear answer:
 
 - `db_name` remains the same between primary and standby in the same DG configuration;
 - `db_unique_name` uniquely identifies each database in the configuration.
 
 ### 4.9 What are `FAL_SERVER` and `FAL_CLIENT` for?
 
-Risposta chiara:
+Clear answer:
 
-- servono alla gap resolution per recuperare archive log mancanti;
-- diventano particolarmente importanti in scenari di ruolo invertibile e riconnessione.
+- they are used for gap resolution to recover missing archive logs;
+- become especially important in role reversal and reconnection scenarios.
 
 ### 4.10 What does `MRP0 APPLYING_LOG` mean?
 
-Risposta chiara:
+Clear answer:
 
 - that the standby managed recovery process is applying redo;
 - In a RAC standby it is normal for the apply to live on only one instance at a time.
 
 ### 4.11 MaxPerformance, MaxAvailability, MaxProtection: differenze?
 
-Risposta chiara:
+Clear answer:
 
-- `MaxPerformance`: tipicamente `ASYNC`, minima latenza, data loss minimo possibile ma non nullo in disastro;
+- `MaxPerformance`: typically`ASYNC`, minimum latency, minimum data loss possible but not zero in disaster;
 - `MaxAvailability`: attempt zero data loss with `SYNC`, while still keeping the primary available in many manageable faults;
 - `MaxProtection`: maximum protection, but the primary can stop if it fails to protect redos as required.
 
-### 4.12 Active Data Guard che vantaggio da?
+### 4.12 Active Data Guard what benefit does it give?
 
-Risposta chiara:
+Clear answer:
 
 - allows use of standby in `READ ONLY WITH APPLY`;
 - useful for reporting, read-only queries, some workload offloads, and GoldenGate/monitoring cases.
 
 ### 4.13 How do you seriously verify that Data Guard is healthy?
 
-Risposta chiara:
+Clear answer:
 
 - on the primary: `v$archive_dest` and no errors on the remote destination;
 - on standby: `v$managed_standby`, `v$dataguard_stats`, `v$database`, alert log, Broker `show configuration` if used.
 
-### 4.14 Quali errori comuni guardi per primi in Data Guard?
+### 4.14 What common errors do you look for first in Data Guard?
 
-Risposta chiara:
+Clear answer:
 
 - `ORA-12514`, `ORA-12154`, `ORA-01017`, archived log gap, missing SRLs, inconsistent file password, wrong listener/service, bad `DB_UNIQUE_NAME`, standby in incorrect state.
 
@@ -473,100 +473,100 @@ Risposta chiara:
 
 ## 5. RAC e ASM
 
-### 5.1 Qual e la differenza tra RAC e Data Guard?
+### 5.1 What is the difference between RAC and Data Guard?
 
-Risposta chiara:
+Clear answer:
 
 - `RAC` provides high availability and active/active scalability on the same shared database;
-- `Data Guard` fornisce disaster recovery e protezione dati mantenendo database distinti.
+- `Data Guard`provides disaster recovery and data protection by maintaining distinct databases.
 
 Risposta forte:
 
-- RAC non sostituisce DR;
-- Data Guard non sostituisce la scalabilita locale di RAC.
+- RAC does not replace DR;
+- Data Guard does not replace the local scalability of RAC.
 ### 5.2 Cos'e Cache Fusion?
 
-Risposta chiara:
+Clear answer:
 
-- e il meccanismo RAC che trasferisce blocchi tra buffer cache di istanze diverse via interconnect, invece di forzare sempre la scrittura preventiva su disco.
+- and the RAC mechanism that transfers blocks between buffer caches of different instances via interconnect, instead of always forcing prior writing to disk.
 
 Why it is central:
 
-- e il cuore dell'accesso concorrente RAC al database condiviso.
+- and the heart of RAC concurrent access to the shared database.
 
 ### 5.3 Che cos'e lo SCAN?
 
-Risposta chiara:
+Clear answer:
 
-- `Single Client Access Name` e il nome logico usato dai client per connettersi a un cluster RAC;
+- `Single Client Access Name`and the logical name used by clients to connect to a RAC cluster;
 - simplifies failover and load balancing without making all nodes known to clients.
 
 ### 5.4 What are OCR and Voting Disk used for?
 
-Risposta chiara:
+Clear answer:
 
 - `OCR` preserves cluster configuration and resources;
 - `Voting Disk` aiuta il cluster a determinare membership e quorum.
 
 ### 5.5 Why are services used in RAC and not connections fixed to the node?
 
-Risposta chiara:
+Clear answer:
 
 - per load balancing, failover, role separation, patching rolling e associazione a PDB o workload specifici.
 
 ### 5.6 Cos'e ASM?
 
-Risposta chiara:
+Clear answer:
 
-- `ASM` e il layer storage Oracle specializzato per file database;
+- `ASM`and the specialized Oracle storage layer for database files;
 - simplifies naming, striping, mirroring and file management for databases, RMAN, RAC and Data Guard.
 
-### 5.7 Che differenza c'e tra disk group e failure group?
+### 5.7 What is the difference between disk group and failure group?
 
-Risposta chiara:
+Clear answer:
 
 - `disk group` = logical set of ASM disks;
 - `failure group` = group that ASM uses for redundancy, to prevent mirror copies from ending up in the same fault domain.
 
 ### 5.8 Why put SPFILE and password file in ASM in RAC?
 
-Risposta chiara:
+Clear answer:
 
-- per avere file condivisi e consistenti tra i nodi;
+- to have shared and consistent files between nodes;
 - avoids divergences between local files and simplifies clusterware startup.
 
 ### 5.9 Cos'e un rebalance ASM?
 
-Risposta chiara:
+Clear answer:
 
 - and ASM data rebalancing when you add or remove disks;
-- ha impatto I/O e va monitorato.
+- has an I/O impact and must be monitored.
 
-Vista da citare:
+View to mention:
 
 - `v$asm_operation`.
 
 ### 5.10 How do you distinguish a cluster problem from a database problem?
 
-Risposta chiara:
+Clear answer:
 
 - cluster side look at `crsctl`, `srvctl`, OCR, listener, VIP, SCAN, resource status;
-- lato database guardi alert log, `v$instance`, `v$database`, wait events, storage e parametri.
+- database side look at alert log,`v$instance`, `v$database`, wait events, storage e parametri.
 
-### 5.11 Che differenza c'e tra `srvctl` e `sqlplus startup` in RAC?
+### 5.11 What is the difference between`srvctl` e `sqlplus startup` in RAC?
 
-Risposta chiara:
+Clear answer:
 
 - `srvctl` manages the database as a clusterware resource;
 - `sqlplus startup` acts only on the local instance and can bypass the cluster logic.
 
 Best practice:
 
-- in RAC e Data Guard clusterizzati, usa `srvctl` per start/stop normali.
+- in clustered RAC and Data Guard, use`srvctl` per start/stop normali.
 
 ### 5.12 How do you check the cluster status?
 
-Risposta chiara:
+Clear answer:
 
 - `crsctl stat res -t`;
 - `srvctl status database -d <db_unique_name> -v`;
@@ -579,100 +579,100 @@ Risposta chiara:
 
 ### 6.1 Cos'e un CDB e cos'e un PDB?
 
-Risposta chiara:
+Clear answer:
 
-- `CDB` e il container database che ospita root, seed e PDB;
+- `CDB`and the database container that hosts the root, seed, and PDB;
 - `PDB` is the pluggable database which appears almost independent but shares the instance and infrastructure of the CDB.
 
 ### 6.2 What is `PDB$SEED` for?
 
-Risposta chiara:
+Clear answer:
 
-- e il template read-only usato per creare nuovi PDB in modo rapido e consistente.
+- and the read-only template used to create new PDBs quickly and consistently.
 
-### 6.3 Common user e local user: differenza?
+### 6.3 Common user and local user: difference?
 
-Risposta chiara:
+Clear answer:
 
-- `common user` esiste a livello CDB e segue regole di naming/presenza comuni;
+- `common user`exists at CDB level and follows common naming/presence rules;
 - `local user` exists only in the specific PDB.
 
 ### 6.4 Does a PDB have its own separate instance?
 
-Risposta chiara:
+Clear answer:
 
 - no;
 - PDBs share the CDB instance, memory, and processes.
 
 ### 6.5 How do you connect an application to a PDB correctly?
 
-Risposta chiara:
+Clear answer:
 
-- tramite un `service` associato al PDB;
+- tramite un `service`associated with the PDB;
 - non tramite login al root o SID nudo.
 
 ### 6.6 Cos'e TDE?
 
-Risposta chiara:
+Clear answer:
 
-- `Transparent Data Encryption` protegge i dati a riposo cifrando colonne o tablespace;
+- `Transparent Data Encryption`protects data at rest by encrypting columns or table spaces;
 - keys are managed via keystore/wallet.
 
 ### 6.7 Chi dovrebbe gestire il keystore TDE?
 
-Risposta chiara:
+Clear answer:
 
 - ideally an account with dedicated privileges such as `SYSKM` or role consistent with internal governance;
 - not always just `SYSDBA`.
 
 ### 6.8 What happens if you lose the TDE wallet/keystore?
 
-Risposta chiara:
+Clear answer:
 
-- i dati cifrati possono diventare inutilizzabili;
-- il backup del keystore e critico quanto il backup del database.
+- encrypted data may become unusable;
+- keystore backup is as critical as database backup.
 
 ### 6.9 In RAC where do you put the TDE keystore?
 
-Risposta chiara:
+Clear answer:
 
 - on supported shared storage, so all nodes see the same keystore;
-- Oracle sconsiglia wallet locali non condivisi per casi RAC comuni.
+- Oracle does not recommend non-shared local wallets for common RAC cases.
 
 ### 6.10 What do you check when a keystore doesn't open?
 
-Risposta chiara:
+Clear answer:
 
 - `WALLET_ROOT`, `TDE_CONFIGURATION`, OS permissions, wallet type, keystore status in `v$encryption_wallet`, sincronizzazione tra nodi se cluster.
 
 ### 6.11 Why is password policy management not enough for DBA security?
 
-Risposta chiara:
+Clear answer:
 
-- la sicurezza DBA include auditing, least privilege, secret management, network encryption, TDE, patching, segregazione dei ruoli e hardening OS.
+- DBA security includes auditing, least privilege, secret management, network encryption, TDE, patching, role segregation and OS hardening.
 
 ---
 
-## 7. Performance, Diagnostica e Tuning
+## 7. Performance, Diagnostics and Tuning
 
 ### 7.1 What are AWR, ASH and ADDM for?
 
-Risposta chiara:
+Clear answer:
 
-- `AWR` raccoglie snapshot e metriche storiche di performance;
-- `ASH` traccia campioni di session activity ad alta frequenza;
-- `ADDM` analizza i dati e propone findings.
+- `AWR`collects snapshots and historical performance metrics;
+- `ASH`tracks high-frequency session activity samples;
+- `ADDM`analyzes the data and proposes findings.
 
 ### 7.2 Quando usi AWR e quando ASH?
 
-Risposta chiara:
+Clear answer:
 
-- `AWR` per analisi storiche su un intervallo;
+- `AWR`for historical analysis over an interval;
 - `ASH` to see who was waiting for what at a time or in a narrow window.
 
 ### 7.3 What do you look at first in an AWR report?
 
-Risposta chiara:
+Clear answer:
 
 - DB time;
 - top foreground waits;
@@ -682,47 +682,47 @@ Risposta chiara:
 
 ### 7.4 How do you analyze a high CPU problem?
 
-Risposta chiara:
+Clear answer:
 
 - distingui CPU Oracle vs OS;
-- guardi AWR/ASH, top SQL, hard parse, parallelismo, execution plan regressi, processi OS e scheduling.
+- look at AWR/ASH, top SQL, hard parse, parallelism, execution plan regressions, OS processes and scheduling.
 ### 7.5 How do you find a blocking session?
 
-Risposta chiara:
+Clear answer:
 
-- `v$session`, `v$lock`, `gv$session` in RAC, eventualmente ASH/AWR se il blocco non e piu attivo.
+- `v$session`, `v$lock`, `gv$session`in RAC, possibly ASH/AWR if the block is no longer active.
 
 ### 7.6 `ORA-01555 snapshot too old`: what does it really come from?
 
-Risposta chiara:
+Clear answer:
 
 - typically from insufficient undo or override too early relative to the duration of the consistent query;
 - It's not just a problem of long queries, but of retention, workload and undo pressure.
 
 ### 7.7 `ORA-04031` what does it tell you?
 
-Risposta chiara:
+Clear answer:
 
 - that Oracle is unable to allocate contiguous memory from a shared memory structure, often `Shared Pool` or similar pool;
-- va indagato su dimensionamento, frammentazione, hard parse e componenti attivi.
+- sizing, fragmentation, hard parse and active components must be investigated.
 
 ### 7.8 If a query is slow, where do you start?
 
-Risposta chiara:
+Clear answer:
 
 - I confirm whether the problem is new or historical;
 - I look at real execution plan, statistics freshness, waits, cardinality mismatch, bind peeking, I/O, locking, temp and parallelism.
 
 ### 7.9 Why are statistics important?
 
-Risposta chiara:
+Clear answer:
 
 - the cost-based optimizer decides the plan based on statistics;
-- statistiche stale o sbagliate possono generare piani pessimi.
+- stale or incorrect statistics can generate terrible plans.
 
-### 7.10 Rebuild index: soluzione standard?
+### 7.10 Rebuild index: standard solution?
 
-Risposta chiara:
+Clear answer:
 
 - no;
 - it is only done if there is a real reason, not as an automatic reflex.
@@ -733,23 +733,23 @@ Risposta forte:
 
 ### 7.11 How do you check the status of tablespaces and FRAs?
 
-Risposta chiara:
+Clear answer:
 
 - tablespace: `DBA_DATA_FILES`, `DBA_FREE_SPACE`, `DBA_TEMP_FREE_SPACE`, metriche OEM;
 - FRA: `v$recovery_file_dest`, `v$flash_recovery_area_usage`.
 
-### 7.12 Alert log o trace file: quando usi uno e quando l'altro?
+### 7.12 Alert log or trace file: when do you use one and when the other?
 
-Risposta chiara:
+Clear answer:
 
-- alert log per eventi principali e cronologia di alto livello;
-- trace file per dettaglio tecnico di errori, incidenti, sessioni e processi specifici.
+- alert log for major events and high-level history;
+- trace files for technical detail of errors, incidents, sessions and specific processes.
 
 ### 7.13 What is ADRCI and why is it useful?
 
-Risposta chiara:
+Clear answer:
 
-- e la CLI dell'Automatic Diagnostic Repository;
+- and the Automatic Diagnostic Repository CLI;
 - It is used to navigate alert, incident, trace and diagnostic purge also in RAC/Data Guard.
 
 ---
@@ -758,104 +758,104 @@ Risposta chiara:
 
 ### 8.1 The database does not start and see `ORA-01034`. Where are you leaving from?
 
-Risposta chiara:
+Clear answer:
 
 - I check if the instance is really down;
 - check `ORACLE_SID`, `ORACLE_HOME`, alert log, parameter file, spfile/pfile, listener status and clusterware if RAC.
 
 ### 8.2 A listener is on but returns `ORA-12514`. What does it mean?
 
-Risposta chiara:
+Clear answer:
 
 - the listener does not yet know the requested service;
 - typically dynamic registration problem, wrong service, wrong TNS alias or database not in expected state.
 
 ### 8.3 Standby is mounted but does not apply redo. What do you control?
 
-Risposta chiara:
+Clear answer:
 
 - `MRP0`, `RFS`, `v$archive_dest`, `v$dataguard_stats`, listener/service, file password, SRL, gap archive, TNS errors, database role and Broker if active.
 
 ### 8.4 `DEST_ID=2 ERROR` on primary in Data Guard: what do you think immediately?
 
-Risposta chiara:
+Clear answer:
 
-- trasporto redo fallito;
+- redo transport failed;
 - control `error` in `v$archive_dest`, aka TNS, standby listener, service standby, file password, standby status and network.
 
-### 8.5 La FRA e piena. Quali rischi hai?
+### 8.5 The FRA is full. What risks do you have?
 
-Risposta chiara:
+Clear answer:
 
 - archiving can stop;
 - backup/recovery/flashback possono degradare o bloccarsi;
 - in severe cases it also impacts the primary.
 
-Azioni tipiche:
+Typical actions:
 
 - understand what takes up space;
-- liberare in modo controllato;
-- riallineare retention e dimensionamento.
+- release in a controlled manner;
+- realign retention and sizing.
 
 ### 8.6 A tablespace is almost full. What are you doing?
 
-Risposta chiara:
+Clear answer:
 
-- verifico autoextend, spazio reale, crescita, segmenti maggiori, business impact;
+- I check autoextend, real space, growth, major segments, business impact;
 - then I add space, extend files or clean up only if supported.
 
 ### 8.7 A RAC node falls. How do you answer correctly?
 
-Risposta chiara:
+Clear answer:
 
 - I check clusterware, vip/service relocation, alert/trace, interconnect, ASM and resource status;
 - then I understand if the problem is node, GI, network, storage or database.
 
-### 8.8 Hai backup RMAN, ma nessuno ha mai testato restore. E sufficiente?
+### 8.8 You have RMAN backups, but no one has ever tested restore. Is it enough?
 
-Risposta chiara:
+Clear answer:
 
 - no;
-- backup non verificato non e un backup affidabile.
+- unverified backup is not a reliable backup.
 
 Risposta forte:
 
-- servono `validate`, restore test, runbook e prove periodiche di recovery.
+- servono `validate`, restore tests, runbooks and periodic recovery tests.
 
 ### 8.9 How do you distinguish `restore controlfile` from `recover database using backup controlfile`?
 
-Risposta chiara:
+Clear answer:
 
-- il primo rimette il control file;
-- il secondo entra nel flusso di recovery quando il control file usato non e perfettamente allineato alla storia corrente e richiede approccio di recovery compatibile.
+- the first puts the control file back;
+- the second enters the recovery flow when the control file used is not perfectly aligned with the current history and requires a compatible recovery approach.
 
 ### 8.10 If an application suddenly stops connecting, where do you start?
 
-Risposta chiara:
+Clear answer:
 
 - listener, service, DNS/SCAN if RAC, firewall, `sqlnet.ora`, DB status, account lock, recent errors in alert log and client side.
 
 ### 8.11 How do you respond if they ask you about a typical day as a DBA?
 
-Risposta chiara:
+Clear answer:
 
 - checking availability, backup, alerts, space, DG lag, critical jobs, listeners/services, performance regressions, open incidents and planned changes.
 
 ### 8.12 What do you do before patching?
 
-Risposta chiara:
+Clear answer:
 
 - verified backups, sufficient space, patch prerequisites, clean inventory, opatch/opatchauto conflicts, change window, rollback plan, cluster status and validated runbook.
 
 ### 8.13 What do you do after patching?
 
-Risposta chiara:
+Clear answer:
 
 - I check version, inventory, alert log, services, listener, broker, backup, job, initial performance and application health check.
 
 ### 8.14 How do you explain a difference between `READ ONLY`, `MOUNTED` and `READ ONLY WITH APPLY`?
 
-Risposta chiara:
+Clear answer:
 
 - `MOUNTED`: standby not open to normal users;
 - `READ ONLY`: open for read only but without apply in the simple case;
@@ -863,7 +863,7 @@ Risposta chiara:
 
 ### 8.15 If the topic enters critical production, what do you change in your approach?
 
-Risposta chiara:
+Clear answer:
 
 - more standardization, change control, RPO/RTO, hardening, monitoring, test recovery, runbook, role segregation, zero hardcoded secrets, DR tests and periodic validation.
 
@@ -873,39 +873,39 @@ Risposta chiara:
 
 ### 9.1 How do you define RPO and RTO to a non-technical manager?
 
-Risposta chiara:
+Clear answer:
 
 - `RPO` = how much data you can afford to lose;
 - `RTO` = how long it takes to get back up and running.
 
 ### 9.2 How do you choose between single instance, RAC and Data Guard?
 
-Risposta chiara:
+Clear answer:
 
-- single instance per semplicita;
-- RAC per HA locale e scalabilita;
+- single instance for simplicity;
+- RAC for local HA and scalability;
 - Data Guard per DR;
-- spesso in ambienti seri RAC + Data Guard insieme.
+- often in serious environments RAC + Data Guard together.
 
 ### 9.3 How do you defend an enterprise backup strategy?
 
-Risposta chiara:
+Clear answer:
 
 - full/incremental backups consistent with RPO/RTO;
-- retention chiara;
-- FRA dimensionata;
+- clear retention;
+- Dimensioned FRA;
 - control file autobackup;
 - restore test periodici;
 - offsite or standby-based backup where useful.
 ### 9.4 How do you set up serious monitoring?
 
-Risposta chiara:
+Clear answer:
 
 - availability, redo transport/apply lag, FRA, table space, backup success, wait anomalies, listener/service health, cluster resources, job failures, CPU/memory/I/O, and incident routing.
 
 ### 9.5 What would you never do as a DBA in production?
 
-Risposta chiara:
+Clear answer:
 
 - destructive commands without recovery path;
 - modifiche manuali non documentate su cluster/ASM;
@@ -915,20 +915,20 @@ Risposta chiara:
 
 ### 9.6 How do you explain a regression after application release?
 
-Risposta chiara:
+Clear answer:
 
 - AWR/ASH before-after comparison, new SQLs, changed plan, mutated statistics, different bind pattern, locking, data volume, parameter drift, new code path.
 
-### 9.7 Quando usi switchover invece di failover?
+### 9.7 When do you use switchover instead of failover?
 
-Risposta chiara:
+Clear answer:
 
 - when the primary is still healthy and the role transition is plannable;
 - for maintenance, DR testing or low-risk migration.
 
 ### 9.8 How do you demonstrate technical maturity?
 
-Risposta chiara:
+Clear answer:
 
 - parli per runbook, verifiche, trade-off e failure mode;
 - you don't sell magic, you sell operational control.
@@ -941,9 +941,9 @@ Use them for quick review.
 
 1. `Che cos'e LGWR?` Scrive redo online.
 2. `Che cos'e DBWn?` Scrive dirty blocks ai datafile.
-3. `Che cos'e CKPT?` Coordina checkpoint e aggiorna header/control file.
+3. `Che cos'e CKPT?`Coordinate checkpoints and update header/control files.
 4. `Che cos'e SMON?` Does system recovery and housekeeping.
-5. `Che cos'e PMON?` Ripulisce risorse di processi/sessioni fallite; in release moderne alcune responsabilita sono cambiate ma il concetto resta.
+5. `Che cos'e PMON?`Cleans up resources of failed processes/sessions; in modern releases some responsibilities have changed but the concept remains.
 6. `Che cos'e ARCn?` Archivia redo online in archived log.
 7. `Che cos'e LREG?` Register services to the listener.
 8. `Che cos'e MRP0?` Apply redo on physical standby.
@@ -951,26 +951,26 @@ Use them for quick review.
 10. `Che cos'e FRA?` Area recovery per archived log, backup, flashback e file collegati.
 11. `Che cos'e OMF?` Oracle Managed Files, naming/placement gestiti da Oracle.
 12. `Che cos'e ASM?` Storage layer Oracle per file database.
-13. `Che cos'e SCAN?` Nome unico per accesso client a un cluster RAC.
+13. `Che cos'e SCAN?`Unique name for client access to a RAC cluster.
 14. `Che cos'e OCR?` Cluster configuration repository.
 15. `Che cos'e Voting Disk?` Quorum e membership cluster.
 16. `Che cos'e AWR?` Repository storico performance.
 17. `Che cos'e ASH?` Session activity sampling.
-18. `Che cos'e ADDM?` Analisi automatica dei dati AWR.
-19. `Che cos'e TDE?` Cifratura dati a riposo.
+18. `Che cos'e ADDM?`Automatic analysis of AWR data.
+19. `Che cos'e TDE?`Data encryption at rest.
 20. `Che cos'e un PDB?` Database pluggable dentro un CDB.
 
 ---
 
 ## 11. Scenario Questions to Simulate Orally
 
-Queste valgono piu di molte definizioni.
+These are worth more than many definitions.
 
-1. `Lo standby e in lag ma il primary e sano. Dimmi il piano di triage.`
-2. `Hai perso un datafile utente. Dimmi restore e recover.`
-3. `Il listener e up ma le app ricevono ORA-12514.`
-4. `Dopo patching un solo nodo RAC non riparte.`
-5. `La FRA ha raggiunto il 95%.`
+1. `The standby is lagging but the primary is healthy. Walk me through the triage plan.`
+2. `You lost a user datafile. Walk me through restore and recovery.`
+3. `The listener is up but the applications receive ORA-12514.`
+4. `After patching, only one RAC node does not come back up.`
+5. `The FRA has reached 95%.`
 6. `Un PDB non apre dopo clone o plug.`
 7. `AWR mostra CPU alta ma l'app dice lentezza I/O.`
 8. `DGMGRL dice warning ma SQL mostra apply attivo.`
@@ -980,12 +980,12 @@ Queste valgono piu di molte definizioni.
 Recommended response method:
 
 - initial state;
-- impatto business;
-- verifiche immediate;
-- ipotesi ordinate per probabilita;
+- business impact;
+- immediate checks;
+- hypotheses ordered by probability;
 - fix;
 - final check;
-- prevenzione futura.
+- future prevention.
 
 ---
 
@@ -1012,15 +1012,15 @@ You must be able to explain without reading:
 
 If you want to go from junior to intermediate, you also need to know how to do:
 
-- un runbook rapido per datafile loss;
+- a fast runbook for datafile loss;
 - un runbook rapido per DG lag;
 - un runbook rapido per ORA-12514;
 - un runbook rapido per tablespace/FRA pieni;
-- un confronto serio tra `MaxPerformance` e `MaxAvailability`.
+- a serious comparison between`MaxPerformance` e `MaxAvailability`.
 
 ---
 
-## 13. Fonti Usate
+## 13. Sources Used
 
 ### 13.1 Sources for coverage of questions
 
@@ -1051,7 +1051,7 @@ Questions curated and cleaned from multiple public sources of technical collecti
 
 ---
 
-## 14. Sintesi Finale
+## 14. Final Summary
 
 If you want to be convincing in a technical discussion, you need to demonstrate three things:
 
@@ -1059,6 +1059,6 @@ If you want to be convincing in a technical discussion, you need to demonstrate 
 2. you can connect the concept to a real command, view or error;
 3. you know how to think in an operational mode, not just a definitional one.
 
-Una risposta forte da DBA non e lunga. E precisa, gerarchica e verificabile.
+A strong response from DBA is not long. It is precise, hierarchical and verifiable.
 
 

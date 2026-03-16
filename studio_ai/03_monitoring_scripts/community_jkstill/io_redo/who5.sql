@@ -33,7 +33,7 @@ select
 	to_number(substr((e.consistent_Gets + e.block_Gets),1,9)) Log_IO,
 	to_number(substr(e.Physical_reads,1,9)) Phy_IO,
 	to_number(substr(e.block_changes,1,9)) blk_chgs,
-   -- idle time
+   --idle time
    -- days added to hours
    --( trunc(LAST_CALL_ET/86400) * 24 ) || ':'  ||
    -- days separately
@@ -56,7 +56,7 @@ where
 	and  b.paddr = d.addr
 	and  b.username is not null
 	-- added 0.0000001 to the division above to
-	-- avoid divide by zero errors
+	--avoid divide by zero errors
 	-- this is to show all sessions, whether they
 	-- have done IO or not
 	--and  (e.consistent_Gets + e.block_Gets) > 0

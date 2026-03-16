@@ -104,7 +104,7 @@ select /*
 	, elapsed - (idle_time+user_time+sys_time+iowait_time+busy_time+rsrc_mgr_cpu_wait_time+os_cpu_wait_time) unaccounted_for
 	, abs((trunc(elapsed) - (idle_time+user_time+sys_time+iowait_time+busy_time+rsrc_mgr_cpu_wait_time+os_cpu_wait_time)) / elapsed * 100 ) unaccounted_for_pct
 	, load 
-	,idle_time
+,idle_time
 	, user_time	 
 	, iowait_time 
 	, busy_time

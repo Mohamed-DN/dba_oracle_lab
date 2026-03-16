@@ -52,7 +52,7 @@ http://oracle-help.com/oracle-database/killable-processes-oracle-database/
 
 -- Statistiche storiche processes
 
-col data for a20
+with data for a20
 select distinct to_char(b.begin_interval_time,'DD/MM/YYYY HH24:MI') data, a.* --b.begin_interval_time
 from DBA_HIST_RESOURCE_LIMIT a, DBA_HIST_SNAPSHOT b
 where a.resource_name='processes'
@@ -60,7 +60,7 @@ and b.snap_id=a.snap_id
 and a.instance_number=1
 order by a.snap_id;
 
-col data for a20
+with data for a20
 select to_char(b.begin_interval_time,'YYYY/MM/DD') data, round(avg(current_utilization))
 from DBA_HIST_RESOURCE_LIMIT a, DBA_HIST_SNAPSHOT b
 where a.resource_name='processes'

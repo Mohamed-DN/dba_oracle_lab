@@ -25,7 +25,7 @@ with data as (
 select to_char(s.end_interval_time,'yyyy-mm-dd hh24:mi:ss') end_interval_time
 	,metric_name
 	, average
-	--, metric_unit -- all are centiseconds 
+	--, metric_unit -- all are centiseconds
 from dba_hist_sysmetric_summary h
 join dba_hist_snapshot s on s.snap_id = h.snap_id
 where  h.metric_id in (

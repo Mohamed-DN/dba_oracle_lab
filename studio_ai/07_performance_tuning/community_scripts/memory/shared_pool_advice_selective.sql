@@ -73,7 +73,7 @@ select distinct
 	, d.estd_lc_time_saved
 	, s.secs_gain
 	--, s.max_factor
-	--, d.con_id
+	--, d.with_id
 	--, s.*
 from data d
 	join selector s on s.inst_id = d.inst_id

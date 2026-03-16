@@ -36,15 +36,15 @@ select
 	table_name, 
 	column_name, 
 	data_type, 
-	decode(data_type,
-		'NUMBER', decode( data_precision + data_scale, 
+decode(data_type,
+'NUMBER', decode( data_precision + data_scale,
 			NULL,NULL, 
-			'(' || to_char(data_precision) || ',' || to_char(data_scale) || ')'
+'(' || to_char(data_precision) || ',' || to_char(data_scale) || ')'
 			),
 		'DATE','',
 		'(' || to_char(data_length) || ')'
 	) dlength,
-	decode(nullable,'Y','NULL','NOT NULL') nullable
+decode(nullable,'Y','NULL','NOT NULL') nullable
 from dba_tab_columns
 where owner = upper('&uuser')
 and table_name like upper('&utable')

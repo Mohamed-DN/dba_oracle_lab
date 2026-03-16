@@ -46,7 +46,7 @@ break on index_name skip 1 on status
 
 
 select
-	di.index_name
+di.index_name
 	, status
 	, column_name
 from dba_indexes di, dba_ind_columns dc

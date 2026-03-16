@@ -39,7 +39,7 @@ col sql_id format a13
 col p1text format a15
 col program format a30
 col wait_time_micro format 999,999,999,999
-col starttime format a20
+with the starttime format a20
 col state format a15
 col process format a9
 col agent_id format 9999999 head 'AGENT ID'
@@ -52,7 +52,7 @@ select
 	--mod(e.p1,16) p1,
 	to_char(h.starttime,'yyyy-mm-dd hh24:mi:ss') starttime,
 	h.agent_id,
-	a.process,
+a.process,
 	a.program,
 	e.seq# seq,
 	e.state,

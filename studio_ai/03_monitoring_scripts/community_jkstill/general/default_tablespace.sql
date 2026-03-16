@@ -5,6 +5,6 @@ COLUMN description FORMAT A50
 SET LINESIZE 200
 
 SELECT *
-FROM   database_properties
+FROM database_properties
 WHERE  property_name like '%TABLESPACE';
 

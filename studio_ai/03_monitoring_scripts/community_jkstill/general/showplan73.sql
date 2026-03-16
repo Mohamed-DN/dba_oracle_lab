@@ -29,11 +29,11 @@ SELECT
 	object_name,
 	cost,
 	lpad(decode(cardinality,null,'  ',
-		decode( sign(cardinality-1000), 
+decode( sign(cardinality-1000),
 			-1, cardinality||' ',
-			decode(sign(cardinality-1000000), 
+decode(sign(cardinality-1000000),
 				-1, trunc(cardinality/1000)||'K',
-				decode( sign(cardinality-1000000000), 
+decode( sign(cardinality-1000000000),
 					-1, trunc(cardinality/1000000)||'M',
 					trunc(cardinality/1000000000)||'G'
 				)

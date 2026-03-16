@@ -55,7 +55,7 @@ from dual;
 
 whenever sqlerror exit &sqlplus_return_code
 
--- create an intentional error
+--create an intentional error
 -- to cause the script to exit
 select * from -sdfsdf;
 

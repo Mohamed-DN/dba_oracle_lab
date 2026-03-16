@@ -39,7 +39,7 @@ with csv (idx,string,cloc,val,rght) as (
 		, substr(t.string,1,instr('&u_list',',') -1)  val
 		, substr(t.string,instr('&u_list',',')) rght
 	from  (select upper(regexp_replace('&u_list','\s+','')) string from dual) t
-	union all
+union all
 	select 
 		csv.idx + 1 as idx
 		, csv.string

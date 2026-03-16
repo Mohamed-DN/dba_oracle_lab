@@ -15,7 +15,7 @@ create or replace view dba_table_audit_flags
 	, select_audit
 	, insert_audit
 	, update_audit
-	, delete_audit
+, delete_audit
 	, alter_audit
 	, audit_audit
 	, comment_audit

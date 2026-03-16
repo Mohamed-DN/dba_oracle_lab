@@ -1,16 +1,16 @@
 # SQL Plan Management (SPM)
 
-Script SPM disponibili nel toolkit:
+SPM scripts available in the toolkit:
 
 - `../03_monitoring_scripts/SPM.sql`
 - `../03_monitoring_scripts/SPM_from_AWR_old_fashioned.sql`
 
-Flusso tipico:
+Typical flow:
 
-1. Identifica SQL degradato.
-2. Cattura baseline.
+1. Identify degraded SQL.
+2. Capture baseline.
 3. Validate candidate plan.
-4. Esegui evoluzione baseline controllata.
+4. Perform controlled baseline evolution.
 
 See also:
 

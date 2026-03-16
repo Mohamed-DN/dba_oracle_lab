@@ -16,7 +16,7 @@ col metric_unit format a50
 select m.metric_name
 	, g.group_id
 	, g.name group_name
-	, g.interval_size / 100 interval_seconds
+, g.interval_size / 100 interval_seconds
 	, m.metric_unit
 from v$metricname m
 join v$metricgroup g on g.group_id = m.group_id

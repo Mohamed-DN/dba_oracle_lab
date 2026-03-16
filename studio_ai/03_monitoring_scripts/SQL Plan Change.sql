@@ -118,8 +118,8 @@ select plan_hash_value,executions,ROUND((elapsed_time/1000000)/executions,0) fro
 --- in SQLAREA:
 
 --	sql_id in v$sqlarea with more than one associated plan and :
--- 	tempo esecuzione medio maggiore di X millisecondi
---  numero esecuzione totale maggiore di X volte
+--average execution time greater than X milliseconds
+--total execution number greater than X times
 SELECT sql_id, count(plan_hash_value)
 	FROM gv$sql s
     WHERE executions > 1

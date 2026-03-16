@@ -44,7 +44,7 @@ REM********************************
 REM* Change the spool logfile name
 REM********************************
 
-col DATASPOOL noprint new_value NOME_REPORT
+with DATASPOOL noprint new_valueNOME_REPORT
 
 select '<nomescript>_'||to_char(sysdate ,'YYYYMMDDHH24MISS')     DATASPOOL
   from dual ;
@@ -59,15 +59,15 @@ set define off
 
 CREATE TABLE <owner>.<tablename>
 (
-	<campotabella>
-	<campotabella>
-	<campotabella>
-	<campotabella>
+<tablefield>
+<tablefield>
+<tablefield>
+<tablefield>
 )
 TABLESPACE <nometablespace>;
 
 
--- Se prevista la presen di un Ruolo _RO / _RW assegnare le grant al ruolo
+--If there is a _RO / _RW Role, assign the grants to the role
 GRANT  SELECT ON <owner>.<tablename> TO <owner_ruolo_RO>;
 GRANT  SELECT, INSERT, UPDATE, DELETE ON <owner>.<tablename> TO <owner_ruolo_RW>;
 

@@ -19,8 +19,8 @@ with raw_data as (
 	select inst_id
 		, sql_exec_start
 		, sql_id
-		, session_id
-		, session_serial#
+, session_id
+, session_serial#
 		, sql_exec_id
 		,decode(session_state,'ON CPU','ON CPU',h.event) event
 	from gv$active_session_history h
@@ -47,8 +47,8 @@ with raw_data as (
 	select inst_id
 		, sql_exec_start
 		, sql_id
-		, session_id
-		, session_serial#
+, session_id
+, session_serial#
 		, sql_exec_id
 		, event
 		, event_count
@@ -58,8 +58,8 @@ with raw_data as (
 )
 select inst_id
 	, sql_id
-	, session_id
-	, session_serial#
+, session_id
+, session_serial#
 	, sql_exec_id
 	, event
 	, event_count

@@ -26,7 +26,7 @@ from dba_tab_privs
 where grantee like upper('&&urole')
 union all
 select
-	'grant ' || privilege || ' to ' || grantee || 
+'grant ' || privilege || ' to ' || grantee ||
 	decode(admin_option, 'NO', ';', 'YES', ' with admin option;')
 from dba_sys_privs
 where grantee like upper('&&urole')

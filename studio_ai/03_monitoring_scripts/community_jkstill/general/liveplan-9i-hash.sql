@@ -32,7 +32,7 @@ where s.username is not null
 order by username, sid
 /
 
-col csid noprint new_value usid
+with csid noprint new_value usid
 prompt Get SQL for which SID? : 
 set term off feed off
 select '&1' csid from dual;

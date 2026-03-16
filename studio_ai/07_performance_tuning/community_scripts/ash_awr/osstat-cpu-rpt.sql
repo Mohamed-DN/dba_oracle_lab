@@ -88,10 +88,10 @@ select
 	, load
 	, pct(user_time, total_time) user_time
 	, pct(sys_time, total_time) sys_time
-	, pct(idle_time, total_time) idle_time
+, pct(idle_time, total_time) idle_time
 	--, pct(busy_time, total_time) busy_time
 	, pct(iowait_time, total_time) iowait_time
-	, pct(nice_time, total_time) nice_time
+, pct(nice_time, total_time) nice_time
 	--, total_time
 from cpudata
 -- the first row of data per instance will have 0 due to lag() 

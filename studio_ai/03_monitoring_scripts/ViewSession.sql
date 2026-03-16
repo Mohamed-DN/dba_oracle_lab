@@ -62,7 +62,7 @@ SET PAGES 400
          AND wait.event = ses.event
          AND wait.event NOT IN
                 ('rdbms ipc message',
-                 'pmon timer',
+'pmon timer',
                  'smon timer',
                  'wakeup time manager')
 ORDER BY 3, 8;

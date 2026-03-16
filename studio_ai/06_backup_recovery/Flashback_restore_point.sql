@@ -11,7 +11,7 @@ How To Flashback Primary Database In Standby Configuration (Doc ID 728374.1)
 
 -- DESCHEDULE DELETE ARCHIVELOG SCRIPT ON THE DR SERVER
 
-commentare script
+comment scripts
 
 -- STOP APPLY
 -- To have a second restore mode ready

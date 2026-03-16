@@ -27,7 +27,7 @@
 --              Note that the AVG_ETIME will not be acurate for parallel queries. The 
 --              ELAPSED_TIME column contains the sum of all parallel slaves. So the 
 --              script divides the value by the number of PX slaves used which gives an 
---              approximation. 
+--approximation.
 --
 --              Note also that if parallel slaves are spread across multiple nodes on
 --              a RAC database the PX_SERVERS_EXECUTIONS column will not be set.
@@ -39,7 +39,7 @@ set lines 190
 col sql_text format a70 trunc
 col child format 99999
 col execs format 9,999
-col avg_etime format 99,999.99
+with avg_etime format 99,999.99
 col "IO_SAVED_%" format 999.99
 col avg_px format 999
 col offload for a7

@@ -27,7 +27,7 @@ select
 	to_char(s.end_interval_time,'yyyy-mm-dd hh24:mi:ss') end_interval_time
 	, io.file#
 	, io.instance_number
-	--, io.con_id
+	--, i.with_id
 	, io.tablespace_name
 	, io.phyrdstot
 	, trunc(io.readtimtot * 10,1) readtimtot_ms
@@ -41,7 +41,7 @@ join dba_hist_snapshot s on s.snap_id = io.snap_id
 	--and s.con_id = io.con_id
 	--and DATE'2016-01-13' = trunc(s.end_interval_time)
 order by end_interval_time, io.file#, io.instance_number
-	--, io.con_id
+	--, i.with_id
 /
 
 spool off

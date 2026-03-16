@@ -76,7 +76,7 @@ with pdbs as (
 	&&v_12copts union all
 	select inst_id, 0 con_id, 'CDB' name
 	from gv$instance
-	union all
+union all
 	select inst_id, 1 con_id, 'ROOT' name
 	from gv$instance
 )
@@ -97,7 +97,7 @@ select
 	substr(p.program,1,20) server_program,
 	p.spid spid,
 	to_char(logon_time, 'mm/dd/yy hh24:mi:ss') logon_time,
-	-- idle time
+	--idle time
 	-- days added to hours
 	--( trunc(LAST_CALL_ET/86400) * 24 ) || ':'  ||
 	-- days separately

@@ -44,8 +44,8 @@ col leaf_blocks             format a6                   heading 'Leaf|blocks'   
 col distinct_keys           format 999,999,999          heading 'Distinct|keys'
 col rows_per_key            format 999,999,999          heading 'Rows per key'
 
-col p1 new_value 1
-col p2 new_value 2
+with p1 new_value 1
+with p2 new_value 2
 select null p1, null p2 from dual where 1 = 2;
 
 var tab_name varchar2(30)
@@ -80,9 +80,9 @@ select lpad(case when num_rows < 1e5 then num_rows || ' '
      , last_analyzed
      , user_stats
      , temporary
-     , compression
+, compression
      , substr(replace(degree, ' '), 1, 3) degree
-     , partitioned
+, partitioned
      , iot_type
   from dba_tables t 
  where table_name = :tab_name
@@ -91,8 +91,8 @@ select lpad(case when num_rows < 1e5 then num_rows || ' '
 ttitle left "Column statistics"
 
 select column_name
-     , avg_col_len
-     , data_type || decode(data_type, 'NUMBER', '(' || data_precision || decode(data_scale, 0, null, ',' || data_scale) || ')'
+, avg_col_len
+, data_type || decode(data_type, 'NUMBER', '(' || data_precision || decode(data_scale, 0, null, ',' || data_scale) || ')'
                                     , 'VARCHAR2', '(' || data_length || ')'
                                     , null
        ) data_type

@@ -38,7 +38,7 @@ COL dist_sqlexec_seen   HEAD "Distinct|Execs Seen" FOR 999999
 COL dist_timestamps     HEAD "Distinct|Tstamps" FOR 999999
 COL event               FOR A42 WORD_WRAP
 COL event2              FOR A42 WORD_WRAP
-COL time_model_name     FOR A50 WORD_WRAP
+COL time_model_name FOR A50WORD_WRAP
 COL program2            FOR A40 TRUNCATE
 COL username            FOR A20 wrap
 COL obj                 FOR A30
@@ -65,7 +65,7 @@ FROM (
         (SELECT
              a.*
            , session_id sid
-           , session_serial# serial
+, session_serial# serial
            , TO_CHAR(CASE WHEN session_state = 'WAITING' THEN p1 ELSE null END, '0XXXXXXXXXXXXXXX') p1hex
            , TO_CHAR(CASE WHEN session_state = 'WAITING' THEN p2 ELSE null END, '0XXXXXXXXXXXXXXX') p2hex
            , TO_CHAR(CASE WHEN session_state = 'WAITING' THEN p3 ELSE null END, '0XXXXXXXXXXXXXXX') p3hex
@@ -108,7 +108,7 @@ FROM (
            ||CASE WHEN BITAND(time_model, POWER(2, 20)) = POWER(2, 20) THEN 'INMEMORY_PREPOPULATE '  END
            ||CASE WHEN BITAND(time_model, POWER(2, 21)) = POWER(2, 21) THEN 'INMEMORY_REPOPULATE '  END
            ||CASE WHEN BITAND(time_model, POWER(2, 22)) = POWER(2, 22) THEN 'INMEMORY_TREPOPULATE '  END
-           ||CASE WHEN BITAND(time_model, POWER(2, 23)) = POWER(2, 23) THEN 'TABLESPACE_ENCRYPTION ' END time_model_name 
+           ||CASE WHEN BITAND(time_model, POWER(2, 23)) = POWER(2, 23) THEN 'TABLESPACE_ENCRYPTION' END time_model_name
         FROM gv$active_session_history a) a
       , dba_users u
       , (SELECT

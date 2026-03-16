@@ -44,7 +44,7 @@ REM********************************
 REM* Change the spool logfile name
 REM********************************
 
-col DATASPOOL noprint new_value NOME_REPORT
+with DATASPOOL noprint new_valueNOME_REPORT
 
 select '<nomescript>_'||to_char(sysdate ,'YYYYMMDDHH24MISS')     DATASPOOL
   from dual ;
@@ -58,16 +58,16 @@ set serveroutput on
 set define off
 
 INSERT INTO <owner>.<nometabella>
-(<campitabella>) VALUES (<valcampi>);
+(<tablefields>) VALUES (<tablefields>);
 
 INSERT INTO <owner>.<nometabella>
-(<campitabella>) VALUES (<valcampi>);
+(<tablefields>) VALUES (<tablefields>);
 
 UPDATE <owner>.<nometabella> set VAL = <val>
-WHERE [condizione] ;
+WHERE [condition] ;
 
 DELETE FROM <owner>.<nometabella>
-WHERE [condizione] ;
+WHERE [condition] ;
 
 COMMIT;
 

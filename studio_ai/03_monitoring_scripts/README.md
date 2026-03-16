@@ -1,46 +1,46 @@
-# 03 — Script SQL di Monitoring (Uso Quotidiano)
+#03 — Monitoring SQL Script (Daily Use)
 
-> 48 script SQL per il monitoraggio quotidiano di database Oracle RAC.
+> 48 SQL scripts for daily monitoring of Oracle RAC databases.
 > These are the scripts that an Enterprise DBA uses **every day** to diagnose problems.
 
 ---
 
-## 📂 Organizzazione per Categoria
+## 📂 Organization by Category
 
-### 🔍 Sessioni e Lock
+### 🔍 Sessions and Lock
 
 | Script | What He Does |
 |---|---|
 | `ViewSession.sql` | Show all active sessions with username, program, status |
-| `View_Blocking.sql` | Identifica le sessioni bloccanti (chi blocca chi) |
+| `View_Blocking.sql` |Identify blocking sessions (who is blocking whom)|
 | `locks.sql` | Active locks with details on type and object |
 | `locks_blocking.sql` | Lock ascenders with waiting chain |
-| `locks_details.sql` | Dettagli completi dei lock (DML, DDL, tipo) |
+| `locks_details.sql` |Full lock details (DML, DDL, type)|
 | `locks_10g.sql` | 10g compatible version |
 | `Check_Lock.sql` | Check rapido dei lock |
-| `Processsi.sql` | Processi OS collegati alle sessioni Oracle |
+| `Processsi.sql` |OS processes linked to Oracle sessions|
 
 ### 📊 Performance CPU e I/O
 
 | Script | What He Does |
 |---|---|
-| `View_Cpu_Consumer.sql` | Top consumatori di CPU in tempo reale |
+| `View_Cpu_Consumer.sql` |Top real-time CPU consumers|
 | `View_Cpu_Hist.sql` | Storico consumo CPU |
-| `View_IO_Database.sql` | I/O complessivo del database |
-| `View_IO_Hist.sql` | Storico I/O |
-| `View_IO_RealTime.sql` | I/O in tempo reale per sessione |
-| `IO_WaitTimeDetails.sql` | Dettaglio tempi di attesa I/O |
-| `IO_stat_nel_tempo.sql` | Statistiche I/O nel tempo |
-| `Event_statistics.sql` | Statistiche sugli eventi di attesa |
+| `View_IO_Database.sql` |Overall database I/O|
+| `View_IO_Hist.sql` |I/O history|
+| `View_IO_RealTime.sql` |Real-time I/O per session|
+| `IO_WaitTimeDetails.sql` |Detail of I/O waiting times|
+| `IO_stat_nel_tempo.sql` |I/O statistics over time|
+| `Event_statistics.sql` |Wait event statistics|
 
 ### 📈 ASH (Active Session History)
 
 | Script | What He Does |
 |---|---|
 | `ASH.sql` | Report ASH base |
-| `ActiveSessionHistoryQueries.sql` | Query ASH avanzate |
+| `ActiveSessionHistoryQueries.sql` |Advanced ASH queries|
 | `AshTopSession.sql` | Top sessions by activity |
-| `AshTopSql.sql` | Top SQL per consumo risorse |
+| `AshTopSql.sql` |Top SQL for resource consumption|
 | `AshTopProcedure.sql` | Top procedure PL/SQL |
 
 ### 💾 ASM (Automatic Storage Management)
@@ -51,13 +51,13 @@
 | `Asm_Disks.sql` | Detail of ASM disks |
 | `Asm_Disks_Perf.sql` | Performance I/O per disco ASM |
 | `Asm_DiskGroupPerformance.sql` | Performance per Disk Group |
-| `Asm_Files.sql` | File contenuti nei Disk Group |
+| `Asm_Files.sql` |Files contained in Disk Groups|
 | `Asm_Alias.sql` | Alias ASM |
-| `Asm_Clients.sql` | Database connessi all'ASM |
-| `Asm_Templates.sql` | Template di ridondanza |
+| `Asm_Clients.sql` |Databases connected to the ASM|
+| `Asm_Templates.sql` |Redundancy template|
 | `Asm_Check.sql` | Health check ASM |
-| `Asmdisk.sql` | Informazioni disco singolo |
-| `Asm_drop_files.sql` | Identificazione file da eliminare |
+| `Asmdisk.sql` |Single disc information|
+| `Asm_drop_files.sql` |Identifying files to delete|
 
 ### 🔧 SQL Tuning e SPM
 
@@ -66,21 +66,21 @@
 | `SPM.sql` | SQL Plan Management (baselines) |
 | `SPM_from_AWR_old_fashioned.sql` | SPM creation from AWR (classic method) |
 | `SQL Area 1x.sql` | Analisi SQL Area |
-| `SQL Bind.sql` | Variabili bind per SQL ID |
+| `SQL Bind.sql` |Bind variables for SQL ID|
 | `SQL Plan Change.sql` | Detection of plan changes |
-| `SQL Stats.sql` | Statistiche SQL dettagliate |
-| `SQL_Profile_Other_SqlID.sql` | Applicazione SQL Profile da un altro SQL ID |
-| `View_UnstablePlan.sql` | Identificazione piani instabili |
+| `SQL Stats.sql` |Detailed SQL statistics|
+| `SQL_Profile_Other_SqlID.sql` |SQL Profile application from another SQL ID|
+| `View_UnstablePlan.sql` |Identification of unstable floors|
 
-### 📋 Altre Utility
+### 📋 Other Utilities
 
 | Script | What He Does |
 |---|---|
-| `___ Situation.sql` | Panorama generale: sessioni, PDB, job, PX, connessioni |
-| `PGA.sql` | Analisi utilizzo PGA |
-| `View_RedoGeneration.sql` | Generazione redo log per sessione |
+| `___ Situation.sql` |General overview: sessions, PDB, jobs, PX, connections|
+| `PGA.sql` |PGA usage analysis|
+| `View_RedoGeneration.sql` |Redo log generation per session|
 | `BACKUP CHECKS.sql` | Check RMAN backup status |
-| `MONITOR__RMAN_BACKUP.sql` | Monitoraggio backup RMAN in corso |
+| `MONITOR__RMAN_BACKUP.sql` |Monitoring RMAN backup in progress|
 | `sysaux_fix.sql` | Fix per tablespace SYSAUX pieno |
 | `Stats_workflow.sql` | Workflow for statistics management |
 | `P3NPGP Queue*.sql` | Oracle queue management (Advanced Queuing) |
@@ -94,7 +94,7 @@
 # Da SQL*Plus, connesso come DBA:
 sqlplus / as sysdba
 
-# Esecuzione di uno script
+# Running a script
 @/path/to/studio_ai/03_monitoring_scripts/ViewSession.sql
 ```
 

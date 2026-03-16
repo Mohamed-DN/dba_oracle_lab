@@ -39,7 +39,7 @@ prompt parameter_name,database,value,pdb_modifiable,con_id
 
 with dbs as (
 	select 0 con_id, 'CDB' db from dual
-	union all
+union all
 	select con_id, name db from v$pdbs
 ),
 params as (
@@ -47,7 +47,7 @@ params as (
 		name sp_name
 		, sp.value
 		, decode(sp.ispdb_modifiable,'TRUE','Y','N') pdb_modifiable
-		, sp.con_id
+, sp.with_id
 	from  v$system_parameter sp
 )
 select 

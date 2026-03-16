@@ -39,7 +39,7 @@ select ( ( (32 * power(2,30)) / &blocksize) -1) * &blocksize maxfilesize from du
 col totaldatafiles new_value totaldatafiles noprint
 select floor(&maxtotalsize / ( 32 * power(2,30) )) totaldatafiles from dual;
 
-col totalruntime new_value totalruntime  noprint
+col totalruntime new_value totalruntime noprint
 select trim(155 * &totaldatafiles) totalruntime from dual;
 
 prompt
@@ -79,8 +79,8 @@ where tablespace_name = 'USERS'
 )
 select
 	-- level is a pseudo column created by 'connect by'
-	q'[	']' || file_name || '&newtbs' || lpad(level,3,'0') || q'[.DBF' size ]' || to_char(&maxfilesize)
-	-- to comma or not to comma
+q'[ ']' || file_name || '&newtbs' || lpad(level,3,'0') || q'[.DBF' size ]' || to_char(&maxfilesize)
+	--to comma or not to comma
 	|| case level when  &totaldatafiles then '' else ',' end
 from template
 -- a SQL trick to create multiple rows

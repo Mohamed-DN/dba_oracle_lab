@@ -18,7 +18,7 @@ getInstance () {
 
 	declare testIns
 
-	# space if standalone
+# space if standalone
 	# digit for RAC - checks up to 4 nodes
 
 	for orainst in ' ' 1 2 3 4
@@ -69,7 +69,7 @@ do
 
 	echo "   localInst: $localInst"
 
-	declare alertLog='notfound'
+declare alertLog='notfound'
 
 	if [[ -n $localInst ]]; then
 		alertLog=$(getAlertLog $psid $localInst)

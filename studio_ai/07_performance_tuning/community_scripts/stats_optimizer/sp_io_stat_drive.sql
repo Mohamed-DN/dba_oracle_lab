@@ -29,7 +29,7 @@ from (
 		, sum(a.PHYBLKRD) phyblkrd
 		, sum(a.PHYBLKWRT) phyblkwrt
 		, sum(a.WAIT_COUNT) wait_count
-		, sum(a.time) time
+, sum(a.time) time
 	from ( 
 		SELECT 
 			snap_id

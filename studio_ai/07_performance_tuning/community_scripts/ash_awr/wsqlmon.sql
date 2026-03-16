@@ -19,7 +19,7 @@
 --              Diagnostics and Tuning pack licenses for using it as it queries
 --              some separately licensed views.
 --
--- Modification: 
+--Modification:
 --              jkstill 2016-08-23 - made to work with AWR and renamed to wsqlmon.sql
 ------------------------------------------------------------------------------------------------------------------------
 SET LINESIZE 999 PAGESIZE 5000 TRIMOUT ON TRIMSPOOL ON 

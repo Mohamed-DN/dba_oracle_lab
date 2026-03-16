@@ -71,7 +71,7 @@ with constraints as (
 				and table_name = c1.table_name
 			)
 		) 
-	union all
+union all
 	select
 		u1.owner
 		, u1.table_name
@@ -105,7 +105,7 @@ heir (owner, table_name, pk_constraint_name, fk_constraint_name, r_owner,r_const
 		--, 'A' code
 	from constraints a
 	where r_constraint_name is null
-	union all
+union all
 	select
 		b.owner
 		, b.table_name

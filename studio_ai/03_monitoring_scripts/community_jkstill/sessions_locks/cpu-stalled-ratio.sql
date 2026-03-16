@@ -21,7 +21,7 @@ col profiles_on_cpu format a60
 
 @defaults
 
-col period_parm new_value period_parm
+with period_parm new_value period_parm
 col period_units_parm new_value period_units_parm
 
 def period_default=10
@@ -77,7 +77,7 @@ profile_data as (
 profiles_active as (
 	select
 		listagg(profile, ', ') within group (order by profile) profiles_on_cpu
-	from profile_data
+from profile_data
 )
 select
 	w.event_count stalled

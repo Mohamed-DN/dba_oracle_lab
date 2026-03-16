@@ -62,7 +62,7 @@ set pagesize 60
 spool $HOME/tmp/spsnap.txt
 
 select to_char(s.startup_time,' dd Mon "at" HH24:mi:ss') instart_fmt
-     , di.instance_name                                  inst_name
+, di.instance_name inst_name
      , di.db_name                                        db_name
      , s.snap_id                                         snap_id
      , to_char(s.snap_time,'mm/dd/yyyy hh24:mi')         snapdat
@@ -77,7 +77,7 @@ select to_char(s.startup_time,' dd Mon "at" HH24:mi:ss') instart_fmt
    and di.instance_number  = :inst_num
    and di.dbid             = s.dbid
    and di.instance_number  = s.instance_number
-   and di.startup_time     = s.startup_time
+and di.startup_time = s.startup_time
  order by db_name, instance_name, snap_id;
 
 spool off

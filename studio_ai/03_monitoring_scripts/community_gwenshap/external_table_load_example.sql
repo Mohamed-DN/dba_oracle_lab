@@ -12,7 +12,7 @@ time_stamp date
   (
      type oracle_loader
      default directory slct_work_db_bm
-     access parameters
+access parameters
      (
              records delimited by newline
                          CHARACTERSET AL32UTF8
@@ -29,7 +29,7 @@ time_stamp date
 'db051.unl.gz',
 'db052.unl.gz'
 ))
-  parallel
+parallel
   reject limit unlimited;
 
 --select * from db.bm_tmp where rownum<=5;
@@ -40,5 +40,5 @@ truncate table real_table;
 
 insert into /*+ PARALLEL(32) APPEND*/ real_table
 select /*+ PARALLEL(32) */
- str,id,toomuchdata,decode(genre_id,'NULL',null,genre_id),time_stamp
+str,id,toomuchdata,decode(genre_id,'NULL',null,genre_id),time_stamp
 from external_table;

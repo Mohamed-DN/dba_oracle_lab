@@ -66,7 +66,7 @@ data as (
 		, nvl(s.mbrc,0)  mbrc
 		, nvl(p.maxthr,0)	 maxthr
 		, nvl(p.slavethr,0) slavethr
-	from parallel_io p, serial_io s
+from parallel_io p, serial_io s
 	where p.statid = s.statid
 	and ( nvl(s.mreadtim,0) / 2)	> nvl(s.sreadtim,0)
 	and nvl(s.mbrc,0) > 0

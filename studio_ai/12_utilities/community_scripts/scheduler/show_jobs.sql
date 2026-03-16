@@ -36,7 +36,7 @@ select
  --this_sec,
  next_date,
  --next_sec,
- total_time,
+total_time,
  broken,
  interval,
  failures,

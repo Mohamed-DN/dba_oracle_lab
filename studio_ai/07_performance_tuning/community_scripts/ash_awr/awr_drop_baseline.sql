@@ -14,7 +14,7 @@ prompt
 col u_baseline new_value u_baseline
 
 prompt
-prompt AWR Baseline to drop: 
+prompt AWR Baseline to drop:
 prompt
 
 set feed off term off 

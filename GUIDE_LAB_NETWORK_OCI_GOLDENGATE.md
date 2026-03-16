@@ -1,12 +1,12 @@
 # Network Guide: Local Lab, OCI and GoldenGate
 
-> This guide explains how to consistently connect your VirtualBox local lab with an Oracle target on Oracle Cloud Infrastructure (OCI). The goal is to clarify what `stessa rete` really means, when the public IP is enough, when a VPN is needed and which ports must be opened.
+> This guide explains how to consistently connect your VirtualBox local lab with an Oracle target on Oracle Cloud Infrastructure (OCI). The goal is to clarify what `same network` really means, when the public IP is enough, when a VPN is needed, and which ports must be opened.
 
 ---
 
-## 1. Il Problema Reale
+## 1. The Real Problem
 
-Nel tuo lab esistono tre mondi diversi:
+In your lab there are three different worlds:
 
 1. private network VirtualBox `host-only` of the local lab;
 2. VirtualBox NAT network used to go out to the Internet;
@@ -28,13 +28,13 @@ Schema minimo:
                                 v
 +-------------------------- OCI / VCN -------------------------------+
 |                                                                    |
-|  Subnet privata o pubblica                                         |
+|  Private or public subnet |
 |  dbtarget/compute instance/listener/GoldenGate               |
 |                                                                    |
 +--------------------------------------------------------------------+
 ```
 
-Conclusione:
+Conclusion:
 
 - Local `host-only` does not reach OCI on its own;
 - OCI does not reach the `192.168.56.x` network on its own;
@@ -44,13 +44,13 @@ Conclusione:
 
 ## 2. What `Stessa Rete` Really Means
 
-Ci sono tre significati diversi.
+There are three different meanings.
 
 ### 2.1 Same application logic network
 
-Basta che le macchine si risolvano e si raggiungano sulle porte corrette.
+Just let the cars resolve and reach the correct doors.
 
-Questo e sufficiente per GoldenGate nella maggior parte dei lab.
+This is sufficient for GoldenGate in most labs.
 
 ### 2.2 Same private network routed
 
@@ -60,37 +60,37 @@ Local and OCI machines are seen via private IPs, typically with:
 - FastConnect;
 - overlay VPN.
 
-Questo e il modello enterprise serio.
+This is the serious enterprise model.
 
 ### 2.3 Same network only nominal via `/etc/hosts`
 
-Non basta mappare un nome in `/etc/hosts` se non esiste connettivita reale.
+It's not enough to map a name to`/etc/hosts`if there is no real connectivity.
 
 `/etc/hosts` risolve un nome. Non crea il routing.
 
 ---
 
-## 3. Modelli Supportati per il Lab
+## 3. Supported Lab Templates
 
 ### 3.1 Model A - Simple lab with OCI public IP
 
 Usi:
 
-- i nodi locali escono via NAT;
-- il target OCI ha un IP pubblico;
+- local nodes exit via NAT;
+- the OCI target has a public IP;
 - open only minimal ports in OCI, limited to your home public IP.
 
 Pro:
 
-- semplice;
+- simple;
 - rapido;
-- nessun appliance VPN.
+- no VPN appliances.
 
 Contro:
 
 - it is not a true shared private network;
-- dipende dall'IP pubblico di casa;
-- meno elegante del modello enterprise.
+- depends on your home public IP;
+- less elegant than the enterprise model.
 
 Quando usarlo:
 
@@ -107,8 +107,8 @@ Usi:
 Pro:
 
 - true private extension of the network;
-- modello enterprise corretto;
-- IP privati end-to-end.
+- correct enterprise model;
+- End-to-end private IPs.
 
 Contro:
 
@@ -117,20 +117,20 @@ Contro:
 
 Quando usarlo:
 
-- if you really mean that the cloud target is `sulla stessa rete privata` of the lab.
+- if you really mean that the cloud target is `on the same private network` as the lab.
 
-### 3.3 Modello C - Overlay VPN opzionale
+### 3.3 Model C - Optional overlay VPN
 
-Usi una mesh VPN software tra lab locale e OCI.
+You use a software VPN mesh between local lab and OCI.
 
 Pro:
 
-- facile da mettere su;
+- easy to put on;
 - evita aperture ampie su Internet.
 
 Contro:
 
-- non e il modello Oracle/enterprise di riferimento;
+- it is not the Oracle/enterprise model of reference;
 - it should be treated as a convenience option for the laboratory.
 
 Quando usarlo:
@@ -139,21 +139,21 @@ Quando usarlo:
 
 ---
 
-## 4. Modello Raccomandato nel Repo
+## 4. Model Recommended in the Repo
 
-Per il repo consiglio due livelli.
+For the repo I recommend two levels.
 
-### Livello 1 - Percorso base documentato
+### Level 1 - Documented basic path
 
 - target OCI compute with public IP;
 - NSG o Security List molto restrittive;
 - listener and GoldenGate exposed only to your home public IP;
-- traffico applicativo minimo e controllato.
+- minimal and controlled application traffic.
 
-### Livello 2 - Percorso avanzato
+### Level 2 - Advanced path
 
 - Site-to-Site VPN OCI;
-- IP privati tra lab e cloud;
+- private IPs between lab and cloud;
 - same internal naming for `dbtarget.localdomain`;
 - no open DB listener in the world.
 
@@ -168,11 +168,11 @@ Per il repo consiglio due livelli.
 ### 5.2 GoldenGate Classic/Core
 
 - `7809/tcp`: Manager classico.
-- porte trail/processi: tipicamente un range tipo `7810-7820/tcp`.
+- trail/process ports: typically a typical range`7810-7820/tcp`.
 
 ### 5.3 GoldenGate Microservices
 
-Porte tipiche:
+Typical doors:
 
 - `9011/tcp`: Service Manager
 - `9012/tcp`: Administration Server
@@ -181,13 +181,13 @@ Porte tipiche:
 
 ### 5.4 SSH
 
-- `22/tcp`: amministrazione host.
+- `22/tcp`: host administration.
 
-Regola pratica:
+Rule of thumb:
 
 - open only the doors that are really needed for the chosen model;
 - do not open Web UI GoldenGate to the world without restrictions;
-- per il lab pubblico usa sorgente limitata al tuo IP pubblico.
+- for the public lab use source limited to your public IP.
 
 ---
 
@@ -198,7 +198,7 @@ In OCI you can filter traffic with:
 - `Security List` a livello subnet;
 - `Network Security Group (NSG)` at VNIC/instance level.
 
-Per il lab e meglio usare NSG dedicate al target.
+For the lab it is better to use NSG dedicated to the target.
 
 Minimum example for Oracle + GoldenGate DB target:
 
@@ -206,18 +206,18 @@ Minimum example for Oracle + GoldenGate DB target:
 - ingress `1521/tcp` da `TUO_IP_PUBBLICO/32`
 - ingress `7809/tcp` da `TUO_IP_PUBBLICO/32` se usi classic GG
 - input `9011-9014/tcp` from `TUO_IP_PUBBLICO/32` only if you use microservices
-- egress `all` oppure minima uscita necessaria
+- egress `all`or minimum output necessary
 
-Nota importante:
+Important note:
 
-- se il tuo IP pubblico cambia spesso, questo modello diventa scomodo;
-- in quel caso VPN o Bastion sono piu puliti.
+- if your public IP changes often, this model becomes inconvenient;
+- in that case VPN or Bastion are cleaner.
 
 ---
 
 ## 7. How to Make `dbtarget` Reachable
 
-### 7.1 Naming lato locale
+### 7.1 Local side naming
 
 Su `rac1`, `rac2`, `racstby1`, `racstby2` you can use:
 
@@ -225,9 +225,9 @@ Su `rac1`, `rac2`, `racstby1`, `racstby2` you can use:
 130.x.x.x   dbtarget.localdomain   dbtarget
 ```
 
-o l'IP privato VPN, se esiste.
+or the VPN private IP, if it exists.
 
-### 7.2 TNS lato locale
+### 7.2 TNS local side
 
 Example:
 
@@ -257,13 +257,13 @@ If these tests fail, GoldenGate is not the problem. And the network.
 
 ## 8. Site-to-Site VPN: How to Really Connect the Lab and OCI
 
-The correct Oracle model for `stessa rete privata` is:
+The correct Oracle model for `same private network` is:
 
 1. `VCN` in OCI with target subnet;
-2. `DRG` associato alla VCN;
-3. `Customer Premises Equipment (CPE)` che rappresenta il tuo lato locale;
+2. `DRG` associated with the VCN;
+3. `Customer Premises Equipment (CPE)` representing your local side;
 4. `IPSec Connection` tra OCI e il tuo router/firewall o VM gateway locale;
-5. route rules da entrambi i lati.
+5. route rules on both sides.
 
 Schema:
 
@@ -282,13 +282,13 @@ With this template you can use:
 
 - private IPs towards the target;
 - listeners and GoldenGate not publicly exposed;
-- naming interno coerente.
+- consistent internal naming.
 
 ---
 
-## 9. Bastion, VPN o IP Pubblico?
+## 9. Bastion, VPN or Public IP?
 
-### Usa Bastion quando:
+### Use Bastion when:
 
 - you want to do administrative SSH without opening `22/tcp` to the world.
 
@@ -297,10 +297,10 @@ With this template you can use:
 - you want true private network between local and OCI;
 - you want to make the `dentro` target look like your network perimeter.
 
-### Usa IP pubblico limitato quando:
+### Use restricted public IP when:
 
 - you just want a quick, controlled lab;
-- sai bene quali porte aprire;
+- you know well which doors to open;
 - understand that it is not the same level as an enterprise environment.
 
 ---
@@ -313,7 +313,7 @@ For local migration -> OCI with GoldenGate you need at least two paths.
 
 The source must achieve:
 
-- `7809` se usi Manager classico;
+- `7809`if you use Classic Manager;
 - oppure `9014`/Distribution-Receiver se usi microservices.
 
 ### 10.2 Path source -> target DB listener
@@ -322,21 +322,21 @@ It is used for:
 
 - `tnsping`;
 - Replicat if it ran on target;
-- test operativi e initial load.
+- operational tests and initial load.
 
-### 10.3 Percorso SSH amministrativo
+### 10.3 Administrative SSH path
 
 It is used for:
 
-- installazione;
+- installation;
 - troubleshooting;
-- trasferimento file se non usi object storage.
+- file transfer if you don't use object storage.
 
 ---
 
 ## 11. Network Checklist Before Touching GoldenGate
 
-Esegui questi check nell'ordine.
+Perform these checks in order.
 
 ### On the OCI target
 
@@ -344,12 +344,12 @@ Esegui questi check nell'ordine.
 - firewall OS coerente
 - NSG/Security List coerenti
 - active listener
-- DB aperto
-- GoldenGate Manager o microservices attivi se gia installati
+- DB open
+- GoldenGate Manager or microservices active if already installed
 
-### Dai nodi locali
+### From local nodes
 
-- risoluzione nome `dbtarget`
+- name resolution`dbtarget`
 - `ping` o almeno reachability IP
 - `nc -vz dbtarget 1521`
 - `nc -vz dbtarget 7809` oppure porte microservices
@@ -362,19 +362,19 @@ Esegui questi check nell'ordine.
 
 ---
 
-## 12. Errori Tipici da Evitare
+## 12. Typical Mistakes to Avoid
 
-1. pensare che `/etc/hosts` crei connettivita.
+1. think that`/etc/hosts`you create connectivity.
 2. aprire la porta DB ma non la porta GoldenGate.
-3. aprire la porta in OCI ma dimenticare il firewall Linux interno.
-4. usare nomi TNS corretti ma porte sbagliate.
+3. open the port in OCI but forget the internal Linux firewall.
+4. use correct TNS names but the wrong ports.
 5. use a cloud target that responds to the browser but not to the DB listener.
 6. confuse `host-only` VirtualBox with Internet-routable.
-7. believe that `stessa rete` just means same DNS domain.
+7. believe that `same network` just means the same DNS domain.
 
 ---
 
-## 13. Fonti Oracle Ufficiali
+## 13. Official Oracle Sources
 
 - OCI Site-to-Site VPN: https://docs.oracle.com/en-us/iaas/Content/Network/Tasks/managingIPsec.htm
 - OCI Bastion: https://docs.oracle.com/en-us/iaas/Content/Bastion/Concepts/bastionoverview.htm
@@ -384,7 +384,7 @@ Esegui questi check nell'ordine.
 
 ---
 
-## 14. Decisione Pratica per il Tuo Lab
+## 14. Practical Decision for Your Lab
 
 If you want to move without wasting time:
 
@@ -392,4 +392,4 @@ If you want to move without wasting time:
 2. make DB listener and GoldenGate work end-to-end;
 3. only then, if you want to do things like in the company, switch to Site-to-Site VPN.
 
-Questa e la sequenza pragmatica corretta.
+This is the correct pragmatic sequence.

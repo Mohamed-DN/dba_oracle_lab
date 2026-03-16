@@ -72,7 +72,7 @@ col my_sql format a80 wrap
 
 with waiters as (
 	select
-		'WAITER' lock_participant
+'WAITER' lock_participant
 		, blocking_session
 		, sid
 		, con_id
@@ -91,7 +91,7 @@ with waiters as (
 ),
 blockers as (
 	select
-		'BLOCKER' lock_participant
+'BLOCKER' lock_participant
 		, blocking_session
 		, sid
 		, con_id
@@ -111,7 +111,7 @@ blockers as (
 rawdata as (
 	select *
 	from waiters
-	union all
+union all
 	select *
 	from blockers
 ),
@@ -139,7 +139,7 @@ data as (
       	4, 'Share',          /* S */
       	5, 'S/Row-X (SRX)',  /* C */
       	6, 'Exclusive',      /* X */
-      	to_char(l.lmode)
+to_char(l.lmode)
    	) mode_held
    	, decode
    	(
@@ -189,7 +189,7 @@ select
 	--, d.sid
 	, d.blocking_session
 	--, d.kaddr
-	, d.con_id
+, d.with_id
 	, d.inst_id
 	, d.username
 	--, p1, p2, p3

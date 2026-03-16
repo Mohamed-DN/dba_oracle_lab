@@ -30,7 +30,7 @@ SELECT
   , group_number                             group_number
   , sector_size                              sector_size
   , block_size                               block_size
-  , allocation_unit_size                     allocation_unit_size
+, allocation_unit_size allocation_unit_size
   , state                                    state
   , type                                     type
   , total_mb                                 total_mb

@@ -10,7 +10,7 @@ col job_duration format a20
 col job_name format a30
 
 select
-	client_name
+client_name
 	, job_start_time
 	, job_name
 	, job_duration

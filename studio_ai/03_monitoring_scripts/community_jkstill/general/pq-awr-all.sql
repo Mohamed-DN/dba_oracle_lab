@@ -1,6 +1,6 @@
 
 -- pq-awr-all.sql
--- aggregate PQ per time period
+--aggregate PQ by time period
 
 set linesize 200 trimspool on
 set pagesize 60

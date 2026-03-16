@@ -24,7 +24,7 @@ prompt
 
 var l_schemas varchar2(4000)
 
--- remove all spaces
+--remove all spaces
 exec :l_schemas := regexp_replace(trim('&schemas'), '(\s){1,}','')
 
 select 

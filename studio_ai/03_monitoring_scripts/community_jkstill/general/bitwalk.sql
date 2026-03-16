@@ -28,7 +28,7 @@ with data as (
 ),
 masked as (
 select flags
-	, level -1  bit
+, level -1 bit
 	, power(2,level -1) mask
 	--, bitand(flags, (power(2,level -1))) masked_value
 from data

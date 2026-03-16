@@ -36,9 +36,9 @@ set term on head on feed on
 select
 	-- epoch in UTC
 	--to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400000000,'DAY') UTC
-	--,  ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400000000,'DAY')) at time zone 'UTC') at time zone '&u_tz' local_time
-	to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY') UTC
-	,  ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')) at time zone 'UTC') at time zone '&u_tz' local_time
+	--, ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400000000,'DAY')) at time zone 'UTC') at time zone '&u_tz' local_time
+to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY') UTC
+, ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')) at time zone 'UTC') at time zone '&u_tz' local_time
 from dual
 /
 

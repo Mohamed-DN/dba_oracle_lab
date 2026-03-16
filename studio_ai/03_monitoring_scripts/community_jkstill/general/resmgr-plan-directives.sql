@@ -26,8 +26,8 @@ prompt
 select null plan
 	, null pluggable_database
 	, null shares
-	, null utilization_limit
-	, null parallel_server_limit
+, null utilization_limit
+, null parallel_server_limit
 from dual
 where 1=2
 &legacy_db union all

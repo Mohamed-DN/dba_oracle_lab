@@ -1,10 +1,10 @@
 -- Vers: 1.3
--- Le utenze nominali hanno il formato COxxxx per esterni e D0xxxx per gli interni e vengono comunicati da Security Governance
+--The nominal users have the format COxxxx for external and D0xxxx for internal and are communicated by Security Governance
 -- Check the HP Service Manager Activity field
 
 #####Creation of single pluggable DB profiles#####
 create profile PROFILO_USER limit
-                 idle_time  15
+idle_time 15
      failed_login_attempts   5
         password_life_time  80
        password_reuse_time 450
@@ -16,7 +16,7 @@ create profile PROFILO_USER limit
 
 #####Creation of GLOBAL pluggable DB profiles#####
 create profile C##PROFILO_USER limit
-                 idle_time  15
+idle_time 15
      failed_login_attempts   5
         password_life_time  80
        password_reuse_time 450
@@ -34,7 +34,7 @@ undefine PasswordIniziale
 accept User prompt "Enter Username: " 
 accept InitialPassword hide prompt "Enter temporary initial password: "
 CREATE USER &&User
-        IDENTIFIED BY "&&PasswordIniziale"
+IDENTIFIED BY "&&InitialPassword"
    DEFAULT TABLESPACE USERS
  TEMPORARY TABLESPACE TEMP
               PROFILE PROFILO_USER

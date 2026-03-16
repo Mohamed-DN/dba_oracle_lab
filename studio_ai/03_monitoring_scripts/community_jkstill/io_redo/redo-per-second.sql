@@ -5,7 +5,7 @@
 -- aggregates are per AWR snapshot interval, and min/avg/max chosen
 
 col min_redo_per_second format 999,999,999
-col avg_redo_per_second format 999,999,999
+with avg_redo_per_second format 999,999,999
 col max_redo_per_second format 999,999,999
 
 with metrics as (

@@ -1,17 +1,17 @@
 # CLOUD GUIDE: GoldenGate towards Oracle Cloud Infrastructure (OCI ARM)
 
-> **Obiettivo**: Configurare un target database GoldenGate su Oracle Cloud Free Tier (ARM Ampere A1) per creare un'architettura **ibrida on-prem → cloud**. Questo aggiunge esperienza cloud reale al tuo CV.
+> **Goal**: Configure a GoldenGate database target on Oracle Cloud Free Tier (ARM Ampere A1) to create a **hybrid on-prem → cloud** architecture. This adds real cloud experience to your CV.
 
 ---
 
 ## Indice
 
 1. [What is Oracle Cloud Free Tier](#1-what-is-oracle-cloud-free-tier)
-2. [Architettura Ibrida](#2-architettura-ibrida)
+2. [Hybrid Architecture](#2-hybrid-architecture)
 3. [Reading Path (What to Study Before/After)](#3-reading-path)
 4. [Setup OCI — Creare l'Infrastruttura Cloud](#4-setup-oci)
-5. [Installare Oracle 19c su ARM](#5-installare-oracle-19c-su-arm)
-6. [Installare GoldenGate su ARM](#6-installare-goldengate-su-arm)
+5. [Install Oracle 19c on ARM](#5-install-oracle-19c-on-arm)
+6. [Install GoldenGate on ARM](#6-install-goldengate-on-arm)
 7. [Networking Lab ↔ Cloud](#7-networking-lab-cloud)
 8. [Configurare Replicat su OCI](#8-configurare-replicat-su-oci)
 9. [Test End-to-End](#9-test-end-to-end)
@@ -30,7 +30,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ║                                                                  ║
 ║  COMPUTE (VM.Standard.A1.Flex — ARM Ampere)                      ║
 ║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 4 OCPU (ARM, equivalenti a ~4 core)  │                     ║
+║ │ • 4 OCPUs (ARM, equivalent to ~4 cores) │ ║
 ║  │  • 24 GB RAM                            │                     ║
 ║ │ • You can split into 1-4 VMs │ ║
 ║  │  • Oracle Linux 8 (aarch64)             │                     ║
@@ -38,7 +38,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ║                                                                  ║
 ║  STORAGE                                                         ║
 ║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 200 GB Block Volume totale           │                     ║
+║ │ • 200 GB Block Total Volume │ ║
 ║  │  • 10 GB Object Storage                 │                     ║
 ║  └─────────────────────────────────────────┘                     ║
 ║                                                                  ║
@@ -65,11 +65,11 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 
 ---
 
-## 2. Architettura Ibrida
+##2. Hybrid Architecture
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                     ARCHITETTURA IBRIDA ON-PREM → CLOUD                     ║
+║ HYBRID ARCHITECTURE ON-PREM → CLOUD ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                              ║
 ║   IL TUO PC (VirtualBox)                       ORACLE CLOUD (OCI)           ║
@@ -103,7 +103,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ║                            │   + GoldenGate 19c (ARM)               │        ║
 ║                            │   + Replicat (Integrated)              │        ║
 ║                            │                                        │        ║
-║                            │   IP Pubblica: xxx.xxx.xxx.xxx         │        ║
+║ │ Public IP: xxx.xxx.xxx.xxx │ ║
 ║                            │   IP Privata: 10.0.0.x                 │        ║
 ║                            └────────────────────────────────────────┘        ║
 ║                                                                              ║
@@ -117,7 +117,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 
 ---
 
-## 3. Percorso di Lettura
+## 3. Reading Path
 
 ### 📖 What to Read BEFORE (Before Touching OCI)
 
@@ -150,8 +150,8 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ╔═══╦═══════════════════════════════╦══════════════════════════════╗
 ║ # ║ What to read ║ Why ║
 ╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 1 ║ GUIDE_MAA_BEST_PRACTICES.md   ║ Validare la tua architettura ║
-║   ║                               ║ contro gli standard Oracle   ║
+║ 1 ║ GUIDE_MAA_BEST_PRACTICES.md║ Validate your architecture ║
+║ ║ ║ against Oracle standards ║
 ╠═══╬═══════════════════════════════╬══════════════════════════════╣
 ║ 2 ║ GUIDE_DBA_ACTIVITIES.md         ║ Batch jobs, AWR, patching,   ║
 ║   ║                               ║ Data Pump, security          ║
@@ -188,13 +188,13 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ╠════════════════════════════════════════════════════════╣
 ║                                                        ║
 ║  VCN: labnet (10.0.0.0/16)                             ║
-║  ├── Subnet pubblica: 10.0.0.0/24                      ║
-║  │   └── VM ARM (10.0.0.2, IP pubblica assegnata)      ║
+║ ├── Public subnet: 10.0.0.0/24 ║
+║ │ └── ARM VM (10.0.0.2, public IP assigned) ║
 ║  ├── Internet Gateway (IGW)                            ║
 ║  ├── Route Table: 0.0.0.0/0 → IGW                     ║
 ║  └── Security List:                                    ║
 ║      ├── IN: TCP 22 (SSH) da 0.0.0.0/0                ║
-║      ├── IN: TCP 1521 (Oracle) dal TUO IP pubblico    ║
+║ ├── IN: TCP 1521 (Oracle) from YOUR public IP ║
 ║      ├── IN: TCP 7809 (GoldenGate) dal TUO IP         ║
 ║      └── OUT: Tutto (0.0.0.0/0)                       ║
 ╚════════════════════════════════════════════════════════╝
@@ -204,7 +204,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 
 ```bash
 # 1. Menu → Networking → Virtual Cloud Networks → Create VCN
-#    Name: labnet
+# Name: labnet
 #    CIDR: 10.0.0.0/16
 #    [Create VCN]
 
@@ -229,7 +229,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 
 **Security List — Regole Ingress:**
 
-| Protocollo | Porta | Source CIDR | Descrizione |
+|Protocol| Porta | Source CIDR |Description|
 |---|---|---|---|
 | TCP | 22 | `0.0.0.0/0` | SSH |
 | TCP | 1521 | `IL_TUO_IP/32` | Oracle Listener |
@@ -244,10 +244,10 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ```bash
 # Menu → Compute → Instances → Create Instance
 
-# Configurazione:
+#Configuration:
 #   Name:           oci-dbcloud
 #   Compartment:    (root)
-#   Placement:      AD-1 (o l'unico disponibile)
+# Placement: AD-1 (or the only one available)
 #
 #   Image:          Oracle Linux 8 (aarch64)   ← IMPORTANTE: ARM!
 #   Shape:          VM.Standard.A1.Flex
@@ -260,15 +260,15 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 #     Public IP:    Assign a public IPv4 address  ← OBBLIGATORIO
 #
 #   SSH Key:        Upload your public key (.pub)
-#     oppure:       Generate a key pair (scarica la private key!)
+#or: Generate a key pair (download the private key!)
 #
 #   Boot Volume:    150 GB  (50 boot + lascia 50 per DB)
 ```
 
 > **"Out of Capacity"?** Succede spesso con ARM Free Tier. Soluzioni:
 > 1. Try again after a few hours/day
-> 2. Prova una diversa Availability Domain
-> 3. Converti a Pay-As-You-Go (PAYG) — non paghi se resti sotto i limiti free
+> 2. Try a different Availability Domain
+> 3. Convert to Pay-As-You-Go (PAYG) — you don't pay if you stay under the free limits
 
 ### 4.4 First SSH Connection
 
@@ -276,22 +276,22 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 # Dal tuo PC Windows (PowerShell)
 ssh -i C:\Users\<user>\.ssh\id_rsa opc@<IP_PUBBLICA_OCI>
 
-# 'opc' è l'utente predefinito Oracle Linux su OCI
-# Ha sudo senza password
+#'opc' is the default Oracle Linux user on OCI
+# Has sudo without password
 ```
 
 ### 4.5 Initial OS Configuration
 
 ```bash
-# Come opc (sudo)
+#Like opc (sudo)
 
-# Aggiorna il sistema
+# Update the system
 sudo dnf update -y
 
-# Installa prerequisiti Oracle
+# Install Oracle prerequisites
 sudo dnf install -y oracle-database-preinstall-19c
-# Su OL8 ARM, questo pacchetto configura automaticamente:
-# - utente oracle
+# On OL8 ARM, this package automatically configures:
+#- oracle user
 # - gruppi (oinstall, dba, oper, backupdba, dgdba, kmdba)
 # - limiti kernel
 # - parametri sysctl
@@ -302,7 +302,7 @@ sudo mkdir -p /u01/app/oraInventory
 sudo chown -R oracle:oinstall /u01/app
 sudo chmod -R 775 /u01/app
 
-# Configura il firewall OCI-interno
+# Configure the OCI-internal firewall
 sudo firewall-cmd --permanent --add-port=1521/tcp
 sudo firewall-cmd --permanent --add-port=7809/tcp
 sudo firewall-cmd --permanent --add-port=7810-7820/tcp
@@ -315,7 +315,7 @@ echo "$(hostname -I | awk '{print $1}') oci-dbcloud" | sudo tee -a /etc/hosts
 
 ---
 
-## 5. Installare Oracle 19c su ARM
+## 5. Install Oracle 19c on ARM
 
 ### 5.1 Download Binari ARM
 
@@ -332,10 +332,10 @@ Transfer the file to the OCI VM:
 # Dal tuo PC
 scp -i ~/.ssh/id_rsa LINUX.ARM64_1919000_db_home.zip opc@<IP_OCI>:/tmp/
 
-# Sulla VM OCI come oracle
+#On the OCI VM as oracle
 sudo su - oracle
 
-# Scompatta direttamente nell'ORACLE_HOME
+# Unpack directly intoORACLE_HOME
 cd /u01/app/oracle/product/19.0.0/dbhome_1
 unzip /tmp/LINUX.ARM64_1919000_db_home.zip
 ```
@@ -343,7 +343,7 @@ unzip /tmp/LINUX.ARM64_1919000_db_home.zip
 ### 5.2 Configurare Environment
 
 ```bash
-# Come oracle
+#Like oracle
 cat >> ~/.bash_profile <<'EOF'
 
 # Oracle Environment
@@ -379,7 +379,7 @@ cd $ORACLE_HOME
   oracle.install.db.OSRACDBA_GROUP=dba \
   DECLINE_SECURITY_UPDATES=true
 
-# Esegui come root
+#Run as root
 sudo /u01/app/oraInventory/orainstRoot.sh
 sudo $ORACLE_HOME/root.sh
 ```
@@ -397,9 +397,9 @@ dbca -silent -createDatabase \
   -createAsContainerDatabase false \
   -memoryPercentage 50 \
   -storageType FS \
-  -datafileDestination /u01/app/oracle/oradata \
+-datafileDestination /u01/app/oracle/oradata \
   -redoLogFileSize 100 \
-  -emConfiguration NONE \
+-emConfiguration NONE \
   -sysPassword <password> \
   -systemPassword <password> \
   -databaseType MULTIPURPOSE
@@ -408,7 +408,7 @@ dbca -silent -createDatabase \
 ### 5.5 Configure Listener
 
 ```bash
-# Crea il listener
+# Create the listener
 cat > $ORACLE_HOME/network/admin/listener.ora <<'EOF'
 LISTENER =
   (DESCRIPTION_LIST =
@@ -427,10 +427,10 @@ SID_LIST_LISTENER =
   )
 EOF
 
-# Avvia il listener
+# Start the listener
 lsnrctl start
 
-# Configura auto-start
+# Configure auto-start
 sqlplus / as sysdba <<EOF
 ALTER SYSTEM SET local_listener='(ADDRESS=(PROTOCOL=TCP)(HOST=0.0.0.0)(PORT=1521))' SCOPE=BOTH;
 ALTER SYSTEM REGISTER;
@@ -441,7 +441,7 @@ EOF
 
 ---
 
-## 6. Installare GoldenGate su ARM
+## 6. Install GoldenGate on ARM
 
 ### 6.1 Download GoldenGate ARM
 
@@ -450,17 +450,17 @@ Da [edelivery.oracle.com](https://edelivery.oracle.com):
 - Platform: **Linux ARM 64-bit (aarch64)**
 
 ```bash
-# Trasferisci sulla VM
+# Transfer to VM
 scp -i ~/.ssh/id_rsa fbo_ggs_Linux_arm64_Oracle_shiphome.zip opc@<IP_OCI>:/tmp/
 
-# Come oracle
+#Like oracle
 sudo su - oracle
 mkdir -p /u01/app/goldengate
 cd /u01/app/goldengate
 unzip /tmp/fbo_ggs_Linux_arm64_Oracle_shiphome.zip
 cd fbo_ggs_Linux_arm64_Oracle_shiphome/Disk1
 
-# Installazione silente
+# Silent installation
 cat > /tmp/oggcore.rsp <<'EOF'
 oracle.install.responseFileVersion=/oracle/install/rspfmt_ogginstall_response_schema_v19_1_0
 INSTALL_OPTION=ORA19c
@@ -486,7 +486,7 @@ EOF
 source ~/.bash_profile
 ```
 
-### 6.3 Configurare Manager
+### 6.3 Configure Manager
 
 ```bash
 cd $OGG_HOME
@@ -524,9 +524,9 @@ Your lab is on a local network (192.168.1.x), but the OCI VM is on the Internet.
 ║ OPTION 1: SSH Tunnel (Recommended for Lab) ║
 ║  ─────────────────────────────────────────────                   ║
 ║  racstby1 ──SSH tunnel──→ OCI VM (porta 7809 + 1521)             ║
-║  • Semplice, sicuro, gratuito                                    ║
+║ • Simple, secure, free ║
 ║  • Basta un comando SSH                                          ║
-║  • Perfetto per il lab                                           ║
+║ • Perfect for the lab ║
 ║                                                                  ║
 ║  OPZIONE 2: VPN Site-to-Site                                     ║
 ║  ──────────────────────────                                      ║
@@ -535,20 +535,20 @@ Your lab is on a local network (192.168.1.x), but the OCI VM is on the Internet.
 ║ • More complex to configure ║
 ║ • Enterprise solution (production) ║
 ║                                                                  ║
-║  OPZIONE 3: IP Pubblico Diretto                                  ║
+║ OPTION 3: Direct Public IP ║
 ║  ────────────────────────────                                    ║
-║  Pump punta direttamente all'IP pubblico OCI                     ║
+║ Pump points directly to the OCI public IP ║
 ║  • Richiede port forwarding sul router                           ║
 ║  • Meno sicuro senza encryption                                  ║
-║  • Funziona se hai IP pubblico statico                           ║
+║ • Works if you have static public IP ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-### 7.2 Opzione 1: SSH Tunnel (Raccomandato)
+### 7.2 Option 1: SSH Tunnel (Recommended)
 
 ```bash
 # Sullo standby (racstby1), crea un tunnel persistente
-# Questo mappa:
+# This map:
 #   localhost:7809 → OCI_VM:7809 (GoldenGate Manager)
 #   localhost:1522 → OCI_VM:1521 (Oracle Listener)
 
@@ -557,16 +557,16 @@ ssh -i /home/oracle/.ssh/oci_key \
     -L 1522:localhost:1521 \
     -N -f opc@<IP_PUBBLICA_OCI>
 
-# Verifica che i tunnel funzionino
+#Verify that the tunnels are working
 ss -tlnp | grep -E "7809|1522"
-# Devi vedere le porte in LISTEN
+#You need to see the doors in LISTEN
 ```
 
-### 7.3 TNS Configuration con Tunnel
+### 7.3 TNS Configuration with Tunnel
 
 ```
 # tnsnames.ora sullo standby (racstby1)
-# Punta al tunnel locale (localhost:1522 → OCI:1521)
+# Point to local tunnel (localhost:1522 → OCI:1521)
 
 CLOUDDB =
   (DESCRIPTION =
@@ -584,12 +584,12 @@ tnsping CLOUDDB
 sqlplus ggadmin/<password>@CLOUDDB
 ```
 
-### 7.4 Opzione 3: Connessione Diretta (se hai IP statico)
+### 7.4 Option 3: Direct Connection (if you have static IP)
 
 Se il tuo router fa port forwarding o hai IP statico:
 
 ```
-# tnsnames.ora — punta direttamente all'IP pubblico OCI
+# tnsnames.ora — points directly to the OCI public IP
 CLOUDDB =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = <IP_PUBBLICA_OCI>)(PORT = 1521))
@@ -602,7 +602,7 @@ CLOUDDB =
 
 ```
 # Parametro Data Pump GoldenGate
-# RMTHOST punta all'IP OCI direttamente
+# RMTHOST points to the OCI IP directly
 RMTHOST <IP_PUBBLICA_OCI>, MGRPORT 7809
 ```
 
@@ -611,7 +611,7 @@ RMTHOST <IP_PUBBLICA_OCI>, MGRPORT 7809
 To keep the SSH tunnel active even after reboot:
 
 ```bash
-# Come root su racstby1
+#As root on racstby1
 cat > /etc/systemd/system/ssh-tunnel-oci.service <<'EOF'
 [Unit]
 Description=SSH Tunnel to OCI for GoldenGate
@@ -642,16 +642,16 @@ systemctl status ssh-tunnel-oci
 
 ## 8. Configurare Replicat su OCI
 
-### 8.1 Preparazione Database Cloud
+### 8.1 Cloud Database Preparation
 
 ```sql
--- Sulla VM OCI come sysdba
+--On the OCI VM as sysdba
 sqlplus / as sysdba
 
 -- Abilita GoldenGate
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
 
--- Crea utente GoldenGate
+--Create GoldenGate user
 CREATE USER ggadmin IDENTIFIED BY <password>
     DEFAULT TABLESPACE USERS
     TEMPORARY TABLESPACE TEMP
@@ -665,11 +665,11 @@ GRANT RESOURCE TO ggadmin;
 
 EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
 
--- Crea lo schema target (se non esiste)
--- Importalo con Data Pump dallo standby (vedi 8.2)
+--Create the target schema (if it does not exist)
+--Import it with Data Pump from standby (see 8.2)
 ```
 
-### 8.2 Initial Load con Data Pump
+### 8.2 Initial Load with Data Pump
 
 ```bash
 # Sullo Standby (racstby1) — esporta
@@ -679,12 +679,12 @@ expdp ggadmin/<password>@RACDB_STBY \
     dumpfile=hr_cloud_init.dmp \
     logfile=hr_cloud_export.log
 
-# Trasferisci via SSH
+# Transfer via SSH
 scp -i /home/oracle/.ssh/oci_key \
     /path/to/hr_cloud_init.dmp \
     opc@<IP_PUBBLICA_OCI>:/tmp/
 
-# Sulla VM OCI — importa
+# On the OCI VM — import
 impdp ggadmin/<password> \
     schemas=HR \
     directory=DATA_PUMP_DIR \
@@ -706,7 +706,7 @@ GGSCI> DBLOGIN USERID ggadmin PASSWORD <password>
 -- Crea checkpoint table
 GGSCI> ADD CHECKPOINTTABLE ggadmin.checkpoint
 
--- Aggiungi Replicat
+--Add Replicat
 GGSCI> ADD REPLICAT rep_cloud, INTEGRATED, \
        EXTTRAIL ./dirdat/ra, \
        CHECKPOINTTABLE ggadmin.checkpoint
@@ -728,7 +728,7 @@ MAP HR.*, TARGET HR.*;
 The Pump on standby must point to the SSH tunnel (or direct OCI IP):
 
 ```
-# Sullo standby (racstby1), modifica il pump
+# On standby (racstby1), change the pump
 GGSCI> EDIT PARAMS pump_cloud
 ```
 
@@ -754,7 +754,7 @@ GGSCI> ADD RMTTRAIL ./dirdat/ra, EXTRACT pump_cloud, MEGABYTES 100
 ### 8.5 Startup
 
 ```
--- Sullo standby
+--On standby
 GGSCI> START EXTRACT pump_cloud
 
 -- Sulla VM OCI
@@ -772,45 +772,45 @@ INSERT INTO employees (employee_id, first_name, last_name, email, hire_date, job
 VALUES (9999, 'Cloud', 'Test', 'cloud@test.com', SYSDATE, 'IT_PROG');
 COMMIT;
 
--- 2. Attendi ~30 secondi (rede internet ha latenza)
+--2. Wait ~30 seconds (internet has latency)
 
 -- 3. Sulla VM OCI
 sqlplus hr/hr@CLOUDDB
 SELECT * FROM employees WHERE employee_id = 9999;
--- Devi vedere la riga! 🎉
+--You have to see the line! 🎉
 ```
 
 ```
--- Verifica lag sullo standby
+--Check lag on standby
 GGSCI> LAG EXTRACT ext_racdb
 GGSCI> LAG EXTRACT pump_cloud
 
--- Verifica lag sul cloud
+--Check for lag on the cloud
 GGSCI> LAG REPLICAT rep_cloud
--- Il lag sarà più alto della versione locale (latenza internet)
--- Tipico: 5-30 secondi con SSH tunnel
+--Lag will be higher than local version (internet latency)
+--Typical: 5-30 seconds with SSH tunnel
 ```
 
 ---
 
 ## 10. Troubleshooting Cloud
 
-| Problema | Causa | Soluzione |
+| Problema | Causa |Solution|
 |---|---|---|
-| SSH timeout | Security List does not open port 22 | Aggiungi regola ingress TCP 22 |
-| `tnsping` timeout verso OCI | Security List does not open 1521 | Aggiungi regola TCP 1521 dal tuo IP |
-| GG Pump `ABENDED` | Tunnel SSH caduto | Riavvia tunnel: `systemctl restart ssh-tunnel-oci` |
-| `ORA-12170: TNS:Connect timeout` | Firewall OCI o locale | Controlla Security List + `firewall-cmd` |
-| `OGG-00146: No manager` su OCI | Manager non avviato | `./ggsci` → `START MGR` |
-| Lag altissimo (>60sec) | Banda internet lenta | Abilita compression nel Pump: `RMTHOST ... COMPRESS` |
+| SSH timeout | Security List does not open port 22 |Add TCP ingress rule 22|
+| `tnsping` timeout verso OCI | Security List does not open 1521 |Add TCP rule 1521 from your IP|
+| GG Pump `ABENDED` |SSH tunnel crashed| Riavvia tunnel: `systemctl restart ssh-tunnel-oci` |
+| `ORA-12170: TNS:Connect timeout` |OCI or local firewall| Controlla Security List + `firewall-cmd` |
+| `OGG-00146: No manager` su OCI |Manager not started| `./ggsci` → `START MGR` |
+|Very high lag (>60sec)| Banda internet lenta |Enable compression in Pump:`RMTHOST ... COMPRESS` |
 | `ORA-01017: invalid user/pass` | Different password ARM/x86 | Recreate user `ggadmin` on the OCI VM |
-| **"Out of Capacity"** al create VM | ARM Free Tier esaurite nella regione | Riprova in orari diversi o cambia AD |
-| Binario GG non parte | Download x64 invece di ARM | Scarica versione **aarch64** da eDelivery |
+| **"Out of Capacity"** al create VM |ARM Free Tier sold out in the region|Please try again at different times or change AD|
+| Binary GG does not start | Download x64 instead of ARM | Download **aarch64** version from eDelivery |
 
 ### Final Verification
 
 ```bash
-# Sullo standby
+# On standby
 GGSCI> INFO ALL
 # ext_racdb:  RUNNING
 # pump_cloud: RUNNING
@@ -819,7 +819,7 @@ GGSCI> INFO ALL
 GGSCI> INFO ALL
 # rep_cloud:  RUNNING
 
-# Lag accettabile (< 60 sec con internet)
+# Acceptable lag (< 60 sec with internet)
 GGSCI> LAG REPLICAT rep_cloud
 ```
 
@@ -828,7 +828,7 @@ GGSCI> LAG REPLICAT rep_cloud
 ## Appendix: Auto-Start on OCI after Reboot
 
 ```bash
-# Come root sulla VM OCI
+#As root on the OCI VM
 
 # 1. Auto-start listener + DB
 cat > /etc/systemd/system/oracle-db.service <<'EOF'

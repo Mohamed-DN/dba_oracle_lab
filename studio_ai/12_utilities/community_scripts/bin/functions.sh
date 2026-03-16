@@ -110,7 +110,7 @@ getLinkSource () {
 	do
 		parentFile=$(readlink $file2chk 2>/dev/null)
 		[[ -z $parentFile ]] && { echo $file2chk; break; }
-		file2chk=$parentFile
+file2chk=$parentFile
 	done
 
 	return 0
@@ -132,7 +132,7 @@ getInstance () {
 
 	declare testIns
 
-	# space if standalone
+# space if standalone
 	# digit for RAC - checks up to 8 nodes
 
 	for orainst in ' ' 1 2 3 4 5 6 7 8
@@ -149,7 +149,7 @@ getInstance () {
 	return
 }
 
-getAllInstances () {
+getAllInstances() {
 
 	local i=0
 

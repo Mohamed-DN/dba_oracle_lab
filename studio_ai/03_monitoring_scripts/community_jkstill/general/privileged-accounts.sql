@@ -51,7 +51,7 @@ with grantee_data as (
    select  'ROLE' grantee_type, role grantee
    from dba_roles r
    &use_12c_feature where r.oracle_maintained != 'Y'
-   union all
+union all
    select 'USER' grantee_type,  username grantee
    from dba_users u
    &use_12c_feature where u.oracle_maintained != 'Y'

@@ -7,7 +7,7 @@
 break on snap_time skip 1
 
 select
-	distinct
+distinct
 	--to_char(max(to_date(to_char(s.snap_time,'mm/dd/yyyy'),'mm/dd/yyyy')) over ( partition by to_char(snap_time,'YYYY/WW')),'YYYY/WW') snap_time
 	to_char(max(s.snap_time) over ( partition by to_char(snap_time,'YYYY/WW')),'YYYY/WW') snap_time
 	, p.name

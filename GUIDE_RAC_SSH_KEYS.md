@@ -1,7 +1,7 @@
 # GUIDE SSH Keys RAC (grid, oracle, root)
 
 This guide is for configuring or repairing SSH user equivalence in the Oracle RAC/Data Guard lab.
-Obiettivo: evitare errori `PRVG-2019`, `Host key verification failed`, `Permission denied`.
+Objective: avoid errors`PRVG-2019`, `Host key verification failed`, `Permission denied`.
 
 ---
 
@@ -125,7 +125,7 @@ Then start again from section 3.
 
 ---
 
-## 5) Fix rapido errori comuni
+## 5) Quick fix common errors
 
 ### 5.1 `Host key verification failed`
 
@@ -168,7 +168,7 @@ ls -ld /home/oracle /home/oracle/.ssh
 ls -l /home/oracle/.ssh
 ```
 
-Permessi corretti:
+Correct permissions:
 
 - user home not writable by others (`755` or `750`)
 - `.ssh` = `700`
@@ -213,5 +213,5 @@ cat /home/oracle/.ssh/id_rsa.pub | ssh root@racstby1 \
 ## 7) Checklist finale
 
 - `ssh racstby1 hostname` and `ssh racstby2 hostname` without password for `grid`, `oracle`, `root`
-- nessun errore `PRVG-2019` in `cluvfy`
+- no errors`PRVG-2019` in `cluvfy`
 - `known_hosts` and `authorized_keys` files with correct owner/permissions

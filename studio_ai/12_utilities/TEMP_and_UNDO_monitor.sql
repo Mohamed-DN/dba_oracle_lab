@@ -133,28 +133,28 @@ BEGIN
   SYS.DBMS_SCHEDULER.CREATE_JOB
     (
        job_name        => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-      ,start_date      => SYSTIMESTAMP
+,start_date => SYSTIMESTAMP
       ,repeat_interval => 'FREQ=MINUTELY;INTERVAL=5;'
       ,end_date        => NULL
       ,job_class       => 'DEFAULT_JOB_CLASS'
       ,job_type        => 'PLSQL_BLOCK'
       ,job_action      => 'BEGIN DELETE FROM dba_op.TEMP_USE_HISTORY WHERE data < SYSDATE - 31; INSERT INTO dba_op.TEMP_USE_HISTORY SELECT * FROM dba_op.temp_use WHERE ROWNUM < 10; COMMIT; END;'
-      ,comments        => 'cancellazione DBA_OP.PURGE_TEMP_USE_HISTORY'
+,comments => 'deletionDBA_OP.PURGE_TEMP_USE_HISTORY'
     );
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-     ,attribute => 'RESTARTABLE'
+,attribute => 'RESTARTABLE'
      ,value     => TRUE);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-     ,attribute => 'LOGGING_LEVEL'
+,attribute => 'LOGGING_LEVEL'
      ,value     => SYS.DBMS_SCHEDULER.LOGGING_OFF);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-     ,attribute => 'MAX_FAILURES');
+,attribute => 'MAX_FAILURES');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-     ,attribute => 'MAX_RUNS');
+,attribute => 'MAX_RUNS');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
      ,attribute => 'STOP_ON_WINDOW_CLOSE'
@@ -165,7 +165,7 @@ BEGIN
      ,value     => 3);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
-     ,attribute => 'SCHEDULE_LIMIT');
+,attribute => 'SCHEDULE_LIMIT');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_TEMP_USE_HISTORY'
      ,attribute => 'AUTO_DROP'
@@ -194,28 +194,28 @@ BEGIN
   SYS.DBMS_SCHEDULER.CREATE_JOB
     (
        job_name        => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-      ,start_date      => SYSTIMESTAMP
+,start_date => SYSTIMESTAMP
       ,repeat_interval => 'FREQ=MINUTELY;INTERVAL=5;'
       ,end_date        => NULL
       ,job_class       => 'DEFAULT_JOB_CLASS'
       ,job_type        => 'PLSQL_BLOCK'
       ,job_action      => 'BEGIN DELETE FROM dba_op.undo_use_history WHERE data < SYSDATE - 31;INSERT INTO dba_op.undo_use_history SELECT * FROM dba_op.undo_use WHERE ROWNUM < 5;COMMIT;END;'
-      ,comments        => 'cancellazione dba_op.undo_use_history'
+,comments => 'delete dba_op.undo_use_history'
     );
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-     ,attribute => 'RESTARTABLE'
+,attribute => 'RESTARTABLE'
      ,value     => TRUE);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-     ,attribute => 'LOGGING_LEVEL'
+,attribute => 'LOGGING_LEVEL'
      ,value     => SYS.DBMS_SCHEDULER.LOGGING_OFF);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-     ,attribute => 'MAX_FAILURES');
+,attribute => 'MAX_FAILURES');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-     ,attribute => 'MAX_RUNS');
+,attribute => 'MAX_RUNS');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
      ,attribute => 'STOP_ON_WINDOW_CLOSE'
@@ -226,7 +226,7 @@ BEGIN
      ,value     => 3);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
-     ,attribute => 'SCHEDULE_LIMIT');
+,attribute => 'SCHEDULE_LIMIT');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.PURGE_UNDO_USE_HISTORY'
      ,attribute => 'AUTO_DROP'

@@ -10,7 +10,7 @@ drop table freespace_map;
 create table freespace_map (
 	tablespace_name varchar2(30),
 	segment_name varchar2(30),
-	file_name varchar2(60),
+file_name varchar2(60),
 	block_id number,
 	bytes number,
 	blocks number

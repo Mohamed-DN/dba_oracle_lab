@@ -71,7 +71,7 @@ with fk_tree (
 	from all_constraints c
 	where c.owner = '&v_user'
 		and c.constraint_type in ('U','P')
-	union all
+union all
 	select
 		c.table_name
 		, c.constraint_name

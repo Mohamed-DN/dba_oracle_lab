@@ -8,12 +8,12 @@
 
 Run these queries after each step of the lab to check the status of the database.
 
-### 1.1 Informazioni Database
+### 1.1 Database Information
 
 ```sql
--- Info generali del database
+--General database information
 -- Fonte: oracle-base.com/dba/monitoring/db_info.sql
--- ✅ FONDAMENTALE: da eseguire sempre come primo check
+--✅ FUNDAMENTAL: always carry out as a first check
 SELECT dbid, name, db_unique_name, open_mode, log_mode,
        force_logging, flashback_on, database_role,
        protection_mode, switchover_status
@@ -23,17 +23,17 @@ FROM v$database;
 > **Why?** Show all at once: Is the DB open? Is it in archivelog? Is it primary or standby? Is force logging enabled? This query alone tells you 50% of the status of the DB.
 
 ```sql
--- Versione e patch applicati
+--Version and patch applied
 -- Fonte: oracle-base.com/dba/monitoring/patch_registry.sql
--- ✅ UTILE: per sapere esattamente quale versione e patch sono installate
+--✅ USEFUL: to know exactly which version and patch are installed
 SELECT * FROM dba_registry_sqlpatch ORDER BY action_time DESC;
 ```
 
 ### 1.2 Instance Status (RAC)
 
 ```sql
--- Stato di tutte le istanze del cluster
--- ✅ FONDAMENTALE per RAC: controlla che entrambe le istanze siano OPEN
+--Status of all cluster instances
+--✅ FUNDAMENTAL for RAC: check that both instances are OPEN
 SELECT inst_id, instance_name, host_name, status, startup_time,
        ROUND(sysdate - startup_time) AS uptime_days
 FROM gv$instance
@@ -44,12 +44,12 @@ ORDER BY inst_id;
 
 ## 2. 📊 Monitoring Performance
 
-### 2.1 Sessioni Attive
+### 2.1 Active Sessions
 
 ```sql
--- Sessioni attive con SQL in esecuzione
+--Active sessions with SQL running
 -- Fonte: oracle-base.com/dba/monitoring/active_sessions.sql
--- ✅ FONDAMENTALE: il primo posto dove guardare se il DB è lento
+--✅ KEY: The first place to look if the DB is slow
 SELECT s.inst_id, s.sid, s.serial#, s.username, s.program,
        s.status, s.event, s.wait_class,
        s.sql_id, s.last_call_et AS "Seconds Active",
@@ -68,7 +68,7 @@ ORDER BY s.last_call_et DESC;
 ```sql
 -- Top 10 SQL per elapsed time
 -- Fonte: oracle-base.com/dba/monitoring/top_sql.sql
--- ✅ UTILE: identifica le query più costose
+--✅ USEFUL: Identify the most expensive queries
 SELECT * FROM (
     SELECT sql_id, elapsed_time/1000000 AS elapsed_sec,
            cpu_time/1000000 AS cpu_sec,
@@ -84,9 +84,9 @@ SELECT * FROM (
 ### 2.3 Wait Events — Dove il DB "perde tempo"
 
 ```sql
--- System events (gli eventi di attesa del sistema)
+--System events (system wait events)
 -- Fonte: oracle-base.com/dba/monitoring/system_events.sql
--- ✅ UTILE: capire dove il sistema spende tempo in attesa
+--✅ USEFUL: Understand where the system spends time waiting
 SELECT event, total_waits, time_waited_micro/1000000 AS time_waited_sec,
        average_wait_micro/1000 AS avg_wait_ms, wait_class
 FROM gv$system_event
@@ -102,7 +102,7 @@ FETCH FIRST 15 ROWS ONLY;
 ```sql
 -- Wait events per sessione (live)
 -- Fonte: oracle-base.com/dba/monitoring/session_waits.sql
--- ✅ UTILE: durante un problema live, vedi cosa aspetta OGNI sessione
+--✅ HELPFUL: During a live problem, see what awaits EACH session
 SELECT inst_id, sid, event, wait_class,
        seconds_in_wait, state
 FROM gv$session_wait
@@ -114,12 +114,12 @@ ORDER BY seconds_in_wait DESC;
 
 ## 3. 💾 Storage e Tablespace
 
-### 3.1 Spazio Tablespace
+### 3.1 Tablespace
 
 ```sql
 -- Uso tablespace con percentuali
 -- Fonte: oracle-base.com/dba/monitoring/ts_full.sql
--- ✅ FONDAMENTALE: se un tablespace si riempie al 100%, il DB si blocca
+--✅ KEY: if a tablespace fills to 100%, the DB crashes
 SELECT tablespace_name,
        ROUND(SUM(bytes)/1024/1024) AS total_mb,
        ROUND(SUM(bytes - NVL(free_bytes,0))/1024/1024) AS used_mb,
@@ -139,12 +139,12 @@ ORDER BY pct_used DESC;
 
 > **Quando preoccuparsi?** Se `pct_used` > 85%, you need to add space. If > 95%, it is urgent!
 
-### 3.2 Datafile
+### 3.2 Datafiles
 
 ```sql
--- Info datafile con autoextend
+--Info datafile with autoextend
 -- Fonte: oracle-base.com/dba/monitoring/datafiles.sql
--- ✅ UTILE: verifica l'autoextend e la dimensione massima
+--✅ USEFUL: Check autoextend and maximum size
 SELECT file_name, tablespace_name,
        ROUND(bytes/1024/1024) AS size_mb,
        ROUND(maxbytes/1024/1024) AS max_mb,
@@ -153,11 +153,11 @@ FROM dba_data_files
 ORDER BY tablespace_name, file_name;
 ```
 
-### 3.3 ASM Disk Group (specifico per il nostro lab)
+### 3.3 ASM Disk Group (specific to our lab)
 
 ```sql
 -- Stato ASM Disk Groups
--- ✅ FONDAMENTALE per il nostro lab RAC
+--✅ FUNDAMENTAL for our RAC lab
 SELECT name, state, type, total_mb, free_mb,
        ROUND((1 - free_mb/total_mb) * 100, 1) AS pct_used
 FROM v$asm_diskgroup;
@@ -170,9 +170,9 @@ FROM v$asm_diskgroup;
 ### 4.1 Oggetti Lockati
 
 ```sql
--- Oggetti con lock attivo
+--Objects with active lock
 -- Fonte: oracle-base.com/dba/monitoring/locked_objects.sql
--- ✅ FONDAMENTALE: quando una sessione "si blocca", cerca qui
+--✅ KEY: When a session "hangs", look here
 SELECT lo.inst_id, lo.session_id AS sid, lo.oracle_username,
        lo.os_user_name, do.object_name, do.object_type,
        lo.locked_mode,
@@ -185,11 +185,11 @@ JOIN dba_objects do ON lo.object_id = do.object_id
 ORDER BY lo.oracle_username;
 ```
 
-### 4.2 Blocchi e Chi Blocca Chi
+### 4.2 Blocks and Who's Blocking Who
 
 ```sql
--- Catena di blocco: chi blocca chi?
--- ✅ FONDAMENTALE: identifica il "colpevole" che blocca tutti gli altri
+--Blockchain: Who is blocking whom?
+--✅ FUNDAMENTAL: identify the "culprit" who blocks everyone else
 SELECT
     s1.inst_id AS blocker_inst, s1.sid AS blocker_sid, s1.serial# AS blocker_serial,
     s1.username AS blocker_user, s1.program AS blocker_program,
@@ -201,14 +201,14 @@ JOIN gv$lock l2 ON l1.id1 = l2.id1 AND l1.id2 = l2.id2 AND l1.block = 1 AND l2.r
 JOIN gv$session s2 ON l2.sid = s2.sid AND l2.inst_id = s2.inst_id;
 ```
 
-### 4.3 Kill di una Sessione Bloccante
+### 4.3 Killing a Blocking Session
 
 ```sql
--- Kill sessione (ATTENZIONE: usa con cautela!)
--- 🔶 PERICOLOSO: termina la sessione dell'utente, la transazione viene rollbackata
+--Kill session (WARNING: use with caution!)
+--🔶 DANGEROUS: user session ends, transaction is rolled back
 ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 
--- Per RAC (specifica l'istanza):
+--For RAC (specify instance):
 ALTER SYSTEM KILL SESSION 'sid,serial#,@inst_id' IMMEDIATE;
 ```
 
@@ -219,7 +219,7 @@ ALTER SYSTEM KILL SESSION 'sid,serial#,@inst_id' IMMEDIATE;
 ### 5.1 Redo Log Status
 
 ```sql
--- Stato Online Redo Log
+--Online Status Redo Log
 -- Fonte: oracle-base.com/dba/monitoring/logfiles.sql
 -- ✅ FONDAMENTALE per Data Guard
 SELECT group#, thread#, sequence#, bytes/1024/1024 AS size_mb,
@@ -233,9 +233,9 @@ ORDER BY thread#, group#;
 ### 5.2 Redo generation (to understand the load)
 
 ```sql
--- Redo generato per giorno
+--Redo generated per day
 -- Fonte: oracle-base.com/dba/monitoring/redo_by_day.sql
--- ✅ UTILE: capire quanto redo genera il DB (impatta DG e GG)
+--✅ USEFUL: understand how much redo generates the DB (impacts DG and GG)
 SELECT TRUNC(first_time) AS day,
        thread#,
        COUNT(*) AS log_switches,
@@ -246,12 +246,12 @@ GROUP BY TRUNC(first_time), thread#
 ORDER BY day DESC, thread#;
 ```
 
-### 5.3 Generazione Redo per Ora
+### 5.3 Redo Generation for Now
 
 ```sql
--- Redo per ora (più granulare)
+--Redo for now (more granular)
 -- Fonte: oracle-base.com/dba/monitoring/redo_by_hour.sql
--- ✅ UTILE: identifica i picchi di attività
+--✅ USEFUL: identify peaks of activity
 SELECT TO_CHAR(first_time, 'YYYY-MM-DD HH24') AS hour,
        thread#,
        COUNT(*) AS switches
@@ -268,8 +268,8 @@ ORDER BY hour DESC;
 ### 6.1 Database Users
 
 ```sql
--- Lista utenti con stato
--- ✅ UTILE: verifica chi è lockato, scaduto, ecc.
+--List of users with status
+--✅ USEFUL: check who is locked, expired, etc.
 SELECT username, account_status, profile, default_tablespace,
        created, expiry_date, last_login
 FROM dba_users
@@ -280,15 +280,15 @@ ORDER BY username;
 ### 6.2 Privileges of a User
 
 ```sql
--- System privileges di un utente
+--System privileges of a user
 -- Fonte: oracle-base.com/dba/monitoring/system_privs.sql
--- ✅ UTILE per audit di sicurezza
+--✅ USEFUL for security audits
 SELECT grantee, privilege, admin_option
 FROM dba_sys_privs
 WHERE grantee = UPPER('&username')
 ORDER BY privilege;
 
--- Ruoli assegnati
+--Roles assigned
 -- Fonte: oracle-base.com/dba/monitoring/role_privs.sql
 SELECT grantee, granted_role, admin_option
 FROM dba_role_privs
@@ -301,14 +301,14 @@ ORDER BY granted_role;
 ## 7. ⚡ Data Guard Monitoring
 
 ```sql
--- Stato Data Guard (esegui sullo STANDBY)
--- ✅ FONDAMENTALE per il nostro lab
+--Data Guard Status (run on STANDBY)
+--✅ FUNDAMENTAL for our lab
 SELECT name, value, datum_time, time_computed
 FROM v$dataguard_stats;
 ```
 
 ```sql
--- Processi DG attivi sullo standby
+--DG processes active on standby
 SELECT process, pid, status, thread#, sequence#,
        block#, blocks
 FROM v$managed_standby
@@ -316,12 +316,12 @@ ORDER BY process;
 ```
 
 ```sql
--- Gap di archivelog (deve restituire 0 righe = nessun gap)
+--Archivelog gap (must return 0 lines = no gaps)
 SELECT * FROM v$archive_gap;
 ```
 
 ```sql
--- Ultimo log applicato sullo standby
+--Last log applied on standby
 SELECT thread#, MAX(sequence#) AS last_applied,
        MAX(next_time) AS last_time
 FROM v$archived_log
@@ -336,7 +336,7 @@ GROUP BY thread#;
 ### 8.1 Startup / Shutdown
 
 ```sql
--- Sequenza di startup
+--Startup sequence
 STARTUP;            -- Avvia: NOMOUNT → MOUNT → OPEN
 STARTUP NOMOUNT;    -- Solo istanza (per creare DB o restore)
 STARTUP MOUNT;      -- Monta il controlfile (per DG, maintenance)
@@ -346,36 +346,36 @@ STARTUP RESTRICT;   -- Apri ma solo DBA possono connettersi
 SHUTDOWN IMMEDIATE;    -- Ferma, rollback delle transazioni attive, chiudi
 SHUTDOWN ABORT;        -- EMERGENZA: termina immediatamente (richiede recovery)
 SHUTDOWN TRANSACTIONAL; -- Aspetta fine transazioni, poi chiudi
-SHUTDOWN NORMAL;       -- Aspetta che tutti si disconnettano (può aspettare per sempre)
+SHUTDOWN NORMAL;       -- Wait for everyone to log out (can wait forever)
 ```
 
-> **Regola**: Usa `SHUTDOWN IMMEDIATE` nel 99% dei casi. `ABORT` only if IMMEDIATE is blocked.
+> **Rule**: Use`SHUTDOWN IMMEDIATE`in 99% of cases.`ABORT` only if IMMEDIATE is blocked.
 
 ### 8.2 srvctl (RAC)
 
 ```bash
-# Stato database RAC
+# RAC database status
 srvctl status database -d RACDB
 
 # Avvia/ferma database
 srvctl start database -d RACDB
 srvctl stop database -d RACDB
 
-# Avvia/ferma singola istanza
+# Start/stop single instance
 srvctl start instance -d RACDB -i RACDB1
 srvctl stop instance -d RACDB -i RACDB2
 
-# Stato listener
+# Listener status
 srvctl status listener
 srvctl status scan_listener
 
-# Configurazione completa
+#Complete setup
 srvctl config database -d RACDB
 
-# Stato di tutti i servizi CRS
+#Status of all CRS services
 crsctl stat res -t
 
-# Stato del cluster
+# Cluster status
 crsctl check crs
 olsnodes -n -s
 ```
@@ -392,10 +392,10 @@ CREATE TABLESPACE app_data
 ALTER TABLESPACE app_data
     ADD DATAFILE '+DATA' SIZE 500M AUTOEXTEND ON;
 
--- Ridimensiona datafile
+--Resize datafile
 ALTER DATABASE DATAFILE '+DATA/RACDB/...filename...' RESIZE 1G;
 
--- Metti tablespace offline (manutenzione)
+--Take tablespace offline (maintenance)
 ALTER TABLESPACE app_data OFFLINE;
 ALTER TABLESPACE app_data ONLINE;
 ```
@@ -403,24 +403,24 @@ ALTER TABLESPACE app_data ONLINE;
 ### 8.4 User Management
 
 ```sql
--- Crea utente
+--Create user
 CREATE USER app_user IDENTIFIED BY "Password123!"
     DEFAULT TABLESPACE app_data
     TEMPORARY TABLESPACE temp
-    QUOTA UNLIMITED ON app_data;
+UNLIMITED QUOTE ON app_data;
 
--- Assegna permessi
+--Assign permissions
 GRANT CONNECT, RESOURCE TO app_user;
 GRANT CREATE VIEW, CREATE SYNONYM TO app_user;
 
 -- Cambia password
 ALTER USER app_user IDENTIFIED BY "NuovaPassword!";
 
--- Locka/Unlocka utente
+--Lock/Unlock user
 ALTER USER app_user ACCOUNT LOCK;
 ALTER USER app_user ACCOUNT UNLOCK;
 
--- Profilo password (no scadenza per lab)
+--Password profile (no expiration for lab)
 CREATE PROFILE lab_profile LIMIT
     PASSWORD_LIFE_TIME UNLIMITED
     PASSWORD_REUSE_TIME UNLIMITED
@@ -433,32 +433,32 @@ ALTER USER app_user PROFILE lab_profile;
 ### 8.5 Statistiche e Performance
 
 ```sql
--- Raccogli statistiche (dopo caricamento dati)
+--Collect statistics (after data upload)
 EXEC DBMS_STATS.GATHER_SCHEMA_STATS('HR');
 EXEC DBMS_STATS.GATHER_DATABASE_STATS;
 
--- Oggetti invalidi (dopo patching)
+--Invalid Items (After Patching)
 -- Fonte: oracle-base.com/dba/monitoring/invalid_objects.sql
 SELECT owner, object_type, object_name, status
 FROM dba_objects
 WHERE status = 'INVALID'
 ORDER BY owner, object_type, object_name;
 
--- Ricompila tutti gli oggetti invalidi
+--Recompile all invalid objects
 @$ORACLE_HOME/rdbms/admin/utlrp.sql
 ```
 
-### 8.6 Alert Log — Il "Diario" del DBA
+### 8.6 Alert Log — The DBA's "Diary".
 
 ```bash
-# Trova l'alert log
+# Find the alert log
 adrci
 ADRCI> SHOW ALERT
 
-# Oppure direttamente:
+# Or directly:
 tail -200 $ORACLE_BASE/diag/rdbms/racdb/RACDB1/trace/alert_RACDB1.log
 
-# Cerca errori ORA- nell'alert
+# Look for ORA- errors in the alert
 grep "ORA-" $ORACLE_BASE/diag/rdbms/racdb/RACDB1/trace/alert_RACDB1.log | tail -20
 ```
 
@@ -468,24 +468,24 @@ grep "ORA-" $ORACLE_BASE/diag/rdbms/racdb/RACDB1/trace/alert_RACDB1.log | tail -
 
 ```sql
 -- Genera un AWR Report (HTML)
--- ✅ FONDAMENTALE per analisi performance
+--✅ FUNDAMENTAL for performance analysis
 @$ORACLE_HOME/rdbms/admin/awrrpt.sql
 
--- Pulisci vecchi snapshot AWR
+--Clean up old AWR snapshots
 EXEC DBMS_WORKLOAD_REPOSITORY.MODIFY_SNAPSHOT_SETTINGS(retention => 7*24*60, interval => 60);
 ```
 
 ---
 
-## 9. 🔄 Oggetti Inutilizzati e Pulizia
+## 9. 🔄 Unused Items and Cleaning
 
 ```sql
--- Indici non utilizzati (per ottimizzazione)
+--Unused indices (for optimization)
 -- Fonte: oracle-base.com/dba/monitoring/index_usage.sql
--- 🔶 ATTENZIONE: monitorizza per almeno un ciclo di business completo
+--🔶 ATTENTION: monitor for at least one complete business cycle
 ALTER INDEX hr.emp_name_idx MONITORING USAGE;
 
--- Dopo un po', controlla:
+--After a while, check:
 SELECT * FROM v$object_usage;
 
 -- Recyclebin (cestino Oracle)
@@ -494,53 +494,53 @@ SELECT owner, original_name, object_name, type, droptime
 FROM dba_recyclebin
 ORDER BY droptime DESC;
 
--- Svuota il cestino
+--Empty the trash
 PURGE DBA_RECYCLEBIN;
 ```
 
 ---
 
-## 10. Script oracle-base.com — Selezione e Valutazione
+## 10. oracle-base.com Scripts — Selection and Evaluation
 
 ### ⬇️ Script da Scaricare e Usare
 
-| Script | Categoria | Valutazione | Descrizione |
+| Script | Categoria |Assessment|Description|
 |---|---|---|---|
-| `active_sessions.sql` | Monitoring | ✅ **Essenziale** | Sessioni attive con SQL |
-| `sessions.sql` | Monitoring | ✅ **Essenziale** | All sessions |
-| `top_sql.sql` | Monitoring | ✅ **Essenziale** | More expensive queries |
-| `locked_objects.sql` | Monitoring | ✅ **Essenziale** | Oggetti con lock |
-| `ts_full.sql` | Monitoring | ✅ **Essenziale** | Spazio tablespace |
-| `datafiles.sql` | Monitoring | ✅ **Helpful** | Info datafile |
-| `logfiles.sql` | Monitoring | ✅ **Helpful** | Redo log status |
-| `redo_by_day.sql` | Monitoring | ✅ **Helpful** | Redo volume per day |
-| `redo_by_hour.sql` | Monitoring | ✅ **Helpful** | Volume redo per ora |
-| `invalid_objects.sql` | Monitoring | ✅ **Essenziale** | Oggetti INVALID |
-| `session_waits.sql` | Monitoring | ✅ **Essenziale** | Wait events per sessione |
-| `system_events.sql` | Monitoring | ✅ **Helpful** | Wait system events |
-| `parameters_non_default.sql` | Monitoring | ✅ **Helpful** | Parametri modificati |
-| `patch_registry.sql` | Monitoring | ✅ **Helpful** | Patch installate |
-| `cache_hit_ratio.sql` | Monitoring | ✅ **Helpful** | Efficienza buffer cache |
-| `free_space.sql` | Monitoring | ✅ **Helpful** | Spazio libero |
-| `longops.sql` | Monitoring | ✅ **Helpful** | Operazioni lunghe |
-| `recovery_status.sql` | Monitoring | ✅ **Helpful** | Recovery status |
-| `db_info.sql` | Monitoring | ✅ **Essenziale** | Info database |
-| `sessions_rac.sql` | RAC | ✅ **Essenziale RAC** | Sessions for all instances |
-| `locked_objects_rac.sql` | RAC | ✅ **Essenziale RAC** | Lock on all instances |
-| `session_waits_rac.sql` | RAC | ✅ **Essenziale RAC** | Wait on all instances |
+| `active_sessions.sql` |Monitoring|✅ **Essential**|Active sessions with SQL|
+| `sessions.sql` |Monitoring|✅ **Essential**| All sessions |
+| `top_sql.sql` |Monitoring|✅ **Essential**| More expensive queries |
+| `locked_objects.sql` |Monitoring|✅ **Essential**|Locked objects|
+| `ts_full.sql` |Monitoring|✅ **Essential**|Tablespace space|
+| `datafiles.sql` |Monitoring| ✅ **Helpful** |Datafile info|
+| `logfiles.sql` |Monitoring| ✅ **Helpful** | Redo log status |
+| `redo_by_day.sql` |Monitoring| ✅ **Helpful** | Redo volume per day |
+| `redo_by_hour.sql` |Monitoring| ✅ **Helpful** | Volume redo per ora |
+| `invalid_objects.sql` |Monitoring|✅ **Essential**| Oggetti INVALID |
+| `session_waits.sql` |Monitoring|✅ **Essential**| Wait events per sessione |
+| `system_events.sql` |Monitoring| ✅ **Helpful** | Wait system events |
+| `parameters_non_default.sql` |Monitoring| ✅ **Helpful** |Parameters changed|
+| `patch_registry.sql` |Monitoring| ✅ **Helpful** | Patch installate |
+| `cache_hit_ratio.sql` |Monitoring| ✅ **Helpful** |Cache buffer efficiency|
+| `free_space.sql` |Monitoring| ✅ **Helpful** |Free space|
+| `longops.sql` |Monitoring| ✅ **Helpful** |Long operations|
+| `recovery_status.sql` |Monitoring| ✅ **Helpful** | Recovery status |
+| `db_info.sql` |Monitoring|✅ **Essential**| Info database |
+| `sessions_rac.sql` | RAC |✅ **RAC essential**| Sessions for all instances |
+| `locked_objects_rac.sql` | RAC |✅ **RAC essential**| Lock on all instances |
+| `session_waits_rac.sql` | RAC |✅ **RAC essential**| Wait on all instances |
 | `monitor_memory_rac.sql` | RAC | ✅ **Useful RAC** | Memory usage per instance |
-| `compile_all.sql` | Misc | 🔶 **Situazionale** | Recompile everything (after patch) |
-| `login.sql` | Misc | ✅ **Recommended** | Personalizza SQL*Plus prompt |
-| `health.sql` | Monitoring | ✅ **Essenziale** | Health check complessivo |
+| `compile_all.sql` | Misc |🔶 **Situational**| Recompile everything (after patch) |
+| `login.sql` | Misc | ✅ **Recommended** |Customize SQL*Plus prompt|
+| `health.sql` |Monitoring|✅ **Essential**| Health check complessivo |
 
-### ❌ Script da NON usare nel tuo Lab
+### ❌ Scripts NOT to use in your Lab
 
 | Script | Motivo |
 |---|---|
 | `drop_all.sql` | 🚨 Dangerous! Clear ALL schema objects |
 | `analyze_all.sql` | Obsoleto, usa `DBMS_STATS` |
 | `dispatchers.sql` | Solo per Shared Server (noi usiamo Dedicated) |
-| `pipes.sql` | Solo per DBMS_PIPE (uso molto specifico) |
+| `pipes.sql` |Only forDBMS_PIPE(very specific use)|
 
 ### How to Download Scripts
 
@@ -548,7 +548,7 @@ PURGE DBA_RECYCLEBIN;
 # Crea la directory degli script DBA
 mkdir -p /home/oracle/dba_scripts
 
-# Scarica gli script essenziali
+#Download the essential scripts
 cd /home/oracle/dba_scripts
 for script in active_sessions sessions top_sql locked_objects ts_full \
               datafiles logfiles redo_by_day invalid_objects session_waits \
@@ -561,9 +561,9 @@ for script in sessions_rac locked_objects_rac session_waits_rac monitor_memory_r
     wget -q "https://oracle-base.com/dba/rac/${script}.sql"
 done
 
-# Login.sql per personalizzare SQL*Plus
+# Login.sqlto customize SQL*Plus
 wget -q "https://oracle-base.com/dba/miscellaneous/login.sql"
-# Copia nella home di oracle
+# Copy to oracle home
 cp login.sql /home/oracle/login.sql
 ```
 
@@ -576,10 +576,10 @@ Perform all these checks as a final check of your environment:
 ```sql
 -- ==============================
 -- CHECKLIST DBA FINALE
--- Esegui come SYS su ogni DB
+--Run as SYS on each DB
 -- ==============================
 
--- 1. Database aperto e in archivelog?
+--1. Database open and in archivelog?
 SELECT name, open_mode, log_mode, force_logging, database_role FROM v$database;
 
 -- 2. Tutte le istanze RAC online?
@@ -591,10 +591,10 @@ SELECT tablespace_name,
 FROM dba_tablespace_usage_metrics
 WHERE ROUND((used_space/tablespace_size)*100) > 80;
 
--- 4. Oggetti invalidi?
+--4. Invalid items?
 SELECT COUNT(*) AS invalid_count FROM dba_objects WHERE status = 'INVALID';
 
--- 5. Data Guard sincronizzato?
+--5. Data Guard synchronized?
 SELECT * FROM v$archive_gap;  -- 0 righe = OK
 
 -- 6. RMAN backup recente?
@@ -604,10 +604,10 @@ WHERE start_time > SYSDATE - 1
 ORDER BY start_time DESC;
 
 -- 7. Alert log errori recenti?
--- (esegui da bash)
+--(run from bash)
 -- grep "ORA-" $ORACLE_BASE/diag/rdbms/*/*/trace/alert_*.log | tail -10
 
--- 8. ASM spazio?
+--8. ASM space?
 SELECT name, total_mb, free_mb,
        ROUND((1-free_mb/total_mb)*100) AS pct_used
 FROM v$asm_diskgroup;

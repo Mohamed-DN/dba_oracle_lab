@@ -41,7 +41,7 @@ with data as (
 				'platform_slash', 'policy_invoker', 'proxy_enterprise_identity', 'proxy_user', 'proxy_userid',
 				'scheduler_job', 'server_host', 'service_name', 'session_default_collation', 'session_edition_id', 
 				'session_edition_name', 'session_user', 'session_userid', 'sessionid', 'sid', 'statementid', 
-				'terminal', 
+'terminal',
 				'unified_audit_sessionid'
 )
 		)

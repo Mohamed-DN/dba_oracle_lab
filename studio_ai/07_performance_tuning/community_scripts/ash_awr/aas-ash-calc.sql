@@ -30,7 +30,7 @@ with snapshots as (
 ash_data as (
 	select distinct sample_id 
 		, inst_id
-		, sample_time begin_interval_time
+, sample_time begin_interval_time
 		, lead(sample_time) over (partition by inst_id order by sample_id) end_interval_time
 		, lead(sample_time) over (partition by inst_id order by sample_id) - sample_time time_diff
 	from snapshots

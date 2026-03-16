@@ -1,6 +1,6 @@
 -- HOW TO LOAD SQL PLANS INTO SPM FROM AWR (Doc ID 789888.1)
 -- Use this procedure on DBs with releases lower than 12.2
--- Sostituire opportunamente sql_id, plan_hash_value, snap_id iniziale e finale
+--Replace the leading and trailing sql_id, plan_hash_value, snap_id appropriately
 
 exec DBMS_SQLTUNE.CREATE_SQLSET('BAD_QUERY');
 
@@ -23,8 +23,8 @@ NAME                           OWNER                          CREATED           
 ------------------------------ ------------------------------ ------------------- ---------------
 BAD_QUERY                     SYS                            30/05/2014 20:10:03               1
 
--- Caricamento in SPM
--- In Oracle 12c possono essere caricati ulteriori piani in automatico da Oracle.
+--Loading into SPM
+--In Oracle 12c additional plans can be loaded automatically from Oracle.
 -- If you want to definitively fix the plan, use FIXED => YES
 
 set serveroutput on
@@ -45,7 +45,7 @@ from DBA_SQL_PLAN_BASELINES b
 where DBMS_SQLTUNE_UTIL0.SQLTEXT_TO_SQLID(SQL_TEXT||chr(0)) = '&sql_id'
 order by 1;
 
--- Rimozione SQLSET
+--Removing SQLSET
 
 exec DBMS_SQLTUNE.DROP_SQLSET('BAD_QUERY');
 

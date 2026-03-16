@@ -14,7 +14,7 @@ break on role skip 2
 
 select 
 	a.role, 
-	b.granted_role  priv , 
+b.granted_role priv ,
 	'ROLE' privtype
 from dba_roles a, dba_role_privs b
 where b.grantee = a.role

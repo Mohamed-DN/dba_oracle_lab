@@ -1,11 +1,11 @@
 
 -- ===========================================================================================
-1. Check alert per errori ORA- ricorrenti
+1. Check alert for NOW-recurring errors
 
    grep "ORA-" LISTENERLOG | uniq -c | sort -n
 
 -- ===========================================================================================   
-2. Check log listeners per bombardamento da parte di Microservizi / Application 
+2. Check log listeners for bombardment by Microservices / Application
 
    -- see in general which service bombs the most and understand why a ConnPOol is not used or why it finds itself opening and closing conn continuously
    tail -1000 /u01/app/orabase/diag/tnslsnr/poddb01-sec-01/listener/trace/listener.log | grep SERVICE_NAME | cut -f 7 -d '=' | cut -f 1 -d ")"  | sort -n | uniq -c
@@ -17,7 +17,7 @@
     295 YAPP_RO
 
 -- ===========================================================================================
-3. Verificare che non si presentino situazioni di lock bloccanti nell''AWR per piu di 5 minuti
+3. Check that no lock situations occur in the AWR for more than 5 minutes
 
     SELECT *
 	FROM (
@@ -39,11 +39,11 @@
 	
 
 -- ===========================================================================================
-4. Verifica su EM13 per capire se nell''arco almeno dell''ultima settimana non si siano verificati eventi non standard ( lock, aumenti delleconnessioni al database, contention ) 
+4. Check on EM13 to understand if no non-standard events have occurred over at least the last week (lock, increases in database connections, contention)
 
 
 -- ===========================================================================================
-5. Check che non ci sia un motivo perche i cursori dei sql id non siano shared
+5. Check that there is no reason why the sql id cursors are not shared
 
 	select 
 	  sql_id,count(*)
@@ -52,10 +52,10 @@
 	having count(*) > 100
 	order by 2 desc
 
-	nel caso compaia una riga, indagare sul perche'' il sql non sia shared in funzione del rate di esecuzione ( prenderlo incosiderazione se e stato eseguito piu di 100 volte in totale)
+if a line appears, investigate why the sql is not shared according to the execution rate (take this into consideration if it has been executed more than 100 times in total)
 
 -- ===========================================================================================
-6.  Eseguire un check che gli indici siano utilizzati nei piani di esecuzione 
+6. Check that the indexes are used in the execution plans
 
     select
 	  owner,index_name,index_type,table_owner,table_name,tablespace_name,'ALTER INDEX ' || OWNER || '.' || INDEX_NAME || ' INVISIBLE;'
@@ -72,11 +72,11 @@
 	and owner not in ( 'SYS','SYSTEM','APEX_040200','DBA_OP','MDSYS','FLOWS_FILES','DVSYS','OUTLN','DVSYS','OJVMSYS','XDB','PERFSTAT','WMSYS','LBACSYS','CTXSYS','GSMADMIN_INTERNAL','DBFW_CONSOLE_ACCESS','ORDDATA')
     and visibility = 'VISIBLE'
 
-	-- valutare insieme agli applicativi l'opportunita' di mettere in invisible gli indici che non risukltano utilizzati per poi dropparli
+	--evaluate together with the applications the opportunity to make the indices that are not used invisible and then drop them
 	
 	
 -- ===========================================================================================
-7.  Eseguire un check che non ci siano query con alti tempi di esecuzione ( esempio 300 millisec )
+7. Check that there are no queries with high execution times (e.g. 300 millisec)
 
 	SELECT ROUND(disk_reads/executions) "DSK/EX", ROUND(buffer_gets/executions) "BFF/EX",
 		   ROUND(rows_processed/executions) "RWS/EX", ROUND((cpu_time/1000000)/executions,3) "CPU/EX",
@@ -92,7 +92,7 @@
 
 
 -- ===========================================================================================
-8.  Eseguire un check che non ci siano query parallel che durano meno di un minuto
+8. Check that there are no parallel queries that last less than a minute
 
 	SELECT ROUND(disk_reads/executions) "DSK/EX", ROUND(buffer_gets/executions) "BFF/EX",
 		   ROUND(rows_processed/executions) "RWS/EX", ROUND((cpu_time/1000000)/executions,3) "CPU/EX",
@@ -109,7 +109,7 @@
 	
 	
 -- ===========================================================================================
-9.  Eseguire un check sugli indici con parallel degree > 1. Fare un check sulla dimensizone della tabella, se superiore a 10Gb hanno senso altrimenti mettere gli indici in noparallel
+9. Perform a check on the indexes with parallel degree > 1. Check the size of the table, if greater than 10Gb it makes sense otherwise put the indexes in noparallel
 
 	select *
 	from dba_indexes where degree <> 'DEFAULT' 
@@ -117,7 +117,7 @@
 
 	
 -- ===========================================================================================
-10. Check che tabelle con dimensione superiore a 100GB siano partizionate
+10. Check that tables larger than 100GB are partitioned
 
 
 	select 
@@ -139,7 +139,7 @@
 
 	
 -- ===========================================================================================
-11. Check che su ambiente RAC le sequence abbiano la cache abilitata
+11. Check that the sequences have cache enabled in the RAC environment
 
 	select 
 	  'ALTER SEQUENCE ' || SEQUENCE_OWNER || '.' || SEQUENCE_NAME || ' CACHE 50;'
@@ -151,7 +151,7 @@
 
 
 -- ===========================================================================================
-11. Check sulla dimensione degli indici ed eventuale rebuild
+11. Check the size of the indexes and possible rebuild
 
     --
     -- Check that the indexes are less than 50% of the size of the table.
@@ -191,13 +191,13 @@
 			 tps.TBL_SIZE_MB
 	 )
 	 where IDX_SIZE_MB*100/TBL_SIZE_MB > 50
-	   and TBL_SIZE_MB > 10 -- prendo solo le tabelle piu grosse di 10 mb per evitare falsi positivi
+	   and TBL_SIZE_MB> 10 -- I only take tables larger than 10 MB to avoid false positives
 	 order by 3 desc,1,2
 	 /
 	 
 
 -- ===========================================================================================
-12. Check per capire se ci sono query che hanno piani pessimi rispetto ad altri
+12. Check to understand if there are queries that have bad plans compared to others
 
 
 select *

@@ -22,7 +22,7 @@ with data as (
 	select distinct
 		e.owner
 		, e.segment_name
-		, e.partition_name
+, e.partition_name
 		, e.segment_type
 		, e.tablespace_name
 		, t.block_size
@@ -34,7 +34,7 @@ select
 	to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') snaptime
 	, owner
 	, segment_name
-	, partition_name
+, partition_name
 	, segment_type
 	, tablespace_name
 	, block_size

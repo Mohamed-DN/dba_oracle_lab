@@ -19,7 +19,7 @@ from (
 	from data
 	order by 1
 )
-union all 
+union all
 select '==== aggregates ===', 0 from dual
 union all
 select 'AVG' , avg(bytes) bytes

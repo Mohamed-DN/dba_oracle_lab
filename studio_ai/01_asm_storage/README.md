@@ -1,7 +1,7 @@
 # 01 — ASM & Storage Management
 
 > Operating procedures for managing Oracle ASM storage in an Enterprise RAC environment.
-> Include sia il metodo **ASMLib** che **AFD** (ASM Filter Driver).
+> Includes both **ASMLib** and **AFD** (ASM Filter Driver) methods.
 
 ---
 
@@ -35,5 +35,5 @@ Real example of adding AFD disks in production (P1NDREHP database).
 
 ---
 
-## 🔗 Collegamento
+## 🔗 Link
 See also the training guide: [GUIDE_ADD_ASM_DISK.md](../../GUIDE_ADD_ASM_DISK.md)

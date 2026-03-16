@@ -10,7 +10,7 @@
 > - `rac1`: 192.168.56.101
 > - `rac2`: 192.168.56.102
 
-### 📸 Riferimenti Visivi
+### 📸 Visual References
 
 ![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)
 
@@ -48,7 +48,7 @@
 ║    │  ┌─────────┐     ┌──────────┐     ┌──────────┐          │       ║
 ║    │  │ +CRS    │     │ +DATA    │     │ +FRA     │          │       ║
 ║    │  │  5 GB   │     │  20 GB   │     │  15 GB   │          │       ║
-║    │  │ OCR,    │     │ Datafile,│     │ Archive, │          │       ║
+║ │ │ OCR, │ │ Datafile,│ │ Archive, │ │ ║
 ║    │  │ Voting  │     │ Redo,    │     │ Backup,  │          │       ║
 ║    │  │ Disk    │     │ Control  │     │ Flashback│          │       ║
 ║    │  └─────────┘     └──────────┘     └──────────┘          │       ║
@@ -72,13 +72,13 @@ Step 9: datapatch ━━━━━━━━━━━━━━━━━━▶ patc
 
 ---
 
-## 2.1 Preparazione Storage Condiviso (ASM)
+## 2.1 Shared Storage (ASM) Preparation
 
 ### Creating Shared Disks in VirtualBox
 
 If you use VirtualBox, create disks from **Virtual Media Manager** (`Ctrl+D`):
 
-| Disco | Dimensione | Uso |
+| Disco |Size| Uso |
 |---|---|---|
 | `asm_crs.vdi`  | 5 GB  | OCR + Voting Disk (Clusterware) |
 | `asm_data.vdi` | 20 GB | Disk Group DATA (Datafile) |
@@ -94,23 +94,23 @@ If you use VirtualBox, create disks from **Virtual Media Manager** (`Ctrl+D`):
 The disks for ASM have already been manually partitioned in [Phase 0](./GUIDE_PHASE0_MACHINE_SETUP.md) tramite `fdisk`. Verifichiamo che le partizioni siano visibili:
 ```bash
 lsblk
-# Devi vedere sdc1, sdd1, sde1, sdf1, sdg1
+#You need to see sdc1, sdd1, sde1, sdf1, sdg1
 ```
 
 
 
 ---
 
-## 2.2 Download e Preparazione Binari
+## 2.2 Download and Preparation of Binaries
 
-Scarica dal sito [Oracle eDelivery](https://edelivery.oracle.com):
+Download from the [Oracle eDelivery] site(https://edelivery.oracle.com):
 - `LINUX.X64_193000_grid_home.zip` (Grid Infrastructure 19.3)
 - `LINUX.X64_193000_db_home.zip` (Database 19.3)
 
 Trasferisci i file su `rac1` (for example in `/tmp/`):
 
 ```bash
-# Scompatta Grid nella GRID_HOME (come utente grid)
+# Unpack Grid intoGRID_HOME(as grid user)
 su - grid
 unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
 ```
@@ -119,25 +119,25 @@ unzip -q /tmp/LINUX.X64_193000_grid_home.zip -d /u01/app/19.0.0/grid
 
 ---
 
-## 2.3 Installazione CVU Disk Package
+## 2.3 CVU Disk Package Installation
 
 > ⚠️ **ATTENZIONE**: Il file `cvuqdisk` si trova dentro la GRID_HOME that you just unpacked. Since the zip was extracted **only on `rac1`**, il path `/u01/app/19.0.0/grid/` **DOES NOT EXIST yet on `rac2`!** You must then copy the RPM file from `rac1` a `rac2` before installing it.
 
-**Step 1: Su `rac1` (as `root`) — Installa direttamente:**
+**Step 1: Su `rac1` (as `root`) — Install directly:**
 ```bash
-# Su rac1 il file esiste già perché hai scompattato il Grid qui
+#On rac1 the file already exists because you unpacked the Grid here
 rpm -ivh /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm
 ```
 
-**Step 2: Copia il file RPM su `rac2`:**
+**Step 2: Copy the RPM file to`rac2`:**
 ```bash
-# Ancora da rac1, spedisci il file a rac2 via scp
+# Again from rac1, send the file to rac2 via scp
 scp /u01/app/19.0.0/grid/cv/rpm/cvuqdisk-1.0.10-1.rpm root@rac2:/tmp/
 ```
 
-**Step 3: Su `rac2` (as `root`) — Installa dalla copia in /tmp:**
+**Step 3: Su `rac2` (as `root`) — Install from the copy in /tmp:**
 ```bash
-# Su rac2, installa dalla copia che hai appena trasferito
+# On rac2, install from the copy you just ported
 rpm -ivh /tmp/cvuqdisk-1.0.10-1.rpm
 ```
 
@@ -147,29 +147,29 @@ rpm -ivh /tmp/cvuqdisk-1.0.10-1.rpm
 
 ## 2.3b Creare il file Oracle Inventory Pointer (`/etc/oraInst.loc`)
 
-> ⚠️ **Da fare su ENTRAMBI i nodi (`rac1` e `rac2`) how `root`**, altrimenti `cluvfy` fallisce con l'errore: `PRVG-10467: The default Oracle Inventory group could not be determined.`
+> ⚠️ **To be done on BOTH nodes (`rac1` e `rac2`) how `root`**, otherwise`cluvfy`fails with the error:`PRVG-10467: The default Oracle Inventory group could not be determined.`
 
 **Why is it needed?** Oracle uses the file `/etc/oraInst.loc` to know where to save its "installation log" (the Inventory) and which Linux group owns it. This file is normally created automatically when you first install Oracle — but since you haven't installed anything yet, it doesn't exist! We have to create it by hand before launching the pre-check.
 
 **Su `rac1` E `rac2`, as a user `root`:**
 
 ```bash
-# 1. Crea il file pointer che dice a Oracle dove sta l'Inventory
+#1. Create the pointer file that tells Oracle where the Inventory is
 cat > /etc/oraInst.loc <<'EOF'
 inventory_loc=/u01/app/oraInventory
 inst_group=oinstall
 EOF
 
-# 2. Permessi corretti sul file
+#2. Correct permissions on the file
 chown root:oinstall /etc/oraInst.loc
 chmod 644 /etc/oraInst.loc
 
-# 3. Crea la directory dell'Inventory (se non esiste già)
+#3. Create the Inventory directory (if it doesn't already exist)
 mkdir -p /u01/app/oraInventory
 chown grid:oinstall /u01/app/oraInventory
 chmod 775 /u01/app/oraInventory
 
-# 4. Verifica
+#4. Check
 cat /etc/oraInst.loc
 ls -ld /u01/app/oraInventory
 ```
@@ -197,9 +197,9 @@ Quando lanci `cluvfy`, Oracle scans **ALL** network interfaces on the system, no
 ╚═══════════╩══════════════════╩═══════════════════════════╩═════════════╝
 ```
 
-Le due interfacce "inutili" causano 3 errori specifici:
+The two "useless" interfaces cause 3 specific errors:
 
-| Errore cluvfy | Causa | Interfaccia |
+| Errore cluvfy | Causa |Interface|
 |---|---|---|
 | `PRVG-1172`: Duplicate IP on multiple nodes | VirtualBox NAT gives `10.0.2.15` to ALL VMs | `enp0s3` |
 | `PRVG-1172`: Duplicate IP on multiple nodes | `libvirtd` crea `192.168.122.1` on ALL VMs | `virbr0` |
@@ -207,7 +207,7 @@ Le due interfacce "inutili" causano 3 errori specifici:
 
 ### Is it Oracle Best Practice? YES!
 
-La documentazione Oracle (MOS Doc ID 1585184.1 — "Grid Infrastructure Preinstallation Steps") raccomanda esplicitamente:
+The Oracle documentation (MOS Doc ID 1585184.1 — "Grid Infrastructure Preinstallation Steps") explicitly recommends:
 - **Disable unnecessary network interfaces** before installing Grid
 - **Disable IPv6** if it is not used in the cluster (99% of labs don't use it)
 - **Remove virtual bridges** as `virbr0` che non partecipano al cluster
@@ -220,41 +220,41 @@ The reason is that during installation, Grid Infrastructure **enumerates all int
 
 ```bash
 # ============================================================
-# 1. ELIMINA virbr0 (bridge di libvirt/KVM — non serve a RAC)
+#1. DELETE virbr0 (libvirt/KVM bridge — not needed by RAC)
 # ============================================================
-# virbr0 è creato dal demone libvirtd, che serve per gestire
-# macchine virtuali KVM *dentro* la VM stessa.
-# Nel nostro lab non faremo mai VM-in-VM, quindi lo disabilitiamo.
+#virbr0 is created by the libvirtd daemon, which is used to manage
+#KVM virtual machines *inside* the VM itself.
+# In our lab we will never do VM-in-VM, so we disable it.
 systemctl stop libvirtd
 systemctl disable libvirtd
 ip link set virbr0 down
 brctl delbr virbr0 2>/dev/null
 
-# Verifica: virbr0 non deve più comparire
+#Check: virbr0 should no longer appear
 ip addr show virbr0 2>&1
 # Deve dire: "Device virbr0 does not exist."
 
 # ============================================================
 # 2. DISABILITA IPv6 SULLA NAT (enp0s3)
 # ============================================================
-# L'IPv6 auto-configurato sulla NAT di VirtualBox genera indirizzi
-# IPv6 diversi su ogni VM, ma NON sono raggiungibili tra di loro
-# perché la NAT è isolata. Cluvfy prova a fare ping IPv6 e fallisce.
+# Auto-configured IPv6 on VirtualBox NAT generates addresses
+# Different IPv6 on each VM, but they are NOT reachable to each other
+#because NAT is isolated. Cluvfy tries to ping IPv6 and fails.
 echo "net.ipv6.conf.enp0s3.disable_ipv6 = 1" >> /etc/sysctl.conf
 sysctl -p
 
-# Verifica: enp0s3 non deve più mostrare indirizzi "inet6"
+#Check: enp0s3 should no longer show "inet6" addresses
 ip -6 addr show enp0s3
-# Deve essere vuoto o mostrare solo link-local
+# Must be empty or show only link-local
 
 # ============================================================
 # 3. (OPZIONALE) NOTA SULL'INTERFACCIA NAT (enp0s3)
 # ============================================================
-# L'interfaccia enp0s3 (10.0.2.15) serve per dare internet alla
-# VM (download pacchetti, yum update). NON la disabilitiamo
-# perché ci serve, ma cluvfy darà comunque un WARNING perché
-# entrambe le VM hanno lo stesso IP 10.0.2.15 sulla NAT.
-# Questo WARNING è HARMLESS: Oracle non userà mai questa rete.
+#The enp0s3 interface (10.0.2.15) is used to give internet to
+# VM (package download, yum update). We do NOT disable it
+#because we need it, but cluvfy will still give a WARNING because
+#both VMs have the same IP 10.0.2.15 on the NAT.
+#This WARNING is HARMLESS: Oracle will never use this network.
 ```
 
 > 💡 **Why don't we disable it too `enp0s3`?** Because it is the only interface that gives Internet access to VMs (for `yum install`, download patch, ecc.). Il Warning di cluvfy sull'IP duplicato `10.0.2.15` is harmless: during Grid installation, we will choose manually `enp0s8` as a public network e `enp0s9` like interconnect. Oracle will never touch NAT.
@@ -266,7 +266,7 @@ ip -6 addr show enp0s3
 Before building the Grid software, block the time synchronization imposed by the hypervisor and leave control of the time to `chronyd`.
 
 Because: in the lab there is a "time war":
-1. `chronyd` dentro Linux sincronizza l'ora con NTP.
+1. `chronyd`Inside Linux synchronizes time with NTP.
 2. VirtualBox Guest Additions prova a riallineare l'ora al clock dell'host.
 3. After reboot the hypervisor wins, the time skips and `cluvfy`/Grid possono segnalare errori NTP.
 
@@ -275,7 +275,7 @@ Because: in the lab there is a "time war":
 Run on both nodes as `root`:
 
 ```bash
-# Disabilita i servizi VBox che possono forzare il clock guest
+#Disable VBox services that can force the guest clock
 if systemctl list-unit-files | grep -q '^vboxadd-service.service'; then
   systemctl disable --now vboxadd-service
 fi
@@ -284,23 +284,23 @@ if systemctl list-unit-files | grep -q '^vboxservice.service'; then
   systemctl disable --now vboxservice
 fi
 
-# Verifica (se non esistono e normale)
+#Check (if they don't exist it's normal)
 systemctl is-enabled vboxadd-service 2>/dev/null || true
 systemctl is-active vboxadd-service 2>/dev/null || true
 systemctl is-enabled vboxservice 2>/dev/null || true
 systemctl is-active vboxservice 2>/dev/null || true
 ```
 
-Nota rapida altri hypervisor:
+Quick note other hypervisors:
 - VMware: disattiva "Synchronize guest time with host" nelle opzioni VM.
-- Proxmox/KVM: disabilita policy time sync guest-side equivalente, poi lascia solo `chronyd`.
+- Proxmox/KVM: disable equivalent guest-side time sync policy, then leave alone`chronyd`.
 
 ### 2) Hardening Chrony su `rac1` e `rac2`
 
 Run on both nodes as `root`:
 
 ```bash
-# Imposta makestep per correggere subito drift >1s nei primi 3 update
+# Set makestep to immediately fix drift >1s in the first 3 updates
 if grep -q '^makestep' /etc/chrony.conf; then
   sed -i 's/^makestep.*/makestep 1.0 3/' /etc/chrony.conf
 else
@@ -327,34 +327,34 @@ reboot
 After logging in on each node:
 
 ```bash
-# Verifica che VBox time sync resti disattivo
+#Verify that VBox time sync remains disabled
 systemctl is-active vboxadd-service 2>/dev/null || true
 systemctl is-active vboxservice 2>/dev/null || true
 
-# Verifica sync Chrony
+#Check Chrony sync
 chronyc sources -v
 chronyc tracking
 timedatectl
 ```
 
-Criterio PASS/FAIL:
+PASS/FAIL criterion:
 - PASS: `chronyc tracking` mostra `Leap status     : Normal`.
 - PASS: `chronyc sources -v` mostra almeno una sorgente valida (`*` o `+`).
-- FAIL: `Leap status : Not synchronised` su uno dei due nodi.
+- FAIL: `Leap status : Not synchronised`on one of the two nodes.
 
-### 4) Gate di avanzamento verso Grid
+### 4) Advancement gate towards Grid
 
-Vai avanti con `2.4` (cluvfy) e `2.5` (installazione Grid) solo se entrambi i nodi sono sincronizzati.
+Go ahead with`2.4` (cluvfy) e `2.5`(Grid installation) only if both nodes are synchronized.
 
-Nota importante:
-- warning su NAT duplicata `10.0.2.15` (`enp0s3`) e benigno nel lab VirtualBox ed e separato dal problema NTP.
+Important note:
+- warning su NAT duplicata `10.0.2.15` (`enp0s3`) is benign in the VirtualBox lab and is separate from the NTP issue.
 
 ---
 
 ## 2.4 Pre-Check con Cluster Verification Utility
 
 ```bash
-# Come utente grid su rac1
+#As a grid user on rac1
 su - grid
 cd /u01/app/19.0.0/grid
 
@@ -376,15 +376,15 @@ cd /u01/app/19.0.0/grid
 
 | Errore | Tipo | Azione |
 |---|---|---|
-| `PRVF-7530`: RAM insufficiente | ⚠️ Warning | Procedi — l'installer ha "Ignore All" (o alza la RAM a 9 GB) |
-| `PRVG-1172`: IP 10.0.2.15 duplicato | ⚠️ Warning | Harmless — it's VirtualBox NAT, Oracle doesn't use it |
+| `PRVF-7530`: RAM insufficiente | ⚠️ Warning |Proceed — installer says "Ignore All" (or raise RAM to 9GB)|
+| `PRVG-1172`: Duplicate IP 10.0.2.15| ⚠️ Warning | Harmless — it's VirtualBox NAT, Oracle doesn't use it |
 | `PRVG-11250`: RPM Database check | ℹ️ Info | Ignorable (you need root for this check) |
-| `PRVF-4664`: NTP non configurato | ❌ Errore | Applica `2.3d` (blocco sync host + hardening Chrony) e rilancia cluvfy |
+| `PRVF-4664`: NTP not configured| ❌ Errore | Applica `2.3d` (blocco sync host + hardening Chrony) e rilancia cluvfy |
 | SSH user equivalence FAILED | ❌ Errore | Repeat SSH setup (Step 1.12) |
 
 ---
 
-## 2.5 Installazione Grid Infrastructure
+## 2.5 Grid Infrastructure Installation
 
 ### GUI method (Recommended for learning)
 
@@ -392,11 +392,11 @@ cd /u01/app/19.0.0/grid
 > If you are connected from the VirtualBox black console or from a Putty without Xming, the command will fail saying "Display not set".
 
 ```bash
-# Come utente grid su rac1 (connesso via MobaXterm)
-# Il DISPLAY di solito viene settato in automatico da MobaXterm.
-# Se hai problemi, verifica con `echo $DISPLAY` (dovrebbe darti qualcosa come localhost:10.0)
+#As a grid user on rac1 (connected via MobaXterm)
+# The DISPLAY is usually set automatically by MobaXterm.
+#If you have problems, please check with`echo $DISPLAY`(should give you something like localhost:10.0)
 
-# Avvia l'installer  
+# Start the installer
 cd /u01/app/19.0.0/grid
 ./gridSetup.sh
 ```
@@ -406,10 +406,10 @@ cd /u01/app/19.0.0/grid
 **Step 1 — Configuration Option**:
 - Seleziona: **Configure Oracle Grid Infrastructure for a New Cluster**
 
-> Questa opzione installa Clusterware + ASM da zero.
+> This option installs Clusterware + ASM from scratch.
 
 **Step 2 — Cluster Configuration**:
-- Seleziona: **Configure an Oracle Standalone Cluster**
+- Select: **Configure an Oracle Standalone Cluster**
 
 > Standalone = a "normal" cluster (not Domain Services Cluster, which is for cloud/large infrastructure).
 
@@ -421,7 +421,7 @@ cd /u01/app/19.0.0/grid
 > **The SCAN name must exactly match the one in the DNS!** The installer checks the DNS at this time.
 
 **Step 4 — Cluster Nodes**:
-- Aggiungi `rac2` cliccando "Add":
+- Aggiungi `rac2`by clicking "Add":
   - Public Hostname: `rac2.localdomain`
   - Virtual Hostname: `rac2-vip.localdomain`
 - `rac1` will already be present:
@@ -459,8 +459,8 @@ cd /u01/app/19.0.0/grid
 **Step-by-step procedure:**
 
 1. **Disk Group Name**: `CRS`
-2. **Redundancy**: seleziona **Normal**
-3. **Allocation Unit Size**: lascia `4 MB` (default)
+2. **Redundancy**: Select **Normal**
+3. **Allocation Unit Size**: leave`4 MB` (default)
 4. **Discovery Path**: clicca **"Change Discovery Path..."** e scrivi:
    ```text
    /dev/oracleasm/disks/*
@@ -470,8 +470,8 @@ cd /u01/app/19.0.0/grid
    - ☑️ `/dev/oracleasm.../CRS2` (2047 MB)
    - ☑️ `/dev/oracleasm.../CRS3` (2047 MB)
 6. **NON selezionare** `DATA` e `RECO`! You will use them later to create separate disk groups
-7. **NON selezionare** "Configure Oracle ASM Filter Driver" (usiamo ASMLib, non AFD)
-8. Clicca **Next**
+7. **DO NOT select** "Configure Oracle ASM Filter Driver" (we use ASMLib, not AFD)
+8. Click **Next**
 
 > ⚠️ **Why NOT select DATE and RECO here?**
 > Questo step crea il disk group `CRS` which will contain **only** the cluster metadata (OCR and Voting Disk). Disk groups `DATA` (per i datafile del database) e `RECO` (for RMAN backups and archived logs) will be created separately after Grid installation, with the tool `asmca` or via SQL. Mixing everything into one disk group is a violation of Oracle best practices!
@@ -480,7 +480,7 @@ cd /u01/app/19.0.0/grid
 
 | Parametro | Scelta | Why |
 |---|---|---|
-| **Disk Group** | `CRS` separato da `DATA` e `RECO` | Oracle raccomanda di separare i metadati del cluster dai dati del database (MOS Doc 1373437.1). Se il disk group DATA si corrompe, il cluster resta su. |
+| **Disk Group** | `CRS` separato da `DATA` e `RECO` |Oracle recommends separating cluster metadata from database data (MOS Doc 1373437.1). If the DATA disk group becomes corrupt, the cluster remains up.|
 | **Redundancy** | Normal | Oracle requires **at least 3 Voting Disks** for quorum (majority voting). Normal = 3 disks, if you lose 1 the cluster stays up (2 out of 3). High = 5 discs. |
 | **Allocation Unit** | 4 MB | Default Oracle is recommended for small disk groups like CRS (contains only a few MB of metadata). |
 | **Discovery Path** | `/dev/oracleasm/disks/*` | We use the physical path of the operating system instead of the alias `ORCL:*`. Questo aggira un bug noto dell'installer (PRVG-11800) dove il check `cluvfy` in background fallisce nel caricare la libreria `oracleasmlib` da remoto. Passando il path OS diretto, l'installer usa i permessi standard Linux (`grid:asmadmin`) e non fallisce mai. |
@@ -500,7 +500,7 @@ cd /u01/app/19.0.0/grid
 > **In Production (Oracle Best Practices)**: Use separate passwords for `SYS` e `ASMSNMP`, with a minimum complexity of 8 characters, and save them in a password vault (such as Oracle Key Vault). The user `ASMSNMP` it is used by Enterprise Manager to monitor ASM — in production it must not have the same password as `SYS`.
 
 **Step 10 — IPMI**:
-- Seleziona: **Do not use IPMI**
+- Select: **Do not use IPMI**
 
 **Step 11 — EM Registration**:
 - Deseleziona: **Register with Enterprise Manager**
@@ -515,7 +515,7 @@ cd /u01/app/19.0.0/grid
 - Software Location: `/u01/app/19.0.0/grid`
 
 **Step 14 — Root Script Execution**:
-- **DESELEZIONA** "Automatically run configuration scripts"
+- **DESELECT** "Automatically run configuration scripts"
 - We'll run them manually, one at a time, to understand what they do
 
 **Step 15 — Prerequisite Checks**:
@@ -524,24 +524,24 @@ cd /u01/app/19.0.0/grid
 
 The installer will run a `cluvfy` internal. Here's how to interpret the results:
 
-| Check | Risultato | What to do |
+| Check |Result| What to do |
 |---|---|---|
 | **Physical Memory** (PRVF-7530) | ⚠️ Warning | **Ignore it**. You have 7.5 GB instead of 8 GB. This is normal in VirtualBox. |
-| **RPM Package Manager** (PRVG-11250) | ℹ️ Info | **Ignoralo**. Manca root per questo check. |
-| **Network Interface** (PRVG-1172) | ⚠️ Warning | **Ignoralo** solo se riguarda l'IP NAT `10.0.2.15`. |
+| **RPM Package Manager** (PRVG-11250) | ℹ️ Info |**Ignore it**. Root is missing for this check.|
+| **Network Interface** (PRVG-1172) | ⚠️ Warning |**Ignore this** only if it concerns IP NAT`10.0.2.15`. |
 | 🛑 **Device Checks for ASM** (PRVG-11800) | ❌ Se **FAILED** | **YOU MUST FIX IT!** (See below) |
 
 > 🛠️ **Troubleshooting: Errore PRVG-11800 (Failed to discover any devices...)**
 > If you followed the guide but still get this FAILED, you've run into a **known installer bug on Oracle Linux 7**: background check (`cluvfy`) a volte non riesce a caricare la libreria `libasm.so` per risolvere l'alias `ORCL:*`, even if the GUI showed them to you in Step 8!
 > 
-> **La soluzione (workaround ufficiale):**
+> **The solution (official workaround):**
 > 1. Clicca **Back** fino a tornare allo **Step 8 (Create ASM Disk Group)**.
-> 2. Clicca **"Change Discovery Path..."** e scrivi il percorso nativo Linux: `/dev/oracleasm/disks/*`
+> 2. Click **"Change Discovery Path..."** and write the native Linux path:`/dev/oracleasm/disks/*`
 > 3. Click OK. The disks will appear with the new path. Select ONLY the three CRS1, CRS2, CRS3.
 > 4. Go **Next** until you return to this Step 15. Now the check will pass using native filesystem permissions!
 
 **If all FAILEDs are resolved (and only Warnings remain):**
-- Spunta la casella **"Ignore All"** in alto a destra.
+- Check the **"Ignore All"** box at the top right.
 - Clicca **Next → Yes** per proseguire.
 
 The installer will stop at **Step 17** and show you a pop-up asking you to run 2 scripts like `root`.
@@ -564,12 +564,12 @@ The installer will stop at **Step 17** and show you a pop-up asking you to run 2
 
 > 💡 **What to answer to the prompt?**
 > Once launched, the script will ask: `Enter the full pathname of the local bin directory: [/usr/local/bin]:`
-> Premi semplicemente **Invio** per accettare il default.
+> Simply press **Enter** to accept the default.
 >
 > **This is the most important script of the entire installation**. Executes:
 > - Configura Oracle Clusterware (CRS) e OHAS
-> - Crea il CRS daemon (`crsd`, `cssd`, `evmd`)
-> - Inizializza il disk group ASM `CRS`
+> - Create the CRS daemon (`crsd`, `cssd`, `evmd`)
+> - Initialize the ASM disk group`CRS`
 > - Start the cluster on this node
 >
 > **WAIT (this will take 5-10 minutes)** for it to finish completely and return to the command prompt before moving on to node 2!
@@ -583,18 +583,18 @@ The installer will stop at **Step 17** and show you a pop-up asking you to run 2
 
 > On node 2, `root.sh` will add this node to the existing cluster (created from node 1).
 
-Torna all'installer GUI e clicca **OK** per completare lo step.
+Return to the installer GUI and click **OK** to complete the step.
 
 The installer will perform a final automatic check (`stage -post crsinst`).
 
 > 🛠️ **Troubleshooting: Errore PRVG-13606 (NTP/Chrony non sincronizzato)**
 > Se il check finale fallisce con l'errore `chrony daemon is not synchronized with any external time source`, return to the section `2.3d` and realign time first.  
-> **Soluzione:**
+> **Solution:**
 > 1. Apri un terminale `root` on the node indicated in the error (e.g. `rac2`).
 > 2. Check that in `/etc/chrony.conf` ci sia `makestep 1.0 3`.
-> 3. Esegui: `systemctl restart chronyd` e poi `chronyc tracking`.
+> 3. Run:`systemctl restart chronyd` e poi `chronyc tracking`.
 > 4. Conferma `Leap status : Normal`.
-> 5. Ritorna nell'installer GUI e clicca su **Retry**.
+> 5. Return to the installer GUI and click **Retry**.
 
 
 
@@ -606,7 +606,7 @@ Se l'esecuzione di `root.sh` fails (e.g. due to SSH timeouts, network problems o
 
 **To clean up the failed installation and try again (do as `root`):**
 ```bash
-# Sul nodo dove ha fallito (o su entrambi se necessario)
+#On the node where it failed (or on both if necessary)
 /u01/app/19.0.0/grid/crs/install/rootcrs.sh -deconfig -force
 ```
 > This script "unmounts" the cluster, cleans the interfaces, kills the daemons and resets the ASM disks (headers included) allowing you to start again cleanly.
@@ -616,23 +616,23 @@ Se l'esecuzione di `root.sh` fails (e.g. due to SSH timeouts, network problems o
 ## 2.6 Cluster Verification
 
 ```bash
-# Come root o grid
-# Stato generale del cluster
+#Like root or grid
+# General status of the cluster
 crsctl stat res -t
 
 # Elenco nodi
 olsnodes -n
 
-# Stato CRS (deve essere tutto ONLINE)
+# CRS Status (must be all ONLINE)
 crsctl check crs
 
-# Verifica ASM
+#Check ASM
 su - grid
 asmcmd lsdg
 # Dovrai vedere il disk group CRS
 ```
 
-Output atteso di `crsctl check crs`:
+Expected output of`crsctl check crs`:
 ```
 CRS-4638: Oracle High Availability Services is online
 CRS-4537: Cluster Ready Services is online
@@ -644,19 +644,19 @@ CRS-4533: Event Manager is online
 
 ---
 
-## 2.6b 📸 Snapshot di Sicurezza (MILESTONE: SNAP-05)
+## 2.6b 📸 Security Snapshot (MILESTONE: SNAP-05)
 
 This is the perfect time to "freeze" your car. You have a formatted and working Oracle 19c cluster, but still no database. If you make a mistake creating the data disk groups or database, you can come back here and try again without having to reinstall the entire Grid.
 
 **Hot/Cold Snapshot Procedure:**
 
-1. **Spegni il cluster in modo pulito (su `rac1` as root):**
+1. **Shut down the cluster cleanly (on`rac1` as root):**
    ```bash
    /u01/app/19.0.0/grid/bin/crsctl stop cluster -all
    ```
    *Wait for all services (ASM, GNS, VIP, etc.) to go offline on both nodes.*
 
-2. **Spegni le macchine:**
+2. **Turn off the machines:**
    ```bash
    # Su rac1
    shutdown -h now
@@ -668,7 +668,7 @@ This is the perfect time to "freeze" your car. You have a formatted and working 
    - Nome: `SNAP-05: Grid_Install_OK`
    - Description: "Grid Infrastructure 19c installed successfully. CRS active on 3 disks. No database created."
 
-4. **Riaccendi le macchine** e attendi qualche minuto che il cluster riparta in automatico al boot.
+4. **Turn the machines back on** and wait a few minutes for the cluster to restart automatically at boot.
 
 ---
 
@@ -677,7 +677,7 @@ This is the perfect time to "freeze" your car. You have a formatted and working 
 Now that the cluster is active (and protected by snapshots), let's create the disk groups to host the actual database data:
 
 ```bash
-# Come utente grid (puoi farlo da un nodo qualsiasi, es. rac1)
+#As a grid user (you can do it from any node, e.g. rac1)
 su - grid
 asmca
 ```
@@ -687,13 +687,13 @@ asmca
 **Or from sqlplus command line (faster):**
 
 ```sql
-# Come utente grid
+#As a grid user
 su - grid
 
--- Connettiti all'istanza ASM locale (+ASM1)
+--Connect to local ASM instance (+ASM1)
 sqlplus / as sysasm
 
--- Crea disk group DATA (Usiamo il path fisico come fatto nell'installer!)
+--Create disk group DATA (We use the physical path as done in the installer!)
 CREATE DISKGROUP DATA EXTERNAL REDUNDANCY
   DISK '/dev/oracleasm/disks/DATA'
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
@@ -705,16 +705,16 @@ CREATE DISKGROUP RECO EXTERNAL REDUNDANCY
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
--- Verifica
+--Verify
 SELECT name, state, type, total_mb, free_mb FROM v$asm_diskgroup;
 
 EXIT;
 ```
 
 ```bash
-# Verifica da asmcmd
+#Check from asmcmd
 asmcmd lsdg
-# Dovrai vedere: CRS, DATA, RECO tutti MOUNTED
+# You will need to see: CRS, DATA, RECO all MOUNTED
 ```
 
 > **Why create separate DATA and RECO?** DATA contains the datafiles (the real data). The Fast Recovery Area (located in the RECO disk group) contains archivelogs, RMAN backups and flashback logs. Separating them is a fundamental best practice: if the DATA disk fills up, you still have space for recovery.
@@ -727,29 +727,29 @@ asmcmd lsdg
 
 The patches you need (already present in your downloads):
 
-| Patch | Descrizione | Dove si Applica |
+| Patch |Description|Where it applies|
 |---|---|---|
-| **p6880880** | **OPatch** (utility per applicare patch) | Sostituisci in ogni ORACLE_HOME |
+| **p6880880** | **OPatch** (utility per applicare patch) |Replace in everyORACLE_HOME |
 | **p38658588** | **Combo Patch (GI RU + OJVM RU)** — Jan 2026 | Grid Home + DB Home |
 
-### Step 1: Aggiorna OPatch nella Grid Home
+### Step 1: Update OPatch in Grid Home
 
 OPatch is the tool that applies patches. The version shipped with the base software 19.3 is too old. You must update it BEFORE applying any patches.
 
 ```bash
-# ⚠️ Come ROOT su rac1 (la directory OPatch ha owner root dopo l'installazione!)
+#⚠️ As ROOT on rac1 (OPatch directory has owner root after installation!)
 su - root
 
-# Backup del vecchio OPatch
+#Backup of the old OPatch
 mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
 
-# Scompatta il nuovo OPatch
+# Unpack the new OPatch
 unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
 
-# Rimetti i permessi corretti all'utente grid
+#Put the correct permissions back to the grid user
 chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 
-# Verifica la versione (torna a grid)
+#Check version (back to grid)
 su - grid
 $ORACLE_HOME/OPatch/opatch version
 # Deve mostrare: OPatch Version: 12.2.0.1.48 (o superiore per patch Gennaio 2026)
@@ -762,7 +762,7 @@ $ORACLE_HOME/OPatch/opatch version
 > **How ​​to download from MOS**: Go to [support.oracle.com](https://support.oracle.com) → Patches & Updates → cerca **6880880** → seleziona la piattaforma (`Linux x86-64`) e la versione **19.0.0.0**. Il numero `190000` in the file name indicates the database version (19c). Don't confuse with p6880880_**230000** which is for Oracle **23c**!
 
 ```bash
-# Ripeti su rac2 (sempre come root!)
+#Repeat on rac2 (still as root!)
 ssh rac2
 su - root
 mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp.$(date +%Y%m%d)
@@ -772,24 +772,24 @@ su - grid
 $ORACLE_HOME/OPatch/opatch version
 ```
 
-### Step 2: Scompatta la Combo Patch
+### Step 2: Unpack the Combo Patch
 
 > ⚠️ **ATTENZIONE**: NON scompattare la patch in `/tmp`! Nelle nostre VM, `/tmp` it is a RAM disk (tmpfs) of only 4GB. The extracted patch takes up more than 3GB, filling up `/tmp` to 100% and blocking the node. Always use `/u01` che ha 50GB di spazio!
 
 ```bash
-# Scompatta su rac1 (come root)
+#Unzip to rac1 (as root)
 mkdir -p /u01/app/patch
 cd /u01/app/patch
 unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 
-# Identifica gli ID delle RU all'interno della Combo Patch:
+# Identify RU IDs within the Combo Patch:
 ls -l /u01/app/patch/38658588
-# Vedrai due cartelle numeriche: una per OJVM (38523609) e una per la vera e propria RU (38629535).
+# You will see two numeric folders: one for OJVM (38523609) and one for the actual RU (38629535).
 # Useremo il path 38629535 per opatchauto! 
 
-# Ripeti l'estrazione su rac2!
-# (La cartella /u01 non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
+# Repeat extraction on rac2!
+#(The /u01 folder is not shared, so the patch must physically exist on both nodes)
 ssh rac2
 mkdir -p /u01/app/patch
 cd /u01/app/patch
@@ -798,67 +798,67 @@ chown -R grid:oinstall /u01/app/patch
 exit
 ```
 
-### Step 3: Applica la RU alla Grid Home con opatchauto
+### Step 3: Apply RU to Grid Home with opatchauto
 
 > ⚠️ **Oracle Best Practice (MOS 2632107.1)**: Before applying any patch, ALWAYS run:
 > 1. **Conflict check** — checks that there are no conflicts with patches already applied
 > 2. **Space check** — checks for sufficient disk space  
-> 3. **Backup dell'ORACLE_HOME** — per poter fare rollback in caso di problemi
+> 3. **Backup dell'ORACLE_HOME** — to be able to rollback in case of problems
 
 ```bash
-# Come root su rac1
+#As root on rac1
 su - root
 
-# --- BEST PRACTICE 1: Verifica spazio disco (servono almeno 15 GB in /u01) ---
+#--- BEST PRACTICE 1: Check disk space (you need at least 15 GB in /u01) ---
 df -h /u01
-# Se hai meno di 15 GB liberi, libera spazio prima di proseguire!
+#If you have less than 15 GB free, free up space before continuing!
 
 # --- BEST PRACTICE 2: Backup dell'ORACLE_HOME (per rollback) ---
 tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
 
-# --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
+# --- BEST PRACTICE 3: Pre-check with opatchauto analyze (dry run without applying!) ---
 cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/19.0.0/grid
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
-# Sostituisci 38629535 con l'ID reale della RU che hai trovato nello step 2!
-# Se mostra errori di conflitto, risolvili PRIMA di applicare!
+# Replace 38629535 with the real ID of the RU you found in step 2!
+#If it shows conflict errors, resolve them BEFORE applying!
 # Se mostra "Patch analysis is complete" → puoi proseguire.
 
-# --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
+#--- REAL APPLICATION (only after analyze is OK) ---
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 ```
 
 > **Why opatchauto?** For Grid Infrastructure, you can't use plain `opatch apply`. You have to use `opatchauto` (as root), which:
-> 1. Ferma il CRS automaticamente
-> 2. Applica la patch
-> 3. Riavvia il CRS
+> 1. Stop CRS automatically
+> 2. Apply the patch
+> 3. Restart the CRS
 > It does everything in one go, even managing cluster service dependencies.
 
 ```bash
-# Verifica che il CRS si sia riavviato
+#Verify that the CRS has restarted
 crsctl check crs
-# Deve mostrare tutto ONLINE
+# Must show everything ONLINE
 
-# Verifica la patch applicata
+#Check the applied patch
 su - grid
 $ORACLE_HOME/OPatch/opatch lspatches
-# Deve mostrare il numero del patch RU
+# Must show the RU patch number
 ```
 
 ```bash
-# Ripeti su rac2 come root
+#Repeat on rac2 as root
 ssh rac2
 cd /u01/app/patch/38658588/38629535
 export ORACLE_HOME=/u01/app/19.0.0/grid
 $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
 
-# Verifica
+#Verify
 crsctl check crs
 su - grid
 $ORACLE_HOME/OPatch/opatch lspatches
 ```
 
-> 📸 **SNAPSHOT — "SNAP-04: Grid_Installato_e_Patchato" ⭐ MILESTONE**
+> 📸 **SNAPSHOT — "SNAP-04: Grid_Installed_and_Patched" ⭐ MILESTONE**
 > The cluster is active and updated to the latest Release Update. Reinstalling it would take hours. If the RDBMS Database installation fails, you can return here.
 > ```bash
 > VBoxManage snapshot "rac1" take "SNAP-04: Grid_Installato_e_Patchato"
@@ -870,16 +870,16 @@ $ORACLE_HOME/OPatch/opatch lspatches
 ## 2.9 Installazione Software Database
 
 ```bash
-# Come utente oracle
+#As an oracle user
 su - oracle
 
-# Scompatta il DB nella ORACLE_HOME
+# Unpack the DB into theORACLE_HOME
 unzip -q /tmp/LINUX.X64_193000_db_home.zip -d $ORACLE_HOME
-#Controllare i gruppi del utenza oracle e'nel caso assegnare i gruppi mancanti
+#Check the oracle user groups and assign the missing groups if necessary
 id oracle 
 usermod -g oinstall -G dba,asmdba,backupdba,dgdba,kmdba,racdba,oper oracle
 id oracle
-# Avvia l'installer
+# Start the installer
 cd $ORACLE_HOME
 export DISPLAY=<IP_del_tuo_PC>:0.0
 ./runInstaller
@@ -891,11 +891,11 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 
 > We ONLY install the tracks. We create the database later with DBCA. This is the professional method: first you install, then you build.
 
-**Step 2**: Seleziona **Oracle Real Application Clusters database installation**
+**Step 2**: Select **Oracle Real Application Clusters database installation**
 
-**Step 3**: Seleziona entrambi i nodi (`rac1`, `rac2`)
+**Step 3**: Select both nodes (`rac1`, `rac2`)
 
-**Step 4**: Seleziona **Enterprise Edition**
+**Step 4**: Select **Enterprise Edition**
 
 **Step 5**: Check the paths:
 - Oracle Base: `/u01/app/oracle`
@@ -913,7 +913,7 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 
 **Step 8**: Rivedi Summary e clicca **Install**
 
-### Esecuzione root.sh
+### Executionroot.sh
 
 **On rac1 as root:**
 
@@ -936,26 +936,26 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 > [!IMPORTANT]
 > **ORDER OF OPERATIONS**: You must update the OPatch utility **BEFORE** launching `opatchauto apply`. If you try to apply the January 2026 RU with an older OPatch (version < 12.2.0.1.48), the operation will fail.
 
-### Step 1: Aggiorna OPatch nella DB Home
+### Step 1: Update OPatch in the Home DB
 
 ```bash
-# ⚠️ Come ROOT su rac1 (anche la DB Home OPatch può avere owner root dopo root.sh)
+#⚠️ As ROOT on rac1 (even the DB Home OPatch can have owner root afterroot.sh)
 su - root
 
-# Backup del vecchio OPatch
+#Backup of the old OPatch
 mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
 
-# Scompatta il nuovo OPatch
+# Unpack the new OPatch
 unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
 
-# Rimetti i permessi corretti all'utente oracle  
+#Return the correct permissions to the oracle user
 chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
 
-# Verifica (torna a oracle)
+#Verify (return to oracle)
 su - oracle
 $ORACLE_HOME/OPatch/opatch version
 
-# Ripeti su rac2 (come root!)
+#Repeat on rac2 (as root!)
 ssh rac2
 su - root
 mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp.$(date +%Y%m%d)
@@ -965,10 +965,10 @@ su - oracle
 $ORACLE_HOME/OPatch/opatch version
 ```
 
-### Step 2: Applica la RU alla DB Home
+### Step 2: Apply the RU to the Home DB
 
 ```bash
-# Come root su rac1
+#As root on rac1
 su - root
 
 # Cambia ownership della patch directory a oracle, altrimenti opatchauto fallisce (OPATCHAUTO-72083)
@@ -1002,9 +1002,9 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 The OJVM patch is bundled inside the Combo Patch. We have already unpacked everything in Step 2 of Grid, so the files are already ready in `/u01/app/patch/38658588/`. Si applica con `opatch apply` standard puntando alla sottocartella OJVM.
 
 ```bash
-# Come utente oracle su rac1
+#As an oracle user on rac1
 su - oracle
-cd /u01/app/patch/38658588/38523609   # Usa l'ID reale della cartella OJVM trovato prima
+cd /u01/app/patch/38658588/38523609 # Use the real ID of the OJVM folder found before
 $ORACLE_HOME/OPatch/opatch apply
 
 # Quando chiede "Is the local system ready for patching?" rispondi: y
@@ -1021,7 +1021,7 @@ $ORACLE_HOME/OPatch/opatch apply
 ### Step 4: Check Applied Patches and Cleaning
 
 ```bash
-# Come oracle su rac1
+#Like oracle on rac1
 $ORACLE_HOME/OPatch/opatch lspatches
 ```
 
@@ -1040,10 +1040,10 @@ rm -f /tmp/p*.zip
 ```
 ```
 
-### Step 5: datapatch (dopo la creazione del DB)
+### Step 5: datapatch (after DB creation)
 
-> **IMPORTANTE**: `datapatch` va eseguito DOPO aver creato il database con DBCA (sezione successiva). Non eseguirlo ora — non hai ancora un database!
-> Dopo DBCA, esegui:
+> **IMPORTANTE**: `datapatch`it must be performed AFTER creating the database with DBCA (next section). Don't run it now — you don't have a database yet!
+> After DBCA, run:
 
 ```bash
 # Like oracle, AFTER creating the database
@@ -1062,7 +1062,7 @@ ORDER BY action_time DESC;
 ```
 
 > 📸 **SNAPSHOT — "SNAP-05: DB_Software_Installato"**
-> I binari del database sono installati e completamente patchati con RU + OJVM. Pronto per DBCA.
+> Database binaries are installed and fully patched with RU + OJVM. Ready for DBCA.
 > ```bash
 > VBoxManage snapshot "rac1" take "SNAP-05: DB_Software_Installato"
 > VBoxManage snapshot "rac2" take "SNAP-05: DB_Software_Installato"
@@ -1070,9 +1070,9 @@ ORDER BY action_time DESC;
 
 ---
 
-## 2.12 Creazione Database RAC con DBCA
+## 2.12 Creation of RAC Database with DBCA
 
-> ⚠️ **ATTENZIONE MOBAXTERM**: Anche `dbca` lancia un'interfaccia grafica (GUI). Devi essere connesso a `rac1` tramite **MobaXterm** con la spunta su **X11-Forwarding** (vedi Fase 0.12). 
+> ⚠️ **ATTENZIONE MOBAXTERM**: Anche `dbca`launches a graphical interface (GUI). You must be connected to`rac1`via **MobaXterm** with the checkmark on **X11-Forwarding** (see Phase 0.12).
 
 ```bash
 # As an oracle user on rac1 (connected via MobaXterm)
@@ -1085,18 +1085,18 @@ dbca
 
 **Step 1**: **Create a database**
 
-**Step 2**: **Advanced Configuration** (per avere pieno controllo)
+**Step 2**: **Advanced Configuration** (to have full control)
 
 **Step 3**: Database Type:
 - **Oracle RAC database**
-- Seleziona entrambi i nodi
+- Select both nodes
 
 **Step 4**: Template:
-- **Custom Database** (per massimo controllo)
+- **Custom Database** (for maximum control)
 
 **Step 5**: Database Identification:
 - Global Database Name: `RACDB`
-- SID Prefix: `RACDB` (diventerà RACDB1 su rac1, RACDB2 su rac2)
+- SID Prefix: `RACDB`(will become RACDB1 on rac1, RACDB2 on rac2)
 <img width="795" height="587" alt="image" src="https://github.com/user-attachments/assets/6abf8a34-a666-45cf-b121-e5d580e27e75" />
 
 **Step 6**: Storage:
@@ -1106,17 +1106,17 @@ dbca
 
 **Step 7**: Fast Recovery Area:
 - Recovery Area: `+RECO`
-- Size: `10000` MB (o quanto hai disponibile)
+- Size: `10000`MB (or as much as you have available)
 - ✅ **Enable archiving** (FONDAMENTALE per Data Guard!)
 <img width="793" height="628" alt="image" src="https://github.com/user-attachments/assets/13321d51-fd29-4ec9-b234-3a3bdd48a96c" />
 
-> **Perché Enable Archiving?** Senza archivelog mode, Data Guard non funziona. L'archivelog è il "diario" di tutte le modifiche. È quello che viene spedito allo standby.
+> **Why Enable Archiving?** Without archivelog mode, Data Guard does not work. The archivelog is the "diary" of all changes. It's the one that gets sent to standby.
 
 **Step 8**: Listener:
-- Seleziona il listener del cluster (già configurato da Grid)
+- Select the cluster listener (already configured by Grid)
 
 **Step 9**: Database Options:
-- Puoi deselezionare componenti non necessari (Oracle Text, Spatial, etc.)
+- You can deselect unnecessary components (Oracle Text, Spatial, etc.)
 
 **Step 10**: Configuration Options:
 - Memory: **Use Automatic Shared Memory Management**
@@ -1126,7 +1126,7 @@ dbca
 <img width="797" height="627" alt="image" src="https://github.com/user-attachments/assets/fcbaf6da-cbbe-42f4-9811-b80c62bb3551" />
 
 **Step 11**: Management Options:
-- Deseleziona EM Express per semplicità
+- Uncheck EM Express for simplicity
 
 **Step 12**: Password:
 - Imposta password per SYS, SYSTEM, etc.
@@ -1139,11 +1139,11 @@ dbca
 **Step 14**: Rivedi Summary → **Finish**
 <img width="862" height="1389" alt="image" src="https://github.com/user-attachments/assets/70fa2936-2362-4f38-a113-9082fe158675" />
 
-L'installazione richiederà 15-30 minuti a seconda dell'hardware.
+Installation will take 15-30 minutes depending on your hardware.
 
 ---
 
-## 2.13 Verifica Post-Installazione Database
+## 2.13 Post-Installation Database Verification
 
 ```bash
 # As an oracle user
@@ -1176,13 +1176,13 @@ srvctl config database -d RACDB
 ```
 
 > 📸 **SNAPSHOT — "SNAP-06: Database_RAC_Creato" ⭐ MILESTONE**
-> Il tuo RAC primario è completamente operativo! Questo è lo snapshot più importante per non dover ripetere MAI PIÙ l'installazione del cluster.
+> Your primary RAC is fully operational! This is the most important snapshot to NEVER have to repeat the cluster installation AGAIN.
 > ```bash
 > VBoxManage snapshot "rac1" take "SNAP-06: Database_RAC_Creato"
 > VBoxManage snapshot "rac2" take "SNAP-06: Database_RAC_Creato"
 > ```
 
-### Abilitare Force Logging (necessario per Data Guard)
+### Enable Force Logging (required for Data Guard)
 
 ```sql
 -- Like sysdba
@@ -1193,13 +1193,13 @@ SELECT force_logging FROM v$database;
 -- Must return YES
 ```
 
-> **Perché Force Logging?** Alcune operazioni (come `INSERT /*+ APPEND */ ...` o `CREATE TABLE ... NOLOGGING`) possono bypassare il redo log per velocità. Ma se non generi redo, lo standby non riceve le modifiche e i dati si corrompono. Force Logging impedisce questo bypass.
+> **Why Force Logging?** Some operations (such as`INSERT /*+ APPEND */ ...` o `CREATE TABLE ... NOLOGGING`) can bypass the redo log for speed. But if you don't generate redo, the standby doesn't receive the changes and the data becomes corrupted. Force Logging prevents this bypass.
 
 ---
 
-## 2.14 Pulizia File Temporanei e Patch
+## 2.14 Cleaning Temporary Files and Patches
 
-I file delle patch che abbiamo scompattato in `/u01/app/patch` e `/tmp` occupano diversi GB. Una volta che le patch sono applicate e il database è creato, **non servono più** e possono essere eliminati per liberare spazio prezioso sul disco virtuale.
+I file delle patch che abbiamo scompattato in `/u01/app/patch` e `/tmp`they occupy several GB. Once the patches are applied and the database is created, they are **no longer needed** and can be deleted to free up valuable virtual disk space.
 
 ```bash
 # As root on rac1
@@ -1210,11 +1210,11 @@ rm -f /tmp/p*.zip
 ssh rac2 "rm -rf /u01/app/patch && rm -f /tmp/p*.zip"
 ```
 
-> **Nota sui backup**: NON cancellare invece i backup dell'ORACLE_HOME (`/u01/app/*_backup_*.tar.gz`) che hai creato come best practice. Quelli ti serviranno se in futuro dovessi fare un rollback di una patch difettosa!
+> **Nota sui backup**: NON cancellare invece i backup dell'ORACLE_HOME (`/u01/app/*_backup_*.tar.gz`) that you created as a best practice. You'll need those if you need to rollback a bad patch in the future!
 
 ---
 
-## ✅ Checklist Fine Fase 2
+## ✅ End of Phase 2 Checklist
 
 ```bash
 # 1. Operational cluster
@@ -1224,13 +1224,13 @@ crsctl stat res -t | grep -E "ONLINE|OFFLINE"
 su - grid -c "asmcmd lsdg"
 # CRS, DATA, RECO all MOUNTED
 
-# 3. Database RAC attivo
+#3. Active RAC database
 su - oracle -c "srvctl status database -d RACDB"
 
-# 4. Archive logging attivo
+#4. Archive logging active
 su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT log_mode FROM v\\\$database;\""
 
-# 5. Force logging attivo
+#5. Force logging active
 su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT force_logging FROM v\\\$database;\""
 ```
 

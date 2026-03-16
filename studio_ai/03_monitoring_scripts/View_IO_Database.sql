@@ -22,17 +22,17 @@ column end_time for a25
 
 
 SELECT end_time,
-       ROUND(sr/inttime,3) sri,
+ROUND(sr/inttime,3) sri,
        ROUND(sw/inttime,3) swi,
        ROUND((sr+sw)/inttime,3) tsi,
        --ROUND(sr/DECODE((sr+sw),0,1,(sr+sw))*100,3) srp,
        --ROUND(sw/DECODE((sr+sw),0,1,(sr+sw))*100,3) swp,
-       ROUND(lr/inttime,3) lri,
+ROUND(lr/inttime,3) lri,
        ROUND(lw/inttime,3) lwi,
        ROUND((lr+lw)/inttime,3) tli,
        --ROUND(lr/DECODE((lr+lw),0,1,(lr+lw))*100,3) lrp,
        --ROUND(lw/DECODE((lr+lw),0,1,(lr+lw))*100,3) lwp,
-       ROUND((tbr/inttime)/1048576,3) tr,
+ROUND((tbr/inttime)/1048576,3) tr,
        ROUND((tbw/inttime)/1048576,3) tw,
        ROUND(((tbr+tbw+tbr2)/inttime)/1048576,3) tm
 FROM (
@@ -112,17 +112,17 @@ column end_time for a25
 set lines 300
 set pages 300
 SELECT end_time,
-       ROUND(sr/inttime,3) sri,
+ROUND(sr/inttime,3) sri,
        ROUND(sw/inttime,3) swi,
        ROUND((sr+sw)/inttime,3) tsi,
        --ROUND(sr/DECODE((sr+sw),0,1,(sr+sw))*100,3) srp,
        --ROUND(sw/DECODE((sr+sw),0,1,(sr+sw))*100,3) swp,
-       ROUND(lr/inttime,3) lri,
+ROUND(lr/inttime,3) lri,
        ROUND(lw/inttime,3) lwi,
        ROUND((lr+lw)/inttime,3) tli,
        --ROUND(lr/DECODE((lr+lw),0,1,(lr+lw))*100,3) lrp,
        --ROUND(lw/DECODE((lr+lw),0,1,(lr+lw))*100,3) lwp,
-       ROUND((tbr/inttime)/1048576,3) tr,
+ROUND((tbr/inttime)/1048576,3) tr,
        ROUND((tbw/inttime)/1048576,3) tw,
        ROUND(((tbr+tbw+tbr2)/inttime)/1048576,3) tm
 FROM (

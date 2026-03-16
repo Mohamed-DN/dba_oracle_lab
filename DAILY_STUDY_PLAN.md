@@ -32,7 +32,7 @@
 
 ## 🗓️ WEEK 1: Foundation (Days 1-5)
 
-> **Obiettivo**: Leggere la teoria, creare le VM, configurare l'OS, installare Grid Infrastructure.
+> **Objective**: Read the theory, create the VMs, configure the OS, install Grid Infrastructure.
 
 ```
 ╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
@@ -41,7 +41,7 @@
 ║ ║ 📖 1h: Read ARCHITECTURE GUIDE ║ ║
 ║ Day 1 ║ (SGA, PGA, Redo, Undo, Temp, ASM) ║ Assimilated theory ║
 ║ ║ 📖 30min: Read GUIDA_CDB_PDB (P.1) ║ Downloaded the entire SW ║
-║           ║ 💻 1.5h: Scarica tutto il software    ║                           ║
+║ ║ 💻 1.5h: Download all software ║ ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 1.5h: Crea VM rac1 in VirtualBox ║                           ║
 ║ Day 2 ║ (CPU, RAM, disks, 2 NICs) ║ rac1: OL7.9 installed ║
@@ -78,7 +78,7 @@
 ║           ║ 💻 1h: DBCA → crea RACDB (GUI)      ║ RACDB RUNNING 2 nodi!     ║
 ║           ║                                       ║ 📸 SNAP-09 ⭐            ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 30min: Force Logging + datapatch  ║                           ║
+║ ║ 💻 30min: Force Logging + datapatch ║ ║
 ║ Day 7 ║ 💻 2.5h: Create racstby1 VM ║ Standby VM created ║
 ║ ║ install OL 7.9 (as Phase 0) ║ OL7.9 installed ║
 ║           ║                                       ║ 📸 SNAP-01-stby          ║
@@ -96,7 +96,7 @@
 ║ ║ 💻 1h: Static listener + TNS ║ ║
 ║ Day 10 ║ 💻 30min: Standby Redo Logs ║ RMAN Duplicate OK!        ║
 ║           ║ 💻 1.5h: RMAN DUPLICATE from active  ║ MRP attivo, 0 gap         ║
-║           ║   (attenzione: ~30-60 min di attesa) ║ 📸 SNAP-12 ⭐            ║
+║ ║ (warning: ~30-60 min wait) ║ 📸 SNAP-12 ⭐ ║
 ╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
 ```
 
@@ -104,12 +104,12 @@
 
 ## 🗓️ WEEK 3: Data Guard + GoldenGate + Backup (Days 11-15)
 
-> **Obiettivo**: Configurare DGMGRL, installare GoldenGate, configurare RMAN backup.
+> **Objective**: Configure DGMGRL, install GoldenGate, configure RMAN backup.
 
-Aggiornamento del percorso GG:
+GG route update:
 
 - correct base flow uses `Integrated Extract` on `primary`, not on standby;
-- `dbtarget` locale resta opzionale;
+- `dbtarget`local remains optional;
 - if you choose OCI, you must first close network and target following `GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md` and `GUIDE_GOLDENGATE_OCI_ARM.md`.
 
 ```
@@ -125,7 +125,7 @@ Aggiornamento del percorso GG:
 ║ Day 12 ║ 💻 1h: Choose target: dbtarget or OCI ║ target decided ║
 ║           ║ 💻 1.5h: DB Software + DBCA target   ║ DB target creato          ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1.5h: Installa GG su primary +   ║                           ║
+║ ║ 💻 1.5h: Install GG on primary + ║ ║
 ║ Day 13 ║ target, configure Manager ║ GG installed ║
 ║           ║ 💻 1.5h: Extract su primary +        ║ Processi configurati      ║
 ║           ║   Replicat                            ║ 📸 SNAP-16               ║
@@ -133,7 +133,7 @@ Aggiornamento del percorso GG:
 ║           ║ 💻 1h: Initial Load (expdp/impdp)    ║                           ║
 ║ Day 14 ║ 💻 1h: Start all processes GG ║ GG RUNNING!               ║
 ║           ║ 💻 1h: Test DML end-to-end            ║ Lag < 10 secondi          ║
-║           ║   (INSERT su primary → arriva target)║ 📸 SNAP-17 ⭐            ║
+║ ║ (INSERT on primary → target arrives)║ 📸 SNAP-17 ⭐ ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 30min: Read GUIDE_PHASE7 (RMAN) ║ ║
 ║ Day 15 ║ 💻 1h: RMAN backup on standby ║ Backup on standby OK ║
@@ -159,14 +159,14 @@ Aggiornamento del percorso GG:
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 30min: Read FAILOVER_GUIDE ║ ║
 ║ Day 17 ║ 📸 SNAP before failover!          ║ ║
-║           ║ 💻 1h: Spegni rac1+rac2 (violenza!) ║ Failover completato!      ║
+║ ║ 💻 1h: Shut down rac1+rac2 (violence!) ║ Failover complete!      ║
 ║ ║ 💻 1h: FAILOVER TO RACDB_STBY ║ Standby is new Primary ║
 ║ ║ 💻 30min: Reinstate with Flashback ║ Reinstate Successful ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 30min: Read MIGRATION_GUIDE ║ ║
 ║ Day 18 ║ 💻 1h: Simulate migration DD: ║ Zero-downtime migration ║
 ║ ║ expdp/impdp + Extract from SCN ║ simulated successfully ║
-║           ║ 💻 1h: Sincronizza + cutover          ║                           ║
+║ ║ 💻 1h: Sync + cutover ║ ║
 ║ ║ 💻 30min: Check migrated data ║ ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 30min: Read GUIDA_LISTENER_DBA ║ ║
@@ -188,7 +188,7 @@ Aggiornamento del percorso GG:
 
 > **Objective**: Build OCI target, clarify network, prepare GG migration to cloud and validate MAA.
 
-Aggiornamento del percorso cloud:
+Cloud path update:
 
 - the main lab OCI target should not be confused with `GoldenGate Free` as the base path;
 - the focus is: `compute target`, `listener`, `porte`, `NSG o VPN`, `initial load`, `cutover`;
@@ -228,7 +228,7 @@ Aggiornamento del percorso cloud:
 
 ---
 
-## 📊 Progresso Visivo
+## 📊 Visual Progress
 
 ```
 Day: 1 5 10 15 20 25 30 35 40
@@ -258,7 +258,7 @@ Sett 8:                                     ██████████ 🎯 
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 1.5h: Read EXAM_GUIDE Parts 1-5 ║ ║
 ║ Day 26 ║ (Architecture, Instance, Users, ║ Basic concepts revised ║
-║           ║    Storage, Data Movement)            ║                           ║
+║ ║ Storage, Data Movement) ║ ║
 ║ ║ 💻 1.5h: SQL Exercises (Part 10) ║ Fluent SQL ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 1h: Read EXAM_GUIDE Parts 6-9 ║ ║
@@ -269,7 +269,7 @@ Sett 8:                                     ██████████ 🎯 
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 30min: Read MIGRATION_GUIDE_PG ║ ║
 ║ Day 28 ║ 💻 1h: Install PostgreSQL 16 ║ PG installed ║
-║           ║ 💻 1h: ora2pg + converti schema       ║ Schema HR su PG           ║
+║ ║ 💻 1h: hour2pg + convert scheme ║ HR scheme on PG ║
 ║           ║ 💻 30min: Configura ODBC + GG for PG  ║ GG for PG pronto          ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 💻 1h: Configura Extract + Pump       ║                           ║
@@ -305,15 +305,15 @@ Sett 8:                                     ██████████ 🎯 
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 1h: Review Part 8-9 (Tablespace ║ ║
 ║ Day 33 ║ Undo, OMF) ║ Tablespace + Undo OK ║
-║           ║ 💻 2h: SQL intensivo Parte 10 —      ║ 100 query SQL eseguite     ║
+║ ║ 💻 2h: Intensive SQL Part 10 — ║ 100 SQL queries executed ║
 ║           ║   JOIN, subqueries, group functions   ║                           ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 2h: SQL avanzato — DDL, DML,      ║                           ║
+║ ║ 💻 2h: Advanced SQL — DDL, DML, ║ ║
 ║ Day 34 ║ SET operators, conversions, NVL, ║ SQL mastered ║
 ║           ║   sequences, views, constraints      ║                           ║
 ║ ║ 💻 1h: Lab practice with HR scheme ║ ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📝 2h: Simulazione esame 1Z0-082     ║                           ║
+║ ║ 📝 2h: 1Z0-082 exam simulation ║ ║
 ║ Day 35 ║ (online practice exam) ║ Score ≥ 75% target ║
 ║ ║ 📖 1h: Review incorrect answers ║ ⭐ READY FOR 1Z0-082!   ║
 ╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
@@ -342,7 +342,7 @@ Sett 8:                                     ██████████ 🎯 
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║ ║ 📖 1h: Review 11.12 (Performance ║ ║
 ║ Day 38 ║ AWR/ADDM/ASH, Memory, Wait Events)║ AWR report generated ║
-║           ║ 💻 1h: Genera AWR/ADDM su lab RAC    ║ ADDM raccomandazioni OK   ║
+║ ║ 💻 1h: Generate AWR/ADDM on RAC lab ║ ADDM recommendations OK ║
 ║ ║ 📖 1h: Review 11.13 (SQL Tuning ║ Optimizer included ║
 ║           ║   Advisor, Optimizer Statistics)      ║                           ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
@@ -351,7 +351,7 @@ Sett 8:                                     ██████████ 🎯 
 ║ ║ 💻 1h: Review 11.6 (TDE, Audit) ║ TDE clear concepts ║
 ║ ║ 📖 1h: Review 11.11 (19c Features) ║ New Features included ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📝 2h: Simulazione esame 1Z0-083     ║                           ║
+║ ║ 📝 2h: 1Z0-083 exam simulation ║ ║
 ║ Day 40 ║ (online practice exam) ║ Score ≥ 75% target ║
 ║ ║ 📖 1h: Review incorrect answers ║ ⭐ READY FOR 1Z0-083!   ║
 ║ ║ ║ 🏆🏆 COMPLETE ROUTE! 🏆🏆║
@@ -360,14 +360,14 @@ Sett 8:                                     ██████████ 🎯 
 
 ---
 
-## ⚡ Consigli per Andare Veloce
+## ⚡ Tips for Going Fast
 
-| Consiglio | Why |
+|Advise| Why |
 |---|---|
 | **Download EVERYTHING on day one** | Don't waste time waiting for 3GB downloads mid-installation |
 | **Usa 2 terminali** | One for commands, one for alert log (`tail -f alert*.log`) |
-| **Copy commands from guide** | Non digitarli a mano — errori di battitura = nemico n.1 |
-| **ALWAYS take a snapshot FIRST** | 30 secondi di snapshot vs 3 ore di reinstallazione |
+| **Copy commands from guide** |Don't type them by hand — typos = enemy #1|
+| **ALWAYS take a snapshot FIRST** |30 second snapshot vs 3 hour reinstallation|
 | **If something fails, read the alert log** | The answer is almost always there |
 | **Non saltare i test intermedi** | A `ping` that fails on day 2 becomes a nightmare on day 10 |
 
@@ -411,14 +411,14 @@ Sett 8:                                     ██████████ 🎯 
 
 > Use these resources to enrich your study with real-world operational procedures and scripts.
 
-| Week | Quando Usare | Cartella studio_ai |
+| Week | Quando Usare |Studio_ai folder|
 |---|---|---|
 | **Week. 1** (Day 4: ASM disks) | After configuring ASMLib | [01_asm_storage/](./studio_ai/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDE_ADD_ASM_DISK.md) |
 | **Week. 2** (Day 9: Grid) | After installing Grid | [05_patching/](./studio_ai/05_patching/) |
-| **Week. 3** (Day 11: DG) | After configuring Data Guard | [02_dataguard/](./studio_ai/02_dataguard/) |
+| **Week. 3** (Day 11: DG) | After configuring Data Guard |[02_dataguard/](./studio_ai/02_dataguard/)|
 | **Week. 3** (Day 15: RMAN) | After configuring RMAN | [06_backup_recovery/](./studio_ai/06_backup_recovery/) |
 | **Week. 4** (Day 19: Listener) | After Listener/Services | [04_user_management/](./studio_ai/04_user_management/) |
-| **Week. 4** (Day 20: DBA) | After DBA activity | [03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](./studio_ai/07_performance_tuning/) |
+| **Week. 4** (Day 20: DBA) | After DBA activity |[03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](./studio_ai/07_performance_tuning/)|
 | **Week. 5** (Day 24: Patching) | Afterwards I review patching | [08_tde_security/](./studio_ai/08_tde_security/) |
 
 ---
@@ -434,20 +434,20 @@ To stress the GoldenGate lab with as many cases as possible, use [GUIDE_PHASE5_G
 3. Day 15: Run `GG-19..GG-28` (DG switchover/failover, re-instantiate, long tx, concurrency).
 4. Day 16-17: Run `GG-29..GG-40` (charset/timezone, restart DB/host, purge trail, credentials, 120 minute dress rehearsal).
 
-### KPI di uscita (obbligatori)
+### Exit KPIs (required)
 
 - almeno `32/40` in-state testing `PASS`
-- pass dei test critici: `GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`
-- nessun processo `ABENDED` oltre 10 minuti
-- lag entro soglia in finestra test prolungata
+- critical test passes:`GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`
+- no trial`ABENDED` oltre 10 minuti
+- lag within threshold in prolonged test window
 
-### Deliverable da creare nel repo
+### Deliverable to create in the repo
 
 1. `TESTLOG_GOLDENGATE.md` with columns: Date/Time, Test ID, Scenario, Result, Max Lag, Evidence, Notes/Fix (starting from `TESTLOG_GOLDENGATE_TEMPLATE.md`).
 2. Screenshot/log folder with evidence of `INFO ALL`, `LAG`, `VIEW REPORT`, query count/checksum.
 3. Mini-runbook for each fail: symptom, root cause, fix, post-fix validation.
 
-### Regola tempo/risorse per lab domestico
+### Adjust time/resources for home lab
 
 - If you're short on time, close `GG-01..GG-24` during the week first.
 - Complete `GG-25..GG-40` over the weekend or in two dedicated sessions.
@@ -469,7 +469,7 @@ The rule remains **3 hours a day**, but with different intensities.
 
 ### 2) Recommended weekly pattern
 
-| Day | Intensita | Recommended use |
+| Day |Intensity| Recommended use |
 |---|---|---|
 | Day 1 | HIGH | New topic + new lab |
 | Day 2 | HIGH | Continuazione + troubleshooting |
@@ -484,21 +484,21 @@ The rule remains **3 hours a day**, but with different intensities.
 For every new topic made in `D0`, pianifica:
 
 - `D+1`: 20 minutes of recall without notes
-- `D+3`: 20 minuti di quiz + 1 test pratico rapido
-- `D+7`: 30 minuti di mini simulazione + correzione errori
+- `D+3`: 20 minute quiz + 1 quick practice test
+- `D+7`: 30 minutes of mini simulation + error correction
 
 ### 4) Rebalanced load for the 8 weeks
 
-| Week | Focus | HIGH days | MEDIUM days | LIGHT/BUFFER days | Uscita minima |
+| Week | Focus | HIGH days | MEDIUM days | LIGHT/BUFFER days |Minimum output|
 |---|---|---|---|---|---|
-| 1 | OS + Grid + ASM | 3 | 1 | 1 + buffer opzionale | Grid stabile + checklist prerequisiti |
-| 2 | RAC + standby prep | 3 | 1 | 1 + buffer opzionale | RAC operational + standby ready |
-| 3 | Data Guard + RMAN + GG base | 2 | 2 | 1 + buffer opzionale | broker ok + backup validato + GG base |
-| 4 | GG avanzato + HA test | 3 | 1 | 1 + buffer opzionale | almeno 24 test GG chiusi |
-| 5 | EM + monitoraggio + cloud | 2 | 2 | 1 + buffer opzionale | OMS/agent attivi + dashboard utili |
-| 6 | Oracle->PostgreSQL migration | 2 | 2 | 1 + buffer opzionale | end-to-end migration flow |
-| 7 | Esame 1Z0-082 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + error log classificato |
-| 8 | Esame 1Z0-083 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + runbook finali |
+| 1 | OS + Grid + ASM | 3 | 1 |1 + optional buffer|Stable grid + prerequisite checklist|
+| 2 | RAC + standby prep | 3 | 1 |1 + optional buffer| RAC operational + standby ready |
+| 3 | Data Guard + RMAN + GG base | 2 | 2 |1 + optional buffer| broker ok + backup validato + GG base |
+| 4 |Advanced GG + HA test| 3 | 1 |1 + optional buffer|at least 24 GG tests closed|
+| 5 |EM + monitoring + cloud| 2 | 2 |1 + optional buffer| OMS/agent attivi + dashboard utili |
+| 6 |Oracle->PostgreSQL migration| 2 | 2 |1 + optional buffer| end-to-end migration flow |
+| 7 | Esame 1Z0-082 prep | 2 | 2 |1 + optional buffer|2 mocks + classified error log|
+| 8 | Esame 1Z0-083 prep | 2 | 2 |1 + optional buffer| 2 mock + runbook finali |
 
 ### 5) Anti-overload rules (practical)
 
@@ -507,20 +507,20 @@ For every new topic made in `D0`, pianifica:
 - Maintain only one “must close” technical goal per day.
 - Always close with written evidence: 5-10 lines of what worked, what didn't, next step.
 
-### 6) Cadenza mock exam (allineata a Oracle)
+### 6) Cadence mock exam (aligned to Oracle)
 
-Valori verificati su Oracle Japan (consultati il 13 marzo 2026):
+Values ​​verified on Oracle Japan (consulted on March 13, 2026):
 
 - `1Z0-082-JPN`: `120 minuti`, `72 domande`, `passing score 60%`
 - `1Z0-083-JPN`: `120 minuti`, `68 domande`, `passing score 57%`
 
-Uso pratico nel lab:
+Practical use in the lab:
 
 - Week 7: 2 simulations of 120 minutes (day 3 and day 5)
 - Week 8: 2 simulations of 120 minutes (day 2 and day 5)
 - After each mock: 40-60 minutes of "error review" by category (SQL, backup, HA, security, tuning)
 
-### 7) Riallocazione GoldenGate (piu casi, meno stress)
+### 7) GoldenGate reallocation (more cases, less stress)
 
 Per i 40 test GoldenGate:
 
@@ -530,7 +530,7 @@ Per i 40 test GoldenGate:
 
 Criterion: at least `8 test` per week must be "hard" (failover, lag, restart, recovery trail).
 
-### 8) Fonti usate (internet + Oracle ufficiale)
+### 8) Sources used (internet + official Oracle)
 
 - Oracle University Japan, `1Z0-082-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
 - Oracle University Japan, `1Z0-083-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-ii-1z0-083-exam/

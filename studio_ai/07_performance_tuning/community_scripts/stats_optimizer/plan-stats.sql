@@ -70,7 +70,7 @@ select  distinct
 	d.sql_id
 	, d.plan_count
 	, d.plan_hash_value
-	, d.start_time
+, d.start_time
 	, d.day
 	, d.elapsed_time_sum
 	, min(d.elapsed_time_sum) over (partition by d.sql_id, d.plan_hash_value) elapsed_time_plan_min

@@ -89,7 +89,7 @@ rank_output as (
 		, p1
 		, event_count
 		, row_number() over (partition by begin_interval, instance_number order by event_count desc)	 event_rank
-	from agg_data
+from agg_data
 )
 select 
 		begin_interval

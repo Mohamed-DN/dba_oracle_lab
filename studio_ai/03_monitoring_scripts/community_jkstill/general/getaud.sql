@@ -32,7 +32,7 @@
 --
 -- Only values 01,02,10,11,20,22 are valid.
 
--- Limitations:
+--Limitations:
 --
 -- * Only Statement and Privilege auditing options administered in AUDIT$ are
 --   considered here.

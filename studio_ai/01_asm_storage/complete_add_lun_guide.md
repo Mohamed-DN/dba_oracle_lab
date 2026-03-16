@@ -2,19 +2,19 @@
 
 This action note unifies the LUN addition flow in the RAC environment.
 
-Passi consigliati:
+Recommended steps:
 
 1. Rescan disks on all nodes.
 2. Identify new device and verify WWN/LUN.
-3. Configura ASMLib o AFD in base allo standard del cluster.
+3. Configure ASMLib or AFD according to the cluster standard.
 4. Add disk to diskgroup with `ALTER DISKGROUP ... ADD DISK`.
-5. Monitora rebalance e spazio libero.
+5. Monitor rebalance and free space.
 
-Procedure dettagliate gia presenti in questa cartella:
+Detailed procedures already present in this folder:
 
 - [asm_disk_add_procedure.md](./asm_disk_add_procedure.md)
 - [asm_disk_deallocation.md](./asm_disk_deallocation.md)
 
-Riferimento formativo esteso:
+Extended training reference:
 
 - [GUIDE_ADD_ASM_DISK.md](../../GUIDE_ADD_ASM_DISK.md)

@@ -73,7 +73,7 @@ with metric_data as (
 				 round(value / 100,2)
 			else null
 		end cpu_seconds
-		-- container total
+		--container total
 		, case
 			when h.metric_name = 'CPU Usage Per Sec' and g.name = 'PDB System Metrics Long Duration' then
 				sum(h.value / 100) over (partition by h.instance_number,to_char(h.begin_time,'yyyy-mm-dd hh24:mi:ss') order by h.con_id)
@@ -103,7 +103,7 @@ with metric_data as (
 			when h.metric_name = 'DB Time Per Second' and g.name = 'Service Metrics' then
 				h.value 
 			else null
-		end db_time_per_second
+end db_time_per_second
 		, case
 			when h.metric_name = 'Network Traffic Volume Per Sec' and g.name = 'System Metrics Long Duration' then
 				h.value 
@@ -149,8 +149,8 @@ data as (
 		, min(cpu_seconds) cpu_seconds_ct
 		, min(host_cpu_usage_per_second) host_cpu_usage_per_second
 		, min(host_cpu_utilization_pct) host_cpu_utilization_pct
-		, min(db_cpu_time_ratio) db_cpu_time_ratio
-		, min(db_time_per_second) db_time_per_second
+, min(db_cpu_time_ratio) db_cpu_time_ratio
+, min(db_time_per_second) db_time_per_second
 		, min(aas) aas
 		, min(net_bytes_per_second) net_bytes_per_second
 		, min(redo_bytes_per_second) redo_bytes_per_second
@@ -161,7 +161,7 @@ data as (
 select
 	&&use_std d.snap_id
 	&&use_std , d.instance_number
-	&&use_std , d.con_id
+&&use_std , d.con_id
 	&&use_std , d.begin_time
 	&&use_std , d.end_time
 	&&use_std , d.elapsed_seconds
@@ -181,8 +181,8 @@ select
 	--
 	&&use_csv d.snap_id
 	&&use_csv ||','|| d.instance_number
-	&&use_csv ||','|| d.con_id
-	&&use_csv ||','|| d.begin_time
+&&use_csv ||','|| d.with_id
+&&use_csv ||','|| d.begin_time
 	&&use_csv ||','|| d.end_time
 	&&use_csv ||','|| d.elapsed_seconds
 	&&use_csv ||','|| d.cpu_seconds

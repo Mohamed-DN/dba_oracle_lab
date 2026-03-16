@@ -45,7 +45,7 @@ with class_values as
 ),
 bitmask as (
 	select 1 bit from dual
-	union all
+union all
 	select power(2,level) bit
 	from dual
 	connect by level <=15

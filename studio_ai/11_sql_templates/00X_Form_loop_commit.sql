@@ -45,7 +45,7 @@ REM********************************
 REM* Change the spool logfile name
 REM********************************
 
-col DATASPOOL noprint new_value NOME_REPORT
+with DATASPOOL noprint new_valueNOME_REPORT
 
 select '<nomescript>_'||to_char(sysdate ,'YYYYMMDDHH24MISS')     DATASPOOL
   from dual ;
@@ -69,8 +69,8 @@ DECLARE
         -- Exctract rowid
         CURSOR cr_GROUPID IS
                 SELECT rowid
-                FROM <nome_tabella>
-                where    <condizione> ;
+FROM <table_name>
+where <condition> ;
 BEGIN
         DBMS_OUTPUT.ENABLE(1000000);
 
@@ -84,12 +84,12 @@ BEGIN
                 nrows := nrows + 1;
 
                 -- Es: update records identified by rowid
-                -- UPDATE <nome_tabella>
-                -- SET <modifiche>
+                --UPDATE <table_name>
+                --SET <changes>
                 -- WHERE rowid = riga.rowid;
 
                 -- Es: delete records identified by rowid
-                -- DELETE <nome_tabella>
+                --DELETE <table_name>
                 -- WHERE rowid = riga.rowid;
 
                 -- Commit after 1(parameter) records

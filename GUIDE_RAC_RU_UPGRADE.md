@@ -7,11 +7,11 @@ This guide explains how to manage the transition from an existing RU (e.g. r19.2
 
 ---
 
-## 1. Logica di Upgrade di Oracle 19c
+## 1. Oracle Upgrade Logic 19c
 
 In Oracle 19c, applying a new Release Update (RU) over an existing one follows an automated flow:
 
-1. **Rilevamento**: `opatchauto` analizza la Home e scopre la patch RU attualmente installata.
+1. **Detection**:`opatchauto`scans the Home and discovers the currently installed RU patch.
 2. **Automatic Rollback**: If the patch you are applying is a new version of the same type (RU), the tool automatically *rollbacks* the previous patch.
 3. **Application**: Once the old version is removed, the new release is applied.
 4. **Cluster Management**: For the Grid Infrastructure, `opatchauto` independently manages the stop and start of the CRS (Oracle High Availability Services) services.
@@ -38,7 +38,7 @@ chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
 # Ripeti su rac2
 ```
 
-### Step 1: Pulizia e Preparazione
+### Step 1: Cleaning and Preparation
 Before unzipping the new patch, free up space on `/u01/app/patch` (which is our 50GB workspace, since `/tmp` is too small in our VMs).
 
 ```bash
@@ -49,9 +49,9 @@ unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 ```
 
-### Step 2: Identificazione dei Sotto-Patch
+### Step 2: Identification of Sub-Patches
 The Combo Patch will extract two directories. For Jan 2026:
-- `38629535`: La Release Update (RU) principale.
+- `38629535`: The main Release Update (RU).
 - `38523609`: La OJVM Release Update.
 
 ### Step 3: Upgrade the Grid Home (Nodes 1 and 2)
@@ -75,7 +75,7 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 The OJVM patch applies over the old one with `opatch apply`.
 
 ```bash
-# Come oracle su rac1
+# Like oracle on rac1
 su - oracle
 cd /u01/app/patch/38658588/38523609
 $ORACLE_HOME/OPatch/opatch apply
@@ -88,7 +88,7 @@ $ORACLE_HOME/OPatch/opatch apply
 After updating the binaries on all nodes, you need to align the database data dictionary. This command must be executed on **ONE NODE** (rac1) with the DB open.
 
 ```bash
-# Come oracle su rac1
+# Like oracle on rac1
 $ORACLE_HOME/OPatch/datapatch -verbose
 ```
 
@@ -111,4 +111,4 @@ Once the upgrade is successfully completed, always **DELETE** the extracted file
 # Come root
 rm -rf /u01/app/patch/*
 ```
-*(NON cancellare mai la cartella nascosta `.patch_storage` dentro le Home).*
+*(NEVER delete the hidden folder`.patch_storage` dentro le Home).*

@@ -44,7 +44,7 @@ REM********************************
 REM* Change the spool logfile name
 REM********************************
 
-col DATASPOOL noprint new_value NOME_REPORT
+with DATASPOOL noprint new_valueNOME_REPORT
 
 select '<nomescript>_'||to_char(sysdate ,'YYYYMMDDHH24MISS')     DATASPOOL
   from dual ;

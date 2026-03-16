@@ -1,6 +1,6 @@
 --@ttitle.sql
 
-col stime new_value start_time noprint
+col estimates new_value start_time noprint
 col instance_name new_value s_instance_name noprint
 
 ttitle off

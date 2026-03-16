@@ -36,7 +36,7 @@ SELECT   s.sid sid,
                24, 'Create Procedure',
                25, 'Alter Procedure',
                26, 'Lock Table',
-               27, 'No Operation',
+27, 'No Operation',
                28, 'Rename',
                29, 'Comment',
                30, 'Audit',
@@ -115,9 +115,9 @@ ORDER BY t.VALUE DESC;
 
        SID USERNAME           COMMAND    OSUSER             MACHINE                   PROCESS           VALUE
 ---------- ------------------ ---------- ------------------ ------------------------- ------------ ----------
-        26 GBC_LOCAL                     enrico.landi       WORKGROUP\HHUB7060CY5     4492:5932         93792
+        26 GBC_LOCALenrico.landi WORKGROUP\HHUB7060CY5 4492:5932 93792
         75 GBC_RO                        rainbow            h3fas092                  602               32692
-        37 GBC_LOCAL                     utente             WORKGROUP\GHOST-DX5150    3456:3032          4258
+        37 GBC_LOCALuser WORKGROUP\GHOST-DX5150 3456:3032 4258
         35 TPSYSADM                      oracle             h3mih111                  26047              2460
         62 TPSYSADM                      oracle             h3mih111                  26330              1717
         99 TPSYSADM                      oracle             h3mih111                  29006              1610

@@ -1,15 +1,15 @@
 # PHASE 8: Oracle Enterprise Manager Cloud Control 13.5 (Single OMS Lab)
 
-Aggiornata: 13 marzo 2026
+Updated: March 13, 2026
 Target lab: Oracle Linux 7.9/8.x, Oracle DB 19c, RAC + Data Guard + GoldenGate gia operativi.
 
 This phase adds a centralized console to monitor and govern the entire laboratory:
 
 - host e metriche OS
-- database single instance e RAC
+- single instance database and RAC
 - ASM, listener, Data Guard
 - alerting, incident management, notification, jobs, blackout
-- monitoraggio backup RMAN
+- RMAN backup monitoring
 
 ## 8.0A Input from Phase 7 (preflight)
 
@@ -20,33 +20,33 @@ dgmgrl sys/<password>@RACDB "show configuration;"
 ```
 
 ```sql
--- Sul DB principale che userai come repository EM
+--On the main DB that you will use as EM repository
 sqlplus / as sysdba
 SELECT name, open_mode, log_mode FROM v$database;
 SELECT value FROM v$parameter WHERE name='compatible';
 ```
 
 ```bash
-# Dal nodo emcc1: risoluzione DNS e reachability target
+#From node emcc1: DNS resolution and reachability target
 getent hosts rac1 rac2 racstby1 racstby2 dbtarget
 ```
 
-Gate minimo:
+Minimum gate:
 
 - Data Guard in `SUCCESS`
-- repository DB raggiungibile da `emcc1`
-- spazio disco e RAM adeguati su `emcc1`
+- DB repository reachable from`emcc1`
+- adequate disk space and RAM`emcc1`
 
-## 8.0B Se OMS e gia installato
+## 8.0B If OMS is already installed
 
-Se hai gia un OMS funzionante (test precedenti), non reinstallare:
+If you already have a working OMS (previous tests), do not reinstall:
 
 ```bash
 $OMS_HOME/bin/emctl status oms -details
 $AGENT_HOME/bin/emctl status agent
 ```
 
-Se `OMS Up` e `Agent Up`, vai direttamente a `8.7` (deploy agent target) oppure `8.8` (onboarding target).
+Se `OMS Up` e `Agent Up`, go directly to`8.7` (deploy agent target) oppure `8.8` (onboarding target).
 
 ## 8.1 Operational objective
 
@@ -55,13 +55,13 @@ At the end of the phase you must have:
 - 1 VM dedicata `emcc1` con OMS + local Agent
 - repository database 19c per EM
 - registered targets (host + DB + ASM + listener)
-- rule set incidenti e notifiche email
-- dashboard operative giornaliere
+- rule set incidents and email notifications
+- daily operational dashboards
 - runbook test alert validato
 
-## 8.2 Architettura consigliata nel tuo lab
+##8.2 Recommended architecture in your lab
 
-Scelta bloccata: Single OMS su VM dedicata.
+Locked choice: Single OMS on dedicated VM.
 
 ```text
 +------------------------+            +---------------------------+
@@ -78,41 +78,41 @@ Scelta bloccata: Single OMS su VM dedicata.
 +----------------+  +----------------+  +----------------+
 ```
 
-Nota pratica:
+Practical note:
 
 - In lab you can put DB repository on `dbtarget` per risparmiare RAM.
 - In production, dedicated OMS vs repository separation is preferred.
 
-## 8.3 Prerequisiti minimi
+## 8.3 Minimum prerequisites
 
 ## 8.3.1 Hardware VM `emcc1`
 
 Minimo lab:
 
 - vCPU: 4
-- RAM: 12 GB (16 GB consigliati)
+- RAM: 12 GB (16 GB recommended)
 - Disk: 120 GB
 
-Con 8 GB RAM OMS tende a saturarsi durante discovery e patching console.
+With 8 GB RAM OMS tends to become saturated during console discovery and patching.
 
 ## 8.3.2 Software
 
 - Oracle Linux 7.9 o 8.x
-- JDK supportato dalla release EM 13.5
-- pacchetti OS richiesti dall installer
-- install media EM 13.5 + eventuale RU
+- JDK supported by EM 13.5 release
+- OS packages required by the installer
+- install media EM 13.5 + possible RU
 
 ## 8.3.3 Network and ports
 
-Apri almeno:
+Open at least:
 
 - 7802/7803 (upload/communication, depends on configuration)
 - 3872 (agent)
 - 4903, 4904 (OMS internal)
 - 1521 (repository DB)
-- 7803 (console HTTPS OMS default, oppure porta custom scelta in installazione)
+- 7803 (default OMS HTTPS console, or custom port chosen during installation)
 
-Usa DNS risolvibile per:
+Use resolvable DNS for:
 
 - `emcc1`
 - RAC and standby nodes
@@ -125,17 +125,17 @@ Usa DNS risolvibile per:
 - middleware home OMS: `/u01/app/oracle/middleware`
 - software media: `/u01/software/em13c`
 
-## 8.4 Preparazione VM emcc1
+## 8.4 Preparing the emcc1 VM
 
 ```bash
-# hostname e risoluzione
+# hostname and resolution
 hostnamectl set-hostname emcc1
 
-# swap consigliata per OMS in lab
+# swap recommended for OMS in lab
 free -h
 swapon --show
 
-# controlli kernel/network (esempio)
+#kernel/network controls (example)
 ulimit -n
 sysctl -a | egrep "fs.file-max|net.core.somaxconn" 
 ```
@@ -146,33 +146,33 @@ Check NTP/chrony on all VMs, otherwise you will have false alerts and inconsiste
 
 You can use:
 
-- opzione A: repository nel database `dbtarget`
-- opzione B: repository locale su `emcc1`
+- option A: repository in the database`dbtarget`
+- option B: local repository on`emcc1`
 
-Per lab e sufficiente opzione A.
+For lab, option A is sufficient.
 
 Checklist repository DB:
 
 - ARCHIVELOG ON
 - character set supportato
-- spazio tablespace adeguato per SYSMAN/MGMT_TABLESPACE
+- adequate tablespace space for SYSMAN/MGMT_TABLESPACE
 - listeners and services reachable from `emcc1`
 
-Controlli rapidi:
+Quick Controls:
 
 ```sql
 SELECT name, open_mode, log_mode FROM v$database;
 SELECT value FROM v$parameter WHERE name='compatible';
 ```
 
-## 8.6 Installazione OMS 13.5 da zero
+## 8.6 Installing OMS 13.5 from scratch
 
-## 8.6.1 Installazione grafica (consigliata in lab)
+## 8.6.1 Graphic installation (recommended in lab)
 
 1. Copia software EM su `emcc1`.
-2. Estrai/esegui installer.
+2. Extract/run installer.
 3. Seleziona "Install a new Enterprise Manager System".
-4. Inserisci connessione repository DB.
+4. Enter DB repository connection.
 5. Define SYSMAN password and console port.
 6. Complete prereq check and install.
 
@@ -193,11 +193,11 @@ chmod +x em13500_linux64.bin
 # Agent locale status
 /u01/app/oracle/agent/agent_inst/bin/emctl status agent
 
-# URL console
+# Console URL
 /u01/app/oracle/middleware/bin/emctl status oms -details | egrep "Console URL|Upload URL"
 ```
 
-Login console:
+Console Login:
 
 - URL: `https://emcc1:<porta_oms>/em`
 - user: `SYSMAN`
@@ -229,11 +229,11 @@ Recommended order:
 5. RAC database target
 6. Data Guard association
 
-Verifiche minime in console:
+Minimum console checks:
 
 - target status: Up
-- metric collection senza errori
-- availability timeline coerente
+- error-free metric collection
+- consistent availability timeline
 
 ## 8.9 Daily operational setup
 
@@ -248,7 +248,7 @@ Crea homepage operative:
 
 ## 8.9.2 Metric thresholds
 
-Definisci soglie realistiche per lab:
+Define realistic thresholds for labs:
 
 - CPU host > 85% per 15 min
 - Filesystem usage > 85%
@@ -258,25 +258,25 @@ Definisci soglie realistiche per lab:
 
 ## 8.9.3 Incident Rules
 
-Crea almeno due rule set:
+Create at least two rule sets:
 
 - `LAB_CRITICAL_DB`
 - `LAB_WARNING_INFRA`
 
 Example routing:
 
-- Critical -> email immediata
+- Critical -> immediate email
 - Warning -> digest ogni 30 minuti
 
 ## 8.9.4 Notifications (SMTP)
 
-Configura:
+Configure:
 
 - SMTP server
 - sender address
 - recipient groups (DBA team)
 
-Testa con invio notifica di prova e con incidente reale simulato.
+Test with sending test notification and with real simulated accident.
 
 ## 8.9.5 Jobs e library
 
@@ -291,7 +291,7 @@ Save job template to library for reuse.
 
 ## 8.9.6 Blackout
 
-Usa blackout per manutenzione:
+Use maintenance blackout:
 
 - patching Grid/DB
 - reboot host
@@ -299,7 +299,7 @@ Usa blackout per manutenzione:
 
 Rule: No scheduled activities without open blackout.
 
-## 8.10 Monitoraggio specifico RMAN
+## 8.10 RMAN specific monitoring
 
 In EM crea viste/favorite su:
 
@@ -327,21 +327,21 @@ Each test must record: date, objective, alert detection time, outcome.
 ## Test 1 - Alert CPU host
 
 1. generates CPU load on `dbtarget`
-2. attende superamento soglia
+2. waits for the threshold to be exceeded
 3. incident verification and email notification
 
-Esito atteso:
+Expected outcome:
 
 - incidente warning/critical creato
 - email ricevuta
 
 ## Test 2 - Tablespace alert
 
-1. riempi tablespace test oltre soglia
+1. fill test tablespace beyond threshold
 2. verify event in EM
-3. riduci uso tablespace e chiudi incidente
+3. reduce tablespace usage and close incident
 
-Esito atteso:
+Expected outcome:
 
 - auto-clear accident after threshold reentry
 
@@ -351,29 +351,29 @@ Esito atteso:
 2. check target unavailable
 3. restart listener
 
-Esito atteso:
+Expected outcome:
 
 - target status returns Up and incident closed
 
 ## Test 4 - Data Guard lag
 
-1. simula backlog apply (lab controllato)
+1. simulate backlog apply (lab controlled)
 2. check lag and crash metrics
-3. ripristina apply realtime
+3. reset apply realtime
 
-Esito atteso:
+Expected outcome:
 
-- alert DG visibile nella dashboard
+- DG alert visible in the dashboard
 
 ## Test 5 - Job fail/success
 
-1. crea job SQL con errore intenzionale
+1. Create SQL jobs with intentional error
 2. failure verification and notification
-3. correggi job e riesegui
+3. fix job and rerun
 
-Esito atteso:
+Expected outcome:
 
-- storico job mostra fail poi success
+- job history shows fail then success
 
 ## 8.12 Troubleshooting piu comune
 
@@ -396,14 +396,14 @@ $AGENT_HOME/bin/emctl upload agent
 
 Sintomi:
 
-- metriche in ritardo
+- lagging metrics
 - pending uploads alto
 
 Azioni:
 
 - check OMS resources (CPU/RAM/disk)
 - controlla repository DB load
-- riavvio controllato OMS in finestra manutenzione
+- OMS controlled restart in maintenance window
 
 ```bash
 $OMS_HOME/bin/emctl status oms -details
@@ -436,23 +436,23 @@ Azioni:
 
 ## 8.14 Phase 8 completion checklist
 
-- OMS Up e console accessibile
+- OMS Up and accessible console
 - agent deployed on all target nodes
 - RAC + standby + dbtarget visible and monitored
-- rule set incidenti attivo
+- incident rule set active
 - notifiche email testate
-- almeno 5 test runbook eseguiti con esito registrato
+- at least 5 runbook tests performed with recorded results
 
-## 8.15 Integrazione con il resto del lab
+## 8.15 Integration with the rest of the lab
 
 After this phase you can:
 
 - usare EM per seguire switchover/failover in tempo reale
 - correlare alert DG con backup RMAN
-- schedulare controlli DBA periodici
-- avere evidenze operative per review/cv
+- schedule periodic DBA checks
+- have operational evidence for review/CV
 
-## 8.16 Riferimenti ufficiali Oracle (13.5)
+##8.16 Official Oracle References (13.5)
 
 - Oracle Enterprise Manager Cloud Control Basic Installation Guide 13.5:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/embsc/index.html

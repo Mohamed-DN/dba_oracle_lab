@@ -60,13 +60,13 @@ done
 searchTerm="${service}.*${connectionTerm}"
 
 if [[ $summaryType == 'second' ]]; then
-	timeStrLen=8
+timeStrLen=8
 	timePadStr=''
 elif [[ $summaryType == 'minute' ]]; then
-	timeStrLen=5
+timeStrLen=5
 	timePadStr=':00'
 elif [[ $summaryType == 'hour' ]]; then
-	timeStrLen=2
+timeStrLen=2
 	timePadStr=':00:00'
 else
 	# error

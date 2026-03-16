@@ -53,7 +53,7 @@ select
 	, segment_owner
 	, segment_name
 	, segment_type
-	, partition_name
+, partition_name
 	, allocated_space
 	, used_space
 	, reclaimable_space

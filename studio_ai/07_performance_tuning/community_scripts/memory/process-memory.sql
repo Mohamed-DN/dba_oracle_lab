@@ -126,14 +126,14 @@ BEGIN
 	execute_immediate ( 'alter session set nls_date_format=''dd-mon-yyyy hh24:mi:ss'' ' ) ;
 	dbms_sql.parse ( l_theCursor, REPLACE ( :v_sql, '"', '''' ), dbms_sql.native ) ;
 	dbms_sql.describe_columns ( l_theCursor, l_colCnt, l_descTbl ) ;
-	FOR i IN 1 .. l_colCnt
+FOR i IN 1 .. l_colCnt
 	LOOP
 		dbms_sql.define_column ( l_theCursor, i, l_columnValue, 4000 ) ;
 	END LOOP;
 	l_status := dbms_sql.execute ( l_theCursor ) ;
 	WHILE ( dbms_sql.fetch_rows ( l_theCursor ) > 0 )
 	LOOP
-		FOR i IN 1 .. l_colCnt
+FOR i IN 1 .. l_colCnt
 		LOOP
 			dbms_sql.column_value ( l_theCursor, i, l_columnValue ) ;
 			p ( rpad ( l_descTbl ( i ) .col_name, 30 )

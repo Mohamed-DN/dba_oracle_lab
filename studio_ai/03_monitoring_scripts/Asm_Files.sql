@@ -32,7 +32,7 @@ SELECT
   , bytes
   , space
   , NVL(LPAD(type, 18), '<DIRECTORY>')  type
-  , creation_date
+, creation_date
   , disk_group_name
   , LPAD(system_created, 4) system_created
 FROM

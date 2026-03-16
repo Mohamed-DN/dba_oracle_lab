@@ -185,7 +185,7 @@ order by sample_time;
 
 DBMS_LOB.SUBSTR(sql_text,1,30)
 
-### Attività che comporti User I/O
+### Activity involving User I/O
 
 select inst_id, ash.sql_id, count(*)
 from gv$active_session_history ash, v$event_name evt
@@ -196,7 +196,7 @@ and evt.wait_class = 'User I/O'
 group by inst_id, sql_id
 order by count(*) desc;
 
-### Query utili da provare
+### Useful queries to try
 
 ### What resource is currently in high demand?
 ### This query will give you for the last 30 minutes those resources that are in high demand on your system.

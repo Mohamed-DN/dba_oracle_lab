@@ -41,7 +41,7 @@ with dep_recurse (
 		and object_type in ('FUNCTION','PACKAGE','PROCEDURE','TYPE','VIEW')
 	)
 	-- anchor member
-	union all
+union all
 	-- recursive member
 	select
 		d.owner
@@ -74,7 +74,7 @@ and owner not in (
 	select name schema_to_exclude
 	from system.LOGSTDBY$SKIP_SUPPORT
 	where action = 0
-	union all
+union all
 	select 'PUBLIC' name from dual
 )
 and referenced_owner || '.' || referenced_name not in ('SYS.STANDARD')

@@ -37,7 +37,7 @@ full outer join dba_hist_snapshot hs on hs.snap_id = d.snap_id
 	and hs.instance_number = d.instance_number
 	and hs.dbid = d.dbid
 where hs.begin_interval_time between
-	to_date(:v_begin_date,'&d_date_format')
+to_date(:v_begin_date,'&d_date_format')
 	and to_date(:v_end_date,'&d_date_format')
 order by hs.begin_interval_time
 /

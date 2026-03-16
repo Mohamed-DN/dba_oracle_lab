@@ -9,7 +9,7 @@ SELECT
   FORCE_MATCHING_SIGNATURE,
   sum(EXECUTIONS) EXECUTIONS,
   count(distinct sql_id) sql_ids, 
-  min(sql_id) esempio_sql_id1,
+min(sql_id) example_sql_id1,
   max(sql_id) esempio_sql_id2
 FROM gv$sqlarea s
 WHERE executions > 0

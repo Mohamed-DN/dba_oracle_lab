@@ -4,8 +4,8 @@
 
 CREATE OR REPLACE VIEW dba_op.temp_use AS
 /* 
-   ATTENZIONE la stima dei MB va corretta in base alle dimensioni del blocco *********************************
-   sql da v$tempseg_usage e' lultimo eseguito, NON quello in esecuzione nella sesssione, li registro entrambi
+   ATTENTION the MB estimate must be corrected based on the size of the block *********************************
+   sql da v$tempseg_usageit is the last one executed, NOT the one running in the session, I record them both
    cfr http://yong321.freeshell.org/oranotes/v$sort_usage.txt
    v$tempseg_usage is a synonym of v$sort_usage
 */ 
@@ -29,7 +29,7 @@ CREATE TABLE dba_op.TEMP_USE_HISTORY AS SELECT * FROM dba_op.temp_use WHERE 1=0;
 
 GRANT SELECT ON dba_op.temp_use_history to public;
 
--- interrogazione utilizzi nel momento di massimo consumo
+--query uses at the time of maximum consumption
 select * from TEMP_USE_HISTORY
 where data = (
    select data from (
@@ -76,9 +76,9 @@ DELETE FROM dba_op.TEMP_USE_HISTORY WHERE data < SYSDATE - 31;
 INSERT INTO dba_op.TEMP_USE_HISTORY SELECT * FROM dba_op.temp_use WHERE ROWNUM < 10; 
 COMMIT; 
 END;'
-   ,next_date => to_date('29/09/2017 09:00:00','dd/mm/yyyy hh24:mi:ss')
+,next_date => to_date('29/09/2017 09:00:00','dd/mm/yyyy hh24:mi:ss')
    ,interval  => 'SYSDATE+5/1440'
-   ,no_parse  => FALSE
+,no_parse => FALSE
   );
   SYS.DBMS_OUTPUT.PUT_LINE('Job Number is: ' || to_char(x));
 COMMIT;
@@ -98,9 +98,9 @@ INSERT INTO dba_op.undo_use_history SELECT * FROM dba_op.undo_use WHERE ROWNUM <
 --INSERT INTO sisal_dba.undo_space_detail_history SELECT * FROM sisal_dba.undo_space_detail;
 COMMIT;
 END;'
-   ,next_date => to_date('25/08/2017 16:11:50','dd/mm/yyyy hh24:mi:ss')
+,next_date => to_date('25/08/2017 16:11:50','dd/mm/yyyy hh24:mi:ss')
    ,interval  => 'SYSDATE+5/1440'
-   ,no_parse  => FALSE
+,no_parse => FALSE
   );
   SYS.DBMS_OUTPUT.PUT_LINE('Job Number is: ' || to_char(x));
 COMMIT;

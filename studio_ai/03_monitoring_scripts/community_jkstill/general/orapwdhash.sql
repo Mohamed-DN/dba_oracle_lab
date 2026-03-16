@@ -3,7 +3,7 @@
 -- adapted from Pete Finnigans Oracle Password Cracker
 -- http://www.petefinnigan.com/oracle_password_cracker.htm
 
-col v_username new_value v_username noprint 
+col v_username new_value v_username noprint
 col v_password new_value v_password noprint 
 
 prompt

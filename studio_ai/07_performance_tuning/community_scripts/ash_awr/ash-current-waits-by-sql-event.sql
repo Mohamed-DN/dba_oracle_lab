@@ -20,8 +20,8 @@ col sql_time format 999,999,999 head 'SQL TIME(s)'
 with sqldata as (
 select distinct
 	sql_id
-	,session_id
-	, session_serial#
+,session_id
+, session_serial#
 	, sql_exec_id
 	, event
 	, count(*) over (partition by sql_id, session_id, session_serial#, sql_exec_id, event) sql_time

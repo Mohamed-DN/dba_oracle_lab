@@ -84,12 +84,12 @@ BEGIN
 	dbms_sql.parse ( l_theCursor, REPLACE ( '&1', '"', '''' ), dbms_sql.native ) ;
 	dbms_sql.describe_columns ( l_theCursor, l_colCnt, l_descTbl ) ;
 
-	FOR i IN 1 .. l_colCnt
+FOR i IN 1 .. l_colCnt
 	LOOP
 		sort_table(l_descTbl(i).col_name) := i;
 	END LOOP;
 
-	FOR i IN 1 .. l_colCnt
+FOR i IN 1 .. l_colCnt
 	LOOP
 		dbms_sql.define_column ( l_theCursor, i, l_columnValue, 4000 ) ;
 	END LOOP;
@@ -98,7 +98,7 @@ BEGIN
 	LOOP
 		s_idx := sort_table.first;
 		-- unsorted
-		&unsorted FOR i IN 1 .. l_colCnt
+&unsorted FOR i IN 1 .. l_colCnt
 		--sorted
 		&sorted WHILE s_idx IS NOT NULL
 		LOOP

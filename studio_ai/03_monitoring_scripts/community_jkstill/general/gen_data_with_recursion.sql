@@ -7,7 +7,7 @@
 
 with gen (id) as (
         select 1 id from dual
-        union all
+union all
         select gen.id + 1 as id
         from gen
         where id < 500

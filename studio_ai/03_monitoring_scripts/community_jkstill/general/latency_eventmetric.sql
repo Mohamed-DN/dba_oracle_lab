@@ -6,7 +6,7 @@
 
    NAME                      TIME_WAITED WAIT_COUNT      AVGMS
    ------------------------- ----------- ---------- ----------
-   log file parallel write         2.538          4      6.345
+   log file parallel write 2,538 4 6,345
    log file sync                   2.329          1     23.287
    db file sequential read             0          0
    db file scattered read              0          0
@@ -34,6 +34,6 @@ where m.event_id=n.event_id
                   'direct path write',
                   'direct path write temp',
                   'log file sync',
-                  'log file parallel write'
+'log file parallel write'
 )
 /

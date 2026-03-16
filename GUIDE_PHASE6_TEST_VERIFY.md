@@ -20,7 +20,7 @@ INFO ALL
 ```
 
 ```sql
--- Standby deve essere utilizzabile da GG
+--Standby must be usable from DD
 sqlplus / as sysdba
 SELECT open_mode, database_role FROM v$database;
 ```
@@ -41,12 +41,12 @@ For advanced testing use the full matrix in [GUIDE_PHASE5_GOLDENGATE.md](./GUIDE
 ```sql
 sqlplus / as sysdba
 
--- Crea uno schema di test
+--Create a test pattern
 CREATE USER testdg IDENTIFIED BY testdg123
     DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
 GRANT CREATE SESSION, CREATE TABLE TO testdg;
 
--- Inserisci dati
+--Enter data
 CONNECT testdg/testdg123
 
 CREATE TABLE test_replica (
@@ -56,10 +56,10 @@ CREATE TABLE test_replica (
 );
 
 INSERT INTO test_replica VALUES (1, 'Test Data Guard', SYSTIMESTAMP);
-INSERT INTO test_replica VALUES (2, 'Verifica Redo Shipping', SYSTIMESTAMP);
+INSERT INTO test_replica VALUES (2, 'Verify Redo Shipping', SYSTIMESTAMP);
 COMMIT;
 
--- Forza un log switch per accelerare la spedizione
+--Force a log switch to speed up shipping
 CONNECT / AS SYSDBA
 ALTER SYSTEM SWITCH LOGFILE;
 ALTER SYSTEM SWITCH LOGFILE;
@@ -71,23 +71,23 @@ ALTER SYSTEM SWITCH LOGFILE;
 -- Lo standby deve essere in READ ONLY (Active Data Guard)
 sqlplus / as sysdba
 
--- Verifica lo stato di apply
+--Check the status of apply
 SELECT process, status, thread#, sequence#
 FROM v$managed_standby
 WHERE process IN ('MRP0','RFS');
 
--- Verifica i dati
+--Check the data
 SELECT * FROM testdg.test_replica;
--- Se vedi le 2 righe, Data Guard funziona!
+--If you see the 2 lines, Data Guard works!
 
--- Verifica il Transport Lag
+--Check Transport Lag
 SELECT name, value, datum_time FROM v$dataguard_stats
 WHERE name IN ('transport lag','apply lag','apply finish time');
 ```
 
 > **Output atteso:**
-> - `transport lag`: 0 secondi — i redo arrivano in tempo reale.
-> - `apply lag`: 0 secondi o pochi secondi — i redo vengono applicati immediatamente.
+> - `transport lag`: 0 seconds — redos arrive in real time.
+> - `apply lag`: 0 seconds or a few seconds — redos are applied immediately.
 > - The data in the table `test_replica` are visible on standby.
 
 ### Check with DGMGRL
@@ -111,11 +111,11 @@ SHOW DATABASE RACDB_STBY;
 ```bash
 dgmgrl sys/<password>@RACDB
 
--- Verifica che lo switchover sia possibile
+--Verify that switchover is possible
 VALIDATE DATABASE RACDB_STBY;
 -- Deve mostrare: "Ready for Switchover: Yes"
 
--- Esegui lo switchover
+--Perform the switchover
 SWITCHOVER TO RACDB_STBY;
 ```
 
@@ -123,11 +123,11 @@ After switchover:
 
 ```bash
 SHOW CONFIGURATION;
--- RACDB_STBY è ora Primary
--- RACDB è ora Physical Standby
+-- RACDB_STBYis now Primary
+--RACDB is now Physical Standby
 
--- Verifica che la replica funzioni al contrario
--- Inserisci dati sul NUOVO primario (RACDB_STBY)
+--Verify that replication works in reverse
+--Enter data on the NEW primary (RACDB_STBY)
 ```
 
 ```sql
@@ -138,11 +138,11 @@ COMMIT;
 ```
 
 ```sql
--- Verifica sul NUOVO standby (RACDB, ora in mount/read only)
+--Check on NEW standby (RACDB, now in mount/read only)
 sqlplus / as sysdba
 
 SELECT * FROM testdg.test_replica;
--- Devi vedere la riga con id=3
+--You need to see the line with id=3
 ```
 
 ### Switchover di ritorno
@@ -153,7 +153,7 @@ dgmgrl sys/<password>@RACDB_STBY
 SWITCHOVER TO RACDB;
 
 SHOW CONFIGURATION;
--- Tutto torna come prima
+--Everything goes back to how it was before
 ```
 
 ---
@@ -179,19 +179,19 @@ EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
 
 ### On Target: Check Replicat status
 
-Sul target OCI con GoldenGate Microservices non usare `ggsci` classico.
+Sul target OCI con GoldenGate Microservices non usare `ggsci`classic.
 
 Controlla da Web UI (Administration Server):
 
 - replicat `REPTAR` in state `Running`
-- checkpoint in avanzamento
+- progress checkpoint
 - lag basso/stabile
-- nessun errore in diagnostics
+- no errors in diagnostics
 
 ### Generate traffic and verify
 
 ```sql
--- Sul Primario (RACDB)
+--On the Primary (RACDB)
 sqlplus testdg/testdg123@RACDB
 
 INSERT INTO test_replica VALUES (100, 'GoldenGate Test 1', SYSTIMESTAMP);
@@ -201,11 +201,11 @@ COMMIT;
 ```
 
 ```sql
--- Sul Target (dbtarget) - dopo pochi secondi
+--On Target (dbtarget) - after a few seconds
 sqlplus testdg/testdg123@dbtarget
 
 SELECT * FROM test_replica WHERE id >= 100;
--- Devi vedere le 3 righe inserite dal primario!
+--You must see the 3 lines inserted by the head doctor!
 ```
 
 > If the rows are present on the target, the complete chain works:
@@ -216,13 +216,13 @@ SELECT * FROM test_replica WHERE id >= 100;
 ```
 -- Sullo Standby
 GGSCI> STATS EXTRACT ext_racdb, LATEST
--- Mostra le tabelle e il numero di operazioni catturate
+--Shows the tables and the number of operations captured
 
 GGSCI> STATS EXTRACT pump_racdb, LATEST
 
 -- Sul Target
--- verifica statistiche dal pannello del replicat REPTAR (Microservices UI)
--- e dalla sezione diagnostics / performance
+--check statistics from the REPTAR replicat panel (Microservices UI)
+--and from the diagnostics / performance section
 ```
 
 ---
@@ -230,7 +230,7 @@ GGSCI> STATS EXTRACT pump_racdb, LATEST
 ## 6.4 Test di Stress — Volume
 
 ```sql
--- Sul Primario
+--On the Primary
 sqlplus testdg/testdg123@RACDB
 
 BEGIN
@@ -243,15 +243,15 @@ END;
 ```
 
 ```
--- Monitora il lag in tempo reale su GoldenGate
+--Monitor real-time lag on GoldenGate
 GGSCI> LAG EXTRACT ext_racdb
--- Sul target verifica lag del replicat REPTAR da UI Microservices
+--On the target check lag of the REPTAR replicat from UI Microservices
 ```
 
 ```sql
--- Dopo qualche secondo, verifica sul Target
+--After a few seconds, check on Target
 SELECT COUNT(*) FROM testdg.test_replica;
--- Deve corrispondere al conteggio sul primario
+--Must match the count on the primary
 ```
 
 ---
@@ -259,7 +259,7 @@ SELECT COUNT(*) FROM testdg.test_replica;
 ## 6.5 Complete DML Test (INSERT / UPDATE / DELETE)
 
 ```sql
--- Sul Primario
+--On the Primary
 sqlplus testdg/testdg123@RACDB
 
 -- UPDATE
@@ -270,18 +270,18 @@ COMMIT;
 DELETE FROM test_replica WHERE id = 2;
 COMMIT;
 
--- DDL (se hai configurato DDL replication in GG)
+--DDL (if you have configured DDL replication in GG)
 ALTER TABLE test_replica ADD (email VARCHAR2(100));
 
--- INSERT con nuova colonna
+--INSERT with new column
 INSERT INTO test_replica VALUES (9999, 'DDL Test', SYSTIMESTAMP, 'test@oracle.com');
 COMMIT;
 ```
 
 ```sql
--- Verifica sul Target
+--Check on the Target
 SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
--- id=1: nome = 'UPDATED ROW'
+--id=1: name = 'UPDATED ROW'
 -- id=2: NON deve esistere (deleted)
 -- id=9999: deve esistere con email
 ```
@@ -290,18 +290,18 @@ SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
 
 ## 6.6 Test Summary Table
 
-| # | Test | Dove | Risultato Atteso | ✅/❌ |
+| # | Test | Dove |Expected Result| ✅/❌ |
 |---|---|---|---|---|
-| 1 | INSERT on Primary → visible on Standby | DG | Righe visibili in tempo reale | |
+| 1 | INSERT on Primary → visible on Standby | DG |Lines visible in real time| |
 | 2 | Transport Lag = 0 | DG | dgmgrl SHOW DATABASE | |
 | 3 | Apply Lag = 0 o ~secondi | DG | dgmgrl SHOW DATABASE | |
-| 4 | Switchover + Switchback | DG | Nessuna perdita dati, SUCCESS | |
+| 4 | Switchover + Switchback | DG |No data loss, SUCCESS| |
 | 5 | INSERT su Primary → visibile su Target | GG | Righe replicate via GG | |
-| 6 | UPDATE → replicato su Target | GG | Modifiche su target | |
-| 7 | DELETE → replicato su Target | GG | Riga cancellata su target | |
-| 8 | Stress 1000 lines → all on Target | GG | COUNT(*) identico | |
+| 6 |UPDATE → replicated on Target| GG |Changes on target| |
+| 7 |DELETE → replicated to Target| GG |Line deleted on target| |
+| 8 | Stress 1000 lines → all on Target | GG |COUNT(*) identical| |
 | 9 | Lag GG Extract < 10s | GG | LAG EXTRACT | |
-| 10 | Lag GG Replicat < 10s | GG | Lag REPTAR da UI Microservices | |
+| 10 | Lag GG Replicat < 10s | GG |REPTAR lag from UI Microservices| |
 
 ---
 
@@ -312,8 +312,8 @@ SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
 ### Test: Brutal shutdown of a node
 
 ```bash
-# In VirtualBox: seleziona rac2 → Tasto destro → Chiudi → Spegnimento brutale
-# Oppure sulla console di rac2:
+# In VirtualBox: Select rac2 → Right Click → Close → Brutal Shutdown
+# Or on the rac2 console:
 echo 1 > /proc/sys/kernel/sysrq
 echo b > /proc/sysrq-trigger  # Crash immediato!
 ```
@@ -323,27 +323,27 @@ echo b > /proc/sysrq-trigger  # Crash immediato!
 ```sql
 sqlplus / as sysdba
 
--- Il database è ancora OPEN?
+--Is the database still OPEN?
 SELECT instance_name, status FROM gv$instance;
 -- rac1: OPEN
--- rac2: non mostrato (è crashato)
+--rac2: not shown (crashed)
 
--- Puoi ancora fare DML?
-INSERT INTO testdg.test_replica VALUES (5000, 'Nodo 2 è crashato', SYSTIMESTAMP);
+--Can you still do DML?
+INSERT INTO testdg.test_replica VALUES (5000, 'Node 2 has crashed', SYSTIMESTAMP);
 COMMIT;
--- Se funziona → RAC sta facendo il suo lavoro!
+--If it works → RAC is doing its job!
 
--- Verifica il VIP failover
+--Test VIP failover
 SELECT name, value FROM v$parameter WHERE name = 'local_listener';
--- Il VIP di rac2 (.112) è migrato su rac1?
+--Has rac2 VIP (.112) migrated to rac1?
 ```
 
 ```bash
-# Controlla i servizi del cluster
+#Check cluster services
 crsctl stat res -t
-# rac2 sarà OFFLINE, rac1 avrà entrambi i VIP
+#rac2 will be OFFLINE, rac1 will have both VIPs
 
-# Controlla lo stato del database
+# Check the database status
 srvctl status database -d RACDB
 # Instance RACDB1 is running on node rac1
 # Instance RACDB2 is not running
@@ -353,13 +353,13 @@ srvctl status database -d RACDB
 
 ```bash
 # In VirtualBox: Avvia rac2
-# Aspetta 2-3 minuti per il boot
+# Wait 2-3 minutes to boot
 
-# Su rac2 dopo il boot, il cluster si riunisce automaticamente
+#On rac2 after booting, the cluster joins together automatically
 crsctl stat res -t
-# Entrambi i nodi ONLINE
+# Both nodes ONLINE
 
-# Verifica che il database si riapre
+#Verify that the database reopens
 srvctl status database -d RACDB
 # RACDB1 e RACDB2 entrambi running
 ```
@@ -385,17 +385,17 @@ AFTER switchover:
 dgmgrl sys/<password>@RACDB
 SWITCHOVER TO RACDB_STBY;
 
-# 2. Verifica GG sullo standby (ora primario)
+#2. Check DD on standby (primary time)
 cd $OGG_HOME && ./ggsci
 INFO ALL
 # Extract e Pump devono essere ancora RUNNING
 
-# 3. Inserisci dati sul nuovo primario
+#3. Enter data on the new primary
 sqlplus testdg/testdg123@RACDB_STBY
 INSERT INTO test_replica VALUES (6000, 'Post-Switchover GG Test', SYSTIMESTAMP);
 COMMIT;
 
-# 4. Verifica sul target
+#4. Check on the target
 sqlplus testdg/testdg123@dbtarget
 SELECT * FROM test_replica WHERE id = 6000;
 -- Deve esistere!
@@ -406,9 +406,9 @@ SELECT * FROM test_replica WHERE id = 6000;
 dgmgrl sys/<password>@RACDB_STBY
 SWITCHOVER TO RACDB;
 
-# 6. Verifica
+#6. Check
 GGSCI> INFO ALL
-# Tutto RUNNING? → BRAVO!
+# Everything RUNNING? → BRAVO!
 ```
 
 ---
@@ -417,51 +417,51 @@ GGSCI> INFO ALL
 
 ### Problemi Cluster (Clusterware)
 
-| Problema | Causa Probabile | Soluzione |
+| Problema | Causa Probabile |Solution|
 |---|---|---|
-| `crsctl check crs` fallisce | CRS non partito correttamente | `crsctl start crs` (as root) |
+| `crsctl check crs` fallisce |CRS did not start correctly| `crsctl start crs` (as root) |
 | A node "evicts" itself from the cluster | Interconnect down o heartbeat perso | Controlla `ip addr show enp0s9`, ping remote node |
 | VIP non migra | Network mask errata | Check VIP subnet with `srvctl config vip -n rac1` |
 | ORA-29702: error occurred | ocssd.log errori networking | Controlla `/u01/app/19.0.0/grid/log/<host>/ocssd/ocssd.log` |
 
 ### Problemi Data Guard
 
-| Problema | Causa Probabile | Soluzione |
+| Problema | Causa Probabile |Solution|
 |---|---|---|
 | Transport Lag cresce | Slow network or standby listener down | `lsnrctl status` on standby, check bandwidth |
 | Apply Lag cresce | Standby in "no apply" state | `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;` |
 | ORA-16191: Primary log shipping disabled | `log_archive_dest_state_2` = DEFER | `ALTER SYSTEM SET log_archive_dest_state_2=ENABLE;` |
-| GAP rilevato nel DGMGRL | Archivelog missing | `ALTER SYSTEM SET fal_server='RACDB'` on standby, the FAL will request logs |
-| DGMGRL mostra WARNING | Stale redo log detected | `ALTER SYSTEM SWITCH LOGFILE;` + check FAL |
+|GAP detected in the DGMGRL| Archivelog missing | `ALTER SYSTEM SET fal_server='RACDB'` on standby, the FAL will request logs |
+|DGMGRL shows WARNING| Stale redo log detected | `ALTER SYSTEM SWITCH LOGFILE;` + check FAL |
 
 ### Problemi GoldenGate
 
-| Problema | Causa Probabile | Soluzione |
+| Problema | Causa Probabile |Solution|
 |---|---|---|
-| Extract ABENDED | Redo log non disponibile | `GGSCI> ALTER EXTRACT ext_racdb, BEGIN NOW` |
-| Replicat ABENDED | Conflitto duplicato (PK) | Riavvia `REPTAR` da UI/AdminClient, risolvi conflitto e riparti dal checkpoint corretto |
-| Lag alto Extract | LogMiner lento | Verify `v$goldengate_capture` per colli di bottiglia |
-| Lag alto Replicat | Batch troppo piccolo | Aumenta `BATCHSQL` nel param Replicat |
-| Trail pieno su disco | Pump non trasmette | Check network, `INFO EXTRACT pump_racdb` |
+| Extract ABENDED |Redo log not available| `GGSCI> ALTER EXTRACT ext_racdb, BEGIN NOW` |
+| Replicat ABENDED |Duplicate Conflict (PK)| Riavvia `REPTAR`from UI/AdminClient, resolve the conflict and restart from the correct checkpoint|
+| Lag alto Extract | LogMiner lento | Verify `v$goldengate_capture`for bottlenecks|
+|High lag Replicat|Batch too small| Aumenta `BATCHSQL`in the Replicat param|
+|Full trail on disc|Pump does not transmit| Check network, `INFO EXTRACT pump_racdb` |
 
 ### Problemi RMAN
 
-| Problema | Causa Probabile | Soluzione |
+| Problema | Causa Probabile |Solution|
 |---|---|---|
 | ORA-19502: write error | FRA piena | `DELETE NOPROMPT OBSOLETE;`, aumenta FRA |
-| RMAN-06059: expected numeric | Errore nel script | Controlla sintassi nel .sh |
-| Backup lentissimo | BCT non attivo o PARALLELISM=1 | `CONFIGURE DEVICE TYPE DISK PARALLELISM 2;` |
-| RESTORE fallisce | Backup corrotto o expired | `CROSSCHECK BACKUP; VALIDATE BACKUP;` |
+| RMAN-06059: expected numeric |Error in script|Check syntax in .sh|
+| Backup lentissimo |BCT not active or PARALLELISM=1| `CONFIGURE DEVICE TYPE DISK PARALLELISM 2;` |
+|RESTORE fails| Backup corrotto o expired | `CROSSCHECK BACKUP; VALIDATE BACKUP;` |
 
 ### Problemi Performance
 
 ```sql
--- Top 5 SQL per tempo di esecuzione
+--Top 5 SQL by execution time
 SELECT sql_id, elapsed_time/1000000 AS secs, executions, 
        SUBSTR(sql_text, 1, 80) AS sql
 FROM v$sql ORDER BY elapsed_time DESC FETCH FIRST 5 ROWS ONLY;
 
--- Sessioni bloccanti
+--Blocking sessions
 SELECT blocking_session, sid, serial#, wait_class, event
 FROM v$session WHERE blocking_session IS NOT NULL;
 
@@ -469,7 +469,7 @@ FROM v$session WHERE blocking_session IS NOT NULL;
 SELECT tablespace_name, ROUND(used_percent, 1) AS pct
 FROM dba_tablespace_usage_metrics WHERE used_percent > 85;
 
--- ASM quasi pieno
+--ASM almost full
 SELECT name, ROUND((1-free_mb/total_mb)*100, 1) AS pct 
 FROM v$asm_diskgroup WHERE (1-free_mb/total_mb) > 0.8;
 ```
@@ -477,7 +477,7 @@ FROM v$asm_diskgroup WHERE (1-free_mb/total_mb) > 0.8;
 ### Dove Trovare i Log di Errore
 
 ```bash
-# Alert Log del database (IL PIÙ IMPORTANTE)
+#Database Alert Log (MOST IMPORTANT)
 adrci
 SHOW ALERT -tail 50
 
@@ -492,30 +492,30 @@ tail -100 /u01/app/19.0.0/grid/log/$(hostname)/ocssd/ocssd.log
 
 # Log GoldenGate
 cat $OGG_HOME/dirrpt/ext_racdb.rpt
-# Per il replicat target (REPTAR) usa diagnostics/report dalla UI Microservices
+# For the replicat target (REPTAR) use diagnostics/report from the Microservices UI
 ```
 
 ---
 
 ## 6.10 COMPLETE Test Summary Table
 
-| # | Test | Dove | Risultato Atteso | ✅/❌ |
+| # | Test | Dove |Expected Result| ✅/❌ |
 |---|---|---|---|---|
-| 1 | INSERT on Primary → visible on Standby | DG | Righe visibili in tempo reale | |
+| 1 | INSERT on Primary → visible on Standby | DG |Lines visible in real time| |
 | 2 | Transport Lag = 0 | DG | dgmgrl SHOW DATABASE | |
 | 3 | Apply Lag = 0 o ~secondi | DG | dgmgrl SHOW DATABASE | |
-| 4 | Switchover + Switchback | DG | Nessuna perdita dati, SUCCESS | |
+| 4 | Switchover + Switchback | DG |No data loss, SUCCESS| |
 | 5 | INSERT su Primary → visibile su Target | GG | Righe replicate via GG | |
-| 6 | UPDATE → replicato su Target | GG | Modifiche su target | |
-| 7 | DELETE → replicato su Target | GG | Riga cancellata su target | |
-| 8 | Stress 1000 lines → all on Target | GG | COUNT(*) identico | |
+| 6 |UPDATE → replicated on Target| GG |Changes on target| |
+| 7 |DELETE → replicated to Target| GG |Line deleted on target| |
+| 8 | Stress 1000 lines → all on Target | GG |COUNT(*) identical| |
 | 9 | Lag GG Extract < 10s | GG | LAG EXTRACT | |
-| 10 | Lag GG Replicat < 10s | GG | Lag REPTAR da UI Microservices | |
+| 10 | Lag GG Replicat < 10s | GG |REPTAR lag from UI Microservices| |
 | 11 | **rac2 node crash** → rac1 continues | RAC | DB OPEN su rac1, VIP migrato | |
 | 12 | **Rejoin rac2 node** → cluster intact | RAC | Entrambe le istanze OPEN | |
 | 13 | **DD after switchover** → replication intact | DG+GG | Extract RUNNING, dati replicati | |
-| 14 | RMAN backup from standby | RMAN | Backup completato senza errori | |
-| 15 | RMAN RESTORE VALIDATE | RMAN | Restore simulato OK | |
+| 14 | RMAN backup from standby | RMAN |Backup completed without errors| |
+| 15 | RMAN RESTORE VALIDATE | RMAN |Simulated restore OK| |
 
 ---
 

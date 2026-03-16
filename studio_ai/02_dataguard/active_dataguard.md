@@ -14,6 +14,6 @@ SELECT open_mode, database_role FROM v$database;
 SELECT process, status, sequence# FROM v$managed_standby;
 ```
 
-Approfondimento:
+Further information:
 
 - [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)

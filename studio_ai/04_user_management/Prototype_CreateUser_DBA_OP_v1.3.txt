@@ -3,7 +3,7 @@
 
 
 --######## CREATION OF TABLESPACE DBA_OP ######## 
--- Modificare il DG dei dati in base alle configurazioni del DB
+--Change the data DG according to the DB configurations
 set lines 200
 col NAME for a30
 col FILE_NAME for a80
@@ -22,7 +22,7 @@ select 'USING FOR FILESYSTEM' NAME,
 from dba_Data_files where tablespace_name in ('SYSTEM')
 union all
 select tablespace_name NAME,
-       file_name,
+file_name,
        bytes/1024/1024 Mb,
        autoextensible,
        maxbytes/1024/1024 MaxMb
@@ -30,7 +30,7 @@ from dba_Data_files where tablespace_name in ('DBA_OP_DATA');
 
 # If the tablespace does not exist, create it and repeat the query in the point above to verify correct creation
 CREATE BIGFILE TABLESPACE DBA_OP_DATA DATAFILE '&FILENAME' SIZE 1024M AUTOEXTEND ON NEXT 128M MAXSIZE 32767m LOGGING;
-# Ripetere query sopra
+# Repeat query above
 
 
 # Check the existence of the user. If the username does not exist, create it

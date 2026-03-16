@@ -73,7 +73,7 @@ locktypes as (
 		where mod(level,2) = 1
 		connect by level <= 220
 		--
-		union all
+union all
 		select
 		  level,
 		  case mod(level,2)
@@ -121,7 +121,7 @@ select /*+ ordered gather_plan_statistics */
 		4, 'Share',          /* S */
 		5, 'S/Row-X (SRX)',  /* C */
 		6, 'Exclusive',      /* X */
-		to_char(l.lmode)
+to_char(l.lmode)
 	) mode_held,
 	decode
 	(

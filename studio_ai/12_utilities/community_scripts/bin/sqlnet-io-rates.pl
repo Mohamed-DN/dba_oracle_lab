@@ -104,7 +104,7 @@ if ($localSysdba) {
 		{
 			RaiseError => 1,
 			AutoCommit => 0,
-			ora_session_mode => 2
+ora_session_mode => 2
 		}
 	);
 } else {
@@ -310,9 +310,9 @@ for (my $i=0; $i<$iterations; $i++) {
 	}
 
 	#print 'Diff: ' . Dumper(\%dataDiff);
-	printData(%dataDiff);
+printData(%dataDiff);
 
-	%dataPrev = %dataCurr;
+%prevdate = %Currdate;
 	%dataCurr = ();
 	($startTime) = [gettimeofday];
 

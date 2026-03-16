@@ -1,6 +1,6 @@
 --
 -- The PURGE_AM_TABLES JOB is NOT created automatically by the script
--- versione 1.01 : corretta schedulazione job "JOB_COLLECT_DB_GROWTH_JOB"
+--version 1.01: correct job scheduling"JOB_COLLECT_DB_GROWTH_JOB"
 
 -- 28052022 Modified Script for automatic drop and creation of job temp and undo usage
 
@@ -463,7 +463,7 @@ DECLARE
 
 BEGIN
 
--- Cancello le predisposizioni gia presenti 
+--I delete the predispositions already present
 
 execute immediate('DELETE FROM DBA_OP.MAINT_PARTITIONS WHERE TABLE_NAME IN (''DBA_OP.MAINT_TABLESPACE_LOG'',''DBA_OP.MAINT_TABLESPACE_RESIZE'',''DBA_OP.DB_TABLESPACES_GROWTH'',''DBA_OP.DB_SEGMENTS_GROWTH'',''DBA_OP.PURGE_TABLE_AM_OBJ_LOG'',''DBA_OP.TEMP_USE_HISTORY'',''DBA_OP.UNDO_USE_HISTORY'')');
 
@@ -509,11 +509,11 @@ CREATE OR REPLACE PACKAGE DBA_OP.PKG_DBA_UTILITY AS
    20220527      versione v1.3       Introduced parametered thresholds
                                      Modified some error level returned by application
 
-   20220713      versione v1.4       Eliminata differenza di calcolo tra PDB e DB Standalone
+   20220713 version v1.4 Eliminated calculation difference between PDB and Standalone DB
                                      Bug Fix CheckForAutoextendDF which only worked on non-autoextensible dfs
 
    20220718 version v1.5 Introduced Error handling in ExtendTablespaceAuto loop
-                                     Modificata query di generazione lista tablepace da estendere
+                                     Modified tablepace list generation query to extend
                                      Modified MAINTENANCE_TABLESPACE_RESIZE table
                                      Modified LogResize Procedure to introduce WAR or ERROR conditions in the resize log
                                      Logging in tablespace resize even if just an autoextend of the datafile has been performed
@@ -525,8 +525,8 @@ CREATE OR REPLACE PACKAGE DBA_OP.PKG_DBA_UTILITY AS
 
    20220828 version v1.8 Fix ExtendTablespace on Warning message "Added maximum number of 10" that is logged for no real reason
    
-   20220928      versione v1.9       CanTablespaceBeExtended fixed ricerca ultimo evento di modifica spazi
-                                     ExtendTablespaceAuto modificata per non eseguire nessuna estenzione nel caso in cui non ci sia spazio su ASM
+   20220928 version v1.9 CanTablespaceBeExtended fixed search for last space modification event
+                                     ExtendTablespaceAuto modified to not perform any extension in case there is no space on ASM
 
 */
 
@@ -552,7 +552,7 @@ CREATE OR REPLACE PACKAGE DBA_OP.PKG_DBA_UTILITY AS
   PROCEDURE CalculateSpaceToAdd(vTablespaceName IN VARCHAR2, vSpaceAddMb OUT NUMBER ) ;
   PROCEDURE CheckForAutoextendDF(vTablespaceName  IN VARCHAR2 , vMBToAdd IN OUT NUMBER ) ;
 
-  V_NORM_SIZE        NUMBER := 0.97; -- 1000MB da esprimere in GB
+V_NORM_SIZE NUMBER := 0.97; -- 1000MB to be expressed in GB
   V_LEVEL_ERR        NUMBER := 0.9 ;
   V_LEVEL_WRN        NUMBER := 0.8 ;
   V_MNUM             NUMBER := 0.8 ;
@@ -680,7 +680,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
              WHEN  TBSP_MAXSIZE_MB >= V_NORM_SIZE*1024 AND ( USED_MB >= WARN_SIZE_MB  and USED_MB < ERR_SIZE_MB )
                THEN (TBSP_MAXSIZE_MB - WARN_SIZE_MB )/2
              WHEN TBSP_MAXSIZE_MB >= V_NORM_SIZE*1024 AND (USED_MB >= ERR_SIZE_MB)
-               -- per uscire dall'error e poi dal warning, uso il free per andare oltre la soglia di warning
+               --to exit the error and then the warning, I use free to go beyond the warning threshold
                THEN 1.5*(TBSP_MAXSIZE_MB - WARN_SIZE_MB)
           END as SPACEMB_ADD,
           WARN_SIZE_MB,
@@ -704,7 +704,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                    , (SELECT tablespace_name
                              , SUM(bytes)                                     b_allocati
                              , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
-                      FROM   dba_data_files
+FROM dba_data_files
                       GROUP  BY tablespace_name) a
                    , (SELECT tablespace_name
                              , SUM(bytes)  b_free
@@ -713,7 +713,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                       GROUP  BY tablespace_name) f
                    , (SELECT tablespace_name
                              , COUNT(*) df#
-                      FROM   dba_data_files
+FROM dba_data_files
                       GROUP  BY tablespace_name) df
               WHERE  tbs.tablespace_name   = a.tablespace_name
                    AND tbs.tablespace_name = f.tablespace_name(+)
@@ -748,7 +748,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
 
         select
           ROUND(value*4194303/1024/1024)
-        into vTblspMaxDfSize
+into vTblspMaxDfSize
         from v$parameter
         where name = 'db_block_size';
 
@@ -897,7 +897,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                          , SUM(bytes)                                     b_allocati
                          , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
                          , SUM(decode(AUTOEXTENSIBLE,'YES',1,0)) b_autoext
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) a
                , (SELECT tablespace_name
                          , SUM(bytes)  b_free
@@ -906,7 +906,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                   GROUP  BY tablespace_name) f
                , (SELECT tablespace_name
                          , COUNT(*) df#
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) df
           WHERE  tbs.tablespace_name = a.tablespace_name
                AND tbs.tablespace_name = f.tablespace_name(+)
@@ -1061,7 +1061,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                         select
                           ceil(vMBToAdd/CalculateMaxAllowedDfSize),
                           ceil(vMBToAdd/CalculateMaxAllowedDfSize)*CalculateMaxAllowedDfSize
-                        into vDfToAdd ,
+into vDfToAdd ,
                              vMBToAdd
                         from dual;
 
@@ -1166,7 +1166,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                , (SELECT tablespace_name
                          , SUM(bytes)                                     b_allocati
                          , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) a
                , (SELECT tablespace_name
                          , SUM(bytes)  b_free
@@ -1175,7 +1175,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                   GROUP  BY tablespace_name) f
                , (SELECT tablespace_name
                          , COUNT(*) df#
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) df
           WHERE  tbs.tablespace_name = a.tablespace_name
                AND tbs.tablespace_name = f.tablespace_name(+)
@@ -1230,7 +1230,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                , (SELECT tablespace_name
                          , SUM(bytes)                                     b_allocati
                          , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) a
                , (SELECT tablespace_name
                          , SUM(bytes)  b_free
@@ -1239,7 +1239,7 @@ CREATE OR REPLACE PACKAGE BODY DBA_OP.PKG_DBA_UTILITY AS
                   GROUP  BY tablespace_name) f
                , (SELECT tablespace_name
                          , COUNT(*) df#
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) df
           WHERE  tbs.tablespace_name = a.tablespace_name
                AND tbs.tablespace_name = f.tablespace_name(+)
@@ -1295,7 +1295,7 @@ AS
         dbms_output.put_line ( vSeverityText || ': ' || pMessage ) ;
 
         INSERT INTO DBA_OP.MAINT_TABLESPACE_LOG
-            (datetime,
+(datetime,
              severity,
              tablespace_name,
              message)
@@ -1328,7 +1328,7 @@ PROCEDURE LogResize(  pTablespaceName   VARCHAR2 ,
     BEGIN
 
         INSERT INTO DBA_OP.MAINT_TABLESPACE_RESIZE
-            (datetime,
+(datetime,
              tablespace_name,
              used_mb,
              added_mb,
@@ -1393,7 +1393,7 @@ is
                 and argument_position = 3
                 and owner = 'DBA_OP'
                 ) and p_schema is null
-        union all
+union all
         select
          p_schema
         from dual
@@ -1441,8 +1441,8 @@ select
    sysdate as INS_DATE,
    owner,
    segment_name,
-   partition_name,
-   decode(compression,'NO','DISABLED',compression) COMPRESSION,
+partition_name,
+decode(compression,'NO','DISABLED',compression) COMPRESSION,
    sum(size_mb) SIZE_MB,
    sum(NROWS) NROWS,
    SEGMENT_TYPE,
@@ -1451,11 +1451,11 @@ from (
 SELECT
          OWNER,
          SEGMENT_NAME,
-         partition_name,
+partition_name,
          SUM(SIZE_MB) SIZE_MB,
          SUM(nvl(NUM_ROWS,0)) as NROWS,
          TABLESPACE_NAME,
-         compression,
+compression,
          SEGMENT_TYPE,
          subpartition_name
      FROM (
@@ -1466,7 +1466,7 @@ SELECT
                           t.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                          t.compression,
+t.compression,
                           'TABLE PARTITION' as SEGMENT_TYPE,
                           NULL   as subpartition_name
                            FROM dba_segments s,
@@ -1484,7 +1484,7 @@ SELECT
                           t.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                          t.compression,
+t.compression,
                           'TABLE SUBPARTITION',
                           t.subpartition_name
                            FROM dba_segments s,
@@ -1502,7 +1502,7 @@ SELECT
                                                                                                 s.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                                                                                                t.compression,
+t.compression,
                           'TABLE',
                           NULL
                            FROM dba_segments s,
@@ -1520,7 +1520,7 @@ SELECT
                                                                                                 s.partition_name,
                          ROUND(s.BYTES / 1048576) SIZE_MB,
                           NULL as num_rows,
-                                                                                                l.compression,
+l.compression,
                           'LOB',
                           NULL
                            FROM dba_segments s,
@@ -1531,9 +1531,9 @@ SELECT
 )
 GROUP BY OWNER,
          SEGMENT_NAME,
-         partition_name,
+partition_name,
          TABLESPACE_NAME,
-         compression,
+compression,
          SEGMENT_TYPE,
          subpartition_name
 ORDER BY SIZE_MB DESC
@@ -1541,8 +1541,8 @@ ORDER BY SIZE_MB DESC
 WHERE owner in ( select username from dba_users where created > (select created + interval '30' minute from v$database) )
 group by owner,
          segment_name,
-         partition_name,
-         decode(compression,'NO','DISABLED',compression),
+partition_name,
+decode(compression,'NO','DISABLED',compression),
          SEGMENT_TYPE,
          subpartition_name;
 
@@ -1553,8 +1553,8 @@ select
    sysdate as INS_DATE,
    owner,
    segment_name,
-   partition_name,
-   decode(compression,'NO','DISABLED',compression) COMPRESSION,
+partition_name,
+decode(compression,'NO','DISABLED',compression) COMPRESSION,
    sum(size_mb) SIZE_MB,
    sum(NROWS) NROWS,
    SEGMENT_TYPE,
@@ -1563,12 +1563,12 @@ from (
 SELECT
          OWNER,
          SEGMENT_NAME,
-         partition_name,
+partition_name,
          SUM(SIZE_MB) SIZE_MB,
          SUM(nvl(NUM_ROWS,0)) as NROWS,
          --SEGMENT_TYPE,
          TABLESPACE_NAME,
-         compression,
+compression,
          SEGMENT_TYPE,
          subpartition_name
      FROM (
@@ -1579,7 +1579,7 @@ SELECT
                           t.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                          t.compression,
+t.compression,
                           'INDEX PARTITION' as SEGMENT_TYPE,
                           NULL   as subpartition_name
                            FROM dba_segments s,
@@ -1597,7 +1597,7 @@ SELECT
                           t.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                          t.compression,
+t.compression,
                           'INDEX SUBPARTITION' as SEGMENT_TYPE,
                           subpartition_name
                            FROM dba_segments s,
@@ -1615,7 +1615,7 @@ SELECT
                           s.partition_name,
                           ROUND(s.BYTES / 1048576) SIZE_MB,
                           num_rows,
-                          t.compression,
+t.compression,
                           'INDEX',
                           NULL
                            FROM dba_segments s,
@@ -1628,9 +1628,9 @@ SELECT
    )
 GROUP BY OWNER,
          SEGMENT_NAME,
-         partition_name,
+partition_name,
          TABLESPACE_NAME,
-         compression,
+compression,
          SEGMENT_TYPE,
          subpartition_name
 ORDER BY SIZE_MB DESC
@@ -1638,8 +1638,8 @@ ORDER BY SIZE_MB DESC
 WHERE owner in ( select username from dba_users where created > (select created + interval '30' minute from v$database) )
 group by owner,
          segment_name,
-         partition_name,
-         decode(compression,'NO','DISABLED',compression),
+partition_name,
+decode(compression,'NO','DISABLED',compression),
          SEGMENT_TYPE,
          subpartition_name;
 
@@ -1648,14 +1648,14 @@ INSERT INTO DBA_OP.DB_TABLESPACES_GROWTH
   SELECT
          SYSDATE as INS_DATE,
          tbs.tablespace_name
-       , ROUND(a.b_allocati / 1024 / 1024, 0)                                                  mb_allocati
+, ROUND(a.b_allocati / 1024 / 1024, 0) mb_allocati
        , ROUND(( a.b_allocati - NVL(f.b_free, 0) ) / 1024 / 1024, 0)     mb_occupati
   FROM   dba_tablespaces tbs
        , (SELECT tablespace_name
                  , SUM(bytes)                                     b_allocati
                  , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
                 -- , WM_CONCAT(DISTINCT autoextensible)             autoextensible
-          FROM   dba_data_files
+FROM dba_data_files
           GROUP  BY tablespace_name) a
        , (SELECT tablespace_name
                  , SUM(bytes)  b_free
@@ -1664,7 +1664,7 @@ INSERT INTO DBA_OP.DB_TABLESPACES_GROWTH
           GROUP  BY tablespace_name) f
        , (SELECT tablespace_name
                  , COUNT(*) df#
-          FROM   dba_data_files
+FROM dba_data_files
           GROUP  BY tablespace_name) df
   WHERE  tbs.tablespace_name = a.tablespace_name
        AND tbs.tablespace_name = f.tablespace_name(+)
@@ -1679,11 +1679,11 @@ is
 -- PURGE PROCEDURE USER TABLES PROFILES 0
 --
 -- Procedure for deleting AM_OBJ tables intended for deletion for a maximum period
--- di giacienza stabilito nelle seguanti modalita :
+--of stock established in the following ways:
 -- The tables will have the following suffixes which determine their maximum time spent on the DB:
 -- "DAY_" - One day of stay
 -- "WEEK_" - One week stay
--- "MONTH_"  - Un mese di permanenza
+--"MONTH_" - One month stay
 -- "MONTH3_" - Tre mesi ( 90 day )
 -- ATTENTION !!!! The tables created with these suffixes will be maintained for the established period
 -- ALL others that do not maintain this standard will be CANCELED IMMEDIATELY!!!!
@@ -1697,13 +1697,13 @@ is
 -- !!!!!!!!!!
 -- UTENZE INTERESSATE DA TALE SVECCHIAMENTO :
 --  - ICTEIM_OBJ
---  - REPLAY_OBJ          -- inserita il 13-4-2018
---  - SOPRA_OBJ           -- inserita il 13-4-2018
---  - NEXI_DIGITAL_OBJ    -- inserita il 20-4-2018
---  - NEXI_OBJ            -- inserita il 13-9-2019
---  - NEXI_DST_OBJ        -- inserita il 05-5-2021
+--  - REPLAY_OBJ-- posted 4-13-2018
+--  - SOPRA_OBJ-- posted 4-13-2018
+--  - NEXI_DIGITAL_OBJ-- posted 4-20-2018
+--  - NEXI_OBJ-- posted on 9-13-2019
+--  - NEXI_DST_OBJ-- posted on 05-5-2021
 --
---  !!!!!! Tali utenze sono inserite nella clausola descritta in basso
+--!!!!!! These utilities are included in the clause described below
 --
 ------------------------------------------------------------------------------------ BEGIN
 ecode    NUMBER(38);
@@ -1725,7 +1725,7 @@ select owner,object_name,created from dba_objects
    and object_name like 'WEEK/_%' escape '/'
    and trunc (sysdate) - trunc(created) > 7
 union
--- Tabelle datate > Un Mese
+--Dated tables > One month
 select owner,object_name,created from dba_objects
  where object_type ='TABLE'
    and object_name like 'MONTH/_%' escape '/'
@@ -1737,7 +1737,7 @@ select owner,object_name,created from dba_objects
    and object_name like 'MONTH3/_%' escape '/'
    and trunc (sysdate) - trunc(created)> 90
 -- Unauthorized tables without suffix
---- Abilitato il 6/7/2018
+--- Enabled on 6/7/2018
 union
 select owner,object_name,created from dba_objects
  where object_type ='TABLE'
@@ -1863,7 +1863,7 @@ SELECT * FROM (
                , (SELECT tablespace_name
                          , SUM(bytes)                                     b_allocati
                          , SUM(DECODE (maxbytes, '0', bytes, maxbytes))   b_max
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) a
                , (SELECT tablespace_name
                          , SUM(bytes)  b_free
@@ -1872,7 +1872,7 @@ SELECT * FROM (
                   GROUP  BY tablespace_name) f
                , (SELECT tablespace_name
                          , COUNT(*) df#
-                  FROM   dba_data_files
+FROM dba_data_files
                   GROUP  BY tablespace_name) df
           WHERE  tbs.tablespace_name = a.tablespace_name
                AND tbs.tablespace_name = f.tablespace_name(+)
@@ -1907,7 +1907,7 @@ FROM dual;
   SYS.DBMS_SCHEDULER.CREATE_JOB
     (
        job_name        => 'DBA_OP.MAINT_TABLESPACE_JOB'
-      ,start_date      => SYSTIMESTAMP
+      ,start_date => SYSTIMESTAMP
       ,repeat_interval => 'FREQ=HOURLY; BYMINUTE='|| RAND_SEC ||';BYSECOND=0'
       ,end_date        => NULL
       ,job_class       => 'DEFAULT_JOB_CLASS'
@@ -1962,7 +1962,7 @@ BEGIN
                                                NUMBER_OF_ARGUMENTS =>2,
                                                repeat_interval => 'FREQ=DAILY;',
                             START_DATE => SYSDATE,
-                            COMMENTS   => 'Cancellazione DBA_RECYCLEBIN');
+COMMENTS => 'DeletionDBA_RECYCLEBIN');
 END;
 /
 

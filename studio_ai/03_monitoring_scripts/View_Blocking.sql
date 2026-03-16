@@ -1,4 +1,4 @@
--- # Mostra le sessioni bloccanti
+--# Show blocking sessions
 
 SELECT blocking_sid
 FROM ( SELECT blocking_sid, SUM(num_blocked) num_blocked, max(ctime) ctime

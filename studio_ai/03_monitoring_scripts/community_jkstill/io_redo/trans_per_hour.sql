@@ -9,7 +9,7 @@ var start_date char(20)
 
 declare 
 	v_avg_bytes_per_trans number(10,4);
-	v_logical_ios integer;
+v_logical_ios integer;
 	v_db_block_gets integer;
 	v_consistent_gets integer;
 	v_physical_writes integer;

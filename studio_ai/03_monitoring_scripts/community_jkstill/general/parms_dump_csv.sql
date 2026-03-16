@@ -1,6 +1,6 @@
 
 -- parms_dump_csv.sql
--- dump all parameters to a CSV file
+--dump all parameters to a CSV file
 -- Jared Still
 
 
@@ -36,7 +36,7 @@ select
 	|| '","' || replace(b.KSPFTCTXVL,chr(10),' ')
 	|| '","' || decode(b.KSPFTCTXDF,'TRUE','Y','N')
 	|| '","' || decode(bitand(ksppiflg/256,1),1,'Y' ,'N')
-	|| '","' || decode(bitand(ksppiflg/65536,3),1,'I',2,'D', 3,'I','N')
+|| '","' || decode(bitand(ksppiflg/65536,3),1,'I',2,'D', 3,'I','N')
 	|| '","' || decode(bitand(KSPFTCTXVF,7),1,'M',4,'S','N')
 	|| '","' || decode(bitand(KSPFTCTXVF,2),2,'Y','N') || '"'
 from X$KSPPI a, x$ksppcv2 b

@@ -19,7 +19,7 @@ getInstance () {
 	declare testIns
 
 
-	# space if standalone
+# space if standalone
 	# digit for RAC - checks up to 4 nodes
 
 	for orainst in ' ' 1 2 3 4

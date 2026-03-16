@@ -32,7 +32,7 @@ select
 	, null plan
 	, null comments
 	, null status
-	, null mandatory
+, null mandatory
 from dual where 0=1
 &legacy_db union all
 &legacy_db select plan_id, plan, comments, status, mandatory 

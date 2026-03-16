@@ -76,7 +76,7 @@ begin
 
 	v_sql_tune_task_id := dbms_sqltune.create_tuning_task (
 		sql_id => v_sqlid,
-		scope => dbms_sqltune.scope_comprehensive,
+scope => dbms_sqltune.scope_comprehensive,
 		time_limit => 500,
 		task_name => :b_sql_tune_task_name,
 		description => 'SQL_ID: ' || v_sqlid || ' Time: ' || v_timestamp

@@ -8,65 +8,65 @@
 - Use this guide as a catalog of the DBA trade: it tells you what exists, why it's done, and where you can try it in the repo.
 - Use [GUIDE_DBA_ACTIVITY_CHECKLIST.md](./GUIDE_DBA_ACTIVITY_CHECKLIST.md) when you need the operating sequence by frequency.
 - Mantieni separati:
-  - `lab base`: costruzione ambiente e runbook di setup;
+  - `lab base`: environment construction and setup runbook;
   - `extra_dba`: post-lab operational activities;
-  - `studio_ai`: script e note reali da riuso.
+  - `studio_ai`: actual scripts and notes to reuse.
 
 ## 2. The macro-areas of DBA work
 
 | Area | What the DBA does | Frequenza tipica | Where do you make it in the repo |
 |---|---|---|---|
-| **Disponibilita e startup/shutdown** | Check instances, services, listeners, cluster resources, restarts checked | Giornaliera / su change | [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md), [GUIDE_LISTENER_SERVICES_DBA.md](../GUIDE_LISTENER_SERVICES_DBA.md) |
-| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md](../GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md), [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md) |
-| **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDE_PHASE7_RMAN_BACKUP.md](../GUIDE_PHASE7_RMAN_BACKUP.md), [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md) |
-| **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche | Giornaliera / settimanale / su incidente | [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md) |
-| **Storage, ASM e capacity** | Controlla tablespace, FRA, ASM disk group, crescita dati, autoextend, soglie | Giornaliera / settimanale / mensile | [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md), [GUIDE_ADD_ASM_DISK.md](../GUIDE_ADD_ASM_DISK.md) |
-| **Security e accessi** | Manages users, roles, privileges, auditing, wallet, TDE, hardening | Settimanale / mensile / su richiesta | [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md) |
-| **Scheduler e batch** | Controlla job, finestre, chains, fallimenti, credenziali e retry | Giornaliera / settimanale | [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md) |
-| **HA e DR** | Gestisce RAC, Data Guard, switchover, failover, reinstate, lag, protection mode | Giornaliera / mensile / drill | [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../GUIDE_PHASE4_DATAGUARD_DGMGRL.md), [GUIDE_FULL_SWITCHOVER.md](../GUIDE_FULL_SWITCHOVER.md), [GUIDE_FAILOVER_AND_REINSTATE.md](../GUIDE_FAILOVER_AND_REINSTATE.md) |
-| **Network, listeners and services** | Check SCAN, static/dynamic listeners, srvctl, TNS, service placement | Giornaliera / su incident | [GUIDE_LISTENER_SERVICES_DBA.md](../GUIDE_LISTENER_SERVICES_DBA.md) |
-| **Multitenant e lifecycle PDB** | Create, clone, open/close, plug/unplug, refresh, control PDB services | Su richiesta / mensile | [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md) |
-| **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB | Su richiesta / progetto | [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md) |
+|**Availability and startup/shutdown**| Check instances, services, listeners, cluster resources, restarts checked |Daily / on change| [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md), [GUIDE_LISTENER_SERVICES_DBA.md](../GUIDE_LISTENER_SERVICES_DBA.md) |
+|**Monitoring and alerting**|Reads alert logs, EM incidents, critical events, failed jobs, host and DB metrics|Daily| [GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md](../GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md), [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md) |
+| **Backup e recovery** |Defines strategy, monitors backups, performs validation, restore tests, recovery runbooks|Daily / Weekly / Quarterly| [GUIDE_PHASE7_RMAN_BACKUP.md](../GUIDE_PHASE7_RMAN_BACKUP.md), [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md) |
+| **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche |Daily / weekly / on accident| [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md) |
+| **Storage, ASM e capacity** |Control tablespace, FRA, ASM disk group, data growth, autoextend, thresholds|Daily / Weekly / Monthly| [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md), [GUIDE_ADD_ASM_DISK.md](../GUIDE_ADD_ASM_DISK.md) |
+| **Security e accessi** | Manages users, roles, privileges, auditing, wallet, TDE, hardening |Weekly / monthly / on request| [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md) |
+| **Scheduler e batch** |Check jobs, windows, chains, failures, credentials and retries|Daily/weekly| [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md) |
+| **HA e DR** | Gestisce RAC, Data Guard, switchover, failover, reinstate, lag, protection mode |Daily / monthly / drill| [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../GUIDE_PHASE4_DATAGUARD_DGMGRL.md), [GUIDE_FULL_SWITCHOVER.md](../GUIDE_FULL_SWITCHOVER.md), [GUIDE_FAILOVER_AND_REINSTATE.md](../GUIDE_FAILOVER_AND_REINSTATE.md) |
+| **Network, listeners and services** | Check SCAN, static/dynamic listeners, srvctl, TNS, service placement |Daily / on incident| [GUIDE_LISTENER_SERVICES_DBA.md](../GUIDE_LISTENER_SERVICES_DBA.md) |
+| **Multitenant e lifecycle PDB** | Create, clone, open/close, plug/unplug, refresh, control PDB services |On request / monthly| [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md) |
+| **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB |Upon request / project| [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md), [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md) |
 | **Patching e lifecycle software** | Apply RU/OJVM, update OPatch, rollback plan, post-patch verification | Mensile / trimestrale / change | [GUIDE_RAC_PATCHING.md](../GUIDE_RAC_PATCHING.md), [GUIDE_RAC_RU_UPGRADE.md](../GUIDE_RAC_RU_UPGRADE.md) |
-| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | [TESTLOG_GOLDENGATE_TEMPLATE.md](../TESTLOG_GOLDENGATE_TEMPLATE.md), [DAILY_STUDY_PLAN.md](../DAILY_STUDY_PLAN.md) |
+|**Documentation and change management**| Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned |Continuous| [TESTLOG_GOLDENGATE_TEMPLATE.md](../TESTLOG_GOLDENGATE_TEMPLATE.md), [DAILY_STUDY_PLAN.md](../DAILY_STUDY_PLAN.md) |
 
 ## 3. Complete activities by operational domain
 
 ### 3.1 Availability and operational continuity
 
 A DBA must always know:
-- se il database e disponibile;
+- if the database is available;
 - whether the services are online;
-- se il cluster e sano;
-- se ci sono restart non attesi o errori `ORA-` recenti.
+- if the cluster is healthy;
+- if there are unexpected restarts or errors`ORA-` recenti.
 
 Typical activities:
 - check database and instance status;
 - verify `srvctl status database`, `srvctl status service`, `crsctl stat res -t`;
 - verify registered listeners and services;
 - check alert log and `adrci`;
-- restart controllato per manutenzione o troubleshooting.
+- controlled restart for maintenance or troubleshooting.
 
 Output minimo da conservare:
 - status `OPEN_MODE`, `DATABASE_ROLE`, online services;
-- ultimi errori alert log;
+- latest alert log errors;
 - evidence that the restart did not leave resources in an intermediate state.
 
-## 3.2 Monitoring, alerting e osservabilita
+## 3.2 Monitoring, alerting and observability
 
 This area covers the most frequent day-2 work:
-- controllare incidenti ed eventi;
-- riconoscere subito saturazione CPU, memoria, I/O, FRA, tablespace;
-- accorgersi di job falliti, lag DG o target down.
+- monitor incidents and events;
+- immediately recognize CPU, memory, I/O, FRA, tablespace saturation;
+- notice failed jobs, DG lag or target down.
 
 Typical activities:
 - review dashboard EM;
-- review alert log e trace rilevanti;
+- review alert log and relevant traces;
 - host and database metrics control;
 - verifies that collection and monitoring jobs are healthy;
-- tuning soglie e notifiche.
+- tuning thresholds and notifications.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md](../GUIDE_PHASE8_ENTERPRISE_MANAGER_13C.md)
 - [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md)
 
@@ -77,16 +77,16 @@ This is a primary responsibility of the DBA. Oracle makes it clear: the backup a
 Typical activities:
 - verify RMAN backup outcome;
 - retention check, crosscheck, delete obsolete;
-- `RESTORE VALIDATE` e prove di recovery;
+- `RESTORE VALIDATE`and recovery tests;
 - backup control controlfile, spfile, archivelog;
-- test restore su host alternativo o drill controllato.
+- test restore on alternative host or controlled drill.
 
-Segnali di maturita:
+Signs of maturity:
 - backup presenti non basta;
 - periodic restore test is needed;
-- RPO/RTO devono essere esplicitati e verificati.
+- RPO/RTO must be explained and verified.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_PHASE7_RMAN_BACKUP.md](../GUIDE_PHASE7_RMAN_BACKUP.md)
 - [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md)
 
@@ -97,17 +97,17 @@ The DBA doesn't "optimize everything all the time": he must first understand whe
 Typical activities:
 - review AWR;
 - review ADDM;
-- analisi ASH per incidenti brevi;
+- ASH analysis for short accidents;
 - top SQL per elapsed time, CPU, I/O;
 - wait events e sessioni attive;
 - check statistics, SQL plans, post-change regressions.
 
 In RAC you also need to look at:
-- sessioni cross-instance;
+- cross-instance sessions;
 - load per instance;
 - any imbalances in GCS/GES services or contention.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md)
 - [TOP_100_SCRIPT_DBA.md](../TOP_100_SCRIPT_DBA.md)
@@ -122,15 +122,15 @@ Typical activities:
 - monitor tablespace e autoextend;
 - monitor FRA usage;
 - monitor ASM disk group usage e rebalance;
-- previsione crescita dati;
+- data growth forecast;
 - adding datafiles or disks before the critical threshold is reached.
 
 Output minimo:
 - growth trend per week/month;
 - top consumers;
-- soglie operative condivise.
+- shared operating thresholds.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md)
 - [GUIDE_ADD_ASM_DISK.md](../GUIDE_ADD_ASM_DISK.md)
 
@@ -140,33 +140,33 @@ This area is not just about creating users.
 
 Typical activities:
 - create/edit users and roles;
-- review privilegi e grant eccessivi;
+- review excessive privileges and grants;
 - control of expired, blocked and orphaned accounts;
 - wallet/TDE management;
-- review auditing e accessi amministrativi;
-- applicare least privilege usando `SYSBACKUP`, `SYSDG`, `SYSKM` quando possibile al posto di `SYSDBA`.
+- review auditing and administrative access;
+- applicare least privilege usando `SYSBACKUP`, `SYSDG`, `SYSKM`whenever possible instead of`SYSDBA`.
 
-Controlli chiave:
+Key Controls:
 - privilege `ANY` assigned only if justified;
 - directory object and Data Pump roles under control;
-- audit e evidenze accessibili.
+- accessible audits and evidence.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md)
 
-## 3.7 Scheduler, batch e manutenzione automatica
+## 3.7 Scheduler, batch and automatic maintenance
 
-Molti incidenti arrivano da job che smettono di girare o girano troppo.
+Many accidents come from jobs that stop spinning or spin too much.
 
 Typical activities:
 - review `DBA_SCHEDULER_JOBS`, `DBA_SCHEDULER_JOB_RUN_DETAILS`, job failures;
 - check maintenance windows;
 - review chains, programs, credentials;
 - checking jobs that are stuck, looped or too slow;
-- purging log scheduler quando necessario.
+- purging log scheduler when necessary.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md)
 
 ## 3.8 HA/DR: RAC, Data Guard, switchover, failover
@@ -174,7 +174,7 @@ Nel tuo repo:
 In environments like yours, the DBA needs to know:
 - se RAC e sano;
 - if Data Guard ships and applies gap-free redo;
-- quale protection mode e attivo;
+- which protection mode is active;
 - se switchover/failover sono pronti.
 
 Typical activities:
@@ -182,10 +182,10 @@ Typical activities:
 - monitor transport/apply lag;
 - review `Protection Mode` e `LogXptMode`;
 - test switchover pianificato;
-- drill di failover e reinstate nel lab;
+- failover and reinstate drill in the lab;
 - Verify that backup and monitoring continue after role transition.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)
 - [GUIDE_FULL_SWITCHOVER.md](../GUIDE_FULL_SWITCHOVER.md)
 - [GUIDE_FAILOVER_AND_REINSTATE.md](../GUIDE_FAILOVER_AND_REINSTATE.md)
@@ -205,7 +205,7 @@ Typical activities:
 - static review listeners for Data Guard / RMAN;
 - relocate services for maintenance or balancing.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_LISTENER_SERVICES_DBA.md](../GUIDE_LISTENER_SERVICES_DBA.md)
 
 ## 3.10 Multitenant: CDB/PDB lifecycle
@@ -220,13 +220,13 @@ Typical activities:
 - manage PDB services;
 - check status and monitoring for single PDB.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_CDB_PDB_USERS.md](../GUIDE_CDB_PDB_USERS.md)
 
 ## 3.11 Data movement: Data Pump, clone, refresh
 
-Questa area copre richieste operative e di progetto:
-- refresh ambienti di test;
+This area covers operational and project requests:
+- refresh test environments;
 - export schema o full;
 - import with remap;
 - clone with RMAN;
@@ -236,10 +236,10 @@ Typical activities:
 - `expdp` / `impdp`;
 - selective exports per schema/table;
 - import with `REMAP_SCHEMA`, `REMAP_TABLESPACE`;
-- clone/duplicate per test;
+- clone/duplicate for testing;
 - version and privilege compatibility control.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_RMAN_COMPLETE_19C.md](../GUIDE_RMAN_COMPLETE_19C.md)
 
@@ -249,44 +249,44 @@ This is one of the most sensitive areas of DBA work.
 
 Typical activities:
 - check patch inventory;
-- aggiornamento OPatch;
+- OPatch update;
 - pre-check e backup home;
-- applicazione RU/OJVM;
+- RU/OJVM application;
 - review invalid objects and datapatches where applicable;
 - rollback plan;
 - verify services and performance post-change.
 
 For RAC/Data Guard the DBA must also:
-- mantenere ordine rolling quando possibile;
+- keep order rolling whenever possible;
 - align grid home, db home, standby and tooling;
 - document baseline before and after.
 
-Nel tuo repo:
+In your repo:
 - [GUIDE_RAC_PATCHING.md](../GUIDE_RAC_PATCHING.md)
 - [GUIDE_RAC_RU_UPGRADE.md](../GUIDE_RAC_RU_UPGRADE.md)
 
-## 3.13 Documentazione, evidenze e change management
+## 3.13 Documentation, evidence and change management
 
 This part is often overlooked, but it distinguishes a makeshift DBA from a reliable one.
 
 Typical activities:
-- mantenere runbook aggiornati;
+- keep runbooks updated;
 - tenere evidenze di backup test, switchover test, patching, failover drill;
-- annotare parametri cambiati;
+- note changed parameters;
 - mantenere checklist pre/post change;
 - registrare rischi, rollback plan, owner e finestra.
 
 In the lab you can train it with:
 - test log GoldenGate;
 - checklist RMAN;
-- note di role transition e patching.
+- role transition and patching notes.
 
 ## 4. Vista per frequenza
 
 ### Daily
 
 - availability check database, listener, services, cluster
-- alert log e incidenti EM
+- alert log and EM incidents
 - job batch e scheduler failures
 - backup ultimo ciclo
 - DG lag / status broker
@@ -297,7 +297,7 @@ In the lab you can train it with:
 
 - review AWR/ADDM
 - `RESTORE VALIDATE`
-- review crescita storage
+- storage growth review
 - user reviews and anomalous grants
 - review scheduler jobs e log retention
 - review GG lag / errori se in uso
@@ -313,7 +313,7 @@ In the lab you can train it with:
 ### Trimestrale
 
 - switchover drill
-- restore drill o clone su host alternativo
+- restore drill or clone on alternative host
 - failover/reinstate in lab
 - complete runbook and documentation review
 
@@ -321,16 +321,16 @@ In the lab you can train it with:
 
 If you master this folder, you need to know how to do at least this:
 
-1. capire in pochi minuti se il tuo ambiente e sano o no;
+1. understand in a few minutes whether your environment is healthy or not;
 2. demonstrate that backups not only exist but are restoreable;
 3. find the reason for lag, lock, top SQL and storage growth;
 4. manage users, privileges and auditing without abusing `SYSDBA`;
-5. fare switchover/failover controllati e capire l'impatto del protection mode;
+5. perform controlled switchover/failover and understand the impact of protection mode;
 6. manage TNS listeners, services, SCAN and troubleshoot;
 7. do patching with pre-check, post-check and rollback plan;
 8. gestire PDB, Data Pump e refresh ambienti.
 
-## 6. Fonti Oracle ufficiali consultate
+## 6. Official Oracle sources consulted
 
 - Oracle Database 19c Administration landing page:
   https://docs.oracle.com/en/database/oracle/oracle-database/19/administration.html

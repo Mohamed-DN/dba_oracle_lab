@@ -40,7 +40,7 @@ begin
 		'2', 'yyyy-mm-dd', 
 		'3', 'DD-MON-YY',
 		'4', 'DD-MON-YYYY'
-	) || '''' into v_sqlcmd
+) || '''' into v_sqlcmd
 	from dual;
 
 	dbms_output.put_line('SQLCMD: ' || v_sqlcmd);

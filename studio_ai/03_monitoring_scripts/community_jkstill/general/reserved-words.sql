@@ -10,7 +10,7 @@ col reserved format a9 head 'Reserved?'
 select keyword
 	, reserved
 	, res_type
-	, res_attr
+, res_attr
 	, res_semi
 	, duplicate
 from v$reserved_words

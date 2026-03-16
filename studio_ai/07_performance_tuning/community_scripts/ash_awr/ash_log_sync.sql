@@ -22,8 +22,8 @@ col max_time_waited format 90.09999
 with av as (
         select
                 sample_id
-                , session_id
-                , sample_time
+, session_id
+, sample_time
                 , max(time_waited) over (partition by sample_id, session_id, sample_time) time_waited
                 --,  time_waited / power(10,6) time_waited
         from v$active_session_history

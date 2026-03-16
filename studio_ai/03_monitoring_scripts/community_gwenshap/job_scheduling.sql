@@ -100,7 +100,7 @@ IF exist_flag=0 THEN
         schedule_name => 'SYSTEM.HOURLY_STATISTICS',
         job_class => 'DEFAULT_JOB_CLASS',
         comments => 'CMDB missing statistics refresh by the hour',
-        auto_drop => FALSE,
+auto_drop => FALSE,
         enabled => TRUE);
 END IF;
 dbms_output.put_line('Succeeded to define hourly statistics job');
@@ -115,7 +115,7 @@ END;
     job_name        => 'strmadmin.Streams_HeartBeat',
     job_type        => 'PLSQL_BLOCK',
     job_action      => 'begin update strmadmin.prod2_heartbeat set DB_CHANGE_TIME=sysdate where db_name=''PROD2''; commit; end;',
-    start_date      => SYSTIMESTAMP,
+start_date => SYSTIMESTAMP,
     repeat_interval => 'freq=MINUTELY; interval=10',
     end_date        => NULL,
     enabled         => TRUE,

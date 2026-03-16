@@ -72,7 +72,7 @@ select
 	s.process client_process,
 	--substr(p.program,1,20) server_program,
 	to_char(logon_time, 'mm/dd/yy hh24:mi:ss') logon_time,
-	-- idle time
+	--idle time
 	-- days added to hours
 	--( trunc(LAST_CALL_ET/86400) * 24 ) || ':'  ||
 	-- days separately

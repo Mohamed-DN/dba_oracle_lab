@@ -73,7 +73,7 @@ if ($localSysdba) {
 		{
 			RaiseError => 1,
 			AutoCommit => 0,
-			ora_session_mode => 2
+ora_session_mode => 2
 		}
 	);
 } else {
@@ -94,7 +94,7 @@ $dbh->{RowCacheSize} = 100;
 
 my $sql=q{with data as (
 	select sql_id, sql_exec_id, sql_exec_start,
-		min(sample_time) start_time,
+min(sample_time) start_time,
 		max(sample_time) end_time,
 		max(sample_time - sql_exec_start) duration
 	from dba_hist_active_sess_history

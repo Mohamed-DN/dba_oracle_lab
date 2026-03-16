@@ -2,7 +2,7 @@
 
 Operating procedures for creating and managing Oracle users in the lab.
 
-## File presenti in questa cartella
+## Files present in this folder
 
 - `Prototype_CreateUser_Named_User_v1.4.txt` - template utenza nominale
 - `Prototype_CreateUser_DBA_OP_v1.3.txt` - operational DBA user template
@@ -12,12 +12,12 @@ Operating procedures for creating and managing Oracle users in the lab.
 
 ## Recommended use
 
-1. Parti dal template piu vicino al tuo caso.
-2. Adatta tablespace/profile/quote al DB target.
-3. Applica naming convention standard del team.
-4. Registra ticket/change-id nel commento script.
+1. Start from the template closest to your case.
+2. Adapt tablespace/profile/quote to the target DB.
+3. Apply the team's standard naming convention.
+4. Record ticket/change-id in the script comment.
 
-## Riferimenti
+## References
 
 - [GUIDE_CDB_PDB_USERS.md](../../GUIDE_CDB_PDB_USERS.md)
 - [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)

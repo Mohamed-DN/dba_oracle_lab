@@ -5,20 +5,20 @@
 
 ## 1. Checklist giornaliera
 
-### Apertura giornata
+### Opening day
 
 - check database / instances / services status
 - check listener and cluster resources
-- controlla alert log e ultimi errori `ORA-`
-- controlla ultimi backup RMAN
-- controlla `SHOW CONFIGURATION` Data Guard e lag
-- controlla tablespace critici, FRA e ASM disk group
-- controlla incidenti o target down in Enterprise Manager
+- check alert log and latest errors`ORA-`
+- check latest RMAN backups
+- check`SHOW CONFIGURATION`Data Guard and lag
+- check critical tablespaces, FRAs and ASM disk groups
+- check incidents or target downs in Enterprise Manager
 
-Evidenza minima:
+Minimum evidence:
 - EM screenshot or status output
-- note su anomalie aperte
-- owner assegnato per ogni issue
+- notes on open anomalies
+- owner assigned for each issue
 
 ## 2. Checklist giornaliera su ticket o anomalie
 
@@ -27,14 +27,14 @@ Evidenza minima:
 - save query, output and event time
 - only make one change at a time whenever possible
 - immediately check the effect of the correction
-- aggiorna il runbook se il caso non era documentato
+- update the runbook if the case was not documented
 
 ## 3. Checklist settimanale
 
-- genera o analizza AWR / ADDM
+- generate or analyze AWR/ADDM
 - verify `RESTORE VALIDATE`
-- controlla crescita storage e trend tablespace
-- rivedi job scheduler falliti e catene lunghe
+- monitor storage growth and tablespace trends
+- review failed job schedulers and long chains
 - Check expired/blocked users and exceptional grants
 - Check GG lag / processes if GoldenGate is active
 - controlla invalid objects e warning applicativi noti
@@ -45,20 +45,20 @@ Evidenza minima:
 - review capacity planning with growth last month
 - review auditing, privilegi potenti e directory object
 - controlled maintenance tests on services/listeners
-- review soglie e notifiche Enterprise Manager
+- review Enterprise Manager thresholds and notifications
 - review operational documentation and rollback plan
 
 ## 5. Checklist trimestrale
 
 - esegui switchover drill
-- esegui restore drill o clone di recovery
-- prova failover/reinstate nel lab
+- run restore drill or recovery clone
+- test failover/reinstate in the lab
 - complete security review, wallet, backup wallet, privileged users
-- pulizia backlog runbook e standardizzazione naming/script
+- runbook backlog cleaning and naming/script standardization
 
 ## 6. Checklist pre-change
 
-- definisci obiettivo, finestra, owner e rollback
+- define goal, window, owner and rollback
 - verify recent backup and credible restore path
 - save baseline: services status, DG lag, patch level, top alert, key parameters
 - check for enough space for patch / export / clone / recovery
@@ -78,50 +78,50 @@ Evidenza minima:
 
 - classify the problem: crash, lag, space issue, lock, security, network
 - Determine the impact now: users, services, RPO/RTO, data risk
-- evita cambi multipli non tracciati
+- avoid multiple untracked changes
 - use correct views and tools before rebooting
 - evaluate whether immediate escalation on storage, OS, network or security is needed
 - save root cause, workaround and final fix separately
 
 ## 9. Checklist per refresh / clone / Data Pump
 
-- conferma sorgente, target e versione
+- confirm source, target and version
 - verify required privileges
 - check dump space or clone destination
 - check schema/tablespace/PDB mapping
 - valid import or clone with objects, invalids and statistics
-- documenta tempi reali e colli di bottiglia
+- documents real times and bottlenecks
 
 ## 10. Checklist per backup e recovery readiness
 
-- backup full/incremental riusciti
+- successful full/incremental backups
 - archivelog backup coerente
-- controlfile e spfile protetti
-- retention valida
-- crosscheck e delete obsolete eseguiti secondo policy
-- ultimo restore test documentato
+- protected controlfiles and spfiles
+- valid retention
+- crosscheck and delete obsolete performed according to policy
+- last documented restore test
 - recovery path noto per datafile, tablespace, controlfile, spfile, PDB, table recovery
 
 ## 11. Checklist per HA/DR
 
 - `SHOW CONFIGURATION` in `SUCCESS`
-- lag trasporto/apply entro soglia
+- transport/apply lag within threshold
 - protection mode consistent with the policy
 - standby log present and apply active
 - switchover readiness verificata
-- observer / FSFO valutato se scenario lo richiede
+- observer / FSFO evaluated if scenario requires it
 - backup continuity verified even after role transition
 
 ## 12. Checklist per security
 
 - review users with privileges `ANY`, `DBA`, `EXP_FULL_DATABASE`, `IMP_FULL_DATABASE`
-- review account dormienti, scaduti o non conformi
+- dormant, expired or non-compliant review accounts
 - review directory object e uso Data Pump
-- review auditing e accessi amministrativi
+- review auditing and administrative access
 - review wallet/TDE e backup wallet
 - apply least privilege with `SYSBACKUP`, `SYSDG`, `SYSKM` when possible
 
-## 13. Sequenza consigliata nel tuo lab
+## 13. Recommended sequence in your lab
 
 1. use [GUIDE_DBA_ACTIVITY_CATALOG.md](./GUIDE_DBA_ACTIVITY_CATALOG.md) to see the full perimeter
 2. do the daily checklist for a week
@@ -130,7 +130,7 @@ Evidenza minima:
 5. do a restore test
 6. close with EM + MAA review
 
-## 14. Guide del repo da tenere affiancate
+## 14. Repo guides to keep side by side
 
 - [GUIDE_DBA_ACTIVITIES.md](../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_DBA_COMMANDS.md](../GUIDE_DBA_COMMANDS.md)

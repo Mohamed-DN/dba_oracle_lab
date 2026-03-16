@@ -33,7 +33,7 @@ column isadjusted head 'ADJU|STED?' format a5
 
 select
 	--a.INDX NUM
-	a.con_id
+a.with_id
 	, b.inst_id
 	, a.KSPPINM NAME
 	--a.KSPPITY TYPE
@@ -41,7 +41,7 @@ select
 	, b.KSPFTCTXVL VALUE
 	, decode(b.KSPFTCTXDF,'TRUE','Y','N') ISDEFAULT
 	, decode(bitand(ksppiflg/256,1),1,'Y' ,'N') ISSES_MODIFIABLE
-	, decode(bitand(ksppiflg/65536,3),1,'I',2,'D', 3,'I','N') ISSYS_MODIFIABLE
+, decode(bitand(ksppiflg/65536,3),1,'I',2,'D', 3,'I','N')ISSYS_MODIFIABLE
 	-- M = MODIFIED S = SYSTEM_MOD
 	, decode(bitand(KSPFTCTXVF,7),1,'M',4,'S','N') ISMODIFIED
 	, decode(bitand(KSPFTCTXVF,2),2,'Y','N') ISADJUSTED

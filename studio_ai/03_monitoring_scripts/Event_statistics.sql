@@ -1,8 +1,8 @@
 -- EVENT HISTOGRAMS
 
-db file sequential read (tempistiche I/O lettura)
-log file parallel write (tempistiche I/O in scrittura da parte del Log Writer)
-log file sync (tempo di commit complessivo)
+db file sequential read (read I/O timing)
+log file parallel write (I/O writing times by the Log Writer)
+log file sync (overall commit time)
 enq: TX - index contention
 enq: TX - row lock contention
 

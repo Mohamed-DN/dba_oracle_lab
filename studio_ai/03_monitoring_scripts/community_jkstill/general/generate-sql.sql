@@ -6,8 +6,8 @@
 
 col column_name format a30
 col data_type format a15
-col data_precision format 999,999
-col data_scale format 999,999
+with data_precision format 999,999
+with data_scale format 999,999
 col data_length format 9,999,999
 
 col col_desc format a60
@@ -41,7 +41,7 @@ select
 		else
 			case when regexp_like(data_type,'NUMBER.*') then
 				case when data_precision is not null then
-					'col ' || column_name || ' format ' || rpad('9',data_precision,'9') || '.' || rpad('9',data_scale,'9')
+'col ' || column_name || ' format ' || rpad('9',data_precision,'9') || '.' || rpad('9',data_scale,'9')
 				else
 					'col ' || column_name || ' format 999999'
 				end

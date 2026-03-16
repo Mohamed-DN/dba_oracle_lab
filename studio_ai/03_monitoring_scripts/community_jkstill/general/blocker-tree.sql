@@ -135,7 +135,7 @@ blockers as (
 all_data as (
 	select username, sid, blocking_sid, 'Blocker' status, program, event, time_waited
 	from blockers
-	union all
+union all
 	select username, sid, blocking_sid, 'Blocked' status,  program, event , time_waited
 	from blocked
 ),
@@ -151,7 +151,7 @@ select
 	, connect_by_isleaf isleaf
 	, connect_by_root(sid) sid_root
 	, sys_connect_by_path(sid,'/') lock_path
-from  all_data
+from all_data
 connect by nocycle blocking_sid = prior sid
 start with blocking_sid is null
 )

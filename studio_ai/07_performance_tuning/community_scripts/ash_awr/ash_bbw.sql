@@ -6,7 +6,7 @@ set linesize 120
 
 OBJN                      OTYPE FILEN BLOCKN SQL_ID        BLOCK_TYPE
 ------------------------- ----------- ------ ------------- ------------------
-53218 BBW_INDEX_VAL_I     INDEX     1  64826 97dgthz60u28d data block 1
+53218 BBW_INDEX_VAL_IINDEX 1 64826 97dgthz60u28d data block 1
 53218 BBW_INDEX_VAL_I     INDEX     1  64826 gypmcfzruu249 data block 1
 53218 BBW_INDEX_VAL_I     INDEX     1  64826 2vd1w5kgnfa5n data block 1
 53218 BBW_INDEX_VAL_I     INDEX     1  64826 3p3qncvp2juxs data block 1

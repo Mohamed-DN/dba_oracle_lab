@@ -33,7 +33,7 @@ begin
 		decode
 		(
 			v_filetype
-			,1,'Control File'
+,1,'Control File'
 			,2,'Data File'
 			,3,'Online Log File'
 			,4,'Archive Log'
@@ -44,7 +44,7 @@ begin
 			,9,'Backup Piece'
 			,10,'Incremental Backup Piece'
 			,11,'Archive Backup Piece'
-			,12,'Data File Copy'
+,12,'Data File Copy'
 			,13,'Spfile'
 			,14,'Disaster Recovery Configuration'
 			,15,'Storage Manager Disk'

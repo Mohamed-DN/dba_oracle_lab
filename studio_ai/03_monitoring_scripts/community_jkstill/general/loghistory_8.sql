@@ -60,7 +60,7 @@ select
 	, h.first_time
 	, a.next_time
 	, h.time_to_switch
-	, a.completion_time
+, a.completion_time
 	, (a.completion_time - a.next_time) * 86400 arch_write_time
 	, a.blocks * block_size bytes
 	--, h.sequence#

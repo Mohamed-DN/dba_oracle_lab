@@ -18,7 +18,7 @@ INFO ALL
 ```
 
 ```sql
--- Spazio FRA (primario e standby)
+--FRA space (primary and standby)
 sqlplus / as sysdba
 SELECT name, space_limit/1024/1024 mb_limit, space_used/1024/1024 mb_used
 FROM v$recovery_file_dest;
@@ -28,9 +28,9 @@ Check minimi:
 
 - DGMGRL `SUCCESS`
 - standby DD processes `RUNNING` (e replicat target `REPTAR` attivo)
-- FRA non satura (idealmente < 80%)
+- FRA not saturated (ideally < 80%)
 
-Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e aggiorna solo retention/schedule.
+If you have already created RMAN scripts in previous tests, do not recreate them: validate them and only update retention/schedule.
 
 ---
 
@@ -51,14 +51,14 @@ Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e 
                          │ RAC STANDBY (ADG) │
                          │   (RACDB_STBY)        │
                          │   → BACKUP PRINCIPALE │───→ 🗄️ +FRA
-                         │   Level 0 + Level 1   │     (full + incr + arch)
+│ Level 0 + Level 1 │ (full + incr + arch)
                          └──────────┬─────────────┘
                                     │ GoldenGate
                                     ▼
                          ┌──────────────────────┐
                          │   TARGET DB           │
                          │   (dbtarget)          │
-                         │   → Backup separato   │───→ 🗄️ Disco locale
+│ → Separate backup │───→ 🗄️ Local disk
                          └──────────────────────┘
 ```
 
@@ -73,7 +73,7 @@ Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e 
 ### Connessione RMAN
 
 ```bash
-# Sul Primario
+#On the Primary
 rman TARGET /
 
 # Sullo Standby
@@ -92,30 +92,30 @@ SHOW ALL;
 -- Configure the retention policy (keep backup for 7 days)
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
 
--- Configura il backup automatico del controlfile e SPFILE
+--Configure automatic controlfile and SPFILE backup
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
 CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+FRA/%F';
 
--- Configura la parallelizzazione (2 canali per usare 2 CPU)
+--Configure parallelization (2 channels to use 2 CPUs)
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
 
--- Abilita la compressione (riduce lo spazio ~60-70%)
+--Enable compression (reduces space ~60-70%)
 CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
 
--- Configura il formato dei backup
+--Configure the backup format
 CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+FRA/RACDB/%U';
 
 -- Enable optimization (skip already backed up files that haven't changed)
 CONFIGURE BACKUP OPTIMIZATION ON;
 
--- Abilita block change tracking (accelera gli incrementali)
+--Enable block change tracking (accelerates incrementals)
 -- ONLY ON PRIMARY OR STANDBY, NOT BOTH
 -- Recommended on Standby if you backup from there
 ```
 
 > **Explanation:**
 > - `RECOVERY WINDOW OF 7 DAYS`: Keeps enough backups to be able to restore the DB to any point in the last 7 days.
-> - `COMPRESSED BACKUPSET`: Comprime i backup riducendo lo spazio disco.
+> - `COMPRESSED BACKUPSET`: Compresses backups reducing disk space.
 > - `BACKUP OPTIMIZATION ON`: If you do a full backup and a datafile has not changed since the previous backup, RMAN skips it.
 
 ---
@@ -131,7 +131,7 @@ sqlplus / as sysdba
 
 ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '+DATA/RACDB/bct_racdb.dbf';
 
--- Verifica
+--Verify
 SELECT filename, status, bytes/1024/1024 size_mb FROM v$block_change_tracking;
 ```
 
@@ -188,7 +188,7 @@ RUN {
             TAG 'ARCH_WITH_FULL'
             DELETE INPUT;
 
-    -- Backup del Controlfile e SPFILE
+    --Controlfile and SPFILE backup
     BACKUP CURRENT CONTROLFILE TAG 'CTL_WEEKLY';
     BACKUP SPFILE TAG 'SPFILE_WEEKLY';
 
@@ -196,20 +196,20 @@ RUN {
     RELEASE CHANNEL ch2;
 }
 
--- Rimuovi i backup obsoleti secondo la retention policy
+--Remove obsolete backups according to the retention policy
 DELETE NOPROMPT OBSOLETE;
 
--- Crosscheck per rimuovere riferimenti a backup cancellati manualmente
+--Crosscheck to remove references to manually deleted backups
 CROSSCHECK BACKUP;
 CROSSCHECK ARCHIVELOG ALL;
 DELETE NOPROMPT EXPIRED BACKUP;
 DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
 EOF
 
-# Controlla se RMAN ha avuto errori
+# Check if RMAN had errors
 if grep -i "RMAN-" $LOG_FILE | grep -v "RMAN-08138" > /dev/null; then
     echo "ERRORE RMAN rilevato! Controlla il log: $LOG_FILE"
-    # Qui puoi aggiungere una notifica email
+# Here you can add an email notification
 else
     echo "Backup Full completato con successo."
 fi
@@ -359,9 +359,9 @@ The primary also has its backup — light but essential as a safety net.
 ```bash
 cat > /home/oracle/scripts/rman_primary_backup.sh <<'SCRIPT'
 #!/bin/bash
-# rman_primary_backup.sh — Backup dal Primario
-# Level 1 incrementale + archivelog
-# PIÙ LEGGERO di quello sullo standby
+# rman_primary_backup.sh— Backup from the Primary
+# Level 1 incremental + archivelog
+#LIGHTER than the one on standby
 
 source /home/oracle/.db_env
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
@@ -374,7 +374,7 @@ rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
 
-    -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
+    --Only Level 1 (NOT Level 0 full to avoid overloading)
     BACKUP AS COMPRESSED BACKUPSET
         INCREMENTAL LEVEL 1
         DATABASE
@@ -396,7 +396,7 @@ EOF
 if grep -i "RMAN-" $LOG_FILE | grep -v "RMAN-08138" > /dev/null; then
     echo "ERRORE RMAN rilevato! Controlla il log: $LOG_FILE"
 else
-    echo "Backup Primario completato con successo."
+echo "Primary Backup completed successfully."
 fi
 SCRIPT
 
@@ -407,17 +407,17 @@ chmod +x /home/oracle/scripts/rman_primary_backup.sh
 
 ---
 
-## 7.6 Schedulazione con Cron
+## 7.6 Scheduling with Chron
 
 ```bash
-# Come utente oracle, su OGNI macchina
+#As an oracle user, on EVERY machine
 crontab -e
 ```
 
 ### On the Primary (rac1):
 
 ```cron
-# Backup Incrementale — Ogni giorno alle 04:00 (sfalsato dallo standby)
+# Incremental Backup — Daily at 04:00 (staggered from standby)
 0 4 * * * /home/oracle/scripts/rman_primary_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
 # Backup Archivelog — Ogni 2 ore
@@ -427,7 +427,7 @@ crontab -e
 ### On Standby (racstby1):
 
 ```cron
-# Backup Full — Domenica alle 02:00
+# Backup Full — Sunday at 02:00
 0 2 * * 0 /home/oracle/scripts/rman_full_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
 # Backup Incrementale — Lun-Sab alle 02:00
@@ -456,17 +456,17 @@ rman TARGET /
 -- Lista tutti i backup
 LIST BACKUP SUMMARY;
 
--- Lista backup recenti del DB
+--List of recent DB backups
 LIST BACKUP OF DATABASE COMPLETED AFTER 'SYSDATE-1';
 
--- Lista backup degli archivelog
+--Archivelog backup list
 LIST BACKUP OF ARCHIVELOG ALL;
 
--- Verifica l'integrità di tutti i backup (controlla che siano leggibili)
--- ATTENZIONE: questo legge fisicamente i file, può richiedere tempo
+--Verify the integrity of all backups (check that they are readable)
+--WARNING: This physically reads the files, it can take time
 VALIDATE BACKUP;
 
--- Report dei file non backuppati
+--Report of files not backed up
 REPORT NEED BACKUP;
 
 -- Report dei file unrecoverable
@@ -502,21 +502,21 @@ chmod +x /home/oracle/scripts/rman_report.sh
 ### Test 1: Restore a single table (Point-in-Time Recovery)
 
 ```rman
--- Questo test NON modifica il database reale
+--This test does NOT modify the real database
 -- Usa RMAN Table Point-in-Time Recovery (TSPITR)
 
 rman TARGET /
 
--- Verifica che il backup sia utilizzabile per il restore
+--Verify that the backup is usable for restore
 RESTORE DATABASE PREVIEW;
 RESTORE DATABASE VALIDATE;
 ```
 
-### Test 2: Restore su una location alternativa
+### Test 2: Restore to an alternative location
 
 ```rman
 -- If you have space, you can do a full restore to a different path
--- per verificare che tutto funzioni
+--to check that everything is working
 
 RUN {
     SET NEWNAME FOR DATAFILE 1 TO '/tmp/restore_test/system01.dbf';
@@ -530,10 +530,10 @@ RUN {
 ### Test 3: Verify Restore from Standby to Primary
 
 ```rman
--- Connettiti al primario usando il catalog dello standby
+--Connect to the primary using the standby catalog
 rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB_STBY
 
--- Il backup fatto sullo standby è usabile per il primario
+--The backup made on standby is usable for the primary
 RESTORE DATABASE PREVIEW;
 ```
 
@@ -543,11 +543,11 @@ RESTORE DATABASE PREVIEW;
 
 | Database | Tipo Backup | Frequenza | Retention | Dove |
 |---|---|---|---|---|
-| **RACDB (Primary)** | Level 1 Incremental | Every day 04:00 | 7 days | +FRA |
-| **RACDB (Primary)** | Archivelog | Ogni 2 ore | — | +FRA |
-| **RACDB_STBY (Standby)** | Level 0 Full | Domenica 02:00 | 7 days | +FRA |
-| **RACDB_STBY (Standby)** | Level 1 Incr | Lun-Sab 02:00 | 7 days | +FRA |
-| **RACDB_STBY (Standby)** | Archivelog | Ogni 2 ore | — | +FRA |
+| **RACDB (Primary)** |Level 1 Incremental| Every day 04:00 | 7 days | +FRA |
+| **RACDB (Primary)** | Archivelog |Every 2 hours| — | +FRA |
+| **RACDB_STBY (Standby)** |Level 0 Full|Sunday 02:00| 7 days | +FRA |
+| **RACDB_STBY (Standby)** |Level 1 Incr| Lun-Sab 02:00 | 7 days | +FRA |
+| **RACDB_STBY (Standby)** | Archivelog |Every 2 hours| — | +FRA |
 | **dbtarget (Target GG)** | Level 1 Cumulative | Every day 03:00 | 3 days | /u01/backup |
 
 ---
@@ -561,38 +561,38 @@ RESTORE DATABASE PREVIEW;
 Oracle raccoglie automaticamente le statistiche tramite il job `GATHER_STATS_JOB` which runs in the maintenance window (at night). Check that it is active:
 
 ```sql
--- Verifica che la raccolta automatica sia attiva
+--Verify that automatic collection is turned on
 SELECT client_name, status FROM dba_autotask_client 
 WHERE client_name = 'auto optimizer stats collection';
 -- Deve mostrare: ENABLED
 
--- Vedi quando ha girato l'ultima volta
+--See when it last shot
 SELECT client_name, window_name, jobs_created, jobs_started, jobs_completed
 FROM dba_autotask_client_history 
 WHERE client_name LIKE '%stats%' 
 ORDER BY window_start_time DESC FETCH FIRST 5 ROWS ONLY;
 ```
 
-### Raccolta Statistiche Manuale (per tabelle specifiche)
+### Manual Statistics Collection (for specific tables)
 
 ```sql
--- Statistiche su uno schema intero
+--Statistics on an entire scheme
 EXEC DBMS_STATS.GATHER_SCHEMA_STATS('HR', CASCADE => TRUE, DEGREE => 4);
 
--- Statistiche su una tabella specifica
+--Statistics on a specific table
 EXEC DBMS_STATS.GATHER_TABLE_STATS('HR', 'EMPLOYEES', CASCADE => TRUE);
 
--- Statistiche su TUTTO il database (pesante — fallo solo se necessario)
+--Statistics on the ENTIRE database (heavy — only do this if necessary)
 EXEC DBMS_STATS.GATHER_DATABASE_STATS(DEGREE => 4);
 ```
 
 > **`CASCADE => TRUE`**: Also collects table index statistics.
-> **`DEGREE => 4`**: Usa 4 processi paralleli per velocizzare.
+> **`DEGREE => 4`**: Use 4 parallel processes to speed up.
 
 ### Check Tables with Old Statistics
 
 ```sql
--- Tabelle con statistiche più vecchie di 7 giorni e > 10% righe modificate
+--Tables with statistics older than 7 days and >10% rows changed
 SELECT owner, table_name, last_analyzed, num_rows, stale_stats
 FROM dba_tab_statistics 
 WHERE stale_stats = 'YES' 
@@ -604,12 +604,12 @@ ORDER BY num_rows DESC;
 
 ```sql
 -- ============= HEALTH CHECK SCRIPT =============
--- Eseguilo una volta al giorno o dopo ogni intervento
+--Perform it once a day or after each procedure
 
--- 1. Stato dell'istanza
+--1. Status of the application
 SELECT inst_id, instance_name, status, startup_time FROM gv$instance;
 
--- 2. Spazio Tablespace (> 85% = WARNING, > 95% = CRITICAL)
+--2. Tablespace (> 85% = WARNING, > 95% = CRITICAL)
 SELECT tablespace_name, 
        ROUND(used_percent, 1) AS "Used%",
        CASE WHEN used_percent > 95 THEN '🔴 CRITICAL'
@@ -618,14 +618,14 @@ SELECT tablespace_name,
 FROM dba_tablespace_usage_metrics
 ORDER BY used_percent DESC;
 
--- 3. Spazio ASM
+--3. ASM space
 SELECT name, state, type, 
        ROUND(total_mb/1024,1) AS total_gb, 
        ROUND(free_mb/1024,1) AS free_gb,
        ROUND((1-free_mb/total_mb)*100,1) AS "Used%"
 FROM v$asm_diskgroup;
 
--- 4. Alert log errori recenti (ORA-)
+--4. Recent error log alert (ORA-)
 SELECT originating_timestamp, message_text 
 FROM v$diag_alert_ext 
 WHERE originating_timestamp > SYSDATE - 1
@@ -637,10 +637,10 @@ SELECT wait_class, COUNT(*) AS sessions
 FROM gv$session WHERE status = 'ACTIVE' AND wait_class != 'Idle'
 GROUP BY wait_class ORDER BY sessions DESC;
 
--- 6. Data Guard lag (solo sullo standby)
+--6. Data Guard lag (only on standby)
 SELECT name, value, datum_time FROM v$dataguard_stats WHERE name LIKE '%lag%';
 
--- 7. Job falliti nelle ultime 24 ore
+--7. Jobs failed in the last 24 hours
 SELECT job_name, status, actual_start_date, run_duration
 FROM dba_scheduler_job_run_details
 WHERE actual_start_date > SYSDATE - 1 AND status = 'FAILED';
@@ -664,7 +664,7 @@ FROM v$recovery_file_dest;
 ```bash
 cat > /home/oracle/scripts/daily_health_check.sh <<'SCRIPT'
 #!/bin/bash
-# daily_health_check.sh — Report giornaliero del database
+# daily_health_check.sh— Daily database report
 source /home/oracle/.db_env
 
 LOG=/home/oracle/scripts/logs/health_$(date +%Y%m%d).log
@@ -674,27 +674,27 @@ sqlplus -s / as sysdba >> $LOG <<SQL
 SET LINESIZE 200 PAGESIZE 100
 
 PROMPT
-PROMPT === INSTANCE STATUS ===
+prompt === INSTANCE STATUS ===
 SELECT inst_id, instance_name, status FROM gv\$instance;
 
 PROMPT
-PROMPT === TABLESPACE USAGE ===
+prompt === TABLESPACE USAGE ===
 SELECT tablespace_name, ROUND(used_percent,1) AS pct_used FROM dba_tablespace_usage_metrics WHERE used_percent > 80 ORDER BY used_percent DESC;
 
 PROMPT
-PROMPT === ASM DISKGROUP ===
+prompt === ASM DISKGROUP ===
 SELECT name, ROUND((1-free_mb/total_mb)*100,1) AS pct_used FROM v\$asm_diskgroup;
 
 PROMPT
-PROMPT === STALE STATISTICS ===
+prompt === STALE STATISTICS ===
 SELECT owner, COUNT(*) AS stale_tables FROM dba_tab_statistics WHERE stale_stats='YES' AND owner NOT IN ('SYS','SYSTEM') GROUP BY owner;
 
 PROMPT
-PROMPT === RECENT ORA ERRORS ===
+prompt === RECENT ORA ERRORS ===
 SELECT originating_timestamp, SUBSTR(message_text,1,120) FROM v\$diag_alert_ext WHERE originating_timestamp > SYSDATE-1 AND message_text LIKE '%ORA-%' FETCH FIRST 10 ROWS ONLY;
 
 PROMPT
-PROMPT === INVALID OBJECTS ===
+prompt === INVALID OBJECTS ===
 SELECT owner, object_type, COUNT(*) FROM dba_objects WHERE status='INVALID' AND owner NOT IN ('SYS','SYSTEM','PUBLIC') GROUP BY owner, object_type;
 SQL
 
@@ -709,7 +709,7 @@ chmod +x /home/oracle/scripts/daily_health_check.sh
 Add to cron on ALL databases:
 
 ```cron
-# Health Check giornaliero — Ogni giorno alle 08:00
+#Daily Health Check — Every day at 08:00
 0 8 * * * /home/oracle/scripts/daily_health_check.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 ```
 
@@ -718,16 +718,16 @@ Add to cron on ALL databases:
 ## ✅ End of Phase 7 Checklist
 
 ```bash
-# 1. BCT attivo sui DB dove esegui incrementali
+#1. BCT active on the DBs where you run incrementals
 sqlplus -s / as sysdba <<< "SELECT status FROM v\$block_change_tracking;"
 
-# 2. Backup eseguito con successo
+#2. Backup successful
 rman TARGET / <<< "LIST BACKUP SUMMARY;"
 
-# 3. Cron configurato
+#3. Cron configured
 crontab -l
 
-# 4. Restore testato
+#4. Restore tested
 rman TARGET / <<< "RESTORE DATABASE VALIDATE;"
 ```
 
@@ -737,9 +737,9 @@ rman TARGET / <<< "RESTORE DATABASE VALIDATE;"
 
 ---
 
-## 🎉 Congratulazioni (Core Stack Completato)
+## 🎉 Congratulations (Core Stack Complete)
 
-Hai completato il core dell'architettura Oracle (HA + DR + replica + backup):
+You have completed the core Oracle architecture (HA + DR + replication + backup):
 
 ```
 RAC Primary (RACDB)
@@ -754,9 +754,9 @@ RAC Primary (RACDB)
 Hai imparato:
 1. **RAC**: High Availability locale con failover automatico.
 2. **Data Guard**: Disaster Recovery with physical standby.
-3. **GoldenGate**: Replica logica cross-platform verso un target indipendente.
+3. **GoldenGate**: Cross-platform logical replication to an independent target.
 4. **RMAN**: Professional Backup & Recovery on ALL databases.
-5. **Statistiche & Maintenance**: Health check, statistiche dell'ottimizzatore, monitoraggio proattivo.
+5. **Statistics & Maintenance**: Health check, optimizer statistics, proactive monitoring.
 6. **Patching**: OPatch, opatchauto, datapatch per Grid e Database.
 
 Natural next step: Centralize monitoring and governance with Enterprise Manager (Step 8).

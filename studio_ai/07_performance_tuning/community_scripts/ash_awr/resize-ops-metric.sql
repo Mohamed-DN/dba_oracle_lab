@@ -51,7 +51,7 @@ metrics as (
 select begin_interval_time, inst_id
 	, resize_count
 	, resize_stddev
-	, resize_metric
+, resize_metric
 	, case
 		when resize_metric >= &warning_threshold then
 			'Warning'

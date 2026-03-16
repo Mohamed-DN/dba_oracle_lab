@@ -33,7 +33,7 @@
 
 -- alter system set events '4020 trace name errorstack level 12, lifetime 5; name processstate level 2, lifetime 5';
 
--- get a call stack 
+--get a call stack
 -- alter system set events '4020 trace name callstack level 2, lifetime 5; name processstate level 2, lifetime 5';
 -- alter system set events '4020 trace name callstack level 2, lifetime 5; name errorstack level 12, lifetime 5; name processstate level 2, lifetime 5';
 -- turn it off

@@ -238,7 +238,7 @@ SELECT to_char(begin_interval_time,'YYYY_MM_DD HH24') WHEN,
        dhss.instance_number INST_ID,
        dhss.sql_id,
        executions_delta exec_delta,
-       rows_processed_delta rows_proc_delta
+rows_processed_delta rows_proc_delta
   FROM dba_hist_sqlstat dhss,
        dba_hist_snapshot dhs,
        dba_hist_sqltext dhst
@@ -278,7 +278,7 @@ FROM (
              dhss.instance_number inst_id,
              dhss.sql_id,
              sum(executions_delta) exec_delta,
-             sum(rows_processed_delta) rows_proc_delta
+sum(rows_processed_delta) rows_proc_delta
         FROM dba_hist_sqlstat dhss,
              dba_hist_snapshot dhs,
              dba_hist_sqltext dhst

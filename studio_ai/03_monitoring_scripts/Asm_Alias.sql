@@ -14,7 +14,7 @@ SET VERIFY    off
 COLUMN disk_group_name        FORMAT a20         HEAD 'Disk Group Name'
 COLUMN alias_name             FORMAT a30         HEAD 'Alias Name'
 COLUMN file_number                               HEAD 'File|Number'
-COLUMN file_incarnation                          HEAD 'File|Incarnation'
+COLUMN file_incarnation HEAD 'File|Incarnation'
 COLUMN alias_index                               HEAD 'Alias|Index'
 COLUMN alias_incarnation                         HEAD 'Alias|Incarnation'
 COLUMN parent_index                              HEAD 'Parent|Index'
@@ -28,9 +28,9 @@ SELECT
     g.name               disk_group_name
   , a.name               alias_name
   , a.file_number        file_number
-  , a.file_incarnation   file_incarnation
+, a.file_incarnation file_incarnation
   , a.alias_index        alias_index
-  , a.alias_incarnation  alias_incarnation
+, a.alias_incarnation alias_incarnation
   , a.parent_index       parent_index
   , a.reference_index    reference_index
   , a.alias_directory    alias_directory

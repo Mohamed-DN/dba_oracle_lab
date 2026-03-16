@@ -46,7 +46,7 @@ select
 	, p.table_schema
 	, p.privilege
 	, p.grantee
-	, p.grantor
+, p.grantor
 	, o.object_type
 from all_tab_privs p
 join all_objects o on o.owner = p.table_schema

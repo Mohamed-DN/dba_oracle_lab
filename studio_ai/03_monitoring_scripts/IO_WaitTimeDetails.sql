@@ -20,7 +20,7 @@ col wait_count    heading 'Wait|Count'  format 999,999
 col time          heading 'Time'        format 999,999
 
   SELECT TO_CHAR (begin_interval_time, 'yyyy-mm-dd hh24:mi') snap_time,
-         --   file_name,
+         --file_name,
          object_type,
          object_name,
          wait_count,

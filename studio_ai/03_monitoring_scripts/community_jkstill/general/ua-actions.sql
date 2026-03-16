@@ -9,7 +9,7 @@ col name format a30
 
 select 
 	--type
-	component
+component
 	--, action
 	, name
 from sys.all_unified_audit_actions

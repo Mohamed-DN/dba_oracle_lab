@@ -6,7 +6,7 @@ set pagesize 100
 col sql_id format a13
 col disk_reads format 99,999,999,999
 col buffer_gets format 999,999,999,999
-col ratio format 999.99
+with the format ratio 999.99
 
 
 with data as (

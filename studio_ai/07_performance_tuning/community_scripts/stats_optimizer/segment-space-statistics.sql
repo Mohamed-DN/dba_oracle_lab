@@ -51,7 +51,7 @@ statnames as (
 		--,'IM prepopulate CUs'
 		--,'IM repopulate (trickle) CUs'
 		--,'IM repopulate CUs'
-		--,'IM scans'
+		--,'IM scan'
 		--,'ITL waits'
 		--,'buffer busy waits'
 		'db block changes'

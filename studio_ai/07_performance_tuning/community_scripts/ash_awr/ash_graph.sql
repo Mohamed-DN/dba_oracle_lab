@@ -32,7 +32,7 @@ select
 from (
    select
          trunc((to_char(sample_time,'J')*(24*60*60)+to_char(sample_time,'SSSSS'))/&v_secs) id
-       , sum(decode(session_state,'ON CPU',1,0))    cpu
+, sum(decode(session_state,'ON CPU',1,0)) cpu
        , sum(decode(session_state,'WAITING',1,0))   waits
      from
         -- v$active_session_history ash

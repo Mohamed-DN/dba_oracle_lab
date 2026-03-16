@@ -171,11 +171,11 @@ begin
 
 		-- have not quite determined where dup line are coming from, so skip them
 		if ( chkline = err_line_rec.text ) then
-			continue;
+continuous;
 		end if;
 
 		--dbms_output.put_line('   TEXT: ' || to_char(err_line_rec.src_line,'99990') || ': ' || err_line_rec.text);
-		--continue;
+		--continuous;
 
 		if ( chkstr != err_line_rec.owner || err_line_rec.name || err_line_rec.type ) then
 			dbms_output.new_line;

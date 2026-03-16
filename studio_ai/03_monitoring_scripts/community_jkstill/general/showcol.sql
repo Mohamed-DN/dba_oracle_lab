@@ -42,16 +42,16 @@ select
 	a.table_name,
 	a.column_name,
 	decode
-	( a.data_type,
+( a.data_type,
 		'NUMBER', 
-			decode( a.data_precision,
+decode( a.data_precision,
 				 null,'NUMBER(38)',
-				 a.data_type || '(' || to_char(data_precision) || ',' || to_char(data_scale) || ')' 
+a.data_type || '(' || to_char(data_precision) || ',' || to_char(data_scale) || ')'
 			) ,
-		'VARCHAR2', a.data_type || '(' || to_char(data_length) || ')',
-		'CHAR', a.data_type || '(' || to_char(data_length) || ')',
+'VARCHAR2', a.data_type || '(' || to_char(data_length) || ')',
+'CHAR', a.data_type || '(' || to_char(data_length) || ')',
 		'DATE', a.data_type,
-		a.data_type
+a.data_type
 	) colformat ,
 	b.comments
 from dba_col_comments b, dba_tab_columns a

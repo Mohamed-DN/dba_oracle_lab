@@ -34,7 +34,7 @@ select * from table(DBMS_XPLAN.DISPLAY_AWR('&SQL_ID','&PLAN_HASH_VALUE',format=>
 -- format=>'ADVANCED'
 
 -- RAC AVERAGE STATISTICS
--- La seguente query mostra i valori mediati tra le due istanze Oracle
+--The following query shows the values ​​averaged between the two Oracle instances
 
 select to_char(sn.begin_interval_time,'yyyy/mm/dd hh24:mi') BEGIN,
        to_char(sn.end_interval_time,'yyyy/mm/dd hh24:mi') END,

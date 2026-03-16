@@ -32,7 +32,7 @@ select
 from
         V$segment_statistics
 where
-        statistic_name = 'segment scans'
+statistic_name = 'segment scans'
 and     value != 0
 order by
 	value desc 

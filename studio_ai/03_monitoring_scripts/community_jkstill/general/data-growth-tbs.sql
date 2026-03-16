@@ -39,13 +39,13 @@ daily_data as (
 )
 select 
 	d.tablespace_name
-	, d.start_time
+, d.start_time
 	, max(d.used_mb) used_mb
 from daily_data d
 group by d.tablespace_name
-	, d.start_time
+, d.start_time
 order by d.tablespace_name
-	,d.start_time
+,d.start_time
 /
 
 

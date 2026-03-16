@@ -22,7 +22,7 @@ col program format a40
 					and p.inst_id = s.inst_id
 				join gv$bgprocess b on b.paddr = s.paddr
 					and b.inst_id = s.inst_id
-			union all
+union all
 			select
 				s.inst_id
 				, s.sid

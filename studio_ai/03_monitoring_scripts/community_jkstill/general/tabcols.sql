@@ -12,8 +12,8 @@ col u_tab_name new_value u_tab_name noprint
 
 col index_name format a30
 col column_name format a30
-col data_type_size format a35
-col data_size format a15
+with data_type_size format a35
+with data_size format a15
 col nullable format a8
 
 prompt 
@@ -41,10 +41,10 @@ select tc.column_name
 	when tc.data_type in ('VARCHAR2','CHAR','VARCHAR') then
 		'('||tc.data_length||')'
 	when tc.data_type in ('BINARY_DOUBLE','NUMBER','FLOAT','INTEGER','BINARY_FLOAT') then
-		'('||nvl(tc.data_precision,38)||','||nvl(tc.data_scale,0)||')'
-	else '('||to_char(data_length)||')'
-	end data_type_size
-	, decode(nullable,'Y','NULL','NOT NULL') nullable
+'('||nvl(tc.data_precision,38)||','||nvl(tc.data_scale,0)||')'
+else '('||to_char(data_length)||')'
+end data_type_size
+, decode(nullable,'Y','NULL','NOT NULL') nullable
 from dba_tab_columns tc
 where	 tc.owner = '&u_own_name'
 	and tc.table_name = '&u_tab_name'

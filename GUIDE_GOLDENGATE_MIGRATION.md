@@ -32,7 +32,7 @@
 ║ │ (old) │ Extract │ (new) │ ║
 ║  │  ⛔ FERMA    │              │  ✅ ATTIVO   │                      ║
 ║ │ users │ │ users │ ║
-║  │              │              │  si connett. │                      ║
+║ │ │ │ connects. │ ║
 ║  └──────────────┘              │  QUI ora     │                      ║
 ║                                └──────────────┘                      ║
 ╚═══════════════════════════════════════════════════════════════════════╝
@@ -44,25 +44,25 @@
 
 | Da | A | GoldenGate? |
 |---|---|---|
-| Oracle 11g → Oracle 19c | ✅ Versioni diverse | |
+| Oracle 11g → Oracle 19c |✅ Different versions| |
 | Oracle on-prem → Oracle Cloud (OCI) | ✅ Cross-platform | |
 | Oracle FS → Oracle ASM | ✅ Storage diverso | |
-| Single node → RAC | ✅ Architettura diversa | |
+| Single node → RAC | ✅ Different architecture | |
 | Oracle Linux → AIX/Solaris | ✅ Cross-OS | |
-| Datacenter A → Datacenter B | ✅ Cross-datacenter | |
+|Datacenter A → Datacenter B| ✅ Cross-datacenter | |
 | Oracle → PostgreSQL | ⚠️ Possibile ma complesso (GG for Big Data) | |
 
 ---
 
 ## Scenario del Repo: Locale RAC 19c -> OCI
 
-Per il tuo lab, lo scenario piu realistico non e un generico `source -> target`, ma questo:
+For your lab, the most realistic scenario is not a generic `source -> target`, but this:
 
-- `source`: RAC 19c locale
-- `HA/DR`: Data Guard locale
+- `source`: local RAC 19c
+- `HA/DR`: local Data Guard
 - `capture GG`: on the local primary
-- `target`: database Oracle su OCI compute
-- `rete`: Restricted public IP or VPN, based on [GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md)
+- `target`: Oracle database on OCI Compute
+- `network`: restricted public IP or VPN, based on [GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md)
 
 Documents to read before cutover:
 
@@ -70,7 +70,7 @@ Documents to read before cutover:
 2. [GUIDE_GOLDENGATE_OCI_ARM.md](./GUIDE_GOLDENGATE_OCI_ARM.md)
 3. [GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md](./GUIDE_LAB_NETWORK_OCI_GOLDENGATE.md)
 
-Regola importante:
+Important rule:
 
 - il target OCI `Always Free` va bene per imparare OCI e target Oracle;
 - but truly core lab-consistent GG migration requires a target and GG version compatible with source 19c, not a confusing shortcut with `GoldenGate Free`.
@@ -82,12 +82,12 @@ Regola importante:
 ### Prerequisiti
 
 ```sql
--- Su SOURCE (vecchio DB)
+--On SOURCE (old DB)
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 ALTER DATABASE FORCE LOGGING;
 
--- Crea utente GG su Source
+--Create GG user on Source
 CREATE USER ggadmin IDENTIFIED BY <password>
     DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
 GRANT DBA TO ggadmin;
@@ -95,13 +95,13 @@ EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
 
 -- Su TARGET (nuovo DB)
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
--- Crea stesso utente ggadmin con stessi privilegi
+--Create the same ggadmin user with the same privileges
 ```
 
 ### Step 1: Initial Load with Data Pump
 
 ```bash
-# Su SOURCE: Export completo dello schema
+#On SOURCE: Complete export of the scheme
 expdp ggadmin/<password> \
     SCHEMAS=HR,FINANCE,INVENTORY \
     DIRECTORY=DATA_PUMP_DIR \
@@ -111,14 +111,14 @@ expdp ggadmin/<password> \
     LOGFILE=export_migration.log \
     FLASHBACK_TIME=SYSTIMESTAMP
 
-# Annota il SCN dell'export (nel log file):
+# Note the SCN of the export (in the log file):
 # Export done in xxx consistent at SCN 12345678
 ```
 
 > **Why `FLASHBACK_TIME=SYSTIMESTAMP`?** Ensures the export is consistent at a point in time. The Extract GG will start from this exact SCN, ensuring zero lost data and zero duplicates.
 
 ```bash
-# Trasferisci il dump file al TARGET
+# Transfer the dump file to the TARGET
 scp migration_*.dmp oracle@target:/u01/app/oracle/datapump/
 
 # Su TARGET: Import
@@ -127,7 +127,7 @@ impdp ggadmin/<password> \
     DIRECTORY=DATA_PUMP_DIR \
     DUMPFILE=migration_%U.dmp \
     PARALLEL=4 \
-    LOGFILE=import_migration.log \
+LOGFILE=import_migration.log \
     TABLE_EXISTS_ACTION=REPLACE
 ```
 
@@ -205,7 +205,7 @@ MAP INVENTORY.*, TARGET INVENTORY.*;
 
 > **`HANDLECOLLISIONS`**: During initial load, there may be "duplicated" rows (already inserted by the Data Pump but also captured by the Extract). HANDLECOLLISIONS handles them without errors. **Remove it after sync is stable!**
 
-### Step 5: Avvia tutto (in ordine!)
+### Step 5: Start everything (in order!)
 
 ```
 -- Su Source
@@ -215,28 +215,28 @@ START EXTRACT pump_migr
 -- Su Target
 START REPLICAT rep_migr
 
--- Monitora
+--Monitor
 INFO ALL
 LAG EXTRACT ext_migr
 LAG REPLICAT rep_migr
 ```
 
-### Step 6: Attendi la sincronizzazione
+### Step 6: Wait for synchronization
 
 ```bash
-# Attendi che il lag scenda a 0
+# Wait for the lag to drop to 0
 GGSCI> LAG EXTRACT ext_migr
 # At 2024-03-15 14:30:00 Lag 0 seconds    ← PRONTO!
 
 GGSCI> LAG REPLICAT rep_migr
-# At 2024-03-15 14:30:03 Lag 3 seconds     ← Quasi pronto
+# At 2024-03-15 14:30:03 Lag 3 seconds ← Almost ready
 
-# Quando il lag è stabile a < 5 secondi per 30+ minuti → sei pronto per il cutover
+#When lag is stable at < 5 seconds for 30+ minutes → you are ready for cutover
 ```
 
 ---
 
-## Step 7: Cutover (Il Momento Critico!)
+## Step 7: Cutover (The Critical Moment!)
 
 ```
 TIMELINE:
@@ -244,26 +244,26 @@ TIMELINE:
   T-30min: Warn users of downtime (short)
   T-5min: Check lag = 0
   T-0: STOP application → no new DML on Source
-  T+1min:  Aspetta che GG applichi gli ultimi record
+T+1min: Wait for GG to apply the latest records
   T+2min: Check counts Source == Target
   T+3min:  STOP Extract e Replicat
-  T+4min:  Riconfigura la connessione dell'app → TARGET
+T+4min: Reconfigure the app connection → TARGET
   T+5min: Restart the application on the TARGET
 ─────────────────────────────────────────────────────────────────────
-  Downtime totale: ~5 minuti!
+Total downtime: ~5 minutes!
 ```
 
 ### Detailed Cutover Procedure
 
 ```bash
-# 1. Ferma l'applicazione (nessun nuovo DML)
-# (dipende dalla tua app)
+#1. Stop the application (no new DML)
+# (depends on your app)
 
-# 2. Aspetta che GG finisca di applicare
+#2. Wait for GG to finish applying
 GGSCI> LAG REPLICAT rep_migr
 # Lag 0 seconds → PRONTO
 
-# 3. Verifica la consistenza dei dati
+#3. Check the consistency of the data
 ```
 
 ```sql
@@ -285,9 +285,9 @@ GGSCI> STOP EXTRACT pump_migr
 # Su Target:
 GGSCI> STOP REPLICAT rep_migr
 
-# 5. Rimuovi HANDLECOLLISIONS (non serve più)
-# 6. Riconfigura l'app per connettersi al TARGET
-# 7. Avvia l'app → Migrazione completata! 🎉
+#5. Remove HANDLECOLLISIONS (no longer needed)
+#6. Reconfigure the app to connect to TARGET
+#7. Launch the app → Migration complete! 🎉
 ```
 
 ---
@@ -309,28 +309,28 @@ If something goes wrong after the cutover, you can move the traffic back to the 
 
 ```
 PRE-MIGRATION:
-  □ Supplemental logging attivo
-  □ Force logging attivo
-  □ GG installato su Source e Target
+□ Supplemental logging active
+□ Force logging active
+□ GG installed on Source and Target
   □ ggadmin user created on both
   □ Source↔Target network working
   □ Export Data Pump completato
-  □ Import Data Pump completato
-  □ SCN dell'export annotato
+□ Import Data Pump completed
+□ SCN of the noted export
 
 SINCRONIZZAZIONE:
-  □ Extract avviato dal SCN corretto
-  □ Pump trasmette i trail
+□ Extract started from the correct SCN
+□ Pump transmits trails
   □ Replicat applies without errors
-  □ Lag stabile < 5 secondi per 30+ minuti
+□ Stable lag < 5 seconds for 30+ minutes
   □ HANDLECOLLISIONS removed after stabilization
 
 CUTOVER:
   □ Users warned
-  □ Applicazione fermata
-  □ Lag = 0 confermato
+□ Application stopped
+□ Lag = 0 confirmed
   □ COUNT(*) Source == Target for all tables
-  □ GG fermato
-  □ App riconfigurata per Target
-  □ App riavviata e funzionante
+□ GG stopped
+□ App reconfigured for Target
+□ App restarted and working
 ```

@@ -19,7 +19,7 @@ col position format 9999 heading '-COST-'
 col optimizer format a10
 
 SELECT 
-	lpad('  ',2*(level-1))||operation operation, 
+lpad(' ',2*(level-1))||operation operation,
 	options, 
 	object_name, 
 	--position ,

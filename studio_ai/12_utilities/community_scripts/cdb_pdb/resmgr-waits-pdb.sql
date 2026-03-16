@@ -36,7 +36,7 @@ from v$rsrcmgrmetric_history m,
    v$pdbs p 
 where m.con_id = p.con_id 
 group by begin_time
-   , m.con_id
+, m.with_id
    , name
 order by begin_time
 /

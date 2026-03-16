@@ -27,7 +27,7 @@
 -- generated bind variables with just a digit name are also changed. eg: :1 becomes :G1
 --
 -- jkstill 2017-11-27
--- use numtodsinterval() to calculate dates
+--use numtodsinterval() to calculate dates
 -- "select systimestamp - interval '100' day from dual" will cause ORA-01873: the leading precision of the interval is too small
 -- this can be corrected by:
 -- "select systimestamp - interval '100' day(3) from dual"
@@ -213,7 +213,7 @@ declare
 		snap_id
 		, position
 		, name
-		, datatype_string
+, datatype_string
 		, value_string
 		, last_captured
 	from data;
@@ -231,7 +231,7 @@ declare
 			when regexp_like(b.name,'^:[[:digit:]]') then 'G'	|| substr(b.name,2)
 			else b.name
 		end name
-		, datatype_string
+, datatype_string
 	from dba_hist_sql_bind_metadata b
 	where b.sql_id = v_sql_id_in
 	order by position;

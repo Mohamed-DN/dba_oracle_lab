@@ -6,7 +6,7 @@ set line 170
 set pagesize 500
 
 select
-   client_name
+client_name
    , window_name
    , window_start_time at time zone sessiontimezone window_start_time
    , window_duration

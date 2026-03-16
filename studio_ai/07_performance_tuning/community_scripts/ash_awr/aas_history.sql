@@ -1,6 +1,6 @@
 
 col value format 999999
-col end_interval_time forma a25
+col end_interval_time forms a25
 set pagesize 60
 
 -- change value below to '--' for regular report, '' for CSV

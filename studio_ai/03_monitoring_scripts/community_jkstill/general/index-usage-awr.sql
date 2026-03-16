@@ -72,7 +72,7 @@ select i.owner
 	, i.index_name
 	, i.index_type
 	, i.join_index
-	, i.partitioned , i.degree
+, i.partitioned , i.degree
 	, i.leaf_blocks, i.distinct_keys
 	, i.avg_leaf_blocks_per_key, i.avg_data_blocks_per_key
 	, i.clustering_factor, i.num_rows	

@@ -39,7 +39,7 @@ data as (
 			when 'ON CPU' then 'CPU'
 			else 'UNKNOWN'
 			end time_source
-		, cpu.core_count
+, cpu.core_count
 		, cpu.core_count * &snap_seconds db_seconds_available
 		--, count(time_source) over (partition by sh.instance_number, sh.sample_time ) time_used
 	from dba_hist_active_sess_history sh
@@ -56,7 +56,7 @@ data as (
 aggs as	(
 	select distinct
 		instance_number
-			, sample_time
+, sample_time
 			, time_source
 			, count(time_source) over (partition by instance_number, sample_time, time_source  order by instance_number, sample_time ) time_used
 			--, count(time_source) time_used
@@ -68,7 +68,7 @@ aggs as	(
 ranked as (
 	select
 		instance_number
-		, sample_time
+, sample_time
 		, time_source
 		-- times 10 due to 10 second AWR samples
 		, time_used * 10 time_used
@@ -78,7 +78,7 @@ ranked as (
 )
 select 
 	instance_number
-	, sample_time
+, sample_time
 	, time_source
 	, time_used
 	, to_char(pct_time,'990.9') pct_time

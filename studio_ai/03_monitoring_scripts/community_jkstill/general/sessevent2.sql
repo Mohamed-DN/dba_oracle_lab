@@ -7,7 +7,7 @@ set trimspool on
 
 @who2
 
-col csid new_value usid noprint
+with csid new_value usid noprint
 prompt SID Value:
 set feed off term off
 select '&1' csid from dual;

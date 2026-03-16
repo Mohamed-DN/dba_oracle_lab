@@ -10,12 +10,12 @@
 Data Guard is the cornerstone of Disaster Recovery in Oracle. In an Enterprise environment like Nexi,
 the typical configuration includes:
 - **Primary RAC** (2 nodes) → **Standby RAC** (2 nodes)
-- Trasporto LOG: **LGWR ASYNC** (per performance) o **LGWR SYNC** (per zero data loss)
+- LOG transport: **LGWR ASYNC** (for performance) or **LGWR SYNC** (for zero data loss)
 - **Active Data Guard** to use standby in READ ONLY mode with APPLY active
 
 ---
 
-## File Contenuti
+## File Contents
 
 ### [dataguard_configuration.md](./dataguard_configuration.md)
 Step-by-step procedure to set up Data Guard with DGMGRL Broker.
@@ -34,5 +34,5 @@ Recovery procedure when Data Guard breaks after a server reboot.
 
 ---
 
-## 🔗 Collegamento
+## 🔗 Link
 See also: [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../../GUIDE_PHASE4_DATAGUARD_DGMGRL.md)

@@ -2,22 +2,22 @@
 
 > Operational guide to test the propagation of a PDB from primary to physical standby and to publish correct RAC services on the primary side and, if you want Active Data Guard, on the standby side.
 
-## Quando farla
+## When to do it
 
 Run this guide:
 
 1. after [GUIDE_PHASE4_DATAGUARD_DGMGRL.md](../GUIDE_PHASE4_DATAGUARD_DGMGRL.md), recommended scenario;
 2. or immediately after Phase 3 only if Data Guard is manual and stable.
 
-Scenario raccomandato:
+Recommended scenario:
 
 - primary `RACDB` aperto `READ WRITE`
 - standby `RACDB_STBY` to `PHYSICAL STANDBY`
-- `MRP0` attivo su `racstby1`
+- `MRP0`active on`racstby1`
 - `DEST_ID=2` valid on primary
 - Broker `SUCCESS`
 
-## Obiettivo
+## Objective
 
 Convalidare tre cose:
 
@@ -25,7 +25,7 @@ Convalidare tre cose:
 2. the PDB application service is published correctly on the primary's RAC listener;
 3. optionally, if you enable Active Data Guard, you can publish a dedicated read-only service on standby as well.
 
-## 1. Pre-check obbligatori
+## 1. Mandatory pre-checks
 
 On primary:
 
@@ -71,16 +71,16 @@ Nota:
 
 ## 2. Basic test: Create a PDB from the seed with replication on the standby
 
-Per il primo test usa il caso piu semplice:
+For the first test use the simplest case:
 
 - `CREATE PLUGGABLE DATABASE ... FROM PDB$SEED`
 - `STANDBYS=ALL`
 
 Don't use yet:
 
-- clone da altro PDB
+- clone from another PDB
 - XML unplug/plug
-- clone remoto
+- remote clone
 - TDE
 
 On the primary, from `CDB$ROOT`:
@@ -108,7 +108,7 @@ Why this case is correct in your lab:
 - the primary and standby have `db_create_file_dest` and FRA in ASM;
 - redo apply can materialize the new PDB without having to do manual clones on standby.
 
-## 3. Forza il redo e aspetta la propagazione
+## 3. Force redo and wait for propagation
 
 On primary:
 
@@ -137,14 +137,14 @@ Atteso:
 - standby remains `MOUNTED`;
 - `MRP0` continua in `APPLYING_LOG` oppure `WAIT_FOR_LOG`.
 
-Regola pratica:
+Rule of thumb:
 
 - if the PDB does not appear immediately, first look at `MRP0`, `transport lag`, `apply lag`;
 - do not create the PDB by hand on standby.
 
-## 4. Test di propagazione oggetti dentro il PDB
+## 4. Object propagation test within the PDB
 
-Quando `LABPDB1` esiste su entrambi i lati, testa una modifica reale.
+Quando `LABPDB1`exists on both sides, test a real change.
 
 On primary:
 
@@ -179,7 +179,7 @@ If you open the standby in `READ ONLY WITH APPLY` in the future, you will also b
 
 ## 5. Publish a RAC service for the PDB on the primary
 
-Per le applicazioni non usare il service di default del CDB. Crea un service dedicato al PDB.
+For applications, do not use the default CDB service. Create a service dedicated to the PDB.
 
 On the primary, like `oracle`:
 
@@ -200,9 +200,9 @@ srvctl config service -d RACDB -s labpdb1_rw
 
 Why like this:
 
-- `-pdb LABPDB1` lega il service al PDB corretto;
+- `-pdb LABPDB1`binds the service to the correct PDB;
 - `-role PRIMARY` prevents the service from appearing on standby;
-- `-preferred RACDB1,RACDB2` lo rende disponibile su entrambe le istanze RAC del primary.
+- `-preferred RACDB1,RACDB2`makes it available on both RAC instances of the primary.
 
 ## 6. Verify listener and service registration
 
@@ -266,21 +266,21 @@ LABPDB1_RO =
 
 ## 8. Advanced cases to be tested after the base case
 
-Quando il test base funziona, prova in quest'ordine:
+When the basic test works, try in this order:
 
 1. new tablespace in PDB;
 2. new user/schema in PDB;
 3. service `PRIMARY` with stop/start and application failover;
 4. Broker switchover and verification of service behavior;
 5. Active Data Guard with service `PHYSICAL_STANDBY`;
-6. TDE nel PDB;
+6. TDE in the PDB;
 7. PDB clone with more advanced Data Guard requirements.
 
 ## 9. Troubleshooting mirato
 
 ### The PDB does not appear on standby
 
-Controlla:
+Check:
 
 ```sql
 SELECT process, status, thread#, sequence#
@@ -292,16 +292,16 @@ FROM   v$dataguard_stats
 WHERE  name IN ('transport lag','apply lag','apply finish time');
 ```
 
-Cause tipiche:
+Typical causes:
 
 - `MRP0` fermo;
-- errore su `DEST_ID=2` lato primary;
+- errore su `DEST_ID=2`primary side;
 - file create problem in ASM;
 - PDB created with options not supported by your standby state.
 
-### Il service del PDB non si registra
+### PDB service does not register
 
-Controlla:
+Check:
 
 ```bash
 srvctl config service -d RACDB -s labpdb1_rw
@@ -309,25 +309,25 @@ srvctl status service -d RACDB -s labpdb1_rw
 lsnrctl status
 ```
 
-Cause tipiche:
+Typical causes:
 
 - PDB not open on primary;
 - service created without `-pdb`;
 - service created on wrong database;
-- ruolo non coerente (`PRIMARY` vs `PHYSICAL_STANDBY`);
+- inconsistent role (`PRIMARY` vs `PHYSICAL_STANDBY`);
 - listener not updated or service stopped.
 
 ### ORA-12514 on the service PDB
 
-Cause tipiche:
+Typical causes:
 
-- il service non e' partito;
+- the service did not start;
 - the SCAN listener has not yet registered the service;
 - you are using a different `SERVICE_NAME` than the one created with `srvctl`.
 
-## 10. Criteri di successo
+## 10. Success Criteria
 
-Considera il test riuscito se:
+Consider the test successful if:
 
 1. `LABPDB1` exists on primary and standby;
 2. `MRP0` continua a lavorare su `racstby1`;
@@ -335,7 +335,7 @@ Considera il test riuscito se:
 4. after log switch, redo apply continues without errors;
 5. the listener shows the correct service.
 
-## Riferimenti Oracle
+## Oracle References
 
 - Oracle SQL Reference, `CREATE PLUGGABLE DATABASE` (`STANDBYS=ALL`)
 - Oracle Data Guard Concepts and Administration, PDB management with Data Guard

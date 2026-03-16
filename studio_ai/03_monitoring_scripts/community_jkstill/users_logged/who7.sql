@@ -3,7 +3,7 @@
 -- who with avg transaction size
 -- only really useful on OLTP systems
 -- since ROLLBACKS and COMMITS are used
--- to determine tx size
+--to determine tx size
 
 @clears
 @columns
@@ -75,7 +75,7 @@ where
 	and  c.statistic# = '14'
 	and  c.class = '128'
 	-- added 0.0000001 to the division above to
-	-- avoid divide by zero errors
+	--avoid divide by zero errors
 	-- this is to show all sessions, whether they
 	-- have done IO or not
 	--and  (e.consistent_Gets + e.block_Gets) > 0

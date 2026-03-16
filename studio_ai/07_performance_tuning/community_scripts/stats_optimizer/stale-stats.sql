@@ -38,8 +38,8 @@ with excluded_schemas as (
 select 
 	owner
 	, table_name
-		|| decode(partition_name, null,'','.' || partition_name)
-		|| decode(subpartition_name, null,'','.' || subpartition_name)
+|| decode(partition_name, null,'','.' || partition_name)
+|| decode(subpartition_name, null,'','.' || subpartition_name)
 		as table_name
 	, null index_name
 	, num_rows
@@ -56,8 +56,8 @@ select
 	owner
 	, table_name 
 	, index_name 
-		|| decode(partition_name, null,'','.' || partition_name)
-		|| decode(subpartition_name, null,'','.' || subpartition_name)
+|| decode(partition_name, null,'','.' || partition_name)
+|| decode(subpartition_name, null,'','.' || subpartition_name)
 		as index_name
 	, num_rows
 	, leaf_blocks blocks

@@ -42,7 +42,7 @@ select
 	, seconds
 	, tdate + 
 		-- midnight converted to 1 second after midnight
-		( decode(seconds,0,1,seconds) / (24*60*60)) 
+( decode(seconds,0,1,seconds) / (24*60*60))
 from r
 /
 

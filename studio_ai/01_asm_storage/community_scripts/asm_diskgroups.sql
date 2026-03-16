@@ -30,15 +30,15 @@ select
 	, sector_size
 	&use_12_2_features , logical_sector_size
 	, block_size
-	, allocation_unit_size
+, allocation_unit_size
 	, type
 	, offline_disks
 	, total_mb
 	, free_mb
 	, required_mirror_free_mb
 	, usable_file_mb
-	, compatibility
-	, database_compatibility
+, compatibility
+, database_compatibility
 from v$asm_diskgroup dg
 order by name
 /

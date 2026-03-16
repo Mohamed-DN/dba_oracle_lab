@@ -1,7 +1,7 @@
 -- dump.sql - jared still
 -- jkstill@gmail.com
 --
--- dump a table to a comma delimited ascii file
+--dump a table to a comma delimited ascii file
 -- only drawback is line length is likely to be padded with 
 -- quite a few spaces if the 'set trimspool on' option is
 -- not in your version of SQLPLUS

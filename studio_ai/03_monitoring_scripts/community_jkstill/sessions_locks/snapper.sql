@@ -129,11 +129,11 @@
 --                          t - Session Time model info from gv$sess_time_model
 --                          w - Session Wait statistics from gv$session_event and gv$session_wait
 --
---                        Instance-level stats:
+--Instance-level stats:
 --                          l - instance Latch get statistics ( gets + immediate_gets )
 --                          e - instance Enqueue lock get statistics
 --                          b - buffer get Where statistics -- useful in versions up to 10.2.x
---                          a - All above
+--a - All above
 --
 --          sinclude - if specified, then show only GV$SESSTAT stats which match the
 --                     LIKE pattern of sinclude (REGEXP_LIKE in 10g+)
@@ -244,8 +244,8 @@ set termout off tab off verify off linesize 999 trimspool on trimout on null ""
 -- Get parameters (future snapper v4.x extended syntax: @snapper <options> <"begin"|"end"|sleep#> <"snap_name"|snap_count> <sid>)
 define snapper_options="&1"
 define   snapper_sleep="&2"
-define   snapper_count="&3"
-define     snapper_sid="&4"
+define snapper_count="&3"
+define snapper_sid="&4"
 
 
 -- The following code is required for making this script "dynamic" as due to
@@ -261,7 +261,7 @@ define _IF_DBMS_SYSTEM_ACCESSIBLE="/* dbms_system is not accessible"
 define _IF_X_ACCESSIBLE="--"
 
 -- plsql_object_id columns available in v$session (from 10.2.0.3)
-define _YES_PLSQL_OBJ_ID="--"  
+define _YES_PLSQL_OBJ_ID="--"
 define _NO_PLSQL_OBJ_ID=""
 -- blocking_instance available in v$session (from 10.2)
 define _YES_BLK_INST="--"      
@@ -278,7 +278,7 @@ col snapper_howtosleep     &noprint new_value _HOW_TO_SLEEP
 col snapper_ora18higher    &noprint new_value _IF_ORA18_OR_HIGHER
 col snapper_ora12higher    &noprint new_value _IF_ORA12_OR_HIGHER
 col snapper_ora12lower     &noprint new_value _IF_LOWER_THAN_ORA12
-col snapper_ora12          &noprint new_value _IF_ORA12_OR_HIGHER
+col snapper_ora12 &noprint new_value _IF_ORA12_OR_HIGHER
 col snapper_ora11higher    &noprint new_value _IF_ORA11_OR_HIGHER
 col snapper_ora11lower     &noprint new_value _IF_LOWER_THAN_ORA11
 col dbms_system_accessible &noprint new_value _IF_DBMS_SYSTEM_ACCESSIBLE
@@ -290,16 +290,16 @@ col yes_blk_inst           &noprint new_value _YES_BLK_INST
 col manual_snapshot        &noprint new_value _MANUAL_SNAPSHOT
 col use_dbms_lock          &noprint new_value _USE_DBMS_LOCK
 
-col snapper_sid            &noprint new_value snapper_sid
+col snapper_sid &noprint new_value snapper_sid
 
 -- sid_filter and inst_filter are the new RAC gv$ friendly way to filter sessions in Snapper v4 
 def sid_filter="/**/"
 def inst_filter="/**/"
-col sid_filter             &noprint new_value sid_filter
+col sid_filter &noprint new_value sid_filter
 col inst_filter            &noprint new_value inst_filter
 
 
--- initialize, precompute and determine stuff
+--initialize, precompute and determine stuff
 var v                      varchar2(100)
 var x                      varchar2(10)
 var sid_filter             varchar2(4000)
@@ -534,7 +534,7 @@ declare
     b number;
 
     c number;
-    delta number;
+delta number;
     evcnt number;
     changed_values number;
     pagesize number:=99999999999999;
@@ -924,7 +924,7 @@ declare
                                                                                                             + gd(c, 'WAIT', 'SGA: MMAN sleep for component shrink')
                                                                                                             + gd(c, 'WAIT', 'DBWR timer')
                                                                                                             + gd(c, 'WAIT', 'Data Guard: Gap Manager')
-                                                                                                            + gd(c, 'WAIT', 'Data Guard: controlfile update')
++ gd(c, 'WAIT', 'Data Guard: controlfile update')
                                                                                                             + gd(c, 'WAIT', 'MRP redo arrival')
                                                                                                             + gd(c, 'WAIT', 'Data Guard: Timer')
                                                                                                             + gd(c, 'WAIT', 'LNS ASYNC archive log')
@@ -974,7 +974,7 @@ declare
                                                                                                             + gd(c, 'WAIT', 'PX Deq: Index Merge Close')
                                                                                                             + gd(c, 'WAIT', 'PX Deq: kdcph_mai')
                                                                                                             + gd(c, 'WAIT', 'PX Deq: kdcphc_ack')
-                                                                                                            + gd(c, 'WAIT', 'imco timer')
++ gd(c, 'WAIT', 'imco timer')
                                                                                                             + gd(c, 'WAIT', 'IMFS defer writes scheduler')
                                                                                                             + gd(c, 'WAIT', 'memoptimize write drain idle')
                                                                                                             + gd(c, 'WAIT', 'virtual circuit next request')
@@ -1356,7 +1356,7 @@ declare
                                                             or regexp_like (name, lv_include_stat, 'i')
                                                            )
                                          --
-                                         union all
+union all
                                          select
                                                 'WAIT', s.inst_id, s.sid,
                                                 en.event# + (select count(*) from v$statname) + 1 - pls_adjust,
@@ -1375,7 +1375,7 @@ declare
                                                             or    regexp_like (name, lv_include_wait, 'i')
                                                            )
                                          --
-                                         union all
+union all
                                          select 'TIME' stype, s.inst_id, s.sid, st.stat_id - pls_adjust statistic#, st.value, null event_count
                                          from gv$session s, gv$sess_time_model st
                                          where &sid_filter --(inst_id,sid) in (&snapper_sid)
@@ -1387,7 +1387,7 @@ declare
                                                             or    regexp_like (stat_name, lv_include_time, 'i')
                                                            )
                                          --
-                                         union all
+union all
                                          select 'LATG', s.inst_id, -1 sid,
                                                s.latch# +
                                                    (select count(*) from v$statname) +
@@ -1402,7 +1402,7 @@ declare
                                                         or    regexp_like (name, lv_include_latch, 'i')
                                                        )
                                          --
- &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11 union all
+&_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11 union all
  &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11 select 'BUFG', to_number(sys_context('userenv', 'instance')), -1 sid,
  &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11       s.indx +
  &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11           (select count(*) from v$statname) +
@@ -1416,7 +1416,7 @@ declare
  &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11 and   s.why0+s.why1+s.why2 > 0
  &_IF_X_ACCESSIBLE &_IF_LOWER_THAN_ORA11 and   (lv_gather like '%b%' or lv_gather like '%a%')
                                          --
- &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER  union all
+&_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER union all
  &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER  select 'BUFG', to_number(sys_context('userenv', 'instance')), -1 sid,
  &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER        sw.indx +
  &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER            (select count(*) from v$statname) +
@@ -1439,7 +1439,7 @@ declare
  &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER        -- deliberate cartesian join
  &_IF_X_ACCESSIBLE &_IF_ORA11_OR_HIGHER  and   (lv_gather like '%b%' or lv_gather like '%a%')
                                          --
-                                         union all
+union all
                                          select 'ENQG', s.inst_id, -1 sid,
                                                ascii(substr(s.eq_type,1,1))*256 + ascii(substr(s.eq_type,2,1)) +
                                                    (select count(*) from v$statname) +
@@ -1552,11 +1552,11 @@ declare
         o_sid                         varchar2(100);
         o_username                    varchar2(100);
         o_machine                     varchar2(100);
-        o_terminal                    varchar2(100);
+o_terminal varchar2(100);
         o_program                     varchar2(100);
         o_event                       varchar2(100);
         o_wait_class                  varchar2(100);
-        o_state                       varchar2(100);
+o_state varchar2(100);
         o_p1                          varchar2(100);
         o_p2                          varchar2(100);
         o_p3                          varchar2(100);
@@ -1576,7 +1576,7 @@ declare
         o_plsql_subprogram_id         varchar2(100);
         o_module                      varchar2(100);
         o_action                      varchar2(100);
-        o_client_identifier           varchar2(100);
+o_client_identifier varchar2(100);
         o_service_name                varchar2(100);
         o_con_id                      varchar2(100);
 
@@ -1804,8 +1804,8 @@ declare
           o_inst_id                     := CASE WHEN i.inst_id                        = chr(0) THEN null ELSE nvl(i.inst_id                       , ' ') END;
           o_sid                         := CASE WHEN i.sid                            = chr(0) THEN null ELSE nvl(i.sid                           , ' ') END;
           o_username                    := CASE WHEN i.username                       = chr(0) THEN null ELSE nvl(i.username                      , ' ') END;
-          o_machine                     := CASE WHEN i.machine                        = chr(0) THEN null ELSE nvl(i.machine                       , ' ') END;
-          o_terminal                    := CASE WHEN i.terminal                       = chr(0) THEN null ELSE nvl(i.terminal                      , ' ') END;
+o_machine := CASE WHEN i.machine = chr(0) THEN null ELSE nvl(i.machine , ' ') END;
+o_terminal := CASE WHEN i.terminal = chr(0) THEN null ELSE nvl(i.terminal , ' ') END;
           o_program                     := CASE WHEN i.program                        = chr(0) THEN null ELSE nvl(i.program                       , ' ') END;
           o_event                       := CASE WHEN i.event                          = chr(0) THEN null ELSE nvl(i.event                         , ' ') END;
           o_wait_class                  := CASE WHEN i.wait_class                     = chr(0) THEN null ELSE nvl(i.wait_class                    , ' ') END;
@@ -1829,8 +1829,8 @@ declare
           o_plsql_subprogram_id         := CASE WHEN i.plsql_subprogram_id            = chr(0) THEN null ELSE nvl(i.plsql_subprogram_id           , ' ') END;
           o_module                      := CASE WHEN i.module                         = chr(0) THEN null ELSE nvl(i.module                        , ' ') END;
           o_action                      := CASE WHEN i.action                         = chr(0) THEN null ELSE nvl(i.action                        , ' ') END;
-          o_client_identifier           := CASE WHEN i.client_identifier              = chr(0) THEN null ELSE nvl(i.client_identifier             , ' ') END;
-          o_service_name                := CASE WHEN i.service_name                   = chr(0) THEN null ELSE nvl(i.service_name                  , ' ') END;
+o_client_identifier := CASE WHEN i.client_identifier = chr(0) THEN null ELSE nvl(i.client_identifier , ' ') END;
+o_service_name := CASE WHEN i.service_name = chr(0) THEN null ELSE nvl(i.service_name , ' ') END;
           o_con_id                      := CASE WHEN i.con_id                         = chr(0) THEN null ELSE nvl(i.con_id                        , ' ') END;
 
           -- print the AAS and activity % as the first columns
@@ -1981,18 +1981,18 @@ begin
                                  from v$statname
                                  where (lv_gather like '%s%' or lv_gather like '%a%')
                                  --
-                                 union all
+union all
                                  select 'WAIT',
                                         event# + (select count(*) from v$statname) + 1 - pls_adjust, name
                                  from v$event_name
                                  where (lv_gather like '%w%' or lv_gather like '%a%')
                                  --
-                                 union all
+union all
                                  select 'TIME' stype, stat_id - pls_adjust statistic#, stat_name name
                                  from gv$sys_time_model
                                  where (lv_gather like '%t%' or lv_gather like '%a%')
                                  --
-                                 union all
+union all
                                  select 'LATG',
                                        l.latch# +
                                            (select count(*) from v$statname) +
@@ -2002,7 +2002,7 @@ begin
                                  from gv$latch l
                                  where (lv_gather like '%l%' or lv_gather like '%a%')
                                  --
-            &_IF_X_ACCESSIBLE    union all
+&_IF_X_ACCESSIBLE union all
             &_IF_X_ACCESSIBLE    select 'BUFG',
             &_IF_X_ACCESSIBLE          indx +
             &_IF_X_ACCESSIBLE              (select count(*) from v$statname) +
@@ -2013,7 +2013,7 @@ begin
             &_IF_X_ACCESSIBLE    from x$kcbwh
             &_IF_X_ACCESSIBLE    where   (lv_gather like '%b%' or lv_gather like '%a%')
                                  --
-                                 union all
+union all
                                  select 'ENQG',
                                        ascii(substr(e.eq_type,1,1))*256 + ascii(substr(e.eq_type,2,1)) +
                                            (select count(*) from v$statname) +
@@ -2137,7 +2137,7 @@ begin
 &_USE_DBMS_LOCK end if;
 &_USE_DBMS_LOCK ash_date2 := sysdate; 
 
-        -- sesstat new sample and delta calculation
+        --sesstat new sample and delta calculation
         if gather_stats = 1 then
 
             get_sessions;
@@ -2177,7 +2177,7 @@ begin
                     lv_curr_sid := s2(b).sid;
                 end if;
 
-                delta := 0; -- don't print
+delta := 0; -- don't print
 
                 case
                     when s1(a).sid = s2(b).sid then

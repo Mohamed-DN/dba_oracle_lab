@@ -97,7 +97,7 @@ begin
 				, numrows => r_tab_avg.num_rows_avg
 				, numblks => r_tab_avg.num_blocks_avg
 				, avgrlen => r_tab_avg.avg_row_len
-				, no_invalidate => true
+, no_invalidate => true
 			);
 			--*/
 		end loop;
@@ -127,11 +127,11 @@ begin
 					dbms_stats.set_index_stats (
 						ownname =>  irec.owner
 						, indname =>  irec.index_name
-						, partname => iprec.partition_name
+, partname => iprec.partition_name
 						, numrows => r_ind_avg.num_rows_avg
 						, numlblks => r_ind_avg.num_leaf_blocks_avg
 						, numdist => r_ind_avg.num_distinct_keys_avg
-						, no_invalidate => true
+, no_invalidate => true
 					);
 					--*/
 				end loop;

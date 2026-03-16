@@ -30,7 +30,7 @@ select
 	--, program_name
 	, to_char(cast(j.start_date as date),'mm/dd/yy-hh24:mi:ss')
 		|| ' ' || extract (timezone_abbr from j.start_date )
-		start_date
+start_date
 	--, state
 	, case j.enabled
 		when 'TRUE' then 'YES'

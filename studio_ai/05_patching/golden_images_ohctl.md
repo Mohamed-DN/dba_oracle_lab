@@ -1,8 +1,8 @@
 # Golden Images OHCTL
 
-Documento convertito da materiale legacy.
+Document converted from legacy material.
 
-Contenuto sorgente originale:
+Original source content:
 
 - [golden_images_ohctl.txt](./golden_images_ohctl.txt)
 

@@ -1,7 +1,7 @@
 # 10 — Partition Manager
 
 > PL/SQL package for automatic management of Oracle partitions.
-> Versioni dalla v2.31 alla v2.36, sviluppate e mantenute dal team DBA Nexi.
+> Versions from v2.31 to v2.36, developed and maintained by the Nexi DBA team.
 
 ---
 
@@ -10,18 +10,18 @@
 The **Partition Manager** is a PL/SQL package that automates:
 - Creation of new partitions (e.g. monthly/daily)
 - Rotating old partitions (drop or merge)
-- Exchange partition per caricamenti fast
+- Exchange partition for fast uploads
 - Partition status monitoring
 
 In an Enterprise environment with thousands of partitioned tables, automation is **a must**.
 
 ---
 
-## Versioni Disponibili
+## Versions Available
 
 | File | Versione | Note |
 |---|---|---|
-| `Script_Creazione_Partition_Manager_v2_36.sql` | v2.36 | **Ultima versione** — usare questa |
+| `Script_Creazione_Partition_Manager_v2_36.sql` | v2.36 |**Latest version** — use this one|
 | `Script_Creazione_Partition_Manager_v2_35.sql` | v2.35 | Precedente |
 | `Script_Creazione_Partition_Manager_v2_34.sql` | v2.34 | Standard + versione NORDICS |
 | `dba_op_user_setup.sql` | — | DBA_OP user setup for the Partition Manager |
@@ -32,19 +32,19 @@ In an Enterprise environment with thousands of partitioned tables, automation is
 ## How It Works
 
 ```sql
--- 1. Installare il package (eseguire lo script come DBA_OP)
+--1. Install the package (run the script asDBA_OP)
 @Script_Creazione_Partition_Manager_v2_36.sql
 
--- 2. Il package crea un job schedulato che:
---    - Controlla le tabelle registrate per la gestione automatica
---    - Crea nuove partizioni in anticipo (es. +3 mesi)
---    - Elimina partizioni più vecchie della retention configurata
+--2. The package creates a scheduled job that:
+--- Check registered tables for automatic management
+--- Create new partitions in advance (e.g. +3 months)
+--- Delete partitions older than the configured retention
 
--- 3. Registrare una tabella per la gestione automatica
+--3. Register a table for automatic management
 EXEC DBA_OP.PKG_PARTITION_MANAGER.REGISTER_TABLE('SCHEMA', 'TABLE_NAME', 'RANGE', 'MONTHLY', 12);
 ```
 
 ---
 
-## 🔗 Collegamento
+## 🔗 Link
 Partitions are also covered in [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md) in the batch/maintenance section.

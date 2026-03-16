@@ -55,7 +55,7 @@ with cpu_data as (
 select
 	&use_std d.snap_id
 	&use_std , d.instance_number
-	&use_std , d.con_id
+&use_std , d.con_id
 	&use_std , d.begin_time
 	&use_std , d.end_time
 	&use_std , d.elapsed_seconds
@@ -65,8 +65,8 @@ select
 --
 	&use_csv d.snap_id
 	&use_csv ||','|| d.instance_number
-	&use_csv ||','|| d.con_id
-	&use_csv ||','|| d.begin_time
+&use_csv ||','|| d.with_id
+&use_csv ||','|| d.begin_time
 	&use_csv ||','|| d.end_time
 	&use_csv ||','|| d.elapsed_seconds
 	&use_csv ||','|| d.cpu_seconds

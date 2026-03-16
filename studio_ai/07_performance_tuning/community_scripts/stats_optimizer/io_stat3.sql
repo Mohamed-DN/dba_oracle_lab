@@ -16,8 +16,8 @@ set verify off echo off line 200
 set trimspool on
 col name format a60
 col rw_ratio format 99999.9 head 'R/W|RATIO'
---col disk noprint
-col stime new_value start_time noprint
+--with disk noprint
+col estimates new_value start_time noprint
 col etime new_value end_time noprint
 col sectime new_value seconds noprint
 col global_name new_value dbname noprint
@@ -34,7 +34,7 @@ select to_char(max(io_date),'mm/dd/yyyy hh24:mi:ss') etime from io_end;
 
 -- get the difference in seconds ( end_time - start_time )
 select 
-		round((max(e.io_date) - min(b.io_date)) / ( 1/(24*60*60))) sectime
+round((max(e.io_date) - min(b.io_date)) / ( 1/(24*60*60))) sectime
 from io_end e, io_begin b
 /
 
@@ -64,9 +64,9 @@ select io.inst_id
 	, io.name
 	, io.rdtot
 	, io.wrtot
-	, io.rpsecond
+, io.rpsecond
 	, io.wpsecond
-	, io.iopsecond
+, i.iopsecond
 	, io.rw_ratio
 from (
 	SELECT
@@ -84,7 +84,7 @@ from (
 				0,
 				1,
 				&&seconds
-			)iopsecond,
+)iopsecond,
 		round(
 			(e.blockreads - b.blockreads) / decode((e.blockwrites - b.blockwrites),0,1,(e.blockwrites - b.blockwrites))
 			,2) rw_ratio

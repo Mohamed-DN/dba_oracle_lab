@@ -4,7 +4,7 @@ This guide explains the operating procedure for managing disks in Oracle ASM (Au
 
 > [!IMPORTANT]
 > **Metodo ASMLib vs Udev**
-> Nel nostro laboratorio e nell'architettura di riferimento usiamo **ASMLib** (`oracleasm`). 
+> In our lab and reference architecture we use **ASMLib** (`oracleasm`). 
 > There is also another widely used method based on **udev rules** (configuring `/etc/udev/rules.d/` e `scsi_id`). Both methods are valid, but throughout our guide we will rely exclusively on **ASMLib** for simplicity and operational consistency.
 
 ---
@@ -14,30 +14,30 @@ This guide explains the operating procedure for managing disks in Oracle ASM (Au
 In an Enterprise environment, space management is dynamic and fundamental:
 *   **Capacity Expansion**: When the free space of a Disk Group (e.g. `+DATA`) drops below an alert threshold (usually 15-20%), you need to add new physical disks. ASM allows this hot operation, **without any downtime**.
 *   **Performance Balancing (Rebalance)**: ASM natively distributes data across all disks in a Disk Group (*striping* operation). When you add a new disk, ASM starts an automatic *Rebalance* process that moves blocks of data from the old disks to the new one. This distributes the I/O load and improves performance.
-*   **Separazione Logica**: In scenari avanzati, si creano Disk Group dedicati (es. `+RECO` per i backup o FRA) per isolare l'I/O critico.
+* **Logical Separation**: In advanced scenarios, dedicated Disk Groups are created (e.g.`+RECO`for backups or FRA) to isolate critical I/O.
 
 ---
 
-## 2. High Level Steps (Fasi di Alto Livello)
+##2. High Level Steps
 
 Whether you are creating a Disk Group from scratch or expanding one, these are the main steps:
 
 1.  **Backend** - *Provision new disks from Storage*: Provision new physical or virtual disks from storage (e.g. VMware, VirtualBox, SAN).
-2.  **root** - *Create Disk Partitions using `fdisk`*: Crea una partizione primaria per riservare il disco ed evitare sovrascritture involontarie.
+2.  **root** - *Create Disk Partitions using `fdisk`*: Create a primary partition to reserve the disk and avoid accidental overwriting.
 3.  **root** - *Mark Disk as ASM Disks using `oracleasm createdisk`*: Register the disk in the ASMLib driver so Oracle can recognize it.
-4.  **grid** - *Create new disk group using `CREATE DISKGROUP` command*: Crea (o espandi usando `ALTER`) il Disk Group dalla riga di comando o grafica ASMCA.
+4.  **grid** - *Create new disk group using `CREATE DISKGROUP`command*: Create (or expand using`ALTER`) the Disk Group from the ASMCA command line or graphical.
 
 ---
 
-## 3. Scopo Formativo: Creare un Disk Group da zero
+##3. Training Purpose: Create a Disk Group from scratch
 
 Below is a pure SQL example to create a new Disk Group, starting from the disks marked by ASMLib. Let's assume that the commands `oracleasm createdisk DATA` e `RECO` have already been launched.
 
 ```sql
-# Come utente grid (proprietario del software Grid Infrastructure)
+#As a grid user (owner of Grid Infrastructure software)
 su - grid
 
--- Connettiti all'istanza ASM locale (+ASM1)
+--Connect to local ASM instance (+ASM1)
 sqlplus / as sysasm
 
 -- Crea disk group DATA (Usiamo il path fisico effettivo del driver oracleasm)
@@ -52,7 +52,7 @@ CREATE DISKGROUP RECO EXTERNAL REDUNDANCY
   ATTRIBUTE 'compatible.asm' = '19.0.0.0.0',
             'compatible.rdbms' = '19.0.0.0.0';
 
--- Verifica i Disk Group appena creati
+--Check the newly created Disk Groups
 SELECT name, state, type, total_mb, free_mb FROM v$asm_diskgroup;
 
 EXIT;
@@ -66,10 +66,10 @@ If instead you want to expand an existing Disk Group (e.g. we already have `+DAT
 
 ### System Administrator phase
 1. **Backend**: A new disk (e.g. 10 GB) is assigned to the virtual machine. It becomes visible as `/dev/sdf`.
-2. **rac1 (root)**: Partizionamento:
+2. **rac1 (root)**: Partitioning:
    ```bash
    fdisk /dev/sdf
-   # Premi n, p, 1, invio, invio, w
+# Press n, p, 1, enter, enter, w
    ```
 3. **rac1 (root)**: Marcatura ASMLib:
    ```bash
@@ -87,13 +87,13 @@ If instead you want to expand an existing Disk Group (e.g. we already have `+DAT
    su - grid
    sqlplus / as sysasm
 
-   -- Aggiungi il disco al Disk Group DATA con priorità di rebalance 4 (valore medio-alto)
+   --Add the disk to Disk Group DATA with rebalance priority 4 (medium-high value)
    ALTER DISKGROUP DATA ADD DISK 'ORCL:DATA_EXP1' REBALANCE POWER 4;
    
-   -- Monitora l'avanzamento dell'operazione asincrona in background
+   --Monitor the progress of the asynchronous operation in the background
    SELECT * FROM v$asm_operation;
    
-   -- Verifica la nuova dimensione al termine dell'operazione
+   --Check the new size once the operation is complete
    SELECT name, total_mb, free_mb FROM v$asm_diskgroup WHERE name = 'DATA';
    ```
 
@@ -102,9 +102,9 @@ If instead you want to expand an existing Disk Group (e.g. we already have `+DAT
 
 ---
 
-## 📚 Approfondisci
+## 📚 Learn more
 
-Per procedure operative reali da ambiente Enterprise (con multipath, VMAX, Pure Storage), consulta:
+For real operating procedures from an Enterprise environment (with multipath, VMAX, Pure Storage), see:
 - [Procedure for Adding ASM Disks (from Production)](./studio_ai/01_asm_storage/asm_disk_add_procedure.md)
 - [ASM Disk Deallocation](./studio_ai/01_asm_storage/asm_disk_deallocation.md)
 

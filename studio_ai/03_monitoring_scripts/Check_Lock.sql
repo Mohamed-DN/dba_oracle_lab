@@ -26,7 +26,7 @@ sw.username||'('||sw.sid||')' "Waiter",
 
 /*******************/
 
-col machine FOR a20
+with machine FOR a20
 col program FOR a30
 col "sess" FOR a15
 
@@ -191,10 +191,10 @@ Holder: 55            1245186    36923             6              0 TX
 Waiter: 33            1245186    36923             0              6 TX
 Waiter: 73            1245186    36923             0              6 TX
 
-Controlo il PID del processo client che locca e che è loccato :
+I check the PID of the client process that is locking and that is locked:
 ---------------------------------------------------------------
 
-col machine FOR a20
+with machine FOR a20
 col program FOR a30
 col "sess"  FOR a15
 SET lines 150 
@@ -241,7 +241,7 @@ ORDER BY sid, type;
 */
 
 set lines 300
-col lm for 99
+with lm for 99
 col rq for 99
 col id1 for 9999999999
 col id2 for 9999999999
@@ -284,7 +284,7 @@ Session      SERIAL# USERN    SPID  SQL_HASH_VALUE PREV_HASH_VALUE EVENT    PROG
 Holder: 15      2512 EANDVIN  24554              0      2640453569 SQL*Net  sqlplus@h3mih        458791         915   6   0 TX
 Waiter: 16       608 EANDVIN  26122     3252277217      3252277217 enqueue  sqlplus@h3mih        458791         915   0   6 TX
 
---- Lock di oggetti
+--- Lock of objects
 
 set lines 124
 set heading off
@@ -337,7 +337,7 @@ and   s.type != 'BACKGROUND'
 and   t.obj# = l.id1
 and   u.user# = t.owner# ;
 
----> Lock di un particolare oggetto 
+---> Lock a particular object
 
 set lines 124
 set heading off
@@ -429,7 +429,7 @@ SELECT
              'CF', 'Control file schema global enqueue',
              'CI', 'Cross-instance function invocation instance',
              'CU', 'Cursor bind',
-             'DF', 'datafile instance',
+'DF', 'datafile instance',
              'DL', 'Direct loader parallel index create',
              'DM', 'Mount/startup db primary/secondary instance',
              'DR', 'Distributed recovery process',
@@ -445,8 +445,8 @@ SELECT
              'MM', 'Mount definition global enqueue',
              'MR', 'Media_recovery',
              'PF', 'Password File',
-             'PI', 'Parallel Operation',
-             'PS', 'Parallel Operation',
+'PI', 'Parallel Operation',
+'PS', 'Parallel Operation',
              'PR', 'Process startup',
              'RT', 'Redo thread global enqueue',
              'SC', 'System change number instance',

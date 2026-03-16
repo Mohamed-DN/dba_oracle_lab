@@ -14,9 +14,9 @@ set term on
 with
 function timestamp_diff_seconds( begin_timestamp timestamp, end_timestamp timestamp ) 
 return number is
-	i_diff_interval interval day(9) to second(6);
+i_diff_interval interval day(9) to second(6);
 begin
-	i_diff_interval := end_timestamp - begin_timestamp;
+i_diff_interval := end_timestamp - begin_timestamp;
 	return 
 		(extract( day from i_diff_interval )*86400)+
 		(extract( hour from i_diff_interval )*3600)+

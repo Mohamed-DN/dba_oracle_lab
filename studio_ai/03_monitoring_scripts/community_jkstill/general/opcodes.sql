@@ -1,5 +1,5 @@
 -- do NOT add blank lines
--- do NOT add a slash or semi-colon terminator
+--do NOT add a slash or semi-colon terminator
 -- this script is called from inside a SQL statement
 --
 -- as seen in dba_hist_active_sess_history

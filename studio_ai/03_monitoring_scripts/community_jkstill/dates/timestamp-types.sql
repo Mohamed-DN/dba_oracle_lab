@@ -57,8 +57,8 @@ declare
 				, 'cast(systimestamp as timestamp)'
 				, 'current_timestamp'
 				, 'localtimestamp'
-				, 'dbtimezone'
-				, 'sessiontimezone'
+, 'dbtimezone'
+, 'sessiontimezone'
 				)
 			)
 		),
@@ -72,8 +72,8 @@ declare
 				, 'yyyy-mm-dd hh24:mi:ss.ff' -- systimestamp as timestamp
 				, 'yyyy-mm-dd hh24:mi:ss.fftzh:tzm' -- current_timestamp
 				, 'yyyy-mm-dd hh24:mi:ss.ff' -- localtimestamp
-				, 'NA' -- dbtimezone
-				, 'NA' -- sessionimezone
+, 'NA' -- dbtimezone
+, 'NA' -- sessionsmezone
 			)
 		)
 	)
@@ -128,7 +128,7 @@ begin
 		;
 		--pl('v_sql: ' || v_sql);
 		execute immediate v_sql into v_date_str, v_dump_data;
-		pl(lpad('data: ',24) || v_date_str);
+pl(lpad('date: ',24) || v_date_str);
 		pl(lpad('dump: ',24)  || v_dump_data);
 		nl;
 	end loop;

@@ -25,8 +25,8 @@ with data as (
 select distinct
 	u.username
 	, m.snap_id
-	, session_id
-	, m.session_serial#
+, session_id
+, m.session_serial#
 	--, s.begin_interval_time
 	--, s.end_interval_time
 	, first_value(s.begin_interval_time) over (partition by u.user_id,session_id,session_serial# order by s.begin_interval_time) start_time
@@ -45,8 +45,8 @@ select
 	, end_time - start_time duration
 */
 	username
-	|| ',' || session_id
-	|| ',' || session_serial#
+|| ',' || session_id
+|| ',' || session_serial#
 	|| ',' || to_char(start_time,'yyyy-mm-dd hh24:mi:ss')
 	|| ',' || to_char(end_time,'yyyy-mm-dd hh24:mi:ss')
 	|| ',''' || to_char(end_time - start_time)

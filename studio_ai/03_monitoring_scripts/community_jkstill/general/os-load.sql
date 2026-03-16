@@ -17,7 +17,7 @@ set pagesize 60
 select inst_id
 	, to_char(h.begin_time,'yyyy-mm-dd hh24:mi:ss') begin_time
 	, g.name metric_name
-	, interval_size / 100 interval_seconds
+, interval_size / 100 interval_seconds
 	,round(h.value,2) OS_LOad
 from gv$sysmetric_history h
 join v$metricgroup g on g.group_id = h.group_id

@@ -22,7 +22,7 @@ select
 	, dt.stripe
 	, dt.system
 	, dt.name
-	, dt.primary_region
+, dt.primary_region
 	, dt.mirror_region
 from v$asm_diskgroup dg
 join v$asm_template dt on dt.group_number = dg.group_number

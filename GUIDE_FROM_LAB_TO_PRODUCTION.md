@@ -33,7 +33,7 @@
 
 ```
 ╔═══════════════════════════════╦═══════════════╦═══════════════╦═══════════════╗
-║ Componente                    ║ Lab (4 GB)    ║ Small Prod    ║ Large Prod    ║
+║ Component ║ Lab (4 GB) ║ Small Prod ║ Large Prod ║
 ╠═══════════════════════════════╬═══════════════╬═══════════════╬═══════════════╣
 ║ SGA_TARGET                    ║ ~1 GB (auto)  ║ 32 GB         ║ 96-128 GB     ║
 ║   ├─ Buffer Cache             ║ ~600 MB       ║ 20 GB         ║ 80 GB         ║
@@ -51,9 +51,9 @@
 
 ### CPU per Node
 
-| Load | Lab | Small Prod | Large Prod |
+| Load | Lab |Small Prod| Large Prod |
 |---|---|---|---|
-| OLTP (molte transazioni piccole) | 2 vCPU | 16 CPU | 32+ CPU |
+|OLTP (many small transactions)| 2 vCPU | 16 CPU | 32+ CPU |
 | DSS/DWH (poche query pesanti) | 2 vCPU | 8 CPU | 16+ CPU |
 | Misto | 2 vCPU | 16 CPU | 24+ CPU |
 
@@ -68,21 +68,21 @@
 ╠════════════════════╬═══════════════╬═══════════════════════════════════╣
 ║ +DATA              ║ 20 GB         ║ 500 GB - 10 TB+                  ║
 ║                    ║ EXTERNAL      ║ NORMAL o HIGH redundancy          ║
-║                    ║ 1 disco VDI   ║ 8-16+ LUN SAN/NVMe               ║
+║ ║ 1 VDI disk ║ 8-16+ SAN/NVMe LUN ║
 ╠════════════════════╬═══════════════╬═══════════════════════════════════╣
 ║ +FRA               ║ 15 GB         ║ 200 GB - 5 TB+                   ║
 ║                    ║ EXTERNAL      ║ NORMAL redundancy                 ║
-║                    ║               ║ Dimensione = 2x DATA (ideale)     ║
+║ ║ ║ Size = 2x DATA (ideal) ║
 ╠════════════════════╬═══════════════╬═══════════════════════════════════╣
-║ +REDO (opzionale)  ║ non presente  ║ SSD/NVMe dedicato per redo log    ║
-║                    ║               ║ Bassa latenza = COMMIT veloce     ║
+║ +REDO (optional) ║ not present ║ Dedicated SSD/NVMe for redo log ║
+║ ║ ║ Low latency = fast COMMIT ║
 ╚════════════════════╩═══════════════╩═══════════════════════════════════╝
 ```
 
 > **ASM Redundancy in Production:**
-> - **EXTERNAL**: Lo storage sottostante (SAN con RAID) fa il mirroring. Oracle non duplica.
-> - **NORMAL**: Oracle fa 2 copie. Protegge da 1 guasto disco. Usato per +CRS, +FRA.
-> - **HIGH**: Oracle fa 3 copie. Protegge da 2 guasti. Usato per +DATA critico.
+> - **EXTERNAL**: The underlying storage (SAN with RAID) is mirrored. Oracle does not duplicate.
+> - **NORMAL**: Oracle makes 2 copies. Protects against 1 disk failure. Used for +CRS, +FRA.
+> - **HIGH**: Oracle makes 3 copies. Protects against 2 faults. Used for +DATA critical.
 
 ---
 
@@ -118,15 +118,15 @@ ALTER SYSTEM SET pga_aggregate_target = 8G SCOPE=SPFILE SID='*';
 
 -- ========= UNDO =========
 ALTER SYSTEM SET undo_retention = 1800 SCOPE=BOTH SID='*';  -- 30 min
--- In produzione: 1800-3600 secondi per evitare ORA-01555
+--In production: 1800-3600 seconds to avoid ORA-01555
 
 -- ========= REDO =========
--- Online Redo Log: almeno 4 gruppi, 1-4 GB per gruppo
--- Log switch ogni 15-20 minuti (non troppo frequente)
+--Online Redo Log: at least 4 groups, 1-4 GB per group
+--Log switch every 15-20 minutes (not too frequent)
 
 -- ========= PROCESSES & SESSIONS =========
 ALTER SYSTEM SET processes = 1500 SCOPE=SPFILE SID='*';
--- sessions = 1.5 * processes + 22 (calcolato automaticamente)
+--sessions = 1.5 * processes + 22 (calculated automatically)
 
 -- ========= PARALLELISM =========
 ALTER SYSTEM SET parallel_max_servers = 64 SCOPE=BOTH SID='*';
@@ -140,7 +140,7 @@ ALTER SYSTEM SET optimizer_adaptive_statistics = FALSE SCOPE=BOTH SID='*';
 ### HugePages (Linux — MANDATORY in Production!)
 
 ```bash
-# Calcola le hugepages necessarie (2 MB per pagina)
+# Calculate hugepages needed (2 MB per page)
 # SGA = 32 GB → 32*1024/2 = 16384 hugepages
 
 echo "vm.nr_hugepages = 16384" >> /etc/sysctl.conf
@@ -157,9 +157,9 @@ echo never > /sys/kernel/mm/transparent_hugepage/defrag
 
 ## 4. Security — What to Add in Production
 
-| Area | Lab (semplificato) | Production |
+| Area |Lab (simplified)| Production |
 |---|---|---|
-| Firewall | Disabilitato | **Abilitato** con porte 1521, 1522, 7809 aperte |
+| Firewall | Disabilitato |**Enabled** with ports 1521, 1522, 7809 open|
 | SELinux | Disabilitato | **Permissive** o **Enforcing** con policy Oracle |
 | Encryption | Nessuna | **TDE** (Transparent Data Encryption) per datafile |
 | Network Encryption | Nessuna | **Native Network Encryption** o SSL/TLS |
@@ -175,7 +175,7 @@ echo never > /sys/kernel/mm/transparent_hugepage/defrag
 LAB: PRODUCTION:
 Script manuali                    Oracle Enterprise Manager (OEM) 13c
 crontab health check + Cloud Control Agent on each node
-alert log manuale                 + Dashboard centralizzata
+manual alert log + centralized dashboard
                                   + Email/SMS alerting
                                   + Integration con PagerDuty/ServiceNow
 
@@ -186,10 +186,10 @@ Alternativa OEM:                  Grafana + Prometheus + oracle_exporter
 ### orachk — Health Check Oracle Automatizzato
 
 ```bash
-# Scarica orachk da MOS (Doc 1268927.2)
-# Eseguilo mensilmente e prima/dopo ogni patching
+# Download orachk from MOS (Doc 1268927.2)
+# Run this monthly and before/after every patching
 ./orachk -a
-# Genera un report HTML con raccomandazioni Oracle
+# Generate an HTML report with Oracle recommendations
 ```
 
 ---
@@ -206,18 +206,18 @@ Alternativa OEM:                  Grafana + Prometheus + oracle_exporter
 ║ □ CPU: at least 16 cores per node ║
 ║  □ Storage SAN/NVMe con multipath                            ║
 ║  □ NIC bonding (LACP) per public + interconnect              ║
-║  □ HugePages configurate, THP disabilitate                   ║
-║  □ Kernel parameters ottimizzati (shmmax, sem, aio-max)      ║
+║ □ HugePages configured, THP disabled ║
+║ □ Optimized kernel parameters (shmmax, sem, aio-max) ║
 ║ □ NTP/chrony synchronized on all nodes ║
 ║                                                               ║
 ║  DATABASE                                                    ║
-║  □ ARCHIVELOG mode attivo                                    ║
-║  □ FORCE LOGGING attivo                                      ║
+║ □ ARCHIVELOG mode active ║
+║ □ FORCE LOGGING active ║
 ║  □ BCT (Block Change Tracking) abilitato                     ║
-║  □ Undo retention >= 1800 secondi                            ║
+║ □ Undo retention >= 1800 seconds ║
 ║  □ Redo Log: 4+ gruppi, 1-4 GB, switch ogni 15-20 min       ║
 ║ □ Processes >= 1000 (based on expected load) ║
-║  □ Statistiche automatiche verificate                        ║
+║ □ Automatic statistics verified ║
 ║ □ Active password policy ║
 ║                                                               ║
 ║  ASM                                                         ║
@@ -230,25 +230,25 @@ Alternativa OEM:                  Grafana + Prometheus + oracle_exporter
 ║ □ Data Guard configured with physical standby ║
 ║  □ Fast-Start Failover (FSFO) opzionale con Observer         ║
 ║  □ FAN (Fast Application Notification) abilitato             ║
-║  □ Services configurati (non usare default service!)         ║
+║ □ Services configured (do not use default service!) ║
 ║  □ CLB + RLB (Connection/Runtime Load Balancing)             ║
 ║                                                               ║
 ║  BACKUP & RECOVERY                                           ║
 ║ □ RMAN backup Level 0 weekly + Level 1 daily ║
 ║  □ Archivelog backup ogni 1-2 ore                            ║
-║  □ RESTORE DATABASE VALIDATE eseguito con successo           ║
+║ □ RESTORE DATABASE VALIDATE completed successfully ║
 ║ □ Tested DR procedure (switchover + failover) ║
 ║                                                               ║
 ║  SICUREZZA                                                   ║
-║  □ Firewall attivo con porte specifiche                      ║
-║  □ TDE per encryption dei datafile                           ║
+║ □ Active firewall with specific ports ║
+║ □ TDE for datafile encryption ║
 ║  □ Unified Auditing abilitato                                ║
 ║  □ Network encryption (Native o SSL)                         ║
 ║                                                               ║
 ║  MONITORING                                                  ║
-║  □ OEM o Grafana+Prometheus configurato                      ║
+║ □ OEM or Grafana+Prometheus configured ║
 ║ □ orachk executed and PASS complete ║
-║  □ Alert email per: spazio, errori ORA-, job falliti         ║
+║ □ Email alert for: space, ORA- errors, failed jobs ║
 ║  □ AWR snapshot ogni 30 min (default)                        ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

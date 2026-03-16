@@ -35,7 +35,7 @@ begin
 			THEN (TRUNC(v_date_table(i))+(25/48))
 			ELSE (TRUNC(v_date_table(i) -(1/24))+(49/48)) 
 			END
-		into v_test_date
+into v_test_date
 		from dual;
 	
 		dbms_output.put_line('    Next Date: ' || v_test_date);

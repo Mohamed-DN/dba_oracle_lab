@@ -34,14 +34,14 @@ select
 	, system_created
 	, alias_directory
 	--, file_type
-	, modification_date
+, modification_date
 from (
 select
 	concat('+'||gname, sys_connect_by_path(aname, '/')) full_path
 	, system_created
 	, alias_directory
 	, file_type
-	, modification_date
+, modification_date
 	, bytes
 from
 (
@@ -52,7 +52,7 @@ from
 		, a.reference_index rindex
 		, a.system_created, a.alias_directory
 		, c.type file_type
-		, c.modification_date
+, c.modification_date
 		, c.bytes
 	from v$asm_alias a, v$asm_diskgroup b, v$asm_file c
 	where a.group_number = b.group_number

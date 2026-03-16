@@ -14,7 +14,7 @@ col iopsecond format 9999.99 head 'IOS|PER|SEC'
 select
 	io.inst_id
 	, io.name
-	, io.iopsecond
+, i.iopsecond
 from (
 	SELECT
 		b.inst_id,
@@ -31,7 +31,7 @@ from (
 				0,
 				1,
 				&&seconds
-			)iopsecond,
+)iopsecond,
 		round(
 			(e.blockreads - b.blockreads) / decode((e.blockwrites - b.blockwrites),0,1,(e.blockwrites - b.blockwrites))
 			,2) rw_ratio

@@ -44,7 +44,7 @@ from ( select sql_id,
               where  ss.snap_id = S.snap_id
               and    ss.instance_number = S.instance_number
               and    executions_delta > 0
-              and    elapsed_time_delta > 0
+and elapsed_time_delta > 0
               and    s.snap_id > nvl('&earliest_snap_id',1016)
               group by sql_id, plan_hash_value))
        group by sql_id, stddev_etime)
@@ -61,7 +61,7 @@ SQL_ID        SUM(EXECS)   MIN_ETIME   MAX_ETIME   NORM_STDDEV
 ------------- ---------- ----------- ----------- -------------
 0qa98gcnnza7h         62       25.58      314.34        7.9833
 
-Questo sql_id ha avuto degli scossoni nel tempo di risposta
+This sql_id had some bumps in response time
 
 Eseguo lo script : find_sql.sql
 
@@ -94,7 +94,7 @@ SQL_ID         CHILD  PLAN_HASH        EXECS         ETIME     AVG_ETIME USERNAM
 0qa98gcnnza7h      4 3723858078           10      4,558.62        455.86 KSO           select avg(pk_col) from kso.skew where col1 > 0
 
 
-Eseguo lo script awr_plan_change.sql dandogli il sql_id
+Eseguo lo script awr_plan_change.sqlgiving it the sql_id
 
 Enter value for sql_id: 0qa98gcnnza7h
 
@@ -133,21 +133,21 @@ order by 1, 2, 3
 
   SNAP_ID   NODE BEGIN_INTERVAL_TIME            SQL_ID        PLAN_HASH_VALUE        EXECS    AVG_ETIME        AVG_LIO
 ---------- ------ ------------------------------ ------------- --------------- ------------ ------------ --------------
-      3206      1 02-OCT-08 08.00.38.743 AM      0qa98gcnnza7h       568322376            4       10.359      121,722.8
-      3235      1 03-OCT-08 01.00.44.932 PM      0qa98gcnnza7h                            1       10.865      162,375.0
-      3235      1 03-OCT-08 01.00.44.932 PM      0qa98gcnnza7h      3723858078            1      127.664   28,913,271.0
-      3236      1 03-OCT-08 01.28.09.000 PM      0qa98gcnnza7h       568322376            1        7.924      162,585.0
-      3236      1 03-OCT-08 01.28.09.000 PM      0qa98gcnnza7h      3723858078            1       86.682   27,751,123.0
-      3305      1 06-OCT-08 10.00.11.988 AM      0qa98gcnnza7h                            4       64.138   22,616,931.5
-      3305      1 06-OCT-08 10.00.11.988 AM      0qa98gcnnza7h       568322376            2        5.710       81,149.0
-      3306      1 06-OCT-08 11.00.16.490 AM      0qa98gcnnza7h                            6        5.512      108,198.5
-      3307      1 06-OCT-08 12.00.20.716 PM      0qa98gcnnza7h                            2        3.824       81,149.0
-      3328      1 07-OCT-08 08.39.20.525 AM      0qa98gcnnza7h                           30       35.473      156,904.7
-      3335      1 07-OCT-08 03.00.20.950 PM      0qa98gcnnza7h      3723858078           10
+3206 1 02-OCT-08 08.00.38.743 AM 0qa98gcnnza7h 568322376 4 10.359 121,722.8
+3235 1 03-OCT-08 01.00.44.932 PM 0qa98gcnnza7h 1 10.865 162,375.0
+3235 1 03-OCT-08 01.00.44.932 PM 0qa98gcnnza7h 3723858078 1 127.664 28,913,271.0
+3236 1 03-OCT-08 01.28.09.000 PM 0qa98gcnnza7h 568322376 1 7.924 162,585.0
+3236 1 03-OCT-08 01.28.09.000 PM 0qa98gcnnza7h 3723858078 1 86.682 27,751,123.0
+3305 1 06-OCT-08 10.00.11.988 AM 0qa98gcnnza7h 4 64.138 22,616,931.5
+3305 1 06-OCT-08 10.00.11.988 AM 0qa98gcnnza7h 568322376 2 5.710 81,149.0
+3306 1 06-OCT-08 11.00.16.490 AM 0qa98gcnnza7h 6 5.512 108,198.5
+3307 1 06-OCT-08 12.00.20.716 PM 0qa98gcnnza7h 2 3.824 81,149.0
+3328 1 07-OCT-08 08.39.20.525 AM 0qa98gcnnza7h 30 35.473 156,904.7
+3335 1 07-OCT-08 03.00.20.950 PM 0qa98gcnnza7h 3723858078 10
 
-Vedo che per le 62 esecuzioni tale sql_id ha 2 piani di esecuzione
+I see that for the 62 executions that sql_id has 2 execution plans
 
-Controllo i 2 piani di esecuzione
+I check the 2 execution plans
 
 select * from table(dbms_xplan.display_cursor('&sql_id','&child_no','typical'));
 
@@ -158,7 +158,7 @@ select * from table(dbms_xplan.display_cursor('&sql_id','&child_no',''));
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('&sql_id', format => 'ADVANCED'));
 
 
-Controllo piano con HASH_VALUE
+Plan control withHASH_VALUE
 
 select * from table(dbms_xplan.display_awr('&sql_id','&plan_hash',''));
 
@@ -185,7 +185,7 @@ COL RUN_TIME FOR a30
          SUM (delta_read_io_bytes) read_io_bytes
     FROM (SELECT sql_id,
                  sql_plan_hash_value,
-                 sample_time,
+sample_time,
                  sql_exec_start,
                  delta_read_io_bytes,
                  sql_exec_id
@@ -211,7 +211,7 @@ ORDER BY starting_time
 
 
 *********
-# per vedere in tempo reale l''elapsed time
+# to see the elapsed time in real time
 *********
 SET LINE 250 PAGES 2000
 ALTER SESSION SET nls_date_format='dd-mon-yy hh24:mi:ss';
@@ -229,7 +229,7 @@ COL RUN_TIME FOR a30
          SUM (delta_read_io_bytes) read_io_bytes
     FROM (SELECT sql_id,
                  sql_plan_hash_value,
-                 sample_time,
+sample_time,
                  sql_exec_start,
                  delta_read_io_bytes,
                  sql_exec_id
@@ -252,7 +252,7 @@ ORDER BY starting_time
 
 *********
 
-Per trovare il sql_id
+To find the sql_id
 
 set long 90000
 set pages 40000
@@ -313,7 +313,7 @@ COL javexec_time_avg    for 9999999999
          first_load_time,
          last_load_time,
          outline_category,
-         sql_profile,
+sql_profile,
          executions,
          TRUNC (DECODE (executions, 0, 0, rows_processed / executions))
             rows_avg,
@@ -323,7 +323,7 @@ COL javexec_time_avg    for 9999999999
          TRUNC (DECODE (executions, 0, 0, buffer_gets / executions))
             buffer_gets_avg,
          TRUNC (DECODE (executions, 0, 0, cpu_time / 1000000 / executions))
-            cpu_time_avg,
+cpu_time_avg,
          TRUNC (DECODE (executions, 0, 0, elapsed_time / 1000000 / executions))
             elapsed_time_avg,
          TRUNC (
@@ -403,7 +403,7 @@ ORDER BY child_number;
 				DECODE (SS.executions_total,
 						0, 0,
 						SS.cpu_time_total / 1000000 / SS.executions_total))
-				cpu_time_avg,
+cpu_time_avg,
 			 TRUNC (
 				DECODE (SS.executions_total,
 						0, 0,
@@ -466,10 +466,10 @@ SELECT DISTINCT
    round(elapsed_time_delta / 1000000 / decode(px_servers_execs_delta,0,1,px_servers_execs_delta),4) "ela(s)",
    round(elapsed_time_delta / 1000000 / decode(executions_delta,0,1,executions_delta) /
                     decode(px_servers_execs_delta,0,1,px_servers_execs_delta),2) "ela/execs",
-   round((cpu_time_delta / 1000000),4) "cpu_time(s)",
+round((cpu_time_delta / 1000000),4) "cpu_time(s)",
    round(cpu_time_delta / 1000000 / decode(executions_delta,0,1,executions_delta) /
                     decode(px_servers_execs_delta,0,1,px_servers_execs_delta),2) "cpu/execs",
-   round(cpu_time_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%cpu",
+round(cpu_time_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%cpu",
 --   buffer_gets_delta "buff_gets",
    round(buffer_gets_delta / decode(executions_delta,0,1,executions_delta) / decode(px_servers_execs_delta,0,1,px_servers_execs_delta),4) "gets/execs",
 --   disk_reads_delta "disk_reads",
@@ -481,12 +481,12 @@ SELECT DISTINCT
 --   direct_writes_delta "direct_wrts",
 --   round(direct_writes_delta / decode(executions_delta,0,1,executions_delta) /
 --                            decode(px_servers_execs_delta,0,1,px_servers_execs_delta),4) "d-wrts/execs",
---   iowait_delta "io_wtime",
---   round(iowait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%iowait",
+--iowait_delta "io_wtime",
+--round(iowait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%iowait",
 --   apwait_delta "ap_wtime",
---   round(apwait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%apwait",
+--round(apwait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%apwait",
 --   ccwait_delta "cc_wtime",
---  round(ccwait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%ccwait",
+--round(ccwait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%ccwait",
 --   clwait_delta "cl_wtime",
 --   round(clwait_delta*100/decode(elapsed_time_delta,0,1,elapsed_time_delta),4) "%clwait",
 --   module,
@@ -522,13 +522,13 @@ COL "ela/e (s)" FOR 9999999
          plan_hash_value "phv",
          --module,
          ROUND (
-              elapsed_time_delta
+elapsed_time_delta
             / DECODE (executions_delta, 0, 1, executions_delta)
             / 1000000,
             2)
             "ela/e (s)",
          ROUND (
-              cpu_time_delta
+cpu_time_delta
             / DECODE (executions_delta, 0, 1, executions_delta)
             / 1000000,
             2)
@@ -590,7 +590,7 @@ COL "ela/e (s)" FOR 9999999
 --                                        AND TO_DATE ('30-DEC-16 01:00:00',
 --                                                     'DD-MON-YY HH24:MI:SS')
 --         AND ROUND (
---                  elapsed_time_delta
+--elapsed_time_delta
 --                / DECODE (executions_delta, 0, 1, executions_delta)
 --                / 1000000,
 --                2) > 0
@@ -680,7 +680,7 @@ ORDER BY s.snap_id, q.sql_id, q.plan_hash_value
 
 **********************************************************************************
 
-Query Utili per BIND VARIABLE
+Useful Queries for BIND VARIABLE
 
 SET LINESIZE 200
 SET PAGESIZE 200

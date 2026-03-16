@@ -109,13 +109,13 @@ package_headers as (
 ),
 all_data as (
 	select owner,package_name,code_name,code_type from package_headers
-	union all
+union all
 	select owner,package_name,code_name,code_type from procedures
-	union all
+union all
 	select owner,package_name,code_name,code_type from functions
-	union all
+union all
 	select owner,package_name,code_name,code_type from views
-	union all
+union all
 	select owner,package_name,code_name,code_type from triggers
 	order by 1,2,3
 )

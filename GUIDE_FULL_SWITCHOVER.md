@@ -18,7 +18,7 @@ BEFORE Switchover:
 │  └────┘ └────┘  │                          │  └────┘ └────┘  │
 │  rac1    rac2   │                          │ stby1   stby2   │
 └─────────────────┘                          └─────────────────┘
-       CLIENTS ──→ si connettono qui
+CLIENTS ──→ connect here
 
 
 DURANTE lo Switchover (~30-60 secondi):
@@ -27,8 +27,8 @@ DURANTE lo Switchover (~30-60 secondi):
 2. Primary becomes Standby
 3. The Standby receives the latest redo and applies it
 4. Standby becomes Primary
-5. Si aprono i nuovi ruoli
-   ⚠️ I client vengono disconnessi per ~30-60 secondi!
+5. New roles open
+⚠️ Clients are disconnected for ~30-60 seconds!
 
 
 AFTER the Switchover:
@@ -42,7 +42,7 @@ AFTER the Switchover:
 │  └────┘ └────┘  │                          │  └────┘ └────┘  │
 │  rac1    rac2   │                          │ stby1   stby2   │
 └─────────────────┘                          └─────────────────┘
-                                       CLIENTS ──→ si connettono QUI ora
+CLIENTS ──→ connect HERE now
 ```
 
 ---
@@ -56,7 +56,7 @@ dgmgrl sys/<password>@RACDB
 
 SHOW CONFIGURATION;
 # Configuration Status: SUCCESS  ← OBBLIGATORIO!
-# Se mostra WARNING o ERROR → NON procedere, risolvi prima
+# If it shows WARNING or ERROR → DO NOT proceed, fix it first
 
 SHOW DATABASE RACDB;
 SHOW DATABASE RACDB_STBY;
@@ -74,7 +74,7 @@ GROUP BY thread# ORDER BY thread#;
 SELECT thread#, MAX(sequence#) FROM v$archived_log WHERE applied='YES' 
 GROUP BY thread# ORDER BY thread#;
 
--- I numeri di sequenza devono corrispondere!
+--Sequence numbers must match!
 ```
 
 ### 3. Verify that switchover is possible
@@ -113,21 +113,21 @@ VBoxManage snapshot "racstby2" take "PRE-SWITCHOVER"
 ```bash
 dgmgrl sys/<password>@RACDB
 
-# Comando singolo — DGMGRL gestisce tutto automaticamente
+# Single command — DGMGRL handles everything automatically
 SWITCHOVER TO RACDB_STBY;
 ```
 
 ### What DGMGRL does internally:
 
 ```
-1. Verifica che tutti i redo siano stati spediti
+1. Check that all redos have been sent
 2. Chiude il database RACDB (Primary → Standby)
    → ALTER DATABASE COMMIT TO SWITCHOVER TO STANDBY WITH SESSION SHUTDOWN
 3. Monta RACDB come physical standby
 4. Apre RACDB_STBY come Primary
    → ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY
 5. Avvia redo apply sul nuovo standby (RACDB)
-6. Riapre il database se configurato per AUTO open
+6. Reopens the database if configured for AUTO open
 ```
 
 ### Step 2: Check the new status
@@ -167,11 +167,11 @@ srvctl status database -d RACDB
 ```sql
 -- Sul NUOVO Primary (RACDB_STBY)
 SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id = 2;
--- STATUS = VALID → redo viene spedito al nuovo standby
+--STATUS = VALID → redo is sent to the new standby
 
 -- Sul NUOVO Standby (RACDB)
 SELECT process, status FROM v$managed_standby WHERE process = 'MRP0';
--- STATUS = APPLYING_LOG → redo viene applicato
+-- STATUS = APPLYING_LOG→ redo is applied
 ```
 
 ### Step 5: DML test on the new Primary
@@ -182,7 +182,7 @@ sqlplus testdg/testdg123@RACDB_STBY
 INSERT INTO test_replica VALUES (7777, 'Switchover completato!', SYSTIMESTAMP);
 COMMIT;
 
--- Verifica sul nuovo standby
+--Check on the new standby
 sqlplus / as sysdba @RACDB
 SELECT * FROM testdg.test_replica WHERE id = 7777;
 -- Deve esistere!
@@ -195,39 +195,39 @@ SELECT * FROM testdg.test_replica WHERE id = 7777;
 ```bash
 dgmgrl sys/<password>@RACDB_STBY
 
-# Verifica
+# Verify
 VALIDATE DATABASE RACDB;
 # Ready for Switchover: Yes
 
 # Esegui
 SWITCHOVER TO RACDB;
 
-# Verifica
+# Verify
 SHOW CONFIGURATION;
-# RACDB è di nuovo Primary
-# RACDB_STBY è di nuovo Standby
+# RACDB is Primary again
+# RACDB_STBYis Standby again
 ```
 
 ---
 
 ## Troubleshooting Switchover
 
-| Problema | Causa | Soluzione |
+| Problema | Causa |Solution|
 |---|---|---|
-| "Ready for Switchover: No" | Apply lag, redo gap | Aspetta che il lag scenda a 0, forza log switch |
-| ORA-16467: switchover target is not in sync | Redo non applicato | `ALTER SYSTEM SWITCH LOGFILE;` on the primary, wait |
-| Switchover stalled | Sessioni attive resistono | Aggiungi `WITH SESSION SHUTDOWN` se manuale |
+| "Ready for Switchover: No" | Apply lag, redo gap |Wait for lag to drop to 0, force log switch|
+| ORA-16467: switchover target is not in sync |Redo not applied| `ALTER SYSTEM SWITCH LOGFILE;` on the primary, wait |
+| Switchover stalled |Active sessions resist| Aggiungi `WITH SESSION SHUTDOWN` se manuale |
 | New standby does not apply redo | Unreachable listeners | `lsnrctl status` on new standby, check tnsnames |
-| ORA-01017 after switchover | Password file not synced | Copy `orapw` from new primary to new standby |
+| ORA-01017 after switchover | File password not synced | Copy `orapw` from new primary to new standby |
 
 ---
 
 ## Quando Usare lo Switchover
 
-| Scenario | Switchover? |
+|Scenario| Switchover? |
 |---|---|
 | Scheduled patching of the primary | ✅ Yes — switchover, patch, switchback |
-| Test annuale di DR | ✅ Yes — check that everything works |
+|Annual DR test| ✅ Yes — check that everything works |
 | Migration to new hardware | ✅ Yes — switchover to new HW |
 | Primary hardware failure | ❌ No — use **Failover** (see dedicated guide) |
 | Data corruption on the primary | ❌ No — usa **Flashback Database** o RMAN restore |

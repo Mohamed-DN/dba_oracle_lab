@@ -32,7 +32,7 @@ select
 	, col.table_name
 	, col.constraint_name
 	, col.column_name
-	, col.position
+, col.position
 	, con.delete_rule
 from (
 	select distinct

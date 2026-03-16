@@ -22,7 +22,7 @@ COL calling_code FOR a70
                procs1.procedure_name, '',
                   DECODE (procs2.procedure_name,  '', '',  NULL, '',  '.')
                || procs2.procedure_name)
-            "calling_code"
+"calling_code"
     FROM v$active_session_history ash,
          all_procedures procs1,
          all_procedures procs2

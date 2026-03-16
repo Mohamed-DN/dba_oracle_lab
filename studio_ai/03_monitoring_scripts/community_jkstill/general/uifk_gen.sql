@@ -7,7 +7,7 @@
 
 
 col default_tablespace new_value default_tablespace noprint 
-col username new_value username noprint
+with username new_value username noprint
 
 prompt Find unindexed foreign keys for a user, and 
 prompt generate indexes for them

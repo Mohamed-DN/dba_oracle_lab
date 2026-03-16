@@ -42,7 +42,7 @@ col u_type new_value u_type noprint
 
 col owner format a30 noprint
 col name format a30 noprint
-col idx noprint
+with idx noprint
 
 col type format a18
 col object format a75
@@ -115,7 +115,7 @@ with dep_recurse (
 		and o.object_name = d.name
 		and o.object_type = d.type
 	-- anchor member
-	union all
+union all
 	-- recursive member
 	select
 		d.owner

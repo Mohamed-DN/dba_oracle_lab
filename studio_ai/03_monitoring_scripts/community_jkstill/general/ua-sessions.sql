@@ -35,7 +35,7 @@ select
 	, return_code
 	, os_username
 	, userhost
-	, terminal
+, terminal
 	, instance_id
 	--, authentication_type
 from unified_audit_trail ua

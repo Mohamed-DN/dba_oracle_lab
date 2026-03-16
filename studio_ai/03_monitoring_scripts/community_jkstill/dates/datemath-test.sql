@@ -5,8 +5,8 @@
 
 
 col epoch_timestamp_tz format 9999999999.999999999
-col    epoch_timestamp format 9999999999.999999999
-col         epoch_date format 9999999999
+col epoch_timestamp format 9999999999.999999999
+with epoch_date format 9999999999
 col epoch_timestamp_col format a35
 col epoch_timestamp_tz_col format a35
 

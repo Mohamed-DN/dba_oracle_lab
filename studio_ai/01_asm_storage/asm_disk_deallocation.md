@@ -7,17 +7,17 @@
 ## Procedure
 
 ```sql
--- 1. Verifica stato attuale dei dischi nel Disk Group
+--1. Check current status of disks in Disk Group
 SELECT PATH, LABEL, NAME, FAILGROUP, OS_MB, MOUNT_STATUS, HEADER_STATUS 
 FROM v$asm_disk WHERE GROUP_NUMBER = (SELECT GROUP_NUMBER FROM v$asm_diskgroup WHERE NAME = 'DATADG');
 
--- 2. DROP del disco (ASM avvia automaticamente il rebalance dei dati)
+--2. Disk DROP (ASM automatically starts data rebalancing)
 ALTER DISKGROUP DATADG DROP DISK DATA_OLD001 REBALANCE POWER 4;
 
--- 3. Monitora il rebalance (attendere che si completi prima di deallocare fisicamente!)
+--3. Monitor the rebalance (wait for it to complete before physically deallocating!)
 SELECT * FROM v$asm_operation;
 
--- 4. Dopo il completamento del rebalance, verifica che il disco non sia più nel Disk Group
+--4. After the rebalance completes, verify that the disk is no longer in the Disk Group
 SELECT PATH, LABEL, NAME FROM v$asm_disk WHERE GROUP_NUMBER = (SELECT GROUP_NUMBER FROM v$asm_diskgroup WHERE NAME = 'DATADG');
 ```
 
@@ -30,7 +30,7 @@ SELECT PATH, LABEL, NAME FROM v$asm_disk WHERE GROUP_NUMBER = (SELECT GROUP_NUMB
 ## OS side cleanup (after completion)
 
 ```bash
-# Rimuovi il disco da ASMLib
+# Remove disk from ASMLib
 /etc/init.d/oracleasm deletedisk DATA_OLD001
 
 # Oppure per AFD

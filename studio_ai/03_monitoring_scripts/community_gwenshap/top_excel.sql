@@ -6,9 +6,9 @@ with awr_ranks as
 select snap_id, sql_id,
                            buffer_gets_delta,
                            dense_rank() over (partition by snap_id order by buffer_gets_delta desc) gets_rank,
-                           cpu_time_delta,
+cpu_time_delta,
                            dense_rank() over (partition by snap_id order by cpu_time_delta desc) cpu_rank,
-                           elapsed_time_delta,
+elapsed_time_delta,
                            dense_rank() over (partition by snap_id order by elapsed_time_delta desc) elapsed_rank,
                            executions_delta,
                            dense_rank() over (partition by snap_id order by executions_delta desc) executions_rank

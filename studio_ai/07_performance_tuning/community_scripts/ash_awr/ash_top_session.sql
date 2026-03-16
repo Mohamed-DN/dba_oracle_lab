@@ -52,7 +52,7 @@ select
         decode(wait_class,'User I/O',1, 0 ), 0))    "WAIT" ,
      sum(decode(ash.session_state,'WAITING',
         decode(wait_class,'User I/O',1, 0 ), 0))    "IO" ,
-     sum(decode(session_state,'ON CPU',1,1))     "TOTAL"
+sum(decode(session_state,'ON CPU',1,1)) "TOTAL"
 from v$active_session_history ash
 group by session_id,user_id,session_serial#,program
 order by sum(decode(session_state,'ON CPU',1,1)) desc

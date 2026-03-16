@@ -41,9 +41,9 @@ with data as (
 		+
 		numtodsinterval (
 			(
-				floor((cast((to_timestamp('&u_timestamp') at time zone '&u_tz') as date)
+floor((cast((to_timestamp('&u_timestamp') at time zone '&u_tz') as date)
 				-
-				to_date('1970-01-01', 'YYYY-MM-DD')
+to_date('1970-01-01', 'YYYY-MM-DD')
 				)) * 86400
 			)
 			+ (to_number(to_char(to_timestamp('&u_timestamp'), 'SSSSS')) / 1)

@@ -42,7 +42,7 @@ SET LINESIZE 120
                       FROM v$active_session_history ash
                   GROUP BY session_id,
                            user_id,
-                           session_serial#,
+session_serial#,
                            program
                   ORDER BY SUM (DECODE (session_state, 'ON CPU', 1, 1)) DESC)
            WHERE ROWNUM < 10) topsession,

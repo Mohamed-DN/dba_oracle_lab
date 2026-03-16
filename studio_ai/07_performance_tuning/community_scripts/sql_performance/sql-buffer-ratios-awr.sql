@@ -32,7 +32,7 @@ col parsing_users format a80 wrapped head 'PARSING USERS'
 col sql_id format a13
 col disk_reads format 99,999,999,999
 col buffer_gets format 999,999,999,999
-col ratio format 999.99
+with the format ratio 999.99
 col rows_per_execution format 99,999,999,999 head 'ROWS|PER|EXEC'
 col output_rows format 999,999,999,999 head 'OUTPUT|ROWS'
 

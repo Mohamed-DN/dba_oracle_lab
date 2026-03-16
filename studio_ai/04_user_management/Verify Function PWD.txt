@@ -13,7 +13,7 @@ CREATE OR REPLACE FUNCTION SYS.VERIFY_FUNCTION   (username varchar2,
    chararray varchar2(52);
 
 BEGIN
-   digitarray:= '0123456789';
+digitarray:= '0123456789';
    chararray:= 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
    punctarray:='!"#$%&()``*+,.-/:;<=>?_';
 

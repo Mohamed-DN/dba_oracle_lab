@@ -1,4 +1,4 @@
-Ciao, NPG è tornata sulla gestione delle code Oracle (rimpiazzate dal modello Kafka, che dopo il deploy di oggi non funziona come da attese)
+Hi, NPG has returned to Oracle queue management (replaced by the Kafka model, which after today's deployment does not work as expected)
 
 
 -- grant to also be given to the OWNER user of the queue tables for correct functioning

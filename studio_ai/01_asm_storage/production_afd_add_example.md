@@ -13,11 +13,11 @@ ALTER DISKGROUP DATA ADD DISK 'AFD:DATA_019' REBALANCE POWER 8;
 SELECT name, state, total_mb, free_mb FROM v$asm_diskgroup;
 ```
 
-Controlli:
+Controls:
 
 - label visible on all nodes
 - diskgroup in state `MOUNTED`
-- rebalance completato
+- rebalance completed
 
 For full flow use:
 

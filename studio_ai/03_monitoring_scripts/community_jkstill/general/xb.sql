@@ -135,7 +135,7 @@ WITH sq AS (
       , par.last_disk_writes    - SUM(chi.last_disk_writes   ) self_disk_writes  
     FROM sq par LEFT OUTER JOIN
          sq chi
-      ON chi.parent_id = par.id
+ON chi.parent_id = par.id
     GROUP BY 
         par.id
       , par.last_elapsed_time, par.last_cr_buffer_gets, par.last_cu_buffer_gets, par.last_disk_reads, par.last_disk_writes   
@@ -191,7 +191,7 @@ select
                                                                                    xbi_plan_line, 
     CASE WHEN p.id = 0 THEN '>>> Plan totals >>>' ELSE p.qblock_name END                                                             xbi_qblock_name,
 --  p.object_node                                                                  xbi_object_node,
---  p.distribution                                                                 xbi_distribution,
+--p.distribution xbi_distribution,
 --  lpad(decode(p.id,0,'T ','')||trim(to_char(round(decode(p.id,0,c.last_elapsed_time,c.self_elapsed_time) /1000,2),'9,999,999.00')), 14) xbi_self_elapsed_time_ms,
     round(decode(p.id,0,c.last_elapsed_time,c.self_elapsed_time) /1000,2)          xbi_self_elapsed_time_ms,
     decode(p.id,0,c.last_cr_buffer_gets,c.self_cr_buffer_gets)                     xbi_self_cr_buffer_gets,
@@ -223,7 +223,7 @@ select
     p.cost                                                                         xbi_opt_cost
 --  p.bytes                                                                        xbi_opt_bytes,
 --  p.cpu_cost                                                                     xbi_cpu_cost,
---  p.io_cost                                                                      xbi_io_cost,
+--p.io_cost xbi_io_cost,
 --  p.other_tag,
 --  p.other,
 --  p.access_predicates,
@@ -291,7 +291,7 @@ from (
     AND sp.address = HEXTORAW('&xbi_sql_addr')
     and sp.access_predicates is not null
     and sp.id = adm.id (+)
-    union all
+union all
     select
         sp.sql_id                      xbi_sql_id,
         --lpad(sp.id, 5, ' ')            xbi_id2,
@@ -315,7 +315,7 @@ from (
 )
 order by
     xbi_id2 asc,
-    xbi_predicate_info asc
+xbi_predicate_info asc
 /
 
 

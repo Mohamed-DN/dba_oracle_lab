@@ -39,7 +39,7 @@ var testfile varchar2(100)
 -- change names as needed in this block
 -- eg. change :dirname to 'CSS_WM_CODESTABLE_DATA_DUMP_DIR'
 begin
-	:dirname := 'TESTDIR';
+:dirname := 'TESTDIR';
 	:testfile := 'dir-test.txt';
 end;
 /
@@ -69,8 +69,8 @@ declare
 begin
 
 	pl('getting file attributes for ' || :dirname || ':' || :testfile);
-	utl_file.fgetattr(
-		location       => :dirname,
+utl_file.fgetattr(
+location => :dirname,
 		filename       => :testfile,
 		fexists        => v_file_exists,
 		file_length    => v_file_length,
@@ -80,7 +80,7 @@ begin
 	if v_file_exists then
 		pl('removing '  || :dirname || ':' || :testfile);
 		utl_file.fremove (
-			location => :dirname,
+location => :dirname,
 			filename  => :testfile
 		);
 	end if;
@@ -88,7 +88,7 @@ begin
 
 	pl('creating file ' || :dirname || ':' || :testfile);
 	fh := utl_file.fopen (
-		location       => :dirname,
+location => :dirname,
 		filename       => :testfile,
 		open_mode      => 'w',
 		max_linesize   => v_max_line_length
@@ -106,7 +106,7 @@ begin
 
 	pl('opening file for read ' || :dirname || ':' || :testfile);
 	fh := utl_file.fopen (
-		location       => :dirname,
+location => :dirname,
 		filename       => :testfile,
 		open_mode      => 'r',
 		max_linesize   => v_max_line_length
@@ -121,7 +121,7 @@ begin
 	if v_read_data != v_test_data then
 		pl('data read is not the same as data written');
 		pl('data written: ' || v_test_data);
-		pl('data    read: ' || v_read_data);
+pl('data read: ' || v_read_data);
 	end if;
 
 	pl('closing file ' || :dirname || ':' || :testfile);
@@ -129,7 +129,7 @@ begin
 
 	pl('removing '  || :dirname || ':' || :testfile);
 	utl_file.fremove (
-		location => :dirname,
+location => :dirname,
 		filename  => :testfile
 	);
 

@@ -31,7 +31,7 @@ set term on	 feed on
 whenever sqlerror exit
 
 select to_char(to_date('&d_begin_date','&d_date_format'),'&d_date_format') begin_date,
-	to_char(to_date('&d_end_date','&d_date_format'),'&d_date_format') end_date
+to_char(to_date('&d_end_date','&d_date_format'),'&d_date_format') end_date
 from dual;
 
 -- exit if ending is lt beginning
@@ -43,9 +43,9 @@ declare
 	n_date_compare number;
 begin
 	select
-		to_date('&d_end_date','&d_date_format') -
-		to_date('&d_begin_date','&d_date_format')
-	into n_date_compare
+to_date('&d_end_date','&d_date_format') -
+to_date('&d_begin_date','&d_date_format')
+into n_date_compare
 	from dual;
 
 	if n_date_compare <= 0 then

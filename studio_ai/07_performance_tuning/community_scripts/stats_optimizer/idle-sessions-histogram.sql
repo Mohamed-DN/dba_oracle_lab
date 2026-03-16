@@ -65,7 +65,7 @@ csv_format as (
 		|| ',' || 'username'
 		|| ',' || 'idle_seconds_bucket'  
 	from dual
-	union all
+union all
 	select * from 
 	(
 		select

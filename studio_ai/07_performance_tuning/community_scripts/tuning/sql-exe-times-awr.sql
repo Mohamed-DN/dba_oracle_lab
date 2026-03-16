@@ -77,8 +77,8 @@ with sql_data as (
 	--where s.snap_id between 130328 and 130329
 		and h.sql_id = :v_sql_id
 	order by sql_id
-		, session_id
-		, session_serial#
+, session_id
+, session_serial#
 		, sql_exec_id
 ),
 sql_seconds as (

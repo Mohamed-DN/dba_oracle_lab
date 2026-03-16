@@ -2,7 +2,7 @@
 
 Guidelines:
 
-- crea service dedicato reportistica
+- creates dedicated reporting service
 - enable only on standby role
 - disable on switchover/failover where not applicable
 

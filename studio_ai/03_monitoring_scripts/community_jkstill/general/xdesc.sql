@@ -47,9 +47,9 @@ DECLARE
 
 		if  v_col_types(rec.col_type) = 'NUMBER'  then
 			if  rec.col_precision = 0 then
-				v_precision_str := '';
+v_precision_str := '';
 			else
-				v_precision_str := '(' || to_char(rec.col_precision) || ',' || to_char(rec.col_scale) || ')';
+v_precision_str := '(' || to_char(rec.col_precision) || ',' || to_char(rec.col_scale) || ')';
 			end if;
 		elsif v_col_types(rec.col_type) in ('RAW','VARCHAR2','CLOB','CHAR','BLOB') then
 			v_precision_str := '(' || to_char(rec.col_max_len) || ')';

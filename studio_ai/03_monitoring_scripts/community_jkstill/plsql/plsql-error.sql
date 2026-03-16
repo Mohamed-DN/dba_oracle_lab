@@ -46,21 +46,21 @@ TRIGGER BROKEN_TRIGGER              1       trigger broken_trigger
 
 with gen_neg(id) as (
 	select 0 id from dual
-	union all
+union all
 	select gen_neg.id - 1 as id
 	from gen_neg
 	where id > -&&lines_context
 ),
 gen_pos(id) as (
 	select 1 id from dual
-	union all
+union all
 	select gen_pos.id + 1 as id
 	from gen_pos
 	where id < &&lines_context
 ),
 gen_range as (
 	select id from gen_neg
-	union all
+union all
 	select id from gen_pos
 ),
 error_context_lines as (

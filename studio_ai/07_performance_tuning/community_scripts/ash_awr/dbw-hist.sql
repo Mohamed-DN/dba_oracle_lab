@@ -15,8 +15,8 @@ def divisor=10
 with data as (
 select distinct
 	snap_id
-	, sum(decode(session_state,'WAITING',1,0)) WAIT
-	, sum(decode(session_state,'ON CPU',1,0)) CPU
+, sum(decode(session_state,'WAITING',1,0)) WAIT
+, sum(decode(session_state,'ON CPU',1,0)) CPU
 from dba_hist_active_sess_history
 where session_type = 'BACKGROUND'
 	and program like '%(DBW_)'

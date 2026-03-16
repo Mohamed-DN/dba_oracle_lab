@@ -1,5 +1,5 @@
 
--- run all advice scripts
+--run all advice scripts
 
 -- ls -1 *advic*.sql| grep -v run-advice-scripts | xargs -I {}  perl -e 'print "prompt\nprompt #### {}\nprompt\n\@{}\n"'
 

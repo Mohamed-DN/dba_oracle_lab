@@ -90,8 +90,8 @@ with objects as (
 		, object_owner
 		, object_name
 		, object_type
-		, partition_start
-		, partition_stop
+, partition_start
+, partition_stop
 	from (
 		select distinct
 			sql_id
@@ -99,8 +99,8 @@ with objects as (
 			, object_owner
 			, object_name
 			, object_type
-			, partition_start
-			, partition_stop
+, partition_start
+, partition_stop
 		from (
 			select 
 				sql_id
@@ -108,11 +108,11 @@ with objects as (
 				, object_owner
 				, object_name
 				, object_type
-				, case partition_start
+, case partition_start
 					when 'ROW LOCATION' then 'ROWID'
 					else partition_start
 				end partition_start
-				, case partition_stop
+, case partition_stop
 					when 'ROW LOCATION' then 'ROWID'
 					else partition_stop
 				end partition_stop
@@ -120,14 +120,14 @@ with objects as (
 			where sql_id = :v_sql_id
 			and object_owner is not null
 			and object_type in ('TABLE','INDEX','INDEX (UNIQUE)','INDEX (CLUSTER)','CLUSTER','TABLE (FIXED)')
-			&s_diag_pack union all
+&s_diag_pack union all
 			&s_diag_pack select 
 				&s_diag_pack sql_id
 				&s_diag_pack , plan_hash_value phv
 				&s_diag_pack , object_owner
 				&s_diag_pack , object_name
 				&s_diag_pack , object_type
-				&s_diag_pack , case partition_start
+&s_diag_pack , case partition_start
 					&s_diag_pack when 'ROW LOCATION' then 'ROWID'
 					&s_diag_pack else partition_start
 				&s_diag_pack end partition_start
@@ -146,8 +146,8 @@ with objects as (
 		, object_owner
 		, object_name
 		, object_type
-		, partition_start
-		, partition_stop
+, partition_start
+, partition_stop
 ),
 indexes as (
 	select * from objects where object_type in ('INDEX','INDEX (UNIQUE)','INDEX (CLUSTER)')
@@ -183,8 +183,8 @@ select
 		|| decode(s.partition_name, null,'','.' || s.partition_name)
 		as index_name
 	, partition_position
-	, i.partition_start
-	, i.partition_stop
+, i.partition_start
+, i.partition_stop
 	, num_rows
 	, leaf_blocks blocks
 	, to_char(last_analyzed,'yyyy-mm-dd hh24:mi:ss') last_analyzed

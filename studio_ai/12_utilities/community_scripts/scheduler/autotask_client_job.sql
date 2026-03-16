@@ -2,7 +2,7 @@
 @@autotask_sql_setup
 
 select 
-	client_name
+client_name
 	, job_name
 	, job_scheduler_status
 	, task_name

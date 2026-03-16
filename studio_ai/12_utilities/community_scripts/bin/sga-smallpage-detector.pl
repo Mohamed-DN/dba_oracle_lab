@@ -18,7 +18,7 @@
    segment size: 20971520
    kernelPageSize: 2097152
  shmid: 1273233429
-    skipping due to small segment size
+skipping due to small segment size
  shmid: 1273167891
    segment size: 115343360
    kernelPageSize: 2097152
@@ -34,7 +34,7 @@
    segment size: 67108864
    kernelPageSize: 2097152
  shmid: 1274052663
-    skipping due to small segment size
+skipping due to small segment size
  shmid: 1274019894
    segment size: 48234496
    kernelPageSize: 2097152
@@ -160,7 +160,7 @@ foreach my $pid (keys %pmonPids) {
 		my $segmentSize = (split(/\s+/,$segmentSizeStr))[1] * 1024;
 
 		if ($segmentSize < $segmentMinSize) {
-			print "	 skipping due to small segment size\n";
+print "skipping due to small segment size\n";
 			next;
 		}
 

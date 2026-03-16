@@ -66,7 +66,7 @@ BEGIN
       DBMS_OUTPUT.PUT('|            ');
       DBMS_OUTPUT.PUT('|            ');
       DBMS_OUTPUT.PUT('|            ');
-      DBMS_OUTPUT.PUT('|Cell Req''d  ');
+      DBMS_OUTPUT.PUT('|Cell Req''d ');
       DBMS_OUTPUT.PUT('|Disk Req''d  ');
       DBMS_OUTPUT.PUT('|            ');
       DBMS_OUTPUT.PUT('|            ');
@@ -225,7 +225,7 @@ BEGIN
 
      END IF;
 
-     -- Calc Disk Utilization Percentage
+     --Calc Disk Utilization Percentage
         IF dg.total_mb > 0 THEN
            DBMS_OUTPUT.PUT_LINE('|'||TO_CHAR((((dg.total_mb - dg.free_mb)/dg.total_mb)*100),'999.9')||CHR(37)||'|');
         ELSE

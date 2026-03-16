@@ -12,7 +12,7 @@ select
 		-- column returned from inline view
 		myvals 
 		-- get the starting position 
-		-- note leading comma required in data
+		--note leading comma required in date
 		,instr(myvals,',',1,level)+1 
 		-- calculate length from starting position and end position
 		-- substract to account for comma

@@ -24,7 +24,7 @@ classes as (
             ,'Cluster'        -- 'L' or #
             ,'Commit'         -- 'C' or $
             ,'Concurrency'    -- 'R' or %
-            ,'Configuration'  -- 'G' or ^
+,'Configuration' -- 'G' or ^
             ,'Idle'           -- 'D' or *
             ,'Network'        -- 'N' or =
             ,'Other'          -- 'O' or +

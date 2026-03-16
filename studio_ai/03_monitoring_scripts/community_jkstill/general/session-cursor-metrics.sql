@@ -32,7 +32,7 @@ with data as (
    gv$statname n,
       gv$sesstat s
    where
-      n.name = :metric
+n.name = :metric
       and s.statistic# = n.statistic#
 		and s.inst_id = n.inst_id
 )

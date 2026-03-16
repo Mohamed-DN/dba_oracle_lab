@@ -97,7 +97,7 @@ for aasrec in (
          dbid, min(s.begin_snap_id) snap_id
       from snaps s
 		group by dbid
-		union all
+union all
 		select 
          dbid, max(s.end_snap_id)  snap_id
       from snaps s

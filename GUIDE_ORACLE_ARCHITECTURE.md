@@ -4,59 +4,59 @@
 
 ---
 
-## 1. Modello Mentale di Base
+## 1. Basic Mental Model
 
-Un database Oracle e' composto da due parti distinte:
+An Oracle database is composed of two distinct parts:
 
 1. the Oracle instance;
-2. il database fisico su disco.
+2. the physical database on disk.
 
 ```text
 +---------------------------------------------------------------+
 |                        ORACLE INSTANCE                         |
 |                                                               |
-|  SGA (memoria condivisa)                                      |
+|SGA (shared memory)|
 |  - Database Buffer Cache                                      |
 |  - Shared Pool                                                |
 |  - Redo Log Buffer                                            |
 |  - Large Pool / Java Pool / Streams Pool                      |
 |                                                               |
-|  PGA (memoria privata per processo)                           |
+|PGA (Per-Process Private Memory)|
 |                                                               |
-|  Processi                                                     |
+|Processes|
 |  - Server processes                                           |
 |  - Background processes                                       |
 +-------------------------------+-------------------------------+
                                 |
-                                | legge / scrive
+| reads/writes
                                 v
 +---------------------------------------------------------------+
 |                        DATABASE FILES                          |
 |                                                               |
 |  Datafiles                                                    |
 |  Tempfiles                                                    |
-|  Control files                                                |
+|Control files|
 |  Online redo logs                                             |
 |  Archived redo logs                                           |
 |  SPFILE / PFILE                                               |
-|  File password                                                |
+|  Password file                                                |
 |  FRA                                                          |
 +---------------------------------------------------------------+
 ```
 
-Definizioni corrette:
+Correct definitions:
 
-- `istanza` = memoria + processi;
-- `database` = insieme dei file persistenti;
+- `istanza`= memory + processes;
+- `database`= set of persistent files;
 - quando fai `shutdown immediate`, stop the instance, do not delete the database;
 - quando fai `startup`, the instance returns to managing database files.
 
-Concetto chiave:
+Key concept:
 
 - the instance is volatile;
-- il database e' persistente.
+- the database is persistent.
 
-Blocco visivo:
+Visual block:
 
 ```text
            STARTUP
@@ -64,36 +64,36 @@ Blocco visivo:
               v
    +-----------------------+
    | NOMOUNT               |
-   | SGA + processi attivi |
-   | nessun control file   |
+   |SGA + active processes|
+   |no control file|
    +-----------------------+
               |
               v
    +-----------------------+
    | MOUNT                 |
-   | control file aperto   |
-   | struttura nota        |
+   |control file open|
+   |known structure|
    +-----------------------+
               |
               v
    +-----------------------+
    | OPEN                  |
-   | datafile e redo aperti|
+   |open datafile and redo|
    | utenti ammessi        |
    +-----------------------+
 ```
 
 ---
 
-## 2. Ciclo di Vita del Database: NOMOUNT, MOUNT, OPEN
+## 2. Database Lifecycle: NOMOUNT, MOUNT, OPEN
 
-Oracle non parte sempre direttamente in `OPEN`. Ci sono tre fasi distinte.
+Oracle does not always start directly in`OPEN`. There are three distinct phases.
 
 ### 2.1 NOMOUNT
 
 In `NOMOUNT`, Oracle reads the parameter file and starts the instance.
 
-Disponibile:
+Available:
 
 - SGA;
 - background processes;
@@ -101,44 +101,44 @@ Disponibile:
 
 Not available yet:
 
-- control file aperto;
-- datafile montati;
-- redo log aperti per uso normale.
+- control open file;
+- mounted datafiles;
+- redo logs open for normal use.
 
-Uso tipico:
+Typical use:
 
 - database creation;
 - RMAN duplicate;
-- recupero di SPFILE;
+- recovery of SPFILE;
 - bootstrap standby.
 
 ### 2.2 MOUNT
 
 In `MOUNT`, Oracle opens the control file and knows the database structure.
 
-Disponibile:
+Available:
 
 - control file;
 - elenco datafile e redo log;
-- metadati di montaggio.
+- montage metadata.
 
 Not available yet:
 
 - normal access to data by users.
 
-Uso tipico:
+Typical use:
 
 - media recovery;
-- database standby;
+- standby databases;
 - rename file;
 - enable/disable archivelog;
-- operazioni Data Guard.
+- Data Guard operations.
 
 ### 2.3 OPEN
 
 In `OPEN`, Oracle opens datafiles and redo logs and the database becomes usable.
 
-Varianti comuni:
+Common variants:
 
 - `OPEN READ WRITE`;
 - `OPEN READ ONLY`;
@@ -147,25 +147,25 @@ Varianti comuni:
 
 ### 2.4 Shutdown Modes
 
-I principali sono:
+The main ones are:
 
 - `SHUTDOWN NORMAL`: wait for all users to log out;
 - `SHUTDOWN IMMEDIATE`: rollback of uncommitted transactions and clean closure;
 - `SHUTDOWN ABORT`: brutal stop, recovery at next startup;
-- `SHUTDOWN TRANSACTIONAL`: aspetta fine transazioni attive.
+- `SHUTDOWN TRANSACTIONAL`: wait for active transactions to end.
 
-Nel lab, il piu' usato e' `IMMEDIATE`.
+In the lab, the most used is`IMMEDIATE`.
 
 ---
 
 ## 3. Memory Architecture
 
-Oracle usa due grandi aree di memoria:
+Oracle uses two large memory areas:
 
-1. `SGA` condivisa;
+1. `SGA`shared;
 2. `PGA` privata.
 
-Schema rapido:
+Quick diagram:
 
 ```text
 +-------------------------------------------------------------------+
@@ -176,7 +176,7 @@ Schema rapido:
 |  +---------------------------------------------------------------+ |
 |                                                                   |
 |  +--------------------------- PGA -------------------------------+ |
-|  | memoria privata del singolo processo: sort, hash, stack      | |
+|  |private memory of the single process: sort, hash, stack| |
 |  +---------------------------------------------------------------+ |
 +-------------------------------------------------------------------+
 ```
@@ -185,119 +185,119 @@ Schema rapido:
 
 All server and background processes read or write the SGA.
 
-Componenti principali.
+Main components.
 
 #### Database Buffer Cache
 
-Contiene blocchi di dati letti dai datafile.
+Contains blocks of data read from datafiles.
 
-Funzione:
+Function:
 
-- ridurre I/O fisico;
-- mantenere in RAM i blocchi piu' usati;
+- reduce physical I/O;
+- keep the most used blocks in RAM;
 - host blocks that have been modified but not yet written to disk.
 
-Stati logici dei blocchi:
+Logical states of the blocks:
 
-- `clean`: blocco uguale alla copia su disco;
+- `clean`: block equal to disk copy;
 - `dirty`: modified in memory, not yet written by DBWn.
 
-Concetto importante:
+Important concept:
 
-- il commit non aspetta la scrittura del blocco dirty sul datafile;
-- il commit aspetta il redo su disco.
+- the commit does not wait for the dirty block to be written to the datafile;
+- commit waits for redo to disk.
 
 #### Shared Pool
 
-Contiene strutture condivise necessarie all'esecuzione SQL.
+Contains shared structures necessary for SQL execution.
 
-Sottocomponenti chiave:
+Key Subcomponents:
 
 - `Library Cache`: SQL parsato, PL/SQL, execution plans;
 - `Data Dictionary Cache`: metadata of tables, users, objects, privileges.
 
 If the Shared Pool is small or fragmented you can see:
 
-- hard parse eccessivi;
-- invalidazioni;
+- excessive hard parses;
+- invalidations;
 - errori `ORA-04031`.
 
 #### Redo Log Buffer
 
 Circular buffer in RAM where Oracle accumulates redo records before LGWR writes them to the online redo logs.
 
-Contiene:
+Contains:
 
 - description of the changes;
-- non i blocchi interi, ma change vectors.
+- not whole blocks, but change vectors.
 
 #### Large Pool
 
-Area opzionale usata da:
+Optional area used by:
 
 - RMAN;
 - parallel execution;
 - shared server;
-- alcune operazioni I/O e messaging.
+- some I/O and messaging operations.
 
 It serves to avoid unnecessary pressure on the Shared Pool.
 
 #### Java Pool
 
-Usata se il database esegue componenti Java interni.
+Used if the database runs internal Java components.
 
 #### Streams Pool
 
-Usata da funzionalita' di streaming e replication in alcuni scenari.
+Used by streaming and replication features in some scenarios.
 
-### 3.2 PGA: memoria privata
+### 3.2 PGA: Private Memory
 
-Ogni processo Oracle ha la propria PGA.
+Each Oracle process has its own PGA.
 
-Contiene tipicamente:
+Typically contains:
 
 - sort area;
 - hash area;
 - stack;
-- informazioni di sessione o processo;
-- cursor state lato processo.
+- session or process information;
+- cursor state on the process side.
 
-Caratteristiche:
+Characteristics:
 
-- non e' condivisa;
-- cresce per sessione o processo;
+- it is not shared;
+- grows per session or process;
 - e' critica per sort, hash join, bitmap merge, parallel execution.
 
 ### 3.3 UGA
 
 La `UGA` it is the memory associated with the user session.
 
-Dipende dal modello di connessione:
+It depends on the connection model:
 
-- con `dedicated server`, la UGA sta nella PGA del server process;
-- con `shared server`, la UGA sta nella SGA.
+- con `dedicated server`, the UGA is in the PGA of the server process;
+- con `shared server`, UGA is in SGA.
 
 ### 3.4 Automatic memory management
 
-Modelli principali.
+Main models.
 
 #### ASMM
 
 Automatic Shared Memory Management.
 
-Parametri tipici:
+Typical parameters:
 
 - `SGA_TARGET`;
 - `SGA_MAX_SIZE`;
 - `PGA_AGGREGATE_TARGET`.
 
-E' il modello piu' comune nel lab Oracle classico.
+It is the most common model in the classic Oracle lab.
 
 #### AMM
 
 Automatic Memory Management.
 
-Parametri tipici:
+Typical parameters:
 
 - `MEMORY_TARGET`;
 - `MEMORY_MAX_TARGET`.
@@ -306,23 +306,23 @@ It can handle SGA and PGA together, but in many real world environments ASMM or 
 
 ---
 
-## 4. Architettura dei Processi
+## 4. Process Architecture
 
 Oracle usa:
 
-1. processi client;
+1. client processes;
 2. listener;
 3. server processes;
 4. background processes.
 
 ### 4.1 Client process
 
-E' il processo applicativo o lo strumento che si connette a Oracle:
+It is the application process or tool that connects to Oracle:
 
 - SQL*Plus;
 - JDBC;
 - Python;
-- applicazione web.
+- web application.
 
 ### 4.2 Listeners
 
@@ -330,11 +330,11 @@ The listener receives the network connection and forwards it to the correct serv
 
 Non esegue SQL.
 
-Fa da dispatcher iniziale:
+Acts as initial dispatcher:
 
 - listen at the door;
 - knows the registered services;
-- passa la sessione al server process.
+- passes the session to the server process.
 
 ### 4.3 Server process
 
@@ -345,38 +345,38 @@ Compiti:
 - parse;
 - execute;
 - fetch;
-- accesso ai blocchi;
+- access to blocks;
 - cursor management;
-- interazione con PGA e SGA.
+- interaction with PGA and SGA.
 
 Modelli:
 
-- `dedicated server`: un server process per sessione;
-- `shared server`: piu' sessioni condividono risorse server.
+- `dedicated server`: one server process per session;
+- `shared server`: Multiple sessions share server resources.
 
-Nel tuo lab usi quasi sempre `dedicated server`.
+In your lab you almost always use`dedicated server`.
 
 ### 4.4 Background processes fondamentali
 
-| Processo | Ruolo pratico |
+|Process|Practical role|
 |---|---|
-| `DBWn` | scrive i dirty buffers dalla Buffer Cache ai datafile |
-| `LGWR` | scrive redo dal Redo Log Buffer agli online redo logs |
-| `CKPT` | segnala checkpoint e aggiorna header/control file |
+| `DBWn` |writes dirty buffers from Buffer Cache to datafiles|
+| `LGWR` |writes redo from the Redo Log Buffer to online redo logs|
+| `CKPT` |reports checkpoints and updates header/control file|
 | `SMON` | instance recovery e housekeeping |
-| `PMON` | cleanup di processi/sessioni fallite |
-| `ARCn` | archivia redo log pieni in archived redo logs |
-| `RECO` | recupero transazioni distribuite in dubbio |
-| `MMON` | raccolta statistiche manageability/AWR |
-| `MMNL` | supporto a MMON |
+| `PMON` |cleanup of failed processes/sessions|
+| `ARCn` |Archive full redo logs in archived redo logs|
+| `RECO` |recovering distributed transactions in doubt|
+| `MMON` |manageability/AWR statistics collection|
+| `MMNL` |MMON support|
 | `LREG` | Dynamically registers services and instances to listeners |
 | `CJQ0` | coordina job scheduler |
 | `RVWR` | scrive flashback logs se Flashback e' attivo |
 | `FBDA` | Flashback Data Archive |
 | `DMON` | Data Guard Broker |
-| `VKTM` | gestisce il tempo virtuale interno |
+| `VKTM` |manages internal virtual time|
 
-### 4.5 Processi RAC-specifici
+### 4.5 RAC-specific processes
 
 Cluster-specific processes also appear in RAC, for example:
 
@@ -389,26 +389,26 @@ Servono a:
 
 - cache fusion;
 - global enqueue service;
-- coordinamento dei blocchi tra istanze.
+- coordination of blocks between instances.
 
 ---
 
 ## 5. How Oracle Executes a Query
 
-Flusso semplificato.
+Simplified flow.
 
 ```text
-1. Client invia SQL
+1. Client sends SQL
 2. Listener forwards to the correct service
 3. Server process riceve SQL
 4. Parse
 5. Bind
 6. Execute
-7. Lettura blocchi o accesso indici
+7. Reading blocks or accessing indexes
 8. Fetch righe al client
 ```
 
-Disegno mentale:
+Mental drawing:
 
 ```text
 Client
@@ -427,13 +427,13 @@ Server Process
 
 ### 5.1 Parse
 
-Il parse non e' solo analisi sintattica.
+Parse is not just syntactic analysis.
 
 Include:
 
 - syntax check;
 - verify objects and privileges;
-- ottimizzazione;
+- optimization;
 - scelta execution plan;
 - lookup o reuse in Library Cache.
 
@@ -442,7 +442,7 @@ Tipi di parse:
 - `hard parse`: need new complete parse;
 - `soft parse`: Oracle reuses an existing plan.
 
-Obiettivo DBA:
+DBA Objective:
 
 - ridurre hard parse inutili;
 - usare bind variables quando ha senso.
@@ -452,13 +452,13 @@ Obiettivo DBA:
 Durante l'execute Oracle:
 
 - acquisisce lock o enqueue necessari;
-- legge blocchi richiesti;
-- modifica blocchi in memoria se la SQL cambia dati;
+- reads requested blocks;
+- modify blocks in memory if the SQL changes data;
 - genera redo e undo.
 
 ### 5.3 Fetch
 
-Le righe vengono restituite al client in fetch successivi.
+The rows are returned to the client in subsequent fetches.
 
 Importante:
 
@@ -467,18 +467,18 @@ Importante:
 
 ---
 
-## 6. Transazioni, SCN, Redo, Undo e Consistenza
+## 6. Transactions, SCN, Redo, Undo and Consistency
 
-Schema del commit:
+Commit scheme:
 
 ```text
-Sessione
+Session
   |
   | UPDATE
   v
 Server process
   |
-  +--> modifica blocco in Buffer Cache
++--> change block to Buffer Cache
   +--> genera UNDO
   +--> genera REDO
                |
@@ -489,7 +489,7 @@ Server process
              LGWR
                |
                v
-      Online Redo Log su disco
+Online Redo Log to disk
                |
                v
            COMMIT OK
@@ -497,18 +497,18 @@ Server process
 DBWn writes the datafiles afterwards.
 ```
 
-Questa e' la parte che separa chi usa Oracle da chi lo capisce.
+This is the part that separates those who use Oracle from those who understand it.
 
 ### 6.1 SCN
 
 Lo `SCN` e' il System Change Number.
 
-E' il riferimento temporale o logico interno di Oracle.
+It is Oracle's internal time or logical reference.
 
 It is used for:
 
-- ordinare le modifiche;
-- garantire consistenza di lettura;
+- order changes;
+- guarantee reading consistency;
 - recovery;
 - flashback;
 - Data Guard;
@@ -516,14 +516,14 @@ It is used for:
 
 ### 6.2 Undo
 
-L'undo conserva l'informazione necessaria per:
+Undo preserves the information needed to:
 
-- fare rollback di transazioni non committate;
-- ricostruire versioni precedenti dei blocchi per query consistenti.
+- rollback uncommitted transactions;
+- rebuild previous versions of blocks for consistent queries.
 
-Concetto chiave:
+Key concept:
 
-- quando fai `UPDATE`, Oracle non sovrascrive solo il dato;
+- quando fai `UPDATE`, Oracle doesn't just overwrite the data;
 - first record the logical image needed in undo.
 
 ### 6.3 Redo
@@ -534,42 +534,42 @@ It is used for:
 
 - redo changes after crash;
 - alimentare archived redo;
-- alimentare Data Guard;
-- consentire media recovery.
+- power Data Guard;
+- allow media recovery.
 
 ### 6.4 Commit
 
-Un `COMMIT` non significa che il datafile e' gia' scritto.
+Un `COMMIT`it does not mean that the datafile is already written.
 
-Significa:
+It means:
 
 - the redo of that transaction has been made durable on the online redo logs;
-- da quel momento la transazione e' committed.
+- from that moment the transaction is committed.
 
-Per questo il commit e' veloce:
+This is why the commit is fast:
 
-- LGWR fa scrittura sequenziale;
+- LGWR does sequential writing;
 - DBWn writes the datafiles later, with lazy logic.
 
 ### 6.5 Read consistency
 
-Oracle garantisce che una query veda una fotografia consistente dei dati a uno SCN logico.
+Oracle ensures that a query sees a consistent snapshot of the data at a logical SCN.
 
 If another session modifies a row while a long query is reading it, Oracle can:
 
-- usare il blocco corrente se compatibile;
-- oppure ricostruire la versione precedente tramite undo.
+- use the current block if compatible;
+- or rebuild the previous version via undo.
 
-Questo evita letture sporche.
+This avoids dirty readings.
 
 ### 6.6 Checkpoint
 
-Il checkpoint non significa stop.
+The checkpoint does not mean stop.
 
-Significa che Oracle:
+It means that Oracle:
 
-- aggiorna informazioni di checkpoint in control file e datafile header;
-- riduce la quantita' di redo da rileggere in instance recovery.
+- update checkpoint information in control file and datafile header;
+- reduces the amount of redo to be reread in instance recovery.
 
 ### 6.7 Instance recovery vs media recovery
 
@@ -591,15 +591,15 @@ Oracle usa:
 - backup;
 - archived redo logs;
 - eventuali incremental backup;
-- control file o catalog RMAN.
+- control file or catalog RMAN.
 
 ---
 
-## 7. Strutture Logiche di Storage
+## 7. Logical Storage Structures
 
-Oracle separa architettura logica e fisica.
+Oracle separates logical and physical architecture.
 
-Ordine logico corretto:
+Correct logical order:
 
 ```text
 Database
@@ -611,22 +611,22 @@ Database
 
 ### 7.1 Data block
 
-Il blocco e' l'unita' minima logica di I/O database.
+The block is the minimum logical unit of database I/O.
 
-Parametri chiave:
+Key Parameters:
 
 - `DB_BLOCK_SIZE`;
-- tipicamente 8 KB nel lab.
+- typically 8 KB in the lab.
 
 ### 7.2 Extent
 
-Un extent e' un insieme di blocchi contigui allocati a un segmento.
+An extent is a set of contiguous blocks allocated to a segment.
 
 ### 7.3 Segment
 
-Un segmento e' l'insieme di extents appartenenti a un oggetto.
+A segment is the set of extents belonging to an object.
 
-Tipi comuni:
+Common types:
 
 - table segment;
 - index segment;
@@ -636,7 +636,7 @@ Tipi comuni:
 
 ### 7.4 Tablespace
 
-Un tablespace e' il contenitore logico dei segmenti.
+A tablespace is the logical container of segments.
 
 Comuni in Oracle:
 
@@ -646,7 +646,7 @@ Comuni in Oracle:
 - `TEMP`;
 - tablespace applicativi.
 
-Tipi importanti:
+Important types:
 
 - permanent;
 - temporary;
@@ -659,11 +659,11 @@ Tipi importanti:
 #### Smallfile tablespace
 
 - multiple datafiles in the same tablespace;
-- modello storico piu' comune.
+- most common historical model.
 
 #### Bigfile tablespace
 
-- un solo datafile molto grande;
+- a single very large datafile;
 - useful in ASM and automated environments.
 
 ---
@@ -672,12 +672,12 @@ Tipi importanti:
 
 ### 8.1 Datafiles
 
-Contengono i blocchi dei tablespace permanenti e undo.
+They contain the permanent and undo tablespace blocks.
 
-Non contengono:
+They do not contain:
 
 - redo log;
-- control file.
+- controlfile.
 
 ### 8.2 Tempfiles
 
@@ -687,19 +687,19 @@ Usati per:
 - hash;
 - temporary segments.
 
-Differenza pratica:
+Practical Difference:
 
 - they are not recovered like normal datafiles;
-- possono essere ricreati.
+- can be recreated.
 
 ### 8.3 Control files
 
 They are the minimum physical catalog of the database.
 
-Contengono informazioni su:
+They contain information on:
 
 - nome DB e DBID;
-- datafiles e redo log;
+- datafiles and redo logs;
 - checkpoint;
 - archived log history;
 - RMAN metadata minima.
@@ -708,24 +708,24 @@ If you lose all control files, the database will not mount.
 
 ### 8.4 Online redo logs
 
-Sono il journal attivo del database.
+I am the active journal of the database.
 
-Organizzati in:
+Organized in:
 
 - gruppi;
 - membri.
 
-Concetti:
+Concepts:
 
 - a group is used as `CURRENT`;
-- al log switch Oracle passa al gruppo successivo;
-- ARCn archivia i gruppi pieni se il DB e' in `ARCHIVELOG`.
+- at log switch Oracle moves to the next group;
+- ARCn archives full groups if the DB is in`ARCHIVELOG`.
 
 ### 8.5 Archived redo logs
 
-Sono copie storiche dei redo log online pieni.
+They are historical copies of the full online redo logs.
 
-Servono per:
+They are used for:
 
 - backup e recovery;
 - point-in-time recovery;
@@ -736,7 +736,7 @@ Servono per:
 #### PFILE
 
 - file testuale;
-- leggibile e modificabile a mano;
+- readable and editable by hand;
 - useful for bootstrap and recovery.
 
 #### SPFILE
@@ -747,7 +747,7 @@ Servono per:
 
 ### 8.7 File passwords
 
-Usato per autenticazione amministrativa remota:
+Used for remote administrative authentication:
 
 - `SYSDBA`;
 - `SYSDG`;
@@ -755,7 +755,7 @@ Usato per autenticazione amministrativa remota:
 - `SYSASM`;
 - `SYSKM`.
 
-E' critico in:
+It is critical in:
 
 - RAC;
 - Data Guard;
@@ -764,9 +764,9 @@ E' critico in:
 
 ### 8.8 FRA
 
-La `Fast Recovery Area` e' un'area gestita da Oracle per file di recovery.
+La `Fast Recovery Area`It is an area managed by Oracle for recovery files.
 
-Contiene tipicamente:
+Typically contains:
 
 - archived logs;
 - flashback logs;
@@ -774,29 +774,29 @@ Contiene tipicamente:
 - copies;
 - control file autobackups.
 
-Se si riempie:
+If it fills:
 
-- backup e archiviazione possono fermarsi;
+- backup and archiving may stop;
 - Data Guard can degrade;
-- compaiono errori di spazio recovery.
+- recovery space errors appear.
 
 ---
 
-## 9. Flusso di Scrittura: UPDATE -> COMMIT
+## 9. Writing Flow: UPDATE -> COMMIT
 
-Questo e' il flusso da sapere a memoria.
+This is the flow you need to know by heart.
 
 ```text
-1. Sessione esegue UPDATE
-2. Oracle legge il blocco in Buffer Cache se necessario
+1. Session executes UPDATE
+2. Oracle reads the block into Buffer Cache if necessary
 3. Oracle genera undo
 4. Oracle genera redo
-5. Oracle modifica il blocco in Buffer Cache
-6. Il blocco diventa dirty
+5. Oracle changes the block to Buffer Cache
+6. The block becomes dirty
 7. COMMIT
-8. LGWR scrive redo su online redo log
-9. COMMIT ritorna OK
-10. DBWn scrivera' il blocco dirty sul datafile piu' tardi
+8. LGWR writes redo to online redo log
+9. COMMIT returns OK
+10. DBWn will write the dirty block to the datafile later
 ```
 
 Vista step-by-step:
@@ -804,23 +804,23 @@ Vista step-by-step:
 ```text
 UPDATE
   |
-  +--> blocco letto o gia' in cache
++--> block read or already in cache
   +--> undo generato
-  +--> redo generato
-  +--> blocco diventa dirty
++--> generated redo
++--> block becomes dirty
 
 COMMIT
   |
-  +--> LGWR forza il redo su disco
-  +--> Oracle conferma il commit
++--> LGWR forces redo to disk
++--> Oracle confirms the commit
 
 POST-COMMIT
   |
-  +--> CKPT aggiorna checkpoint info
-  +--> DBWn scarica il dirty block piu' tardi
++--> CKPT updates checkpoint info
++--> DBWn downloads the dirty block later
 ```
 
-Regola d'oro:
+Golden rule:
 
 - redo before datafiles;
 - questa e' la base del write-ahead logging Oracle.
@@ -829,10 +829,10 @@ Regola d'oro:
 
 ## 10. Oracle Net, Listeners, Services and Dynamic Recording
 
-Blocco visivo:
+Visual block:
 
 ```text
-Applicazione / sqlplus
+Application / sqlplus
         |
         v
      Listeners
@@ -850,7 +850,7 @@ Applicazione / sqlplus
 
 The listener listens for connection requests and forwards them to the correct service.
 
-File tipici:
+Typical files:
 
 - `listener.ora`;
 - `tnsnames.ora`;
@@ -864,25 +864,25 @@ File tipici:
 
 `SERVICE_NAME`:
 
-- identifica il servizio logico usato dalle applicazioni.
+- identifies the logical service used by applications.
 
 Best practice:
 
 - applications must use services, not SIDs;
-- in RAC e Data Guard, il service e' il concetto corretto di accesso.
+- in RAC and Data Guard, service is the correct concept of access.
 
-### 10.3 Registrazione dinamica
+### 10.3 Dynamic recording
 
 Il processo `LREG` registers services to the listener.
 
-Parametri coinvolti:
+Parameters involved:
 
 - `LOCAL_LISTENER`;
 - `REMOTE_LISTENER`.
 
 In RAC:
 
-- `REMOTE_LISTENER` punta tipicamente allo SCAN;
+- `REMOTE_LISTENER`typically points to SCAN;
 - services can do load balancing and failover.
 
 Useful command:
@@ -895,28 +895,28 @@ It is used to force immediate registration after start listener or service chang
 
 ---
 
-## 11. Architettura Multitenant: CDB e PDB
+## 11. Multitenant Architecture: CDB and PDB
 
-Dal punto di vista 19c, l'architettura multitenant e' centrale.
+From the 19c perspective, multitenant architecture is central.
 
 Schema CDB/PDB:
 
 ```text
 +---------------------------------------------------------------+
 |                           CDB ROOT                            |
-|  processi, memoria, redo, undo, dizionario comune            |
+|processes, memory, redo, undo, common dictionary|
 |                                                               |
 |  +----------------+  +----------------+  +----------------+   |
 |  | PDB$SEED       |  | APP_PDB1       |  | APP_PDB2       |   |
-|  | template       |  | dati app 1     |  | dati app 2     |   |
+|  | template       |  |app data 1|  |app data 2|   |
 |  | read only      |  | local users  |  | local users  |   |
 |  +----------------+  +----------------+  +----------------+   |
 +---------------------------------------------------------------+
 ```
 
-### 11.1 Componenti
+### 11.1 Components
 
-Ogni CDB include:
+Each CDB includes:
 
 - `CDB$ROOT`;
 - `PDB$SEED`;
@@ -924,13 +924,13 @@ Ogni CDB include:
 
 ### 11.2 Root
 
-`CDB$ROOT` contiene:
+`CDB$ROOT`contains:
 
-- metadata Oracle comuni;
+- common Oracle metadata;
 - common users;
-- strutture condivise.
+- shared facilities.
 
-Non e' il posto giusto per i dati applicativi normali.
+This is not the right place for normal application data.
 
 ### 11.3 Seed
 
@@ -944,37 +944,37 @@ A PDB appears to the application as a quasi-independent database, but shares wit
 - SGA;
 - background processes;
 - redo logs;
-- control file.
+- controlfile.
 
-Questo e' fondamentale:
+This is fundamental:
 
-- un CDB con 10 PDB non ha 10 istanze separate;
+- a CDB with 10 PDBs does not have 10 separate instances;
 - has a single instance that manages multiple containers.
 
 ### 11.5 Common users e local users
 
 - common user: visible in all containers;
-- local user: esiste solo nel PDB.
+- local user: exists only in the PDB.
 
 ### 11.6 Services and PDB
 
 Best practice:
 
-- ogni applicazione usa un service associato al PDB;
-- in RAC si crea il service con `srvctl add service -pdb ...`.
+- each application uses a service associated with the PDB;
+- in RAC you create the service with`srvctl add service -pdb ...`.
 
 ---
 
 ## 12. ASM: Automatic Storage Management
 
-ASM e' il layer storage Oracle ottimizzato per file database.
+ASM is Oracle's storage layer optimized for database files.
 
 Fa da:
 
 - volume manager;
-- file system specializzato Oracle.
+- Oracle specialized file system.
 
-Concetti base:
+Basic concepts:
 
 - ASM instance;
 - disk groups;
@@ -982,7 +982,7 @@ Concetti base:
 - allocation units;
 - template, striping e mirroring.
 
-Nel tuo lab usi disk group tipici:
+In your lab you use typical disk groups:
 
 - `+DATA`;
 - `+RECO`;
@@ -991,10 +991,10 @@ Nel tuo lab usi disk group tipici:
 Why ASM is important:
 
 - semplifica naming e placement file;
-- supporta OMF;
-- si integra bene con RAC, RMAN, Data Guard.
+- supports OMF;
+- integrates well with RAC, RMAN, Data Guard.
 
-Blocco visivo:
+Visual block:
 
 ```text
 Database / Grid
@@ -1006,7 +1006,7 @@ Database / Grid
    |                         |
    v                         v
 +DATA                     +RECO
-datafile                  archivelog
+datafile archivelog
 controlfile               backup pieces
 online redo               flashback logs
 spfile/password file copies
@@ -1043,10 +1043,10 @@ Condividono:
 - datafiles;
 - control files;
 - online redo logs per thread;
-- SPFILE condiviso;
+- Shared SPFILE;
 - ASM storage.
 
-Non condividono:
+They don't share:
 
 - PGA;
 - buffer cache locale;
@@ -1054,8 +1054,8 @@ Non condividono:
 
 Each instance has:
 
-- propria SGA;
-- propri processi;
+- own EMS;
+- own processes;
 - proprio redo thread;
 - proprio undo tablespace.
 
@@ -1063,30 +1063,30 @@ Each instance has:
 
 It is the mechanism by which a RAC instance can receive blocks in memory from another instance without going through disk.
 
-E' la chiave di RAC.
+It's the key to RAC.
 
 ### 13.3 SCAN
 
-Lo `SCAN` e' il nome virtuale di accesso al cluster.
+Lo `SCAN`it is the virtual name of access to the cluster.
 
 It is used for:
 
-- semplificare connessioni client;
+- simplify client connections;
 - load balancing;
 - failover.
 
 ### 13.4 Services in RAC
 
-I services permettono di decidere:
+The services allow you to decide:
 
 - where the workload should run;
 - failover;
-- ruolo applicativo;
+- applicative role;
 - pinning a PDB.
 
 ---
 
-## 14. Data Guard: Architettura di Protezione
+## 14. Data Guard: Protection Architecture
 
 Data Guard protects the database with one or more standbys.
 
@@ -1110,10 +1110,10 @@ Online Redo Log Standby Redo Log
                                                           Standby datafile
 ```
 
-### 14.1 Componenti concettuali
+### 14.1 Conceptual components
 
 - primary database;
-- database standby;
+- standby databases;
 - redo transport services;
 - apply services;
 - Broker opzionale.
@@ -1135,14 +1135,14 @@ Primary generates redo
 -> apply services apply redo (MRP)
 ```
 
-### 14.4 Ruoli e modalita'
+### 14.4 Roles and methods
 
 Ruoli:
 
 - `PRIMARY`;
 - `PHYSICAL STANDBY`.
 
-Operazioni:
+Operations:
 
 - switchover;
 - failover;
@@ -1161,26 +1161,26 @@ The Broker centralizes management with:
 - `DGMGRL`;
 - Enterprise Manager.
 
-Processo chiave:
+Key Process:
 
 - `DMON`.
 
 ---
 
-## 15. Diagnostica: ADR, Alert Log, Trace, AWR, ASH
+## 15. Diagnostics: ADR, Alert Log, Trace, AWR, ASH
 
 ### 15.1 ADR
 
-L'ADR e' l'Automatic Diagnostic Repository.
+The ADR is the Automatic Diagnostic Repository.
 
-Contiene:
+Contains:
 
 - alert log;
 - trace files;
-- incidenti;
+- accidents;
 - homes diagnostics database, listener and ASM.
 
-Tool principale:
+Main tool:
 
 - `adrci`.
 
@@ -1188,7 +1188,7 @@ Tool principale:
 
 It is the operational diary of the database.
 
-Da controllare per:
+Check for:
 
 - ORA errors;
 - archiver issues;
@@ -1199,41 +1199,41 @@ Da controllare per:
 
 ### 15.3 Trace files
 
-Contengono dettaglio tecnico per processi o errori specifici.
+They contain technical detail for specific processes or errors.
 
 ### 15.4 AWR, ASH, ADDM
 
-Sono strumenti di performance e diagnostica.
+They are performance and diagnostic tools.
 
-Uso concettuale:
+Conceptual use:
 
 - `AWR`: snapshot storici;
-- `ASH`: campionamento sessioni attive;
-- `ADDM`: analisi automatica.
+- `ASH`: sampling of active sessions;
+- `ADDM`: automatic analysis.
 
-Nota pratica:
+Practical note:
 
 - Full AWR, ASH and ADDM require appropriate licenses or packs in production.
 
 ---
 
-## 16. Dizionario Dati e Dynamic Performance Views
+## 16. Data Dictionary and Dynamic Performance Views
 
-Due famiglie fondamentali.
+Two fundamental families.
 
 ### 16.1 DBA_, ALL_, USER_
 
-Metadati persistenti:
+Persistent metadata:
 
 - oggetti;
 - users;
 - tablespace;
 - quote;
-- segmenti.
+- segments.
 
 ### 16.2 V$ e GV$
 
-Vista runtime dinamica.
+Dynamic runtime view.
 
 - `V$`: local instance;
 - `GV$`: cluster-wide in RAC.
@@ -1244,74 +1244,74 @@ Viste da conoscere.
 |---|---|
 | `v$instance` | status of the instance |
 | `v$database` | ruolo, open mode, DBID, log mode |
-| `v$parameter` | parametri effettivi |
-| `v$spparameter` | parametri nello SPFILE |
+| `v$parameter` |actual parameters|
+| `v$spparameter` |parameters in the SPFILE|
 | `v$bgprocess` | background processes |
-| `v$session` | sessioni attive |
-| `v$process` | processi OS e Oracle |
-| `v$datafile` | datafiles |
+| `v$session` |active sessions|
+| `v$process` |OS and Oracle processes|
+| `v$datafile` |datafiles|
 | `v$log` | redo log groups |
 | `v$logfile` | redo log members |
 | `v$archived_log` | archived redo history |
 | `v$managed_standby` | standby and apply processes |
 | `v$dataguard_stats` | transport e apply lag |
 | `v$asm_diskgroup` | ASM status |
-| `gv$instance` | all RAC instances |
+| `gv$instance` |all RAC instances|
 | `gv$services` | services cluster-wide |
 
 ---
 
-## 17. Mappa dei Parametri piu' Importanti
+## 17. Map of the most important parameters
 
-| Parametro | Significato architetturale |
+| Parametro |Architectural significance|
 |---|---|
-| `DB_NAME` | nome logico del database |
-| `DB_UNIQUE_NAME` | nome unico del sito, cruciale per Data Guard |
+| `DB_NAME` |logical name of the database|
+| `DB_UNIQUE_NAME` |unique site name, crucial for Data Guard|
 | `INSTANCE_NAME` | name of the single instance |
 | `SERVICE_NAMES` | database services, today often managed via srvctl |
 | `SGA_TARGET` | automatic EMS management |
 | `PGA_AGGREGATE_TARGET` | target PGA |
-| `DB_BLOCK_SIZE` | block size del database |
-| `CONTROL_FILES` | control file attivi |
-| `DB_CREATE_FILE_DEST` | OMF destination primaria |
+| `DB_BLOCK_SIZE` |database block size|
+| `CONTROL_FILES` |control active files|
+| `DB_CREATE_FILE_DEST` |OMF primary destination|
 | `DB_RECOVERY_FILE_DEST` | FRA |
-| `DB_RECOVERY_FILE_DEST_SIZE` | dimensione FRA |
+| `DB_RECOVERY_FILE_DEST_SIZE` |FRA dimension|
 | `REMOTE_LOGIN_PASSWORDFILE` | use of the password file |
 | `LOCAL_LISTENER` | local listener |
 | `REMOTE_LISTENER` | remote listener or SCAN |
-| `CLUSTER_DATABASE` | abilita comportamento RAC |
-| `LOG_ARCHIVE_CONFIG` | perimetro Data Guard |
-| `LOG_ARCHIVE_DEST_n` | destinazioni redo transport o local archive |
+| `CLUSTER_DATABASE` |enable RAC behavior|
+| `LOG_ARCHIVE_CONFIG` |Data Guard perimeter|
+| `LOG_ARCHIVE_DEST_n` |redo transport or local archive destinations|
 | `STANDBY_FILE_MANAGEMENT` | standby file self-management |
 | `DG_BROKER_START` | Broker startup |
 
 ---
 
-## 18. Errori Concettuali Comuni
+## 18. Common Conceptual Errors
 
-1. pensare che `COMMIT` significhi datafile gia' scritto;
-2. confondere `service` con `SID`;
-3. confondere `istanza` con `database`;
+1. think that`COMMIT`means datafile already written;
+2. confuse`service` con `SID`;
+3. confuse`istanza` con `database`;
 4. believe that each PDB has its own separate instance;
 5. pensare che `MRP0` must be on all RAC standby instances;
-6. ignorare la differenza tra `SPFILE` locale e `SPFILE` condiviso in ASM;
+6. ignore the difference between`SPFILE` locale e `SPFILE`shared in ASM;
 7. believe that the listener contains the database;
 8. confondere redo e undo;
-9. credere che ASM sia solo una directory speciale;
+9. believe that ASM is just a special directory;
 10. usare solo `v$archived_log` to measure Data Guard status.
 
 ---
 
 ## 19. How to Connect Theory to Your Lab
 
-Nel tuo laboratorio questi concetti diventano concreti cosi'.
+In your laboratory these concepts become concrete like this.
 
 ### Phase 2
 
-- `RACDB` = un database condiviso;
+- `RACDB`= a shared database;
 - `rac1` e `rac2` = due istanze;
 - `+DATA`, `+RECO`, `+CRS` = disk group ASM;
-- `SCAN`, VIP, services = accesso client corretto.
+- `SCAN`, VIP, services = successful client access.
 
 ### Phase 3
 
@@ -1322,8 +1322,8 @@ Nel tuo laboratorio questi concetti diventano concreti cosi'.
 
 ### Phase 4
 
-- Broker = strato di orchestrazione Data Guard;
-- `DMON` = processo chiave;
+- Broker = Data Guard orchestration layer;
+- `DMON`= key process;
 - `DGConnectIdentifier`, protection mode, switchover, failover = true HA and DR management.
 
 ### Extra DBA
@@ -1334,7 +1334,7 @@ Nel tuo laboratorio questi concetti diventano concreti cosi'.
 
 ---
 
-## 20. Query Minime da Sapere a Memoria
+## 20. Minimum Queries to Know by Heart
 
 ```sql
 SELECT instance_name, status FROM v$instance;
@@ -1351,7 +1351,7 @@ SELECT inst_id, instance_name, host_name FROM gv$instance;
 
 ---
 
-## 21. Riferimenti Oracle Ufficiali
+## 21. Official Oracle References
 
 - Oracle Database 19c Concepts - Memory Architecture
 - Oracle Database 19c Concepts - Process Architecture
@@ -1363,7 +1363,7 @@ SELECT inst_id, instance_name, host_name FROM gv$instance;
 - Oracle Data Guard Concepts and Administration - Redo Transport and Apply Services
 - Oracle ASM Administrator's Guide - ASM Overview
 
-Link ufficiali:
+Official links:
 
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/memory-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/process-architecture.html
@@ -1380,17 +1380,17 @@ Link ufficiali:
 
 ---
 
-## 22. Sintesi Finale
+## 22. Final Summary
 
 If you only need to remember 10 ideas, remember these:
 
 1. instance and database are not the same thing;
-2. SGA e' condivisa, PGA e' privata;
-3. commit aspetta redo, non datafile;
-4. redo e undo sono entrambi essenziali ma fanno cose diverse;
+2. SGA is shared, PGA is private;
+3. commit expects redo, not datafile;
+4. redo and undo are both essential but do different things;
 5. Oracle garantisce read consistency tramite SCN + undo;
 6. listener forwards connections, does not execute SQL;
-7. service batte SID per applicazioni, RAC e Data Guard;
+7. service beats SID for applications, RAC and Data Guard;
 8. a CDB has only one instance for its PDBs, not one for each PDB;
 9. RAC = multiple instances on the same shared database;
-10. Data Guard = redo transport + redo apply, non copia file \"magica\".
+10. Data Guard = redo transport + redo apply, does not copy \"magic\" files.

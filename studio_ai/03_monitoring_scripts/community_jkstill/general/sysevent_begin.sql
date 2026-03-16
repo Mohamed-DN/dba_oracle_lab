@@ -4,7 +4,7 @@ drop table sysevent_snap;
 drop table sysevent_begin;
 
 create table sysevent_snap (
-	begin_time date
+begin_time date
 	, end_time date
 );
 

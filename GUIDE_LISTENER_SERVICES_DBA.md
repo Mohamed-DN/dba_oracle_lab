@@ -6,11 +6,11 @@
 
 ---
 
-## Indice
+## Index
 
 1. [How the Oracle Listener Works](#1-how-the-oracle-listener-works)
 2. [RAC Listener Configuration](#2-rac-listener-configuration)
-3. [Oracle Services (Services)](#3-servizi-oracle-services)
+3. [Oracle Services](#3-oracle-services)
 4. [SCAN Listener — Oracle's Load Balancer](#4-scan-listener)
 5. [Management via lsnrctl/srvctl (Commands)](#5-management-listener-commands)
 6. [DBA Monitoring Toolkit](#6-dba-monitoring-toolkit)
@@ -46,13 +46,13 @@ The Listener is a **network process** that listens on a TCP port (default 1521) 
 ║             ▼                                                        ║
 ║   ┌─────────────────────────────────┐                                ║
 ║   │   Server Process (Dedicato)     │                                ║
-║   │   connesso a SGA/PGA           │                                ║
+║ │ connected to SGA/PGA │ ║
 ║ │ of the ORCL │ ║ instance
 ║   └─────────────────────────────────┘                                ║
 ║                                                                      ║
 ║ Note: The Listener does NOT transfer data after connection!        ║
-║   Fa solo il "redirect" iniziale, poi client↔server parlano          ║
-║   direttamente.                                                      ║
+║ It only does the initial "redirect", then client↔server talk ║
+║ directly.                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -65,26 +65,26 @@ The Listener is a **network process** that listens on a TCP port (default 1521) 
 ║                                                    ║
 ║ STATIC (listener.ora) DYNAMIC (PMON) ║
 ║  ─────────────────────         ─────────────────   ║
-║  - Definita nel file            - Il processo PMON  ║
+║ - Defined in the file - The PMON process ║
 ║ listener.ora registers ║
 ║ - Serves BEFORE the automatically ║
-║    DB sia aperto                - Funziona quando   ║
+║ DB is open - Works when ║
 ║ - Required for RMAN the DB is OPEN ║
 ║ DUPLICATE (NOMOUNT) - Update services║
-║  - Necessaria per Data            ogni 60 sec       ║
+║ - Required for Date every 60 sec ║
 ║ Guard standby - Preferred in prod ║
 ║                                                    ║
 ║  Quando usare quale:                               ║
 ║  ┌─────────────────────────────────────────────┐   ║
-║  │ SEMPRE statico per:                         │   ║
+║ │ ALWAYS static for: │ ║
 ║ │ - DB in MOUNT (Data Guard standby) │ ║
 ║  │   - RMAN Duplicate (NOMOUNT)                │   ║
 ║ │ - Startup after crash │ ║
 ║  │                                             │   ║
-║  │ SEMPRE dinamico per:                        │   ║
+║ │ ALWAYS dynamic for: │ ║
 ║ │ - Normal production (OPEN) │ ║
 ║  │   - Load balancing RAC                      │   ║
-║  │   - Failover automatico                     │   ║
+║ │ - Automatic failover │ ║
 ║  └─────────────────────────────────────────────┘   ║
 ╚═══════════════════════════════════════════════════╝
 ```
@@ -102,11 +102,11 @@ The Listener is a **network process** that listens on a TCP port (default 1521) 
 ║                                                                  ║
 ║   Client App / SQL*Plus / JDBC                                   ║
 ║       │                                                          ║
-║       │  Connessione via SCAN: rac-scan:1521/ORCL                ║
+║ │ Connection via SCAN: rac-scan:1521/ORCL ║
 ║       ▼                                                          ║
 ║   ╔═══════════════════════════════════╗                           ║
 ║ ║ SCAN LISTENER (3 virtual IPs) ║ ← Grid Infrastructure ║
-║   ║   .105  .106  .107               ║     gestisce tutto        ║
+║ ║ .105 .106 .107 ║ handles everything ║
 ║   ║   Porta 1521                     ║                           ║
 ║   ╚════════════╤══════════════════════╝                           ║
 ║                │  Load Balancing (round-robin                     ║
@@ -115,16 +115,16 @@ The Listener is a **network process** that listens on a TCP port (default 1521) 
 ║        ▼               ▼                                         ║
 ║   ┌─────────┐    ┌─────────┐                                     ║
 ║   │ Node 1  │    │ Node 2  │                                     ║
-║ │ LSNR │ │ LSNR │ ← LOCAL listener per node ║
-║   │ :1521   │    │ :1521   │     (gestito da CRS)                ║
+║ │ LSNR │ │ LSNR │ ← LOCAL listener for node ║
+║ │ :1521 │ │ :1521 │ (operated by CRS) ║
 ║   │         │    │         │                                     ║
 ║   │ Inst1   │    │ Inst2   │                                     ║
 ║   │ ORCL1   │    │ ORCL2   │                                     ║
 ║   └─────────┘    └─────────┘                                     ║
 ║                                                                  ║
 ║ Registered Services: ║
-║   - ORCL (database service, entrambi i nodi)                     ║
-║   - ORCL_APP (application service, solo nodo1)                   ║
+║ - ORCL (database service, both nodes) ║
+║   - ORCL_APP(application service, node1 only) ║
 ║   - ORCL_REPORT (reporting service, solo nodo2)                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
@@ -134,14 +134,14 @@ The Listener is a **network process** that listens on a TCP port (default 1521) 
 In RAC, il `listener.ora` it is managed automatically by the Grid Infrastructure. It is usually found in `$GRID_HOME/network/admin/listener.ora`.
 
 ```bash
-# Visualizza il listener.ora attuale (come utente grid)
+#View current listener.ora (as grid user)
 cat $GRID_HOME/network/admin/listener.ora
 ```
 
-Contenuto tipico generato da CRS:
+Typical content generated by CRS:
 
 ```
-# listener.ora per RAC Node 1 (generato da CRS)
+# listener.ora for RAC Node 1 (generated by CRS)
 LISTENER=
   (DESCRIPTION_LIST=
     (DESCRIPTION=
@@ -150,7 +150,7 @@ LISTENER=
     )
   )
 
-# Registrazione STATICA per Data Guard / RMAN Duplicate
+# STATIC recording for Data Guard / RMAN Duplicate
 SID_LIST_LISTENER=
   (SID_LIST=
     (SID_DESC=
@@ -171,9 +171,9 @@ SID_LIST_LISTENER=
 ### 2.3 File tnsnames.ora
 
 ```
-# tnsnames.ora — connessioni principali
+# tnsnames.ora — main connections
 
-# Connessione via SCAN (PRODUZIONE — usa questo!)
+# Connection via SCAN (PRODUCTION — use this!)
 ORCL =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = rac-scan)(PORT = 1521))
@@ -183,7 +183,7 @@ ORCL =
     )
   )
 
-# Connessione DIRETTA al nodo 1 (debug/manutenzione)
+#DIRECT connection to node 1 (debug/maintenance)
 ORCL1 =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = rac1-vip)(PORT = 1521))
@@ -193,7 +193,7 @@ ORCL1 =
     )
   )
 
-# Connessione allo standby (con UR=A per NOMOUNT/MOUNT!)
+# Connect to standby (with UR=A for NOMOUNT/MOUNT!)
 ORCL_STBY =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = racstby1-vip)(PORT = 1521))
@@ -224,7 +224,7 @@ A Service is a **logical name** that groups together database instances for a ce
 ║  ├── Preferred: Nodo1, Nodo2                                     ║
 ║  ├── Available: (nessuno)                                        ║
 ║  ├── TAF Policy: BASIC (failover automatico)                     ║
-║  └── Scopo: Transazioni OLTP, bassa latenza                     ║
+║ └── Purpose: OLTP transactions, low latency ║
 ║                                                                  ║
 ║  Service: ORCL_REPORT                                            ║
 ║  ├── Preferred: Nodo2                                            ║
@@ -236,13 +236,13 @@ A Service is a **logical name** that groups together database instances for a ce
 ║  ├── Preferred: Nodo1                                            ║
 ║  ├── Available: Nodo2                                            ║
 ║  ├── TAF Policy: NONE                                            ║
-║  └── Scopo: Job batch notturni                                   ║
+║ └── Purpose: Nightly batch jobs ║
 ║                                                                  ║
 ║  ┌──────────────────────────────────────────────────────────┐    ║
 ║ │ ADVANTAGE OF SERVICES: │ ║
 ║  │  - Separazione workload (OLTP vs Report vs Batch)        │    ║
 ║ │ - Automatic failover (if a node fails) │ ║
-║  │  - Monitoraggio per servizio (AWR, wait events)          │    ║
+║ │ - Monitoring by service (AWR, wait events) │ ║
 ║  │  - Load balancing intelligente                           │    ║
 ║ │ - Resource management (Resource Manager for service) │ ║
 ║  └──────────────────────────────────────────────────────────┘    ║
@@ -253,10 +253,10 @@ A Service is a **logical name** that groups together database instances for a ce
 
 ```bash
 # ═══════════════════════════════════════════════════════
-# CREARE UN SERVIZIO RAC (come utente oracle)
+#CREATE A RAC SERVICE (as oracle user)
 # ═══════════════════════════════════════════════════════
 
-# Servizio OLTP — su entrambi i nodi
+# OLTP service — on both nodes
 srvctl add service -db ORCL -service ORCL_OLTP \
   -preferred ORCL1,ORCL2 \
   -failovertype SELECT \
@@ -264,35 +264,35 @@ srvctl add service -db ORCL -service ORCL_OLTP \
   -failoverretry 30 \
   -failoverdelay 10
 
-# Servizio REPORT — preferito su nodo2, failover su nodo1
+# REPORT service — preferred on node2, failover to node1
 srvctl add service -db ORCL -service ORCL_REPORT \
   -preferred ORCL2 \
   -available ORCL1 \
   -failovertype SELECT \
   -failovermethod BASIC
 
-# Servizio BATCH — preferito su nodo1
+# BATCH service — preferred on node1
 srvctl add service -db ORCL -service ORCL_BATCH \
   -preferred ORCL1 \
   -available ORCL2
 
 # ═══════════════════════════════════════════════════════
-# GESTIRE I SERVIZI
+#MANAGE THE SERVICES
 # ═══════════════════════════════════════════════════════
 
-# Avviare un servizio
+# Start a service
 srvctl start service -db ORCL -service ORCL_OLTP
 
-# Fermare un servizio
+# Stop a service
 srvctl stop service -db ORCL -service ORCL_REPORT
 
-# Stato di tutti i servizi
+#Status of all services
 srvctl status service -db ORCL
 
-# Configurazione dettagliata
+#Detailed configuration
 srvctl config service -db ORCL -service ORCL_OLTP
 
-# Rimuovere un servizio
+# Remove a service
 srvctl remove service -db ORCL -service ORCL_BATCH
 
 # ═══════════════════════════════════════════════════════
@@ -301,19 +301,19 @@ srvctl remove service -db ORCL -service ORCL_BATCH
 ```
 
 ```sql
--- Servizi attivi nel database
+--Active services in the database
 SELECT name, network_name, pdb
 FROM   v$services
 ORDER BY name;
 
--- Sessioni per servizio
+--Sessions per service
 SELECT service_name, COUNT(*) sessions
 FROM   gv$session
 WHERE  username IS NOT NULL
 GROUP BY service_name
 ORDER BY 2 DESC;
 
--- Connessione tramite un servizio specifico
+--Connection via a specific service
 -- sqlplus user/pass@rac-scan:1521/ORCL_OLTP
 ```
 
@@ -330,7 +330,7 @@ ORDER BY 2 DESC;
 ║ HOW SCAN WORKS ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
-║   DNS risolve "rac-scan" a:                                      ║
+║ DNS resolves "rac-scan" to: ║
 ║     192.168.1.105                                                ║
 ║     192.168.1.106                                                ║
 ║     192.168.1.107                                                ║
@@ -351,8 +351,8 @@ ORDER BY 2 DESC;
 ║                                                                  ║
 ║   VANTAGGI:                                                      ║
 ║ ✓ Client ALWAYS uses the same hostname (rac-scan) ║
-║   ✓ Se aggiungi/rimuovi nodi, il client NON cambia nulla         ║
-║   ✓ Load balancing automatico tra nodi                           ║
+║ ✓ If you add/remove nodes, the client does NOT change anything ║
+║ ✓ Automatic load balancing between nodes ║
 ║ ✓ If a SCAN listener fails, CRS restarts it on another node ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
@@ -360,19 +360,19 @@ ORDER BY 2 DESC;
 ### 4.2 SCAN commands
 
 ```bash
-# Stato SCAN listener
+# SCAN listener status
 srvctl status scan_listener
 # Output: SCAN Listener LISTENER_SCAN1 is enabled
 #         SCAN Listener LISTENER_SCAN1 is running on node rac1
 
-# Configurazione SCAN
+#SCAN configuration
 srvctl config scan
 srvctl config scan_listener
 
-# Test connessione via SCAN
+# Test connection via SCAN
 tnsping rac-scan
 
-# Verificare risoluzione DNS
+# Check DNS resolution
 nslookup rac-scan
 # Deve restituire 3 IP!
 ```
@@ -386,10 +386,10 @@ nslookup rac-scan
 # COMANDI lsnrctl (Listener Control)
 # ═══════════════════════════════════════════════════════
 
-# Stato del listener
+# Listener status
 lsnrctl status
 
-# Stato dettagliato con servizi
+#Detailed status with services
 lsnrctl services
 
 # Start/Stop (solo per listener locali, NON CRS-managed!)
@@ -413,8 +413,8 @@ srvctl start scan_listener
 srvctl stop scan_listener
 srvctl config scan_listener
 
-# Forzare ri-registrazione (se servizi non appaiono)
-# Da SQL*Plus come SYS:
+#Force re-registration (if services do not appear)
+#From SQL*Plus as SYS:
 ALTER SYSTEM REGISTER;
 
 # ═══════════════════════════════════════════════════════
@@ -422,22 +422,22 @@ ALTER SYSTEM REGISTER;
 # ═══════════════════════════════════════════════════════
 
 # 1. TNS-12541: TNS:no listener
-#    → Controlla se il listener è attivo: lsnrctl status
+#→ Check if the listener is active: lsnrctl status
 #    → Controlla firewall: iptables -L
 
 # 2. ORA-12514: TNS:listener does not currently know of service
-#    → ALTER SYSTEM REGISTER;  (forza ri-registrazione)
-#    → Controlla local_listener parameter
+# → ALTER SYSTEM REGISTER;  (force re-registration)
+# → Check local_listener parameter
 
 # 3. TNS-12535: TNS:operation timed out
-#    → Controlla rete: ping hostname
+#→ Check network: ping hostname
 #    → Controlla /etc/hosts
 
-# Parametro chiave per il listener
+# Key parameter for the listener
 SHOW PARAMETER local_listener;
 SHOW PARAMETER remote_listener;
--- local_listener punta al VIP del nodo corrente
--- remote_listener punta allo SCAN name
+--local_listener points to the VIP of the current node
+--remote_listener points to the SCAN name
 ```
 
 ---
@@ -450,7 +450,7 @@ SHOW PARAMETER remote_listener;
 
 ```sql
 -- ═══════════════════════════════════════════════════════
--- sessions_rac.sql — Sessioni su TUTTI i nodi RAC
+-- sessions_rac.sql— Sessions on ALL RAC nodes
 -- Fonte: oraclebase/dba/rac/sessions_rac.sql
 -- ═══════════════════════════════════════════════════════
 SET LINESIZE 500
@@ -499,7 +499,7 @@ SELECT b.inst_id,
        a.owner AS object_owner,
        a.object_name,
        Decode(b.locked_mode, 0, 'None',
-                             1, 'Null (NULL)',
+1, 'Null (NULL)',
                              2, 'Row-S (SS)',
                              3, 'Row-X (SX)',
                              4, 'Share (S)',
@@ -513,11 +513,11 @@ WHERE  a.object_id = b.object_id
 ORDER BY 1, 2, 3, 4;
 ```
 
-### 6.3 Spazio Tablespace (con Barra Visuale!)
+### 6.3 Tablespace (with View Bar!)
 
 ```sql
 -- ═══════════════════════════════════════════════════════
--- free_space.sql — Spazio utilizzato per datafile
+-- free_space.sql— Space used for datafiles
 -- Fonte: oraclebase/dba/monitoring/free_space.sql
 -- ═══════════════════════════════════════════════════════
 SET PAGESIZE 100 LINESIZE 265
@@ -541,14 +541,14 @@ WHERE  df.file_id = f.file_id (+)
 ORDER BY df.tablespace_name, df.file_name;
 ```
 
-### 6.4 Tuning Rapido (6 Hit Ratio con Raccomandazioni)
+### 6.4 Quick Tuning (6 Hit Ratios with Recommendations)
 
 ```sql
 -- ═══════════════════════════════════════════════════════
 -- tuning.sql — Performance check istantaneo
 -- Fonte: oraclebase/dba/monitoring/tuning.sql
 -- ═══════════════════════════════════════════════════════
--- Controlla automaticamente:
+--Automatically check:
 -- ✓ Dictionary Cache Hit Ratio  (target: >90%)
 -- ✓ Library Cache Hit Ratio     (target: >99%)
 -- ✓ Buffer Cache Hit Ratio      (target: >89%)
@@ -556,11 +556,11 @@ ORDER BY df.tablespace_name, df.file_name;
 -- ✓ Disk Sort Ratio             (target: <5%)
 -- ✓ Rollback Segment Waits      (target: <5%)
 --
--- Esegui: @tuning.sql
--- Ti dice COSA sta male e COME fixarlo!
+--Run: @tuning.sql
+--It tells you WHAT's wrong and HOW to fix it!
 ```
 
-### 6.5 Sessioni Attive
+### 6.5 Active Sessions
 
 ```sql
 -- ═══════════════════════════════════════════════════════
@@ -584,7 +584,7 @@ ORDER BY s.last_call_et DESC;
 
 ```sql
 -- ═══════════════════════════════════════════════════════
--- db_info.sql — Vista completa del database
+-- db_info.sql— Full database view
 -- Fonte: oraclebase/dba/monitoring/db_info.sql
 -- ═══════════════════════════════════════════════════════
 SELECT * FROM v$database;
@@ -606,22 +606,22 @@ FROM   v$logfile ORDER BY 1, 2;
 | Script | What He Does | Quando Usarlo |
 |---|---|---|
 | `@sessions_rac` | Cross-node sessions | Check giornalieri |
-| `@locked_objects_rac` | Lock tra nodi | Troubleshooting blocchi |
-| `@active_sessions` | Sessioni attive | Performance check rapido |
-| `@free_space` | Spazio datafile | Capacity planning |
-| `@ts_free_space` | Spazio tablespace | Alert spazio |
+| `@locked_objects_rac` |Lock between nodes| Troubleshooting blocchi |
+| `@active_sessions` |Active sessions| Performance check rapido |
+| `@free_space` |Datafile space| Capacity planning |
+| `@ts_free_space` |Tablespace space|Space alert|
 | `@tuning` | 6 hit ratio | Tuning rapido |
-| `@db_info` | Complete DB info | Documentazione |
-| `@longops` | Operazioni lunghe | Monitoring RMAN/import |
+| `@db_info` | Complete DB info |Documentation|
+| `@longops` |Long operations|RMAN/import monitoring|
 | `@redo_by_hour` | Redo per ora | Sizing redo log |
 | `@locked_objects` | Lock (single inst) | Debug lock |
 | `@top_sql` | Top SQL per risorse | Performance tuning |
-| `@session_waits` | Wait events | Diagnosi rallentamenti |
-| `@invalid_objects` | Oggetti invalidi | Post-upgrade check |
+| `@session_waits` | Wait events |Slowdown diagnosis|
+| `@invalid_objects` |Invalid items| Post-upgrade check |
 | `@hidden_parameters` | Parametri nascosti | Deep tuning |
 | `@patch_registry` | Patch installate | Compliance check |
 
-> 📥 **Download**: Clona il repo `git clone https://github.com/oraclebase/dba.git` e metti la cartella `monitoring/` in `$ORACLE_BASE/scripts/`. Poi esegui`@$ORACLE_BASE/scripts/monitoring/sessions_rac.sql`.
+> 📥 **Download**: Clona il repo `git clone https://github.com/oraclebase/dba.git` e metti la cartella `monitoring/` in `$ORACLE_BASE/scripts/`. Then execute`@$ORACLE_BASE/scripts/monitoring/sessions_rac.sql`.
 
 ---
 
@@ -630,97 +630,97 @@ FROM   v$logfile ORDER BY 1, 2;
 ### Exercise 1: Listener and Connection
 
 ```bash
-# 1. Verifica lo stato del listener
+#1. Check the status of the listener
 lsnrctl status
 
-# 2. Verifica i servizi registrati
+#2. Check the registered services
 lsnrctl services
 
-# 3. Verifica la configurazione CRS
+#3. Check your CRS configuration
 srvctl status listener
 srvctl status scan_listener
 
-# 4. Testa la connessione via SCAN
+#4. Test the connection via SCAN
 tnsping rac-scan
 
-# 5. Connettiti via SCAN
+#5. Connect via SCAN
 sqlplus sys/<password>@rac-scan:1521/ORCL as sysdba
 
-# 6. Connettiti direttamente al nodo 1
+#6. Connect directly to node 1
 sqlplus sys/<password>@rac1-vip:1521/ORCL1 as sysdba
 
-# 7. Verifica sessione e servizio
+#7. Check session and service
 SELECT instance_name, host_name, status FROM v$instance;
 SELECT sys_context('USERENV','SERVICE_NAME') FROM dual;
 ```
 
-### Esercizio 2: Creare e Testare un Service
+### Exercise 2: Creating and Testing a Service
 
 ```bash
-# 1. Crea un servizio OLTP (entrambi i nodi)
+#1. Create an OLTP Service (Both Nodes)
 srvctl add service -db ORCL -service ORCL_OLTP \
   -preferred ORCL1,ORCL2
 
 # 2. Avvialo
 srvctl start service -db ORCL -service ORCL_OLTP
 
-# 3. Verifica
+#3. Check
 srvctl status service -db ORCL
 
-# 4. Connettiti TRAMITE il servizio
+#4. Connect VIA the service
 sqlplus hr/hr@rac-scan:1521/ORCL_OLTP
 
-# 5. Verifica in SQL*Plus
+#5. Check in SQL*Plus
 SELECT service_name, COUNT(*)
 FROM   gv$session
 WHERE  service_name = 'ORCL_OLTP'
 GROUP BY service_name;
 
-# 6. Sposta il servizio su un solo nodo (manutenzione)
+#6. Move the service to a single node (maintenance)
 srvctl relocate service -db ORCL -service ORCL_OLTP \
   -oldinst ORCL1 -newinst ORCL2
 
-# 7. Verifica che tutte le sessioni sono su nodo2
+#7. Verify that all sessions are on node2
 ```
 
 ### Exercise 3: Complete Monitoring
 
 ```bash
-# 1. Clona gli script Oracle Base
+#1. Clone Oracle Base scripts
 cd $ORACLE_BASE
 git clone https://github.com/oraclebase/dba.git scripts_ob
 
-# 2. Da SQL*Plus, esegui il tuning check
+#2. From SQL*Plus, run the tuning check
 sqlplus / as sysdba
 @/u01/app/oracle/scripts_ob/monitoring/tuning.sql
 
-# 3. Controlla le sessioni RAC
+#3. Check RAC sessions
 @/u01/app/oracle/scripts_ob/rac/sessions_rac.sql
 
-# 4. Controlla lo spazio
+#4. Check the space
 @/u01/app/oracle/scripts_ob/monitoring/free_space.sql
 
-# 5. Controlla i lock
+#5. Check the locks
 @/u01/app/oracle/scripts_ob/rac/locked_objects_rac.sql
 ```
 
-### Esercizio 4: Simulare un Problema e Risolverlo
+### Exercise 4: Simulate a Problem and Solve It
 
 ```bash
-# Sessione 1 — Crea un lock
+# Session 1 — Create a lock
 sqlplus hr/hr@ORCL
 UPDATE employees SET salary = salary * 1.1 WHERE employee_id = 100;
 -- NON dare COMMIT!
 
-# Sessione 2 — Cerca il lock
+# Session 2 — Search for the lock
 sqlplus / as sysdba
 @locked_objects_rac.sql
--- Vedrai il lock Row-X (SX) sull'oggetto EMPLOYEES
+--You will see the Row-X (SX) lock on the EMPLOYEES object
 
-# Sessione 3 — Killa la sessione bloccante
+# Session 3 — Kill the blocking session
 ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 
-# Sessione 1 — Vedrà: ORA-00028: your session has been killed
+#Session 1 — You will see: ORA-00028: your session has been killed
 ```
 
 ---
@@ -733,13 +733,13 @@ ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 | 2 | SCAN listener active (3 IPs) | `srvctl status scan_listener` | ☐ |
 | 3 | DNS risolve SCAN a 3 IP | `nslookup rac-scan` | ☐ |
 | 4 | Registered services | `lsnrctl services` | ☐ |
-| 5 | `local_listener` corretto | `SHOW PARAMETER local_listener` | ☐ |
+| 5 | `local_listener`correct| `SHOW PARAMETER local_listener` | ☐ |
 | 6 | `remote_listener` = SCAN | `SHOW PARAMETER remote_listener` | ☐ |
-| 7 | Entry statica per DG | Controlla `listener.ora` | ☐ |
-| 8 | `tnsping` funziona | `tnsping ORCL` | ☐ |
+| 7 | Entry statica per DG |Check`listener.ora` | ☐ |
+| 8 | `tnsping`works| `tnsping ORCL` | ☐ |
 | 9 | Custom services created | `srvctl status service -db ORCL` | ☐ |
-| 10 | Connessione via SCAN OK | `sqlplus user/pass@rac-scan/ORCL` | ☐ |
+| 10 |Connection via SCAN OK| `sqlplus user/pass@rac-scan/ORCL` | ☐ |
 
 ---
 
-> **Fonte**: Script monitoring da [github.com/oraclebase/dba](https://github.com/oraclebase/dba) (Tim Hall). Architettura da [oracle-base.com](https://oracle-base.com).
+> **Fonte**: Script monitoring da [github.com/oraclebase/dba](https://github.com/oraclebase/dba)(Tim Hall). Architecture from [oracle-base.com](https://oracle-base.com).

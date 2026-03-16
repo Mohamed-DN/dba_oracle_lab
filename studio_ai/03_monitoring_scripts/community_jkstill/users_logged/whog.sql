@@ -65,7 +65,7 @@ with pdbs as (
 	&&v_12copts union all
 	select inst_id, 0 con_id, 'CDB' name
 	from gv$instance
-	union all
+union all
 	select inst_id, 1 con_id, 'ROOT' name
 	from gv$instance
 )

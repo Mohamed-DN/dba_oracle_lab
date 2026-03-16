@@ -1,4 +1,4 @@
-Per vedere il cosumo di CPU del sistema operativo nella settimana
+To see the CPU consumption of the operating system for the week
 -----------------------------------------------------------------
 SET LINES 3000
 SET PAGES 3000

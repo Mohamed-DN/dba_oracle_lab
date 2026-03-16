@@ -5,7 +5,7 @@
 -- demo of the INSERT .. LOG ERRORS for DML
 --
 -- Note:  if the table is in a different schema, this syntax is necessary
---   log errors into schema.err$_table_name
+--log errors into schema.err$_table_name
 -- where the table name is 'ERR$_' || substr(table_name,1,25)
 -- a synonym for the error table would likely work, though doing so
 -- seems a bit of a had for this usage

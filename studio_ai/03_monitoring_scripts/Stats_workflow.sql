@@ -139,11 +139,11 @@ exec DBMS_SCHEDULER.SET_ATTRIBUTE('FRIDAY_WINDOW',    'DURATION', '+002 12:00:00
 exec DBMS_SCHEDULER.DISABLE('SATURDAY_WINDOW');
 exec DBMS_SCHEDULER.DISABLE('SUNDAY_WINDOW');
 
---per modificare la partenza
+--to change the start
 EXECUTE DBMS_SCHEDULER.SET_ATTRIBUTE('MONDAY_WINDOW','repeat_interval','freq=daily;byday=MON;byhour=20;byminute=0; bysecond=0');
 
 -- #########################
--- ### INCREMENTAL STATS ###
+--### INCREMENTAL STATS ###
 -- #########################
 
 -- It is suggested to implement in on DB > 12.2, on 12.1 it can lead to very big synopsys tables
@@ -244,6 +244,6 @@ exec dbms_stats.set_table_prefs('MKT','TBMK2_AU_AUTORIZZ','STALE_PERCENT','20');
 
 
 ####################### ###########################
-per capire su quale tabella si e' fermato il job
+to understand which table the job stopped on
 ###################################################
 select OPERATION,TARGET,START_TIME,END_TIME,STATUS,NOTES from DBA_OPTSTAT_OPERATIONS where START_TIME > (sysdate - 1) order by START_TIME asc;

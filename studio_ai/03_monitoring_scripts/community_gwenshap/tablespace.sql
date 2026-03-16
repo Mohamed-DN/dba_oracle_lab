@@ -10,7 +10,7 @@ select file_name,bytes/1024/1024 Mbytes,autoextensible,maxbytes/1024/1024 M_maxb
 -- List files in a volume with current size and max size
 select file_name,bytes/1024/1024 Mbytes,autoextensible,maxbytes/1024/1024 M_maxbytes from dba_data_files where file_name like '/u04/oradata7/%' order by file_name;
 
--- Grow a datafile
+--Grow a datafile
 ALTER DATABASE DATAFILE '/u05/oradata/COGPREPO/perfstat_01.dbf' resize 2048M;
 
 -- add datafile

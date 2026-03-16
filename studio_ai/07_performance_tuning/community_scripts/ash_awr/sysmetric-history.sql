@@ -67,8 +67,8 @@ select
 	|| ',' || aas
 	|| ',' || (single_block_read_latency / 1000)
 	|| ',' || io_mb_per_sec
-	|| ',' || io_req_per_sec
-	|| ',' || net_volume_per_sec
+|| ',' || io_req_per_sec
+|| ',' || net_volume_per_sec
 	|| ',' || phys_reads_per_sec
 	|| ',' || phys_writes_per_sec
 	|| ',' || redo_per_sec

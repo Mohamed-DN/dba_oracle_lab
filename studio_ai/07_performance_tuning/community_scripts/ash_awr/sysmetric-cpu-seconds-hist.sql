@@ -66,7 +66,7 @@ with cpu_data as (
 		, to_char(end_time,'yyyy-mm-dd hh24:mi:ss') end_time
 		, round(( end_time - begin_time) * 86400,0) elapsed_seconds -- these are dates, not timestamps
 		, trim(to_char(value / 100,'999,990.099999')) cpu_seconds -- recorded in centiseconds
-		-- container total
+		--container total
 		, trim(to_char(sum(value / 100) over (partition by instance_number,to_char(begin_time,'yyyy-mm-dd hh24:mi:ss') order by con_id),'999,990.099999'))  cpu_seconds_ct
 		--, metric_unit
 	from DBA_HIST_SYSMETRIC_HISTORY
@@ -75,7 +75,7 @@ with cpu_data as (
 select
 	&use_std d.snap_id
 	&use_std , d.instance_number
-	&use_std , d.con_id
+&use_std , d.con_id
 	&use_std , d.begin_time
 	&use_std , d.end_time
 	&use_std , d.elapsed_seconds
@@ -85,8 +85,8 @@ select
 --
 	&use_csv d.snap_id
 	&use_csv ||','|| d.instance_number
-	&use_csv ||','|| d.con_id
-	&use_csv ||','|| d.begin_time
+&use_csv ||','|| d.with_id
+&use_csv ||','|| d.begin_time
 	&use_csv ||','|| d.end_time
 	&use_csv ||','|| d.elapsed_seconds
 	&use_csv ||','|| d.cpu_seconds

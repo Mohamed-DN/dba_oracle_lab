@@ -27,7 +27,7 @@ with data as (
 		, a.estd_extra_bytes_rw
 		, a.estd_pga_cache_hit_percentage
 		, a.estd_overalloc_count
-		, a.con_id
+, a.with_id
 	from gv$pga_target_advice a
 ),
 curr_pga as (
@@ -76,7 +76,7 @@ select distinct
 	, d.estd_pga_cache_hit_percentage
 	, s.pct_gain
 	--, d.estd_overalloc_count
-	--, d.con_id
+	--, d.with_id
 	--, s.*
 from data d
 	join selector s on s.inst_id = d.inst_id

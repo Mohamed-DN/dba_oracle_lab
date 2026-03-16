@@ -44,7 +44,7 @@ for line in ( select snap_id,name, position, datatype_string, value_string from 
 loop
 if line.value_string is not null then
 dbms_output.put_line('**** bind variables for snapshot = ' || line.snap_id || ' name=' || line.name
-|| ' position=' || line.position || ' datatype=' || line.datatype_string || ' value=' || line.value_string);
+|| 'position=' || line.position || 'datatype=' || line.datatype_string || ' value=' || line.value_string);
 end if;
 end loop;
 end loop;

@@ -14,7 +14,7 @@ ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS';
 
 SPOOL SGAPARAMS.TXT
 
-/* Database identification */
+/*Database identification*/
 SELECT name, platform_id, database_role FROM v$database;
 SELECT * FROM v$version WHERE banner LIKE 'Oracle Database%';
 

@@ -10,7 +10,7 @@ This guide is a "day-2" reference for administering your RAC cluster. It explain
 
 ## 1. What is a "Combo Patch"?
 
-Spesso su Oracle Support (MOS) troverai due tipi di download per le patch trimestrali:
+Often on Oracle Support (MOS) you will find two types of downloads for quarterly patches:
 1. **Individual Patches**: For example, you download the zip for the *Grid Infrastructure Release Update (GI RU)* and a separate zip for the *Oracle Java VM (OJVM) Release Update*.
 2. **Combo Patch**: It's a single mega-zip (like `p38658588` for Jan 2026) that includes **both** patches inside.
 
@@ -29,7 +29,7 @@ If you have already patched your cluster (e.g. to Jan 2025) and now want to move
 
 The `opatchauto` tool (which you use to apply Release Updates) is smart:
 1. Automatically detects which RU is installed.
-2. Controlla quale RU stai cercando di installare.
+2. Check which RU you are trying to install.
 3. If the new one is superior, **automatically rollback (uninstall) the old one** before applying the new one.
 4. Restart CRS services.
 
@@ -37,7 +37,7 @@ It does everything by itself in one command! (But remember to make a compressed 
 
 ---
 
-## 3. Pulizia Spazio Disco (Pulire le Patch Vecchie)
+## 3. Disk Space Cleanup (Clean Old Patches)
 
 Oracle patches are huge (often >3GB unpacked). In our VMs, the space on `/u01` is around 50 GB. If you keep every single extracted patch in the `/u01/app/patch` folder, in two update cycles you will fill the disk.
 
@@ -48,15 +48,15 @@ Once a patch has been successfully applied (`opatchauto apply` and `datapatch` f
 ```bash
 su - root
 
-# 1. Rimuovi le cartelle delle patch scompattate
+#1. Remove unzipped patch folders
 rm -rf /u01/app/patch/*
 
-# 2. Rimuovi i file ZIP originali scaricati (se sono rimasti in /tmp o /u01)
+#2. Remove the original downloaded ZIP files (if they remained in /tmp or /u01)
 rm -f /tmp/p*.zip
 rm -f /u01/app/patch/*.zip
 
 # 3. Elimina i backup .tar.gz vecchi delle ORACLE_HOME 
-# (Tieni solo l'ultimo precedente funzionante, cancella quelli di mesi fa)
+# (Keep only the last working one, delete those from months ago)
 # Esempio: rm /u01/app/grid_home_backup_20250101.tar.gz
 ```
 
@@ -76,37 +76,37 @@ Before applying any RU patches, you must update the OPatch utility in **each** H
 # Come root su rac1
 su - root
 
-# 1. Aggiorna OPatch per la Grid Home
+#1. Update OPatch for Grid Home
 mv /u01/app/19.0.0/grid/OPatch /u01/app/19.0.0/grid/OPatch.bkp
 unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/19.0.0/grid/
 chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 
-# 2. Aggiorna OPatch per la Database Home
+#2. Update OPatch for the Home Database
 mv /u01/app/oracle/product/19.0.0/dbhome_1/OPatch /u01/app/oracle/product/19.0.0/dbhome_1/OPatch.bkp
 unzip -q /tmp/p6880880_190000_Linux-x86-64.zip -d /u01/app/oracle/product/19.0.0/dbhome_1/
 chown -R oracle:oinstall /u01/app/oracle/product/19.0.0/dbhome_1/OPatch
 
-# Ripeti gli stessi comandi su rac2!
+# Repeat the same commands on rac2!
 ```
 
-### Step 1: Estrazione Combo Patch (Entrambi i nodi)
+### Step 1: Combo Patch Extraction (Both Nodes)
 ```bash
 su - root
 mkdir -p /u01/app/patch/
 cd /u01/app/patch/
 unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
 
-# Trova i due ID interni:
+# Find the two internal IDs:
 ls -l /u01/app/patch/38658588/
 # Esempio output (i numeri reali trovati):
 # drwxr-xr-x 38523609  (questa è la OJVM)
 # drwxr-x--- 38629535  (questa è la RU di DB/Grid)
 
-# Assegna diritti corretti
+# Assign correct rights
 chown -R grid:oinstall /u01/app/patch/
 ```
 
-### Step 2: Applicazione alla Grid Home (`opatchauto`)
+### Step 2: Application to Grid Home (`opatchauto`)
 Use the folder ID of the Grid/DB RU.
 ```bash
 # Come root
@@ -116,7 +116,7 @@ $GRID_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $GRID_HO
 # Ripeti su rac2
 ```
 
-### Step 3: Applicazione alla DB Home (`opatchauto`)
+### Step 3: Application to DB Home (`opatchauto`)
 ```bash
 # Come root
 cd /u01/app/patch/38658588/38629535
@@ -126,19 +126,19 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 # Ripeti su rac2
 ```
 
-### Step 4: Applicazione OJVM alla DB Home (`opatch`)
+### Step 4: Apply OJVM to the Home DB (`opatch`)
 ```bash
 # Come oracle
 su - oracle
 cd /u01/app/patch/38658588/38523609
 $ORACLE_HOME/OPatch/opatch apply
-# Rispondi 'y' quando richiesto
+# Reply 'y' when prompted
 # Ripeti su rac2
 ```
 
 ### Step 5: Datapatch (Only after the DB is created and opened)
 ```bash
-# Come oracle su rac1
+# Like oracle on rac1
 $ORACLE_HOME/OPatch/datapatch -verbose
 ```
 

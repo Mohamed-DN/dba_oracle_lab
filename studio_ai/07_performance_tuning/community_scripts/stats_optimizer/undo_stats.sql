@@ -25,7 +25,7 @@ select
 	, u.ssolderrcnt
 	, u.nospaceerrcnt
 	, u.maxquerylen
-	, u.tuned_undoretention
+, u.tuned_undoretention
 from gv$undostat u
 join v$tablespace t on t.ts# = u.undotsn
 order by end_time

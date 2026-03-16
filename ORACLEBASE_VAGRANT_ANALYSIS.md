@@ -6,7 +6,7 @@
 
 ---
 
-## Confronto Architettura
+## Architecture Comparison
 
 ```
 ╔═══════════════════════════════╦══════════════════════╦═══════════════════════╗
@@ -15,17 +15,17 @@
 ║ DNS                           ║ BIND (su rac1)       ║ dnsmasq (VM dedicata) ║
 ║ ASM disks ║ oracleasm driver ║ udev rules + scsi_id ║
 ║ Time Sync                     ║ NTP/chrony           ║ chrony (burst+makestep)║
-║ /u01                          ║ Dir su root disk     ║ Disco dedicato XFS    ║
+║ /u01 ║ Dir on root disk ║ XFS dedicated disk ║
 ║ CRS Redundancy ║ EXTERNAL (1 disc) ║ NORMAL (3 discs+FG) ║
 ║ NetworkManager                ║ Non configurato      ║ dns=none (protegge    ║
-║                               ║                      ║ resolv.conf)          ║
+║ ║ ║ resolv.conf) ║
 ║ Grid Install ║ GUI (recommended) ║ Silent mode (response ║
 ║                               ║                      ║ file documentato)     ║
 ║ Database Type                 ║ Non-CDB              ║ CDB + PDB            ║
-║ PDB Auto-start                ║ Non configurato      ║ ALTER PDB SAVE STATE  ║
+║ PDB Auto-start ║ Not configured ║ ALTER PDB SAVE STATE ║
 ║ SSH Setup                     ║ Manuale              ║ sshpass + ssh-keyscan ║
-║ cvuqdisk                      ║ Menzionato           ║ Installato esplicita. ║
-║ ASM compatibility             ║ Non specificato       ║ compatible.asm=19.0   ║
+║ cvuqdisk ║ Mentioned ║ Installed explicitly. ║
+║ ASM compatibility ║ Not specified ║ compatible.asm=19.0 ║
 ║ SELinux                       ║ Disabled             ║ Permissive            ║
 ║ Disk partitioning             ║ oracleasm            ║ fdisk + udev symlinks ║
 ╚═══════════════════════════════╩══════════════════════╩═══════════════════════╝
@@ -33,14 +33,14 @@
 
 ---
 
-## Top 10 Miglioramenti da Integrare
+## Top 10 Improvements to Integrate
 
 ### 1. 🔧 udev Rules per ASM Disks (Alternativa a oracleasm)
 
 Oracle Base usa **udev rules** invece del driver `oracleasm`. This is the **Oracle recommended method for 19c+** and requires no additional drivers.
 
 ```bash
-# Identifica i dischi con scsi_id
+# Identify disks with scsi_id
 ASM_DISK1=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdc)
 
 # Crea regole udev persistenti
@@ -70,14 +70,14 @@ chronyc -a makestep         # Forza step di correzione
 ### 3. 🌐 NetworkManager dns=none
 
 ```bash
-# Impedisce a NetworkManager di sovrascrivere /etc/resolv.conf
+# Prevent NetworkManager from overwriting /etc/resolv.conf
 sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
 systemctl restart NetworkManager.service
 ```
 
 **Advantage**: Without this, NetworkManager can overwrite yours `/etc/resolv.conf` and **break SCAN resolution** — a sneaky problem that can appear after a reboot!
 
-### 4. 📀 /u01 su Disco Dedicato (XFS)
+### 4. 📀 /u01 on Dedicated Disk (XFS)
 
 ```bash
 echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdb    # Partiziona
@@ -88,7 +88,7 @@ echo "UUID=${UUID}  /u01    xfs    defaults 1 2" >> /etc/fstab
 mount /u01
 ```
 
-**Vantaggio**: Separa i binari Oracle dal disco OS. Se il disco OS si riempie, Oracle continua a funzionare.
+**Advantage**: Separate Oracle binaries from OS disk. If the OS disk becomes full, Oracle continues to run.
 
 ### 5. 🏗️ CRS NORMAL Redundancy (3 Discs)
 
@@ -105,7 +105,7 @@ oracle.install.asm.diskGroup.disksWithFailureGroupNames=\
 
 ### 6. 📦 Grid Silent Install (Response File)
 
-Tutto il `gridSetup.sh` con parametri in linea di comando — documentato e riproducibile:
+All the`gridSetup.sh`with command line parameters — documented and reproducible:
 
 ```bash
 ${GRID_HOME}/gridSetup.sh -ignorePrereq -waitforcompletion -silent \
@@ -116,7 +116,7 @@ ${GRID_HOME}/gridSetup.sh -ignorePrereq -waitforcompletion -silent \
   ...
 ```
 
-### 7. 🗃️ CDB + PDB con Auto-Start
+### 7. 🗃️ CDB + PDB with Auto-Start
 
 ```bash
 dbca -silent -createDatabase \
@@ -124,20 +124,20 @@ dbca -silent -createDatabase \
   -numberOfPDBs 1 \
   -pdbName pdb1 ...
 
-# IMPORTANTE: salva lo stato della PDB per auto-start!
+# IMPORTANT: Save PDB state for auto-start!
 ALTER PLUGGABLE DATABASE pdb1 SAVE STATE;
 ```
 
-**Vantaggio**: Oracle 21c+ richiede CDB. Meglio imparare subito.
+**Advantage**: Oracle 21c+ requires CDB. Better to learn now.
 
-### 8. 🔑 SSH Automatizzato con sshpass
+### 8. 🔑 SSH Automated with sshpass
 
 ```bash
 ssh-keyscan -H ${NODE2_HOSTNAME} >> ~/.ssh/known_hosts
 sshpass -f /tmp/temp.txt ssh-copy-id ${NODE2_HOSTNAME}
 ```
 
-**Vantaggio**: Elimina l'interazione manuale "Are you sure you want to continue connecting?"
+**Advantage**: Eliminates manual interaction "Are you sure you want to continue connecting?"
 
 ### 9. 📀 ASM Compatibility Attributes
 
@@ -148,7 +148,7 @@ CREATE DISKGROUP data EXTERNAL REDUNDANCY DISK '/dev/oracleasm/asm-data-disk1'
 
 **Advantage**: Without these attributes, ASM uses the lowest compatibility level, disabling new features.
 
-### 10. 📦 cvuqdisk RPM (Pre-requisito Grid)
+### 10. 📦 cvuqdisk RPM (Grid Pre-requisite)
 
 ```bash
 yum install -y ${GRID_HOME}/cv/rpm/cvuqdisk-1.0.10-1.rpm

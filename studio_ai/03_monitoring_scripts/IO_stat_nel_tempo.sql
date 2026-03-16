@@ -141,7 +141,7 @@ DAY                      PHYRDS AVG_READ_MS              PHYWRTS AVG_WRITE_MS
 22/02/2012        6,043,942,713        9.09          960,630,951        87.38
 23/02/2012        2,628,389,094        9.53          417,702,749        88.84
 
-Quest'ultima farla anche senza l'instance_number
+The latter can also be done without the instance_number
 
 Per Oracle 9
 ------------

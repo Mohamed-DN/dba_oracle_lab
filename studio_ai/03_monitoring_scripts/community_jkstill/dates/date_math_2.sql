@@ -28,11 +28,11 @@ select
 		trunc( &&days/5)*7 +
 		decode(
 			mod(&&days,5),
-			4, decode(to_char(start_date, 'D'),1,4,2,4,7,5,6),
-			3, decode(to_char(start_date, 'D'),1,3,2,3,3,3,7,4,5),
-			2, decode(to_char(start_date, 'D'),5,4,6,4,7,3,2),
-			1, decode(to_char(start_date, 'D'),6,3,7,2,1),
-			0, decode(to_char(start_date, 'D'),1,-2,7,-1,0)
+4, decode(to_char(start_date, 'D'),1,4,2,4,7,5,6),
+3, decode(to_char(start_date, 'D'),1,3,2,3,3,3,3,7,4,5),
+2, decode(to_char(start_date, 'D'),5,4,6,4,7,3,2),
+1, decode(to_char(start_date, 'D'),6,3,7,2,1),
+0, decode(to_char(start_date, 'D'),1,-2,7,-1,0)
 		),
 		'mm/dd/yyyy, Day'
 	) end_date

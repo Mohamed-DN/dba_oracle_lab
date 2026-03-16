@@ -42,7 +42,7 @@ spool &u_logfile
 
 with data as (
 	select sql_id, sql_exec_id, sql_exec_start,
-		min(sample_time) start_time, 
+min(sample_time) start_time,
 		max(sample_time) end_time,
 		max(sample_time - sql_exec_start) duration
 	from dba_hist_active_sess_history

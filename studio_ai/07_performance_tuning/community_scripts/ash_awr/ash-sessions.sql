@@ -49,7 +49,7 @@ join dba_users u on u.user_id = h.user_id
 where u.username = '&&target_user'
 )
 select 
-	sample_time
+sample_time
 	, count(*) session_count
 from sessions
 group by sample_time

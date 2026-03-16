@@ -15,7 +15,7 @@ col little_endian format a24 head 'LITTLE ENDIAN'
 
 with data as (
 select status
-		  , incarnation#
+, incarnation#
 		  , resetlogs_change#
 		  , lpad(ltrim(to_char(resetlogs_change#,'XXXXXXXXXXXX')),16,'0') hex_change#
 		  , to_char(resetlogs_time,'yyyy-mm-dd hh24:mi:ss') resetlogs_time
@@ -23,7 +23,7 @@ select status
 from v$database_incarnation
 )
 select status
-		  , incarnation#
+, incarnation#
 		  , resetlogs_change#
 		  , hex_change#
 		  -- 0EC07ABE

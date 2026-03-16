@@ -36,7 +36,7 @@ CMD: grep -h "orcl.** establish *" listener.log | awk -v timeStrLen=2 '{ print $
 The following examples all look for connections to the orcl service.
 If not specified, all connections are searched.
 
-### per second
+### for second
 
 ```
 ./oracle-connect-rate.sh -s -f listener.log -S orcl | head >> README.md
@@ -116,7 +116,7 @@ Execution Statistics
     physical reads: 56
    consistent gets: 726000
       current gets: 0
- total logical IOs: 726000
+total logical IOs: 726000
 
 
  Bind Values
@@ -152,7 +152,7 @@ Execution Statistics
     physical reads: 59
    consistent gets: 40022
       current gets: 0
- total logical IOs: 40022
+total logical IOs: 40022
 
 
  Bind Values
@@ -474,7 +474,7 @@ sample output
        segment size: 20971520
        kernelPageSize: 2097152
      shmid: 1273233429
-	skipping due to small segment size
+skipping due to small segment size
      shmid: 1273167891
        segment size: 115343360
        kernelPageSize: 2097152
@@ -490,7 +490,7 @@ sample output
        segment size: 67108864
        kernelPageSize: 2097152
      shmid: 1274052663
-	skipping due to small segment size
+skipping due to small segment size
      shmid: 1274019894
        segment size: 48234496
        kernelPageSize: 2097152

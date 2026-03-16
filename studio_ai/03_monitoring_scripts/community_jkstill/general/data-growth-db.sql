@@ -37,7 +37,7 @@ daily_data as (
 		and s.instance_number = t.instance_number
 )
 select 
-	d.start_time
+d.start_time
 	, max(d.used_mb) used_mb
 from daily_data d
 group by d.start_time

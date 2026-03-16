@@ -1,20 +1,20 @@
 # ORACLE 19C RMAN LAB GUIDE - COMPLETE (RAC + DATA GUARD + CDB/PDB)
 
-Aggiornata al 13 marzo 2026.
+Updated March 13, 2026.
 Target: VirtualBox Oracle 19c lab (`RACDB` primary, `RACDB_STBY` standby, `dbtarget` test environment).
 
 This guide is designed for laboratory use: it includes configuration, automation, recovery and end-to-end practical tests.
 
-## 0) Regole di sicurezza del lab
+## 0) Lab safety rules
 
 - Perform destructive testing first on `dbtarget` or clone.
 - Before every important test create VirtualBox VM snapshots.
-- Mantieni un diario test (`data, scenario, risultato, tempo recovery`).
+- Keep a test diary (`data, scenario, risultato, tempo recovery`).
 - If you test on RAC primary/standby, isolate a dedicated lab window.
 
-## 1) Obiettivi e metriche (RPO/RTO)
+## 1) Objectives and metrics (RPO/RTO)
 
-Definisci per ogni database:
+Define for each database:
 
 - RPO: maximum data that can be lost (example 30 min on critical primary)
 - RTO: maximum recovery time (example 2 hours)
@@ -27,9 +27,9 @@ Example mapping for your lab:
 | `RACDB_STBY` | Physical Standby | 60 min | 1-3 ore | `RACDB_STBY` |
 | `dbtarget` | Target/clone | 4 ore | 2-6 ore | locale |
 
-## 2) Prerequisiti tecnici obbligatori
+## 2) Mandatory technical prerequisites
 
-Esegui su ogni DB.
+Run on each DB.
 
 ```sql
 SELECT name, db_unique_name, database_role, open_mode, log_mode, force_logging, flashback_on
@@ -48,22 +48,22 @@ FROM gv$instance
 ORDER BY inst_id;
 ```
 
-Controlli minimi:
+Minimum checks:
 
 - `LOG_MODE = ARCHIVELOG`
-- FRA configurata e dimensionata
+- FRA configured and sized
 - `CONTROL_FILE_RECORD_KEEP_TIME` consistent with retention
 - time synchronization between RAC and standby nodes
 
-## 3) Fondamentali RMAN 19c da rispettare
+## 3) RMAN 19c fundamentals to be respected
 
 - `CONTROLFILE AUTOBACKUP` sempre ON.
-- In RAC configura `SNAPSHOT CONTROLFILE` su storage condiviso.
+- In RAC configure`SNAPSHOT CONTROLFILE`on shared storage.
 - In Data Guard, set archivelog policy consistent with apply standby.
-- Preferisci backupset compressi su disco per lab.
-- Usa Recovery Catalog se gestisci piu database/ruoli/switchover frequenti.
+- Prefer compressed backupsets on disk for lab.
+- Use Recovery Catalog if you manage multiple databases/roles/frequent switchovers.
 
-Nota importante Oracle 19c:
+Important Note Oracle 19c:
 
 - Data Recovery Advisor (DRA) is deprecated. Recovery must be managed with explicit RMAN/SQL runbooks.
 
@@ -85,7 +85,7 @@ CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U';
 CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+RECO/%F';
 ```
 
-RAC (da fare su DB RAC):
+RAC (to be done on DB RAC):
 
 ```rman
 CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
@@ -114,11 +114,11 @@ SELECT status, filename FROM v$block_change_tracking;
 
 | Frequenza | `RACDB_STBY` | `RACDB` | `dbtarget` |
 |---|---|---|---|
-| Domenica 01:00 | L0 + arch + controlfile/spfile | arch | full |
-| Lun-Sab 01:00 | L1 + arch + controlfile/spfile | arch | L1 |
-| Ogni ora | archivelog | archivelog (opzionale ridondanza) | archivelog |
-| Daily | crosscheck + delete obsolete | crosscheck + delete obsolete | idem |
-| Settimanale | restore validate | restore validate | restore validate |
+|Sunday 01:00|L0 + arch + controlfile/spfile| arch | full |
+| Lun-Sab 01:00 |L1 + arch + controlfile/spfile| arch | L1 |
+|Every hour| archivelog |archivelog (optional redundancy)| archivelog |
+| Daily |crosscheck + delete obsolete|crosscheck + delete obsolete| idem |
+| Settimanale |restore validate|restore validate|restore validate|
 | Mensile | test recovery reale | test recovery reale | test recovery reale |
 
 ### 6.2 Naming standard
@@ -129,7 +129,7 @@ SELECT status, filename FROM v$block_change_tracking;
 - `CTRL_SPFILE_DAILY`
 - `VAL_WEEKLY`
 
-## 7) Script operativi consigliati
+## 7) Recommended operational scripts
 
 Path suggeriti:
 
@@ -240,14 +240,14 @@ RMAN
 # L1 lun-sab
 0 1 * * 1-6 /home/oracle/scripts/rman/rman_l1_stby.sh
 
-# Archivelog ogni ora
+# Archivelog hourly
 0 * * * * /home/oracle/scripts/rman/rman_arch.sh
 
-# Maintenance + validate settimanale
+# Maintenance + validate weekly
 30 2 * * 6 /home/oracle/scripts/rman/rman_maint_validate.sh
 ```
 
-## 8) Reporting e monitoraggio
+## 8) Reporting and monitoring
 
 RMAN commands:
 
@@ -335,7 +335,7 @@ RECOVER CORRUPTION LIST;
 RECOVER DATAFILE 8 BLOCK 13;
 ```
 
-### 10.4 Complete database recovery (nessuna perdita redo)
+### 10.4 Complete database recovery (no redo loss)
 
 ```rman
 SHUTDOWN IMMEDIATE;
@@ -417,7 +417,7 @@ Import manuale (se usi `NOTABLEIMPORT`):
 impdp \"/ as sysdba\" directory=DATA_PUMP_DIR dumpfile=rman_test.dmp logfile=imp_rman_test.log
 ```
 
-### 10.11 Restore su host alternativo (disaster drill)
+### 10.11 Restore on alternative host (disaster drill)
 
 ```rman
 STARTUP NOMOUNT;
@@ -435,7 +435,7 @@ ALTER DATABASE OPEN RESETLOGS;
 
 ## 11) DUPLICATE: clone and standby
 
-### 11.1 Duplicate per clone/test
+### 11.1 Duplicate for clone/test
 
 ```rman
 CONNECT TARGET sys@RACDB;
@@ -469,11 +469,11 @@ DUPLICATE TARGET DATABASE FOR STANDBY
 - after switchover/failover review cron, channels, FRA path and policy
 - with catalog, register both primary and standby
 
-## 13) RAC e RMAN: punti critici
+## 13) RAC and RMAN: critical points
 
-- usa servizio dedicato backup (evita connessioni casuali ai nodi)
+- use dedicated backup service (avoids random connections to nodes)
 - snapshot controlfile su shared storage
-- evita job duplicati simultanei da nodi diversi
+- avoid simultaneous duplicate jobs from different nodes
 - check `gv$instance` and I/O load during backup
 
 ## 14) COMPLETE LAB TEST SUITE (VirtualBox)
@@ -482,24 +482,24 @@ Each test has: objective, setup, execution, verification, rollback.
 
 ### Test 00 - Baseline backup/validate
 
-Obiettivo: confermare che la catena backup e valida.
+Objective: confirm that the backup chain is valid.
 
 1. Esegui L0 o L1.
 2. Esegui `RESTORE DATABASE PREVIEW SUMMARY`.
 3. Esegui `RESTORE DATABASE VALIDATE`.
 4. Save log output.
 
-Esito atteso: nessun errore RMAN/ORA.
+Expected outcome: no RMAN/ORA errors.
 
 ### Test 01 - Recovery datafile
 
-Obiettivo: recuperare un datafile offline.
+Objective: Recover an offline datafile.
 
-1. Porta datafile offline.
+1. Take datafile offline.
 2. `RESTORE DATAFILE` + `RECOVER DATAFILE`.
-3. Riporta online.
+3. Report online.
 
-Esito atteso: tablespace nuovamente accessibile.
+Expected outcome: tablespace accessible again.
 
 ### Test 02 - Recovery tablespace
 
@@ -509,17 +509,17 @@ Objective: Complete application tablespace recovery.
 2. `RESTORE/RECOVER TABLESPACE`.
 3. `ALTER TABLESPACE ... ONLINE`.
 
-Esito atteso: oggetti leggibili e scrivibili.
+Expected outcome: readable and writable objects.
 
 ### Test 03 - Block corruption
 
-Obiettivo: verificare block media recovery.
+Objective: to verify block media recovery.
 
 1. Locate corrupt blocks with `v$database_block_corruption`.
 2. `RECOVER CORRUPTION LIST`.
 3. Riesegui validate.
 
-Esito atteso: nessuna corruption residua.
+Expected outcome: no residual corruption.
 
 ### Test 04 - DBPITR
 
@@ -534,9 +534,9 @@ Expected outcome: data returns to state T0.
 
 ### Test 05 - PDB PITR
 
-Obiettivo: recovery puntuale di una singola PDB.
+Objective: timely recovery of a single PDB.
 
-1. Crea evento errore in `PDBAPP`.
+1. Create error event in`PDBAPP`.
 2. Esegui `RECOVER PLUGGABLE DATABASE ... UNTIL TIME`.
 3. Check application scheme.
 
@@ -557,7 +557,7 @@ Expected outcome: table restored with data.
 
 Goal: Recover only one tablespace at T0.
 
-1. Crea dati in `APP_TS`.
+1. Create data in`APP_TS`.
 2. Logical damage after T0.
 3. Esegui `RECOVER TABLESPACE ... UNTIL TIME`.
 
@@ -565,19 +565,19 @@ Esito atteso: tablespace coerente al tempo T0.
 
 ### Test 08 - Controlfile recovery
 
-Obiettivo: ripartire da controlfile autobackup.
+Objective: restart from controlfile autobackup.
 
 1. Simulate controlfile loss (clone/lab only).
 2. `RESTORE CONTROLFILE FROM AUTOBACKUP`.
 3. mount + recover + open resetlogs.
 
-Esito atteso: database aperto e consistente.
+Expected outcome: open and consistent database.
 
 ### Test 09 - SPFILE recovery
 
 Objective: Recover instance parameters from backup.
 
-1. Simula perdita spfile su clone.
+1. Simulate spfile loss on clone.
 2. `RESTORE SPFILE FROM AUTOBACKUP`.
 3. restart database.
 
@@ -588,7 +588,7 @@ Expected outcome: regular startup with correct parameters.
 Objective: DR drill complete.
 
 1. Prepare clone hosts with compatible Oracle Home.
-2. Catalog/trasferisci backup.
+2. Catalog/transfer backups.
 3. restore + recover + open resetlogs.
 
 Expected outcome: DB operational on alternative host.
@@ -598,9 +598,9 @@ Expected outcome: DB operational on alternative host.
 Objective: create test environment from lab production.
 
 1. `DUPLICATE ... FROM ACTIVE DATABASE`.
-2. Apri clone e valida applicazione.
+2. Open clone and valid application.
 
-Esito atteso: clone coerente e utilizzabile.
+Expected outcome: Consistent and usable clone.
 
 ### Test 12 - Switchover + backup continuity
 
@@ -618,7 +618,7 @@ Expected outcome: correct backups even with reversed roles.
   - aumenta FRA o esegui cleanup (`DELETE OBSOLETE`, `DELETE EXPIRED`).
 - `RMAN-06059: expected archived log not found`
   - `CROSSCHECK ARCHIVELOG ALL` + `DELETE EXPIRED ARCHIVELOG ALL`.
-- archivelog non cancellati
+- archivelog not deleted
   - check Data Guard policy and apply status.
 - backup lenti
   - rivedi parallelism, compressione, throughput storage.
@@ -627,35 +627,35 @@ Expected outcome: correct backups even with reversed roles.
 
 ## 16) Operational checklist
 
-Giornaliera:
+Daily:
 
 - check RMAN job outcome
-- controlla FRA usage
+- check FRA usage
 - check apply lag DG
 
 Settimanale:
 
 - restore validate
 - report obsolete/need backup
-- revisione trend spazio
+- space trend review
 
 Mensile:
 
 - test recovery reale documentato
-- test almeno 1 scenario logico (table/pitr)
-- test almeno 1 scenario fisico (datafile/controlfile)
+- test at least 1 logical scenario (table/pitr)
+- test at least 1 physical scenario (datafile/controlfile)
 
 ## 17) What to keep in the GitHub repository
 
 - Complete RMAN guide
-- script schedulazione backup
+- backup scheduling script
 - runbook incidenti
 - log template test
 - report test mensili (cartella `docs/tests/rman/` consigliata)
 
-## 18) Fonti usate (Oracle ufficiali + Oracle-Base)
+## 18) Sources used (Official Oracle + Oracle-Base)
 
-Oracle ufficiale 19c:
+Official Oracle 19c:
 
 - Backup and Recovery User's Guide: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/
 - RMAN backup concepts: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-backup-concepts.html
@@ -670,7 +670,7 @@ Oracle ufficiale 19c:
 - RAC backup/recovery notes: https://docs.oracle.com/en/database/oracle/oracle-database/19/racad/configuring-recovery-manager-and-archiving.html
 - Data Guard Concepts and Administration: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/
 
-Riferimento storico (non normativo per 19c):
+Historical reference (non-normative for 19c):
 
 - Oracle-Base RMAN 9i article: https://oracle-base.com/articles/9i/recovery-manager-9i
 
@@ -678,8 +678,8 @@ Riferimento storico (non normativo per 19c):
 
 The guide is complete when:
 
-- backup L0/L1/archivelog funzionano da cron
+- L0/L1/archivelog backups work as cron
 - there is at least 1 restore tested in the last 7 days
 - there is at least 1 logical test (PITR or RECOVER TABLE) in the last 30 days
-- i runbook sono versionati nel repo
+- runbooks are versioned in the repo
 - after each RU patching at least one restore validate is repeated

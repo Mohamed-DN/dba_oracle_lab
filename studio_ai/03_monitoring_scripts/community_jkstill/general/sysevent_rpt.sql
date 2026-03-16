@@ -9,7 +9,7 @@ col total_waits format 999,999,999 head "TOTAL|WAITS"
 col total_timeouts format 999,999,999 head "TOTAL|TIMEOUTS"
 col time_waited format 999,999,999 head "TIME|WAITED|SECONDS"
 col average_wait format 9999999.099999 head "AVG|WAIT"
-col stime new_value start_time noprint
+col estimates new_value start_time noprint
 col etime new_value end_time noprint
 col sectime new_value seconds noprint
 col global_name new_value dbname noprint

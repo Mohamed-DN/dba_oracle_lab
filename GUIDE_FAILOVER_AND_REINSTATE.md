@@ -4,11 +4,11 @@
 
 ---
 
-## ⚠️ AVVERTENZA LAB: Snapshot VirtualBox e Test di Failover
+## ⚠️ LAB WARNING: VirtualBox Snapshot and Failover Test
 
 > **FREQUENTLY ASKED QUESTION**: *"Since I'm on VirtualBox, can I take a snapshot of all 4 machines, test failover, and then put the snapshots back to quickly go back?"*
 > 
-> 🛑 **RISPOSTA: ASSOLUTAMENTE NO! Corromperai tutto il cluster.**
+> 🛑 **ANSWER: ABSOLUTELY NOT! You will corrupt the entire cluster.**
 > 
 > **Why?** In VirtualBox, disks configured as **"Shareable"** (like ours `asm_crs`, `asm_data`, etc.) are intentionally **EXCLUDED** from VM snapshots. 
 > If you do a failover (writing and modifying shared ASM disks) and then restore the VMs to a previous snapshot, the machines' OS disks will roll back in time, but the ASM disks will remain in the post-failover future state. This will cause a fatal misalignment between the operating system/Clusterware and the data on disk (Split Brain or OCR corruption).
@@ -18,7 +18,7 @@
 > 1. Do it as you would use a USB stick: **Completely shut down** the 4 VMs (rac1, rac2, racstby1, racstby2).
 > 2. Go to the Windows folder where you keep the virtual machines and the virtual disks folder (`.vdi`).
 > 3. Right click and **zip/copy-paste** the entire VM folder and the entire folder with all ASM disks into a backup directory (e.g. `Backup_RAC_PreFailover`).
-> 4. Accendi le VM, devasta tutto col failover, fai i tuoi test.
+> 4. Power on the VMs, devastate everything with failover, do your tests.
 > 5. When you're done, shut down the VMs, **delete** the current files, and unzip your physical backup in their place. You'll magically go back to 10 minutes earlier.
 
 ---
@@ -29,13 +29,13 @@
 ╔═══════════════════════╦════════════════════════════╦════════════════════════════╗
 ║                       ║     SWITCHOVER             ║     FAILOVER               ║
 ╠═══════════════════════╬════════════════════════════╬════════════════════════════╣
-║ Quando si usa?        ║ Manutenzione pianificata   ║ EMERGENZA — Primary morto! ║
+║ When is it used?        ║ Planned maintenance ║ EMERGENCY — Primary dead! ║
 ║ Data loss?            ║ ZERO (sempre)              ║ Possibile (MaxPerformance) ║
 ║                       ║                            ║ Zero (MaxAvailability)     ║
 ║ Is Primary active?     ║ Yes ║ NO — it crashed!           ║
 ║ Reversible?          ║ Yes (switchback) ║ Requires REINSTATE or ║
 ║ ║ ║ complete reconstruction ║
-║ Tempo di downtime     ║ ~30-60 secondi             ║ ~1-5 minuti                ║
+║ Downtime ║ ~30-60 seconds ║ ~1-5 minutes ║
 ║ Comando               ║ SWITCHOVER TO ...          ║ FAILOVER TO ...            ║
 ╚═══════════════════════╩════════════════════════════╩════════════════════════════╝
 ```
@@ -49,9 +49,9 @@
 │ RAC PRIMARY │ │ RAC STANDBY │
 │  RACDB          │                          │  RACDB_STBY     │
 │ │ ✕ DEAD! ✕ │ All redos │
-│  💀 💀 💀      │      Nessun redo         │  applicati fino │
+│ 💀 💀 💀 │ No redo │ applied until │
 │ Server broken │ is shipped!      │ to the last │
-│  Disco corrotto │                          │  ricevuto       │
+│ Corrupt disk │ │ received │
 │  Datacenter KO  │                          │                 │
 └─────────────────┘                          └─────────────────┘
                                                      │
@@ -62,8 +62,8 @@
                                              │ NEW PRIMARY │
                                              │  RACDB_STBY     │
                                              │  OPEN (R/W)     │
-                                             │  I client si    │
-                                             │  connettono QUI │
+│ Clients do │
+│ connect HERE │
                                              └─────────────────┘
 ```
 
@@ -74,16 +74,16 @@
 > **Do NOT failover if the Primary is still alive!** If both are open in R/W, you get a **split brain** with irreversible data corruption.
 
 ```bash
-# Prova a connetterti al Primary
+# Try connecting to Primary
 sqlplus sys/<password>@RACDB as sysdba
-# Se timeout → il Primary è probabilmente morto
+# If timeout → the Primary is probably dead
 
 # Prova SSH
 ssh root@rac1
 ssh root@rac2
-# Se entrambi non rispondono → conferma che il Primary è down
+# If both do not respond → confirm that the Primary is down
 
-# Controlla il DGMGRL
+# Check the DGMGRL
 dgmgrl sys/<password>@RACDB_STBY
 SHOW CONFIGURATION;
 # Se RACDB mostra "Error" → conferma
@@ -98,9 +98,9 @@ SHOW CONFIGURATION;
 ```bash
 dgmgrl sys/<password>@RACDB_STBY
 
-# Verifica quanti dati si perderebbero
+# Check how much data would be lost
 SHOW DATABASE RACDB_STBY;
-# Apply Lag: mostra quanto redo NON è stato ancora applicato
+# Apply Lag: Shows how much redo has NOT been applied yet
 
 # Failover!
 FAILOVER TO RACDB_STBY;
@@ -113,9 +113,9 @@ FAILOVER TO RACDB_STBY;
 2. Apply all redos received but not yet applied (reduces data loss)
 3. Opens standby as Primary
    → ALTER DATABASE ACTIVATE STANDBY DATABASE;
-   → oppure FAILOVER TO usando End-Of-Redo (se i redo finali sono disponibili)
+→ or FAILOVER TO using End-Of-Redo (if final redos are available)
 4. Change the database_role from PHYSICAL STANDBY to PRIMARY
-5. Attiva il redo logging
+5. Enable redo logging
 ```
 
 ### Check after Failover
@@ -135,15 +135,15 @@ Configuration Status: SUCCESS
 ```
 
 ```sql
--- Verifica sul nuovo Primary
+--Check on the new Primary
 sqlplus / as sysdba
 SELECT name, database_role, open_mode FROM v$database;
 -- RACDB_STBY | PRIMARY | READ WRITE
 
--- Testa il DML
+--Test the DML
 INSERT INTO testdg.test_replica VALUES (8888, 'Post-Failover!', SYSTIMESTAMP);
 COMMIT;
--- Se funziona → failover riuscito!
+--If it works → successful failover!
 ```
 
 ---
@@ -157,22 +157,22 @@ COMMIT;
 > **Prerequisite**: Flashback Database must have been enabled BEFORE the crash!
 
 ```sql
--- Verifica sul vecchio Primary (se è ripartito)
+--Check on the old Primary (if it has been restarted)
 sqlplus / as sysdba
 SELECT flashback_on FROM v$database;
--- Se YES → puoi usare questa opzione!
+--If YES → you can use this option!
 ```
 
 ```bash
-# 1. Spegni il vecchio Primary
+#1. Turn off the old Primary
 srvctl stop database -d RACDB
 
-# 2. Avvia in MOUNT
+#2. Boot into MOUNT
 sqlplus / as sysdba
 STARTUP MOUNT;
 
-# 3. Flashback al punto PRIMA del failover
-# Il SCN di failover si trova nel nuovo Primary:
+#3. Flashback to the point BEFORE the failover
+# The failover SCN is in the new Primary:
 # SELECT to_char(standby_became_primary_scn) FROM v$database; (sul nuovo primary)
 FLASHBACK DATABASE TO SCN <failover_scn>;
 
@@ -190,7 +190,7 @@ dgmgrl sys/<password>@RACDB_STBY
 
 REINSTATE DATABASE RACDB;
 
-# 7. Verifica
+#7. Check
 SHOW CONFIGURATION;
 # RACDB_STBY - Primary database
 # RACDB      - Physical standby      ← Tornato come standby!
@@ -202,12 +202,12 @@ SHOW CONFIGURATION;
 > If Flashback was not enabled or the old Primary is too divergent.
 
 ```bash
-# 1. Cancella il vecchio database
+#1. Delete the old database
 sqlplus / as sysdba
 STARTUP MOUNT RESTRICT;
 DROP DATABASE;
 
-# 2. Rifai l'RMAN Duplicate (come nella Fase 3)
+#2. Redo the RMAN Duplicate (as in Step 3)
 rman TARGET sys/<password>@RACDB_STBY AUXILIARY sys/<password>@RACDB1
 
 DUPLICATE TARGET DATABASE
@@ -222,7 +222,7 @@ DUPLICATE TARGET DATABASE
 ```
 
 ```bash
-# 3. Registra nel DGMGRL
+#3. Register in the DGMGRL
 dgmgrl sys/<password>@RACDB_STBY
 
 ENABLE DATABASE RACDB;
@@ -233,14 +233,14 @@ SHOW CONFIGURATION;
 
 ---
 
-## Opzione Avanzata: Fast-Start Failover (FSFO) — Failover AUTOMATICO
+## Advanced Option: Fast-Start Failover (FSFO) — AUTOMATIC Failover
 
 ```
 ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
 │ RAC PRIMARY │ │ RAC STANDBY │ │ OBSERVER │
 │  RACDB          │        │  RACDB_STBY     │        │  (su dbtarget)  │
 │                 │        │                 │        │                 │
-│                 │◄══════►│                 │◄══════►│  Monitora lo    │
+│ │◄══════►│ │◄══════►│ Monitor │
 │ │ DG │ │ │ state of │
 │                 │  Redo  │                 │        │  entrambi i DB  │
 └─────────────────┘        └─────────────────┘        │                 │
@@ -254,7 +254,7 @@ SHOW CONFIGURATION;
 ```bash
 dgmgrl sys/<password>@RACDB
 
-# Configura FSFO
+# Configure FSFO
 ENABLE FAST_START FAILOVER;
 
 # Avvia l'Observer (su una terza macchina, es. dbtarget)
@@ -267,7 +267,7 @@ START OBSERVER;
 
 ---
 
-## Diagramma Decisionale
+## Decision Diagram
 
 ```
 Is Primary down?
@@ -292,6 +292,6 @@ Is Primary down?
                                                   │            │
                                                   │            └── NO → RMAN DUPLICATE
                                                   │
-                                                  └── NO → Ricostruisci il server,
+└── NO → Rebuild server,
                                                             poi RMAN DUPLICATE
 ```

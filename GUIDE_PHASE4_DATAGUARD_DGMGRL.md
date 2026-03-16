@@ -5,7 +5,7 @@
 ### Switchover vs Failover — La Differenza Cruciale
 
 ```
-  SWITCHOVER (Pianificato, 0 data loss)         FAILOVER (Emergenza!)
+SWITCHOVER (Planned, 0 data loss) FAILOVER (Emergency!)
   ══════════════════════════════════════         ═══════════════════════
 
   BEFORE: BEFORE:
@@ -24,7 +24,7 @@
   │(ex-pri)│            │  OPEN  │              │o rifare│             │  OPEN  │
   └────────┘ └────────┘ │Phase 3 │ └────────┘
                                                 └────────┘
-  ✅ Ruoli invertiti      ✅ Zero data loss      ⚠️ Possibile data loss
+✅ Roles reversed ✅ Zero data loss ⚠️ Possible data loss
   ✅ Reversible ✅ ~30 seconds ⚠️ Old primary from
                                                     ricostruire
 ```
@@ -36,11 +36,11 @@
 Before tapping DGMGRL, verify that Phase 3 is really closed.
 
 ```sql
--- Sul primario
+--On the primary
 sqlplus / as sysdba
 SELECT name, open_mode, database_role, db_unique_name FROM v$database;
 
--- Sullo standby
+--On standby
 sqlplus / as sysdba
 SELECT name, open_mode, database_role, db_unique_name FROM v$database;
 SELECT process, status FROM v$managed_standby WHERE process='MRP0';
@@ -48,12 +48,12 @@ SHOW PARAMETER spfile;
 ```
 
 ```bash
-# Sullo standby
+# On standby
 srvctl status database -d RACDB_STBY -v
 ```
 
 ```bash
-# Verifica TNS dal primario
+#Check TNS from the primary doctor
 tnsping RACDB
 tnsping RACDB_STBY
 tnsping RACDB_DG
@@ -62,30 +62,30 @@ tnsping RACDB_STBY_DG
 
 Criteri minimi:
 
-- primary `READ WRITE` con ruolo `PRIMARY`
+- primary `READ WRITE`with role`PRIMARY`
 - standby `PHYSICAL STANDBY` con `MRP0` attivo
 - standby registered in the cluster and mounted on `racstby1` / `racstby2`
 - SPFILE standby in ASM, not in `dbs/spfileRACDB1.ora`
-- connettivita TNS ok sia alias SCAN (`RACDB`,`RACDB_STBY`) sia alias redo transport (`RACDB_DG`,`RACDB_STBY_DG`)
+- TNS connectivity ok and alias SCAN (`RACDB`,`RACDB_STBY`) sia alias redo transport (`RACDB_DG`,`RACDB_STBY_DG`)
 
 Nota RAC:
 
 - in physical standby RAC is normal to see `MRP0` on a single instance;
-- non usare l'assenza di `MRP0` su `racstby2` as an error criterion.
+- do not use the absence of`MRP0` su `racstby2` as an error criterion.
 
-Se questi check falliscono, rientra in [GUIDE_PHASE3_RAC_STANDBY.md](./GUIDE_PHASE3_RAC_STANDBY.md) before continuing.
+If these checks fail, it falls into [GUIDE_PHASE3_RAC_STANDBY.md](./GUIDE_PHASE3_RAC_STANDBY.md) before continuing.
 
 Note for Phase 5:
 
-- quando passerai a GoldenGate, il percorso base del repo usera il `primary` as a capture source;
-- Data Guard rimane la piattaforma di DR e role transition;
+- when you switch to GoldenGate, the base repo path will use the`primary` as a capture source;
+- Data Guard remains the DR and role transition platform;
 - any variants with offload from redo or standby are treated as advanced, not as basic flow.
 
 ---
 
 ## 4.1 Abilitare Data Guard Broker
 
-In RAC basta eseguire il settaggio una volta per database:
+In RAC you just need to perform the setting once per database:
 
 - da `rac1` per `RACDB`
 - da `racstby1` per `RACDB_STBY`
@@ -104,7 +104,7 @@ EXIT;
 
 ```bash
 ps -ef | grep dmon
-# Devi vedere un processo dmon_RACDB (o simile)
+#You need to see a dmon_RACDB (or similar) process
 ```
 
 ### 4.1a Best practice RAC: file Broker condivisi in ASM
@@ -144,7 +144,7 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 
 This normalization is consistent with Phase 3:
 
-- SPFILE condiviso in ASM;
+- SPFILE shared in ASM;
 - standby database recorded in OCR;
 - Full RAC configuration on both nodes.
 
@@ -157,20 +157,20 @@ If you have already created a Broker configuration in the past (previous tests),
 ```bash
 dgmgrl sys/<password>@RACDB
 SHOW CONFIGURATION;
--- Se esiste una configurazione precedente:
+--If a previous configuration exists:
 DISABLE CONFIGURATION;
 REMOVE CONFIGURATION;
 ```
 
-Connettiti a `dgmgrl` from **primary node**:
+Connect to`dgmgrl` from **primary node**:
 
 ```bash
-# Come oracle su rac1
+#Like oracle on rac1
 dgmgrl sys/<password>@RACDB
 ```
 
 ```
--- Crea la configurazione
+--Create the configuration
 CREATE CONFIGURATION dg_config AS
   PRIMARY DATABASE IS RACDB
   CONNECT IDENTIFIER IS RACDB;
@@ -180,7 +180,7 @@ ADD DATABASE RACDB_STBY AS
   CONNECT IDENTIFIER IS RACDB_STBY
   MAINTAINED AS PHYSICAL;
 
--- Abilita la configurazione
+--Enable the configuration
 ENABLE CONFIGURATION;
 ```
 
@@ -189,9 +189,9 @@ ENABLE CONFIGURATION;
 > **Explanation:**
 > - `CREATE CONFIGURATION`: Defines the name of the DG configuration.
 > - `PRIMARY DATABASE IS RACDB`: Tells the Broker which one is the primary one.
-> - `CONNECT IDENTIFIER IS RACDB`: Usa l'alias TNS `RACDB` per connettersi.
+> - `CONNECT IDENTIFIER IS RACDB`: Usa l'alias TNS `RACDB`to connect.
 > - `ADD DATABASE ... MAINTAINED AS PHYSICAL`: Adds standby as Physical Standby (not Logical).
-> - `ENABLE CONFIGURATION`: Attiva tutto. Da questo momento, Broker gestisce il redo shipping.
+> - `ENABLE CONFIGURATION`: Activate all. From this moment, Broker manages the redo shipping.
 
 ### 4.2a Best practice Broker: DGConnectIdentifier esplicito
 
@@ -206,7 +206,7 @@ DGMGRL> SHOW DATABASE VERBOSE RACDB;
 DGMGRL> SHOW DATABASE VERBOSE RACDB_STBY;
 ```
 
-Check the value of `DGConnectIdentifier`. Se non e coerente con gli alias `_DG`, impostalo esplicitamente:
+Check the value of `DGConnectIdentifier`. If it is not consistent with the aliases`_DG`, set it explicitly:
 
 ```
 DGMGRL> EDIT DATABASE RACDB SET PROPERTY DGConnectIdentifier='RACDB_DG';
@@ -273,7 +273,7 @@ SUCCESS
 > - **Apply Rate**: The application speed.
 > - In RAC standby it is normal for the Broker to show only one `apply instance` attiva.
 
-> 📸 **SNAPSHOT — "SNAP-09: DGMGRL_Configurato" ⭐ MILESTONE**
+> 📸 **SNAPSHOT — "SNAP-09: DGMGRL_Configured" ⭐ MILESTONE**
 > Data Guard Broker is operational with STATUS = SUCCESS. You have a real Disaster Recovery site.
 > ```bash
 > VBoxManage snapshot "rac1" take "SNAP-09: DGMGRL_Configurato"
@@ -288,18 +288,18 @@ SUCCESS
 
 This section tells you:
 1. how to choose the correct mode;
-2. quali prerequisiti Oracle sono obbligatori;
+2. which Oracle prerequisites are required;
 3. how to actually set it up `MaxPerformance`, `MaxAvailability`, `MaxProtection`;
 4. how to check and go back without breaking the configuration.
 
-### 4.4.1 Capire le 3 modalita (in pratica)
+### 4.4.1 Understanding the 3 modes (in practice)
 
 ```
 ╔═══════════════════╦═══════════════════════════════════════════════════════════╦══════════════╗
-║ Mode              ║ RPO / comportamento commit                               ║ Impatto       ║
+║ Mode ║ RPO / commit behavior ║ Impact ║
 ╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
-║ MaxPerformance    ║ Commit locale immediato, redo spedito ASYNC             ║ Minimo        ║
-║ (default)         ║ (possibile perdita secondi in disastro)                 ║              ║
+║ MaxPerformance ║ Immediate local commit, redo shipped ASYNC ║ Minimum ║
+║ (default) ║ (possible loss of seconds in disaster) ║ ║
 ╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
 ║ MaxAvailability ║ Target zero data loss when synchronized standby;   ║ Medium ║
 ║ ║ if standby does not respond, primary remains available ║ ║
@@ -309,8 +309,8 @@ This section tells you:
 ╚═══════════════════╩═══════════════════════════════════════════════════════════╩══════════════╝
 ```
 
-Regola veloce:
-- se vuoi priorita performance: `MaxPerformance`
+Quick rule:
+- if you want to prioritize performance:`MaxPerformance`
 - if you want zero data loss on the first fault but without blocking the primary: `MaxAvailability`
 - if you want zero absolute data loss and accept primary stop: `MaxProtection`
 
@@ -325,7 +325,7 @@ Before changing modes, check:
 3. Standby in real-time apply.
 4. Broker in `SUCCESS` e senza gap redo.
 5. Per `MaxAvailability`/`MaxProtection`: at least one standby with redo transport `SYNC` o `FASTSYNC` (broker).
-6. `Fast-Start Failover` disabilitato quando cambi protection mode (vincolo broker).
+6. `Fast-Start Failover`disabled when you change protection mode (broker constraint).
 7. In RAC, `LOG_ARCHIVE_DEST_n` consistent across all instances and net service with address list of all standby nodes.
 8. Se usi `SYNC`, configura timeout/retry coerenti (`NET_TIMEOUT`, `REOPEN`) to avoid long stalls on network faults.
 
@@ -361,29 +361,29 @@ DGMGRL> SHOW CONFIGURATION;
 
 ### 4.4.5 Procedure B - Switch to Maximum Availability (zero data loss on the first fault)
 
-Usala quando vuoi un equilibrio serio tra protezione e disponibilita.
+Use it when you want a serious balance between protection and availability.
 
-Opzione standard (piu protettiva):
+Standard option (more protective):
 ```
 DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='SYNC';
 DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='SYNC';
 DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
 ```
 
-Opzione ottimizzata latenza (FASTSYNC):
+Latency optimized option (FASTSYNC):
 ```
 DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='FASTSYNC';
 DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='FASTSYNC';
 DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
 ```
 
-Nota pratica:
-- `SYNC` (con `AFFIRM`) protegge di piu, ma costa piu latenza.
+Practical note:
+- `SYNC` (con `AFFIRM`) protects more, but costs more latency.
 - `FASTSYNC` (equivale a `SYNC/NOAFFIRM`) reduces impact, but in multiple extreme scenarios can expose you to data loss.
 
 ### 4.4.6 Procedure C - Switch to Maximum Protection (only if aware of the impact)
 
-Attenzione:
+Attention:
 - da `MAXPERFORMANCE` you can't jump straight to `MAXPROTECTION`;
 - you have to do it first `MAXAVAILABILITY`;
 - with only one standby, the loss of that standby can stop the primary.
@@ -393,7 +393,7 @@ Attenzione:
 DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY LogXptMode='SYNC';
 DGMGRL> EDIT DATABASE 'RACDB'      SET PROPERTY LogXptMode='SYNC';
 
--- Step 2: passaggio intermedio obbligatorio
+--Step 2: mandatory intermediate step
 DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
 
 -- Step 3: upgrade finale
@@ -403,9 +403,9 @@ DGMGRL> SHOW CONFIGURATION;
 
 ### 4.4.7 Rollback sicuro (downgrade)
 
-Se vuoi tornare indietro:
+If you want to go back:
 1. first lower the protection mode;
-2. poi cambia il transport mode.
+2. then change the transport mode.
 
 Example return to `MaxPerformance`:
 ```
@@ -434,7 +434,7 @@ DGMGRL> SHOW DATABASE RACDB_STBY;
 Output atteso:
 - `Protection Mode` coerente con quello impostato;
 - `Configuration Status: SUCCESS`;
-- lag trasporto/apply vicino a zero nel lab.
+- transport/apply lag close to zero in the lab.
 
 ### 4.4.9 Oracle Best Practices (Operational Summary)
 
@@ -445,9 +445,9 @@ Output atteso:
 5. In RAC, keep same `LOG_ARCHIVE_DEST_n` on all instances and use net service with multiple standby addresses.
 6. Measure latency/network before enforcing `SYNC`; se RTT e alta valuta `FASTSYNC` o torna `ASYNC`.
 7. Con `SYNC`, usa timeout/retry (`NET_TIMEOUT`, `REOPEN`) for automatic recovery after short faults.
-8. Monitora continuamente protection level/lag e chiudi subito anomalie di trasporto.
+8. Continuously monitor protection level/lag and immediately close transport anomalies.
 
-### 4.4.10 Riferimenti Oracle ufficiali (consultati)
+### 4.4.10 Official Oracle references (consulted)
 
 - Data Guard Concepts and Administration 19c (Protection Modes):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-protection-modes.html
@@ -479,7 +479,7 @@ DGMGRL> SWITCHOVER TO RACDB_STBY;
 > **What happens behind the scenes?**
 > 1. The primary (RACDB) flushes all pending redos to the standby.
 > 2. Primary converts to standby (changes controlfile).
-> 3. Standby (RACDB_STBY) converts to primary.
+> 3.Standby (RACDB_STBY) converts to primary.
 > 4. The old primary begins to receive feedback from the new primary.
 >
 > In a RAC, all instances are stopped and restarted automatically by the Broker.
@@ -500,34 +500,34 @@ Configuration Status:
 SUCCESS
 ```
 
-### Switchover di ritorno (ripristina la situazione originale)
+### Return switchover (restores the original situation)
 
 ```
 DGMGRL> SWITCHOVER TO RACDB;
 
 DGMGRL> SHOW CONFIGURATION;
--- RACDB torna primario, RACDB_STBY torna standby
+--RACDB becomes primary again,RACDB_STBY torna standby
 ```
 
 
 
 ---
 
-## 4.6 Test Failover (solo in caso di emergenza reale)
+## 4.6 Failover Test (only in case of real emergency)
 
 Failover is an **UNscheduled** operation used when the primary is unreachable. May result in data loss (if not in MaxProtection).
 
 > **⚠️ CAUTION**: Do not perform a failover in a lab if you are not prepared to reinstantiate standby afterward. After a failover, the old primary cannot automatically become standby again (requires a "reinstate" or recreation).
 
 ```
--- Solo se il primario è davvero down!
+--Only if the primary is really down!
 DGMGRL> FAILOVER TO RACDB_STBY;
 ```
 
 After failover, to restore the old primary as standby:
 
 ```
--- Se il vecchio primario è riavviabile
+--If the old primary is restartable
 DGMGRL> REINSTATE DATABASE RACDB;
 ```
 
@@ -540,15 +540,15 @@ DGMGRL> REINSTATE DATABASE RACDB;
 Active Data Guard (ADG) allows you to open standby in **READ ONLY** while continuing to apply redos. Fundamental for GoldenGate in Phase 5.
 
 ```sql
--- Sullo standby come sysdba
+--On standby as sysdba
 sqlplus / as sysdba
 
--- Sequenza sicura: cancel apply -> open read only -> riabilita apply realtime
+--Safe sequence: cancel apply -> open read only -> re-enable apply realtime
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ALTER DATABASE OPEN READ ONLY;
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
 
--- Verifica
+--Verify
 SELECT open_mode FROM v$database;
 -- Deve mostrare: READ ONLY WITH APPLY
 ```
@@ -568,22 +568,22 @@ srvctl start database -d RACDB_STBY
 ## 4.8 Useful DGMGRL Commands (Cheat Sheet)
 
 ```
--- General condition
+--General condition
 SHOW CONFIGURATION;
 SHOW CONFIGURATION VERBOSE;
 
--- Dettaglio database
+--Database detail
 SHOW DATABASE RACDB;
 SHOW DATABASE RACDB_STBY;
 
 -- Check switchover readiness
 VALIDATE DATABASE RACDB_STBY;
 
--- Controllare i log
+--Check the logs
 SHOW DATABASE RACDB_STBY LogShipping;
 SHOW DATABASE RACDB_STBY StatusReport;
 
--- Disabilitare temporaneamente
+--Temporarily disable
 DISABLE DATABASE RACDB_STBY;
 ENABLE DATABASE RACDB_STBY;
 

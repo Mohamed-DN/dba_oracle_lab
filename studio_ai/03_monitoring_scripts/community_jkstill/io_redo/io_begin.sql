@@ -16,7 +16,7 @@ create global temporary table io_begin(
 	writetime number(12,0),
 	readtime number(12,0),
 	ratio number(12,2),
-	io_date date,
+I_date give,
 	global_name varchar2(40)
 )
 on commit preserve rows

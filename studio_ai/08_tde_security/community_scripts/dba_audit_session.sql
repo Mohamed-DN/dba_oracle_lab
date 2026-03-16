@@ -18,7 +18,7 @@ set feed on term on
 select
 	username
 	, os_username
-	, terminal
+, terminal
 	, action_name
 	, max(timestamp) timestamp
 from dba_audit_session

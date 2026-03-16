@@ -10,7 +10,7 @@ set pagesize 100
 col used_mb format 99,999,999,999
 col start_time format a10
 col size_src format a15
-col csv_data format a200
+with csv_data format a200
 
 -- these will need to be manually set for csv
 set pagesize 0
@@ -72,7 +72,7 @@ monthly_data as (
 )
 , growth_data as (
 	select
-		d.start_time
+d.start_time
 		, max(d.used_mb) used_mb
 	from monthly_data d
 	group by d.start_time

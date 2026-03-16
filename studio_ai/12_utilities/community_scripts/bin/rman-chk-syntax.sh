@@ -27,7 +27,7 @@ export NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
  Done with -t 0 
  This is test on STDIN to check if it is opened on a terminal
 
- terminal:
+terminal:
  script.sh some stuff on the commandline
  script.sh <(echo some stuff)
  script.sh cat - <(echo some stuff)

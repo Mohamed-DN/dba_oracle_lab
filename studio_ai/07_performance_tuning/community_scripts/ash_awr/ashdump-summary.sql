@@ -21,7 +21,7 @@ col duration_seconds format 999999.00009 head 'DURATION'
 
 with data as (
 	select distinct
-		a.session_id
+a.session_id
 		, a.instance_number
 		, min(a.sample_time) over ( partition by a.blocking_session, a.blocking_session_serial# order by  e.parameter1, e.parameter2, e.parameter3 ) min_sample_time
 		, max(a.sample_time) over ( partition by a.blocking_session, a.blocking_session_serial# order by  e.parameter1, e.parameter2, e.parameter3 ) max_sample_time
@@ -50,7 +50,7 @@ calc_seconds as (
 	from duration_calc d
 )
 select
-	session_id
+session_id
 	, instance_number
 	, per_pdb
 	, min_sample_time

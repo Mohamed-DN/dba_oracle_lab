@@ -22,7 +22,7 @@ break on startup_time skip 1
 
 select  distinct
 	s.startup_time
-	, g.name component
+, g.name component
 	, g.pool
 	, min(g.bytes) over (partition by s.startup_time, g.name, g.pool) start_bytes
 	, max(g.bytes) over (partition by s.startup_time, g.name, g.pool) end_bytes

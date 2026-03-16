@@ -18,7 +18,7 @@ col dsk_state format a10
 
 select
 	dg.name
-	, dg.con_id
+, dg.con_id
 	, d.total_mb
 	, d.free_mb
 	, dg.state dg_state

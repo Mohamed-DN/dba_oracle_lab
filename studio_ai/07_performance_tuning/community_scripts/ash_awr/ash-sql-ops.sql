@@ -27,7 +27,7 @@ with data as (
 	 	sql_id
 		&legacy_db , con_id
 		, inst_id
-		, session_id
+, session_id
 		, sql_exec_id
 		, count(*) over (partition by sql_id
 			&legacy_db , con_id
@@ -37,7 +37,7 @@ with data as (
 			, inst_id, session_id, sql_exec_id order by sql_exec_id, sample_id ) row#
 		, sample_id
 		, sql_exec_start
-		, sample_time
+, sample_time
 		, sql_plan_operation
 	from gv$active_session_history
 	where sql_id is not null

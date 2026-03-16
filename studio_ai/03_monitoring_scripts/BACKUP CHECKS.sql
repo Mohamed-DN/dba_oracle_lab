@@ -156,7 +156,7 @@ ORDER BY 1;
 
 
 
-### Archivelog giorni feriali per un singolo DB: media elapsed e media quantità di dati
+### Archivelog weekdays for a single DB: average elapsed and average amount of data
 
 SELECT to_char(start_time,'HH24'), round(avg(elapsed_seconds)/60) as minuti,round(avg(B.INPUT_BYTES)/1024/1024/1024,4) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -169,7 +169,7 @@ and to_char(start_time,'DAY') not like 'SABATO%'
 GROUP BY to_char(start_time,'HH24')
 order by 1;
 
-### Archivelog giorni festivi per un singolo DB: media elapsed e media quantità di dati
+### Archivelog holidays for a single DB: average elapsed and average amount of data
 
 SELECT to_char(start_time,'HH24'), round(avg(elapsed_seconds)/60) as minuti,round(avg(B.INPUT_BYTES)/1024/1024/1024,4) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -181,7 +181,7 @@ and (to_char(start_time,'DAY') like 'DOMENICA%' or to_char(start_time,'DAY') lik
 GROUP BY to_char(start_time,'HH24')
 order by 1;
 
-### Backup incrementali giorni feriali per un singolo DB: media elapsed e media quantità di dati
+### Weekday incremental backups for a single DB: average elapsed and average amount of data
 
 SELECT to_char(start_time,'DAY'),round(avg(elapsed_seconds)/60) as minuti,round(avg(B.OUTPUT_BYTES)/1024/1024/1024,2) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -193,7 +193,7 @@ and to_char(start_time,'DAY') not like 'DOMENICA%'
 and to_char(start_time,'DAY') not like 'SABATO%'
 GROUP BY to_char(start_time,'DAY');
 
-### Backup incrementali giorni festivi per un singolo DB: media elapsed e media quantità di dati
+### Incremental backups on holidays for a single DB: average elapsed and average amount of data
 
 SELECT to_char(start_time,'DAY'),round(avg(elapsed_seconds)/60) as minuti,round(avg(B.OUTPUT_BYTES)/1024/1024/1024,2) as GB
 FROM rman.rc_rman_backup_job_details b, rman.rc_database d
@@ -204,7 +204,7 @@ AND b.db_name='&db_name'
 and (to_char(start_time,'DAY') like 'DOMENICA%' or to_char(start_time,'DAY') like 'SABATO%') 
 GROUP BY to_char(start_time,'DAY');
 
-## Medie tempi / spazi dei backup incrementali di un singolo DB
+## Average times / spaces of incremental backups of a single DB
 
 SELECT to_char(start_time,'YYYY/MM/DD DAY') as Giorno,
 round(elapsed_seconds/60) as minuti,round(B.INPUT_BYTES/1024/1024/1024,2) as INPUT_GB, 
@@ -224,7 +224,7 @@ AND input_type!='ARCHIVELOG'
 GROUP BY db_name, to_char(start_time,'HH24'), to_char(start_time,'DAY')
 order by 3,2;
 
-## Per verificare il corretto backup di un archivelog
+## To verify the correct backup of an archivelog
 
 select * 
 from RMAN.rc_backup_archivelog_details
@@ -241,6 +241,6 @@ where db_key = 190587
 and session_recid = 30551
 and session_stamp = 723013343;
 
-### Verifica pulizia e crescita catalogo RMAN
+### Check RMAN catalog cleanliness and growth
 
 select db_id, min(START_TIME) from RC_BACKUP_SET group by db_id;

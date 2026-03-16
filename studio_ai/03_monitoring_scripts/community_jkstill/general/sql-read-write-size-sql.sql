@@ -48,7 +48,7 @@ with sql_info as (
 	having sum(physical_write_bytes) > 0
 )
 select
-	i.&v_signature_match_column
+i.&v_signature_match_column
 	, m.physical_write_bytes
 	, m.physical_read_bytes
 	, s.sql_id

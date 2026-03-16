@@ -45,7 +45,7 @@ END;
 
 execute DBA_OP.MVIEW_REFRESH(&SCHEMA.&TABLE_NAME, 'C');
 
--- grant a ruoli applicativo
+--grant to application roles
 -- grant execute on DBA_OP.MVIEW_REFRESH to &role_rw;
 
 

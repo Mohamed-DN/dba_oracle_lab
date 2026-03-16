@@ -30,7 +30,7 @@ select
    , total_mb
    , free_mb
    , usable_file_mb
-   , database_compatibility
+, database_compatibility
 from v$asm_diskgroup_stat
 order by name
 /

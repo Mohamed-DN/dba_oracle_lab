@@ -81,7 +81,7 @@ with getsigs as (
 		and  force_matching_signature !=	 0
 			-- included if sql should originate from a particular account
 		and parsing_user_id in (select user_id from dba_users where username like '&u_username')
-	union all
+union all
 		select
 			distinct max(s.force_matching_signature) over (partition by s.force_matching_signature) force_matching_signature
 		from dba_hist_sqlstat s
@@ -110,7 +110,7 @@ all_sql as (
 		from getsigs s
 		join v$sqlarea a on a.force_matching_signature = s.force_matching_signature
 		group by a.sql_id, a.parsing_user_id, s.force_matching_signature
-		union all
+union all
 		select
 			st.sql_id
 			, s.force_matching_signature

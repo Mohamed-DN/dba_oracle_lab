@@ -60,7 +60,7 @@ calctime as (
 		without the getlag() section, then lag() would need to be duplicated for each extract()
 	*/
 	select
-		sample_time
+sample_time
 		, sample_id
 		, lag_time
 		, instance_number
@@ -87,7 +87,7 @@ select
 	-- this line with decode should not normally be necessary
 	-- if you are seeing divide-by-zero errors, there may be an error in the SQL
 	-- or perhaps in the data
-	--, db_time / decode(elapsed_time,null,10000,0,10000, elapsed_time)  aas
+	--, db_time / decode(elapsed_time,null,10000,0,10000, elapsed_time) aas
 	, c.db_time / c.elapsed_time  aas
 from calctime c
 	join gv$pdbs p on p.inst_id = c.instance_number

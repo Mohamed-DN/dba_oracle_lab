@@ -2,7 +2,7 @@
 
 -- date_math_epoch.sql
 -- convert current timestamp to epoch (UTC)
--- convert epoch to timestamp
+--convert epoch to timestamp
 -- Jared Still - 2017-05-16
 --   jkstill@gmail.com
 --
@@ -24,11 +24,11 @@ from dual
 
 select
 	-- epoch in UTC
-	to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')
+to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')
 	-- current local time
-	, from_tz(to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY'),'UTC') at time zone sessiontimezone
-	-- user specified time zone
-	, ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')) at time zone 'UTC') at time zone 'US/Pacific'
+, from_tz(to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY'),'UTC') at time zone sessiontimezone
+	--user specified time zone
+, ((to_timestamp('1970-01-01', 'YYYY-MM-DD SSSSSFF3') + numtodsinterval( &u_epoch / 86400,'DAY')) at time zone 'UTC') at time zone 'US/Pacific'
 from dual
 /
 

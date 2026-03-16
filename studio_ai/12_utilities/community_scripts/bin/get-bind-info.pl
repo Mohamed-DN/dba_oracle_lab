@@ -114,7 +114,7 @@ Execution Statistics
 	 physical reads: $physReads
 	consistent gets: $consistentGets
 		current gets: $currentGets
- total logical IOs: $logicalIOs
+total logical IOs:$logicalIOs
 
 
 };

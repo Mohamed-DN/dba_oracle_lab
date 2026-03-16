@@ -149,7 +149,7 @@ end if;
                              ,orig_schema,new_schema
                             ) 
                    ) DDL 
-    into ddl_comments
+into ddl_comments
     from 
      (select owner,table_name 
         from dba_tab_comments a

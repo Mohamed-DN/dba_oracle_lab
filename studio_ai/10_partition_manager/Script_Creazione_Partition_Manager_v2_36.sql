@@ -19,7 +19,7 @@ BEGIN
 
   select
     replace(version,'.','')
-  into V_DBVER
+into V_DBVER
   from PRODUCT_COMPONENT_VERSION
   where PRODUCT like 'Oracle Database%' ;
 
@@ -80,7 +80,7 @@ IF V_ACL_EXISTS = 0 THEN
 	description => 'SMTP Access',
 	principal => 'DBA_OP', -- the user name trying to access the network resource
 	is_grant => TRUE,
-	privilege => 'connect',
+privilege => 'connect',
 	start_date => null,
 	end_date => null
 	);
@@ -132,7 +132,7 @@ END;
 begin
 
 	DBMS_NETWORK_ACL_ADMIN.ADD_PRIVILEGE(acl => 'smtp_acl_pm.xml',
-	principal => 'DBA_OP',
+principal => 'DBA_OP',
 	is_grant => true,
 	privilege => 'resolve');
 
@@ -142,9 +142,9 @@ end;
 begin
 
 	DBMS_NETWORK_ACL_ADMIN.ADD_PRIVILEGE(acl => 'smtp_acl_pm.xml',
-	principal => 'DBA_OP',
+principal => 'DBA_OP',
 	is_grant => true,
-	privilege => 'connect');
+privilege => 'connect');
 
 end;
 /
@@ -354,7 +354,7 @@ CREATE TABLE DBA_OP.MAINT_PARTITIONS
   LAST_RUN_RESULT                 VARCHAR2(10 BYTE),
   NEXT_RUN_DATE                   DATE,
   SCHEDULE                        VARCHAR2(300 BYTE),
-  SEND_EMAIL_TO                   VARCHAR2(4000 BYTE) DEFAULT 'dbadmin_allarmi@nexi.it'
+  SEND_EMAIL_TOVARCHAR2(4000 BYTE) DEFAULT 'dbadmin_allarmi@nexi.it'
 )
 TABLESPACE DBA_OP_DATA
 LOGGING 
@@ -871,7 +871,7 @@ BEGIN
 
     select
       REGEXP_COUNT( :NEW.SEND_EMAIL_TO, '@' )
-    into v_count
+into v_count
     from dual ;
 
         IF v_count > 1 THEN
@@ -1064,13 +1064,13 @@ IS
 
       20190909 version 1.2 Added partition management via External Package
 
-      20190910      versione 1.3       Aggiunto check sull'esistenza di una sola partizione.
+      20190910 version 1.3 Added check on the existence of only one partition.
                                        Bug Fix su Interval Partitioned Tables
-                                       Se l'esecuzione e' di DryRun, non vengono modificate la last_run_date e la next_run_date
+                                       If the execution is DryRun, the last_run_date and next_run_date are not modified
 
       20190912 version 1.4 Fix on ArchivedRow. Added save exceptions management in case of errors in insert/delete
                                        Added ability to delete rows without storing them in another table
-                                       Fixed valori constant di login
+                                       Fixed constant login values
                                        Fixed Exception handler of the create exchange partition table
                                        Fixed Error Messages all in English
                                        Removed limitation on the destination table for the archive with query
@@ -1081,43 +1081,43 @@ IS
                                        Added ability to manage different primary key indexing between source and target tables of exchange partitions
                                        Modified MovePartition tablespace procedure to perform the Move on the exchange table instead of the final table
 
-      20190924      versione 1.6       Fixed Calcolo Partizioni da rimuovere/comprimere quando retention_unit e' una funzione
+      20190924 version 1.6 Fixed Calculation of Partitions to remove/compress when retention_unit is a function
                                        Added email forwarding
                                        Fixed logging in Create Partition
-                                       Eliminato PARALLEL 4 di default nella exchange partition
+                                       Eliminated PARALLEL 4 by default in the exchange partition
                                        Fixed behavior with Weekly partitions
                                        Fixed MovePartitionTablespace to avoid rebuilding indexes linked to lobs
 
       20191010 version 1.7 Adequate package with external Types
                                        Changed possibility to start PM even if tables is disabled (only with table mode passed as argument)
-                                       Eseguite modifiche per installare PM su Oracle 11R2
+                                       Performed changes to install PM on Oracle 11R2
                                        Fixed Calculate PartitionName with MONDAY derivation depending on the language
                                        Fixed Rename Indexes
-                                       Fixed split partition aggiunto update global indexes
+                                       Fixed split partition added update global indexes
                                        Fixed trash partition management
                                        Fixed Index partition name in RenamePartitions
                                        Fixed partition name string lenght in CalculatePartitionName
                                        Added inpunt TableName to GetCurrentPartitionHV function as per ICTEAM request
 
-      20191013      versione 1.8       Fixed bug in GetPartitionListToAdd quando l'unica partizione presete e' quella cestino
+      20191013 version 1.8 Fixed bug in GetPartitionListToAdd when the only partition present is the trash one
                                        Added Email management
                                        Added SendTestEmail procedure to test sending notifications with one or more configured email servers
                                        Added Status: RUNNING when the table is being maintained by the package
 
       20191031 version 1.9 Fixed RenamePartition in the case of partition key with char
-            Fixed calcolo del RUNNING
+            Fixed RUNNING calculation
             Fixed query for extracting indices whose partition names are to be renamed in the case of partition key such as varchar2
             Fix RenamePartitions which in the case of partition key as varchar must take the portion of the date relating to the RetentionUnit format
-                                       Fix utilizzo MAXVALUE nel caso di partition column varchar2
+                                       Fix use of MAXVALUE in the case of partition column varchar2
                                        Fixed CreatePartition if there is a default parttion with function as partition_retention_unit
-            Fixed AlignExchangeTable per droppare il Pk constraint se e' di troppo nella exchnage table
+            Fixed AlignExchangeTable to drop the Pk constraint if it is too many in the exchange table
 
       20191114 version 2.0 Changed management of the online clause on database versions >= 12.1 in the CompressPartition
                                        Modified the split function by replacing "update GLOBAL indexes" with "update indexes"
                                        Modified ONLINE rebuild of indexes in case the table is not partitioned
 
       20191128 version 2.1 Error 14758 also handled in the drop relating to the exchange partition
-                                       Modificata procedure CreateExchangeTable per creare indici sull'owner corretto
+                                       Modified CreateExchangeTable procedure to create indexes on the correct owner
                                        Modified Create ExchangeTable / AlignExchnageTable to create indexes on the correct owner when the table and its exchange are on different schemas
                                        Changed AlignExchangeTable and CreateExchnageTable to limit the maximum size of automatically created index names
 
@@ -1125,35 +1125,35 @@ IS
                                        Modified AlignExchangeTable to create indexes with fields in the correct order
                                        Modified StartMaintenance and ProcessTable to set the fixed gRunDate instead of the SYSDATE
 
-      20191213      versione 2.3       Scommentata SendMail
+      20191213 version 2.3 SendMail commented out
                                        Changed loggin with tablename instead of PartitionName
                                        Added check that indexes are unusable before rebuilding anyway
                                        Added management of subpartitioned tables in compression CompressSubPartition + IsIndexSubpartitionUnusable
                                        Removed Return from ProcessTable because it prevented the mailing from being sent in the event of an error
 
-      20191217      versione 2.4       Creata funzione RenameIntervalpartitions per evitare di fare reload ad ogni exchange partition che ha creato problemi di performance
+      20191217 version 2.4 RenameIntervalpartitions function created to avoid reloading each exchange partition that created performance problems
                                        Management of last range partition on exchange to avoid spalling done at every run
                                        Modified SendMail so as not to send emails from tables that have not been modified in the last run even if their status is in error
                                        Changed DropPartitionList so that it truncates the last range partition of a table instead of dropping it (because it's not possible to drop it!!)
                                        Changed ExchangePartitionList so that if the partition of an interval partitioned table is a range and is empty, I don't proceed with the exchange
                                        because I would require throwing away the data present in the history table due to a previous exchange round
-                                       Aumentato logging in ExchangePartitionList
+                                       Increased logging in ExchangePartitionList
 
-      20191219      versione 2.5       Modificato GetPartitionListToAdd e GetNetxtPartitionWithRetention per le partizioni annuali e mensili nel cso di column type di tipo date o timestamp
+      20191219 version 2.5 Changed GetPartitionListToAdd and GetNetxtPartitionWithRetention for yearly and monthly partitions when using date or timestamp column types
 
       20200110      versione 2.6       Fix Millennium Bug
                                        Changed GetPartitionListToAdd to correctly create number of partitions with PART_ADD_COUNT = 1
                                        Changed DropPartitionList procedure so that it only exports non-empty partitions
-                                       Modificato logging ExportPartitionData
+                                       Changed ExportPartitionData logging
                                        Modified RenamePartition to correctly handle HighValue = DEFAULT in the case of retention unit as a function
                                        Modified GetPartitionListToCompress to insert only existing partitions (in the case of function retention they may not exist)
                                        Modified GetPartitionListToRemove to insert only existing partitions (in the case of function retention they may not exist)
                                        Created IsPartitionCompressed to understand if the partition is compressed by also analyzing the subpartitions
                                        Modified GetPartitionListToRemove to manage the compression check also at subpartition level
-                                       Fixed dimensione varchar2 ritornato dalla function CanBeOnline
+                                       Fixed size of varchar2 returned by CanBeOnline function
                                        CreatePartition modified to correctly manage the split in the case of retention function and in the case of a trash partition with standard data type retention
                                        Changed CalculateNextPartitionName to rename the DefaultPartition with the date format 99990101
-                                       Modificato cursore cCurIdxToDrop in AlignExchangeTable per eliminare union ridondante
+                                       Changed cCurIdxToDrop cursor in AlignExchangeTable to eliminate redundant union
                                        Modified AlignExchnageTableIndex to create indexes on the exchnage table that we have a name with 4 random digits
                                        Modified CalculateNextRunDate for correct calculation of the NextDate in the case of execution on the same day as the scheduling
 
@@ -1162,53 +1162,53 @@ IS
 
        20200221 version 2.8 CreatePartition modified to correctly manage the add partition in the case of retention_unit as a function
                                        Modified GetPartitionListToAdd function to fix the creation of one more partition than necessary in both the TIMESTAMP/Date case
-                                       che nel caso di funzione esterna
+                                       than in the case of external function
                                        Modified LogFacility to introduce trunc of the MESSAGE field to 4000 and avoid errors during insertion
                                        Enhancement on logging of all package procedures. Transformed some DEBUGS into INFO and improved the information reported in the log
 
-       20200317      versione 2.9      Modificata CreatePartition per gestire correttamente l'add partition nel caso di retention_unit annuale
+       20200317 version 2.9 CreatePartition modified to correctly manage the add partition in the case of annual retention_unit
 
-    20200609      versione 2.10     Modificata CompressPartitionList in modo da non fare il raise nel caso di eccezione durante la compress ( vedi horussg )
+    20200609 version 2.10 Modified CompressPartitionList so as not to raise in case of exception during compress (see horussg)
 
-    20200917      versione 2.11     Eliminata ONLINE nella compress per motivi di licenza
+    20200917 version 2.11 Removed ONLINE in the compress for licensing reasons
 
-    20200918      versione 2.12     Modificata Clausola compress nella CompressPartition
+    20200918 version 2.12 Modified compress clause in CompressPartition
 
-    20200921      versione 2.13     Modificata Clausola compress nella CompressSubPartition
+    20200921 version 2.13 Modified compress clause in CompressSubPartition
 
-    20201001      versione 2.14     Modificata ExchangePartitionList per gestire disabilitazione FK in caso di exchnage partition
+    20201001 version 2.14 Changed ExchangePartitionList to manage FK disabling in case of exchange partition
 
     20201001 version 2.15 Create IstableEmpty to manage checks on non-partitioned tables
 
-    20201105      versione 2.16     Modificato trigger per impedire utilizzo Compressioni non HCC o BASIC
+    20201105 version 2.16 Modified trigger to prevent use of non-HCC or BASIC compressions
 
-    20210305      versione 2.17     Modificata procedure ExportPartition per adeguarla alla versione 19c
+    20210305 version 2.17 ExportPartition procedures modified to adapt to version 19c
 
-    20210714      versione 2.18     Modificata procedure CompressPartition e CompressSubpartition per introdurre il FOR nella clausola compress nel caso di HCC
+    20210714 version 2.18 Modified CompressPartition and CompressSubpartition procedures to introduce the FOR in the compress clause in the case of HCC
 
     20211001 version 2.20 Modified CreatePartition to fix the partition created by the split
 
-    20211103      versione 2.21     Modificata GetPartitionListToRemove per bug che si e' presentato su ECGP quando le partizioni non esistono. Spostato il vPartCount + 1 dentro la IF PART exists
+    20211103 version 2.21 Changed GetPartitionListToRemove for bug that appeared on ECGP when partitions do not exist. Moved the vPartCount + 1 into the IF PART exists
 
     20220211 version 2.22 Introduced before create table as select , alter session required for exchange partition ORA-01497.
-            ExportPartitionData  fix bug per versioni inferiori alla 12.1
+            ExportPartitionData bug fix for versions lower than 12.1
 
-    20220309      versione 2.23     Modificata RenamePartition per evitare di rinominare la partizioni di indice dell'ultima partizione ( che presumibilemente e' quella "attiva"
+    20220309 version 2.23 Modified RenamePartition to avoid renaming the index partition of the last partition (which is presumably the "active" one
             Fixed CreatePartition problem which, in the case of a Recycle Bin partition, creates the default partition with the same name as the new partition
-            Modificata SendMail per abbasssare priorit������ a WARn nel caso in cui il mail server non sia raggiungibile
+            Modified SendMail to lower priority to WARn in case the mail server is not reachable
 
-    20220314      versione 2.24     Modificata CanBeOnline per riattivare la possibilit������ di fare lavori in online attivando Advanced Compression
+    20220314 version 2.24 Modified CanBeOnline to reactivate the possibility of doing work online by activating Advanced Compression
                                        Modified CompressPartition to rebuild invalid index partitions following partition compression
-                                       Modificata CompressPartition per permettere la compressione OLTP ( il default resta BASIC )
-                                       Modificato Trigger di check per permettere la compress oltp
+                                       Modified CompressPartition to allow OLTP compression (default remains BASIC)
+                                       Modified check trigger to allow oltp compress
 
        20220329 version 2.25 Changed ExchangePartitionList due to error in managing the create partition on week partitioned tables
-                                       Modificata GetNextPartitionWithRetention per aggiungere un +7 nella partizione restituita
+                                       Changed GetNextPartitionWithRetention to add a +7 in the returned partition
 
        20220405 version 2.26 Modified Trigger for Compress for BASIC management.
             Changed installation script to restore grants prior to table drop.
 
-       20220413      versione 2.27     Permesso valore di compressione COMPRESS ADVANCED
+       20220413 version 2.27 Allow COMPRESS ADVANCED compression value
 
     20220623 version 2.28 Changed management of the trigger that calculates the TABLE_ID
             Deleted sequence for TABLE_ID management
@@ -1219,9 +1219,9 @@ IS
 
     20231020 version 2.31 New action introduced to manage rejuvenation with insert as select + drop partition
                                        Change of commit for ArchiveQuery functionality
-                                       Modificata clausola di start in caso si specifichi Table	_Name in modo che il record debba essere enabled per essere eseguito
+                                       Modified start clause if Table _Name is specified so that the record must be enabled to be executed
 
-    20231114      versione 2.32     Fix trigger di compatibilit�� logiche
+    20231114 version 2.32 Fix logical compatibility triggers
 
     20240214   versione 2.33     Fix enable/disable fk per logica append
 
@@ -1392,7 +1392,7 @@ IS
          || ''')';
       ExecSqlCommandInto (vStmt, pTableName, v_notcompressed_segs);
 
-      IF v_notcompressed_segs > 0
+IF v_notcompressed_segs > 0
       THEN
          v_ret_val := FALSE;
       ELSE
@@ -1468,13 +1468,13 @@ IS
 
 
    PROCEDURE ExportPartitionData (pTable    IN VARCHAR2,
-                                  pPeriod   IN VARCHAR2, -- nome partizione, OPPURE un nome da associare al periodo specificato dalla subquery
-                                  pQuery    IN VARCHAR2 DEFAULT NULL, -- subquery; se NULL, pPeriod deve essere una partizione
+pPeriod IN VARCHAR2, -- partition name, OR a name to associate with the period specified by the subquery
+pQuery IN VARCHAR2 DEFAULT NULL, -- subquery; if NULL, pPeriod must be a partition
                                   pDirobj   IN VARCHAR2 DEFAULT NULL -- directory object su cui esportare; se NULL, viene usata 'STOR_EXPDP'
                                                                     )
    AS
       --
-      -- Esempi di utilizzo
+      --Examples of use
       --
       -- PARTITIONED TABLE : export_data('MP_HISTORY.TICKET_QF_SPORT','P200508');
       -- NON-PARTITIONED TABLE: export_data('MP_HISTORY.AVVENTION','MONTH200508','where dataora_avv between...');
@@ -1486,7 +1486,7 @@ IS
       schema_name              VARCHAR2 (100);
       export_table_name        VARCHAR2 (100);
       partition_name           VARCHAR2 (100);
-      file_name                VARCHAR2 (200);
+file_name VARCHAR2 (200);
       log_name                 VARCHAR2 (450);
       history_log              VARCHAR2 (200);
       run_log                  VARCHAR2 (200);
@@ -1496,7 +1496,7 @@ IS
       lancio                   NUMBER;
       directory_object         VARCHAR2 (100);
       apice                    VARCHAR2 (1) := '''';
-      separatore               VARCHAR2 (1) := '_';
+separator VARCHAR2 (1) := '_';
       max_filesize             VARCHAR2 (10) := NULL;
       file_exists              BOOLEAN;
       file_length              NUMBER (15);
@@ -1504,8 +1504,8 @@ IS
       log_handle               UTL_FILE.file_type;
       l_text                   VARCHAR2 (2000);
       esito                    VARCHAR2 (2000);
-      inizio                   DATE;
-      fine                     DATE;
+start DATE;
+end DATE;
       msg                      VARCHAR2 (2000);
       versione                 VARCHAR2 (30);
       encrypted_column_count   NUMBER (5);
@@ -1533,15 +1533,15 @@ IS
       THEN
          RAISE_APPLICATION_ERROR (
             -20000,
-            'Usage: export_data(schema.tavola, partition | periodo[,subquery])');
+'Usage: export_data(schema.tavola, partition | period[,subquery])');
       END IF;
 
       --
-      -- impostazioni
+      --settings
       --
       schema_name := UPPER (schema_name);
       export_table_name := UPPER (export_table_name);
-      partition_name := UPPER (pPeriod);
+partition_name := UPPER (pPeriod);
       directory_object := NVL (UPPER (pDirobj), 'PM_EXPORTS');
       lancio := TO_NUMBER (TO_CHAR (SYSDATE, 'YYYYMMDDHH24MISS'));
 
@@ -1570,13 +1570,13 @@ IS
 
       base_name :=
             db_name
-         || separatore
+|| separator
          || schema_name
-         || separatore
+|| separator
          || export_table_name
-         || separatore
-         || partition_name
-         || separatore
+|| separator
+|| partition_name
+|| separator
          || lancio;
       log_name := base_name || '.log';
       -- job_name is truncated to 30...
@@ -1584,20 +1584,20 @@ IS
          export_table_name || separatore || partition_name || '.' || lancio;
       history_log := 'export.history';
       run_log := 'export_run.log';
-      inizio := SYSDATE;
+start := SYSDATE;
 
       LogFacility (LOG_SEV_INFO, 'Generated file is ' || base_name, pTable);
 
       --
-      -- nome del file di output
+      --output file name
       --
       file_name := base_name || '.dmp';
 
       --
-      -- file di output e file di log non devono pre-esistere
+      --Output files and log files do not have to pre-exist
       --
       UTL_FILE.fgetattr (directory_object,
-                         file_name,
+file_name,
                          file_exists,
                          file_length,
                          file_block);
@@ -1625,16 +1625,16 @@ IS
       LogFacility (
          LOG_SEV_INFO,
             'Starting export of partition :'
-         || partition_name
+|| partition_name
          || '". Directory='
          || directory_object
          || '. File='
-         || file_name
+|| file_name
          || '.',
          pTable);
 
       --
-      -- registro inizio lancio: se non posso accedere alla dir, usciro' qui, evitando errori (poco chiari) nella costruzione del job
+      --launch start register: if I cannot access the dir, I will exit here, avoiding (unclear) errors in the construction of the job
       --
       log_handle :=
          UTL_FILE.fopen (directory_object,
@@ -1644,7 +1644,7 @@ IS
       msg :=
             TO_CHAR (SYSDATE, 'YYYY-MM-DD.HH24:MI:SS ')
          || 'lancio EXPORT_DATA '
-         || file_name
+|| file_name
          || '...';
       UTL_FILE.put_line (log_handle, msg);
       UTL_FILE.fclose (log_handle);
@@ -1660,7 +1660,7 @@ IS
                              NULL,
                              job_name);
       DBMS_DATAPUMP.add_file (h1,
-                              file_name,
+file_name,
                               directory_object,
                               max_filesize,
                               DBMS_DATAPUMP.KU$_FILE_TYPE_DUMP_FILE);
@@ -1671,7 +1671,7 @@ IS
                               DBMS_DATAPUMP.KU$_FILE_TYPE_LOG_FILE);
       DBMS_DATAPUMP.metadata_filter (h1,
                                      'SCHEMA_EXPR',
-                                     '=' || apice || schema_name || apice,
+'=' || superscript || schema_name || apex,
                                      NULL);
       DBMS_DATAPUMP.metadata_filter (
          h1,
@@ -1682,7 +1682,7 @@ IS
       THEN
          DBMS_DATAPUMP.data_filter (h1,
                                     'PARTITION_LIST',
-                                    partition_name,
+partition_name,
                                     NULL,
                                     NULL);
       ELSE
@@ -1700,7 +1700,7 @@ IS
       DBMS_DATAPUMP.start_job (h1, 0);
       DBMS_DATAPUMP.wait_for_job (h1, job_state);
       DBMS_DATAPUMP.detach (h1);
-      fine := SYSDATE;
+end := SYSDATE;
 
       --
       -- verify job completed, log file existence
@@ -1744,7 +1744,7 @@ IS
       END IF;
 
       --
-      -- analisi log file
+      --log file analysis
       --
       log_handle :=
          UTL_FILE.fopen (directory_object,
@@ -1752,7 +1752,7 @@ IS
                          'r',
                          1000);
 
-      -- se no-errori imposto OK e continuo; warning-cifratura imposto OK e continuo; altro-ORA- imposto KO e interrompo loop
+      --if no errors I set OK and continue; warning-encryption set OK and continue; else-NOW-I set KO and break loop
       -- (the KO must not be covered by subsequent warnings...)
       --
       esito := '??';
@@ -1762,9 +1762,9 @@ IS
             UTL_FILE.GET_LINE (log_handle, l_text);
 
             IF    l_text LIKE '%successfully completed%'
-               OR l_text LIKE '%completato in%'
+OR l_text LIKE '%completed in%'
             THEN
-               -- dovrebbe implicare no errori e no warning
+               --should imply no errors and no warnings
                esito := 'OK: ' || l_text;
                LogFacility (
                   LOG_SEV_INFO,
@@ -1808,7 +1808,7 @@ IS
                   pTable);
             END IF;
 
-            IF esito LIKE 'KO%'
+IF result LIKE 'KO%'
             THEN
                UTL_FILE.FCLOSE (log_handle);
                LogFacility (
@@ -1835,21 +1835,21 @@ IS
       UTL_FILE.put_line (
          log_handle,
             '=== NEXI === start: '
-         || TO_CHAR (inizio, 'YYYY-MM-DD HH24:MI:SS')
+         || TO_CHAR(start, 'YYYY-MM-DD HH24:MI:SS')
          || ' end: '
          || TO_CHAR (fine, 'YYYY-MM-DD HH24:MI:SS')
          || ' minuti: '
-         || ROUND ( (fine - inizio) * 1440, 2));
+|| ROUND ( (end - start) * 1440, 2));
       UTL_FILE.fclose (log_handle);
 
       --
-      -- interruzione in caso di errore
+      --interruption in case of error
       --
       /*  old version
       IF  l_text NOT LIKE '%successfully completed%'
-      AND l_text NOT LIKE '%completato in%'
+      AND l_text NOT LIKE '%completed in%'
       */
-      IF esito LIKE 'KO%' OR esito LIKE '??%'
+IF outcome LIKE 'KO%' OR outcome LIKE '??%'
       THEN
          RAISE_APPLICATION_ERROR (-20000, '===ERRORE EXPORT=== ' || esito);
       END IF;
@@ -1857,11 +1857,11 @@ IS
       LogFacility (
          LOG_SEV_INFO,
             'Export of partition :'
-         || partition_name
+|| partition_name
          || '". Directory='
          || directory_object
          || '. File='
-         || file_name
+|| file_name
          || ' successfully finished',
          pTable);
 
@@ -1869,7 +1869,7 @@ IS
       -- execution completed successfully, recorded in the history_log
       --
       UTL_FILE.fgetattr (directory_object,
-                         file_name,
+file_name,
                          file_exists,
                          file_length,
                          file_block);
@@ -1879,7 +1879,7 @@ IS
       msg := msg || ' [';
 
       msg :=
-         msg || ' minutes=' || ROUND ( (fine - inizio) * 1440, 2);
+msg || ' minutes=' || ROUND ( (end - start) * 1440, 2);
       msg := msg || ' MB=' || file_length;
       msg := msg || ' db=' || db_name;
       msg := msg || ' ] ';
@@ -1934,7 +1934,7 @@ IS
          || pMessage);
 
       INSERT INTO DBA_OP.MAINT_PARTITIONS_LOG (runid,
-                                               datetime,
+datetime,
                                                severity,
                                                procedure_name,
                                                MESSAGE,
@@ -2013,7 +2013,7 @@ IS
                   pEntry.Partition_Retention_Unit,
                   0);
             vPartName :=
-               CalculatePartitionName (vPartDate,
+CalculatePartitionName(vPartDate,
                                        pEntry.Partition_Retention_Unit,
                                        pEntry.Partition_Name_Prefix);
             vPartTablespaceName := NULL;
@@ -2067,7 +2067,7 @@ IS
                pm_part_rec_type (NULL, NULL, NULL);
             vPartitionList (vPartCount).partition_high_value := vPartDate;
             vPartitionList (vPartCount).partition_name :=
-               CalculatePartitionName (vPartDate,
+CalculatePartitionName(vPartDate,
                                        pEntry.Partition_Retention_Unit,
                                        pEntry.Partition_Name_Prefix);
          ELSE
@@ -2753,14 +2753,14 @@ IS
                         || ' will be disabled',
                         pEntry.TABLE_NAME);
 
-                     comandi_disable.EXTEND;
-                     comandi_enable.EXTEND;
-                     comandi_disable (comandi_disable.COUNT) :=
+commands_disable.EXTEND;
+commands_enable.EXTEND;
+commands_disable (comands_disable.COUNT) :=
                            'alter table '
                         || x.fktable
                         || ' disable constraint '
                         || x.fk;
-                     comandi_enable (comandi_enable.COUNT) :=
+commands_enable (commands_enable.COUNT) :=
                            'alter table '
                         || x.fktable
                         || ' enable novalidate constraint '
@@ -2769,11 +2769,11 @@ IS
 
 
                   -- 20240214 esegui disable
-                  FOR vCmdCount IN 1 .. comandi_disable.COUNT
+FOR vCmdCount IN 1 .. commands_disable.COUNT
                   LOOP
                      BEGIN
                         LogFacility (LOG_SEV_INFO,
-                                     comandi_disable (vCmdCount),
+commands_disable (vCmdCount),
                                      pEntry.TABLE_NAME);
                         ExecSqlCommand (comandi_disable (vCmdCount),
                                         pEntry.TABLE_NAME);
@@ -2783,7 +2783,7 @@ IS
                            LogFacility (
                               LOG_SEV_WARNING,
                                  'An error occurred during '
-                              || comandi_disable (vCmdCount)
+|| commands_disable (vCmdCount)
                               || ' : '
                               || SQLERRM
                               || ' [Code: '
@@ -2815,7 +2815,7 @@ IS
                   LOOP
                      BEGIN
                         LogFacility (LOG_SEV_INFO,
-                                     comandi_enable (vCmdCount),
+commands_enable (vCmdCount),
                                      pEntry.TABLE_NAME);
                         ExecSqlCommand (comandi_enable (vCmdCount),
                                         pEntry.TABLE_NAME);
@@ -2825,7 +2825,7 @@ IS
                            LogFacility (
                               LOG_SEV_WARNING,
                                  'An error occurred during '
-                              || comandi_enable (vCmdCount)
+|| commands_enable (vCmdCount)
                               || ' : '
                               || SQLERRM
                               || ' [Code: '
@@ -2918,11 +2918,11 @@ IS
       CURSOR cPartInfoDate
       IS
          SELECT high_value_in_date_format high_value,
-                partition_name,
+partition_name,
                 tablespace_name
            FROM (SELECT table_name,
                         table_owner,
-                        partition_name,
+partition_name,
                         NVL (
                            TO_DATE (
                               TRIM (
@@ -2934,7 +2934,7 @@ IS
                                                     || ''' and table_owner = '''
                                                     || table_owner
                                                     || ''' and partition_name = '''
-                                                    || partition_name
+|| partition_name
                                                     || ''''),
                                                  '//text()'),
                                               '''.*?''')),
@@ -2946,7 +2946,7 @@ IS
                   WHERE     UPPER (table_owner || '.' || table_name) =
                                UPPER (pTableName)
                         AND partition_name NOT LIKE
-                               pEntry.PARTITION_NAME_PREFIX/* non possibile, faccio affidamento su partition name per fare dei ragionamenti, deve essere corretta
+                               pEntry.PARTITION_NAME_PREFIX/* not possible, I rely on partition name for reasoning, it must be correct
                                                            and partition_position < ( select
                                                                                           max(partition_position)
                                                                                       FROM dba_tab_partitions
@@ -2958,7 +2958,7 @@ IS
       IS
          SELECT table_name,
                 table_owner,
-                partition_name,
+partition_name,
                 tablespace_name,
                 high_value
            FROM dba_tab_partitions
@@ -3174,11 +3174,11 @@ IS
       CURSOR cPartInfoDate
       IS
          SELECT high_value_in_date_format high_value,
-                partition_name,
+partition_name,
                 tablespace_name
            FROM (  SELECT table_name,
                           table_owner,
-                          partition_name,
+partition_name,
                           NVL (
                              TO_DATE (
                                 TRIM (
@@ -3190,7 +3190,7 @@ IS
                                                       || ''' and table_owner = '''
                                                       || table_owner
                                                       || ''' and partition_name = '''
-                                                      || partition_name
+|| partition_name
                                                       || ''''),
                                                    '//text()'),
                                                 '''.*?''')),
@@ -3214,7 +3214,7 @@ IS
       IS
            SELECT table_name,
                   table_owner,
-                  partition_name,
+partition_name,
                   tablespace_name,
                   high_value
              FROM dba_tab_partitions
@@ -3231,7 +3231,7 @@ IS
       IS
          WITH IDX_NAME
               AS (SELECT (index_owner || '.' || index_name) AS index_name,
-                         partition_name,
+partition_name,
                          high_value,
                          partition_position
                     FROM dba_ind_partitions
@@ -3267,7 +3267,7 @@ IS
          WITH IDX_NAME
               AS (SELECT index_name,
                          index_owner,
-                         partition_name,
+partition_name,
                          partition_position,
                          NVL (
                             TO_DATE (
@@ -3280,7 +3280,7 @@ IS
                                                      || ''' and index_owner = '''
                                                      || index_owner
                                                      || ''' and partition_name = '''
-                                                     || partition_name
+|| partition_name
                                                      || ''''),
                                                   '//text()'),
                                                '''.*?''')),
@@ -3303,8 +3303,8 @@ IS
                                     AND kc.column_name = colmn.column_name
                                     AND pi.owner = colmn.owner
                                     AND pi.table_name = colmn.table_name
-                                    AND (   colmn.data_type = 'DATE'
-                                         OR colmn.data_type LIKE
+AND ( colmn.data_type = 'DATE'
+OR colmn.data_type LIKE
                                                '%TIMESTAMP%')
                                     AND index_name NOT LIKE 'SYS_IL%')),
               maxpos
@@ -3315,7 +3315,7 @@ IS
                   GROUP BY mxpos.index_owner, mxpos.index_name)
          SELECT idx.index_owner,
                 idx.index_name,
-                idx.partition_name,
+idx.partition_name,
                 idx.high_value
            FROM idx_name idx, maxpos mp
           WHERE     idx.partition_position < mp.mx_pos
@@ -3866,11 +3866,11 @@ IS
                || ' will be disabled',
                pEntry.TABLE_NAME);
 
-            comandi_disable.EXTEND;
-            comandi_enable.EXTEND;
-            comandi_disable (comandi_disable.COUNT) :=
+commands_disable.EXTEND;
+commands_enable.EXTEND;
+commands_disable (comands_disable.COUNT) :=
                'alter table ' || x.fktable || ' disable constraint ' || x.fk;
-            comandi_enable (comandi_enable.COUNT) :=
+commands_enable (commands_enable.COUNT) :=
                   'alter table '
                || x.fktable
                || ' enable novalidate constraint '
@@ -3878,11 +3878,11 @@ IS
          END LOOP;
 
          -- 20121108 esegui disable
-         FOR vCmdCount IN 1 .. comandi_disable.COUNT
+FOR vCmdCount IN 1 .. commands_disable.COUNT
          LOOP
             BEGIN
                LogFacility (LOG_SEV_INFO,
-                            comandi_disable (vCmdCount),
+commands_disable (vCmdCount),
                             pEntry.TABLE_NAME);
                ExecSqlCommand (comandi_disable (vCmdCount),
                                pEntry.TABLE_NAME);
@@ -3892,7 +3892,7 @@ IS
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred during '
-                     || comandi_disable (vCmdCount)
+|| commands_disable (vCmdCount)
                      || ' : '
                      || SQLERRM
                      || ' [Code: '
@@ -4013,7 +4013,7 @@ IS
          LOOP
             BEGIN
                LogFacility (LOG_SEV_INFO,
-                            comandi_enable (vCmdCount),
+commands_enable (vCmdCount),
                             pEntry.TABLE_NAME);
                ExecSqlCommand (comandi_enable (vCmdCount), pEntry.TABLE_NAME);
             EXCEPTION
@@ -4022,7 +4022,7 @@ IS
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred during '
-                     || comandi_enable (vCmdCount)
+|| commands_enable (vCmdCount)
                      || ' : '
                      || SQLERRM
                      || ' [Code: '
@@ -4060,7 +4060,7 @@ IS
                     (SELECT index_name
                        FROM dba_indexes
                       WHERE owner || '.' || table_name = pTableName)
-             AND partition_name = pPartName
+AND partition_name = pPartName
              AND status <> 'USABLE';
 
       IF v_is_index_unsable > 0
@@ -4088,7 +4088,7 @@ IS
                     (SELECT index_name
                        FROM dba_indexes
                       WHERE owner || '.' || table_name = pTableName)
-             AND partition_name = pPartName
+AND partition_name = pPartName
              AND status <> 'USABLE';
 
       IF v_is_index_unsable > 0
@@ -4110,13 +4110,13 @@ IS
               0 if it contains data
 
       */
-      vconto   NUMBER (10);
+vcount NUMBER (10);
       vsql     VARCHAR2 (1000);
    BEGIN
       vsql := 'select count(1) from ' || pTavola || ' where rownum < 2';
-      ExecSqlCommandInto (vsql, pTavola, vconto);
+ExecSqlCommandInto(vsql, pTable, vcount);
 
-      IF vconto > 0
+IF vaccount > 0
       THEN
          -- the table contains data
          LogFacility (
@@ -4137,15 +4137,15 @@ IS
       RETURN NUMBER
    IS
       /*
-         ritorna:  0  se la tavola non esiste
-                   1  se la partizione e' vuota
-                   2  se la tavola esiste e non e' partizionata
-                  10  se la partizione non esiste
-                  11  se la partizione esiste e non e' vuota
+         returns: 0 if the table does not exist
+                   1 if the partition is empty
+                   2 if the table exists and is not partitioned
+                  10 if the partition does not exist
+                  11 if the partition exists and is not empty
 
-                  99  se errore imprevisto
+                  99 if unexpected error
       */
-      vconto   NUMBER (10);
+vcount NUMBER (10);
       vsql     VARCHAR2 (1000);
    BEGIN
       LogFacility (LOG_SEV_DEBUG,
@@ -4156,9 +4156,9 @@ IS
             'SELECT COUNT(1) FROM dba_tables WHERE ( owner || ''.'' || table_name ) = UPPER('''
          || pTavola
          || ''')';
-      ExecSqlCommandInto (vsql, pTavola, vconto);
+ExecSqlCommandInto(vsql, pTable, vcount);
 
-      IF vconto = 0
+IF vaccount = 0
       THEN
          -- la tavola non esiste
          LogFacility (LOG_SEV_DEBUG,
@@ -4171,11 +4171,11 @@ IS
             'SELECT COUNT(1) FROM dba_tables WHERE ( owner || ''.'' || table_name ) = UPPER('''
          || pTavola
          || ''') AND PARTITIONED=''YES''';
-      ExecSqlCommandInto (vsql, pTavola, vconto);
+ExecSqlCommandInto(vsql, pTable, vcount);
 
-      IF vconto = 0
+IF vaccount = 0
       THEN
-         -- la tavola esiste ma non e' partizionata
+         --the table exists but is not partitioned
          LogFacility (LOG_SEV_DEBUG,
                       'IsPartitionEmpty return 2 for table : ' || pTavola,
                       pTavola);
@@ -4189,11 +4189,11 @@ IS
          || ''') AND partition_name=UPPER('''
          || pPartiz
          || ''')';
-      ExecSqlCommandInto (vsql, pTavola, vconto);
+ExecSqlCommandInto(vsql, pTable, vcount);
 
-      IF vconto = 0
+IF vaccount = 0
       THEN
-         -- la partizione non esiste
+         --the partition does not exist
          LogFacility (LOG_SEV_DEBUG,
                       'IsPartitionEmpty return 10 for table : ' || pTavola,
                       pTavola);
@@ -4206,17 +4206,17 @@ IS
          || ' partition ('
          || pPartiz
          || ') where rownum <= 1';
-      ExecSqlCommandInto (vsql, pTavola, vconto);
+ExecSqlCommandInto(vsql, pTable, vcount);
 
-      IF vconto = 0
+IF vaccount = 0
       THEN
-         -- la partizione e' vuota
+         --the partition is empty
          LogFacility (LOG_SEV_DEBUG,
                       'IsPartitionEmpty return 1 for table : ' || pTavola,
                       pTavola);
          RETURN 1;
       ELSE
-         -- la partizione non e' vuota
+         --the partition is not empty
          LogFacility (LOG_SEV_DEBUG,
                       'IsPartitionEmpty return 11 for table : ' || pTavola,
                       pTavola);
@@ -4442,7 +4442,7 @@ IS
          THEN
             /*
                 -- The safeguard rebuild is done below in NOT online mode, so I replace it with a built rebuild
-                -- Questa e' una rebuild di salvaguardia, non dovrebbe mai essere eseguita
+                -- This is a safeguard rebuild, it should never be performed
                 LogFacility(LOG_SEV_INFO, 'After compression of partition : ' || pName || ' some indexes were found unusable. Rebuilding...' , pTable);
 
                 vStmt := 'alter table ' || TRIM(pTable) || ' modify partition ' || pName || ' rebuild unusable local indexes ' ;
@@ -4479,7 +4479,7 @@ IS
                                                     || '.'
                                                     || table_name = pTable))
             LOOP
-               -- Questa e' una rebuild di salvaguardia, non dovrebbe mai essere eseguita
+               --This is a safeguard rebuild, it should never be performed
                ExecSqlCommand (vStmt, pTable);
             END LOOP;
 
@@ -4512,7 +4512,7 @@ IS
             || ' move compress '
             || pCompressType
             || vTablespaceName
-            || ' parallel '
+|| 'parallel'
             || pDegree
             || CanBeOnline ('MOVE');
          ExecSqlCommand (vStmt, pTable);
@@ -4653,7 +4653,7 @@ IS
                                             || '.'
                                             || table_name = pTable))
                LOOP
-                  -- Questa e' una rebuild di salvaguardia, non dovrebbe mai essere eseguita
+                  --This is a safeguard rebuild, it should never be performed
                   ExecSqlCommand (vStmt, pTable);
                END LOOP;
 
@@ -4719,7 +4719,7 @@ IS
             vStmt :=
                   'alter table '
                || TRIM (pTable)
-               || ' modify partition '
+|| 'modify partition'
                || pPartName
                || ' rebuild unusable local indexes';
             ExecSqlCommand (vStmt, pTable);
@@ -4748,7 +4748,7 @@ IS
             || TRIM (pTable)
             || ' move tablespace '
             || pTablespaceName
-            || ' parallel '
+|| 'parallel'
             || pDegree;
          ExecSqlCommand (vStmt, pTable);
 
@@ -4945,11 +4945,11 @@ IS
                || ' will be disabled',
                pEntry.TABLE_NAME);
 
-            comandi_disable.EXTEND;
-            comandi_enable.EXTEND;
-            comandi_disable (comandi_disable.COUNT) :=
+commands_disable.EXTEND;
+commands_enable.EXTEND;
+commands_disable (comands_disable.COUNT) :=
                'alter table ' || x.fktable || ' disable constraint ' || x.fk;
-            comandi_enable (comandi_enable.COUNT) :=
+commands_enable (commands_enable.COUNT) :=
                   'alter table '
                || x.fktable
                || ' enable novalidate constraint '
@@ -4957,11 +4957,11 @@ IS
          END LOOP;
 
          -- 20121108 esegui disable
-         FOR vCmdCount IN 1 .. comandi_disable.COUNT
+FOR vCmdCount IN 1 .. commands_disable.COUNT
          LOOP
             BEGIN
                LogFacility (LOG_SEV_INFO,
-                            comandi_disable (vCmdCount),
+commands_disable (vCmdCount),
                             pEntry.TABLE_NAME);
                ExecSqlCommand (comandi_disable (vCmdCount),
                                pEntry.TABLE_NAME);
@@ -4971,7 +4971,7 @@ IS
                   LogFacility (
                      LOG_SEV_WARNING,
                         'An error occurred during '
-                     || comandi_disable (vCmdCount)
+|| commands_disable (vCmdCount)
                      || ' : '
                      || SQLERRM
                      || ' [Code: '
@@ -5040,7 +5040,7 @@ IS
                   LOOP
                      BEGIN
                         LogFacility (LOG_SEV_INFO,
-                                     comandi_enable (vCmdCount),
+commands_enable (vCmdCount),
                                      pEntry.TABLE_NAME);
                         ExecSqlCommand (comandi_enable (vCmdCount),
                                         pEntry.TABLE_NAME);
@@ -5050,7 +5050,7 @@ IS
                            LogFacility (
                               LOG_SEV_WARNING,
                                  'An error occurred during '
-                              || comandi_enable (vCmdCount)
+|| commands_enable (vCmdCount)
                               || ' : '
                               || SQLERRM
                               || ' [Code: '
@@ -5213,12 +5213,12 @@ IS
                DropEmptyPartition (pEntry.TABLE_NAME, vPartName);
 
 
-               -- Riabilito le FK
+               --I rehabilitate the FKs
                FOR vCmdCount IN 1 .. comandi_enable.COUNT
                LOOP
                   BEGIN
                      LogFacility (LOG_SEV_INFO,
-                                  comandi_enable (vCmdCount),
+commands_enable (vCmdCount),
                                   pEntry.TABLE_NAME);
                      ExecSqlCommand (comandi_enable (vCmdCount),
                                      pEntry.TABLE_NAME);
@@ -5228,7 +5228,7 @@ IS
                         LogFacility (
                            LOG_SEV_WARNING,
                               'An error occurred during '
-                           || comandi_enable (vCmdCount)
+|| commands_enable (vCmdCount)
                            || ' : '
                            || SQLERRM
                            || ' [Code: '
@@ -5672,7 +5672,7 @@ IS
                               pRetentionUnit,
                               vPartNameToSplit);
 
-         -- Se siamo nella situazione di una partizione cestino
+         --If we are in the situation of a trash partition
          IF SUBSTR (vPartNextSplitValue, 1, 4) = '9999'
          THEN
             -- If there is a trash partition, the name of the new partition must by default be equal to the oldest partition + 1
@@ -5680,7 +5680,7 @@ IS
             --vNewPartDate      := GetNextPartitionWithRetention(pDate, pRetentionUnit , 0) ;
             --vNewPartName      := CalculatePartitionName(pDate, pRetentionUnit, pNamePrefix);
 
-            -- Dobbiamo rinominare la partizione cestino in pDate + una RETENTION UNIT . Lo 0 nelal function sotto e' perch������ il +1 e' direttamente presente nella funzion
+            --We need to rename the trash partition to pDate + a RETENTION UNIT. The 0 in the function below is because the +1 is directly present in the function
             vNewDefPartDate :=
                GetNextPartitionWithRetention (pDate, pRetentionUnit, 0);
             vNewDefPartName :=
@@ -5695,15 +5695,15 @@ IS
          ELSIF     vPartNextSplitValue IS NOT NULL
                AND SUBSTR (vPartNextSplitValue, 1, 4) <> '9999'
          THEN
-            -- Se vPartNextSplitValue is not null allora vuol dire che dobbiamo splittare una partizione esistente.
-            -- vPartNameToSplit e' valorizzato dalla chiamata a GetNextPartition sopra
+            --If vPartNextSplitValue is not null then it means we need to split an existing partition.
+            --vPartNameToSplit is enhanced by the GetNextPartition call above
             NULL;
          END IF;
       ELSE
          -- We are in the case of a retention unit with function
          vPartNameToSplit := DefaultPartition (pTableName);
 
-         -- Se non ho una partizione cestino, potrei avere una partizione piu' grande di quella che voglio creare, vediamo se e' cosi...
+         --If I don't have a trash partition, I might have a larger partition than I want to create, let's see if that's the case...
          IF vPartNameToSplit IS NULL
          THEN
             ExecSqlCommandInto (
@@ -5719,7 +5719,7 @@ IS
 
             -- Compared to the High Value I want to create, I calculate the split high value of the immediately following partition
             -- the retention_unit function always returns a vPartNameToSplit, even if the partition does not exist
-            -- la IF sotto e' sempre verificata
+            --the IF below is always verified
             IF vPartNextSplitValue IS NOT NULL
             THEN
                -- the retention_unit function always returns a vPartNameToSplit, even if the partition does not exist, so I have to check whether it exists or not
@@ -5734,7 +5734,7 @@ IS
                   NULL,
                   vPartNameToSplit);
 
-               -- devo controllare se la partizione esiste o meno
+               --I need to check whether the partition exists or not
                -- If it doesn't exist, then I need to do only ADD Partition and not split
                IF NOT PartitionExists (pTableName, vPartNameToSplit)
                THEN
@@ -5746,14 +5746,14 @@ IS
                END IF;
             END IF;
          ELSE
-            -- questo e' il caso in cui ho una partizione cestino
+            --this is the case when I have a trash partition
             -- Calculate the name of the new trash partition
             --ExecSqlCommandInto('SELECT ' || pRetentionUnit || '.GetNextHV(''' || pTableName || ''' , ''' || pDate || ''',1 ) FROM DUAL',NULL,vPartNextSplitValue);
 
-            -- Calcolo la partition name in base al partition value +1
+            --I calculate the partition name based on the partition value +1
             --ExecSqlCommandInto('SELECT ' || pRetentionUnit || '.GetPartitionNameFromHV(''' || pTableName || ''' , ''' || vPartNextSplitValue || ''' ) FROM DUAL',NULL,vNewPartName);
 
-            -- Devo avanzare di +1 per andare oltre alla pDate per dare un nome coerente alla Def Partition
+            --I have to advance +1 to go beyond the pDate to give a consistent name to the Def Partition
             ExecSqlCommandInto (
                   'SELECT '
                || pRetentionUnit
@@ -5765,7 +5765,7 @@ IS
                NULL,
                vPartNextSplitValue);
 
-            -- Calcolo la partition name in base al partition value +1
+            --I calculate the partition name based on the partition value +1
             ExecSqlCommandInto (
                   'SELECT '
                || pRetentionUnit
@@ -5811,9 +5811,9 @@ IS
                'alter table :table split partition :split_part at ('
             || vPartSplitValue
             || ')'
-            || ' into ( partition :partition , partition :new_split_part ) '
+|| ' into ( partition :partition , partition :new_split_part ) '
             || CanBeOnline ('SPLIT')
-            || ' parallel ( degree '
+|| ' parallel ( degree '
             || pDegree
             || ' )';
       END IF;
@@ -5853,8 +5853,8 @@ IS
    AS
    BEGIN
       IF (    pLogLevel != 'DEBUG'
-          AND pLogLevel != 'INFO'
-          AND pLogLevel != 'WARNING'
+AND pLogLevel != 'INFO'
+AND pLogLevel != 'WARNING'
           AND pLogLevel != 'ERROR')
       THEN
          RAISE_APPLICATION_ERROR (
@@ -5983,8 +5983,8 @@ IS
       l_next_run_date       TIMESTAMP WITH TIME ZONE;
    BEGIN
       DBMS_SCHEDULER.EVALUATE_CALENDAR_STRING (
-         calendar_string     => calendar_string,
-         start_date          => start_date,
+calendar_string => calendar_string,
+start_date => start_date,
          return_date_after   => l_return_date_after,
          next_run_date       => l_next_run_date);
 
@@ -5995,7 +5995,7 @@ IS
          LogFacility (
             LOG_SEV_WARNING,
                'An error occurred during the evaluation of SCHEDULE. The next run date has been calculated with FREQ=DAILY BYHOUR=1'
-            || calendar_string
+|| calendar_string
             || ' : '
             || SQLERRM
             || ' [Code: '
@@ -6005,7 +6005,7 @@ IS
 
          DBMS_SCHEDULER.EVALUATE_CALENDAR_STRING (
             calendar_string     => 'FREQ=DAILY;BYHOUR=1;BYMINUTE=0;BYSECOND=0',
-            start_date          => start_date,
+start_date => start_date,
             return_date_after   => l_return_date_after,
             next_run_date       => l_next_run_date);
 
@@ -6197,7 +6197,7 @@ IS
             WHERE     severity IN ('ERROR', 'WARNING')
                   AND table_name = vTableName
                   AND runid = pRunId
-         ORDER BY datetime;
+ORDER BY datetime;
 
       vDbName       v$DATABASE.NAME%TYPE;
    BEGIN
@@ -6233,7 +6233,7 @@ IS
                END LOOP;
 
 
-               UTL_SMTP.open_data (l_mail_conn);
+               UTL_SMTP.open_data(l_mail_conn);
 
                UTL_SMTP.write_data (
                   l_mail_conn,
@@ -6256,7 +6256,7 @@ IS
                UTL_SMTP.write_data (
                   l_mail_conn,
                   'Reply-To: ' || rwEmailConfig.email_from || UTL_TCP.crlf);
-               UTL_SMTP.write_data (l_mail_conn,
+               UTL_SMTP.write_data(l_mail_conn,
                                     'MIME-Version: 1.0' || UTL_TCP.crlf);
 
                UTL_SMTP.write_data (
@@ -6294,7 +6294,7 @@ IS
                UTL_SMTP.write_data (l_mail_conn, '</tbody>
 </table>'       );
 
-               UTL_SMTP.close_data (l_mail_conn);
+               UTL_SMTP.close_data(l_mail_conn);
                UTL_SMTP.quit (l_mail_conn);
             EXCEPTION
                WHEN OTHERS
@@ -6356,14 +6356,14 @@ IS
             END LOOP;
 
 
-            UTL_SMTP.open_data (l_mail_conn);
+            UTL_SMTP.open_data(l_mail_conn);
 
             UTL_SMTP.write_data (
                l_mail_conn,
                   'Date: '
                || TO_CHAR (SYSDATE, 'DD-MON-YYYY HH24:MI:SS')
                || UTL_TCP.crlf);
-            UTL_SMTP.write_data (l_mail_conn,
+            UTL_SMTP.write_data(l_mail_conn,
                                  'To: ' || vMailTo || UTL_TCP.crlf);
             UTL_SMTP.write_data (
                l_mail_conn,
@@ -6375,7 +6375,7 @@ IS
             UTL_SMTP.write_data (
                l_mail_conn,
                'Reply-To: ' || rwEmailConfig.email_from || UTL_TCP.crlf);
-            UTL_SMTP.write_data (l_mail_conn,
+            UTL_SMTP.write_data(l_mail_conn,
                                  'MIME-Version: 1.0' || UTL_TCP.crlf);
             UTL_SMTP.write_data (
                l_mail_conn,
@@ -6387,7 +6387,7 @@ IS
                '<h1 style="color: #5e9ca0;">NEXI Partition Manager</h1>
                       <p><strong>&nbsp;This is just a test Message</strong></p>');
 
-            UTL_SMTP.close_data (l_mail_conn);
+            UTL_SMTP.close_data(l_mail_conn);
             UTL_SMTP.quit (l_mail_conn);
          EXCEPTION
             WHEN OTHERS
@@ -6503,7 +6503,7 @@ IS
             pTableName);
       ELSE
          LogFacility (LOG_SEV_INFO,
-                      'Esecuzione terminata con successo.',
+'Execution completed successfully.',
                       pTableName);
       END IF;
 
@@ -6538,7 +6538,7 @@ IS
       IS
          WITH excTableCon
               AS (-- Drop pk constraints that are on otyher table but not in exchnage table
-                  (SELECT position, column_name
+(SELECT position, column_name
                      FROM dba_cons_columns excCons, dba_constraints consE
                     WHERE     excCons.owner || '.' || excCons.table_name =
                                  vOtherTableName
@@ -6557,7 +6557,7 @@ IS
                           AND excCons.owner = consE.owner)
                   UNION
                   -- Drop pk constraints that are on Exchange table but not in Other table
-                  (SELECT position, column_name
+(SELECT position, column_name
                      FROM dba_cons_columns excCons, dba_constraints consE
                     WHERE     excCons.owner || '.' || excCons.table_name =
                                  vExchangeTableName
@@ -6599,7 +6599,7 @@ IS
                                   cons.index_name,
                                   tablespace_name,
                                   validated,
-                                  partitioned
+partitioned
                     FROM dba_constraints  cons,
                          dba_cons_columns conscol,
                          dba_indexes      idx
@@ -6669,7 +6669,7 @@ IS
                                AND i2.index_owner = idx.owner
                                AND i2.index_name = idx.index_name
                                AND i1.column_name = i2.column_name
-                               AND i1.column_position = i2.column_position
+AND i1.column_position = i2.column_position
                                AND pi.index_name = idx.index_name
                                AND pi.owner = idx.owner
                                AND pi.locality = 'LOCAL')
@@ -6701,7 +6701,7 @@ IS
             and    i2.index_owner     = idx.owner
             and    i2.index_name      = idx.index_name
             and    i1.column_name     = i2.column_name
-            and    i1.column_position = i2.column_position
+            and i1.column_position = i2.column_position
       )
       and (i1.index_name,i1.index_owner ) not in (
           select
@@ -6732,7 +6732,7 @@ IS
                          WHERE     i2.table_owner || '.' || i2.table_name =
                                       pExchangeTableName
                                AND i1.column_name = i2.column_name
-                               AND i1.column_position = i2.column_position)
+AND i1.column_position = i2.column_position)
                 AND (i1.index_name, i1.index_owner) NOT IN
                        (SELECT index_name, owner
                           FROM dba_constraints cons
@@ -6856,7 +6856,7 @@ IS
             IN (WITH coluTbl
                      AS (SELECT ROWNUM + 10 NUMRIGA, CMD
                            FROM (  SELECT column_position,
-                                             DECODE (column_position,
+DECODE (column_position,
                                                      1, '',
                                                      ',')
                                           || column_name
@@ -7007,7 +7007,7 @@ IS
                          cons.table_name,
                          cons.index_name,
                          tablespace_name,
-                         partitioned
+partitioned
                     FROM DBA_CONSTRAINTS cons, dba_indexes idx
                    WHERE     CONSTRAINT_TYPE = 'P'
                          AND cons.OWNER || '.' || cons.TABLE_NAME =
@@ -7127,10 +7127,10 @@ IS
       FOR rIndexNoPk IN vCurIdxToCreate (pEntry.Table_Name)
       LOOP
          FOR rIndexToCreate
-            IN (WITH colTbl
+IN (WITH colTbl
                      AS (SELECT ROWNUM + 10 NUMRIGA, CMD
                            FROM (  SELECT column_position,
-                                             DECODE (column_position,
+DECODE (column_position,
                                                      1, '',
                                                      ',')
                                           || column_name
@@ -7235,7 +7235,7 @@ BEGIN
     var_PDRYRUN      VARCHAR2 (32767);
     var_PLOGLEVEL    VARCHAR2 (32767);
 BEGIN
-    -- Initialization
+    --Initialization
     var_PTABLENAME := NULL;
     var_PDRYRUN := ''N'';
     var_PLOGLEVEL := ''INFO'';
@@ -7254,18 +7254,18 @@ END;
     );
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
-     ,attribute => 'RESTARTABLE'
+,attribute => 'RESTARTABLE'
      ,value     => FALSE);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
-     ,attribute => 'LOGGING_LEVEL'
+,attribute => 'LOGGING_LEVEL'
      ,value     => SYS.DBMS_SCHEDULER.LOGGING_OFF);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
-     ,attribute => 'MAX_FAILURES');
+,attribute => 'MAX_FAILURES');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
-     ,attribute => 'MAX_RUNS');
+,attribute => 'MAX_RUNS');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
      ,attribute => 'STOP_ON_WINDOW_CLOSE'
@@ -7276,7 +7276,7 @@ END;
      ,value     => 3);
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
-     ,attribute => 'SCHEDULE_LIMIT');
+,attribute => 'SCHEDULE_LIMIT');
   SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
     ( name      => 'DBA_OP.MAINT_PARTITIONS_JOB'
      ,attribute => 'AUTO_DROP'

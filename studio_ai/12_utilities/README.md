@@ -1,30 +1,30 @@
-# 12 - Utilities (Strumenti di supporto)
+#12 – Utilities (Support Tools)
 
-Raccolta script utilita per monitoraggio e operazioni DBA.
+Script collection utilities for monitoring and DBA operations.
 
-## File principali in questa cartella
+## Main files in this folder
 
 - `TEMP_and_UNDO_monitor.sql`
 - `Job monitoring TEMP e UNDO TABLESPACE.sql`
 - `Install_pkg_Dba_Utility_20220713_v1_9_PROD.sql`
 - `mview_refresh_procedure.txt`
 
-## Sottocartelle community_scripts
+## community_scripts subfolders
 
-Sono presenti script aggiuntivi per:
+There are additional scripts for:
 
 - jobs e scheduler
 - uso spazio/tablespace
-- diagnostica ASM/OS
+- ASM/OS diagnostics
 - SQL*Net e memoria
-- controlli RMAN syntax
+- RMAN syntax controls
 
 ## Note operative
 
 - Always validate scripts in a lab environment before using them on critical environments
-- adatta path, owner e privilegi al tuo DB
+- adapt path, owner and privileges to your DB
 
-## Riferimenti
+## References
 
 - [GUIDE_DBA_ACTIVITIES.md](../../GUIDE_DBA_ACTIVITIES.md)
 - [GUIDE_DBA_COMMANDS.md](../../GUIDE_DBA_COMMANDS.md)

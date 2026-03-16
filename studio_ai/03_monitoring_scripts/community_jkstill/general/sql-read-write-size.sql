@@ -49,7 +49,7 @@ sql_metrics as (
 	having sum(physical_write_bytes) > 0
 )
 select
-	i.&v_signature_match_column
+i.&v_signature_match_column
 	, physical_write_bytes
 	, physical_read_bytes
 	, sql_ids

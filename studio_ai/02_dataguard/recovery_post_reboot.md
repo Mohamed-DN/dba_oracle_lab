@@ -9,7 +9,7 @@
 - Standby is on `MOUNT` state but MRP is not active
 - Il Broker mostra `ORA-16766: Redo Apply is stopped`
 - Growing gap between primary and standby
-- I log archivi non vengono spediti
+- Archive logs are not sent
 
 ---
 
@@ -23,23 +23,23 @@ dgmgrl sys/<password>
 
 DGMGRL> show configuration;
 
--- Se mostra errore, verifica lo stato del database
+--If it shows error, check the database status
 DGMGRL> show database 'NOME_DB_STANDBY';
 ```
 
 ### 2. Check the logs and GAP
 
 ```sql
--- Sullo STANDBY
+--On STANDBY
 SELECT * FROM v$standby_log;
 SELECT * FROM v$archive_gap;
 SELECT THREAD#, MAX(SEQUENCE#) FROM v$archived_log WHERE APPLIED = 'YES' GROUP BY THREAD#;
 ```
 
-### 3. Riavvia il MRP (Apply)
+### 3. Restart the MRP (Apply)
 
 ```sql
--- Sullo STANDBY come SYS
+--On STANDBY as SYS
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
 ```
@@ -47,13 +47,13 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT
 ### 4. If the Broker is corrupt, recreate it
 
 ```sql
--- Disabilita e poi riabilita il Broker su entrambi i lati
+--Disable and then re-enable the Broker on both sides
 -- SUL PRIMARY
 ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
--- Attendi 30 secondi
+--Wait 30 seconds
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 
--- SULLO STANDBY (stessa cosa)
+--ON STANDBY (same thing)
 ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 ```
@@ -63,7 +63,7 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 ```sql
 dgmgrl sys/<password>
 
--- Esempio: edit database con il connect identifier corretto
+--Example: edit database with the correct connect identifier
 DGMGRL> edit database 'NOME_DB' SET PROPERTY StaticConnectIdentifier='(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=hostname)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=NOME_DB_DGMGRL)(INSTANCE_NAME=NOME_DB1)(SERVER=DEDICATED)))';
 ```
 

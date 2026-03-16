@@ -7,7 +7,7 @@ SET LINESIZE 200
 SET PAGESIZE 60
 
 SELECT *
-FROM   database_properties
+FROM database_properties
 ORDER BY property_name;
 
 

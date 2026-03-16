@@ -24,7 +24,7 @@ set pagesize 100
 col sample_time format a26
 col inst_id format 999999
 col session_id format 999999
-col session_serial# format 999999
+with session_serial# format 999999
 col event format a60
 col event_count format 99,999,990
 

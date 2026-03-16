@@ -115,7 +115,7 @@ where sq.sql_id = '&sql_id'
   and executions_delta>0
 order by 3,1 asc;
 
--- ANALISI APPROFONDITA in microsecondi
+--IN-DEPTH ANALYSIS in microseconds
 
 SELECT inst_id,ROUND(disk_reads/executions) "DSK/EX", ROUND(buffer_gets/executions) "BFF/EX", 
        ROUND(rows_processed/executions) "RWS/EX", ROUND(cpu_time/executions) "CPU/EX", 

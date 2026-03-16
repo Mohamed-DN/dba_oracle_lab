@@ -16,19 +16,19 @@ break on owner skip 1 on segment_type
 with data as (
 	select owner, 'Table' segment_type,	 nvl(ini_trans,0) ini_trans
 	from dba_tables
-	union all
+union all
 	select table_owner, 'TabPart' segment_type,	nvl(ini_trans,0) ini_trans
 	from dba_tab_partitions
-	union all
+union all
 	select table_owner, 'TabSubPart' segment_type,	nvl(ini_trans,0) ini_trans
 	from dba_tab_subpartitions
-	union all
+union all
 	select owner, 'Index' segment_type,	 nvl(ini_trans,0) ini_trans
 	from dba_indexes
-	union all
+union all
 	select index_owner, 'IndPart' segment_type,	nvl(ini_trans,0) ini_trans
 	from dba_ind_partitions
-	union all
+union all
 	select index_owner, 'IndSubPart' segment_type,	nvl(ini_trans,0) ini_trans
 	from dba_ind_subpartitions
 )

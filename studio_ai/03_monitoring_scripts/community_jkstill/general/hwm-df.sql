@@ -31,7 +31,7 @@ with data as (
 	and t.tablespace_name = a.tablespace_name
 )
 select
-	file_name
+file_name
 	, hwm
 	, total_blocks
 	, shrinkage_blocks

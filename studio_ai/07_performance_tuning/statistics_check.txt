@@ -4,7 +4,7 @@ OPERATIONAL PROCEDURE: MANAGEMENT AND VERIFICATION OF ORACLE STATISTICS (CBO)
 
 1. LOGICA DI AGGIORNAMENTO AUTOMATICO
 --------------------------------------------------------------------------------
-Oracle aggiorna le statistiche automaticamente (durante la finestra di manutenzione) 
+Oracle updates statistics automatically (during maintenance window)
 only if the table is considered "STALE" (Obsolete). 
 
 A table becomes STALE when:
@@ -21,7 +21,7 @@ valid and reliable, regardless of how much time has passed since the last calcul
 ================================================================================
 
 [STEP 1] CHECK CURRENT STATUS (STATE AND BLOCKS)
-Controlla se Oracle ritiene le statistiche vecchie o se sono bloccate.
+Check if Oracle believes the statistics are old or if they are locked.
 
 SELECT owner, table_name, partition_name, last_analyzed, stale_stats, stattype_locked, num_rows
 FROM dba_tab_statistics
@@ -29,10 +29,10 @@ WHERE owner = '&OWNER'
   AND table_name = '&TABLE_NAME'
 ORDER BY last_analyzed DESC;
 
--- Interpretazione:
--- STALE_STATS = 'NO'  -> Statistiche valide. Nessuna azione richiesta.
--- STALE_STATS = 'YES' -> Statistiche vecchie. Richiesto aggiornamento.
--- STATTYPE_LOCKED = 'ALL' -> Statistiche bloccate manualmente. Il job automatico le ignora.
+--Interpretation:
+-- STALE_STATS= 'NO' -> Valid statistics. No action required.
+-- STALE_STATS= 'YES' -> Old statistics. Update required.
+-- STATTYPE_LOCKED= 'ALL' -> Manually locked statistics. The automatic job ignores them.
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ BEGIN DBMS_STATS.FLUSH_DATABASE_MONITORING_INFO; END;
 SELECT 
     m.table_name,
     t.num_rows AS righe_all_ultima_analisi,
-    (m.inserts + m.updates + m.deletes) AS totale_variazioni,
+(m.inserts + m.updates + m.deletes) AS total_variations,
     ROUND(((m.inserts + m.updates + m.deletes) / t.num_rows) * 100, 2) AS perc_variazione,
     CASE WHEN ((m.inserts + m.updates + m.deletes) / t.num_rows) >= 0.10 THEN 'SI' ELSE 'NO' END AS soglia_raggiunta
 FROM dba_tab_modifications m
@@ -67,7 +67,7 @@ WHERE o.owner = '&OWNER'
   AND s.partition_name IS NULL
 ORDER BY o.last_ddl_time DESC;
 
--- Interpretazione:
+--Interpretation:
 -- If LAST_DDL_TIME > LAST_ANALYZED -> Structure changed after statistics. 
 -- Manual update recommended.
 
@@ -80,9 +80,9 @@ BEGIN
   DBMS_STATS.GATHER_TABLE_STATS(
     ownname => '&OWNER',
     tabname => '&TABLE_NAME',
-    estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE, -- Campionamento automatico
+    estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE, -- Automatic sampling
     method_opt => 'FOR ALL COLUMNS SIZE AUTO',       -- Istogrammi automatici
-    degree => 4,                                     -- Parallelismo (4 o 8 per grandi tabelle)
+degree => 4, -- Parallelism (4 or 8 for large tables)
     cascade => TRUE -- Also update indexes
   );
 END;
@@ -96,24 +96,24 @@ SUBJECT: Check NET_MNDT_* tables that have not been updated for months.
 
 1. ANALISI STATUS (Step 1):
    Query su dba_tab_statistics per 'NET_MNDT_ULTIMATE'.
-   Risultato: LAST_ANALYZED = 14-JAN-25, STALE_STATS = 'NO'.
+Result:LAST_ANALYZED = 14-JAN-25, STALE_STATS = 'NO'.
    
-   -> ESITO: Oracle considera le statistiche valide.
+-> OUTCOME: Oracle considers the statistics valid.
 
 2. ANALISI VOLUMETRIA (Step 2):
-   Query su dba_tab_modifications.
+Query on dba_tab_modifications.
    Righe totali: ~292.000.000
-   Variazioni rilevate: ~5.000.000
+Changes detected: ~5,000,000
    Percentuale: 1.7%
    
-   -> ESITO: Soglia del 10% non raggiunta (richieste ~29M variazioni).
-      Il job automatico correttamente NON parte.
+-> OUTCOME: 10% threshold not reached (~29M variations required).
+The automatic job does NOT start correctly.
 
 3. ANALISI DDL (Step 3):
    Query su dba_objects.
    LAST_DDL_TIME (10-JAN-25) < LAST_ANALYZED (14-JAN-25).
    
-   -> ESITO: Nessuna modifica strutturale recente.
+-> OUTCOME: No recent structural changes.
 
 CONCLUSIONE:
 There is no anomaly. The system is behaving as per Oracle specifications.

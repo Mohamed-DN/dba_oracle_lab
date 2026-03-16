@@ -41,7 +41,7 @@ select
    , m.cpu_wait_time / 60000 avg_waiting_sessions
    , d.mgmt_p1 *
      ( (select value from v$parameter where name = 'cpu_count')/100 )
-    allocation
+allocation
 from v$rsrcmgrmetric_history m
    , dba_rsrc_plan_directives d
    , v$rsrc_plan p

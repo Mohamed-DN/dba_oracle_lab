@@ -1,6 +1,6 @@
 
 -- rman-recovery-scn.sql
--- determine minimum restore and recover SCN
+--determine minimum restore and recover SCN
 -- based on what is available in the reccvery catalog
 -- works on Legacy and CDB/PDB
 -- works for a single PDB

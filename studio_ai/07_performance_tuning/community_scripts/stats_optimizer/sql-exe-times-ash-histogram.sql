@@ -53,8 +53,8 @@ with sql_data as (
 	order by 
 		inst_id
 		, sql_id
-		, session_id
-		, session_serial#
+, session_id
+, session_serial#
 		, sql_exec_id
 ),
 sql_seconds as (
