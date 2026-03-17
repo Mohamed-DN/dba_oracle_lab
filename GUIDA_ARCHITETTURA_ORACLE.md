@@ -192,10 +192,20 @@ Funzione:
 - mantenere in RAM i blocchi piu' usati;
 - ospitare blocchi modificati ma non ancora scritti su disco.
 
-Stati logici dei blocchi:
+Stati logici dei blocchi (Buffer States):
 
-- `clean`: blocco uguale alla copia su disco;
+- `clean`: blocco uguale alla copia su disco. Se il DB ha bisogno di spazio, può sovrascriverlo istantaneamente (dopo averlo "invecchiato" tramite LRU). Se Database Smart Flash Cache è abilitato, DBWn può scrivere il corpo del buffer pulito nella flash cache per un futuro riutilizzo rapido, mantenendone l'header in memoria.
 - `dirty`: modificato in memoria, non ancora scritto da DBWn.
+- `pinned`: blocco attualmente in uso o modificato in una transazione attiva, intoccabile per altre operazioni in quel millisecondo.
+
+**Buffer Touch Counts e LRU (Least Recently Used)**:
+Oracle usa una lista LRU per decidere quali blocchi tenere in RAM. Non sposta fisicamente i dati in memoria, ma sposta i "puntatori". Usa un meccanismo di "touch count": quando un buffer viene "pinnato", se il contatore è stato incrementato più di tre secondi fa, viene aumentato. La regola dei tre secondi evita che un burst di operazioni conti come letture multiple (es. un insert di molte righe conta come 1 touch). I blocchi con touch count alti vanno verso la parte "hot" (calda) della lista LRU, quelli non usati "age out" (invecchiano) ed escono.
+
+**Buffer Pools multipli**:
+Di default esiste solo il *Default pool*. Ma per ottimizzare, puoi dividere la Buffer Cache in:
+- `Keep pool`: per blocchi letti spesso (es. tabelle di lookup) che vuoi restino sempre in RAM.
+- `Recycle pool`: per blocchi letti raramente (es. data warehouse scans) che devono uscire subito dalla cache per non inquinare la LRU della Default pool.
+- `Big table cache`: per gestire table scan massivi usando algoritmi basati sulla "temperatura" (temperature-based).
 
 Concetto importante:
 
@@ -208,8 +218,8 @@ Contiene strutture condivise necessarie all'esecuzione SQL.
 
 Sottocomponenti chiave:
 
-- `Library Cache`: SQL parsato, PL/SQL, execution plans;
-- `Data Dictionary Cache`: metadata di tabelle, utenti, oggetti, privilegi.
+- `Library Cache`: Contiene SQL parsato, blocchi PL/SQL, execution plans. Qui avviene l'"Allocation and Reuse": quando un nuovo SQL viene parsato (se non è DDL), viene allocato spazio. L'item resta in memoria tramite algoritmo LRU. Se più sessioni lo usano, resta anche se il processo creatore termina. L'istruzione `ALTER SYSTEM FLUSH SHARED_POOL` (o il cambio del global database name) svuota questa cache.
+- `Data Dictionary Cache` (o *Row Cache*): Oracle accede spessissimo al dizionario dati per il parsing (privilegi, oggetti, tipologie colonne). Questa cache è l'unica a memorizzare i dati come *righe* (rows) e non come *buffer* (blocchi interi).
 
 Se la Shared Pool e' piccola o frammentata puoi vedere:
 
@@ -315,9 +325,13 @@ Oracle usa:
 E' il processo applicativo o lo strumento che si connette a Oracle:
 
 - SQL*Plus;
-- JDBC;
-- Python;
-- applicazione web.
+- JDBC / Client OCI;
+- Python / Applicazione web.
+
+È fondamentale capire la differenza rispetto a un processo server:
+- Il processo client **non può accedere direttamente alla SGA** (ram condivisa) del database.
+- È il motivo per cui l'applicazione e il database possono risiedere su server fisici o reti completamente diversi.
+- La connessione (network session) viene stabilita verso un listener che a sua volta fa nascere un **Server Process** dedicato (o assegnato) per dialogare con la SGA e i file.
 
 ### 4.2 Listener
 
@@ -344,24 +358,24 @@ Compiti:
 - gestione cursori;
 - interazione con PGA e SGA.
 
-Modelli:
+Modelli di connessione:
 
-- `dedicated server`: un server process per sessione;
-- `shared server`: piu' sessioni condividono risorse server.
-
-Nel tuo lab usi quasi sempre `dedicated server`.
+- `dedicated server`: per ogni utente connesso (Client process), Oracle avvia un processo dedicato (Server process) sul server DB. Quel processo Server conserva la UGA (User Global Area) all'interno della sua PGA privata. Questo è il modello standard e più sicuro lato isolamento. (Nel tuo lab usi quasi sempre `dedicated server`).
+- `shared server`: se hai migliaia di utenti, sdoppiare migliaia di server process esaurirebbe la RAM (PGA). Con questo modello, i client parlano con un `Dispatcher`, il quale infila le richieste in una coda. Un pool più piccolo di `Shared Server Processes` pesca le richieste dalla coda. Qui la UGA si sposta all'interno della SGA (Large Pool) in modo che qualsiasi processo server la possa leggere.
 
 ### 4.4 Background processes fondamentali
 
 | Processo | Ruolo pratico |
 |---|---|
-| `DBWn` | scrive i dirty buffers dalla Buffer Cache ai datafile |
-| `LGWR` | scrive redo dal Redo Log Buffer agli online redo logs |
-| `CKPT` | segnala checkpoint e aggiorna header/control file |
-| `SMON` | instance recovery e housekeeping |
-| `PMON` | cleanup di processi/sessioni fallite |
-| `ARCn` | archivia redo log pieni in archived redo logs |
-| `RECO` | recupero transazioni distribuite in dubbio |
+| Processo | Ruolo pratico e Dettaglio Tecnico|
+|---|---|
+| `DBWn` (Database Writer) | Esegue le scritture "lazy" (pigre) dei buffer diventati *dirty* (modificati in RAM) trasferendoli sui datafile fisici. Interviene anche in risposta ai CKPT (Checkpoint). Può avere più thread (DBW0, DBW1, ecc.). |
+| `LGWR` (Log Writer) | Processo super critico: scrive le voci di REDO dal Redo Log Buffer in RAM verso gli Online Redo Logs su disco in modo sequenziale. Scrive sempre in modalità sincrona al momento di un COMMIT. |
+| `CKPT` (Checkpoint) | Monitora il punto di "successo" fino al quale i dati sono salvi. Aggiorna l'header dei control file e l'header di ciascun datafile registrando fino a che numero SCN i dati sono sani, segnalando a DBWn di scaricare buffer sporchi. |
+| `SMON` (System Monitor) | Si occupa della Instance Recovery. In caso di crash del server (e shutdown abort), al successivo riavvio `SMON` "riavvolge" e "riapplica" il vero redo e undo per far tornare il db consistente. Inolte ripulisce i segmenti temporanei. |
+| `PMON` (Process Monitor) | È il sorvegliante. Se un processo utente cade/crasha improvvisamente, PMON interviene: sblocca i table-lock tenuti, svuota la PGA usata dal processo morto. Se usi Oracle RAC, fa il cleanup a livello di cluster. |
+| `ARCn` (Archiver) | Quando un Online Redo Log è pieno, e prima che LGWR possa riciclarlo (sovrascriverlo), ARCn entra in azione copiandolo nei file di backup fisici "Archived Redo Log". Opzionale (serve configurare l'ARCHIVELOG mode) ma obbligatorio in prod. |
+| `RECO` | Recupero transazioni distribuite sospese. |
 | `MMON` | raccolta statistiche manageability/AWR |
 | `MMNL` | supporto a MMON |
 | `LREG` | registra dinamicamente servizi e istanze ai listener |
@@ -587,12 +601,13 @@ graph TD
 
 ### 7.1 Data block
 
-Il blocco e' l'unita' minima logica di I/O database.
+Il blocco è l'unità minima logica di operazione (I/O) del database. Un `Data Block` è logicamente tradotto dal DB come l'unione di uno o più OS Block (i blocchi del sistema operativo, formattati a livello Linux o Windows). Svincolarsi dalla dipendenza dell'OS block permette ad ASM e Oracle di gestire performance in modo custom.
 
 Parametri chiave:
 
-- `DB_BLOCK_SIZE`;
-- tipicamente 8 KB nel lab.
+- `DB_BLOCK_SIZE`: tipicamente 8 KB nel lab. Esistono block size di 16 KB o 32 KB usati spesso per i Data Warehouse massivi.
+- Un blocco ha un **header** (che include metadata, transazioni attive ITL e directory righe) e un **body** (che cresce bottom-up, dove vengono inserite o modificate fisicamente le row).
+- Spazio d'aria (PCTFREE): percentuale (di base il 10%) lasciata rigorosamente vuota nel blocco per consentire un futuro "allargamento" delle righe (es: fai l'update di una row da NULL al testo "PincoPallo" e il dato ha bisogno di un po' più di spazio per espandersi senza provocare una fastidiosa frame-migration al blocco successivo).
 
 ### 7.2 Extent
 
@@ -602,13 +617,13 @@ Un extent e' un insieme di blocchi contigui allocati a un segmento.
 
 Un segmento e' l'insieme di extents appartenenti a un oggetto.
 
-Tipi comuni:
+Tipi comuni di segmenti:
 
-- table segment;
-- index segment;
-- undo segment;
-- temporary segment;
-- LOB segment.
+- `Table segment`: per i dati regolari della tabella.
+- `Index segment`: per le strutture ad albero che compongono gli indici.
+- `Undo segment`: per lo storico/rollback (generato da Oracle in sottofondo in modo invisibile all'utente).
+- `Temporary segment`: segmenti intermedi usa-e-getta crerati da Oracle mentre compi esecuzioni pesanti di SQL come `SORT` complessi o join enormi (tipicamente allocati nel tablespace *TEMP*).
+- `LOB segment`: Large OBjects, foto, documenti, file JSON di grandissime dimensioni (spesso superano l'intero block capacity).
 
 ### 7.4 Tablespace
 
@@ -616,11 +631,10 @@ Un tablespace e' il contenitore logico dei segmenti.
 
 Comuni in Oracle:
 
-- `SYSTEM`;
-- `SYSAUX`;
-- `UNDO`;
-- `TEMP`;
-- tablespace applicativi.
+- `SYSTEM` e `SYSAUX`: oblogatori. Trattano il *"cervello"* di metadata, il Data Dictionary (viste, pacchetti PL/SQL built-in, cronologie AWR).
+- `UNDO`: indispensabile per gestire le undo retention policy. Mantiene tutti gli Undo Segments.
+- `TEMP`: tablespace temporaneo (uso volante per le query).
+- tablespace applicativi: ad. esempio *USERS* o *DATI_APP* in cui vive realmente il software da gestire.
 
 Tipi importanti:
 
@@ -648,7 +662,7 @@ Tipi importanti:
 
 ### 8.1 Datafiles
 
-Contengono i blocchi dei tablespace permanenti e undo.
+Contengono i blocchi dei tablespace permanenti e undo. I dati di un database sono archiviati collettivamente nei Datafiles. Un Segment (quindi una tabella) non può trovarsi a metà su due Tablespace, ma siccome un Tablespace può consistere di *più Datafile* fisici, un Fragment, un Extent o una Tabella possono "estendersi a cavallo" di centinaia di Datafile diversi. Questa dis-connessione astratta massimizza l'ottimizzazione dell'I/O (soprattutto in ASM via file-striping per leggere parallelamente dai vari dischi).
 
 Non contengono:
 
@@ -670,26 +684,26 @@ Differenza pratica:
 
 ### 8.3 Control files
 
-Sono il catalogo fisico minimo del database.
+Sono il catalogo fisico minimo e *crusciale* del database: un piccolo file binario legato univocamente all'istanza. Se perdi tutti i control file attivi/disponibili, il database **non può esser montato (MOUNT)** e l'azione fallirà con errore fatale.
 
 Contengono informazioni su:
 
-- nome DB e DBID;
-- datafiles e redo log;
-- checkpoint;
-- archived log history;
-- RMAN metadata minima.
+- nome DB e DBID (Identificativo Unico Macchina vitale per RMAN);
+- la mappa di tutti i datafiles e redo log su disco;
+- le tabelle logiche degli SCN attuali (checkpoint);
+- storia degli Archived Log e i metadati integrati di RMAN.
 
-Se perdi tutti i control file, il database non monta.
+**Multiplexing Control File**:
+Poiché il control file è fondamentale, in qualsiasi database di produzione vero avrai 2, o più comunemente 3, copie *identiche e aggiornate in contemporanea* (Multiplexing) salvate su hardware disk indipendenti. (es. una copia su `+DATA` e un duplicato di mirroring logico salvato su `+RECO`). In questo modo abbassi i "single point of failure".
 
 ### 8.4 Online redo logs
 
-Sono il journal attivo del database.
+Costituiscono il componente più critico per la **Recovery** e proteggono contro le repentine perdite di alimentazione o failure del server (instance crash). Raccolgono tutte le modifiche fatte ai datafiles (*e perfino* ai block dei datafiles undo) scritte a un ritmo spaventoso prima ancora che vengano scaricate sui DataFile.
 
-Organizzati in:
+Organizzati per architettura di ridondanza solida:
 
-- gruppi;
-- membri.
+- **Gruppi (Groups)**: servono almeno due gruppi al database per girare, e sono usati ad anello (quando si riempie l'11 passa al 12 e via dicendo).
+- **Membri (Members per Gruppo)**: è la traduzione del Multiplexing del Redo! Anche qui, in produzione ogni Gruppo ha come minino due Membri. (Es. Gruppo 1 formattato con 2 file chiamati redo1a.log e redo1b.log messi su dischi ASM differenti. Se muore il primo storage array e redo1a brucia, redo1b garantirà che il log group proceda senza perdere le ultime righe modificate dai clienti della banca che hanno appena prelevato contante al bancomat).
 
 Concetti:
 
@@ -838,14 +852,15 @@ Best practice:
 - le applicazioni devono usare servizi, non SID;
 - in RAC e Data Guard, il service e' il concetto corretto di accesso.
 
-### 10.3 Registrazione dinamica
+### 10.3 Registrazione dinamica ed Ecosistema (LREG)
 
-Il processo `LREG` registra i servizi al listener.
+La registrazione del servizio (Service Registration) è una feature in cui il processo in background **LREG (Listener Registration Process)** comunica dinamicamente le informazioni sull'istanza al listener locale e remoto.
+Questo significa che non devi configurare a mano quasi nulla nel `listener.ora`. LREG informa il listener costantemente sul carico (Load Balancing) e sui dispatcher disponibili.
 
 Parametri coinvolti:
 
-- `LOCAL_LISTENER`;
-- `REMOTE_LISTENER`.
+- `LOCAL_LISTENER`: dice a LREG dove trovare il listener locale.
+- `REMOTE_LISTENER`: indispensabile in RAC per notificare il listener principale dell'intero cluster (SCAN Listener).
 
 In RAC:
 
@@ -901,13 +916,13 @@ Non e' il posto giusto per i dati applicativi normali.
 
 ### 11.4 PDB
 
-Un PDB appare all'applicazione come database quasi indipendente, ma condivide con il CDB:
+Un Pluggable Database (PDB) appare all'applicazione come un database fisico, indipendente e tradizionale, ma a livello architetturale condivide le risorse pesanti con il contenitore madre (CDB):
 
-- istanza;
-- SGA;
-- background processes;
-- redo logs;
-- control file.
+- **Stessa Istanza**: non c'è una RAM/SGA separata o un PDB_CACHE_SIZE isolato (tranne per limiti imposti col Resource Manager).
+- **Mancanza di Processi Background propri**: SMON, PMON, DBWn, LGWR appartengono solo al CDB Root.
+- **Redo Logs**: condivisi. Tutte le modifiche di tutti i PDB vanno ad alimentare l'unico stream di Redo Log gestito dal root.
+- **Undo Tablespace**: di norma esiste l'opzione "Local Undo" (raccomandata in 19c) in cui ogni PDB ha i suoi undo file, o condivisa centralmente.
+- **Control File**: il CDB ha un unico control file che mappa tutti i Datafile di tutti i PDB.
 
 Questo e' fondamentale:
 
@@ -1061,21 +1076,19 @@ graph LR
     LGWR -- "Redo Transport" --> SRL
 ```
 
-### 14.1 Componenti concettuali
+### 14.1 Componenti concettuali essenziali
 
-- primary database;
-- standby database;
-- redo transport services;
-- apply services;
-- Broker opzionale.
+- Primary database: chi detiene i Dati attivi in Read/Write.
+- Standby database: chi consuma i dati e si sincronizza.
+- **Redo Transport Services**: Incaricati di "spedire" via rete il flusso di REDO (tramite modalità SYNC o ASYNC, a seconda della *Protection Mode* voluta come *MaxProtection*, *MaxAvailability*, o *MaxPerformance*).
+- **Apply Services**: L'entità (sul db di destinazione) che "applica" il vero redo ricevuto sui propri datafile. (Tramite `Redo Apply` logico se Logical, o fisico tramite Media Recovery).
+- **Data Guard Broker (`DGMGRL`)**: Il tool amministrativo opzionale (ma consigliatissimo) che automatizza lo switchover e il failover istantaneo, pilotando in background i processi di trasporto e apply per te.
 
 ### 14.2 Tipi principali di standby
 
-- physical standby;
-- logical standby;
-- snapshot standby.
-
-Nel tuo lab usi physical standby.
+- **Physical Standby**: copia byte-per-byte esatta dei datafile. Usa MRP (Managed Recovery Process) per applicare il Redo. È la tipologia usata nel tuo lab pratico!
+- **Logical Standby**: traduce e usa istruzioni SQL per mantenere allineati pezzi di tabelle. Raramente usato per pura HA.
+- **Snapshot Standby**: un Physical Standby temporaneamente convertito in "Read/Write" per fare test applicativi con dati di prod senza corrompere la futura sincronizzazione primaria.
 
 ### 14.3 Flusso base
 
