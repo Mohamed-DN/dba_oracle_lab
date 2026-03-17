@@ -7,7 +7,9 @@
 
 > ⚠️ **REQUISITI HARDWARE CRITICI**: Per far girare l'intero ambiente (4 Nodi RAC + 1 Nodo DNS ) **sono necessari almeno 32GB di RAM fisica** sul tuo PC. Se hai 16GB, puoi fare solo metà del lab (es. 2 nodi RAC senza Standby).
 
-> 🤖 **AUTOMAZIONE DISPONIBILE**: Vuoi saltare i passaggi noiosi? Nella cartella `scripts/` troverai bash script pronti all'uso per autoconfigurare lo storage (`configure_storage.sh`) e installare il Grid (`install_grid.sh`). Le guide ti mostrano la strada manuale (per imparare), ma gli script sono a tua disposizione!
+> 🤖 **AUTOMAZIONE DISPONIBILE**: Vuoi saltare i passaggi noiosi?
+> - **Infrastruttura Parziale**: Nella cartella `scripts/` troverai bash script pronti all'uso per autoconfigurare lo storage base e installare il Grid.
+> - **Infrastruttura Completa (RAC + Data Guard 5 Nodi)**: Vai nella cartella [`vagrant_rac_dataguard`](vagrant_rac_dataguard/README.md) per un ambiente Vagrant *"One-Click"* che automatizza interamente le **Fasi da 0 a 4** (Grid, Database, Standby RMAN Duplicate, DGMGRL Broker). Assicurati di avere almeno 33GB di RAM per questa soluzione.
 
 ---
 
