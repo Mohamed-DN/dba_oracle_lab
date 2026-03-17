@@ -16,8 +16,8 @@
 ╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
 ║  1 (G 1-5)  ║ Teoria + VirtualBox + OS + Grid       ║ Cluster RAC ONLINE      ║
 ║  2 (G 6-10) ║ Database + Standby RAC                ║ RMAN Duplicate OK       ║
-║  3 (G11-15) ║ Data Guard + GoldenGate + RMAN        ║ DG + GG + Backup OK     ║
-║  4 (G16-20) ║ Switch/Failover + Migrazione + DBA    ║ HA completa testata     ║
+║  3 (G11-15) ║ Data Guard + RMAN + EM                ║ DG + Backup + Monitor OK║
+║  4 (G16-20) ║ GoldenGate + Test Verifica + DBA      ║ GG + HA completa testata║
 ║  5 (G21-25) ║ OCI target + rete + MAA             ║ 🏆 LAB COMPLETATO!     ║
 ╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
 ║             ║  ═══ MILESTONE: LAB FINITO ═══         ║                         ║
@@ -102,15 +102,9 @@
 
 ---
 
-## 🗓️ SETTIMANA 3: Data Guard + GoldenGate + Backup (Giorni 11-15)
+## 🗓️ SETTIMANA 3: Data Guard + RMAN Backup + Enterprise Manager (Giorni 11-15)
 
-> **Obiettivo**: Configurare DGMGRL, installare GoldenGate, configurare RMAN backup.
-
-Aggiornamento del percorso GG:
-
-- il flusso base corretto usa `Integrated Extract` sul `primary`, non sullo standby;
-- `dbtarget` locale resta opzionale;
-- se scegli OCI, devi prima chiudere rete e target seguendo `GUIDA_RETE_LAB_OCI_GOLDENGATE.md` e `GUIDA_GOLDENGATE_OCI_ARM.md`.
+> **Obiettivo**: Configurare DGMGRL, strategia RMAN, e installare Cloud Control 13c.
 
 ```
 ╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
@@ -121,64 +115,58 @@ Aggiornamento del percorso GG:
 ║           ║ 💻 1h: Test switchover rapido         ║ Switch + Switchback OK    ║
 ║           ║                                       ║ 📸 SNAP-14 ⭐            ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 30min: Active Data Guard (ADG)    ║                           ║
-║ Giorno 12 ║ 💻 1h: Scegli target: dbtarget o OCI         ║ target deciso           ║
-║           ║ 💻 1.5h: DB Software + DBCA target   ║ DB target creato          ║
+║           ║ 💻 1h: Active Data Guard (ADG)       ║                           ║
+║ Giorno 12 ║ 📖 1h: Leggi GUIDA_FASE5 (RMAN)      ║ ADG configurato           ║
+║           ║ 💻 1h: RMAN backup su standby       ║ Backup su standby OK      ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1.5h: Installa GG su primary +   ║                           ║
-║ Giorno 13 ║   target, configura Manager          ║ GG installato             ║
-║           ║ 💻 1.5h: Extract su primary +        ║ Processi configurati      ║
-║           ║   Replicat                            ║ 📸 SNAP-16               ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Initial Load (expdp/impdp)    ║                           ║
-║ Giorno 14 ║ 💻 1h: Start tutti i processi GG    ║ GG RUNNING!               ║
-║           ║ 💻 1h: Test DML end-to-end            ║ Lag < 10 secondi          ║
-║           ║   (INSERT su primary → arriva target)║ 📸 SNAP-17 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_FASE7 (RMAN)   ║                           ║
-║ Giorno 15 ║ 💻 1h: RMAN backup su standby       ║ Backup su standby OK      ║
 ║           ║ 💻 1h: RMAN backup su primary        ║ Backup su primary OK      ║
-║           ║ 💻 30min: Crontab + health check      ║ 📸 SNAP-18               ║
+║ Giorno 13 ║ 💻 1h: BCT + Crontab + Test restore  ║ Strategia RMAN testata    ║
+║           ║ 📖 1h: Leggi GUIDA_FASE6 (EM 13c)    ║ 📸 SNAP-15 ⭐            ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 💻 1h: Prerequisiti VM emcc1         ║                           ║
+║ Giorno 14 ║ 💻 2h: Installazione OMS 13.5        ║ Enterprise Manager        ║
+║           ║   (GUI installer)                     ║ Installato (OMS Up)       ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 💻 1h: Deploy Agent target           ║ Agent deployati           ║
+║ Giorno 15 ║ 💻 1h: Onboarding Target Oracle      ║ Target monitorati         ║
+║           ║ 💻 1h: Setup metriche e notifiche     ║ 📸 SNAP-16 ⭐            ║
 ╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
 ```
 
 ---
 
-## 🗓️ SETTIMANA 4: HA Avanzata + Listener + DBA Pro (Giorni 16-20)
+## 🗓️ SETTIMANA 4: GoldenGate + Test Verifica + HA Avanzata (Giorni 16-20)
 
-> **Obiettivo**: Switchover, Failover, Migrazione, Listener/Services, attività DBA quotidiane.
+> **Obiettivo**: Installare GoldenGate, Test End-to-End, Switchover/Failover, attività DBA.
+
+Aggiornamento del percorso GG:
+- Scegli esplicitamente target locale (`dbtarget`) o OCI seguendo Fase 7.
 
 ```
 ╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
 ║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_SWITCHOVER     ║                           ║
-║ Giorno 16 ║ 💻 1h: Switchover RACDB → STBY      ║ Switchover riuscito       ║
-║           ║ 💻 1h: Switchback → torna al primary ║ Switchback riuscito       ║
-║           ║ 💻 30min: Verifica GG dopo switch    ║ GG funziona dopo switch!  ║
+║           ║ 📖 30min: Leggi GUIDA_FASE7 (GG)     ║                           ║
+║ Giorno 16 ║ 💻 1.5h: Crea Target (Locale o Cloud)║ Target completato         ║
+║           ║ 💻 1h: Installa GG e crea Extract     ║ Extract running           ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 💻 1h: Initial Load (expdp/CSN)      ║                           ║
+║ Giorno 17 ║ 💻 1h: Crea Replicat Target          ║ GG end-to-end RUNNING!    ║
+║           ║ 💻 1h: Test DML smoke test            ║ 📸 SNAP-17 ⭐            ║
+╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
+║           ║ 📖 30min: Leggi GUIDA_FASE8 (Test)   ║                           ║
+║ Giorno 18 ║ 💻 1.5h: Validazione end-to-end      ║ Test completati           ║
+║           ║ 💻 1h: Simula Crash Nodo (Eviction)   ║ Cluster robusto           ║
+║           ║                                       ║ 📸 SNAP-18 ⭐            ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 📖 30min: Leggi GUIDA_FAILOVER       ║                           ║
-║ Giorno 17 ║ 📸 SNAP prima del failover!          ║                           ║
-║           ║ 💻 1h: Spegni rac1+rac2 (violenza!) ║ Failover completato!      ║
-║           ║ 💻 1h: FAILOVER TO RACDB_STBY        ║ Standby è nuovo Primary   ║
-║           ║ 💻 30min: Reinstate con Flashback    ║ Reinstate riuscito        ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_MIGRAZIONE     ║                           ║
-║ Giorno 18 ║ 💻 1h: Simula migrazione GG:        ║ Migrazione zero-downtime  ║
-║           ║   expdp/impdp + Extract da SCN       ║ simulata con successo     ║
-║           ║ 💻 1h: Sincronizza + cutover          ║                           ║
-║           ║ 💻 30min: Verifica dati migrati       ║                           ║
+║ Giorno 19 ║ 💻 1h: Switchover e Switchback        ║ HA testata                ║
+║           ║ 💻 1h: Simulazione Failover reale     ║ Target cloud non perso    ║
+║           ║ 💻 30min: Flashback Reinstate         ║                           ║
 ╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
 ║           ║ 📖 30min: Leggi GUIDA_LISTENER_DBA   ║                           ║
-║ Giorno 19 ║ 💻 1h: Configura Services con srvctl ║ Services configurati      ║
-║           ║ 💻 1h: EM Express (porta 5500)        ║ EM Express funzionante    ║
-║           ║ 💻 30min: Crea utente DBA custom     ║ Utente lab_dba creato     ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_ATTIVITA_DBA   ║                           ║
-║ Giorno 20 ║ 💻 1h: Crea batch jobs               ║ Stats + health check      ║
-║           ║   (DBMS_SCHEDULER: stats, health)    ║ schedulati                ║
-║           ║ 💻 1h: Genera AWR + ADDM report       ║ Report AWR generato       ║
-║           ║ 💻 30min: Test Data Pump exp/imp      ║ expdp/impdp OK            ║
+║ Giorno 20 ║ 💻 1h: Setup Services + EM Express   ║ Services online           ║
+║           ║ 💻 1.5h: DBA Jobs, AWR, Export        ║ Routine DBA consolidate   ║
 ╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
 ```
 
@@ -235,8 +223,8 @@ Giorno:  1    5    10   15   20   25   30   35   40
          │    │    │    │    │    │    │    │    │
 Sett 1:  ████████████              Teoria + VM + OS + Grid
 Sett 2:       ████████████         Database + Standby + RMAN Dup
-Sett 3:            ████████████    DG + GG + Backup
-Sett 4:                 ███████████ Switch/Fail + Listener + DBA
+Sett 3:            ████████████    DG + RMAN Backup + EM 13c
+Sett 4:                 ███████████ GoldenGate + Test Verifica + HA
 Sett 5:                      ██████████ Cloud + MAA + Ripasso
          │ ────── 🏆 MILESTONE: LAB FINITO ─────  │
 Sett 6:                           ██████████ Migrazione Oracle→PG
@@ -416,23 +404,24 @@ Sett 8:                                     ██████████ 🎯 
 | **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](./studio_ai/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) |
 | **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](./studio_ai/05_patching/) |
 | **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](./studio_ai/02_dataguard/) |
-| **Sett. 3** (Giorno 15: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./studio_ai/06_backup_recovery/) |
-| **Sett. 4** (Giorno 19: Listener) | Dopo Listener/Services | [04_user_management/](./studio_ai/04_user_management/) |
-| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) + [07_performance_tuning/](./studio_ai/07_performance_tuning/) |
+| **Sett. 3** (Giorno 13: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./studio_ai/06_backup_recovery/) |
+| **Sett. 3** (Giorno 14: EM) | Dopo l'installazione di Enterprise Manager | [03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) |
+| **Sett. 4** (Giorno 19: HA) | Dopo Switchover / Failover | [04_user_management/](./studio_ai/04_user_management/) |
+| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](./studio_ai/07_performance_tuning/) |
 | **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](./studio_ai/08_tde_security/) |
 
 ---
 
 ## Addendum Operativo: Sprint GoldenGate Esteso (40 test)
 
-Per stressare il lab GoldenGate con piu casi possibili, usa come riferimento principale [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md).
+Per stressare il lab GoldenGate con piu casi possibili, usa come riferimento principale [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md).
 
-### Piano pratico (Settimana 3 -> Settimana 4)
+### Piano pratico (Settimana 4 -> Settimana 5)
 
-1. Giorno 13: esegui `GG-01..GG-08` (DML, LOB, transazioni, commit storm).
-2. Giorno 14: esegui `GG-09..GG-18` (DDL policy, rete, restart processi, lag stress).
-3. Giorno 15: esegui `GG-19..GG-28` (switchover/failover DG, re-instantiate, long tx, concorrenza).
-4. Giorno 16-17: esegui `GG-29..GG-40` (charset/timezone, restart DB/host, purge trail, credenziali, dress rehearsal 120 minuti).
+1. Giorno 17: esegui `GG-01..GG-08` (DML, LOB, transazioni, commit storm).
+2. Giorno 18: esegui `GG-09..GG-18` (DDL policy, rete, restart processi, lag stress).
+3. Giorno 19: esegui `GG-19..GG-28` (switchover/failover DG, re-instantiate, long tx, concorrenza).
+4. Giorno 20-21: esegui `GG-29..GG-40` (charset/timezone, restart DB/host, purge trail, dress rehearsal 120 minuti).
 
 ### KPI di uscita (obbligatori)
 
@@ -493,9 +482,9 @@ Per ogni argomento nuovo fatto in `D0`, pianifica:
 |---|---|---|---|---|---|
 | 1 | OS + Grid + ASM | 3 | 1 | 1 + buffer opzionale | Grid stabile + checklist prerequisiti |
 | 2 | RAC + standby prep | 3 | 1 | 1 + buffer opzionale | RAC operativo + standby pronto |
-| 3 | Data Guard + RMAN + GG base | 2 | 2 | 1 + buffer opzionale | broker ok + backup validato + GG base |
-| 4 | GG avanzato + HA test | 3 | 1 | 1 + buffer opzionale | almeno 24 test GG chiusi |
-| 5 | EM + monitoraggio + cloud | 2 | 2 | 1 + buffer opzionale | OMS/agent attivi + dashboard utili |
+| 3 | Data Guard + RMAN + EM | 2 | 2 | 1 + buffer opzionale | broker ok + backup validato + EM up |
+| 4 | GoldenGate + Test + HA | 3 | 1 | 1 + buffer opzionale | test end-to-end + HA completa testata |
+| 5 | GG Avanzato + Cloud + MAA| 2 | 2 | 1 + buffer opzionale | sprint 40 test GG + db target OCI |
 | 6 | Migrazione Oracle->PostgreSQL | 2 | 2 | 1 + buffer opzionale | flusso migrazione end-to-end |
 | 7 | Esame 1Z0-082 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + error log classificato |
 | 8 | Esame 1Z0-083 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + runbook finali |
@@ -524,9 +513,9 @@ Uso pratico nel lab:
 
 Per i 40 test GoldenGate:
 
-- settimana 3: `GG-01..GG-16`
-- settimana 4: `GG-17..GG-32`
-- buffer settimana 4/5: `GG-33..GG-40` + retest dei fail
+- settimana 4: `GG-01..GG-18`
+- settimana 4 tardi: `GG-19..GG-32`
+- buffer settimana 5: `GG-33..GG-40` + retest dei fail
 
 Criterio: almeno `8 test` per settimana devono essere "difficili" (failover, lag, restart, recovery trail).
 
