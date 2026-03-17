@@ -85,59 +85,48 @@ Oracle non parte sempre direttamente in `OPEN`. Ci sono tre fasi distinte.
 
 ### 2.1 NOMOUNT
 
-In `NOMOUNT`, Oracle legge il parameter file e avvia l'istanza.
+In `NOMOUNT`, l'istanza di calcolo (Memoria e Processi) viene "guidata" e messa in moto, ma il database fisico per ora è come se non esistesse. Oracle non sa ancora dove siano i file o come si chiami il db. 
+Cosa avviene esattamente sotto il cofano:
+
+1. **Lettura del Parameter File (PFILE/SPFILE)**: L'istanza cerca un file di configurazione specifico nel sistema operativo per sapere come dimensionarsi (cercherà solitamente in sequenza: `spfile<SID>.ora`, poi `spfile.ora`, poi il file di testo `init<SID>.ora`).
+2. **Allocazione della SGA**: Viene fisicamente allocata la quantità di memoria RAM gigantesca necessaria per funzionare (la Shared Pool, Buffer Cache ecc.. come richiesto nel Parameter file).
+3. **Avvio dei Background Processes**: Vengono "accesi" i processi di vitale importanza come PMON, SMON, CKPT, DBWn, LGWR e posizionati pronti in RAM.
+4. **Scrittura file di traccia**: Oracle apre il famosissimo file `alert.log` per l'istanza e ci annota tutte le informazioni di avvio (e gli eventuali errori critici da qui in poi).
 
 Disponibile:
-
-- SGA;
-- background processes;
-- parameter file.
-
-Non disponibile ancora:
-
-- control file aperto;
-- datafile montati;
-- redo log aperti per uso normale.
-
-Uso tipico:
-
-- creazione database;
-- RMAN duplicate;
-- recupero di SPFILE;
-- bootstrap standby.
+- Creazione database (comando `CREATE DATABASE`).
+- Clonazione RMAN (comando `DUPLICATE`).
+- Ripristino di emergenza del Parameter File.
+- Setup iniziale (Bootstrap) dello standby database in Data Guard.
 
 ### 2.2 MOUNT
 
-In `MOUNT`, Oracle apre il control file e conosce la struttura del database.
+In `MOUNT`, l'istanza avviata stringe finalmente la mano al database fisico (ai file), mettendolo sotto chiave amministrativa. È la fase "a porte chiuse".
 
-Disponibile:
+Cosa avviene esattamente:
+1. **Apertura del Control File**: L'istanza va a leggere dal Parameter File l'indirizzo spaziale del *Control File* (il cervello/catalogo su disco) e lo apre in memoria.
+2. **Scansione Fisica dei Metadati**: Leggendo il Control File, Oracle estrae la "mappa del tesoro": i nomi e le directory di tutti i Datafile e i file di Online Redo Log del database. 
+3. **Verifica (senza svelare i dati)**: L'istanza verifica a basso livello che quei file fisici esistano dove il Control File dice che dovrebbero essere (es: controllando dentro i dischi ASM `+DATA`), ma volutamente **non apre i file del database ai clienti**.
 
-- control file;
-- elenco datafile e redo log;
-- metadati di montaggio.
-
-Non disponibile ancora:
-
-- accesso normale ai dati da parte degli utenti.
-
-Uso tipico:
-
-- media recovery;
-- standby database;
-- rename file;
-- enable/disable archivelog;
-- operazioni Data Guard.
+Disponibile per il DBA *ma non per gli Utenti App*:
+- Media Recovery completi (ripristinare e riapplicare vecchi backup).
+- Messa in ricezione per i database di Standby.
+- Operazioni massicce di `RENAME` dei datafiles, abilitazione o spegnimento della modalità preziosa `ARCHIVELOG`.
 
 ### 2.3 OPEN
 
-In `OPEN`, Oracle apre datafile e redo log e il database diventa utilizzabile.
+In `OPEN`, avviene la mossa finale. Il database sbatte aperte le proprie porte, permettendo al business e alle applicazioni di riversarsi in esso per leggere e modificare dati.
 
-Varianti comuni:
+Cosa avviene di molto delicato:
+1. **Apertura Datafiles e Online Redo Logs**: Oracle si collega direttamente dentro quest'ultimi ed è in grado di tracciare o recuperare dati applicativi specifici.
+2. **Verifica della Consistenza Integrale (L'incrocio SCN)**: Oracle va a colpo sicuro a confrontare il *System Change Number (SCN)* (l'orologio interno del db) salvato in sicurezza all'interno del Control File con gli SCN presenti stampati nell'intestazione (header) di tutti i Datafiles. Tutto **deve** coincidere al calcolo per assicurarsi che i file siano perfettamente speculari alla fine.
+3. **Eventuale Instance Recovery Auto-Magica (SMON)**: Se in passato c'è stato un arresto anomalo (ad esempio togliendo la spina al server, usando *SHUTDOWN ABORT*, e interrmpendo il check degli SCN), Oracle se ne accorge qui! Il processo *SMON* entra di prepotenza, consulta i dati crudi sugli avanzi di *Online Redo Logs*, calcola, pulisce i buffer ed esegue l'*Instance Recovery* istantaneamente, recuperando transazioni committate andate disperse e rollbackando quelle sporche, garantendo il db consistente e riavviabile prima dei log in.
+4. **Apertura di Accesso ai Dati**: I tablespace normali divengono editabili e gli utenti normali ottengono privilegi di querying/update sui dati.
 
-- `OPEN READ WRITE`;
-- `OPEN READ ONLY`;
-- `MOUNTED` per standby fisico;
-- `READ ONLY WITH APPLY` per Active Data Guard.
+Varianti Comuni per fasi avanzate:
+- `OPEN READ WRITE`: Uso di produzione regolare.
+- `OPEN READ ONLY`: Protezione assoluta in sola lettura (utile in contesti Data warehouse/Reporting statico).
+- `READ ONLY WITH APPLY`: Per Data Guard attivi (la famosa feature Active Data Guard, dove tu puoi leggere i dati replicati su uno standby allo stesso tempo in cui il server lo aggiorna invisibilmente dietro le quinte).
 
 ### 2.4 Shutdown Modes
 
