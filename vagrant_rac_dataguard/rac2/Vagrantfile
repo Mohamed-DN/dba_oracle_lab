@@ -1,0 +1,56 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'yaml'
+
+# Variables
+params = YAML.load_file '../config/vagrant.yml'
+var_box                     = params['shared']['box']
+var_non_rotational          = params['shared']['non_rotational']
+
+var_asm_crs_disk_1          = params['shared']['asm_crs_disk_1']
+var_asm_crs_disk_2          = params['shared']['asm_crs_disk_2']
+var_asm_crs_disk_3          = params['shared']['asm_crs_disk_3']
+var_asm_data_disk_1         = params['shared']['asm_data_disk_1']
+var_asm_reco_disk_1         = params['shared']['asm_reco_disk_1']
+
+var_vm_name                 = params['rac2']['vm_name']
+var_mem_size                = params['rac2']['mem_size']
+var_cpus                    = params['rac2']['cpus']
+var_public_ip               = params['rac2']['public_ip']
+var_private_ip              = params['rac2']['priv1_ip']
+var_u01_disk                = params['rac2']['u01_disk']
+
+Vagrant.configure("2") do |config|
+  config.vm.box = var_box
+  config.vm.hostname = params['rac2']['host_name']
+
+  config.vm.network "private_network", ip: var_public_ip
+  config.vm.network "private_network", ip: var_private_ip, virtualbox__intnet: "rac_priv1"
+
+  config.vm.synced_folder "../config", "/vagrant_config"
+  config.vm.synced_folder "../shared_scripts", "/vagrant_scripts"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = var_mem_size
+    vb.cpus   = var_cpus
+    vb.name   = var_vm_name
+
+    vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', '0', '--device', '0', '--nonrotational', var_non_rotational]
+    
+    unless File.exist?(var_u01_disk)
+      vb.customize ['createhd', '--filename', var_u01_disk, '--size', 100 * 1024]
+    end
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', var_u01_disk, '--nonrotational', var_non_rotational]
+
+    # RAC2 DOES NOT create the disks, it just attaches the shareable multi-attach files created by rac1
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', var_asm_crs_disk_1, '--mtype', 'shareable', '--nonrotational', var_non_rotational]
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', var_asm_crs_disk_2, '--mtype', 'shareable', '--nonrotational', var_non_rotational]
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 4, '--device', 0, '--type', 'hdd', '--medium', var_asm_crs_disk_3, '--mtype', 'shareable', '--nonrotational', var_non_rotational]
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 5, '--device', 0, '--type', 'hdd', '--medium', var_asm_data_disk_1, '--mtype', 'shareable', '--nonrotational', var_non_rotational]
+    vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 6, '--device', 0, '--type', 'hdd', '--medium', var_asm_reco_disk_1, '--mtype', 'shareable', '--nonrotational', var_non_rotational]
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sh /vagrant/setup_rac2.sh
+  SHELL
+end

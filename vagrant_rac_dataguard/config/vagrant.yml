@@ -1,0 +1,60 @@
+shared:
+  box: "oraclelinux/7"
+  non_rotational: "on"
+  install_os: "ol7"
+  asm_crs_disk_1: "../shared_disks/asm_crs_disk_1.vdi"
+  asm_crs_disk_2: "../shared_disks/asm_crs_disk_2.vdi"
+  asm_crs_disk_3: "../shared_disks/asm_crs_disk_3.vdi"
+  asm_crs_disk_size: 2
+  asm_data_disk_1: "../shared_disks/asm_data_disk_1.vdi"
+  asm_data_disk_size: 20
+  asm_reco_disk_1: "../shared_disks/asm_reco_disk_1.vdi"
+  asm_reco_disk_size: 15
+  stby_crs_disk_1: "../shared_disks/asm_stby_crs_1.vdi"
+  stby_crs_disk_2: "../shared_disks/asm_stby_crs_2.vdi"
+  stby_crs_disk_3: "../shared_disks/asm_stby_crs_3.vdi"
+  stby_data_disk_1: "../shared_disks/asm_stby_data.vdi"
+  stby_reco_disk_1: "../shared_disks/asm_stby_reco.vdi"
+
+dns:
+  vm_name: "dnsnode"
+  host_name: "dnsnode.localdomain"
+  mem_size: 1024
+  cpus: 1
+  public_ip: "192.168.56.50"
+
+rac1:
+  vm_name: "rac1"
+  host_name: "rac1.localdomain"
+  mem_size: 8192
+  cpus: 4
+  public_ip: "192.168.56.101"
+  priv1_ip: "192.168.1.101"
+  u01_disk: "../shared_disks/rac1_u01.vdi"
+
+rac2:
+  vm_name: "rac2"
+  host_name: "rac2.localdomain"
+  mem_size: 8192
+  cpus: 4
+  public_ip: "192.168.56.102"
+  priv1_ip: "192.168.1.102"
+  u01_disk: "../shared_disks/rac2_u01.vdi"
+
+racstby1:
+  vm_name: "racstby1"
+  host_name: "racstby1.localdomain"
+  mem_size: 8192
+  cpus: 4
+  public_ip: "192.168.56.111"
+  priv1_ip: "192.168.2.111"
+  u01_disk: "../shared_disks/racstby1_u01.vdi"
+
+racstby2:
+  vm_name: "racstby2"
+  host_name: "racstby2.localdomain"
+  mem_size: 8192
+  cpus: 4
+  public_ip: "192.168.56.112"
+  priv1_ip: "192.168.2.112"
+  u01_disk: "../shared_disks/racstby2_u01.vdi"
