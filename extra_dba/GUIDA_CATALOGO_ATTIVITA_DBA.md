@@ -17,8 +17,8 @@
 | Area | Cosa fa il DBA | Frequenza tipica | Dove la fai nel repo |
 |---|---|---|---|
 | **Disponibilita e startup/shutdown** | Verifica istanze, servizi, listener, cluster resources, restart controllati | Giornaliera / su change | [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md), [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
-| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
-| **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDA_FASE7_RMAN_BACKUP.md](../GUIDA_FASE7_RMAN_BACKUP.md), [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
+| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
+| **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md), [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
 | **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche | Giornaliera / settimanale / su incidente | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md) |
 | **Storage, ASM e capacity** | Controlla tablespace, FRA, ASM disk group, crescita dati, autoextend, soglie | Giornaliera / settimanale / mensile | [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md), [GUIDA_AGGIUNTA_DISCHI_ASM.md](../GUIDA_AGGIUNTA_DISCHI_ASM.md) |
 | **Security e accessi** | Gestisce utenti, ruoli, privilegi, auditing, wallet, TDE, hardening | Settimanale / mensile / su richiesta | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
@@ -67,7 +67,7 @@ Attivita tipiche:
 - tuning soglie e notifiche.
 
 Nel tuo repo:
-- [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)
+- [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
 - [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md)
 
 ## 3.3 Backup, restore test e recovery readiness
@@ -87,7 +87,7 @@ Segnali di maturita:
 - RPO/RTO devono essere esplicitati e verificati.
 
 Nel tuo repo:
-- [GUIDA_FASE7_RMAN_BACKUP.md](../GUIDA_FASE7_RMAN_BACKUP.md)
+- [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md)
 - [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md)
 
 ## 3.4 Performance e tuning

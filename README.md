@@ -73,14 +73,14 @@
 3. [GUIDA_FASE2_GRID_E_RAC.md](./GUIDA_FASE2_GRID_E_RAC.md)
 4. [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md)
 5. [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) - include anche `Protection Mode`, `MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`
-6. [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
-7. [GUIDA_FASE6_TEST_VERIFICA.md](./GUIDA_FASE6_TEST_VERIFICA.md)
-8. [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
-9. [GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)
+6. [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
+7. [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](./GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
+8. [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
+9. [GUIDA_FASE8_TEST_VERIFICA.md](./GUIDA_FASE8_TEST_VERIFICA.md)
 
 ### 3) Sprint GoldenGate esteso (40 test)
 
-- Guida principale: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- Guida principale: [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
 - Template log test: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
 - Pianificazione giornaliera: [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md) (addendum operativo GoldenGate)
 
@@ -152,7 +152,7 @@ Calendario consigliato:
 
 Materiale operativo:
 
-- guida: [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md)
+- guida: [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
 - template testlog: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
 
 ---
@@ -181,10 +181,10 @@ Materiale operativo:
 | 9 | **Fase 2** | [GRID + RAC](./GUIDA_FASE2_GRID_E_RAC.md) | Installa Grid, ASM, DB Software, crea RACDB |
 | 10 | **Fase 3** | [RAC STANDBY](./GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP |
 | 11 | **Fase 4** | [DATA GUARD](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Active Data Guard, Protection Mode (`MaxPerformance`, `MaxAvailability`, `MaxProtection`, `FASTSYNC`) |
-| 12 | **Fase 5** | [GOLDENGATE](./GUIDA_FASE5_GOLDENGATE.md) | Extract integrato sul primary, Pump, Replicat target locale/OCI + varianti avanzate documentate |
-| 13 | **Fase 6** | [TEST VERIFICA](./GUIDA_FASE6_TEST_VERIFICA.md) | Test DG + GG + stress + node crash |
-| 14 | **Fase 7** | [RMAN BACKUP](./GUIDA_FASE7_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
-| 15 | **Fase 8** | [ENTERPRISE MANAGER](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
+| 12 | **Fase 5** | [RMAN BACKUP](./GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup, script, cron, BCT, restore |
+| 13 | **Fase 6** | [ENTERPRISE MANAGER](./GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | Setup Cloud Control 13.5: OMS, Agent, target discovery, alerting, jobs |
+| 14 | **Fase 7** | [GOLDENGATE](./GUIDA_FASE7_GOLDENGATE.md) | Extract integrato sul primary, Pump, Replicat target locale/OCI + varianti avanzate documentate |
+| 15 | **Fase 8** | [TEST VERIFICA](./GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end DataGuard + RMAN + EM + GoldenGate + stress + node crash |
 | 16 | **RMAN Completa** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Runbook RMAN completo + test lab: config, backup, validate, recovery, catalog |
 
 ---
@@ -245,7 +245,7 @@ Materiale operativo:
 | **Gestione Dischi ASM** | [GUIDA_ASM_DISK](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Aggiungere/Creare dischi ASM (ASMLib + AFD) |
 | **Guida RMAN Completa 19c** | [GUIDA_RMAN_19C](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, Data Guard e test pratici con fonti ufficiali Oracle |
 | **Guida SSH Keys RAC** | [GUIDA_SSH_KEYS](./GUIDA_SSH_KEYS_RAC.md) | User equivalence per `grid`/`oracle`/`root`, reset rapido e troubleshooting `PRVG-2019` |
-| **Guida Fase 8 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
+| **Guida Fase 6 Enterprise Manager** | [GUIDA_EM13C](./GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | Setup completo OEM Cloud Control 13.5, monitoraggio operativo e runbook test |
 | **Template Test GoldenGate** | [TESTLOG_GG_TEMPLATE](./TESTLOG_GOLDENGATE_TEMPLATE.md) | Template pronto per tracciare PASS/FAIL, lag, evidenze e fix |
 
 ---

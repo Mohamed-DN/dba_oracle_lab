@@ -1,10 +1,10 @@
-# FASE 5: Oracle GoldenGate verso Target Locale o OCI
+# FASE 7: Oracle GoldenGate verso Target Locale o OCI
 
 > In questa fase configuriamo GoldenGate in modo coerente con il lab reale. La scelta base e supportata e questa: `Integrated Extract sul primary RACDB`, Data Pump verso target, Replicat sul target. Data Guard resta la tua piattaforma di DR e HA, non il punto di capture predefinito per GoldenGate.
 
 ---
 
-## 5.0 Decisione Architetturale Prima di Partire
+## 7.0 Decisione Architetturale Prima di Partire
 
 La documentazione Oracle impone una distinzione netta.
 
@@ -28,7 +28,7 @@ Punti tecnici chiave:
 
 Conclusione pragmatica:
 
-- Fase 5 base = capture sul primary;
+- Fase 7 base = capture sul primary;
 - varianti con offload dal redo o standby = sezione avanzata, non flusso principale.
 
 Schema:
@@ -51,9 +51,9 @@ Data Guard continua in parallelo come DR.
 
 ---
 
-## 5.0A Ingresso da Fase 4 (check obbligatorio)
+## 7.0A Ingresso da Fase 6 (check obbligatorio)
 
-GoldenGate ha senso solo se Fase 4 e stabile.
+GoldenGate ha senso solo se il monitoring e il database sono stabili. La Fase 6 (Enterprise Manager) deve aver certificato che Data Guard e in salute.
 
 ```bash
 dgmgrl sys/<password>@RACDB
@@ -75,35 +75,29 @@ Criteri minimi:
 - standby sano e apply attivo;
 - source stabile prima di toccare GoldenGate.
 
-Se Fase 4 non e chiusa, torna a [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
+Se Data Guard non e stabile, torna a [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
 
 ---
 
-## 5.0B Scegli il Target: Locale o OCI
+## 7.0B Scegli il Target: Locale (PC/VM) o OCI Cloud
 
-### Opzione 1 - `dbtarget` locale
+In questa fase, costruiremo esplicitamente due strade diverse per la destinazione del replicat.
 
-Usala se vuoi:
+### PERCORSO 1: Target Locale su un altro PC / VM
+Questa è l'opzione raccomandata per sviluppare confidenza locale prima di passare al Cloud.
+- **Database Target**: Oracle Database 21c o l'ultima 23ai (se disponibile).
+- **Vantaggi**: Nessun costo nascosto, riduce le latenze di rete WAN, debug più facile dei componenti locali.
 
-- ridurre variabili di rete;
-- imparare GoldenGate prima del cloud;
-- avere debug piu semplice.
-
-### Opzione 2 - target OCI compute
-
-Usala se vuoi:
-
-- imparare una migrazione locale -> cloud;
-- allenarti su listener, rete, NSG e target remoto.
-
-Prima di usare OCI leggi:
-
-- [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
-- [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
+### PERCORSO 2: Target Cloud (Data Integrator / OCI Compute)
+Esposizione pratica all'esportazione dati verso il Cloud.
+- **Vantaggi**: Impari una skill molto richiesta: la migrazione / replicazione ibrida (On-Prem to Cloud).
+- Prima di usare OCI leggi:
+  - [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+  - [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
 
 ---
 
-## 5.1 Rete e Naming
+## 7.1 Rete e Naming
 
 Qualunque target tu scelga, il source deve risolvere e raggiungere il target.
 
@@ -132,7 +126,7 @@ Se questi test falliscono, non partire con GG.
 
 ---
 
-## 5.2 Architettura Supportata del Lab
+## 7.2 Architettura Supportata del Lab
 
 Flusso base:
 
@@ -159,7 +153,7 @@ Perche il primary e il default giusto:
 
 ---
 
-## 5.3 Prerequisiti Database sul Source
+## 7.3 Prerequisiti Database sul Source
 
 Sul primary `RACDB`:
 
@@ -189,7 +183,7 @@ Nota:
 
 ---
 
-## 5.4 Prerequisiti sul Target
+## 7.4 Prerequisiti sul Target
 
 Sul target Oracle:
 
@@ -206,7 +200,7 @@ Se il target e multitenant:
 
 ---
 
-## 5.5 Creazione Utente GoldenGate
+## 7.5 Creazione Utente GoldenGate
 
 ### Sul source
 
@@ -246,7 +240,7 @@ Nel lab va bene essere larghi con i privilegi. In produzione li restringi.
 
 ---
 
-## 5.6 Installazione Software GoldenGate
+## 7.6 Installazione Software GoldenGate
 
 ### Sul source
 
@@ -259,14 +253,20 @@ mkdir -p /u01/app/goldengate
 chown oracle:oinstall /u01/app/goldengate
 ```
 
-Poi installa il software GoldenGate coerente con il database source.
+Poi installa il software GoldenGate (versione compatibile 19c).
 
 ### Sul target
 
-- se target locale: installa GoldenGate sul server target;
-- se target OCI: segui [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md) per capire se stai usando un target `free validation` o un target realmente coerente con il lab principale.
+**Se hai scelto il PERCORSO 1 (Locale):**
+- Copia e installa il media per Oracle 21c (o 23ai) sul tuo PC o VM target.
+- I passaggi di setup OS e i prerequisiti (es: ORACLE_HOME, Swap, etc) sono analoghi a quelli visti nelle Fasi 0-1, semplificati per un Oracle Single Instance. 
 
-### Variabili ambiente
+**Se hai scelto il PERCORSO 2 (OCI Cloud):**
+- Provvedi all'istanza o al deployment GoldenGate for OCI secondo [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md).
+- Solitamente utilizzerai GoldenGate Microservices nel cloud.
+- Attenzione ad aprire le porte VCN (Network Security Group) sia dal DataGuard (opzionale proxy) o primario On-Prem verso il Cloud.
+
+### Variabili ambiente (Setup Classico)
 
 ```bash
 cat >> /home/oracle/.bash_profile <<'EOF'
@@ -280,7 +280,7 @@ source /home/oracle/.bash_profile
 
 ---
 
-## 5.7 Configurazione Manager
+## 7.7 Configurazione Manager
 
 ### Sul source
 
@@ -314,9 +314,9 @@ Manager analogo, adattando `AUTORESTART REPLICAT *`.
 
 ---
 
-## 5.8 Configurazione Extract sul Primary
+## 7.8 Configurazione Extract sul Primary
 
-### 5.8.1 Login e registrazione
+### 7.8.1 Login e registrazione
 
 Su `rac1` come `oracle`:
 
@@ -332,7 +332,7 @@ GGSCI> ADD EXTRACT ext_rac, INTEGRATED TRANLOG, BEGIN NOW
 GGSCI> ADD EXTTRAIL ./dirdat/er, EXTRACT ext_rac, MEGABYTES 200
 ```
 
-### 5.8.2 Parametri Extract
+### 7.8.2 Parametri Extract
 
 ```text
 GGSCI> EDIT PARAMS ext_rac
@@ -360,7 +360,7 @@ Nota pratica:
 
 ---
 
-## 5.9 Configurazione Data Pump
+## 7.9 Configurazione Data Pump
 
 ```text
 GGSCI> ADD EXTRACT pump_rac, EXTTRAILSOURCE ./dirdat/er
@@ -385,7 +385,7 @@ Se usi microservices sul target, sostituisci il modello `RMTHOST/MGRPORT` con il
 
 ---
 
-## 5.10 Initial Load (Instanziazione)
+## 7.10 Initial Load (Instanziazione)
 
 GoldenGate non sostituisce l'initial load. Prima carichi i dati, poi applichi il delta.
 
@@ -433,9 +433,12 @@ Questa e la logica corretta per evitare buchi o duplicati durante il bootstrap.
 
 ---
 
-## 5.11 Configurazione Replicat sul Target
+## 7.11 Configurazione Replicat sul Target
 
-Sul target:
+La configurazione varia leggermente se operi su un target locale o in OCI.
+
+### PERCORSO 1 (Locale / Classic o Microservices):
+Sul target (dbtarget fisico o VM Locale):
 
 ```bash
 cd $OGG_HOME
@@ -449,7 +452,14 @@ GGSCI> ADD REPLICAT rep_rac, INTEGRATED, EXTTRAIL ./dirdat/rt
 GGSCI> EDIT PARAMS rep_rac
 ```
 
-Esempio:
+### PERCORSO 2 (OCI Cloud con OCI GoldenGate / Microservices):
+Non usi tipicamente pGGSCI (classic), bensì l'interfaccia **Web UI di Admin Server**.
+1. Loggati nella console OCI GoldenGate Deployment.
+2. Configura le "Credential" per puntare al tuo Autonomous/Compute DB (utente ggadmin).
+3. Aggiungi il Replicat Integrato o Non-Integrato puntando al remote trail (trasmesso dal DB Pump via port 9022 o simili per Distribution Service).
+4. Crea virtualmente gli stessi parametri via form web.
+
+Esempio parametri Replicat:
 
 ```text
 REPLICAT rep_rac
@@ -469,7 +479,7 @@ Nota:
 
 ---
 
-## 5.12 Ordine di Avvio
+## 7.12 Ordine di Avvio
 
 Ordine consigliato:
 
@@ -492,7 +502,7 @@ GGSCI> LAG REPLICAT rep_rac
 
 ---
 
-## 5.13 Criteri di Successo Fase 5
+## 7.13 Criteri di Successo Fase 7
 
 La fase e considerata chiusa se hai tutti questi punti:
 
@@ -514,7 +524,7 @@ SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id = 2;
 
 ---
 
-## 5.14 Test Minimi Obbligatori
+## 7.14 Test Minimi Obbligatori
 
 ### DML smoke test
 
@@ -545,7 +555,7 @@ DROP TABLE HR.GG_DDL_TEST PURGE;
 
 ---
 
-## 5.15 Varianti Avanzate e Limiti
+## 7.15 Varianti Avanzate e Limiti
 
 ### Variante A - Offload dal redo o standby
 
@@ -565,7 +575,7 @@ Questa e la variante piu pulita se vuoi offload serio dal source:
 - redo viene spedito a un mining database dedicato;
 - GoldenGate legge li.
 
-E un caso avanzato, non la Fase 5 base.
+E un caso avanzato, non la Fase 7 base.
 
 ### Variante C - GoldenGate Free
 
@@ -575,7 +585,7 @@ Non usarlo come fondazione implicita del lab RAC 19c principale.
 
 ---
 
-## 5.16 Troubleshooting Rapido
+## 7.16 Troubleshooting Rapido
 
 ### `ORA-12514`
 
@@ -612,7 +622,7 @@ Non usarlo come fondazione implicita del lab RAC 19c principale.
 
 ---
 
-## 5.17 Collegamento con la Migrazione Locale -> OCI
+## 7.17 Collegamento con la Migrazione Locale -> OCI
 
 Per usare questa fase come migrazione cloud reale:
 
@@ -631,7 +641,7 @@ Sequenza corretta:
 
 ---
 
-## 5.18 Fonti Oracle Ufficiali
+## 7.18 Fonti Oracle Ufficiali
 
 - Integrated Extract cannot capture from standby: https://docs.oracle.com/en/middleware/goldengate/core/21.3/ggcab/overview-capture-active-data-guard-only-mode.html
 - Active Data Guard only mode and classic capture notes: https://docs.oracle.com/en/middleware/goldengate/core/21.3/coredoc/extract-oracle-active-data-guard-only-mode.html
@@ -640,11 +650,15 @@ Sequenza corretta:
 
 ---
 
-## 5.19 Conclusione Operativa
+## 7.19 Conclusione Operativa
 
-La Fase 5 del repo ora ha una regola semplice:
+La Fase 7 del repo ora ha una regola semplice:
 
 - Data Guard protegge;
 - GoldenGate migra e replica;
 - il capture base parte dal primary;
 - OCI si aggancia come target solo dopo che rete e compatibilita sono state chiarite.
+
+---
+
+**→ Prossimo: [FASE 8: Test di Verifica (Data Guard + GoldenGate)](./GUIDA_FASE8_TEST_VERIFICA.md)**

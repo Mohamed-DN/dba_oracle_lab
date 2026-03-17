@@ -1,20 +1,16 @@
-# FASE 7: Strategia RMAN Backup su Tutti i Database
+# FASE 5: Strategia RMAN Backup su Tutti i Database
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 
 ---
 
-## 7.0 Ingresso da Fase 6 (gate operativo)
+## 5.0 Ingresso da Fase 4 (gate operativo)
 
 Prima di impostare la strategia RMAN, il sistema deve essere stabile:
 
 ```bash
 # Data Guard
 dgmgrl sys/<password>@RACDB "show configuration;"
-
-# GoldenGate standby side
-cd $OGG_HOME && ./ggsci
-INFO ALL
 ```
 
 ```sql
@@ -27,14 +23,13 @@ FROM v$recovery_file_dest;
 Check minimi:
 
 - DGMGRL `SUCCESS`
-- processi GG standby `RUNNING` (e replicat target `REPTAR` attivo)
 - FRA non satura (idealmente < 80%)
 
 Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e aggiorna solo retention/schedule.
 
 ---
 
-## 7.1 La Strategia di Backup
+## 5.1 La Strategia di Backup
 
 ### Backup su TUTTI e 3 i Database
 
@@ -68,7 +63,7 @@ Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e 
 
 ---
 
-## 7.2 Configurazione RMAN Base (Valida per tutti i DB)
+## 5.2 Configurazione RMAN Base (Valida per tutti i DB)
 
 ### Connessione RMAN
 
@@ -120,7 +115,7 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 
 ---
 
-## 7.3 Block Change Tracking (BCT) — Accelera gli Incrementali
+## 5.3 Block Change Tracking (BCT) — Accelera gli Incrementali
 
 Il BCT tiene traccia di quali blocchi sono cambiati, rendendo i backup incrementali **10-100x più veloci**.
 
@@ -155,7 +150,7 @@ ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '/u01/app/oracle/oradata/
 
 ---
 
-## 7.4 Script di Backup — RAC Standby (Backup Principale)
+## 5.4 Script di Backup — RAC Standby (Backup Principale)
 
 Questo è il backup **più importante** della tua infrastruttura. Viene eseguito sullo standby ADG.
 
@@ -302,7 +297,7 @@ chmod +x /home/oracle/scripts/rman_arch_backup.sh
 
 ---
 
-## 7.5 Script di Backup — Target (dbtarget)
+## 5.5 Script di Backup — Target (dbtarget)
 
 Il target GoldenGate ha una strategia più semplice perché può sempre essere ricreato ricarcando i dati dal primario.
 
@@ -352,7 +347,7 @@ chown oracle:oinstall /u01/backup/dbtarget
 
 ---
 
-## 7.5b Script di Backup — RAC PRIMARIO (RACDB)
+## 5.5b Script di Backup — RAC PRIMARIO (RACDB)
 
 Anche il primario ha il suo backup — leggero ma essenziale come rete di sicurezza.
 
@@ -407,7 +402,7 @@ chmod +x /home/oracle/scripts/rman_primary_backup.sh
 
 ---
 
-## 7.6 Schedulazione con Cron
+## 5.6 Schedulazione con Cron
 
 ```bash
 # Come utente oracle, su OGNI macchina
@@ -446,7 +441,7 @@ crontab -e
 
 ---
 
-## 7.7 Verifica dei Backup
+## 5.7 Verifica dei Backup
 
 ### Report dei backup
 
@@ -495,7 +490,7 @@ chmod +x /home/oracle/scripts/rman_report.sh
 
 ---
 
-## 7.8 Test di Restore (FONDAMENTALE!)
+## 5.8 Test di Restore (FONDAMENTALE!)
 
 > **Un backup mai testato è un backup che non esiste.** Testa il restore regolarmente.
 
@@ -539,7 +534,7 @@ RESTORE DATABASE PREVIEW;
 
 ---
 
-## 7.9 Schema Riassuntivo della Strategia
+## 5.9 Schema Riassuntivo della Strategia
 
 | Database | Tipo Backup | Frequenza | Retention | Dove |
 |---|---|---|---|---|
@@ -552,7 +547,7 @@ RESTORE DATABASE PREVIEW;
 
 ---
 
-## 7.10 Statistiche, Health Check e Manutenzione Automatica
+## 5.10 Statistiche, Health Check e Manutenzione Automatica
 
 > **Perché le statistiche?** Oracle usa le statistiche degli oggetti (tabelle, indici) per calcolare il piano di esecuzione ottimale delle query. Statistiche vecchie = piani sbagliati = query lente. Sono il carburante dell'ottimizzatore.
 
@@ -715,7 +710,7 @@ Aggiungi al cron su TUTTI i database:
 
 ---
 
-## ✅ Checklist Fine Fase 7
+## ✅ Checklist Fine Fase 5
 
 ```bash
 # 1. BCT attivo sui DB dove esegui incrementali
@@ -733,7 +728,7 @@ rman TARGET / <<< "RESTORE DATABASE VALIDATE;"
 
 ---
 
-**→ Prossimo consigliato: [FASE 8: Enterprise Manager Cloud Control](./GUIDA_FASE8_ENTERPRISE_MANAGER_13C.md)**
+**→ Prossimo consigliato: [FASE 6: Enterprise Manager Cloud Control](./GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)**
 
 ---
 
@@ -759,4 +754,4 @@ Hai imparato:
 5. **Statistiche & Maintenance**: Health check, statistiche dell'ottimizzatore, monitoraggio proattivo.
 6. **Patching**: OPatch, opatchauto, datapatch per Grid e Database.
 
-Passo successivo naturale: centralizzare monitoraggio e governance con Enterprise Manager (Fase 8).
+Passo successivo naturale: centralizzare monitoraggio e governance con Enterprise Manager (Fase 6).

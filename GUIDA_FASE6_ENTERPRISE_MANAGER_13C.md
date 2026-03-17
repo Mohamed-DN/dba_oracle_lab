@@ -1,4 +1,4 @@
-# FASE 8: Oracle Enterprise Manager Cloud Control 13.5 (Single OMS Lab)
+# FASE 6: Oracle Enterprise Manager Cloud Control 13.5 (Single OMS Lab)
 
 Aggiornata: 13 marzo 2026
 Target lab: Oracle Linux 7.9/8.x, Oracle DB 19c, RAC + Data Guard + GoldenGate gia operativi.
@@ -11,7 +11,7 @@ Questa fase aggiunge una console centralizzata per monitorare e governare tutto 
 - alerting, incident management, notification, jobs, blackout
 - monitoraggio backup RMAN
 
-## 8.0A Ingresso da Fase 7 (preflight)
+## 6.0A Ingresso da Fase 5 (preflight)
 
 Prima di installare EM, verifica che il lab Oracle sia stabile:
 
@@ -37,7 +37,7 @@ Gate minimo:
 - repository DB raggiungibile da `emcc1`
 - spazio disco e RAM adeguati su `emcc1`
 
-## 8.0B Se OMS e gia installato
+## 6.0B Se OMS e gia installato
 
 Se hai gia un OMS funzionante (test precedenti), non reinstallare:
 
@@ -46,9 +46,9 @@ $OMS_HOME/bin/emctl status oms -details
 $AGENT_HOME/bin/emctl status agent
 ```
 
-Se `OMS Up` e `Agent Up`, vai direttamente a `8.7` (deploy agent target) oppure `8.8` (onboarding target).
+Se `OMS Up` e `Agent Up`, vai direttamente a `6.7` (deploy agent target) oppure `6.8` (onboarding target).
 
-## 8.1 Obiettivo operativo
+## 6.1 Obiettivo operativo
 
 A fine fase devi avere:
 
@@ -59,7 +59,7 @@ A fine fase devi avere:
 - dashboard operative giornaliere
 - runbook test alert validato
 
-## 8.2 Architettura consigliata nel tuo lab
+## 6.2 Architettura consigliata nel tuo lab
 
 Scelta bloccata: Single OMS su VM dedicata.
 
@@ -83,9 +83,9 @@ Nota pratica:
 - In lab puoi mettere repository DB su `dbtarget` per risparmiare RAM.
 - In produzione si preferisce separazione dedicata OMS vs repository.
 
-## 8.3 Prerequisiti minimi
+## 6.3 Prerequisiti minimi
 
-## 8.3.1 Hardware VM `emcc1`
+## 6.3.1 Hardware VM `emcc1`
 
 Minimo lab:
 
@@ -95,14 +95,14 @@ Minimo lab:
 
 Con 8 GB RAM OMS tende a saturarsi durante discovery e patching console.
 
-## 8.3.2 Software
+## 6.3.2 Software
 
 - Oracle Linux 7.9 o 8.x
 - JDK supportato dalla release EM 13.5
 - pacchetti OS richiesti dall installer
 - install media EM 13.5 + eventuale RU
 
-## 8.3.3 Rete e porte
+## 6.3.3 Rete e porte
 
 Apri almeno:
 
@@ -118,14 +118,14 @@ Usa DNS risolvibile per:
 - nodi RAC e standby
 - host repository DB
 
-## 8.3.4 Utenti e path consigliati
+## 6.3.4 Utenti e path consigliati
 
 - utente software OMS: `oracle` (lab) o `omsuser` (enterprise)
 - base directory: `/u01/app/oracle`
 - middleware home OMS: `/u01/app/oracle/middleware`
 - software media: `/u01/software/em13c`
 
-## 8.4 Preparazione VM emcc1
+## 6.4 Preparazione VM emcc1
 
 ```bash
 # hostname e risoluzione
@@ -142,7 +142,7 @@ sysctl -a | egrep "fs.file-max|net.core.somaxconn"
 
 Verifica NTP/chrony su tutte le VM, altrimenti avrai falsi alert e metriche incoerenti.
 
-## 8.5 Repository DB 19c per Enterprise Manager
+## 6.5 Repository DB 19c per Enterprise Manager
 
 Puoi usare:
 
@@ -165,9 +165,9 @@ SELECT name, open_mode, log_mode FROM v$database;
 SELECT value FROM v$parameter WHERE name='compatible';
 ```
 
-## 8.6 Installazione OMS 13.5 da zero
+## 6.6 Installazione OMS 13.5 da zero
 
-## 8.6.1 Installazione grafica (consigliata in lab)
+## 6.6.1 Installazione grafica (consigliata in lab)
 
 1. Copia software EM su `emcc1`.
 2. Estrai/esegui installer.
@@ -184,7 +184,7 @@ chmod +x em13500_linux64.bin
 ./em13500_linux64.bin
 ```
 
-## 8.6.2 Comandi post-install obbligatori
+## 6.6.2 Comandi post-install obbligatori
 
 ```bash
 # OMS status
@@ -202,7 +202,7 @@ Login console:
 - URL: `https://emcc1:<porta_oms>/em`
 - user: `SYSMAN`
 
-## 8.7 Deploy agent sui target host
+## 6.7 Deploy agent sui target host
 
 Per ogni host target (rac1, rac2, racstby1, racstby2, dbtarget):
 
@@ -218,7 +218,7 @@ $AGENT_HOME/bin/emctl upload agent
 $AGENT_HOME/bin/emctl clearstate agent
 ```
 
-## 8.8 Onboarding target Oracle
+## 6.8 Onboarding target Oracle
 
 Ordine consigliato:
 
@@ -235,9 +235,9 @@ Verifiche minime in console:
 - metric collection senza errori
 - availability timeline coerente
 
-## 8.9 Setup operativo giornaliero
+## 6.9 Setup operativo giornaliero
 
-## 8.9.1 Dashboard e homepage
+## 6.9.1 Dashboard e homepage
 
 Crea homepage operative:
 
@@ -246,7 +246,7 @@ Crea homepage operative:
 - Database Group (standby + target)
 - Critical Incidents
 
-## 8.9.2 Metric thresholds
+## 6.9.2 Metric thresholds
 
 Definisci soglie realistiche per lab:
 
@@ -256,7 +256,7 @@ Definisci soglie realistiche per lab:
 - Failed login attempts
 - Data Guard transport/apply lag
 
-## 8.9.3 Incident Rules
+## 6.9.3 Incident Rules
 
 Crea almeno due rule set:
 
@@ -268,7 +268,7 @@ Routing esempio:
 - Critical -> email immediata
 - Warning -> digest ogni 30 minuti
 
-## 8.9.4 Notifications (SMTP)
+## 6.9.4 Notifications (SMTP)
 
 Configura:
 
@@ -278,7 +278,7 @@ Configura:
 
 Testa con invio notifica di prova e con incidente reale simulato.
 
-## 8.9.5 Jobs e library
+## 6.9.5 Jobs e library
 
 Crea job standard:
 
@@ -289,7 +289,7 @@ Crea job standard:
 
 Salva job template nella library per riuso.
 
-## 8.9.6 Blackout
+## 6.9.6 Blackout
 
 Usa blackout per manutenzione:
 
@@ -299,7 +299,7 @@ Usa blackout per manutenzione:
 
 Regola: nessuna attivita pianificata senza blackout aperto.
 
-## 8.10 Monitoraggio specifico RMAN
+## 6.10 Monitoraggio specifico RMAN
 
 In EM crea viste/favorite su:
 
@@ -318,9 +318,9 @@ ORDER BY session_key DESC;
 
 Collega questa fase alla tua guida:
 
-- `GUIDA_RMAN_COMPLETA_19C.md`
+- `GUIDA_FASE5_RMAN_BACKUP.md`
 
-## 8.11 Runbook test pratici (lab)
+## 6.11 Runbook test pratici (lab)
 
 Ogni test deve registrare: data, obiettivo, tempo rilevazione alert, esito.
 
@@ -375,7 +375,7 @@ Esito atteso:
 
 - storico job mostra fail poi success
 
-## 8.12 Troubleshooting piu comune
+## 6.12 Troubleshooting piu comune
 
 ## Agent down
 
@@ -427,14 +427,14 @@ Azioni:
 - verifica privilegio DB user monitor
 - controlla clock drift host/OMS
 
-## 8.13 Hardening minimo consigliato in lab
+## 6.13 Hardening minimo consigliato in lab
 
 - password policy forte per SYSMAN e named credentials
 - backup periodico repository DB
 - snapshot VM pre-change
 - audit delle modifiche di soglie/rules/job
 
-## 8.14 Checklist di completamento fase 8
+## 6.14 Checklist di completamento fase 6
 
 - OMS Up e console accessibile
 - agent deployato su tutti i nodi target
@@ -443,7 +443,7 @@ Azioni:
 - notifiche email testate
 - almeno 5 test runbook eseguiti con esito registrato
 
-## 8.15 Integrazione con il resto del lab
+## 6.15 Integrazione con il resto del lab
 
 Dopo questa fase puoi:
 
@@ -452,7 +452,7 @@ Dopo questa fase puoi:
 - schedulare controlli DBA periodici
 - avere evidenze operative per review/cv
 
-## 8.16 Riferimenti ufficiali Oracle (13.5)
+## 6.16 Riferimenti ufficiali Oracle (13.5)
 
 - Oracle Enterprise Manager Cloud Control Basic Installation Guide 13.5:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/embsc/index.html
@@ -478,4 +478,4 @@ Dopo questa fase puoi:
 Note:
 
 - Questa guida copre setup e operativita quotidiana in ambiente lab.
-- Per setup HA/multi-OMS serve un design separato con capacity planning dedicato.
+**→ Prossimo: [FASE 7: Configurazione GoldenGate Locale e Cloud](./GUIDA_FASE7_GOLDENGATE.md)**
