@@ -37,7 +37,7 @@ graph TD
             BC[Database Buffer Cache]
             SP[Shared Pool]
             RLB[Redo Log Buffer]
-            LP[Large/Java/Streams Pool]
+            LP["Large/Java/Streams Pool"]
         end
         PGA["PGA (Memoria Privata)"]
         PROC["Processi (Server & Background)"]
@@ -49,7 +49,7 @@ graph TD
         CF[Control files]
         ORL[Online redo logs]
         ARL[Archived redo logs]
-        PF[SPFILE / Password file]
+        PF["SPFILE / Password file"]
     end
 
     ORACLE_INSTANCE -- "Legge / Scrive" --> DATABASE_FILES
@@ -168,10 +168,10 @@ graph TB
             BC[Buffer Cache]
             SP[Shared Pool]
             RB[Redo Buffer]
-            LP[Large/Java/Streams]
+            LP["Large/Java/Streams"]
         end
         subgraph PGA["PGA (Program Global Area) - Privata"]
-            MEM[Memoria singola sessione: Sort, Hash, Stack]
+            MEM["Memoria singola sessione: Sort, Hash, Stack"]
         end
     end
 ```
@@ -397,10 +397,10 @@ flowchart TD
     Client[Client App] --> Listener[Listener]
     Listener -- "Inoltra (Service)" --> Istanza[Istanza Oracle]
     Istanza --> ServerProcess[Server Process]
-    ServerProcess --> Parse[1. Parse]
-    Parse --> Bind[2. Bind]
-    Bind --> Execute[3. Execute]
-    Execute --> Fetch[4. Fetch]
+    ServerProcess --> Parse["1. Parse"]
+    Parse --> Bind["2. Bind"]
+    Bind --> Execute["3. Execute"]
+    Execute --> Fetch["4. Fetch"]
 ```
 
 ### 5.1 Parse
@@ -779,7 +779,7 @@ Vista step-by-step:
 
 ```mermaid
 flowchart TD
-    UPDATE[UPDATE] --> Fetch[Blocco letto o già in cache]
+    UPDATE[UPDATE] --> Fetch["Blocco letto o già in cache"]
     Fetch --> UNDO[UNDO Generato]
     UNDO --> REDO[REDO generato]
     REDO --> Dirty[Blocco diventa Dirty]
@@ -790,7 +790,7 @@ flowchart TD
 
     Confirm --> POST[POST-COMMIT]
     POST --> CKPT[CKPT aggiorna checkpoint info]
-    CKPT --> DBWn[DBWn scarica il dirty block più tardi]
+    CKPT --> DBWn["DBWn scarica il dirty block più tardi"]
 ```
 
 Regola d'oro:
@@ -806,7 +806,7 @@ Blocco visivo:
 
 ```mermaid
 graph TD
-    APP[Applicazione / SQL*Plus] -->|Usa SERVICE_NAME| LIST[Listener]
+    APP["Applicazione / SQL*Plus"] -->|Usa SERVICE_NAME| LIST[Listener]
     LIST --> REG[Service Registration LREG]
     REG --> I1[Instance 1]
     REG --> I2[Instance 2]
@@ -962,8 +962,8 @@ Blocco visivo:
 ```mermaid
 graph TD
     DB[Database / Grid] --> ASM[ASM Instance]
-    ASM --> DATA[+DATA<br>Datafile<br>Controlfile<br>Online Redo<br>SPFILE / Password File]
-    ASM --> RECO[+RECO<br>Archivelog<br>Backup Pieces<br>Flashback Logs<br>Copies]
+    ASM --> DATA["+DATA<br>Datafile<br>Controlfile<br>Online Redo<br>SPFILE / Password File"]
+    ASM --> RECO["+RECO<br>Archivelog<br>Backup Pieces<br>Flashback Logs<br>Copies"]
 ```
 
 ---
@@ -977,7 +977,7 @@ Schema RAC:
 ```mermaid
 graph TD
     subgraph SHARED_STORAGE["Shared Storage (ASM)"]
-        SS[Datafiles / Controlfiles / Redo / SPFILE]
+        SS["Datafiles / Controlfiles / Redo / SPFILE"]
     end
 
     subgraph RAC["Oracle RAC Cluster"]
@@ -1054,7 +1054,7 @@ graph LR
     end
 
     subgraph STANDBY["STANDBY (RACDB_STBY)"]
-        SRL[Standby Redo Log] --> MRP[MRP0 / Redo Apply]
+        SRL[Standby Redo Log] --> MRP["MRP0 / Redo Apply"]
         MRP --> DF[Datafile Standby]
     end
 
@@ -1082,8 +1082,8 @@ Nel tuo lab usi physical standby.
 ```mermaid
 flowchart LR
     P[Primary Generates Redo] --> T[Redo Transport Sends Redo]
-    T --> R[Standby Receives Redo (RFS/SRL)]
-    R --> A[Apply Services Apply Redo (MRP)]
+    T --> R["Standby Receives Redo (RFS/SRL)"]
+    R --> A["Apply Services Apply Redo (MRP)"]
 ```
 
 ### 14.4 Ruoli e modalita'
@@ -1291,11 +1291,11 @@ Nel tuo laboratorio questi concetti diventano concreti cosi'.
 
 ```mermaid
 graph TD
-    EM[ORACLE ENTERPRISE MANAGER 13c<br>Monitoraggio] 
+    EM["ORACLE ENTERPRISE MANAGER 13c<br>Monitoraggio"] 
     
     subgraph DATAGUARD["Oracle Data Guard (Fase 4)"]
-        PR[RAC PRIMARY<br>RACDB]
-        ST[RAC STANDBY<br>RACDB_STBY]
+        PR["RAC PRIMARY<br>RACDB"]
+        ST["RAC STANDBY<br>RACDB_STBY"]
     end
 
     subgraph BACKUP["RMAN (Fase 5)"]
@@ -1303,7 +1303,7 @@ graph TD
     end
 
     subgraph REPLICATION["GoldenGate (Fase 7)"]
-        TG[TARGET DB<br>Local / Cloud]
+        TG["TARGET DB<br>Local / Cloud"]
     end
 
     EM --> PR
