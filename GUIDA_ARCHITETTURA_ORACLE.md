@@ -1027,108 +1027,85 @@ flowchart LR
 > 3) Lo Standby cattura la ricetta mettendola in RAM o su SRL.
 > 4) I servizi *Apply* fungono da cuoco: eseguono ciecamente la ricetta macinando I/O locale copiando la transazione "originale" senza perdersi una sillaba.
 
-### 14.4 Ruoli e modalita'
+### 14.4 Ruoli, Modalità di Protezione e Operazioni
 
-Ruoli:
+**I Ruoli (Roles):**
+- `PRIMARY`: Il database sovrano. È aperto in Read/Write, gli utenti ci lavorano attivamente, e produce tonnellate di Redo log.
+- `PHYSICAL STANDBY`: Il gemello silenzioso. Riceve il Redo log dal primario e lo applica byte-per-byte alterando i propri datafile di copia. Se aperto in *Read Only con Apply*, permette query di reportistica sgravando il primario (Active Data Guard).
 
-- `PRIMARY`;
-- `PHYSICAL STANDBY`.
+**Operazioni di Cambio Ruolo (Role Transitions):**
+- **Switchover**: Un passaggio di scettro pianificato, senza perdita di dati. Il Primario chiude cordialmente le connessioni utente, si trasforma in Standby, e l'ex-Standby diventa il nuovo Primario ufficiale. Usato per server maintenance o prove DR.
+- **Failover**: Il pulsante rosso di emergenza. Il primario esplode o va a fuoco, e tu forzi fisicamente lo Standby ad aprirsi come nuovo Primario salvando l'azienda. A seconda del livello di protezione, potresti perdere gli ultimissimi millisecondi di dati.
+- **Reinstate**: Dopo un Failover, il vecchio Primario bruciato (una volta riacceso) viene ricondizionato e "retrocesso" a nuovo Standby per ristabilire la catena del Data Guard.
 
-Operazioni:
+**Modalità di Protezione (Protection Modes):**
+- **MaxPerformance** (Default): Il primario manda il log via asincrona (`ASYNC`). L'utente non aspetta mai l'arrivo sullo Standby. Altissime performance sul db principale, ma se il server esplode potresti perdere qualche secondo di transazioni mai arrivate a destinazione.
+- **MaxAvailability**: Spedizione sincrona (`SYNC`). L'utente aspetta il commit solo dopo che lo Standby ha confermato di aver ricevuto il log in memoria in remoto. Ma c'è un trucco intelligente: se la rete verso lo standby cade, il primario "degrada" automaticamente a MaxPerformance pur di non bloccarsi.
+- **MaxProtection**: Spedizione sincrona pura (`SYNC`). Se lo standby non è raggiungibile via rete, *il primario si blocca (shutdown)* per impedire ad ogni costo la divergenza dei dati. Usato solo da banche o istituti con reti ultra-ridondate.
 
-- switchover;
-- failover;
-- reinstate.
+### 14.5 Data Guard Broker (Il cervello manageriale)
 
-Protection modes:
+Impostare a mano il Data Guard tramite lunghi e contorti comandi SQL sul Redo Transport è un rischio altissimo (Oracle lo chiama "Data Guard manuale").
+Il **Data Guard Broker** è un framework interno attivato tramite il processo demone `DMON`. Esso accentra tutta la configurazione in un singolo file di configurazione (`dr1.dat`/`dr2.dat`).
 
-- `MaxPerformance`;
-- `MaxAvailability`;
-- `MaxProtection`.
-
-### 14.5 Broker
-
-Il Broker centralizza la gestione con:
-
-- `DGMGRL`;
-- Enterprise Manager.
-
-Processo chiave:
-
-- `DMON`.
+Perché è fondamentale:
+- Crea un'astrazione: Tu parli con l'interfaccia testuale pazzesca chiamata **`DGMGRL`** o tramite l'intuitivo *Enterprise Manager* (OEM).
+- Basta digitare letteralmente `switchover to RACDB_STBY;` e decine di comandi criptici avvengono sotto il cofano. Non devi preoccuparti di alterare parameter files, riavviare istanze chiuse, o fare check incrociati degli SCN: fa tutto il processo DMON in sinergia tra i due siti.
 
 ---
 
-## 15. Diagnostica: ADR, Alert Log, Trace, AWR, ASH
+## 15. Diagnostica Strutturale: L'ADR e l'Investigazione degli Errori
 
-### 15.1 ADR
+### 15.1 ADR (Automatic Diagnostic Repository)
 
-L'ADR e' l'Automatic Diagnostic Repository.
+Quando il database entra in crisi mistica (`ORA-00600` o `ORA-07445`), la struttura ad albero su file system che trattiene tutti i referti medici prende il nome di ADR. È centralizzato in un percorso definito dal parametro `DIAGNOSTIC_DEST`.
+A differenza delle versioni vetuste di Oracle (>10g), in 19c ogni componente principale (Istanza, Listener, Istanza ASM, Clusterware) ha la propria `ADR Home`. L'utility rigorosa e vitale per interrogare senza pietà l'ADR da terminale Bash è `adrci`.
 
-Contiene:
+- **Alert Log**: Il "diario" maestro (sia XML che text).
+- **Trace Files (`.trc`) e Dump**: I "referti" lunghi, dove il processo che cade sbraita il proprio stack trace per il supporto tecnico (MOS).
+- **Incidenti (Incidents) e Packages (IPS)**: Se il database rileva un errore ciclopico ORA-00600 ("Baco software Oracle"), l'ADR lo codifica come `Incidente` univoco. `adrci` permette al DBA di impacchettare in due secondi tutti i trace e log di quell'inciampo dentro un comodo file zippato da mandare in allegato all'Oracle Support Engineer.
 
-- alert log;
-- trace files;
-- incidenti;
-- homes diagnostiche database, listener e ASM.
+### 15.2 Alert Log (`alert_SID.log`)
 
-Tool principale:
+Il santuario della diagnosi ad alto livello, è la prima riga che il DBA guarda al buio quando sente squillare l'allarme. 
+È un semplice file di testo sequenziale situato tipicamente sotto la cartella `/trace` nell'ADR.
 
-- `adrci`.
+Cosa devi cercarci ossessivamente:
+- Dettagli precisi di un crash e riavvii improvvisi (Tutti gli STARTUP e SHUTDOWN).
+- Eventuali mancanze di Spazio in RMAN o fallosità nell'Archiviare il redo (`ORA-00257`).
+- ORA-Errors non applicativi, che fermano i processi background centrali.
+- Modifiche ai parametri (scopri chi ha alterato a runtime un parametro critico e a che ora).
+- Lo stream di recupero o log-apply in Data Guard.
 
-### 15.2 Alert log
+### 15.3 Strumenti di Tuning (AWR, ASH e ADDM)
 
-E' il diario operativo del database.
+Una diagnosi non è solo sui crash, ma soprattutto sulle Performance azzoppate.
 
-Da controllare per:
+- **AWR (Automatic Workload Repository)**: Il "cervellone" statistico che interroga le metriche di I/O, Cache ed esecuzioni SQL prelevate dai processi MMON *ogni 60 minuti* di default. Produce snapshot pesantissimi e ti permette in un click di confrontare "Ieri alle 14" vs "Oggi alle 14", generando un Report HTML con evidenza dei principali wait-event e colli di bottiglia del sistema (es: Dischi saturati da `db file sequential read`).
+- **ASH (Active Session History)**: Mentre l'AWR ti offre dei macro-report orari totali, ASH fotografa la situazione esatta di tutte le v$session attive *ogni secondo*. Se ti serve sapere a chi diamine apparteneva l'SQL che ieri ha bloccato un processo per esattamente tre miseri minuti tra le 12:00 e le 12:03, lo trovi tramite le tabelle storiche `DBA_HIST_ACTIVE_SESS_HISTORY`.
+- **ADDM (Automatic Database Diagnostic Monitor)**: L'occhio esperto robotizzato. Ad ogni nuovo AWR snapshot generato, interviene lui analiticamente a produrre dei suggerimenti umani e chiari (Esempio: "Aggiungi più RAM al buffer cache perché questo SQL sta divorando la CPU in Hard Parse").
 
-- ORA errors;
-- archiver issues;
-- crash recovery;
-- Data Guard apply;
-- parameter changes;
-- startup e shutdown.
-
-### 15.3 Trace files
-
-Contengono dettaglio tecnico per processi o errori specifici.
-
-### 15.4 AWR, ASH, ADDM
-
-Sono strumenti di performance e diagnostica.
-
-Uso concettuale:
-
-- `AWR`: snapshot storici;
-- `ASH`: campionamento sessioni attive;
-- `ADDM`: analisi automatica.
-
-Nota pratica:
-
-- AWR, ASH e ADDM completi richiedono licenze o packs appropriati in produzione.
+*Avvertenza*: Questi strumenti fenomenali non sono gratuiti ma rientrano unicamente nelle licenze *Diagnostic Pack* o *Tuning Pack* in Oracle Enterprise Edition. Usarli senza licenza equivale a una violazione enorme di compliance nelle audit software.
 
 ---
 
-## 16. Dizionario Dati e Dynamic Performance Views
+## 16. Dizionario Dati e le Dynamic Performance Views
 
-Due famiglie fondamentali.
+Come si capisce cosa c'è "nella testa" o "sui dischi" di Oracle in tempo reale? Lo fai con banali query `SELECT`. Oracle codifica se stesso dentro speciali viste divise in due macro e sacre famiglie.
 
-### 16.1 DBA_, ALL_, USER_
+### 16.1 Famiglia Statica / Metadata (DBA_, ALL_, USER_)
 
-Metadati persistenti:
+Rappresentano i metadati "immobili", come la geometria salvata in cassaforte sul tablespace SYSTEM. Ereditano sempre lo stesso suffisso a seconda dei privilegi di chi esegue la query:
+- `USER_TABLES`: Rivela all'utente X le tabelle create di proprietà dell'utente X (Il suo mondo circoscritto).
+- `ALL_TABLES`: Mostra all'utente X anche le incredibili tabelle di proprietà degli utenti Y o Z verso le quali X abbia ricevuto preventivi permessi stridenti di `GRANT SELECT`.
+- `DBA_TABLES`: Il potere dell'Amministratore Totale. Mostra l'interezza di ogni dannato oggetto nel database, indipendentemente dai permessi del piccolo utente di turno, consentendo una diagnosi dall'alto. In queste view DBA cerchi ad esempio gli storici log spaziali in `DBA_DATA_FILES` e le code Undo in `DBA_UNDO_EXTENTS`.
 
-- oggetti;
-- utenti;
-- tablespace;
-- quote;
-- segmenti.
+### 16.2 Famiglia Dinamica Runtime (Le misteriose V$ e GV$)
 
-### 16.2 V$ e GV$
+Rivelano l'esatto istante presente caricato in Memoria (SGA/PGA). Queste non sono tabelle fisicamente scritte sui dischi in modo permanente, ma proiezioni live dei parametri dei background server processes lette "in tempo reale" scansionando i bit nella RAM. Esplodono se spegni l'istanza.
 
-Vista runtime dinamica.
-
-- `V$`: istanza locale;
-- `GV$`: cluster-wide in RAC.
+- **V$ (Visualizzazioni Istanza Locale)**: Si riferiscono rigorosamente all'attività del *singolo calcolatore (Istanza)* su cui hai aperto il terminale in esecuzione.
+- **GV$ (Global Views per RAC)**: Essenziali quando l'Oracle gira in Cluster Multi-Nodo. Una query su `GV$SESSION` anziché interrogare solo le attuali tre sessioni utente su `rac1` e tralasciare i poveracci su `rac2`, scende ai daemon interni di Cache Fusion e raduna magicamente i process state di entrambe le SGA, restituendoti il quadro applicativo collettivo di tutta l'intera infrastruttura RAC nel suo mastodontico insieme.
 
 Viste da conoscere.
 
