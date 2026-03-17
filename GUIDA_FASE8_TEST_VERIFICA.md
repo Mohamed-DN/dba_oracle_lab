@@ -1,12 +1,12 @@
-# FASE 6: Test di Verifica (Data Guard + GoldenGate)
+# FASE 8: Test di Verifica (Data Guard + RMAN + EM + GoldenGate)
 
-> Questa fase è cruciale. Un sistema che non è stato testato è un sistema che non funziona. Qui eseguiamo test end-to-end per verificare che TUTTA la catena (RAC Primary → DG Standby → GG Target) sia operativa.
+> Questa fase è cruciale. Un sistema che non è stato testato è un sistema che non funziona. Qui eseguiamo test end-to-end per verificare che TUTTA la catena (RAC Primary → DG Standby → Backup → EM Alerts → GG Target) sia operativa.
 
 ---
 
-## 6.0 Ingresso da Fase 5 (preflight)
+## 8.0 Ingresso da Fase 7 (preflight)
 
-Questa fase e un test di sistema: non partire se la Fase 5 non e stabile.
+Questa fase e un test di sistema: non partire se la Fase 7 (GoldenGate) non e stabile, e se RMAN (Fase 5) o EM (Fase 6) non sono configurati.
 
 Checklist minima:
 
@@ -32,9 +32,9 @@ Requisiti:
 - Replicat target (`REPTAR`) `RUNNING` su UI Microservices
 - standby in stato coerente con i test (tipicamente `READ ONLY WITH APPLY`)
 
-Per test avanzati usa la matrice completa in [GUIDA_FASE5_GOLDENGATE.md](./GUIDA_FASE5_GOLDENGATE.md) sezione 5.13.
+Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) sezione 7.13.
 
-## 6.1 Test Data Guard — Verifica Redo Transport
+## 8.1 Test Data Guard — Verifica Redo Transport
 
 ### Sul Primario: Genera traffico
 
@@ -106,7 +106,7 @@ SHOW DATABASE RACDB_STBY;
 
 ---
 
-## 6.2 Test Data Guard — Switchover Completo
+## 8.2 Test Data Guard — Switchover Completo
 
 ```bash
 dgmgrl sys/<password>@RACDB
@@ -158,7 +158,7 @@ SHOW CONFIGURATION;
 
 ---
 
-## 6.3 Test GoldenGate — Verifica Replica End-to-End
+## 8.3 Test GoldenGate — Verifica Replica End-to-End
 
 ### Sullo Standby: Verifica stato processi GG
 
@@ -227,7 +227,7 @@ GGSCI> STATS EXTRACT pump_racdb, LATEST
 
 ---
 
-## 6.4 Test di Stress — Volume
+## 8.4 Test di Stress — Volume
 
 ```sql
 -- Sul Primario
@@ -256,7 +256,7 @@ SELECT COUNT(*) FROM testdg.test_replica;
 
 ---
 
-## 6.5 Test DML Completo (INSERT / UPDATE / DELETE)
+## 8.5 Test DML Completo (INSERT / UPDATE / DELETE)
 
 ```sql
 -- Sul Primario
@@ -288,7 +288,7 @@ SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
 
 ---
 
-## 6.6 Tabella Riassuntiva Test
+## 8.6 Tabella Riassuntiva Test
 
 | # | Test | Dove | Risultato Atteso | ✅/❌ |
 |---|---|---|---|---|
@@ -305,7 +305,7 @@ SELECT * FROM testdg.test_replica WHERE id IN (1, 2, 9999);
 
 ---
 
-## 6.7 Test Node Failure — Simulazione Crash RAC
+## 8.7 Test Node Failure — Simulazione Crash RAC
 
 > Questo è il test più importante: il RAC deve sopravvivere alla perdita di un nodo.
 
@@ -366,7 +366,7 @@ srvctl status database -d RACDB
 
 ---
 
-## 6.8 Test GoldenGate dopo Switchover
+## 8.8 Test GoldenGate dopo Switchover
 
 > CRITICO: Dopo un switchover Data Guard, GoldenGate deve continuare a funzionare.
 
@@ -413,7 +413,7 @@ GGSCI> INFO ALL
 
 ---
 
-## 6.9 Troubleshooting — Problemi Comuni e Soluzioni
+## 8.9 Troubleshooting — Problemi Comuni e Soluzioni
 
 ### Problemi Cluster (Clusterware)
 
@@ -497,7 +497,7 @@ cat $OGG_HOME/dirrpt/ext_racdb.rpt
 
 ---
 
-## 6.10 Tabella Riassuntiva Test COMPLETA
+## 8.10 Tabella Riassuntiva Test COMPLETA
 
 | # | Test | Dove | Risultato Atteso | ✅/❌ |
 |---|---|---|---|---|
@@ -519,4 +519,6 @@ cat $OGG_HOME/dirrpt/ext_racdb.rpt
 
 ---
 
-**→ Prossimo: [FASE 7: Strategia RMAN Backup](./GUIDA_FASE7_RMAN_BACKUP.md)**
+## 🎉 Congratulazioni (Lab Oracle Completo)
+
+Hai verificato accuratamente tutti i componenti dell'ecosistema. Questo conclude le guide passo-passo della tua infrastruttura di base.

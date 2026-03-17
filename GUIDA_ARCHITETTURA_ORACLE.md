@@ -1326,13 +1326,41 @@ Nel tuo laboratorio questi concetti diventano concreti cosi'.
 - `DMON` = processo chiave;
 - `DGConnectIdentifier`, protection mode, switchover, failover = gestione HA e DR vera.
 
-### Extra DBA
+### Extra DBA e Oracle Moderno (21c/23ai)
 
-- PDB propagation primary -> standby;
-- services PDB `PRIMARY` vs `PHYSICAL_STANDBY`;
-- EM, RMAN, TDE, troubleshooting listener e alert log.
+- Le nuove versioni di Oracle spingono pesantemente su AI Vector Search per RAG e machine learning.
+- **Oracle 23ai True Cache**: un approccio rivoluzionario per alleggerire il carico sul DB: una cache SQL in memoria ad alte prestazioni gestita trasparentemente da Oracle.
+- EM (Enterprise Manager 13c) offre la console unificata per monitorare questo ecosistema (Fase 6).
+- RMAN (Fase 5) protegge il db primario, standby e target.
+- GoldenGate (Fase 7) permette lo scarico in tempo reale verso Local (Oracle 21c/23ai) o Cloud (es. OCI Data Integrator o Microservices).
 
 ---
+
+## 20. Architettura Completa del tuo Ecosistema Lab
+
+```text
++-------------------------------------------------------------+
+|               ORACLE ENTERPRISE MANAGER (13c)               |
+|                      (Monitoraggio)                         |
++------------------------------+------------------------------+
+                               |
+                   +-----------+-----------+
+                   |                       |
+           +-------v-------+       +-------v-------+
+           |  (FASE 4)     |       |   (FASE 4)    |
+           |  RAC PRIMARY  +------>+ RAC STANDBY   |
+           |    (RACDB)    | Redo  | (RACDB_STBY)  |
+           +-------+-------+       +-------+-------+
+                   |                       |
+           (FASE 5 - RMAN)                 |
+              Backups to FRA               |
+                                           | (FASE 7 - GoldenGate)
+                                           v
+                                   +-------v-------+
+                                   |  TARGET DB    |
+                                   | (Local/Cloud) |
+                                   +---------------+
+```
 
 ## 20. Query Minime da Sapere a Memoria
 

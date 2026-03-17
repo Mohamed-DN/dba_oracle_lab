@@ -607,4 +607,4 @@ DGMGRL> SHOW DATABASE RACDB_STBY;
 
 ---
 
-**→ Prossimo: [FASE 5: Configurazione GoldenGate](./GUIDA_FASE5_GOLDENGATE.md)**
+**→ Prossimo: [FASE 5: Strategia RMAN Backup](./GUIDA_FASE5_RMAN_BACKUP.md)**
