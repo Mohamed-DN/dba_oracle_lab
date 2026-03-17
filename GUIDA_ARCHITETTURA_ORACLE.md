@@ -55,6 +55,9 @@ graph TD
     ORACLE_INSTANCE -- "Legge / Scrive" --> DATABASE_FILES
 ```
 
+> **Spiegazione Architetturale del Diagramma (Istanza e Database):**
+> Il diagramma mostra la netta e inviolabile separazione tra il "motore di calcolo" volatile e lo "storage" permanente. In alto c'è l'**Istanza Oracle** (che vive solo nella RAM del server e nei cicli di CPU), composta dalla grande memoria pubblica SGA, dalle piccole memorie private PGA e dalle decine di processi in background che lavorano senza sosta. In basso c'è il vero e proprio **Database Fisico**, ovvero file residenti in modo permanente sui dischi o SAN. L'Istanza è l'unico tramite che "Legge e Scrive" verso questi file. Se il server prende fuoco, l'Istanza evapora all'istante (perdendo la RAM), ma finché i Database Files (in basso) sono intatti sui dischi esterni, non hai perso una singola transazione committata.
+
 Definizioni corrette:
 
 - `istanza` = memoria + processi;
@@ -76,6 +79,9 @@ graph TD
     C["MOUNT<br>(control file aperto)<br>(struttura nota)"] --> D
     D["OPEN<br>(datafile e redo aperti)<br>(utenti ammessi)"]
 ```
+
+> **Spiegazione del Flusso di Avvio (Startup):**
+> Il viaggio dall'oscurità al database operativo segue tappe obbligate di sicurezza. Al lancio del comando `STARTUP` (A), Oracle sveglia l'istanza entrando in **NOMOUNT** (B); qui la RAM (SGA) e i Processi nascono "alla cieca" consultando solo il Parameter File, senza sapere dove siano i dati reali. Nel passo successivo **MOUNT** (C), l'istanza recupera il `Control File` (il catalogo strutturale), scopre finalmente la posizione e il nome intero di tutti i Datafile e i Redo log sparsi sui dischi, ma tenendoli bloccati per operazioni amministrative. Solo nell'ultimo salto verso **OPEN** (D), Oracle sblocca fisicamente le valvole: verifica matematicamente l'integrità totale tra header dei file e control file (SCN), ripara in background eventuali corruzioni residue di un vecchio crash (Instance Recovery) e infine lascia entrare le applicazioni per fare query.
 
 ---
 
@@ -164,6 +170,10 @@ graph TB
         end
     end
 ```
+
+> **Spiegazione del Modello di Memoria (SGA vs PGA):**
+> La topologia della RAM in Oracle è simile a un grande ufficio. La scatola superiore **SGA (System Global Area)** rappresenta l'"area comune condivisa": c'è la **Buffer Cache** (l'immenso tavolo di lavoro dove vengono depositati i dati grezzi estratti dai dischi affinché tutti possano leggerli a velocità-RAM), la **Shared Pool** (l'enorme schedario delle query e dei piani di volo già analizzati) e il **Redo Buffer** (il vassoio dove si accumulano freneticamente le registrazioni delle modifiche prima di esser "scaricate" sul disco fisso).
+> La scatola inferiore **PGA (Program Global Area)** rappresenta invece la "scrivania privata asoolutamente isolata" di ciascun impiegato (il Server Process). Se tu utente hai chiesto di ordinare per ordine alfabetico un milione di record (`ORDER BY`), questo "ordinamento mentale (Sort/Hash)" viene fatto in gran segreto e al riparo da occhi indiscreti nella tua *PGA privata*, non disturbando così la memoria pubblica SGA.
 
 ### 3.1 SGA: memoria condivisa dell'istanza
 
@@ -387,6 +397,15 @@ flowchart TD
     Bind --> Execute["3. Execute"]
     Execute --> Fetch["4. Fetch"]
 ```
+
+> **Spiegazione del Flusso di Esecuzione di una Query (Lifecycle):**
+> Il percorso completo per far girare una semplice `SELECT *` è incredibilmente elaborato. 
+> Tutto parte della **Client App** (che potrebbe essere il tuo script Python o DBeaver), che contatta l'antenna direzionale chiamata **Listener**. Il Listener lo rimbalza dentro l'**Istanza** assegnandogli o creandogli al volo un "maggiordomo privato" (il **Server Process**).
+> A questo punto iniziano i "4 Salti Sacri" della SQL: 
+> 1) Il **Parse**: Il server controlla grammatica, permessi e decide la "strada col navigatore GPS" più veloce (Execution Plan tramite il CBO).
+> 2) Il **Bind**: Traduce e incolla le variabili dinamiche segrete passate dall'utente (es: `WHERE ID = :1`) al posto dei segnaposti.
+> 3) L'**Execute**: L'azione pulsante! Si acquisiscono i Lock, si caricano i blocchi fisici dai Datafile alla memoria Buffer Cache (se non ci sono già) e si applicano le eventuali modifiche (Undo e Redo logici).
+> 4) Il **Fetch**: Avviene per le sole letture o ritorni. Il server impacchetta le righe trovate e gliele lancia indietro via rete TCP al Client un "X righe alla volta" (Array Fetching) per non intasare l'infrastruttura.
 
 ### 5.1 Parse (Analisi sintattica e ottimizzazione)
 
@@ -714,6 +733,9 @@ flowchart TD
     CKPT --> DBWn["DBWn scarica il dirty block più tardi"]
 ```
 
+> **Spiegazione del Flusso di Scrittura (Write-Ahead Logging):**
+> Quando lanci un `UPDATE`, non scrivi minimamente sul file dei dati! Subito Oracle cerca il blocco in cache o lo legge dal disco se assente. Una volta in memoria, Oracle non tocca i dati prima di essersi protetto: **1)** Genera le informazioni di rollback nell'UNDO. **2)** Dichiara l'intenzione creando voci di REDO a raffica. **3)** A questo punto "sporca" davvero (Dirty) il blocco in Buffer Cache. Quando dai il comando esplicito `COMMIT`, il processo finale LGWR viene fulmineamente svegliato e costretto a sparare il REDO su disco sequenziale. Fatto questo salto salvavita, il tuo client riceve un glorioso "Ok, salvato!". Molto tempo dopo (Lazy writing), quando scatta il Checkpoint (CKPT), sarà il sonnolento DBWn a svuotare realmente il blocco dirty sul lentissimo Datafile fisico su disco.
+
 Regola d'oro:
 
 - redo prima dei datafile;
@@ -734,6 +756,9 @@ graph TD
     REG --> DG[Role-based service Data Guard]
 ```
 
+> **Spiegazione Architetturale (Ecosistema di Connessione):**
+> Nel diagramma, l'utente (Applicazione) punta ciecamente al Listener usando soltanto un `SERVICE_NAME` logico (es. `ecommerce_db`). Il Listener non ha la più pallida idea di dove stia fisicamente l'Istanza all'accensione. L'intelligenza sta sotto: è il background process **LREG (Listener Registration)** del Database stesso ad alzarsi e "bussare alla porta" del Listener dicendogli: *"Ehi, io sono l'Instance 1, sono vivo, gestisco il service 'ecommerce_db' e sono carico al 50%. Passami le connessioni!"*. In ambienti RAC o Data Guard, LREG notifica l'intero ecosistema permettendo bilanciamenti fluidi senza che tu debba mai modificare i file `tnsnames.ora`.
+ 
 ### 10.1 Listener
 
 Il listener ascolta richieste di connessione e le inoltra al service corretto.
@@ -798,6 +823,10 @@ graph TD
         PDB2["APP_PDB2<br>(Dati App 2, Utenti Locali)"]
     end
 ```
+
+> **Spiegazione Visiva del Multitenant (CDB/PDB):**
+> La struttura è concettualmente ricalcata dall'idea delle macchine virtuali, ma per i database. L'involucro esterno titanico è il **CDB ROOT**: esso "Paga l'affitto" dell'intera memoria RAM e dei processi background condivisi da tutti (ha i propri redo log e process manager che reggono il sistema).
+> Al suo interno, isolati l'uno dall'altro come in tanti appartamenti privati, risiedono i **Pluggable Databases (PDB)**. Il `PDB$SEED` funge unicamente da stampino read-only per colare nuovi PDB puliti. I PDB numerati `APP_PDB1` e `APP_PDB2` sono invece i veri e propri database virtualizzati delle varie applicazioni cliente: credono di essere autonomi, possiedono i propri utenti finali e i propri Tablespace, ma in realtà demandano l'utilizzo di CPU e RAM all'Istanza Madre condivisa.
 
 ### 11.1 Componenti
 
@@ -875,6 +904,10 @@ graph TD
     ASM --> RECO["+RECO<br>Archivelog<br>Backup Pieces<br>Flashback Logs<br>Copies"]
 ```
 
+> **Spiegazione del Flusso ASM:**
+> Il diagramma mostra come il Database venga completamente accecato: non vede più gli Hard Disk. Vede solo l'Istanza ASM, che fa da intermediario magico e traduttore.
+> A destra, i cilindri (Disk Groups) rappresentano le enormi piscine di dischi raggruppati: `+DATA` ingerisce e smista a velocità folli tutta l'operatività I/O calda (Datafile, log attivi), mentre `+RECO` ingurgita senza sosta i dati storici di salvataggio (Archivi e copie RMAN).
+
 ---
 
 ## 13. RAC: Architettura Cluster
@@ -898,6 +931,11 @@ graph TD
     I1 --> SS
     I2 --> SS
 ```
+
+> **Spiegazione del Flusso Cluster RAC:**
+> La potenza mostruosa del RAC è visibile qui! Sotto hai un singolo Database inossidabile posato sui dischi ASM. Ma sopra? Hai due o più nodi di calcolo (Istanze) armati di tonnellate di RAM (SGA/PGA). 
+> Le frecce verticali (`I1 --> SS`) mostrano che ogni nodo legge e scrive simultaneamente sugli stessi Datafile fottendosene degli altri grazie a lock distribuiti.
+> La gigantesca freccia orizzontale al centro (`Cache Fusion`) è l'esclusiva rete in fibra (Interconnect): se il Node 1 ha in RAM i salari dei dipendenti, e il Node 2 deve calcolare le tasse, il Node 2 non scende ai dischi lenti (SS), ma "risucchia" i dati direttamente dalla RAM del Node 1 tramite Cache Fusion a latenza zero.
 
 ### 13.1 Il Paradigma del "Condiviso ma Indipendente"
 
@@ -954,6 +992,12 @@ graph LR
     LGWR -- "Redo Transport" --> SRL
 ```
 
+> **Spiegazione Visiva del Data Guard:**
+> Due server distanti chilometri in due Data Center diversi uniti da un tracciante di rete. 
+> Nel Primary (a sinistra), l'utente modifica qualcosa. L'indefesso processo `LGWR` annota fulmineamente queste modifiche nel proprio *Online Redo Log*. 
+> Simultaneamente o asincronamente (a seconda della modalità di sicurezza voluta), dei processi di backend arpionano questo flusso di log e lo "Sparano" sul cavo di rete (*Redo Transport*). 
+> Il server Standby (a destra) è in profonda ricezione: i processi RFS inzuppano gli *Standby Redo Log* con le nuove modifiche, e infine l'operaio silente `MRP0` (Managed Recovery Process) legge questi log e li scava fisicamente sui Datafile del db di salvataggio, tenendoli allineati al millisecondo col primario.
+
 ### 14.1 Componenti concettuali essenziali
 
 - Primary database: chi detiene i Dati attivi in Read/Write.
@@ -976,6 +1020,12 @@ flowchart LR
     T --> R["Standby Receives Redo (RFS/SRL)"]
     R --> A["Apply Services Apply Redo (MRP)"]
 ```
+
+> **Micro-Analisi del Flusso Dati Standby:**
+> 1) Il Primario genera REDO (la ricetta chimica della transazione).
+> 2) Il Transport Network lancia la ricetta via etere.
+> 3) Lo Standby cattura la ricetta mettendola in RAM o su SRL.
+> 4) I servizi *Apply* fungono da cuoco: eseguono ciecamente la ricetta macinando I/O locale copiando la transazione "originale" senza perdersi una sillaba.
 
 ### 14.4 Ruoli e modalita'
 
