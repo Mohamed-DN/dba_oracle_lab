@@ -4,6 +4,25 @@
 
 ---
 
+## 0. Glossario Rapido per Principianti
+
+> Se sei nuovo al mondo database, questi termini sono i "mattoni" fondamentali dell'ecosistema Oracle.
+
+- **Istanza (Instance)**: I processi in esecuzione e la memoria (RAM) allocata sul server. Esiste solo quando il server è acceso. Se riavvii la macchina, questa "Scompare" per poi ricrearsi.
+- **Database**: I file reali salvati sul disco fisso (l'hard disk). Questi non scompaiono quando spegni la macchina. Contengono sia i tuoi dati che i file di log per la sicurezza.
+- **SGA (System Global Area)**: La grande "memoria condivisa" (pool di RAM) che tutti i processi dell'istanza Oracle utilizzano insieme per lavorare velocemente senza accedere sempre al disco.
+- **PGA (Program Global Area)**: La "memoria privata" assegnata a ogni signola connessione o processo. Ad esempio, se fai un `ORDER BY`, Oracle fa il calcolo qui dentro in privato.
+- **Tablespace**: Un raccoglitore logico. È come una cartella di Windows: tu salvi i tuoi dati in un "Tablespace", e Oracle si preoccupa di spalmarli nei veri file fisici su disco (Datafiles).
+- **Redo Log**: Il diaro di bordo in cui Oracle scrive *qualsiasi modifica* tu faccia prima ancora di salvarla fisicamente nei Datafile. Serve per il recupero in caso di crash.
+- **Undo**: I dati temporanei usati per "Tornare indietro" (Rollback) o per permettere agli altri utenti di leggere i vecchi dati intanto che tu li stai modificando (Read Consistency).
+- **Data Guard**: Il sistema di sicurezza primario per avere un "Database Copia" (Standby) costantemente allineato a quello principale (Primary) per il Disaster Recovery.
+- **Oracle RAC (Real Application Clusters)**: Una tecnologia che ti permette di avere *più istanze* (su più server di calcolo) che operano contemporaneamente sullo *stesso database* fisico. Ideale per Alte Prestazioni (High Availability) e Scalabilità (Load Balancing).
+- **GoldenGate**: Lo strumento che permette di "replicare" e sincronizzare dati tra Oracle e altri database (o tra versioni diverse di Oracle, anche in Cloud) in tempo reale.
+- **Enterprise Manager**: Il pannello di controllo web (una grande dashboard unificata) che un DBA usa per capire lo stato di salute e gestire tutti i database da una sola pagina web.
+- **ASM (Automatic Storage Management)**: Una sorta di file system speciale creato da Oracle per gestire in modo autonomo il salvataggio dei file del DB distribuiti su più dischi.
+
+---
+
 ## 1. Modello Mentale di Base
 
 Un database Oracle e' composto da due parti distinte:
@@ -11,37 +30,29 @@ Un database Oracle e' composto da due parti distinte:
 1. l'istanza Oracle;
 2. il database fisico su disco.
 
-```text
-+---------------------------------------------------------------+
-|                        ORACLE INSTANCE                         |
-|                                                               |
-|  SGA (memoria condivisa)                                      |
-|  - Database Buffer Cache                                      |
-|  - Shared Pool                                                |
-|  - Redo Log Buffer                                            |
-|  - Large Pool / Java Pool / Streams Pool                      |
-|                                                               |
-|  PGA (memoria privata per processo)                           |
-|                                                               |
-|  Processi                                                     |
-|  - Server processes                                           |
-|  - Background processes                                       |
-+-------------------------------+-------------------------------+
-                                |
-                                | legge / scrive
-                                v
-+---------------------------------------------------------------+
-|                        DATABASE FILES                          |
-|                                                               |
-|  Datafiles                                                    |
-|  Tempfiles                                                    |
-|  Control files                                                |
-|  Online redo logs                                             |
-|  Archived redo logs                                           |
-|  SPFILE / PFILE                                               |
-|  Password file                                                |
-|  FRA                                                          |
-+---------------------------------------------------------------+
+```mermaid
+graph TD
+    subgraph ORACLE_INSTANCE["ORACLE INSTANCE (Memoria & Processi)"]
+        subgraph SGA["SGA (Memoria Condivisa)"]
+            BC[Database Buffer Cache]
+            SP[Shared Pool]
+            RLB[Redo Log Buffer]
+            LP[Large/Java/Streams Pool]
+        end
+        PGA["PGA (Memoria Privata)"]
+        PROC["Processi (Server & Background)"]
+    end
+
+    subgraph DATABASE_FILES["DATABASE FILES (Disco Fisico)"]
+        DF[Datafiles]
+        TF[Tempfiles]
+        CF[Control files]
+        ORL[Online redo logs]
+        ARL[Archived redo logs]
+        PF[SPFILE / Password file]
+    end
+
+    ORACLE_INSTANCE -- "Legge / Scrive" --> DATABASE_FILES
 ```
 
 Definizioni corrette:
@@ -58,29 +69,12 @@ Concetto chiave:
 
 Blocco visivo:
 
-```text
-           STARTUP
-              |
-              v
-   +-----------------------+
-   | NOMOUNT               |
-   | SGA + processi attivi |
-   | nessun control file   |
-   +-----------------------+
-              |
-              v
-   +-----------------------+
-   | MOUNT                 |
-   | control file aperto   |
-   | struttura nota        |
-   +-----------------------+
-              |
-              v
-   +-----------------------+
-   | OPEN                  |
-   | datafile e redo aperti|
-   | utenti ammessi        |
-   +-----------------------+
+```mermaid
+graph TD
+    A([STARTUP]) --> B
+    B["NOMOUNT<br>(SGA + processi attivi)<br>(nessun control file)"] --> C
+    C["MOUNT<br>(control file aperto)<br>(struttura nota)"] --> D
+    D["OPEN<br>(datafile e redo aperti)<br>(utenti ammessi)"]
 ```
 
 ---
@@ -167,18 +161,19 @@ Oracle usa due grandi aree di memoria:
 
 Schema rapido:
 
-```text
-+-------------------------------------------------------------------+
-|                           ORACLE INSTANCE                          |
-|                                                                   |
-|  +--------------------------- SGA -------------------------------+ |
-|  | Buffer Cache | Shared Pool | Redo Buffer | Large/Java/Streams| |
-|  +---------------------------------------------------------------+ |
-|                                                                   |
-|  +--------------------------- PGA -------------------------------+ |
-|  | memoria privata del singolo processo: sort, hash, stack      | |
-|  +---------------------------------------------------------------+ |
-+-------------------------------------------------------------------+
+```mermaid
+graph TB
+    subgraph ORACLE_INSTANCE["ORACLE INSTANCE"]
+        subgraph SGA["SGA (System Global Area) - Condivisa"]
+            BC[Buffer Cache]
+            SP[Shared Pool]
+            RB[Redo Buffer]
+            LP[Large/Java/Streams]
+        end
+        subgraph PGA["PGA (Program Global Area) - Privata"]
+            MEM[Memoria singola sessione: Sort, Hash, Stack]
+        end
+    end
 ```
 
 ### 3.1 SGA: memoria condivisa dell'istanza
@@ -397,32 +392,15 @@ Servono a:
 
 Flusso semplificato.
 
-```text
-1. Client invia SQL
-2. Listener inoltra al service corretto
-3. Server process riceve SQL
-4. Parse
-5. Bind
-6. Execute
-7. Lettura blocchi o accesso indici
-8. Fetch righe al client
-```
-
-Disegno mentale:
-
-```text
-Client
-  |
-  v
-Listener -> Service -> Istanza
-  |
-  v
-Server Process
-  |
-  +--> Parse
-  +--> Bind
-  +--> Execute
-  +--> Fetch
+```mermaid
+flowchart TD
+    Client[Client App] --> Listener[Listener]
+    Listener -- "Inoltra (Service)" --> Istanza[Istanza Oracle]
+    Istanza --> ServerProcess[Server Process]
+    ServerProcess --> Parse[1. Parse]
+    Parse --> Bind[2. Bind]
+    Bind --> Execute[3. Execute]
+    Execute --> Fetch[4. Fetch]
 ```
 
 ### 5.1 Parse
@@ -471,30 +449,28 @@ Importante:
 
 Schema del commit:
 
-```text
-Sessione
-  |
-  | UPDATE
-  v
-Server process
-  |
-  +--> modifica blocco in Buffer Cache
-  +--> genera UNDO
-  +--> genera REDO
-               |
-               v
-        Redo Log Buffer
-               |
-               v
-             LGWR
-               |
-               v
-      Online Redo Log su disco
-               |
-               v
-           COMMIT OK
-
-DBWn scrive i datafile dopo.
+```mermaid
+sequenceDiagram
+    participant S as Sessione
+    participant SP as Server Process
+    participant DBWn as DBWn (Data Writer)
+    participant RLB as Redo Log Buffer
+    participant LGWR as LGWR (Log Writer)
+    participant ORL as Online Redo Log
+    participant DF as Datafiles
+    
+    S->>SP: UPDATE
+    SP->>SP: 1. Modifica blocco in Buffer Cache
+    SP->>SP: 2. Genera UNDO in memoria
+    SP->>RLB: 3. Genera REDO e lo salva in RAM
+    S->>SP: COMMIT
+    SP->>LGWR: 4. Chiede scrittura redo
+    LGWR->>ORL: 5. Scrive dal Redo Log Buffer al disco
+    ORL-->>LGWR: 
+    LGWR-->>SP: 
+    SP-->>S: COMMIT COMPLETATO (Veloce)
+    Note over DBWn,DF: Più tardi (modalità Lazy) DBWn\nscrive il blocco modificato.
+    DBWn->>DF: 6. Scrive blocco "Dirty" su Datafile
 ```
 
 Questa e' la parte che separa chi usa Oracle da chi lo capisce.
@@ -601,12 +577,12 @@ Oracle separa architettura logica e fisica.
 
 Ordine logico corretto:
 
-```text
-Database
-  -> Tablespace
-     -> Segment
-        -> Extent
-           -> Block
+```mermaid
+graph TD
+    DB[Database] --> TS[Tablespace]
+    TS --> SEG[Segment]
+    SEG --> EXT[Extent]
+    EXT --> BLK[Block]
 ```
 
 ### 7.1 Data block
@@ -801,23 +777,20 @@ Questo e' il flusso da sapere a memoria.
 
 Vista step-by-step:
 
-```text
-UPDATE
-  |
-  +--> blocco letto o gia' in cache
-  +--> undo generato
-  +--> redo generato
-  +--> blocco diventa dirty
+```mermaid
+flowchart TD
+    UPDATE[UPDATE] --> Fetch[Blocco letto o già in cache]
+    Fetch --> UNDO[UNDO Generato]
+    UNDO --> REDO[REDO generato]
+    REDO --> Dirty[Blocco diventa Dirty]
 
-COMMIT
-  |
-  +--> LGWR forza il redo su disco
-  +--> Oracle conferma il commit
+    Dirty --> COMMIT[COMMIT]
+    COMMIT --> LGWR[LGWR forza REDO su disco]
+    LGWR --> Confirm[Oracle conferma il Commit al Client]
 
-POST-COMMIT
-  |
-  +--> CKPT aggiorna checkpoint info
-  +--> DBWn scarica il dirty block piu' tardi
+    Confirm --> POST[POST-COMMIT]
+    POST --> CKPT[CKPT aggiorna checkpoint info]
+    CKPT --> DBWn[DBWn scarica il dirty block più tardi]
 ```
 
 Regola d'oro:
@@ -831,19 +804,13 @@ Regola d'oro:
 
 Blocco visivo:
 
-```text
-Applicazione / sqlplus
-        |
-        v
-     Listener
-        |
-        | usa SERVICE_NAME
-        v
-   Service registration
-        |
-        +--> instance 1
-        +--> instance 2
-        +--> role-based service Data Guard
+```mermaid
+graph TD
+    APP[Applicazione / SQL*Plus] -->|Usa SERVICE_NAME| LIST[Listener]
+    LIST --> REG[Service Registration LREG]
+    REG --> I1[Instance 1]
+    REG --> I2[Instance 2]
+    REG --> DG[Role-based service Data Guard]
 ```
 
 ### 10.1 Listener
@@ -901,17 +868,13 @@ Dal punto di vista 19c, l'architettura multitenant e' centrale.
 
 Schema CDB/PDB:
 
-```text
-+---------------------------------------------------------------+
-|                           CDB ROOT                            |
-|  processi, memoria, redo, undo, dizionario comune            |
-|                                                               |
-|  +----------------+  +----------------+  +----------------+   |
-|  | PDB$SEED       |  | APP_PDB1       |  | APP_PDB2       |   |
-|  | template       |  | dati app 1     |  | dati app 2     |   |
-|  | read only      |  | utenti locali  |  | utenti locali  |   |
-|  +----------------+  +----------------+  +----------------+   |
-+---------------------------------------------------------------+
+```mermaid
+graph TD
+    subgraph CDB_ROOT["CDB ROOT (Processi, Memoria, Redo, Undo, Dizionario Comune)"]
+        SEED["PDB$SEED<br>(Template, Read Only)"]
+        PDB1["APP_PDB1<br>(Dati App 1, Utenti Locali)"]
+        PDB2["APP_PDB2<br>(Dati App 2, Utenti Locali)"]
+    end
 ```
 
 ### 11.1 Componenti
@@ -996,20 +959,11 @@ Perche' ASM e' importante:
 
 Blocco visivo:
 
-```text
-Database / Grid
-      |
-      v
-   ASM instance
-      |
-   +--+----------------------+
-   |                         |
-   v                         v
-+DATA                     +RECO
-datafile                  archivelog
-controlfile               backup pieces
-online redo               flashback logs
-spfile/password file      copies
+```mermaid
+graph TD
+    DB[Database / Grid] --> ASM[ASM Instance]
+    ASM --> DATA[+DATA<br>Datafile<br>Controlfile<br>Online Redo<br>SPFILE / Password File]
+    ASM --> RECO[+RECO<br>Archivelog<br>Backup Pieces<br>Flashback Logs<br>Copies]
 ```
 
 ---
@@ -1020,20 +974,20 @@ RAC significa piu' istanze che aprono lo stesso database condiviso.
 
 Schema RAC:
 
-```text
-             +---------------- Shared Storage ----------------+
-             | Datafiles / Controlfiles / Redo / SPFILE / ASM |
-             +-------------------+-----------------------------+
-                                 ^
-                                 |
-        +------------------------+------------------------+
-        |                                                 |
-        v                                                 v
-+---------------------+                         +---------------------+
-| Instance RACDB1     |<-- Cache Fusion / GCS ->| Instance RACDB2     |
-| Node rac1           |                         | Node rac2           |
-| SGA + PGA + proc    |                         | SGA + PGA + proc    |
-+---------------------+                         +---------------------+
+```mermaid
+graph TD
+    subgraph SHARED_STORAGE["Shared Storage (ASM)"]
+        SS[Datafiles / Controlfiles / Redo / SPFILE]
+    end
+
+    subgraph RAC["Oracle RAC Cluster"]
+        I1["Instance RACDB1 (Node rac1)<br>SGA + PGA + proc"]
+        I2["Instance RACDB2 (Node rac2)<br>SGA + PGA + proc"]
+    end
+
+    I1 <--> |Cache Fusion / GCS| I2
+    I1 --> SS
+    I2 --> SS
 ```
 
 ### 13.1 Cosa condividono le istanze RAC
@@ -1092,22 +1046,19 @@ Data Guard protegge il database con uno o piu' standby.
 
 Schema redo transport:
 
-```text
-PRIMARY (RACDB)                               STANDBY (RACDB_STBY)
+```mermaid
+graph LR
+    subgraph PRIMARY["PRIMARY (RACDB)"]
+        USER[Utente COMMIT] --> LGWR[LGWR]
+        LGWR --> ORL[Online Redo Log]
+    end
 
-Utente COMMIT
-     |
-     v
-   LGWR  -------------------- redo transport -------------------->
-     |                                                           |
-     v                                                           v
-Online Redo Log                                            Standby Redo Log
-                                                                |
-                                                                v
-                                                        MRP0 / Redo Apply
-                                                                |
-                                                                v
-                                                          Datafile standby
+    subgraph STANDBY["STANDBY (RACDB_STBY)"]
+        SRL[Standby Redo Log] --> MRP[MRP0 / Redo Apply]
+        MRP --> DF[Datafile Standby]
+    end
+
+    LGWR -- "Redo Transport" --> SRL
 ```
 
 ### 14.1 Componenti concettuali
@@ -1128,11 +1079,11 @@ Nel tuo lab usi physical standby.
 
 ### 14.3 Flusso base
 
-```text
-Primary generates redo
--> redo transport sends redo
--> standby receives redo (RFS / SRL)
--> apply services apply redo (MRP)
+```mermaid
+flowchart LR
+    P[Primary Generates Redo] --> T[Redo Transport Sends Redo]
+    T --> R[Standby Receives Redo (RFS/SRL)]
+    R --> A[Apply Services Apply Redo (MRP)]
 ```
 
 ### 14.4 Ruoli e modalita'
@@ -1338,28 +1289,29 @@ Nel tuo laboratorio questi concetti diventano concreti cosi'.
 
 ## 20. Architettura Completa del tuo Ecosistema Lab
 
-```text
-+-------------------------------------------------------------+
-|               ORACLE ENTERPRISE MANAGER (13c)               |
-|                      (Monitoraggio)                         |
-+------------------------------+------------------------------+
-                               |
-                   +-----------+-----------+
-                   |                       |
-           +-------v-------+       +-------v-------+
-           |  (FASE 4)     |       |   (FASE 4)    |
-           |  RAC PRIMARY  +------>+ RAC STANDBY   |
-           |    (RACDB)    | Redo  | (RACDB_STBY)  |
-           +-------+-------+       +-------+-------+
-                   |                       |
-           (FASE 5 - RMAN)                 |
-              Backups to FRA               |
-                                           | (FASE 7 - GoldenGate)
-                                           v
-                                   +-------v-------+
-                                   |  TARGET DB    |
-                                   | (Local/Cloud) |
-                                   +---------------+
+```mermaid
+graph TD
+    EM[ORACLE ENTERPRISE MANAGER 13c<br>Monitoraggio] 
+    
+    subgraph DATAGUARD["Oracle Data Guard (Fase 4)"]
+        PR[RAC PRIMARY<br>RACDB]
+        ST[RAC STANDBY<br>RACDB_STBY]
+    end
+
+    subgraph BACKUP["RMAN (Fase 5)"]
+        FRA[Backups in FRA]
+    end
+
+    subgraph REPLICATION["GoldenGate (Fase 7)"]
+        TG[TARGET DB<br>Local / Cloud]
+    end
+
+    EM --> PR
+    EM --> ST
+    PR -- "Redo Transport" --> ST
+    PR --> FRA
+    ST --> FRA
+    PR -- "Extract / Replicat" --> TG
 ```
 
 ## 20. Query Minime da Sapere a Memoria
