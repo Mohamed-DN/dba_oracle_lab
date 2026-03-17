@@ -1,0 +1,27 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'yaml'
+
+# Variables
+params = YAML.load_file '../config/vagrant.yml'
+
+Vagrant.configure("2") do |config|
+  config.vm.box = params['shared']['box']
+
+  config.vm.network "private_network", ip: params['dns']['public_ip']
+  config.vm.hostname = params['dns']['host_name']
+
+  config.vm.synced_folder "../config", "/vagrant_config"
+  config.vm.synced_folder "../shared_scripts", "/vagrant_scripts"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = params['dns']['mem_size']
+    vb.cpus   = params['dns']['cpus']
+    vb.name   = params['dns']['vm_name']
+    vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', '0', '--device', '0', '--nonrotational', params['shared']['non_rotational']]
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sh /vagrant/setup_dns.sh
+  SHELL
+end
