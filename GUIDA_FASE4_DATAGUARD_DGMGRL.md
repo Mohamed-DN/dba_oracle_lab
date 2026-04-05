@@ -184,6 +184,16 @@ ADD DATABASE RACDB_STBY AS
 ENABLE CONFIGURATION;
 ```
 
+> [!WARNING] 
+> **Troubleshooting ORA-16698**
+> Se quando esegui `ENABLE CONFIGURATION` ricevi l'errore:
+> `Error: ORA-16698: member has a LOG_ARCHIVE_DEST_n parameter with SERVICE attribute set`
+> **Significa che avevi configurato manualmente la spedizione dei log in Fase 3!** Il Broker pretende di avere il controllo esclusivo su questi parametri. Per risolvere, esci da dgmgrl, entra in SQL*Plus come sysdba (sia su primario che su standby) e azzera il parametro di destinazione (solitamente il 2):
+> ```sql
+> ALTER SYSTEM SET log_archive_dest_2='' SCOPE=BOTH;
+> ```
+> Fatto questo, rientra in `dgmgrl` e lancia di nuovo `ENABLE CONFIGURATION;`.
+
 
 
 > **Spiegazione:**
