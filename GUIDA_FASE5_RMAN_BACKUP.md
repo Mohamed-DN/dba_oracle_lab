@@ -2,30 +2,64 @@
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 
+### Cos'è RMAN?
+
+RMAN (Recovery Manager) è lo strumento nativo di Oracle per effettuare backup e ripristini del database. Non è un semplice "copia file": RMAN parla direttamente con il kernel del database, conosce quali blocchi sono usati, quali sono cambiati, e può comprimere, validare e ripristinare intelligentemente.
+
+**Perché NON usare `cp` o `tar` per backuppare un database Oracle?** Perché mentre copi i file, il database continua a scrivere. I file copiati sarebbero internamente inconsistenti (blocchi scritti a metà). RMAN invece coordina tutto con il database per garantire consistenza.
+
+### Concetti fondamentali RMAN
+
+| Termine | Significato | Analogia |
+|---------|------------|----------|
+| **Backupset** | Formato proprietario RMAN che contiene solo i blocchi usati (non quelli vuoti). È più compatto di una copia file. | Come un file ZIP che salta le pagine bianche |
+| **Image Copy** | Copia identica 1:1 del datafile. Più grande ma il restore è istantaneo (basta uno `switch`). | Come un clone esatto del disco |
+| **Level 0** | Backup FULL: copia TUTTI i blocchi usati nel database. È la "base" da cui partono gli incrementali. | La foto completa dell'album |
+| **Level 1** | Backup INCREMENTALE: copia SOLO i blocchi cambiati dal Level 0 (o dal Level 1 precedente). Velocissimo con BCT. | Solo le foto nuove aggiunte dopo l'ultima volta |
+| **Level 1 Cumulative** | Copia TUTTI i blocchi cambiati dal Level 0 (non dal Level 1 precedente). Il restore è più veloce perché ti basta il Level 0 + l'ultimo Cumulative. | Tutte le foto nuove dalla foto completa, non dall'ultimo aggiornamento |
+| **Archivelog** | Copia dei redo log "archiviati" (già pieni). Servono per il Point-In-Time Recovery. | Il diario giornaliero delle modifiche |
+| **FRA** | Fast Recovery Area: disco ASM (+FRA o +RECO) dove Oracle salva backup, archivelog, flashback log. | Il magazzino dei backup |
+| **Retention Policy** | Regola che dice ad RMAN quanto a lungo tenere i backup. Quelli fuori finestra diventano "obsoleti" e possono essere cancellati. | La data di scadenza dei backup |
+| **Channel** | Un "lavoratore" RMAN. Ogni channel legge/scrive in parallelo. 2 channel = 2 letture contemporanee = backup 2x più veloce. | Una corsia autostradale: più corsie = più traffico contemporaneo |
+| **Tag** | Un'etichetta leggibile che appiccichiamo al backup (es. `FULL_WEEKLY`). Serve per trovarlo poi facilmente con `LIST BACKUP`. | Il post-it sul backup |
+| **Crosscheck** | RMAN verifica che i file di backup esistano ancora fisicamente sul disco. Se qualcuno li ha cancellati dal sistema operativo, RMAN li marca come EXPIRED. | Inventario del magazzino |
+
 ---
 
 ## 5.0 Ingresso da Fase 4 (gate operativo)
 
-Prima di impostare la strategia RMAN, il sistema deve essere stabile:
+Prima di impostare la strategia RMAN, il sistema deve essere stabile. Se il Data Guard non funziona, i backup sullo standby falliranno. Se la FRA è piena, RMAN non ha dove scrivere e il database si blocca.
 
 ```bash
-# Data Guard
+# Data Guard — verifica che la configurazione sia operativa
+# Questo comando si connette al Broker tramite il TNS alias "RACDB"
+# e chiede lo stato globale della configurazione.
+# DEVI vedere "SUCCESS" — se vedi WARNING o ERROR, torna alla Fase 4.
 dgmgrl sys/<password>@RACDB "show configuration;"
 ```
 
 ```sql
--- Spazio FRA (primario e standby)
+-- Spazio FRA (Fast Recovery Area) — eseguilo sia sul primario che sullo standby
+-- La FRA è il disco condiviso ASM dove vengono salvati:
+--   - i backup RMAN
+--   - gli archivelog (copie dei redo log pieni)
+--   - i flashback log (se usi Flashback Database)
+-- Se la FRA raggiunge il 100%, il database si FERMA perché non può più archiviare.
+-- La query sotto ti mostra quanto spazio hai e quanto ne stai usando.
 sqlplus / as sysdba
-SELECT name, space_limit/1024/1024 mb_limit, space_used/1024/1024 mb_used
+SELECT name,
+       ROUND(space_limit/1024/1024/1024, 2) AS limit_gb,
+       ROUND(space_used/1024/1024/1024, 2)  AS used_gb,
+       ROUND(space_used/space_limit*100, 1)  AS pct_used
 FROM v$recovery_file_dest;
 ```
 
-Check minimi:
+Check minimi prima di procedere:
 
-- DGMGRL `SUCCESS`
-- FRA non satura (idealmente < 80%)
+- DGMGRL mostra `SUCCESS`
+- FRA usata meno dell'80% (se è sopra, i backup futuri falliranno)
 
-Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e aggiorna solo retention/schedule.
+Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e aggiorna solo retention/schedule.
 
 ---
 
@@ -57,9 +91,16 @@ Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e 
                          └──────────────────────┘
 ```
 
-> **Perché il backup PRINCIPALE sullo standby?** RMAN Level 0 (full) usa molta CPU e I/O. Sullo standby queste risorse non servono ai client. Il backup fatto sullo standby è **identico** a quello fatto sul primario.
+> **Perché il backup PRINCIPALE sullo standby?** Il backup Level 0 (full) è un'operazione estremamente pesante: RMAN deve leggere fisicamente OGNI blocco del database (su un DB da 50 GB, legge tutti i 50 GB dal disco). Questo genera un carico enorme di I/O e CPU. Sullo standby, queste risorse non servono ai client perché nessun utente ci lavora sopra (a meno di Active Data Guard). Ecco perché il consiglio MAA è: **fai i backup pesanti sullo standby**, così il primario resta libero di servire le applicazioni.
 >
-> **Perché backup ANCHE sul primario?** Per sicurezza aggiuntiva: se lo standby è in manutenzione o crasha, il backup degli archivelog sul primario ti protegge dalla perdita totale. Inoltre, un Level 1 leggero garantisce un RPO (Recovery Point Objective) più basso.
+> Il backup fatto sullo standby è **identico** a quello fatto sul primario perché il database standby è una copia fisica bit-per-bit del primario (grazie al Redo Apply di Data Guard).
+>
+> **Perché backup ANCHE sul primario?** Per sicurezza aggiuntiva. Immagina questo scenario:
+> - Lo standby è in manutenzione (spento per patching)
+> - Un DBA cancella per sbaglio 10 tabelle sul primario
+> - Senza backup dal primario, hai perso dati!
+>
+> Un Level 1 leggero sul primario (che grazie al BCT dura pochi minuti) + il backup degli archivelog ogni 2 ore ti garantiscono un RPO (Recovery Point Objective — cioè quanti dati puoi perdere al massimo) di sole 2 ore.
 
 ---
 
@@ -67,70 +108,165 @@ Se hai gia creato gli script RMAN in test precedenti, non ricrearli: validali e 
 
 ### Connessione RMAN
 
+RMAN è un programma a linea di comando separato da SQL*Plus. Quando scrivi `rman TARGET /`, stai dicendo ad RMAN:
+- **TARGET**: il database su cui vuoi operare
+- **`/`**: usa l'autenticazione OS (come quando fai `sqlplus / as sysdba`)
+
+Devi essere loggato come utente `oracle` ed avere le variabili d'ambiente (`ORACLE_HOME`, `ORACLE_SID`) impostate correttamente.
+
 ```bash
-# Sul Primario
+# Connessione al database locale come SYSDBA.
+# RMAN usa internamente una connessione privilegiata SYSDBA.
+# Non serve specificare utente/password se sei l'utente OS "oracle".
 rman TARGET /
 
-# Sullo Standby
-rman TARGET /
-
-# Sul Target
-rman TARGET /
+# Se vuoi connetterti a un database remoto via TNS:
+rman TARGET sys/oracle@RACDB
 ```
 
 ### Configurazione Iniziale (esegui su ogni DB)
 
+I comandi `CONFIGURE` di RMAN impostano parametri **persistenti** che vengono salvati nel Control File del database. Una volta configurati, restano attivi per tutti i backup futuri senza doverli ripetere.
+
 ```rman
--- Mostra la configurazione attuale
+-- ============================================================
+-- MOSTRA CONFIGURAZIONE ATTUALE
+-- ============================================================
+-- Mostra TUTTI i parametri RMAN salvati nel control file.
+-- Se non hai mai configurato nulla, vedrai i valori di default.
+-- Ogni riga mostrerà sia il valore corrente che il default.
 SHOW ALL;
 
--- Configura la retention policy (mantieni backup per 7 giorni)
+-- ============================================================
+-- RETENTION POLICY: per quanti giorni tenere i backup
+-- ============================================================
+-- Dice ad RMAN: "Devi sempre avere abbastanza backup per poter
+-- ripristinare il database a qualsiasi punto negli ultimi 7 giorni."
+-- I backup più vecchi di questo vengono marcati come "obsoleti"
+-- e possono essere cancellati con DELETE OBSOLETE.
+--
+-- ATTENZIONE: questo NON cancella automaticamente i vecchi backup!
+-- Li marca solo come "obsoleti". Devi usare DELETE OBSOLETE per cancellarli.
+--
+-- Alternativa: CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+--   → Tiene sempre almeno 2 copie di backup complete.
+--   La RECOVERY WINDOW è preferita perché è basata sul tempo, non sul conteggio.
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
 
--- Configura il backup automatico del controlfile e SPFILE
+-- ============================================================
+-- CONTROLFILE AUTOBACKUP: rete di sicurezza automatica
+-- ============================================================
+-- Dopo OGNI comando di backup, RMAN crea automaticamente una copia
+-- del Control File e dello SPFILE. Perché è cruciale?
+-- Il Control File contiene la MAPPA di tutti i backup: senza di esso,
+-- RMAN non sa dove sono i backup precedenti!
+-- Se perdi il Control File E non hai un autobackup, devi ricostruire
+-- tutto a mano (operazione lunghissima e rischiosa).
+--
+-- Il formato '%F' genera un nome univoco basato su DBID e timestamp.
+-- Esempio: c-1225375887-20260406-00 (c-DBID-DATA-SEQUENZA)
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
 CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+FRA/%F';
 
--- Configura la parallelizzazione (2 canali per usare 2 CPU)
+-- ============================================================
+-- PARALLELISMO E COMPRESSIONE
+-- ============================================================
+-- PARALLELISM 2: usa 2 canali (processi) simultanei per leggere/scrivere.
+--   Con 4 CPU disponibili, 2 canali è un buon compromesso:
+--   abbastanza veloce senza saturare la macchina.
+-- COMPRESSED BACKUPSET: applica compressione a ogni backup.
+--   Un backup da 50 GB compresso diventa ~15-20 GB (risparmi 60-70% di spazio).
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
 
--- Abilita la compressione (riduce lo spazio ~60-70%)
+-- ============================================================
+-- ALGORITMO DI COMPRESSIONE
+-- ============================================================
+-- Oracle offre 4 livelli di compressione:
+--   BASIC  → lenta, buona compressione (gratis, inclusa in tutte le edizioni)
+--   LOW    → velocissima, poca compressione (richiede ACO - Advanced Compression Option)
+--   MEDIUM → bilanciata (richiede ACO)
+--   HIGH   → lentissima, massima compressione (richiede ACO)
+-- In laboratorio usiamo MEDIUM. In produzione senza licenza ACO, usa BASIC.
 CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
 
--- Configura il formato dei backup
+-- ============================================================
+-- FORMATO FILE DI BACKUP
+-- ============================================================
+-- Dove RMAN salverà fisicamente i file di backup.
+-- '+FRA/RACDB/%U' significa:
+--   +FRA    → disco ASM della Fast Recovery Area
+--   RACDB   → sottodirectory per questo database
+--   %U      → nome univoco generato automaticamente
+--             (esempio: 0a2s3k4l_1_1)
+-- Su ASM, Oracle gestisce automaticamente i file: non devi
+-- preoccuparti di path, permessi o spazio su singoli dischi.
 CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+FRA/RACDB/%U';
 
--- Abilita l'ottimizzazione (salta i file già backuppati che non sono cambiati)
+-- ============================================================
+-- BACKUP OPTIMIZATION
+-- ============================================================
+-- Se un datafile non è cambiato rispetto all'ultimo backup,
+-- RMAN lo SALTA completamente. Questo è utilissimo per i tablespace
+-- read-only o per i datafile che contengono dati storici non modificati.
+-- Esempio pratico: hai un tablespace STORICO di 30 GB che non cambia mai.
+-- Senza optimization: ogni full backup copia 30 GB inutilmente.
+-- Con optimization: RMAN lo salta, risparmiando 30 GB e 10 minuti di tempo.
 CONFIGURE BACKUP OPTIMIZATION ON;
-
--- Abilita block change tracking (accelera gli incrementali)
--- SOLO SU PRIMARIO O STANDBY, NON SU ENTRAMBI
--- Consigliato sullo Standby se fai backup da lì
 ```
 
-> **Spiegazione:**
-> - `RECOVERY WINDOW OF 7 DAYS`: Mantiene abbastanza backup per poter ripristinare il DB a qualsiasi punto negli ultimi 7 giorni.
-> - `COMPRESSED BACKUPSET`: Comprime i backup riducendo lo spazio disco.
-> - `BACKUP OPTIMIZATION ON`: Se fai un backup full e un datafile non è cambiato dal backup precedente, RMAN lo salta.
+> **Riepilogo di cosa hai appena configurato:**
+> | Parametro | Valore | Effetto pratico |
+> |-----------|--------|----------------|
+> | Retention | 7 giorni | Puoi ripristinare il DB a qualsiasi punto della settimana scorsa |
+> | Autobackup | ON | Se perdi il control file, RMAN può ritrovare i backup |
+> | Parallelismo | 2 canali | Backup ~2x più veloce rispetto a 1 canale |
+> | Compressione | MEDIUM | Backup ~3x più piccoli |
+> | Formato | +FRA/RACDB/%U | Tutto salvato su ASM, gestione automatica |
+> | Optimization | ON | Salta file non modificati = backup più veloce |
 
 ---
 
 ## 5.3 Block Change Tracking (BCT) — Accelera gli Incrementali
 
-Il BCT tiene traccia di quali blocchi sono cambiati, rendendo i backup incrementali **10-100x più veloci**.
+### Cos'è il BCT e perché è indispensabile?
 
-### Sul Primario (RACDB) — se fai backup dal primario:
+Per capire il BCT, devi prima capire come funziona un backup incrementale SENZA BCT:
+
+1. RMAN apre il datafile (es. `system01.dbf`, che contiene 500.000 blocchi)
+2. Per OGNI blocco, legge l'header del blocco per trovare il suo SCN (System Change Number)
+3. Se lo SCN è più recente dell'ultimo backup, il blocco viene copiato
+4. Se lo SCN è più vecchio, il blocco viene saltato
+
+**Problema**: anche per "saltare" un blocco, RMAN deve comunque LEGGERLO dal disco per controllarne l'SCN. Su un database da 100 GB, RMAN legge comunque tutti i 100 GB anche se solo 2 GB sono cambiati. Questo richiede ~30 minuti di I/O puro.
+
+**Con il BCT attivo**, Oracle mantiene un file speciale (il "change tracking file") che funziona come un **diario delle modifiche**. Ogni volta che DBWn scrive un blocco sporco su disco, Oracle segna nel file BCT: "il blocco 12345 del datafile 3 è cambiato". Quando RMAN parte per l'incrementale:
+
+1. RMAN legge il file BCT (pochi MB)
+2. Il file BCT gli dice: "sono cambiati i blocchi 12345, 67890, 11111 del datafile 3"
+3. RMAN va a leggere SOLO quei 3 blocchi, ignora tutti gli altri
+4. Risultato: backup di 2 GB letti in 2 minuti invece di 100 GB in 30 minuti
+
+### Attivazione BCT
+
+Sul Primario (RACDB) — come `oracle` su `rac1`:
 
 ```sql
 sqlplus / as sysdba
 
+-- Crea il file di change tracking su ASM.
+-- Il file è piccolo (circa 1/30000 della dimensione del database).
+-- Per un DB da 50 GB, il file BCT sarà circa 1.7 MB.
+-- DEVE stare su disco condiviso in RAC perché entrambe le istanze
+-- devono poter scrivere le modifiche.
 ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '+DATA/RACDB/bct_racdb.dbf';
 
--- Verifica
-SELECT filename, status, bytes/1024/1024 size_mb FROM v$block_change_tracking;
+-- Verifica che sia attivo e vedi la dimensione del file
+SELECT filename, status, ROUND(bytes/1024/1024, 2) AS size_mb
+FROM v$block_change_tracking;
+-- Output atteso: status = ENABLED, size_mb = ~1-5 MB
 ```
 
-### Sullo Standby (RACDB_STBY) — CONSIGLIATO:
+Sullo Standby (RACDB_STBY) — **FORTEMENTE CONSIGLIATO** dato che è da qui che facciamo i backup pesanti:
 
 ```sql
 sqlplus / as sysdba
@@ -138,7 +274,7 @@ sqlplus / as sysdba
 ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '+DATA/RACDB_STBY/bct_racdb_stby.dbf';
 ```
 
-### Sul Target (dbtarget):
+Sul Target (dbtarget) — se lo hai configurato:
 
 ```sql
 sqlplus / as sysdba
@@ -146,13 +282,23 @@ sqlplus / as sysdba
 ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '/u01/app/oracle/oradata/dbtarget/bct_dbtarget.dbf';
 ```
 
-> **Perché il BCT?** Senza BCT, un backup incrementale deve leggere OGNI blocco del database per capire se è cambiato. Con BCT, Oracle tiene un "diario" dei blocchi modificati e RMAN legge solo quelli. Su un database da 100 GB, un incrementale senza BCT può richiedere 30 minuti; con BCT, 2 minuti.
+> **Confronto pratico BCT ON vs OFF (database 50 GB, 2 GB modificati al giorno):**
+>
+> | Metrica | Senza BCT | Con BCT |
+> |---------|-----------|--------|
+> | Dati letti | 50 GB (tutto il DB) | 2 GB (solo modificati) |
+> | Tempo incrementale | ~25 minuti | ~2 minuti |
+> | I/O sul disco | Altissimo (satura ASM) | Minimo |
+> | Impatto sulle prestazioni | Significativo | Quasi nullo |
 
 ---
 
 ## 5.4 Script di Backup — RAC Standby (Backup Principale)
 
-Questo è il backup **più importante** della tua infrastruttura. Viene eseguito sullo standby ADG.
+Questo è il backup **più importante** della tua infrastruttura. Viene eseguito sullo standby perché:
+- Non impatta le prestazioni del primario (dove lavorano gli utenti)
+- Il database standby è una copia fisica identica, quindi il backup è valido per entrambi
+- In caso di disaster recovery, puoi usare questi backup per ricostruire da zero
 
 ### Backup Level 0 (Full) — Domenica
 
@@ -161,48 +307,111 @@ cat > /home/oracle/scripts/rman_full_backup.sh <<'SCRIPT'
 #!/bin/bash
 # rman_full_backup.sh — Backup Full (Level 0) dallo Standby
 # Eseguire SOLO sullo Standby (RACDB_STBY)
+#
+# COSA FA QUESTO SCRIPT:
+# 1. Si connette ad RMAN come SYSDBA
+# 2. Apre 2 canali paralleli verso il disco
+# 3. Copia TUTTI i blocchi del database (Level 0 = base completa)
+# 4. Backuppa gli archivelog e li cancella per liberare spazio
+# 5. Crea copie di sicurezza del Control File e dello SPFILE
+# 6. Cancella i backup obsoleti (> 7 giorni) e quelli corrotti
 
 source /home/oracle/.db_env
+# ^^^ carica le variabili: ORACLE_HOME, ORACLE_SID, LD_LIBRARY_PATH
+# Senza questo, RMAN non trova il binario e non si connette al DB.
+
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
+# ^^^ formato data leggibile nei log RMAN (altrimenti mostra formato interno Oracle)
 
 LOG_DIR=/home/oracle/scripts/logs
 LOG_FILE=$LOG_DIR/rman_full_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
+# ^^^ crea la cartella dei log se non esiste, e genera un nome file
+#     univoco basato su data e ora (es: rman_full_20260406_020000.log)
 
 rman TARGET / LOG=$LOG_FILE <<EOF
+# ^^^ rman TARGET / = connessione locale al database come SYSDBA
+# ^^^ LOG=$LOG_FILE = RMAN scrive tutto l'output anche nel file di log
+# ^^^ <<EOF = heredoc bash: tutto il contenuto fino a EOF viene passato come input
+
 RUN {
+    # RUN { } = blocco transazionale RMAN.
+    # Tutti i comandi dentro RUN vengono eseguiti come un'unità.
+    # Se uno fallisce, gli altri si fermano.
+
     ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
     ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
+    # ^^^ Apre 2 "lavoratori" paralleli.
+    #     ch1 leggerà i datafile dispari, ch2 quelli pari (più o meno).
+    #     Risultato: backup ~2x più veloce rispetto a 1 solo canale.
+    #     Con ALLOCATE esplicito dentro RUN, hai più controllo
+    #     rispetto al CONFIGURE DEVICE TYPE DISK PARALLELISM.
 
     -- Backup Full Database (Level 0)
     BACKUP AS COMPRESSED BACKUPSET
+    -- ^^^ AS COMPRESSED BACKUPSET: crea un file proprietario RMAN
+    --     contenente solo i blocchi usati, compressi con l'algoritmo MEDIUM.
+    --     Un DB da 50 GB diventa ~15-20 GB nel backup.
         INCREMENTAL LEVEL 0
+    -- ^^^ LEVEL 0 = copia TUTTI i blocchi usati nel database.
+    --     Questo è il "punto zero" per gli incrementali della settimana.
+    --     DEVE girare almeno una volta prima di poter fare Level 1.
         DATABASE
+    -- ^^^ Backuppa TUTTO il database: tutti i tablespace, tutti i datafile,
+    --     inclusi SYSTEM, SYSAUX, UNDO, TEMP, e tutti i PDB.
         TAG 'FULL_WEEKLY'
+    -- ^^^ TAG = etichetta leggibile. Quando fai LIST BACKUP, vedrai
+    --     questa etichetta e saprai subito che backup è.
         PLUS ARCHIVELOG
+    -- ^^^ Backuppa anche gli archivelog PRIMA e DOPO il backup del database.
+    --     Perché prima E dopo? Perché durante il backup, il database
+    --     continua a generare redo. RMAN deve catturare anche i redo
+    --     generati durante il backup stesso per garantire consistenza.
             TAG 'ARCH_WITH_FULL'
             DELETE INPUT;
+    -- ^^^ DELETE INPUT: dopo aver backuppato gli archivelog, CANCELLALI
+    --     dal disco. Questo è FONDAMENTALE per liberare spazio nella FRA.
+    --     Senza questo, la FRA si riempie e il database si ferma.
 
     -- Backup del Controlfile e SPFILE
     BACKUP CURRENT CONTROLFILE TAG 'CTL_WEEKLY';
+    -- ^^^ Il Control File è la "mappa" del database: contiene l'elenco
+    --     di TUTTI i datafile, i redo log, e la storia di tutti i backup.
+    --     Perderlo = dover ricostruire tutto a mano.
     BACKUP SPFILE TAG 'SPFILE_WEEKLY';
+    -- ^^^ Lo SPFILE contiene TUTTI i parametri del database.
+    --     Senza di esso, dovresti ricordarti a memoria ogni singolo parametro.
 
     RELEASE CHANNEL ch1;
     RELEASE CHANNEL ch2;
+    -- ^^^ Chiude i canali allocati. Libera le risorse.
 }
 
 -- Rimuovi i backup obsoleti secondo la retention policy
 DELETE NOPROMPT OBSOLETE;
+-- ^^^ Oracle controlla tutti i backup registrati nel control file.
+--     Quelli che cadono fuori dalla finestra di 7 giorni vengono cancellati.
+--     NOPROMPT = non chiedere conferma (necessario in script automatici).
 
 -- Crosscheck per rimuovere riferimenti a backup cancellati manualmente
 CROSSCHECK BACKUP;
+-- ^^^ RMAN va a verificare fisicamente che ogni file di backup esista sul disco.
+--     Se qualcuno ha cancellato un file da ASM o dal filesystem a mano,
+--     RMAN lo marca come EXPIRED ("non disponibile").
 CROSSCHECK ARCHIVELOG ALL;
+-- ^^^ Stessa cosa ma per gli archivelog.
+
 DELETE NOPROMPT EXPIRED BACKUP;
+-- ^^^ Cancella dal catalogo RMAN i riferimenti a backup che non esistono più.
 DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+-- ^^^ Idem per archivelog fantasma.
 EOF
 
 # Controlla se RMAN ha avuto errori
 if grep -i "RMAN-" $LOG_FILE | grep -v "RMAN-08138" > /dev/null; then
+    # ^^^ Cerca la stringa "RMAN-" nel log (indica un errore RMAN).
+    #     grep -v "RMAN-08138" esclude il messaggio informativo
+    #     "channel %s not allocated" che è innocuo.
     echo "ERRORE RMAN rilevato! Controlla il log: $LOG_FILE"
     # Qui puoi aggiungere una notifica email
 else
@@ -213,11 +422,13 @@ SCRIPT
 chmod +x /home/oracle/scripts/rman_full_backup.sh
 ```
 
-> **Spiegazione:**
-> - `INCREMENTAL LEVEL 0`: Backup full di tutti i blocchi. È la "base" per gli incrementali successivi.
-> - `PLUS ARCHIVELOG DELETE INPUT`: Backuppa anche gli archivelog e li cancella dopo il backup (libera spazio su +FRA).
-> - `DELETE NOPROMPT OBSOLETE`: Rimuove i backup più vecchi della retention window (7 giorni).
-> - `CROSSCHECK`: Verifica che i file di backup esistano fisicamente. Se qualcuno li ha cancellati a mano, RMAN li marca come EXPIRED.
+> **Riepilogo del flusso Level 0:**
+> 1. RMAN si connette al database standby
+> 2. Apre 2 canali paralleli (due processi che leggono contemporaneamente)
+> 3. Legge OGNI blocco di OGNI datafile (ecco perché è lento: legge tutto!)
+> 4. Comprime i blocchi e li scrive nel backupset su +FRA
+> 5. Backuppa anche gli archivelog e li cancella dalla FRA
+> 6. Fa pulizia: cancella backup vecchi e verifica che tutto sia integro
 
 ### Backup Level 1 (Incrementale) — Tutti i giorni
 
@@ -428,31 +639,65 @@ chmod +x /home/oracle/scripts/rman_arch_backup.sh
 
 ## 5.6 Schedulazione con Cron
 
+Il **cron** è lo scheduler di Linux: esegue comandi/script automaticamente a orari prefissati. Ogni utente ha il suo crontab (tabella dei job). Noi lo usiamo per automatizzare completamente i backup senza intervento umano.
+
+### Sintassi Cron (mini guida)
+
+```
+Minuto  Ora  Giorno  Mese  GiornoSettimana  Comando
+  0      2    *       *         0            /script.sh
+  |      |    |       |         |
+  |      |    |       |         +-- 0=Domenica, 1=Lunedì, ..., 6=Sabato
+  |      |    |       +------------ 1-12 (mese dell'anno)
+  |      |    +-------------------- 1-31 (giorno del mese)
+  |      +------------------------- 0-23 (ora)
+  +-------------------------------- 0-59 (minuto)
+  *  = ogni valore possibile
+  */2 = ogni 2 (es. ore 0, 2, 4, 6, ...)
+  1-6 = da 1 a 6
+```
+
 ```bash
-# Come utente oracle, su OGNI macchina
+# Apri l'editor cron come utente oracle (su OGNI macchina)
 crontab -e
 ```
 
 ### Sul Primario (rac1):
 
 ```cron
-# Backup Incrementale — Ogni giorno alle 04:00 (sfalsato dallo standby)
+# === BACKUP INCREMENTALE GIORNALIERO ===
+# Ogni giorno alle 04:00 (sfalsato dallo standby che gira alle 02:00)
+# Perché alle 04:00? Per non sovrapporre I/O con il backup dello standby.
+# Lo script rman_primary_backup.sh fa un Level 1 + archivelog + controlfile.
 0 4 * * * /home/oracle/scripts/rman_primary_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
-# Backup Archivelog — Ogni 2 ore
+# === BACKUP ARCHIVELOG OGNI 2 ORE ===
+# Svuota gli archivelog accumulati nella FRA del primario.
+# Perché ogni 2 ore? Il primario genera continuamente redo log.
+# Senza questo job, la FRA si riempie e il DB si blocca.
+# Il >> appende al log (non lo sovrascrive).
+# Il 2>&1 redirige anche gli errori stderr nello stesso file.
 0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 ```
 
 ### Sullo Standby (racstby1):
 
 ```cron
-# Backup Full — Domenica alle 02:00
+# === BACKUP FULL SETTIMANALE (DOMENICA) ===
+# Il backup più pesante: Level 0 = copia tutto il database.
+# Gira di domenica alle 02:00 di notte quando nessuno lavora.
+# Questo è il "punto zero" per tutti gli incrementali della settimana.
 0 2 * * 0 /home/oracle/scripts/rman_full_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
-# Backup Incrementale — Lun-Sab alle 02:00
+# === BACKUP INCREMENTALE (LUN-SAB) ===
+# Dal lunedì al sabato alle 02:00: copia SOLO i blocchi cambiati
+# rispetto al backup precedente (Level 1 differenziale).
+# Grazie al BCT, questo backup dura pochi minuti.
 0 2 * * 1-6 /home/oracle/scripts/rman_incr_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
-# Backup Archivelog — Ogni 2 ore
+# === BACKUP ARCHIVELOG OGNI 2 ORE ===
+# Anche sullo standby si accumulano archivelog (ricevuti dal primario).
+# Li backuppiamo e cancelliamo ogni 2 ore per tenere la FRA pulita.
 0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 ```
 
@@ -467,30 +712,105 @@ crontab -e
 
 ## 5.7 Verifica dei Backup
 
-### Report dei backup
+Dopo aver eseguito i backup, è fondamentale verificare che siano validi. Un backup corrotto è peggio di nessun backup: ti dà un falso senso di sicurezza.
+
+### Comandi di verifica (con spiegazione dettagliata)
 
 ```rman
+-- Connettiti ad RMAN
 rman TARGET /
 
--- Lista tutti i backup
+-- ============================================================
+-- LIST BACKUP SUMMARY
+-- ============================================================
+-- Mostra un riepilogo di TUTTI i backup registrati nel control file.
+-- Colonne importanti nell'output:
+--   Key  = numero identificativo del backup
+--   TY   = tipo: B=Backupset, P=Proxy (nastro)
+--   LV   = livello: F=Full/Level0, 1=Level1, A=Archivelog
+--   S    = status: A=Available, X=Expired, U=Unavailable
+--   Compressed = YES/NO (se hai usato compressione)
+--   Tag  = l'etichetta che gli hai dato
+--
+-- COSA GUARDARE: tutti i backup devono avere S=A (Available).
+-- Se vedi S=X (Expired), quel backup non esiste piu' fisicamente.
 LIST BACKUP SUMMARY;
 
--- Lista backup recenti del DB
+-- ============================================================
+-- LIST BACKUP OF DATABASE COMPLETED AFTER 'SYSDATE-1'
+-- ============================================================
+-- Mostra SOLO i backup del database completati nelle ultime 24 ore.
+-- Se questo non restituisce risultati, significa che:
+--   1. Non hai ancora eseguito nessun backup (normale se stai iniziando)
+--   2. Il cron notturno non ha girato
+--   3. Il backup ha fallito
+-- SYSDATE-1 = ieri. Puoi cambiare il numero: SYSDATE-7 = ultimi 7 giorni.
 LIST BACKUP OF DATABASE COMPLETED AFTER 'SYSDATE-1';
 
--- Lista backup degli archivelog
+-- ============================================================
+-- LIST BACKUP OF ARCHIVELOG ALL
+-- ============================================================
+-- Mostra tutti i backup degli archivelog mai fatti.
+-- Se non restituisce nulla, NON hai mai backuppato gli archivelog.
+-- Questo e' PERICOLOSO: la FRA si riempira' e il DB si fermera'.
 LIST BACKUP OF ARCHIVELOG ALL;
 
--- Verifica l'integrità di tutti i backup (controlla che siano leggibili)
--- ATTENZIONE: questo legge fisicamente i file, può richiedere tempo
-VALIDATE BACKUP;
+-- ============================================================
+-- BACKUP VALIDATE DATABASE
+-- ============================================================
+-- ATTENZIONE: il comando corretto e' BACKUP VALIDATE, NON "VALIDATE BACKUP"!
+-- Questo comando simula un backup completo: legge OGNI blocco di OGNI 
+-- datafile e ne verifica l'integrita' (checksum), ma NON crea
+-- fisicamente il file di backup. E' perfetto per un test non distruttivo.
+-- Se trova blocchi corrotti, li segnala con il messaggio:
+--   "block corruption found" + numero datafile + numero blocco.
+BACKUP VALIDATE DATABASE;
 
--- Report dei file non backuppati
+-- ============================================================
+-- REPORT NEED BACKUP
+-- ============================================================
+-- Mostra quali datafile NON soddisfano la retention policy.
+-- La colonna "Days" indica quanti giorni sono passati dall'ultimo
+-- backup valido di quel file. Se vedi numeri enormi (es. 2546),
+-- significa che quel file non e' mai stato backuppato correttamente.
+-- In pratica: tutti i file che appaiono in questa lista DEVONO
+-- essere backuppati urgentemente con almeno un Level 0.
 REPORT NEED BACKUP;
 
--- Report dei file unrecoverable
+-- ============================================================
+-- REPORT UNRECOVERABLE DATABASE
+-- ============================================================
+-- Mostra i datafile che contengono operazioni NOLOGGING
+-- (es. INSERT /*+ APPEND */ senza FORCE LOGGING).
+-- Questi blocchi non possono essere recuperati dagli archivelog
+-- perche' il redo non e' stato generato.
+-- Se questo report e' vuoto = tutto OK, sei al sicuro.
+-- Se mostra dei file = devi fare un backup FULL di quei file.
 REPORT UNRECOVERABLE DATABASE;
 ```
+
+> [!WARNING]
+> **Il comando `VALIDATE BACKUP;` (senza la parola DATABASE) NON esiste in RMAN!**
+> Se lo provi, riceverai l'errore: `RMAN-01009: syntax error: found ";": expecting one of: "controlfile"`.
+> Il comando corretto è: `BACKUP VALIDATE DATABASE;` (legge tutto ma NON scrive nulla).
+
+### Come leggere l'output di LIST BACKUP SUMMARY
+
+```
+Key     TY LV S Device Type Completion Time      #Pieces #Copies Compressed Tag
+------- -- -- - ----------- -------------------- ------- ------- ---------- ---
+1       B  F  A DISK        13-MAR-2026 04:38:26 1       1       NO         TAG20260313T043826
+```
+
+| Colonna | Valore | Significato |
+|---------|--------|-------------|
+| Key | 1 | Numero identificativo del backup (sequenziale) |
+| TY | B | Tipo: **B**ackupset (formato proprietario RMAN) |
+| LV | F | Livello: **F**ull (Level 0 o backup non incrementale) |
+| S | A | Status: **A**vailable (il file esiste ed è utilizzabile) |
+| #Pieces | 1 | Numero di file generati da questo backup |
+| Compressed | NO | Il backup NON è compresso (spreco di spazio!) |
+| Tag | TAG2026... | Etichetta auto-generata (non personalizzata) |
 
 ### Script di Report Automatico
 
