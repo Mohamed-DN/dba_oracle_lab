@@ -400,6 +400,30 @@ chmod +x /home/oracle/scripts/rman_primary_backup.sh
 
 > **Perché solo Level 1 sul primario?** Il Level 0 (full) è pesante e lo fa già lo standby la domenica. Il primario fa solo il Level 1, che è leggero e veloce grazie al BCT. Se lo standby crasha, hai comunque un backup recente dal primario.
 
+### 5.5c Backup Archivelog sul Primario (Sicurezza Extra)
+Questo script è fondamentale per liberare spazio nella FRA del primario ogni 2 ore.
+
+```bash
+cat > /home/oracle/scripts/rman_arch_backup.sh <<'SCRIPT'
+#!/bin/bash
+# rman_arch_backup.sh — Backup Archivelog (Primario)
+source /home/oracle/.db_env
+
+LOG_DIR=/home/oracle/scripts/logs
+LOG_FILE=$LOG_DIR/rman_arch_$(date +%Y%m%d_%H%M%S).log
+mkdir -p $LOG_DIR
+
+rman TARGET / LOG=$LOG_FILE <<EOF
+BACKUP AS COMPRESSED BACKUPSET
+    ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    TAG 'PRIMARY_ARCH_HOURLY'
+    DELETE INPUT;
+EOF
+SCRIPT
+
+chmod +x /home/oracle/scripts/rman_arch_backup.sh
+```
+
 ---
 
 ## 5.6 Schedulazione con Cron
