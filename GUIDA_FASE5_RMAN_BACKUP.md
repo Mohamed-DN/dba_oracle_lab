@@ -104,6 +104,29 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
 
 ---
 
+### ⚠️ Regola d'Oro RAC: Su quale nodo eseguire i comandi?
+
+In un cluster RAC a 2 nodi, questa è la domanda più frequente. Ecco la regola definitiva:
+
+| Operazione | Dove eseguirla | Perché |
+|------------|---------------|--------|
+| `CONFIGURE ...` RMAN | **1 solo nodo** (qualsiasi) | Le impostazioni RMAN vengono salvate nel **Control File**, che è condiviso in ASM. Entrambi i nodi lo leggono automaticamente. |
+| `ALTER SYSTEM SET ... SID='*'` | **1 solo nodo** (qualsiasi) | Con `SID='*'` il parametro viene scritto nello **SPFILE condiviso** e si propaga a tutte le istanze al prossimo riavvio (o subito con `SCOPE=BOTH`). |
+| `ALTER DATABASE ENABLE BCT` | **1 solo nodo** (qualsiasi) | Il file BCT viene creato su ASM (disco condiviso). Entrambe le istanze lo usano. |
+| Script backup (`rman_full_backup.sh`) | **1 solo nodo** (il nodo 1 del cluster) | RMAN si connette al database tramite l'istanza locale, ma il backup è del database intero (tutti i datafile condivisi). Non serve farlo su 2 nodi! |
+| Crontab backup | **1 solo nodo** (il nodo 1 del cluster) | Se metti il cron su entrambi i nodi, avrai 2 backup identici che partono alla stessa ora — spreco di risorse e possibili conflitti. |
+| Script di creazione (`cat > /home/oracle/scripts/...`) | **1 solo nodo** (gli script stanno nel filesystem locale) | Il filesystem `/home/oracle` è **locale** a ogni nodo. Se vuoi gli script anche sul nodo 2 (come fallback), copiali con `scp`. |
+| Health check SQL con `GV$` | **1 solo nodo** (qualsiasi) | Le viste `GV$` (Global V$) mostrano i dati di **tutte le istanze** del cluster da un unico punto. |
+| Health check SQL con `V$` | Mostra **solo il nodo locale** | Se usi `V$` senza la G, vedi solo l'istanza su cui sei connesso. |
+
+> **In pratica:** Per tutta la Fase 5, lavori quasi esclusivamente su **un solo nodo**:
+> - `rac1` per il cluster primario
+> - `racstby1` per il cluster standby
+>
+> Non devi mai SSH-are sul nodo 2 per replicare i comandi RMAN o i CONFIGURE.
+
+---
+
 ## 5.2 Configurazione RMAN Base (Valida per tutti i DB)
 
 ### Connessione RMAN
@@ -125,6 +148,8 @@ rman TARGET sys/oracle@RACDB
 ```
 
 ### Configurazione Iniziale (esegui su ogni DB)
+
+> **🟢 RAC: esegui i CONFIGURE su UN SOLO nodo per cluster.** I comandi CONFIGURE vengono salvati nel Control File, che è condiviso tra tutti i nodi via ASM. Se fai `CONFIGURE RETENTION POLICY...` su `rac1`, anche `rac2` lo vedrà automaticamente.
 
 I comandi `CONFIGURE` di RMAN impostano parametri **persistenti** che vengono salvati nel Control File del database. Una volta configurati, restano attivi per tutti i backup futuri senza doverli ripetere.
 
@@ -248,6 +273,8 @@ Per capire il BCT, devi prima capire come funziona un backup incrementale SENZA 
 
 ### Attivazione BCT
 
+> **🟢 RAC: esegui su UN SOLO nodo.** Il file BCT è creato su ASM (disco condiviso) e viene usato automaticamente da entrambe le istanze.
+
 Sul Primario (RACDB) — come `oracle` su `rac1`:
 
 ```sql
@@ -294,6 +321,10 @@ ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '/u01/app/oracle/oradata/
 ---
 
 ## 5.4 Script di Backup — RAC Standby (Backup Principale)
+
+> **🟢 RAC: esegui tutto su UN SOLO nodo (`racstby1`).** Gli script vengono creati nel filesystem locale di `racstby1`. RMAN si connette all'istanza locale ma backuppa il database completo (tutti i datafile condivisi su ASM). Non serve ripetere nulla su `racstby2`.
+>
+> Se vuoi una copia degli script anche su `racstby2` per sicurezza (es. se `racstby1` va giù), copia con: `scp /home/oracle/scripts/*.sh oracle@racstby2:/home/oracle/scripts/`
 
 Questo è il backup **più importante** della tua infrastruttura. Viene eseguito sullo standby perché:
 - Non impatta le prestazioni del primario (dove lavorano gli utenti)
@@ -560,6 +591,8 @@ chown oracle:oinstall /u01/backup/dbtarget
 
 ## 5.5b Script di Backup — RAC PRIMARIO (RACDB)
 
+> **🟢 RAC: esegui tutto su UN SOLO nodo (`rac1`).** Stessa logica dello standby: gli script e il cron vanno configurati solo su `rac1`. Non ripetere su `rac2`.
+
 Anche il primario ha il suo backup — leggero ma essenziale come rete di sicurezza.
 
 ```bash
@@ -641,6 +674,13 @@ chmod +x /home/oracle/scripts/rman_arch_backup.sh
 
 Il **cron** è lo scheduler di Linux: esegue comandi/script automaticamente a orari prefissati. Ogni utente ha il suo crontab (tabella dei job). Noi lo usiamo per automatizzare completamente i backup senza intervento umano.
 
+> **🟢 RAC: configura il crontab su UN SOLO nodo per cluster.**
+> - Primario: crontab solo su `rac1` (NON su `rac2`)
+> - Standby: crontab solo su `racstby1` (NON su `racstby2`)
+> - Target: crontab su `dbtarget`
+>
+> Se metti il cron su entrambi i nodi dello stesso cluster, partiranno DUE backup identici alla stessa ora. Questo causa conflitti di lock RMAN e doppio consumo di spazio e I/O. **Non farlo mai.**
+
 ### Sintassi Cron (mini guida)
 
 ```
@@ -713,6 +753,8 @@ crontab -e
 ## 5.7 Verifica dei Backup
 
 Dopo aver eseguito i backup, è fondamentale verificare che siano validi. Un backup corrotto è peggio di nessun backup: ti dà un falso senso di sicurezza.
+
+> **🟢 RAC: puoi eseguire tutti i comandi di verifica da UN SOLO nodo qualsiasi.** RMAN legge le informazioni dal Control File condiviso, quindi da `rac1` o `rac2` vedi gli stessi identici risultati.
 
 ### Comandi di verifica (con spiegazione dettagliata)
 
