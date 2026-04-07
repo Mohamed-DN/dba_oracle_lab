@@ -750,7 +750,7 @@ dgmgrl sys/<password>
 
 ### 11.3 RMAN Avanzato
 
-> 📖 Riferimento Lab: [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
+> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
 
 ```bash
 # Backup incrementale Level 0 (full base)
@@ -1044,7 +1044,7 @@ SELECT * FROM unified_audit_trail WHERE dbusername = 'APP_USER' ORDER BY event_t
 
 ### 11.9 RMAN Backup & Recovery Workshop (Approfondimento)
 
-> 📖 Riferimento Lab: [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md)
+> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
 > **Corso**: Oracle Database: Backup and Recovery Workshop
 
 #### 11.9.1 Strategie e Terminologia
@@ -1581,14 +1581,14 @@ SELECT DBMS_ADVISOR.GET_TASK_SCRIPT(task_name => 'access_advisor_task') FROM dua
 | Data Guard | [Fase 3](./GUIDA_FASE3_RAC_STANDBY.md) + [Fase 4](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
 | Switchover/Failover | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) + [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) |
 | Multitenant (CDB/PDB) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.8 |
-| RMAN Backup/Recovery | [GUIDA_FASE7_RMAN_BACKUP.md](./GUIDA_FASE7_RMAN_BACKUP.md) + Sezione 11.9 |
+| RMAN Backup/Recovery | [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) + Sezione 11.9 |
 | Flashback Technologies | Sezione 11.9.3 |
 | Deploy/Patch/Upgrade | [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md) + Sezione 11.10 |
 | 19c New Features | Sezione 11.11 |
 | Performance Tuning (AWR/ADDM) | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) + Sezione 11.12 |
 | SQL Tuning | Sezione 11.13 |
 | Security (TDE, Audit) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.6 |
-| GoldenGate | [Fase 5](./GUIDA_FASE5_GOLDENGATE.md) |
+| GoldenGate | [Fase 7](./GUIDA_FASE7_GOLDENGATE.md) |
 | Oracle→PostgreSQL | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
 
 ---

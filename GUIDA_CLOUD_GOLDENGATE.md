@@ -139,7 +139,7 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ║ 4 ║ OCI Getting Started (Oracle)  ║ Console OCI, VCN, Subnet,    ║
 ║   ║ cloud.oracle.com/get-started  ║ Security List, SSH Keys      ║
 ╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 5 ║ GUIDA_FASE5_GOLDENGATE.md     ║ Capire Extract, Pump,        ║
+║ 5 ║ GUIDA_FASE7_GOLDENGATE.md     ║ Capire Extract, Pump,        ║
 ║   ║                               ║ Replicat prima del cloud     ║
 ╚═══╩═══════════════════════════════╩══════════════════════════════╝
 ```
