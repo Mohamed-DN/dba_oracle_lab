@@ -876,47 +876,440 @@ chmod +x /home/oracle/scripts/rman_report.sh
 
 ---
 
-## 5.8 Test di Restore (FONDAMENTALE!)
+## 5.8 Test Pratici di Backup e Recovery (FONDAMENTALE!)
 
-> **Un backup mai testato è un backup che non esiste.** Testa il restore regolarmente.
+> **Un backup mai testato è un backup che non esiste.** In produzione, i DBA che non testano i restore regolarmente vengono licenziati dopo il primo disastro. Testa SEMPRE.
 
-### Test 1: Restore di una tabella singola (Point-in-Time Recovery)
+> **🟢 RAC: tutti i test si eseguono da UN SOLO nodo (`rac1`).** Il database è uno solo condiviso su ASM: che tu sia su `rac1` o `rac2` non fa differenza.
+
+### Passo 0: Esecuzione Immediata del Backup (senza aspettare il cron)
+
+Prima di testare il ripristino, devi avere un backup fresco. Lancia gli script a mano:
+
+```bash
+# === Sul PRIMARIO (rac1) come utente oracle ===
+
+# 1. Lancia subito la configurazione RMAN base (se non l'hai ancora fatta)
+rman TARGET / <<EOF
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+FRA/%F';
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
+CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+FRA/RACDB/%U';
+CONFIGURE BACKUP OPTIMIZATION ON;
+EOF
+# ^^^ Questi 7 comandi vengono salvati nel Control File.
+#     Eseguili una volta sola, restano permanenti.
+
+# 2. Lancia un backup FULL Level 0 immediato
+#    (è la BASE da cui partono tutti gli incrementali futuri)
+rman TARGET / <<EOF
+RUN {
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
+
+    BACKUP AS COMPRESSED BACKUPSET
+        INCREMENTAL LEVEL 0
+        DATABASE
+        TAG 'MANUAL_FULL_TEST'
+        PLUS ARCHIVELOG
+            TAG 'MANUAL_ARCH_TEST'
+            DELETE INPUT;
+
+    BACKUP CURRENT CONTROLFILE TAG 'MANUAL_CTL';
+    BACKUP SPFILE TAG 'MANUAL_SPFILE';
+
+    RELEASE CHANNEL ch1;
+    RELEASE CHANNEL ch2;
+}
+EOF
+# ^^^ Questo backup richiede 10-30 minuti a seconda della dimensione del DB.
+#     Alla fine vedrai: "backup set complete, elapsed time: ..."
+
+# 3. Verifica che il backup sia stato registrato
+rman TARGET / <<EOF
+LIST BACKUP SUMMARY;
+REPORT NEED BACKUP;
+EOF
+# ^^^ Ora dovresti vedere il tuo backup con Tag=MANUAL_FULL_TEST
+#     e REPORT NEED BACKUP dovrebbe mostrare ZERO file (tutti backuppati).
+```
+
+> **Output atteso dopo il backup:**
+> ```
+> Key     TY LV S Device Type Completion Time      #Pieces #Copies Compressed Tag
+> ------- -- -- - ----------- -------------------- ------- ------- ---------- ---
+> 3       B  0  A DISK        07-APR-2026 06:45:02 2       1       YES        MANUAL_FULL_TEST
+> 4       B  A  A DISK        07-APR-2026 06:45:15 1       1       YES        MANUAL_ARCH_TEST
+> 5       B  F  A DISK        07-APR-2026 06:45:20 1       1       YES        MANUAL_CTL
+> ```
+> Nota che ora `LV=0` (Level 0), `Compressed=YES`, e il tag è il tuo.
+
+---
+
+### Test 1: Verifica Non-Distruttiva (il backup è leggibile?)
+
+Questi comandi NON modificano il database. Verificano solo che i backup siano integri e utilizzabili.
 
 ```rman
--- Questo test NON modifica il database reale
--- Usa RMAN Table Point-in-Time Recovery (TSPITR)
-
 rman TARGET /
 
--- Verifica che il backup sia utilizzabile per il restore
+-- ============================================================
+-- RESTORE DATABASE PREVIEW
+-- ============================================================
+-- Fa una "prova a secco": RMAN controlla se ha tutti i pezzi
+-- necessari per un restore completo (datafile + archivelog),
+-- ma NON LI COPIA FISICAMENTE. È come chiedere:
+-- "Se dovessi ricostruire il database da zero, avrei tutto?"
+-- Se vedi "media recovery... would be applied" = tutto OK.
+-- Se vedi "no backup of datafile X found" = PROBLEMA!
 RESTORE DATABASE PREVIEW;
+
+-- ============================================================
+-- RESTORE DATABASE VALIDATE
+-- ============================================================
+-- Un passo più in profondità: RMAN legge fisicamente OGNI blocco
+-- dai file di backup e verifica l'integrità dei checksum,
+-- ma NON SCRIVE nulla su disco. È il test più affidabile
+-- per verificare che i backup non siano corrotti.
+-- Se va tutto bene, vedrai: "Finished restore at ..."
+-- Se c'è un blocco corrotto, vedrai: "block corruption found"
 RESTORE DATABASE VALIDATE;
 ```
 
-### Test 2: Restore su una location alternativa
+---
 
-```rman
--- Se hai spazio, puoi fare un restore completo su un path diverso
--- per verificare che tutto funzioni
+### Test 2: Recupero di una Tabella Droppata (Flashback Drop)
 
+Questo è lo scenario più comune: qualcuno ha fatto `DROP TABLE` per errore. Oracle ha una funzionalità chiamata **Recyclebin** (Cestino) che rende il recupero istantaneo senza nemmeno bisogno di RMAN.
+
+```sql
+-- === Sul PRIMARIO (rac1) come oracle ===
+sqlplus / as sysdba
+
+-- 1. Verifica che il Recyclebin sia attivo (dovrebbe esserlo di default)
+SHOW PARAMETER recyclebin;
+-- Output atteso: recyclebin = on
+
+-- 2. Crea una tabella di test con dati
+CREATE TABLE HR.TEST_BACKUP (
+    id    NUMBER PRIMARY KEY,
+    nome  VARCHAR2(50),
+    data_ins DATE DEFAULT SYSDATE
+);
+
+INSERT INTO HR.TEST_BACKUP VALUES (1, 'Mario Rossi', SYSDATE);
+INSERT INTO HR.TEST_BACKUP VALUES (2, 'Luigi Bianchi', SYSDATE);
+INSERT INTO HR.TEST_BACKUP VALUES (3, 'Anna Verdi', SYSDATE);
+COMMIT;
+
+-- 3. Verifica che i dati ci siano
+SELECT * FROM HR.TEST_BACKUP;
+-- Deve mostrare 3 righe
+
+-- 4. Annota l'SCN corrente (ci servirà dopo per il test PITR)
+SELECT CURRENT_SCN FROM V$DATABASE;
+-- Esempio output: 2847593 (segnatelo!)
+
+-- 5. DROP della tabella (simula errore umano!)
+DROP TABLE HR.TEST_BACKUP;
+
+-- 6. Verifica che sia sparita
+SELECT * FROM HR.TEST_BACKUP;
+-- Errore: ORA-00942: table or view does not exist
+
+-- 7. Guarda nel Recyclebin (il cestino di Oracle)
+SELECT object_name, original_name, type, droptime
+FROM dba_recyclebin
+WHERE original_name = 'TEST_BACKUP';
+-- Dovresti vedere la tabella con il suo nome "cestinato"
+-- (tipo BIN$aBcDeFgHiJ...)
+
+-- 8. RECUPERA LA TABELLA DAL CESTINO!
+FLASHBACK TABLE HR.TEST_BACKUP TO BEFORE DROP;
+
+-- 9. Verifica che i dati siano tornati
+SELECT * FROM HR.TEST_BACKUP;
+-- 🎉 Le 3 righe sono tornate senza bisogno di RMAN!
+```
+
+> **Quando il Flashback Drop NON funziona:**
+> - Se hai fatto `DROP TABLE ... PURGE` (bypass del cestino)
+> - Se il tablespace ha avuto bisogno di spazio e il Recyclebin è stato svuotato automaticamente
+> - Se hai eseguito `PURGE RECYCLEBIN` manualmente
+>
+> In questi casi, devi usare RMAN con Point-in-Time Recovery (Test 3).
+
+---
+
+### Test 3: Point-In-Time Recovery di una Tabella con RMAN (PITR)
+
+Questo è il test più realistico: la tabella è stata droppata con `PURGE`, il cestino è vuoto. L'unica salvezza è RMAN. Usiamo la funzionalità **RMAN Table Point-in-Time Recovery** (disponibile da Oracle 12c).
+
+```sql
+-- === Sul PRIMARIO (rac1) come oracle ===
+sqlplus / as sysdba
+
+-- 1. Crea una nuova tabella di test
+CREATE TABLE HR.TEST_PITR (
+    id    NUMBER PRIMARY KEY,
+    nome  VARCHAR2(50),
+    valore NUMBER(10,2)
+);
+
+INSERT INTO HR.TEST_PITR VALUES (1, 'Transazione Alpha', 1500.00);
+INSERT INTO HR.TEST_PITR VALUES (2, 'Transazione Beta',  2700.50);
+INSERT INTO HR.TEST_PITR VALUES (3, 'Transazione Gamma', 9999.99);
+COMMIT;
+
+-- 2. SEGNA L'ORARIO PRECISO (sarà il punto di recupero!)
+SELECT TO_CHAR(SYSDATE, 'DD-MON-YYYY HH24:MI:SS') AS "TIMESTAMP_PRIMA_DEL_DROP"
+FROM DUAL;
+-- ^^^ Esempio output: 07-APR-2026 06:50:30
+-- COPIATI QUESTO TIMESTAMP! È il momento in cui la tabella esisteva ancora.
+
+-- 3. Aspetta qualche secondo, poi DROPPA CON PURGE (nessun cestino!)
+DROP TABLE HR.TEST_PITR PURGE;
+
+-- 4. Verifica: sparita davvero?
+SELECT * FROM HR.TEST_PITR;
+-- ORA-00942: table or view does not exist
+
+-- 5. Verifica: il cestino è vuoto?
+SELECT * FROM dba_recyclebin WHERE original_name = 'TEST_PITR';
+-- no rows selected — non c'è salvezza nel cestino
+```
+
+Ora usa RMAN per recuperare la tabella viaggiando indietro nel tempo:
+
+```bash
+# === Sempre su rac1 come oracle ===
+
+# RMAN RECOVER TABLE: recupera una tabella specifica a un punto nel tempo.
+# Oracle internamente:
+#   a) Crea un database ausiliario temporaneo (in /tmp o in +FRA)
+#   b) Fa un restore del database a quel punto nel tempo nel DB ausiliario
+#   c) Usa Data Pump per esportare SOLO la tabella dal DB ausiliario
+#   d) Importa la tabella nel database di produzione
+#   e) Cancella il database ausiliario
+
+# SOSTITUISCI il timestamp con quello che hai annotato al passo 2!
+rman TARGET /
+
+RECOVER TABLE HR.TEST_PITR
+    UNTIL TIME "TO_DATE('07-APR-2026 06:50:30','DD-MON-YYYY HH24:MI:SS')"
+    AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
+    REMAP TABLE HR.TEST_PITR:HR.TEST_PITR_RECOVERED;
+```
+
+> **Spiegazione del comando:**
+> - `RECOVER TABLE HR.TEST_PITR`: recupera questa specifica tabella
+> - `UNTIL TIME "..."`: torna indietro al momento PRIMA del DROP
+> - `AUXILIARY DESTINATION '/tmp/rman_pitr_aux'`: dove creare il DB temporaneo (serve ~2x lo spazio del tablespace)
+> - `REMAP TABLE ... :HR.TEST_PITR_RECOVERED`: rinomina la tabella recuperata (per sicurezza, non sovrascrive l'originale se esistesse ancora)
+
+```sql
+-- 6. Verifica il recupero!
+sqlplus / as sysdba
+
+SELECT * FROM HR.TEST_PITR_RECOVERED;
+-- 🎉 Le 3 righe sono tornate! Transazione Alpha, Beta, Gamma.
+
+-- 7. Se sei soddisfatto, rinominala
+ALTER TABLE HR.TEST_PITR_RECOVERED RENAME TO TEST_PITR;
+
+-- 8. Pulizia: cancella la directory ausiliaria temporanea
+-- (fallo dal terminale Linux)
+```
+
+```bash
+rm -rf /tmp/rman_pitr_aux
+```
+
+> [!WARNING]
+> **RECOVER TABLE richiede:**
+> - Un backup FULL (Level 0) recente come base
+> - Gli archivelog continui dal backup fino al timestamp di recovery
+> - Spazio sufficiente nella AUXILIARY DESTINATION (~dimensione tablespace)
+> - Che il database sia in ARCHIVELOG mode (che noi abbiamo attivato in Fase 3)
+>
+> Se non hai un backup o gli archivelog sono stati cancellati, il recovery è IMPOSSIBILE.
+
+---
+
+### Test 4: Recupero di un Datafile Perso (Scenario Critico)
+
+Questo simula la perdita fisica di un datafile (disco guasto, cancellazione accidentale). **Test da fare con ESTREMA CAUTELA** — consigliato farlo prima sullo standby o su un DB di test.
+
+```sql
+-- === Preparazione: identifica un datafile NON critico ===
+sqlplus / as sysdba
+
+-- Elenca tutti i datafile con il loro tablespace
+SELECT file#, name, status, ROUND(bytes/1024/1024) AS size_mb
+FROM v$datafile
+ORDER BY file#;
+-- Cerca il file del tablespace USERS (è il meno critico).
+-- Esempio: file# = 7, name = +DATA/RACDB/DATAFILE/users.260.1227759055
+
+-- Crea un tablespace di TEST dedicato (così non rischi i dati veri)
+CREATE TABLESPACE TEST_RECOVERY
+    DATAFILE '+DATA' SIZE 50M
+    AUTOEXTEND ON NEXT 10M MAXSIZE 200M;
+
+-- Crea una tabella nel tablespace di test
+CREATE TABLE HR.TEST_DATAFILE (
+    id NUMBER, testo VARCHAR2(100)
+) TABLESPACE TEST_RECOVERY;
+INSERT INTO HR.TEST_DATAFILE SELECT LEVEL, 'Riga '||LEVEL FROM DUAL CONNECT BY LEVEL <= 1000;
+COMMIT;
+
+-- Segna quale file è stato creato
+SELECT file#, name FROM v$datafile WHERE name LIKE '%TEST_RECOVERY%';
+-- Esempio output: file# = 10, +DATA/RACDB/DATAFILE/test_recovery.289...
+-- SEGNA IL NUMERO DEL FILE (es. 10)
+```
+
+```sql
+-- === SIMULA LA PERDITA DEL FILE ===
+
+-- 1. Metti il datafile offline (simula disco guasto)
+ALTER DATABASE DATAFILE 10 OFFLINE;
+-- ^^^ Sostituisci 10 con il tuo file#
+
+-- 2. Ora prova ad accedere alla tabella
+SELECT * FROM HR.TEST_DATAFILE;
+-- ORA-00376: file 10 cannot be read at this time
+-- Il database funziona ancora! Solo il tablespace TEST_RECOVERY è giù.
+```
+
+```bash
+# === RECUPERO CON RMAN ===
+rman TARGET /
+
+# RMAN RESTORE + RECOVER: ripristina il datafile dal backup
+# e poi applica gli archivelog per portarlo aggiornato
 RUN {
-    SET NEWNAME FOR DATAFILE 1 TO '/tmp/restore_test/system01.dbf';
-    SET NEWNAME FOR DATAFILE 2 TO '/tmp/restore_test/sysaux01.dbf';
-    -- ... etc.
-    RESTORE DATABASE;
-    -- NON fare RECOVER: è solo un test
+    # 1. Restore: copia il datafile dal backup al disco ASM
+    RESTORE DATAFILE 10;
+    # ^^^ RMAN cerca nel backup più recente il file 10
+    #     e lo ricopia su ASM nella posizione originale.
+
+    # 2. Recover: applica gli archivelog per aggiornare il file
+    #    dal momento del backup fino a "adesso"
+    RECOVER DATAFILE 10;
+    # ^^^ Senza questo, il file sarebbe "vecchio" (al momento del backup).
+    #     RECOVER legge gli archivelog e applica tutte le modifiche
+    #     avvenute DOPO il backup, rendendo il file consistente con il resto.
 }
+
+# 3. Torna in SQL*Plus per rimettere online il file
+SQL "ALTER DATABASE DATAFILE 10 ONLINE";
 ```
 
-### Test 3: Verifica Restore da Standby al Primario
+```sql
+-- 4. Verifica il recupero!
+sqlplus / as sysdba
+SELECT COUNT(*) FROM HR.TEST_DATAFILE;
+-- 🎉 Output: 1000 righe — tutto recuperato!
+
+-- 5. Pulizia finale (opzionale)
+DROP TABLE HR.TEST_DATAFILE PURGE;
+DROP TABLESPACE TEST_RECOVERY INCLUDING CONTENTS AND DATAFILES;
+```
+
+> **Perché questo test è importante?** Nella realtà, i dischi si guastano. I file vengono cancellati per errore. Un DBA deve saper ripristinare un singolo datafile **senza fermare il database**. Questo è esattamente quello che hai appena fatto: il database è rimasto aperto per gli altri utenti, solo il tablespace rotto era offline.
+
+---
+
+### Test 5: Validazione Integrità Completa (Dry Run)
+
+Questo test non modifica nulla. Verifica che OGNI blocco del database e OGNI file di backup siano integri.
 
 ```rman
--- Connettiti al primario usando il catalog dello standby
-rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB_STBY
+rman TARGET /
 
--- Il backup fatto sullo standby è usabile per il primario
+-- ============================================================
+-- TEST A: I blocchi del database sono integri?
+-- ============================================================
+-- Legge fisicamente ogni blocco di ogni datafile e verifica
+-- i checksum. Se un blocco è corrotto, lo segnala.
+-- NON crea backup, NON modifica nulla.
+BACKUP VALIDATE DATABASE;
+
+-- ============================================================
+-- TEST B: I file di backup sono leggibili?
+-- ============================================================
+-- Per ogni backupset registrato, RMAN apre il file e verifica
+-- che sia leggibile e non corrotto.
+-- Se un file è stato cancellato o corrotto, lo marca EXPIRED.
+CROSSCHECK BACKUP;
+CROSSCHECK ARCHIVELOG ALL;
+
+-- ============================================================
+-- TEST C: Avrei tutto per un restore completo?
+-- ============================================================
+-- Simula un restore completo: controlla che tutti i datafile
+-- e archivelog necessari siano disponibili nei backup.
 RESTORE DATABASE PREVIEW;
+RESTORE DATABASE VALIDATE;
+
+-- ============================================================
+-- TEST D: Ci sono datafile scoperti?
+-- ============================================================
+REPORT NEED BACKUP;
+-- Se mostra file = fai subito un backup Level 0!
+
+-- ============================================================
+-- TEST E: Ci sono operazioni NOLOGGING non protette?
+-- ============================================================
+REPORT UNRECOVERABLE DATABASE;
+-- Se mostra file = fai subito un backup di quei datafile specifici
 ```
+
+---
+
+### Test 6: Verifica Restore da Backup dello Standby al Primario
+
+Un backup fatto sullo standby è utilizzabile per il ripristino del primario. Questo test lo conferma.
+
+```rman
+-- Dal primario, verifica che può usare i backup dello standby
+rman TARGET /
+
+-- RESTORE ... PREVIEW mostra quali backup userebbe per il restore.
+-- Se hai fatto backup dallo standby, li vedrai elencati qui.
+-- Il DBID è lo stesso, quindi sono pienamente intercambiabili.
+RESTORE DATABASE PREVIEW;
+
+-- Dovresti vedere output tipo:
+-- "List of Backup Sets"
+-- "BS Key  Type LV ...  Tag: FULL_WEEKLY"
+-- Questo prova che i backup fatti su racstby1 sono utilizzabili
+-- per ripristinare il primario su rac1.
+```
+
+---
+
+### Riepilogo Test: Cosa hai verificato
+
+| Test | Cosa verifica | Rischio | Tempo |
+|------|--------------|---------|-------|
+| **Passo 0** | Il backup esiste e completa con successo | Nessuno | 10-30 min |
+| **Test 1** | I file di backup sono integri e leggibili | Nessuno (dry run) | 5-15 min |
+| **Test 2** | Recovery di DROP TABLE via Recyclebin | Nessuno (cestino) | 1 min |
+| **Test 3** | Recovery di DROP TABLE PURGE via RMAN PITR | Basso (usa /tmp) | 10-20 min |
+| **Test 4** | Recovery di datafile perso (disco guasto) | Medio (offline tablespace test) | 5-10 min |
+| **Test 5** | Integrità totale database e backup | Nessuno (readonly) | 10-30 min |
+| **Test 6** | Backup standby usabile per primario | Nessuno (readonly) | 2 min |
+
+> [!IMPORTANT]
+> **Best Practice Oracle MAA per i test:**
+> - Esegui il Test 1 (validazione) **almeno settimanalmente**
+> - Esegui il Test 3 o 4 (recovery reale) **almeno mensilmente** su un DB di test
+> - Documenta SEMPRE i risultati dei test in un log con data e ora
+> - Se un test fallisce, **non andare avanti** — risolvi prima il problema di backup
 
 ---
 
