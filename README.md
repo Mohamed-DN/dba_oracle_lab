@@ -95,6 +95,7 @@
 - [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md) — Comandi DBA essenziali da terminale
 - [GUIDA_DATA_PUMP.md](./GUIDA_DATA_PUMP.md) — 🆕 Export/Import con Data Pump (expdp/impdp)
 - [GUIDA_AGGIUNTA_DISCHI_ASM.md](./GUIDA_AGGIUNTA_DISCHI_ASM.md) — Aggiungere dischi ASM
+- [GUIDA_SCHEDULER_JOBS.md](./GUIDA_SCHEDULER_JOBS.md) — 🆕 Oracle Scheduler: job, chain, auto-tasks, monitoring
 - [GUIDA_SSH_KEYS_RAC.md](./GUIDA_SSH_KEYS_RAC.md) — Equivalenza utenti SSH in RAC
 
 #### Performance & Diagnostica

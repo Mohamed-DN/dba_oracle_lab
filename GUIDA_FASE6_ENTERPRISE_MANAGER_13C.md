@@ -452,7 +452,187 @@ Dopo questa fase puoi:
 - schedulare controlli DBA periodici
 - avere evidenze operative per review/cv
 
-## 6.16 Riferimenti ufficiali Oracle (13.5)
+## 6.16 Installazione Silente OMS (Response File)
+
+Per automazione e ripetibilità, usa il response file:
+
+```bash
+# Genera response file template
+./em13500_linux64.bin -getResponseFileTemplates -outputLoc /tmp/em_templates
+
+# Compila il response file (esempio chiave)
+cat > /tmp/em_install.rsp <<'EOF'
+RESPONSEFILE_VERSION=2.2.1.0.0
+INSTALL_TYPE="TYPICAL"
+
+# Percorsi
+ORACLE_MIDDLEWARE_HOME_LOCATION="/u01/app/oracle/middleware"
+ORACLE_HOSTNAME=emcc1
+AGENT_BASE_DIR="/u01/app/oracle/agent"
+
+# Repository DB
+DATABASE_HOSTNAME=dbtarget
+LISTENER_PORT=1521
+SERVICENAME_OR_SID=EMREP
+SYS_PASSWORD=<sys_password>
+SYSMAN_PASSWORD=<sysman_password>
+
+# Console
+MANAGEMENT_TABLESPACE_LOCATION=+DATA/{DB_UNIQUE_NAME}/datafile/mgmt.dbf
+CONFIGURATION_DATA_TABLESPACE_LOCATION=+DATA/{DB_UNIQUE_NAME}/datafile/mgmt_ecm_depot.dbf
+JVM_DIAGNOSTICS_TABLESPACE_LOCATION=+DATA/{DB_UNIQUE_NAME}/datafile/mgmt_deepdive.dbf
+
+# Plugin
+PLUGIN_SELECTION="{\"oracle.sysman.db\":\"13.5.0.0.0\",\"oracle.sysman.emas\":\"13.5.0.0.0\"}"
+
+# Security
+WLS_ADMIN_SERVER_USERNAME=weblogic
+WLS_ADMIN_SERVER_PASSWORD=<wls_password>
+WLS_ADMIN_SERVER_CONFIRM_PASSWORD=<wls_password>
+
+# Porte (default o custom)
+EM_UPLOAD_PORT=4903
+EM_CENTRAL_CONSOLE_PORT=7803
+EOF
+```
+
+```bash
+# Installazione silente
+./em13500_linux64.bin -silent -responseFile /tmp/em_install.rsp \
+  -invPtrLoc /etc/oraInst.loc \
+  -J-Djava.io.tmpdir=/tmp
+
+# Post-install root scripts
+sudo /u01/app/oracle/middleware/allroot.sh
+```
+
+> **Best Practice**: In produzione, salva il response file (senza password) nel repository per riproducibilità. Le password vanno gestite via vault o variabili d'ambiente.
+
+---
+
+## 6.17 EMCLI — Command Line Interface
+
+`emcli` è il tool da riga di comando per automatizzare EM. Essenziale per DBA che vogliono scriptare le operazioni.
+
+### Setup Iniziale
+
+```bash
+# Configura emcli
+$OMS_HOME/bin/emcli setup \
+  -url=https://emcc1:7803/em \
+  -username=SYSMAN \
+  -password=<password> \
+  -trustall
+
+# Login (sessione)
+$OMS_HOME/bin/emcli login -username=SYSMAN -password=<password>
+```
+
+### Comandi Essenziali
+
+```bash
+# Lista target
+emcli get_targets -targets="oracle_database"
+emcli get_targets -targets="host"
+emcli get_targets -targets="osm_instance"    # ASM
+
+# Status target specifico
+emcli get_targets -targets="RACDB:rac_database" -format="name:csv"
+
+# Lista incidenti aperti
+emcli get_open_incidents
+
+# Crea blackout
+emcli create_blackout \
+  -name="PATCHING_RAC_$(date +%Y%m%d)" \
+  -add_targets="RACDB:rac_database" \
+  -schedule="duration::02:00" \
+  -reason="RU Patching"
+
+# Rimuovi blackout
+emcli stop_blackout -name="PATCHING_RAC_20260407"
+
+# Job submission
+emcli submit_job \
+  -name="RMAN_HEALTH_CHECK" \
+  -type="SQLScript" \
+  -targets="RACDB:rac_database" \
+  -input="sql_script:SELECT status FROM v$instance;"
+```
+
+### Script di Health Check via EMCLI
+
+```bash
+#!/bin/bash
+# /home/oracle/scripts/em_health_check.sh
+# Verifica rapida via EMCLI
+
+$OMS_HOME/bin/emcli login -username=SYSMAN -password=$(cat /home/oracle/.em_pwd)
+
+echo "=== TARGET STATUS ==="
+$OMS_HOME/bin/emcli get_targets -targets="oracle_database" -format="name:pretty" \
+  | grep -E "Status|RACDB"
+
+echo ""
+echo "=== INCIDENTI APERTI ==="
+$OMS_HOME/bin/emcli get_open_incidents | head -20
+
+echo ""
+echo "=== BLACKOUT ATTIVI ==="
+$OMS_HOME/bin/emcli get_blackouts -format="name:pretty" | grep "ACTIVE"
+```
+
+---
+
+## 6.18 Metric Extensions — Metriche Custom
+
+Le Metric Extensions permettono di creare metriche personalizzate per monitorare ciò che EM non copre di default.
+
+### Esempio 1: Monitorare Tabelle con Troppi Extent
+
+```sql
+-- Query per la Metric Extension
+SELECT owner, segment_name, extents, bytes/1024/1024 AS mb
+FROM dba_segments
+WHERE extents > 500
+ORDER BY extents DESC;
+```
+
+**Setup nella Console EM:**
+1. Enterprise → Monitoring → Metric Extensions → Create
+2. Target Type: `Database Instance`
+3. Collection Type: `SQL`
+4. Incolla la query sopra
+5. Definisci colonne: Owner, Segment, Extents (metrica), Size_MB (metrica)
+6. Alert: Warning se extents > 500, Critical se > 1000
+7. Deploy sul target group RAC
+
+### Esempio 2: Monitorare FRA Usage (più granulare)
+
+```sql
+SELECT
+    name,
+    ROUND(space_limit/1024/1024/1024, 1) AS limit_gb,
+    ROUND(space_used/1024/1024/1024, 1) AS used_gb,
+    ROUND(space_used/space_limit * 100, 1) AS pct_used
+FROM v$recovery_file_dest;
+```
+
+### Esempio 3: Data Guard Lag Alert Custom
+
+```sql
+SELECT
+    name AS metric_name,
+    TO_NUMBER(REGEXP_SUBSTR(value, '\d+')) AS lag_seconds
+FROM v$dataguard_stats
+WHERE name IN ('transport lag', 'apply lag');
+```
+
+> **Importante**: Le Metric Extensions devono essere testate su un target singolo prima del deploy massivo. Usa la Console EM per il test prima di gestirle via EMCLI.
+
+---
+
+## 6.19 Riferimenti ufficiali Oracle (13.5)
 
 - Oracle Enterprise Manager Cloud Control Basic Installation Guide 13.5:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/embsc/index.html
@@ -462,6 +642,10 @@ Dopo questa fase puoi:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/emadm/index.html
 - Oracle Enterprise Manager Cloud Control Monitoring Guide 13.5:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/emmon/index.html
+- EMCLI Reference:
+  https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/emcli/index.html
+- Metric Extensions:
+  https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/emadm/creating-metric-extensions.html
 - Incidents and Problems in EM 13.5:
   https://docs.oracle.com/en/enterprise-manager/cloud-control/enterprise-manager-cloud-control/13.5/emadm/managing-incidents.html
 - Management Agent administration in EM 13.5:
@@ -475,7 +659,4 @@ Dopo questa fase puoi:
 
 ---
 
-Note:
-
-- Questa guida copre setup e operativita quotidiana in ambiente lab.
 **→ Prossimo: [FASE 7: Configurazione GoldenGate Locale e Cloud](./GUIDA_FASE7_GOLDENGATE.md)**
