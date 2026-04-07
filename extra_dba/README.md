@@ -1,85 +1,109 @@
-# Extra DBA - Indice Attivita Post-Laboratorio
+# Extra DBA — Indice Attività Post-Laboratorio
 
-> Indice curato delle attivita DBA avanzate gia presenti nel repository.
-> Non sostituisce il percorso base Fase 0 -> Fase 8: lo estende dopo che il lab e stabile.
+> Indice curato delle attività DBA avanzate già presenti nel repository.
+> Non sostituisce il percorso base Fase 0 → Fase 8: lo estende dopo che il lab è stabile.
 
 ## Documenti principali della cartella
 
 | Documento | Quando usarlo | File |
 |---|---|---|
-| **Catalogo completo attivita DBA** | Quando vuoi vedere tutto il perimetro del lavoro DBA Oracle, organizzato per dominio operativo | [GUIDA_CATALOGO_ATTIVITA_DBA.md](./GUIDA_CATALOGO_ATTIVITA_DBA.md) |
+| **Catalogo completo attività DBA** | Quando vuoi vedere tutto il perimetro del lavoro DBA Oracle, organizzato per dominio operativo | [GUIDA_CATALOGO_ATTIVITA_DBA.md](./GUIDA_CATALOGO_ATTIVITA_DBA.md) |
 | **Checklist operativa DBA** | Quando vuoi una sequenza pratica giornaliera, settimanale, mensile, trimestrale e pre/post change | [GUIDA_CHECKLIST_ATTIVITA_DBA.md](./GUIDA_CHECKLIST_ATTIVITA_DBA.md) |
 | **Guida domande DBA Oracle** | Quando vuoi ripassare domande tecniche, risposte chiare, scenari realistici e follow-up tipici | [GUIDA_DOMANDE_DBA_ORACLE.md](./GUIDA_DOMANDE_DBA_ORACLE.md) |
+| **PDB + Data Guard + Services** | Quando vuoi testare la propagazione PDB verso standby e pubblicare servizi RAC | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
 
 ## Come usare questa area
 
 - Completa prima il lab base e tieni il Data Guard in `MaxPerformance`.
 - Usa questa area per operazioni day-2, hardening, esercizi avanzati e scenari DBA reali.
-- `studio_ai` resta separato: contiene script e note operative; qui trovi solo il percorso guidato delle attivita extra.
+- `studio_ai` resta separato: contiene script e note operative; qui trovi solo il percorso guidato delle attività extra.
 
-## 1. Data Guard avanzato
+---
 
-| Attivita | Quando usarla | Guida |
-|---|---|---|
-| **Protection Mode / switch modalita** | Subito dopo Fase 4, se vuoi capire quando usare `MaxPerformance`, `MaxAvailability`, `MaxProtection` o `FASTSYNC` | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
-| **Switchover** | Quando vuoi testare role transition pianificata senza data loss | [GUIDA_SWITCHOVER_COMPLETO.md](../GUIDA_SWITCHOVER_COMPLETO.md) |
-| **Failover + Reinstate** | Quando vuoi simulare perdita del primary e recupero controllato | [GUIDA_FAILOVER_E_REINSTATE.md](../GUIDA_FAILOVER_E_REINSTATE.md) |
-| **Active Data Guard** | Quando vuoi tenere lo standby in `READ ONLY WITH APPLY`, anche per GoldenGate | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
-| **PDB propagation + services** | Quando vuoi creare un PDB sul primary, verificarne la comparsa sullo standby e pubblicare servizi RAC corretti | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
+## Mappa Completa: Guide del Repo per Dominio
 
-### Nota pratica sul cambio modalita
+### 1. Data Guard & HA
 
-- `MaxPerformance`: default del lab, minima latenza, redo in `ASYNC`.
-- `MaxAvailability`: da usare se vuoi zero data loss sul primo fault e la rete regge `SYNC` o `FASTSYNC`.
-- `MaxProtection`: da usare solo se accetti l'impatto massimo sulla disponibilita del primary.
+| Attività | Guida |
+|---|---|
+| Protection Mode / switch modalità | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
+| Switchover pianificato | [GUIDA_SWITCHOVER_COMPLETO.md](../GUIDA_SWITCHOVER_COMPLETO.md) |
+| Failover + Reinstate | [GUIDA_FAILOVER_E_REINSTATE.md](../GUIDA_FAILOVER_E_REINSTATE.md) |
+| Flashback Database | [GUIDA_FLASHBACK_DATABASE.md](../GUIDA_FLASHBACK_DATABASE.md) |
+| PDB propagation + services | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
+| MAA best practices | [GUIDA_MAA_BEST_PRACTICES.md](../GUIDA_MAA_BEST_PRACTICES.md) |
 
-La guida tecnica resta in [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md), sezione `4.4 Configurazione Protection Mode`.
+### 2. RAC Operations & Services
 
-## 2. RAC operations
+| Attività | Guida |
+|---|---|
+| Listener, SCAN, TNS | [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
+| TAF, FAN, CLB/RLB | [GUIDA_SERVIZI_APPLICATIVI_RAC.md](../GUIDA_SERVIZI_APPLICATIVI_RAC.md) |
+| Aggiunta dischi ASM | [GUIDA_AGGIUNTA_DISCHI_ASM.md](../GUIDA_AGGIUNTA_DISCHI_ASM.md) |
+| Patching RAC | [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md) |
+| Upgrade RU | [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md) |
 
-| Attivita | Quando usarla | Guida |
-|---|---|---|
-| **Listener e Services** | Quando devi capire SCAN, listener statici, servizi RAC e troubleshooting `ORA-12514` | [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
-| **PDB services role-based** | Quando vuoi pubblicare servizi PDB sul primary e, con Active Data Guard, sullo standby read-only | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
-| **Patching RAC** | Quando devi applicare RU/OJVM o ripulire l'home dopo il patching | [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md) |
-| **Upgrade RU workflow** | Quando vuoi simulare upgrade RU piu strutturati e rollback | [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md) |
+### 3. Backup & Recovery
 
-## 3. Backup e recovery
+| Attività | Guida |
+|---|---|
+| RMAN strategia completa | [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md) |
+| Flashback Database | [GUIDA_FLASHBACK_DATABASE.md](../GUIDA_FLASHBACK_DATABASE.md) |
+| Data Pump export/import | [GUIDA_DATA_PUMP.md](../GUIDA_DATA_PUMP.md) |
 
-| Attivita | Quando usarla | Guida |
-|---|---|---|
-| **RMAN lab base** | Quando vuoi la strategia operativa del lab con backup, cron e restore guidato | [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md) |
-| **RMAN completa 19c** | Quando vuoi un runbook piu esteso con recovery, catalog, validate e casi Data Guard | [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
+### 4. Performance & Troubleshooting 🆕
 
-## 4. Monitoring e day-2
+| Attività | Guida |
+|---|---|
+| **Metodo troubleshooting da zero** | [GUIDA_TROUBLESHOOTING_COMPLETO.md](../GUIDA_TROUBLESHOOTING_COMPLETO.md) |
+| Comandi avanzati AWR/ASH/ADDM | [GUIDA_AWR_ASH_ADDM.md](../GUIDA_AWR_ASH_ADDM.md) |
+| Top 100 script DBA | [TOP_100_SCRIPT_DBA.md](../TOP_100_SCRIPT_DBA.md) |
 
-| Attivita | Quando usarla | Guida |
-|---|---|---|
-| **Enterprise Manager 13.5** | Quando vuoi monitorare OMS, agent, target RAC/Data Guard e job operativi | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) |
-| **Attivita DBA essenziali** | Quando vuoi runbook su AWR/ADDM/ASH, Data Pump, security e patching | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
-| **MAA best practices** | Quando vuoi confrontare il lab con raccomandazioni Oracle HA/DR | [GUIDA_MAA_BEST_PRACTICES.md](../GUIDA_MAA_BEST_PRACTICES.md) |
-| **Domande DBA Oracle** | Quando vuoi consolidare architettura, recovery, Data Guard, RAC, ASM, performance e troubleshooting | [GUIDA_DOMANDE_DBA_ORACLE.md](./GUIDA_DOMANDE_DBA_ORACLE.md) |
+### 5. Security & Encryption 🆕
 
-## 5. Security e encryption
+| Attività | Guida |
+|---|---|
+| TDE, Auditing, Encryption | [GUIDA_SECURITY_HARDENING.md](../GUIDA_SECURITY_HARDENING.md) |
+| Utenti, ruoli, profili | [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
 
-| Attivita | Quando usarla | Guida |
-|---|---|---|
-| **TDE / keystore / wallet** | Quando vuoi configurare Transparent Data Encryption, capire il ruolo del wallet e ricordarti il backup del keystore | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
-| **Toolkit TDE e audit** | Quando vuoi script pratici per audit trail, controlli sicurezza e note operative riusabili | [studio_ai/08_tde_security](../studio_ai/08_tde_security/) |
+### 6. Database Administration
 
-### Nota pratica su TDE
+| Attività | Guida |
+|---|---|
+| CDB/PDB, Multitenant | [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
+| Comandi DBA essenziali | [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md) |
+| Scheduler & Jobs | [GUIDA_SCHEDULER_JOBS.md](../GUIDA_SCHEDULER_JOBS.md) |
+| Attività quotidiane DBA | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
 
-- nel repo la parte piu concreta oggi sta in [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), sezione `5.3 Transparent Data Encryption (TDE)`;
-- il punto critico non e solo creare la master key, ma gestire bene `keystore`, backup wallet e utenti amministrativi (`SYSKM`);
-- `TDE` protegge i dati a riposo, non sostituisce backup, auditing o network encryption.
+### 7. Monitoring
+
+| Attività | Guida |
+|---|---|
+| Enterprise Manager 13.5 | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) |
+
+### 8. GoldenGate & Replication
+
+| Attività | Guida |
+|---|---|
+| GoldenGate locale (Oracle + PG) | [GUIDA_FASE7_GOLDENGATE.md](../GUIDA_FASE7_GOLDENGATE.md) |
+| Migrazione zero-downtime | [GUIDA_MIGRAZIONE_GOLDENGATE.md](../GUIDA_MIGRAZIONE_GOLDENGATE.md) |
+| Oracle → PostgreSQL | [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](../GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
+
+### 9. Riferimenti
+
+| Attività | Guida |
+|---|---|
+| Glossario 100+ termini | [GLOSSARIO_ORACLE.md](../GLOSSARIO_ORACLE.md) |
+| Architettura Oracle | [GUIDA_ARCHITETTURA_ORACLE.md](../GUIDA_ARCHITETTURA_ORACLE.md) |
+
+---
 
 ## Percorso consigliato post-lab
 
-1. Protection Mode
-2. Switchover
-3. Failover + Reinstate
-4. RMAN completo
-5. TDE / wallet / security review
-6. Enterprise Manager
-7. MAA review finale
-
+1. Protection Mode → Switchover → Failover + Reinstate
+2. RMAN completo + Flashback Database
+3. Performance: mega-guida troubleshooting + AWR/ASH
+4. Security: TDE + Auditing + Hardening
+5. Enterprise Manager
+6. Scheduler & Jobs
+7. MAA review finale + Domande colloquio
