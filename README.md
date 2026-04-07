@@ -98,8 +98,8 @@
 - [GUIDA_SSH_KEYS_RAC.md](./GUIDA_SSH_KEYS_RAC.md) — Equivalenza utenti SSH in RAC
 
 #### Performance & Diagnostica
-- [GUIDA_AWR_ASH_ADDM.md](./GUIDA_AWR_ASH_ADDM.md) — 🆕 AWR, ASH, ADDM e SQL Tuning Advisor
-- [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md) — 🆕 Errori comuni con diagnosi e soluzioni
+- [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md) — 🆕 **MEGA-GUIDA**: metodo da zero, wait events, scenari reali, SQL tuning, monitoring
+- [GUIDA_AWR_ASH_ADDM.md](./GUIDA_AWR_ASH_ADDM.md) — 🆕 Comandi avanzati AWR/ASH/ADDM, SQL Monitor, SPM, SQL Quarantine
 
 #### Sicurezza
 - [GUIDA_SECURITY_HARDENING.md](./GUIDA_SECURITY_HARDENING.md) — 🆕 TDE, Auditing, Encryption, Password Profiles
