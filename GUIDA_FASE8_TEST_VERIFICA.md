@@ -14,13 +14,13 @@ Checklist minima:
 # Data Guard
 dgmgrl sys/<password>@RACDB "show configuration;"
 
-# GoldenGate su standby
+# GoldenGate sul PRIMARIO (rac1) — è lì che gira l'Extract
 cd $OGG_HOME && ./ggsci
 INFO ALL
 ```
 
 ```sql
--- Standby deve essere utilizzabile da GG
+-- Primario deve essere stabile
 sqlplus / as sysdba
 SELECT open_mode, database_role FROM v$database;
 ```
@@ -28,9 +28,9 @@ SELECT open_mode, database_role FROM v$database;
 Requisiti:
 
 - DGMGRL in `SUCCESS`
-- Extract/Pump `RUNNING` su standby
-- Replicat target (`REPTAR`) `RUNNING` su UI Microservices
-- standby in stato coerente con i test (tipicamente `READ ONLY WITH APPLY`)
+- Extract/Pump `RUNNING` sul **primario** (`rac1`)
+- Replicat `RUNNING` sul **target** (`dbtarget`)
+- Primary in `READ WRITE`, standby in apply
 
 Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) sezione 7.13.
 
@@ -160,9 +160,10 @@ SHOW CONFIGURATION;
 
 ## 8.3 Test GoldenGate — Verifica Replica End-to-End
 
-### Sullo Standby: Verifica stato processi GG
+### Sul Primario (rac1): Verifica stato processi GG
 
 ```bash
+# L'Extract e il Pump girano sul PRIMARIO (rac1)
 cd $OGG_HOME
 ./ggsci
 
@@ -173,25 +174,31 @@ Output atteso:
 ```
 Program     Status      Group       Lag at Chkpt  Time Since Chkpt
 MANAGER     RUNNING
-EXTRACT     RUNNING     ext_racdb   00:00:02      00:00:05
-EXTRACT     RUNNING     pump_racdb  00:00:00      00:00:03
+EXTRACT     RUNNING     ext_rac     00:00:02      00:00:05
+EXTRACT     RUNNING     pump_rac    00:00:00      00:00:03
 ```
 
-### Sul Target: Verifica stato Replicat
+### Sul Target (dbtarget): Verifica stato Replicat
 
-Sul target OCI con GoldenGate Microservices non usare `ggsci` classico.
+```bash
+# Sul target locale (dbtarget), verifica il Replicat
+cd $OGG_HOME
+./ggsci
 
-Controlla da Web UI (Administration Server):
+INFO ALL
+```
 
-- replicat `REPTAR` in stato `Running`
-- checkpoint in avanzamento
-- lag basso/stabile
-- nessun errore in diagnostics
+Output atteso:
+```
+Program     Status      Group       Lag at Chkpt  Time Since Chkpt
+MANAGER     RUNNING
+REPLICAT    RUNNING     rep_rac     00:00:01      00:00:02
+```
 
 ### Genera traffico e verifica
 
 ```sql
--- Sul Primario (RACDB)
+-- Sul Primario (RACDB) — rac1
 sqlplus testdg/testdg123@RACDB
 
 INSERT INTO test_replica VALUES (100, 'GoldenGate Test 1', SYSTIMESTAMP);
@@ -209,20 +216,22 @@ SELECT * FROM test_replica WHERE id >= 100;
 ```
 
 > Se le righe sono presenti sul target, la catena completa funziona:
-> **RAC Primary → (DG Redo) → RAC Standby → (GG Extract/Pump) → Target DB (GG Replicat)**
+> **RAC Primary (rac1) → GG Extract → GG Pump → rete → GG Replicat → Target DB (dbtarget)**
+>
+> In parallelo, Data Guard continua a proteggere: Primary → Standby (RACDB_STBY)
 
 ### Verifica statistiche GoldenGate
 
 ```
--- Sullo Standby
-GGSCI> STATS EXTRACT ext_racdb, LATEST
+-- Sul Primario (rac1)
+GGSCI> STATS EXTRACT ext_rac, LATEST
 -- Mostra le tabelle e il numero di operazioni catturate
 
-GGSCI> STATS EXTRACT pump_racdb, LATEST
+GGSCI> STATS EXTRACT pump_rac, LATEST
 
--- Sul Target
--- verifica statistiche dal pannello del replicat REPTAR (Microservices UI)
--- e dalla sezione diagnostics / performance
+-- Sul Target (dbtarget)
+GGSCI> STATS REPLICAT rep_rac, LATEST
+-- Mostra INSERT/UPDATE/DELETE replicati
 ```
 
 ---
@@ -368,16 +377,21 @@ srvctl status database -d RACDB
 
 ## 8.8 Test GoldenGate dopo Switchover
 
-> CRITICO: Dopo un switchover Data Guard, GoldenGate deve continuare a funzionare.
+> CRITICO: Dopo un switchover Data Guard, l'Extract GoldenGate deve essere spostato o riconfigurato perché il primario è cambiato.
 
 ```
 PRIMA dello switchover:
-  Primary (RACDB) → DG → Standby (RACDB_STBY) → GG Extract → Target
+  Primary (RACDB, rac1) → GG Extract/Pump → Target (dbtarget)
+                        → DG Redo → Standby (RACDB_STBY)
 
 DOPO lo switchover:
-  Old-Primary (RACDB, ora standby) ← DG ← New-Primary (RACDB_STBY)
-  L'Extract GG gira ancora su RACDB_STBY (che ora è il primario!)
-  → Deve continuare a catturare modifiche senza interruzione!
+  New-Primary (RACDB_STBY, racstby1)
+  Old-Primary (RACDB, rac1, ora standby)
+
+  ⚠️ L'Extract GG era su rac1, che ora è standby!
+  → Devi FERMARE l'Extract su rac1 e RIAVVIARLO dal nuovo primario (racstby1)
+  → Oppure usare la funzione Integrated Extract che si adatta automaticamente
+     al nuovo primario (se configurato correttamente con DG Broker)
 ```
 
 ```bash
@@ -385,10 +399,22 @@ DOPO lo switchover:
 dgmgrl sys/<password>@RACDB
 SWITCHOVER TO RACDB_STBY;
 
-# 2. Verifica GG sullo standby (ora primario)
+# 2. L'Extract era sul vecchio primario (rac1).
+#    Con Integrated Extract registrato nel database,
+#    devi fermarlo e riavviarlo dal nuovo primario.
+
+# Su rac1 (ora standby): ferma l'Extract
 cd $OGG_HOME && ./ggsci
+STOP EXTRACT ext_rac
+STOP EXTRACT pump_rac
+
+# Su racstby1 (ora primario): avvia l'Extract
+# (GoldenGate deve essere installato anche qui)
+cd $OGG_HOME && ./ggsci
+START EXTRACT ext_rac
+START EXTRACT pump_rac
 INFO ALL
-# Extract e Pump devono essere ancora RUNNING
+# Extract e Pump devono essere RUNNING
 
 # 3. Inserisci dati sul nuovo primario
 sqlplus testdg/testdg123@RACDB_STBY
@@ -406,8 +432,15 @@ SELECT * FROM test_replica WHERE id = 6000;
 dgmgrl sys/<password>@RACDB_STBY
 SWITCHOVER TO RACDB;
 
-# 6. Verifica
-GGSCI> INFO ALL
+# 6. Sposta di nuovo l'Extract su rac1
+# Su racstby1: STOP
+STOP EXTRACT ext_rac
+STOP EXTRACT pump_rac
+
+# Su rac1 (di nuovo primario): START
+START EXTRACT ext_rac
+START EXTRACT pump_rac
+INFO ALL
 # Tutto RUNNING? → BRAVO!
 ```
 
