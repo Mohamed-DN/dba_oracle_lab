@@ -17,6 +17,14 @@
 | 07 | `GUIDA_FASE8_TEST_VERIFICA.md` | **Audit Compliant**: Eccellente copertura di scenari reali (Switchover, Node Crash, Eviction, GG Post-Switchover). Troubleshooting table chiara. Nessun refactoring necessario. | ✅ |
 | 08 | `GUIDA_FASE5_RMAN_BACKUP.md` | **Audit Compliant**: Strategia di backup su Primary/Standby/Target impeccabile. BCT (Block Change Tracking) applicato correttamente. Script CRON e Health Check inclusi didatticamente. Nessun refactoring. | ✅ |
 | 09 | `Script & Query` | **Audit Compliant**: Verificato che gli script di automazione (es. RMAN, Health Check) e le query SQL siano correttamente spiegati in-line all'interno delle guide Fase 6 e Fase 7. | ✅ |
+| 10 | `GUIDA_FASE7_GOLDENGATE.md` | **Riscrittura Totale Aprile 2026**: Rimossa architettura cloud OCI. Implementato target locale (Oracle + PostgreSQL). Approccio 100% manuale con teoria profonda su ogni processo GG. Aggiunta sezione DEFGEN per target eterogeneo. ~600 righe nuove. | ✅ |
+| 11 | `GUIDA_FASE8_TEST_VERIFICA.md` | **Fix Architettura**: Corretto Extract GoldenGate da Standby a Primary per allineamento con nuova Fase 7. Aggiornati test post-switchover. | ✅ |
+| 12 | `README.md` | **Ristrutturazione Indice**: Indice completo con 35+ guide organizzate per categoria. Aggiunte sezioni Performance, Sicurezza, Cloud OCI. | ✅ |
+| 13 | `GUIDA_RMAN_COMPLETA_19C.md` | **Deprecazione**: Aggiunto avviso di deprecazione con redirect alla guida Fase 5 autoritativa. | ✅ |
+| 14 | **7 NUOVE GUIDE** | Flashback Database, AWR/ASH/ADDM, Troubleshooting Completo, Security Hardening, Servizi Applicativi RAC, Data Pump, Glossario Oracle — tutte con teoria profonda e comandi spiegati. | ✅ |
+| 15 | `GUIDA_TROUBLESHOOTING_COMPLETO.md` | **Riscrittura Totale**: 9 parti, ~900 righe. Metodo top-down, wait events da zero, scenari reali, SQL tuning, monitoring proattivo, checklist DBA, dizionario wait events. | ✅ |
+| 16 | `GUIDA_AWR_ASH_ADDM.md` | **Riscrittura**: Comandi avanzati, SQL Monitor, SQL Plan Management, SQL Quarantine 19c, script generazione report automatica. | ✅ |
+| 17 | `GUIDA_MIGRAZIONE_GOLDENGATE.md` | **Fix Link**: Corretto link rotto GUIDA_FASE5_GOLDENGATE (inesistente) → GUIDA_FASE7_GOLDENGATE. | ✅ |
 
 ---
 
@@ -25,6 +33,9 @@
 L'Intelligenza Artificiale ha processato l'intero repository secondo le istruzioni del DBA Lead.
 - Gli **IP Address** sono stati conformati al Matrix Master (192.168.x.x) ovunque.
 - I **Comandi "Scatola Nera"** (come `echo | fdisk` e il setup Data Pump senza CSN) sono stati esplosi in processi espliciti ed educativi per massimizzare l'apprendimento.
+- **GoldenGate** riscritto per architettura locale con target Oracle + PostgreSQL.
+- **7 nuove guide** create coprendo Flashback, Performance, Troubleshooting, Security, Servizi RAC, Data Pump, Glossario.
+- **Troubleshooting e Performance**: mega-guida riscritta da zero insegnando il metodo Oracle (top-down, wait events).
 - L'architettura complessiva (Oracle RAC + Data Guard + GoldenGate) è **solida, coerente e pronta per l'ambiente di produzione / lab avanzato**.
 
-> *"Un sistema ben documentato è un sistema che sopravvive al suo creatore."* — ✅ **Audit Completato.**
+> *"Un sistema ben documentato è un sistema che sopravvive al suo creatore."* — ✅ **Audit Completato — Aprile 2026.**

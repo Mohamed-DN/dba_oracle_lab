@@ -121,10 +121,19 @@
 
 #### Script & Riferimenti
 - [GLOSSARIO_ORACLE.md](./GLOSSARIO_ORACLE.md) — 🆕 100+ acronimi e termini Oracle spiegati
+- [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md) — Architettura Oracle: SGA, PGA, processi, storage
 - [TOP_100_SCRIPT_DBA.md](./TOP_100_SCRIPT_DBA.md) — Top 100 script DBA
 - [extra_dba/](./extra_dba/README.md) — Guide extra (domande colloquio, checklist, catalogo attività)
 - [studio_ai/](./studio_ai/README.md) — Script AI per studio (12 categorie: ASM, DataGuard, monitoring, ecc.)
 - [vagrant_rac_dataguard/](./vagrant_rac_dataguard/README.md) — Automazione Vagrant "One-Click" (Fasi 0→4)
+
+#### Cloud OCI (Opzionale Avanzato)
+
+> Le guide seguenti documentano un percorso **alternativo avanzato**: replicare verso Oracle Cloud (OCI ARM Free Tier). Il percorso principale del lab è **locale** (vedi Fase 7).
+
+- [GUIDA_CLOUD_GOLDENGATE.md](./GUIDA_CLOUD_GOLDENGATE.md) — GoldenGate verso OCI ARM (setup completo)
+- [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md) — Target DB su OCI: scelta percorso Free vs Enterprise
+- [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md) — Networking locale ↔ OCI (VPN, SSH tunnel, IP pubblico)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
