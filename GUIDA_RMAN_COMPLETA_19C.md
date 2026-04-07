@@ -1,5 +1,11 @@
 # GUIDA LAB RMAN ORACLE 19C - COMPLETA (RAC + DATA GUARD + CDB/PDB)
 
+> [!WARNING]
+> **Questa guida è stata sostituita dalla versione molto più dettagliata nella Fase 5.**
+> Vai a → [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
+>
+> Il file seguente è mantenuto come riferimento storico per i runbook avanzati (sezione 10+).
+
 Aggiornata al 13 marzo 2026.
 Target: lab VirtualBox Oracle 19c (`RACDB` primary, `RACDB_STBY` standby, `dbtarget` ambiente test).
 

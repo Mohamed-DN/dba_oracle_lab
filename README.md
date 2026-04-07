@@ -80,21 +80,51 @@
 8. [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
 9. [GUIDA_FASE8_TEST_VERIFICA.md](./GUIDA_FASE8_TEST_VERIFICA.md)
 
-### 3) Sprint GoldenGate esteso (40 test)
+### 3) Guide Operative e Approfondimenti
 
-- Guida principale: [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
-- Template log test: [TESTLOG_GOLDENGATE_TEMPLATE.md](./TESTLOG_GOLDENGATE_TEMPLATE.md)
-- Pianificazione giornaliera: [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md) (addendum operativo GoldenGate)
+#### Data Guard & HA
+- [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md) — Switchover passo-passo con diagrammi
+- [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md) — Failover di emergenza e reinstate
+- [GUIDA_FLASHBACK_DATABASE.md](./GUIDA_FLASHBACK_DATABASE.md) — 🆕 Flashback Database: macchina del tempo Oracle
+- [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md) — Oracle Maximum Availability Architecture
 
-### 4) Operazioni avanzate + Cloud + esami
+#### Database Architecture & Admin
+- [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) — Multitenant: CDB, PDB, utenti, service
+- [GUIDA_LISTENER_SERVICES_DBA.md](./GUIDA_LISTENER_SERVICES_DBA.md) — Listener, services, TNS in dettaglio
+- [GUIDA_SERVIZI_APPLICATIVI_RAC.md](./GUIDA_SERVIZI_APPLICATIVI_RAC.md) — 🆕 TAF, FAN, CLB/RLB, Application Continuity
+- [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md) — Comandi DBA essenziali da terminale
+- [GUIDA_DATA_PUMP.md](./GUIDA_DATA_PUMP.md) — 🆕 Export/Import con Data Pump (expdp/impdp)
+- [GUIDA_AGGIUNTA_DISCHI_ASM.md](./GUIDA_AGGIUNTA_DISCHI_ASM.md) — Aggiungere dischi ASM
+- [GUIDA_SSH_KEYS_RAC.md](./GUIDA_SSH_KEYS_RAC.md) — Equivalenza utenti SSH in RAC
 
-1. Protection Mode / switch modalita: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
-2. Switchover / Failover / Migrazione: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md), [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md)
-3. PDB propagation + services: [extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md](./extra_dba/GUIDA_PDB_DATAGUARD_SERVICES.md)
-4. Domande DBA Oracle: [extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md](./extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md)
-5. Extra DBA index: [extra_dba/README.md](./extra_dba/README.md)
-6. Cloud, rete e MAA: [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md), [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md), [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md)
-7. Esami e PostgreSQL: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md), [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+#### Performance & Diagnostica
+- [GUIDA_AWR_ASH_ADDM.md](./GUIDA_AWR_ASH_ADDM.md) — 🆕 AWR, ASH, ADDM e SQL Tuning Advisor
+- [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md) — 🆕 Errori comuni con diagnosi e soluzioni
+
+#### Sicurezza
+- [GUIDA_SECURITY_HARDENING.md](./GUIDA_SECURITY_HARDENING.md) — 🆕 TDE, Auditing, Encryption, Password Profiles
+
+#### Patching & Upgrade
+- [GUIDA_PATCHING_RAC.md](./GUIDA_PATCHING_RAC.md) — Patching post-installazione con Combo Patch
+- [GUIDA_UPGRADE_RU_RAC.md](./GUIDA_UPGRADE_RU_RAC.md) — Upgrade Release Update in RAC
+
+#### GoldenGate & Replica
+- [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) — GoldenGate locale (Oracle + PostgreSQL target)
+- [GUIDA_MIGRAZIONE_GOLDENGATE.md](./GUIDA_MIGRAZIONE_GOLDENGATE.md) — Cutover e migrazione con GG
+- [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) — Migrazione Oracle → PostgreSQL
+
+#### Produzione & Esami
+- [GUIDA_DA_LAB_A_PRODUZIONE.md](./GUIDA_DA_LAB_A_PRODUZIONE.md) — Sizing lab vs produzione
+- [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md) — Preparazione esami Oracle
+- [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) — Attività quotidiane del DBA
+- [VALIDAZIONE_BEST_PRACTICES.md](./VALIDAZIONE_BEST_PRACTICES.md) — Validazione best practice Oracle
+
+#### Script & Riferimenti
+- [GLOSSARIO_ORACLE.md](./GLOSSARIO_ORACLE.md) — 🆕 100+ acronimi e termini Oracle spiegati
+- [TOP_100_SCRIPT_DBA.md](./TOP_100_SCRIPT_DBA.md) — Top 100 script DBA
+- [extra_dba/](./extra_dba/README.md) — Guide extra (domande colloquio, checklist, catalogo attività)
+- [studio_ai/](./studio_ai/README.md) — Script AI per studio (12 categorie: ASM, DataGuard, monitoring, ecc.)
+- [vagrant_rac_dataguard/](./vagrant_rac_dataguard/README.md) — Automazione Vagrant "One-Click" (Fasi 0→4)
 
 > **Consiglio**: il piano completo e aggiornato e' su [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md), 8 settimane (40 giorni) a 3 ore/giorno.
 
