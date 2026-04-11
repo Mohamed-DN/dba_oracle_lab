@@ -120,6 +120,12 @@
 - [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) — Attività quotidiane del DBA
 - [VALIDAZIONE_BEST_PRACTICES.md](./VALIDAZIONE_BEST_PRACTICES.md) — Validazione best practice Oracle
 
+#### 📋 Procedure Operative (Runbook Giornalieri)
+- [procedure_operative/](./procedure_operative/README.md) — 🆕 **11 procedure pronte all'uso** per il lavoro quotidiano:
+  - Morning Health Check, Verifica Backup, Check Data Guard
+  - Lock/Blocchi, Query Lenta, Tablespace Pieno, CPU Alta, ORA-Errors
+  - Gestione Utenti, Start/Stop RAC, Review AWR Settimanale
+
 #### Script & Riferimenti
 - [GLOSSARIO_ORACLE.md](./GLOSSARIO_ORACLE.md) — 🆕 100+ acronimi e termini Oracle spiegati
 - [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md) — Architettura Oracle: SGA, PGA, processi, storage
