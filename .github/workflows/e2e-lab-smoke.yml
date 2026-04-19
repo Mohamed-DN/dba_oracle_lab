@@ -34,7 +34,8 @@ jobs:
 
       - name: Verify key controls are encoded in playbooks
         run: |
-          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml
+          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml || \
+            grep -Fq 'v\$dataguard_stats' automation/roles/oracle_daily_health/tasks/main.yml
           grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
           grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
 
