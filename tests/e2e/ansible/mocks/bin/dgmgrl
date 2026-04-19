@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+cmd="$*"
+if [[ "$cmd" == *"show configuration"* ]]; then
+  echo "Configuration Status: SUCCESS"
+  exit 0
+fi
+if [[ "$cmd" == *"show database verbose"* ]]; then
+  echo "Transport Lag:      0 seconds"
+  echo "Apply Lag:          0 seconds"
+  exit 0
+fi
+if [[ "$cmd" == *"switchover to"* ]]; then
+  echo "Switchover succeeded"
+  exit 0
+fi
+echo "SUCCESS"

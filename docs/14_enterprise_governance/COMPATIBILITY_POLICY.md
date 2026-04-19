@@ -21,3 +21,4 @@
 ## Policy di modifica
 - Ogni cambio di stato deve aggiornare questa tabella e il changelog.
 - Le versioni deprecated devono avere finestra di deprecazione esplicita in release note.
+- La versione machine-readable per release artifact è `reliability/release/compatibility_matrix.yml`.

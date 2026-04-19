@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+if [[ "$*" == *"status database"* ]]; then
+  echo "Instance RACDB1 is running on node rac1"
+  exit 0
+fi
+if [[ "$*" == *"status listener"* ]]; then
+  echo "Listener LISTENER is enabled"
+  exit 0
+fi
+if [[ "$*" == *"status scan_listener"* ]]; then
+  echo "SCAN listener LISTENER_SCAN1 is enabled"
+  exit 0
+fi
+echo "srvctl mock ok"

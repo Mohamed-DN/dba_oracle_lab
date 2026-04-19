@@ -1,0 +1,45 @@
+name: E2E Functional Playbooks (Mocked)
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "automation/**"
+      - "tests/e2e/**"
+      - ".github/workflows/e2e-functional-playbooks.yml"
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      - "automation/**"
+      - "tests/e2e/**"
+      - ".github/workflows/e2e-functional-playbooks.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  functional-e2e-playbooks:
+    name: Functional E2E on playbooks (repeatable)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Ansible
+        run: pip install ansible-core
+
+      - name: Run functional E2E suite
+        run: tests/e2e/ansible/run_functional_e2e.sh
+
+      - name: Upload E2E logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-functional-playbooks-logs
+          path: tests/e2e/ansible/logs/*.log
+          if-no-files-found: error
