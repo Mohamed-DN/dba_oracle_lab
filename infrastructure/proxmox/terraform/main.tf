@@ -32,7 +32,7 @@ resource "proxmox_vm_qemu" "lab" {
 
 locals {
   vm_metadata = {
-    environment = var.environment
+    environment  = var.environment
     generated_at = timestamp()
     hosts = {
       for vm_name, vm in var.vms :
