@@ -6,11 +6,6 @@
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
-> **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
-
-### 📑 Navigazione Rapida
-
 [⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🌐 Piano IP](#-piano-ip)
 
 ---
@@ -63,7 +58,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 > 💡 **Non vuoi fare tutto a mano?**
 > - **Parziale**: La cartella `scripts/` ha bash script per storage e Grid.
-> - **Completa**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automatizza le **Fasi 0→4** in un click (33GB RAM).
+> - **Completa**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automatizza le **Fasi 0→4** in un click (33GB RAM). **Importante**: Richiede binari Oracle nella cartella `/software`.
 
 ---
 
@@ -238,13 +233,10 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### 🎓 Esami & Carriera
 
-| Guida | Cosa Impari |
-|---|---|
-| [Ripasso Concetti DBA](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 sezioni Q&A su architettura, RAC, DG, performance, scenari |
+| [**Ripasso & Colloqui (Mega Guide)**](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | **MASTER GUIDE**: Q1 - Q106, Mindset, Metodo STAR e Teoria Senior |
 | [Preparazione Esami](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
 | [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
 | [Attività DBA](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR, Patching, DataPump |
-| [**Preparazione Colloqui**](./docs/10_esami_carriera/GUIDA_PREPARAZIONE_COLLOQUIO_TECNICO.md) | **MEGA-GUIDA**: mindset, metodo STAR e 18 domande avanzate |
 | [Validazione Best Practices](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98% |
 
 ---
@@ -319,11 +311,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Risorse Extra (Archivio)
 
-| Documento | Descrizione |
-|---|---|
 | [Catalogo Attività DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
 | [Checklist Operativa](./docs/10_esami_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
-| [Domande Tecniche DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande e risposte per esami e certificazioni |
 
 ---
 

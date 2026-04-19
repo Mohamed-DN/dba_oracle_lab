@@ -6,44 +6,32 @@
 
 ## Cosa Succede durante uno Switchover
 
+Lo switchover inverte i ruoli tra Primary e Standby.
+
+```mermaid
+stateDiagram-v2
+    state "SITO A (PRIMARY)" as SiteA_P
+    state "SITO B (STANDBY)" as SiteB_S
+    state "SITO A (STANDBY)" as SiteA_S
+    state "SITO B (PRIMARY)" as SiteB_P
+
+    [*] --> SiteA_P
+    [*] --> SiteB_S
+    
+    SiteA_P --> SiteA_S: SWITCHOVER
+    SiteB_S --> SiteB_P: SWITCHOVER
+    
+    SiteA_S --> SiteB_P: Redo Shipping
+    SiteA_P --> SiteB_S: Redo Shipping
 ```
-PRIMA dello Switchover:
-═══════════════════════
-┌─────────────────┐      Redo Shipping      ┌─────────────────┐
-│  RAC PRIMARY    │ ───────────────────────→ │  RAC STANDBY    │
-│  RACDB          │                          │  RACDB_STBY     │
-│  OPEN (R/W)     │                          │  MOUNT o ADG    │
-│  ┌────┐ ┌────┐  │                          │  ┌────┐ ┌────┐  │
-│  │DB1 │ │DB2 │  │                          │  │DB1 │ │DB2 │  │
-│  └────┘ └────┘  │                          │  └────┘ └────┘  │
-│  rac1    rac2   │                          │ stby1   stby2   │
-└─────────────────┘                          └─────────────────┘
-       CLIENTS ──→ si connettono qui
 
-
-DURANTE lo Switchover (~30-60 secondi):
-═══════════════════════════════════════
-1. DGMGRL chiude il Primary (flush redo finale)
-2. Il Primary diventa Standby
-3. Lo Standby riceve l'ultimo redo e lo applica
-4. Lo Standby diventa Primary
-5. Si aprono i nuovi ruoli
+### Flusso Operativo:
+1. **DGMGRL** chiude il Primary (flush redo finale).
+2. Il Primary diventa Standby.
+3. Lo Standby riceve l'ultimo redo e lo applica.
+4. Lo Standby diventa Primary.
+5. Si aprono i nuovi ruoli.
    ⚠️ I client vengono disconnessi per ~30-60 secondi!
-
-
-DOPO lo Switchover:
-═══════════════════
-┌─────────────────┐      Redo Shipping      ┌─────────────────┐
-│  RAC STANDBY    │ ←─────────────────────── │  RAC PRIMARY    │
-│  RACDB          │                          │  RACDB_STBY     │
-│  MOUNT (standby)│                          │  OPEN (R/W)     │
-│  ┌────┐ ┌────┐  │                          │  ┌────┐ ┌────┐  │
-│  │DB1 │ │DB2 │  │                          │  │DB1 │ │DB2 │  │
-│  └────┘ └────┘  │                          │  └────┘ └────┘  │
-│  rac1    rac2   │                          │ stby1   stby2   │
-└─────────────────┘                          └─────────────────┘
-                                       CLIENTS ──→ si connettono QUI ora
-```
 
 ---
 

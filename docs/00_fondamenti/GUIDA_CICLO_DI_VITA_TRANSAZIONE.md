@@ -55,9 +55,22 @@ Ora che Oracle sa *come* recuperare la riga (es. tramite un indice), deve portar
 
 Prima di modificare la riga nel Buffer Cache, Oracle deve assicurarsi che nessun altro la stia toccando.
 
-1. **ITL (Interested Transaction List)**: Il Server Process guarda l'**header del blocco dati**. Cerca uno slot ITL libero. Se non c'è, prova a crearlo (fino al limite). Se il blocco è pieno zeppo e non c'è spazio per un nuovo slot ITL, l'utente aspetta (Wait event: `enq: TX - allocate ITL entry`).
-2. **Record Locking**: La transazione scrive il suo ID (TxID) nello slot ITL e imposta un "lock bit" (un byte specifico) direttamente sulla riga `id = 100` all'interno del blocco. 
-3. **Contesa**: Se quel lock bit era già impostato da un'altra transazione (es. Mary sta modificando lo stesso impiegato e non ha fatto commit), John viene **bloccato** in attesa (Wait event: `enq: TX - row lock contention`).
+```mermaid
+graph TD
+    BlockHeader[Block Header] --> ITLSlot[ITL Slots - Interested Transaction List]
+    ITLSlot --> Slot1[Slot 1: Active Tx A]
+    ITLSlot --> Slot2[Slot 2: Free]
+    
+    TxB[Transaction B] -- "Requests Lock" --> Slot2
+    Slot2 -- "Assigned" --> TxB
+    TxB -- "Writes TxID to Row Header" --> Row[Row: id=100]
+    
+    subgraph "Contention Scenario"
+        TxC[Transaction C] -- "Requests Row id=100" --> Row
+        Row -- "Blocked by TxB" --> TxC
+        TxC -- "Wait Event" --> enqTX[enq: TX - row lock contention]
+    end
+```
 
 ---
 
@@ -161,9 +174,21 @@ I **Redo Log Files** sono circolari. Quando il Gruppo 1 è pieno, LGWR passa al 
 
 Se il database è in modalità `ARCHIVELOG` (ed in produzione lo è **sempre**), subentra un altro processo: l'**ARCn (Archiver)**.
 
-1. Quando LGWR riempie il Redo Log Group 1 e fa lo "switch" al Group 2, il Group 1 diventa temporaneamente bloccato.
-2. Si sveglia l'**ARCn**, che prende il Group 1 pieno e lo **copia per intero** in una cartella sicura (tipicamente nel Fast Recovery Area - FRA). Questa copia si chiama **Archived Redo Log**.
-3. Solo quando l'ARCn (Archiver) ha confermato la fine della copia, il Gruppo 1 nel Redo Log circolare viene liberato e può essere sovrascritto da LGWR al prossimo giro.
+```mermaid
+graph LR
+    subgraph "Online Logs (Circular)"
+        G1[Group 1: FULL]
+        G2[Group 2: CURRENT]
+        G3[Group 3: UNUSED]
+    end
+    
+    G1 -- "Log Switch" --> G2
+    G1 -- "ARCn Task" --> FRA[FRA / Archived Logs]
+    FRA -- "Success" --> Release[G1 cleared for reuse]
+    
+    style G1 fill:#f96
+    style G2 fill:#9f9
+```
 
 ```
 Se il database si corrompe domani, possiamo usare:

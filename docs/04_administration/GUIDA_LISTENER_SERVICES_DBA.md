@@ -24,37 +24,24 @@
 
 Il Listener è un **processo di rete** che ascolta su una porta TCP (default 1521) e indirizza le connessioni client al database corretto.
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Listener
+    participant Instance
+    participant ServerProcess
+
+    Client->>Listener: Connect Request (Port 1521, Service=ORCL)
+    Note over Listener: Checks Services Table
+    Listener->>Instance: Check Instance Health
+    Instance-->>Listener: Ready (Slot Available)
+    Listener->>ServerProcess: Spawn/Hand-off
+    Listener-->>Client: REDIRECT (or HAND-OFF)
+    Client->>ServerProcess: Direct Communication (Data Flow)
+    Note over Client,ServerProcess: Listener is no longer involved
 ```
-╔══════════════════════════════════════════════════════════════════════╗
-║                    COME FUNZIONA UNA CONNESSIONE                     ║
-╠══════════════════════════════════════════════════════════════════════╣
-║                                                                      ║
-║   Client (SQL*Plus, App, JDBC)                                       ║
-║     │                                                                ║
-║     │ 1. "Voglio connettermi a ORCL sulla porta 1521"                ║
-║     ▼                                                                ║
-║   ┌─────────────────────────────────┐                                ║
-║   │       LISTENER (:1521)          │                                ║
-║   │                                 │                                ║
-║   │  Conosce i servizi registrati:  │                                ║
-║   │  - ORCL                        │                                ║
-║   │  - ORCL_DG (Data Guard)        │                                ║
-║   │  - PDB1                        │                                ║
-║   └─────────┬───────────────────────┘                                ║
-║             │                                                        ║
-║             │ 2. "OK, ti mando all'istanza giusta"                   ║
-║             ▼                                                        ║
-║   ┌─────────────────────────────────┐                                ║
-║   │   Server Process (Dedicato)     │                                ║
-║   │   connesso a SGA/PGA           │                                ║
-║   │   dell'istanza ORCL            │                                ║
-║   └─────────────────────────────────┘                                ║
-║                                                                      ║
-║   Nota: Il Listener NON trasferisce dati dopo la connessione!        ║
-║   Fa solo il "redirect" iniziale, poi client↔server parlano          ║
-║   direttamente.                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
-```
+
+> **Nota**: Il Listener NON trasferisce dati dopo la connessione! Fa solo il "redirect" iniziale, poi client↔server parlano direttamente.
 
 ### Listener Statico vs Dinamico
 
@@ -95,38 +82,26 @@ Il Listener è un **processo di rete** che ascolta su una porta TCP (default 152
 
 ### 2.1 Architettura Listener in RAC
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║              LISTENER ARCHITECTURE IN RAC                        ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║   Client App / SQL*Plus / JDBC                                   ║
-║       │                                                          ║
-║       │  Connessione via SCAN: rac-scan:1521/ORCL                ║
-║       ▼                                                          ║
-║   ╔═══════════════════════════════════╗                           ║
-║   ║   SCAN LISTENER (3 IP virtuali)  ║  ← Grid Infrastructure   ║
-║   ║   .105  .106  .107               ║     gestisce tutto        ║
-║   ║   Porta 1521                     ║                           ║
-║   ╚════════════╤══════════════════════╝                           ║
-║                │  Load Balancing (round-robin                     ║
-║                │  + connection load balancing)                    ║
-║        ┌───────┴───────┐                                         ║
-║        ▼               ▼                                         ║
-║   ┌─────────┐    ┌─────────┐                                     ║
-║   │ Node 1  │    │ Node 2  │                                     ║
-║   │ LSNR    │    │ LSNR    │  ← Listener LOCALE per nodo         ║
-║   │ :1521   │    │ :1521   │     (gestito da CRS)                ║
-║   │         │    │         │                                     ║
-║   │ Inst1   │    │ Inst2   │                                     ║
-║   │ ORCL1   │    │ ORCL2   │                                     ║
-║   └─────────┘    └─────────┘                                     ║
-║                                                                  ║
-║   Servizi Registrati:                                            ║
-║   - ORCL (database service, entrambi i nodi)                     ║
-║   - ORCL_APP (application service, solo nodo1)                   ║
-║   - ORCL_REPORT (reporting service, solo nodo2)                  ║
-╚══════════════════════════════════════════════════════════════════╝
+In un ambiente RAC, la connessione avviene tramite lo SCAN (Single Client Access Name).
+
+```mermaid
+graph TD
+    Client[Client App / JDBC] -- "Connect rac-scan:1521/ORCL" --> SCAN[SCAN Listener<br/>(3 IPs, Grid Infrastructure)]
+    
+    subgraph "Cluster Nodes"
+        SCAN -- "Local Load Balancing" --> L1[Local Listener Node 1]
+        SCAN -- "Local Load Balancing" --> L2[Local Listener Node 2]
+        
+        L1 -- "Connect" --> I1[Instance ORCL1]
+        L2 -- "Connect" --> I2[Instance ORCL2]
+    end
+    
+    subgraph "Services"
+        I1 --- S1[ORCL_OLTP]
+        I2 --- S1
+        I1 --- S2[ORCL_APP]
+        I2 --- S3[ORCL_REPORT]
+    end
 ```
 
 ### 2.2 File listener.ora (RAC — gestito da Grid)
@@ -325,37 +300,29 @@ ORDER BY 2 DESC;
 
 **SCAN = Single Client Access Name**. È un hostname DNS che risolve a 3 IP (per high availability e load balancing).
 
+```mermaid
+graph LR
+    DNS[DNS: rac-scan] -- "Resolves to 3 IPs" --> IPs[192.168.1.105<br/>192.168.1.106<br/>192.168.1.107]
+    
+    subgraph "SCAN Listeners"
+        IPs --> SL1[SCAN-L1 on Node 1]
+        IPs --> SL2[SCAN-L2 on Node 2]
+        IPs --> SL3[SCAN-L3 on Node 1]
+    end
+    
+    subgraph "Instances"
+        SL1 -- "Routing" --> I1[Instance 1]
+        SL2 -- "Routing" --> I1
+        SL1 -- "Routing" --> I2[Instance 2]
+        SL3 -- "Routing" --> I2
+    end
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                      COME FUNZIONA SCAN                          ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║   DNS risolve "rac-scan" a:                                      ║
-║     192.168.1.105                                                ║
-║     192.168.1.106                                                ║
-║     192.168.1.107                                                ║
-║                                                                  ║
-║   Ogni IP è gestita da uno SCAN Listener (su un nodo del RAC):   ║
-║                                                                  ║
-║   ┌──────────┐  ┌──────────┐  ┌──────────┐                      ║
-║   │ SCAN-L1  │  │ SCAN-L2  │  │ SCAN-L3  │                      ║
-║   │ .105     │  │ .106     │  │ .107     │                      ║
-║   │ Nodo1    │  │ Nodo2    │  │ Nodo1    │  ← CRS decide        ║
-║   └────┬─────┘  └────┬─────┘  └────┬─────┘    dove metterlo     ║
-║        │             │             │                             ║
-║        └──────┬──────┘──────┬──────┘                             ║
-║               │             │                                    ║
-║          ┌────┴───┐    ┌────┴───┐                                ║
-║          │ Inst 1 │    │ Inst 2 │  ← routing intelligente       ║
-║          └────────┘    └────────┘                                ║
-║                                                                  ║
-║   VANTAGGI:                                                      ║
-║   ✓ Client usa SEMPRE lo stesso hostname (rac-scan)              ║
-║   ✓ Se aggiungi/rimuovi nodi, il client NON cambia nulla         ║
-║   ✓ Load balancing automatico tra nodi                           ║
-║   ✓ Se un SCAN listener cade, CRS lo riavvia su un altro nodo   ║
-╚══════════════════════════════════════════════════════════════════╝
-```
+
+**VANTAGGI**:
+- ✓ Client usa SEMPRE lo stesso hostname (**rac-scan**).
+- ✓ Se aggiungi/rimuovi nodi, il client NON cambia nulla.
+- ✓ Load balancing automatico tra nodi.
+- ✓ Se un SCAN listener cade, CRS lo riavvia su un altro nodo.
 
 ### 4.2 Comandi SCAN
 
