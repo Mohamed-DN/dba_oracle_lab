@@ -7,6 +7,13 @@
 
 ## Step 1: Identifica la Query (hai il SQL_ID?)
 
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> Per analizzare performance, i Senior usano il metodo AAS (Average Active Sessions) e leggono da ASH direttamente tramite script specializzati. Tralascia le query manuali sottostanti e usa il tuo arsenale `libreria_oracle/` per una diagnosi immediata:
+> - **Top SQL da ASH (Ultimi N minuti)**: `@./libreria_oracle/07_performance_tuning/community_scripts/ash_awr/ash_top_sql.sql`
+> - **Misurare il Carico (AAS)**: `@./libreria_oracle/07_performance_tuning/community_scripts/ash_awr/aas.sql`
+> - **Dettaglio Singola Query (Eventi)**: `@./libreria_oracle/03_monitoring_scripts/Event_statistics.sql`
+
 ### Se hai il SQL_ID:
 
 ```sql

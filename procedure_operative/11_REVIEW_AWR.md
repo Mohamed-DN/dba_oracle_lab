@@ -5,6 +5,13 @@
 
 ---
 
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> Leggere i report AWR interi in formato di testo è spesso inefficiente. I Senior DBA estraggono direttamente i dati top dall'AWR usando script SQL specifici. Usa il tuo arsenale `libreria_oracle/` per una diagnosi mirata:
+> - **Top Eventi Storici (AWR)**: `@./libreria_oracle/07_performance_tuning/community_scripts/ash_awr/awr-top-events.sql`
+> - **Analisi Workload I/O Storico**: `@./libreria_oracle/03_monitoring_scripts/View_IO_Hist.sql`
+> - **Trend di 10 Giorni dei Wait**: `@./libreria_oracle/07_performance_tuning/community_scripts/ash_awr/awr-top-10-daily.sql`
+
 ## Step 1: Genera AWR Report (HTML)
 
 ```sql

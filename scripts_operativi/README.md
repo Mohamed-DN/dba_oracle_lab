@@ -3,6 +3,11 @@
 > Raccolta di script SQL **pronti al copia-incolla** organizzati per **scenario operativo**.
 > Ogni file contiene: diagnosi, azione correttiva, verifica, e note per la produzione.
 
+> [!WARNING]
+> **DEPRECATION NOTICE (Livello Junior)**
+> Gli script in questa cartella sono didattici e "basici", perfetti per capire come funzionano le viste sottostanti (`V$SESSION`, `DBA_TABLESPACE`).  
+> Se stai affrontando un vero incidente o vuoi usare tool di livello "Senior DBA", spostati nella cartella **[../libreria_oracle](../libreria_oracle)**. Lì troverai il **Catalogo Top 20** con script avanzatissimi (come i tool di Tanel Poder) per un'analisi professionale in stile _Top Tier_.
+
 ---
 
 ## Come Usarli

@@ -17,6 +17,14 @@ ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | grep -i ora | head -10
 
 > Se i processi Oracle NON sono in top → il problema NON è il database.
 
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> Smetti di faticare con le viste `gv$`. Utilizza gli script operativi della tua libreria per diagnosticare immediatamente la root cause della CPU assorbita:
+> - **Chi Consuma CPU ADESSO**: `@./libreria_oracle/03_monitoring_scripts/View_Cpu_Consumer.sql`
+> - **Trend CPU Storico**: `@./libreria_oracle/03_monitoring_scripts/View_Cpu_Hist.sql`
+> - **Top SQL CPU da AWR**: `@./libreria_oracle/07_performance_tuning/community_scripts/ash_awr/top10-sql-awr.sql`
+> Esegui questi script invece di assemblare query lunghe.
+
 ## Step 2: Average Active Sessions (il "battito cardiaco")
 
 ```sql

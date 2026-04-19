@@ -10,12 +10,13 @@
 Assicurarsi che l'infrastruttura (ASM e Tablespace) non si scontri contro gli "Hard Lmits" fisici di Oracle. 
 Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può superare i 32GB, indipendentemente dallo spazio sul disco.
 
-## 🗂️ Gli script di riferimento
+## 🗂️ Gli script di riferimento (Top Tier)
 
-Gli script per questa procedura sono già salvati nel repository:
-1. `libreria_oracle/01_asm_storage/asm_limits_ausize.sql`
-2. `libreria_oracle/03_monitoring_scripts/tbs_maxsize_limits.sql`
-3. `libreria_oracle/03_monitoring_scripts/gen_bigfile_autoextend.sql`
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> Sfrutta gli script provati della community presenti nella tua libreria per analizzare rapidamente lo spazio invece di affidarti a query base:
+> 1. **Check Metriche ASM**: `@./libreria_oracle/01_asm_storage/community_scripts/asm-diskgroup-stat.sql`
+> 2. **Analisi Spazio Oggetti**: `@./libreria_oracle/12_utilities/community_scripts/storage/showspace.sql`
 
 ---
 

@@ -7,6 +7,13 @@
 
 ## Step 1: Identifica il Problema (30 secondi)
 
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> Vuoi identificare l'albero dei lock (chi blocca chi) in pochi millisecondi invece di lottare con JOIN lunghissime? Usa gli storici script della community dalla tua libreria:
+> - **Blocking Tree**: `@./libreria_oracle/03_monitoring_scripts/View_Blocking.sql`
+> - **Lock Completi**: `@./libreria_oracle/03_monitoring_scripts/locks.sql`
+> - **Dettaglio Oggetti**: `@./libreria_oracle/03_monitoring_scripts/locks_details.sql`
+
 ```sql
 sqlplus / as sysdba
 

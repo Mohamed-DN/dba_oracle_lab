@@ -8,6 +8,14 @@
 
 Verifica rapida che l'ambiente Oracle (RAC + Data Guard + Backup) sia sano prima dell'inizio della giornata lavorativa.
 
+> [!TIP]
+> **🚀 L'approccio "Top Tier" (Senior DBA)**
+> In questo runbook troverai query di base. Ma un DBA Senior non perde tempo a scrivere query a mano ogni mattina. Nella tua `libreria_oracle/` hai i migliori script del mondo già pronti! Usa questi:
+> - **Alert Log**: `./libreria_oracle/12_utilities/community_scripts/get-alert-logs.sh`
+> - **Check RMAN**: `@./libreria_oracle/06_backup_recovery/community_scripts/rman-bkup-status.sql`
+> - **ASM Check**: `@./libreria_oracle/01_asm_storage/community_scripts/asm-diskgroup-stat.sql`
+> Esegui questi script invece di copiare le lunghissime query manuali mostrate qui sotto.
+
 ---
 
 ## Step 1: Stato Database e Istanze
