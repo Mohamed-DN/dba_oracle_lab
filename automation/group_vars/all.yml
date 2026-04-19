@@ -9,6 +9,7 @@ grid_home: /u01/app/19c/grid
 
 # ---- Oracle attivo (impostare in base all'operazione) ----
 oracle_home: "{{ oracle_home_19c }}"
+oracle_pdb_name: PDB1
 
 # ---- ASM ----
 asm_diskgroup_data: +DATA
@@ -41,6 +42,7 @@ fra_alert_pct: 80
 # ---- Security / Vault placeholders ----
 # Definire in group_vars/vault.yml (Ansible Vault):
 # vault_app_user_password: "StrongPasswordHere"
+# vault_cdb_admin_password: "StrongCdbPasswordHere"
 app_user_password: "{{ vault_app_user_password | default('CHANGEME_VAULT') }}"
 
 # ---- Notifiche (opzionale, decommentare) ----

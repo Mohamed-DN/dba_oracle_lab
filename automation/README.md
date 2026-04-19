@@ -46,6 +46,8 @@ automation/
 │   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
 │   ├── 09_datapump_export.yml             ← Logical backup con expdp
 │   └── 10_manage_services.yml             ← Gestione RAC services
+│   ├── 11_create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
+│   └── 12_dba_maintenance.yml             ← Maintenance DBA periodica
 ├── templates/
 │   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
 │   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
@@ -111,6 +113,13 @@ ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml
 
 # ---- INSTALLAZIONE SOFTWARE ----
 ansible-playbook -i inventory/lab.ini playbooks/01_oracle_install.yml
+
+# ---- CDB/PDB (se mancanti) ----
+ansible-playbook -i inventory/lab.ini playbooks/11_create_cdb_pdb.yml \
+  -e cdb_create_if_missing=true --ask-vault-pass
+
+# ---- DBA MAINTENANCE (invalid objects, stats dizionario, audit purge) ----
+ansible-playbook -i inventory/production.ini playbooks/12_dba_maintenance.yml
 ```
 
 ---
@@ -126,6 +135,7 @@ ansible-vault create group_vars/vault.yml
 #   vault_oracle_sys_password: "MiaPassword123!"
 #   vault_oracle_rman_password: "BackupSecure!"
 #   vault_app_user_password: "StrongAppUserPassword!"
+#   vault_cdb_admin_password: "StrongCdbPassword!"
 
 # Usa il vault nei playbook:
 ansible-playbook playbooks/05_rman_backup.yml --ask-vault-pass
