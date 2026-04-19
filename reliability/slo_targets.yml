@@ -1,0 +1,17 @@
+sli:
+  backup_success_rate:
+    unit: percent
+    target: 99
+    window: monthly
+  dataguard_apply_lag_p95:
+    unit: seconds
+    target: 60
+    window: daily
+  dr_rto:
+    unit: minutes
+    target: 30
+    window: monthly
+  critical_service_availability:
+    unit: percent
+    target: 99.5
+    window: monthly
