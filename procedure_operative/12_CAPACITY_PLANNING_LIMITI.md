@@ -13,9 +13,9 @@ Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può supera
 ## 🗂️ Gli script di riferimento
 
 Gli script per questa procedura sono già salvati nel repository:
-1. `studio_ai/01_asm_storage/asm_limits_ausize.sql`
-2. `studio_ai/03_monitoring_scripts/tbs_maxsize_limits.sql`
-3. `studio_ai/03_monitoring_scripts/gen_bigfile_autoextend.sql`
+1. `libreria_oracle/01_asm_storage/asm_limits_ausize.sql`
+2. `libreria_oracle/03_monitoring_scripts/tbs_maxsize_limits.sql`
+3. `libreria_oracle/03_monitoring_scripts/gen_bigfile_autoextend.sql`
 
 ---
 
@@ -23,7 +23,7 @@ Gli script per questa procedura sono già salvati nel repository:
 
 Esegui lo script:
 ```sql
-@studio_ai/01_asm_storage/asm_limits_ausize.sql
+@libreria_oracle/01_asm_storage/asm_limits_ausize.sql
 ```
 
 ### Cosa analizzare nell'output:
@@ -47,7 +47,7 @@ Esegui lo script:
 
 Esegui lo script:
 ```sql
-@studio_ai/03_monitoring_scripts/tbs_maxsize_limits.sql
+@libreria_oracle/03_monitoring_scripts/tbs_maxsize_limits.sql
 ```
 
 ### Come interpretarlo:
@@ -69,7 +69,7 @@ Il generatore fornisce il comando esatto per portare il limite al **170%** del v
 
 Esegui:
 ```sql
-@studio_ai/03_monitoring_scripts/gen_bigfile_autoextend.sql
+@libreria_oracle/03_monitoring_scripts/gen_bigfile_autoextend.sql
 ```
 
 ### Esempio output (da copiare e lanciare):

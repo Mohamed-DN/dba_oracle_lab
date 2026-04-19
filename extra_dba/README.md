@@ -16,7 +16,7 @@
 
 - Completa prima il lab base e tieni il Data Guard in `MaxPerformance`.
 - Usa questa area per operazioni day-2, hardening, esercizi avanzati e scenari DBA reali.
-- `studio_ai` resta separato: contiene script e note operative; qui trovi solo il percorso guidato delle attività extra.
+- `libreria_oracle` resta separato: contiene script e note operative; qui trovi solo il percorso guidato delle attività extra.
 
 ---
 

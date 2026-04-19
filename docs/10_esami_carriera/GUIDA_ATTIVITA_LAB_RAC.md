@@ -6,7 +6,7 @@
 > - GoldenGate configurato e funzionante
 > - RMAN backup configurato
 >
-> **Obiettivo**: Mettere in pratica le competenze DBA Enterprise usando gli script della raccolta `studio_ai/`.
+> **Obiettivo**: Mettere in pratica le competenze DBA Enterprise usando gli script della raccolta `libreria_oracle/`.
 
 ---
 
@@ -69,7 +69,7 @@ GGSCI> info all
 GGSCI> lag extract EXTMAIN
 ```
 
-> 📋 **Script utili**: `studio_ai/03_monitoring_scripts/community_jkstill/ash_awr/aas.sql` per AAS baseline
+> 📋 **Script utili**: `libreria_oracle/03_monitoring_scripts/community_jkstill/ash_awr/aas.sql` per AAS baseline
 
 ---
 
@@ -80,7 +80,7 @@ GGSCI> lag extract EXTMAIN
 ### 2.1 Panoramica rapida
 ```sql
 -- Chi sta facendo cosa adesso?
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/locks_waits/active_status.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/locks_waits/active_status.sql
 
 -- Versione manuale:
 SELECT s.sid, s.serial#, s.username, s.program, s.status,
@@ -93,8 +93,8 @@ ORDER BY s.last_call_et DESC;
 
 ### 2.2 Top SQL per consumo risorse
 ```sql
--- Usa: @studio_ai/03_monitoring_scripts/community_gwenshap/top-sql.sql
--- Oppure: @studio_ai/03_monitoring_scripts/community_jkstill/ash_awr/top10-sql-ash.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_gwenshap/top-sql.sql
+-- Oppure: @libreria_oracle/03_monitoring_scripts/community_jkstill/ash_awr/top10-sql-ash.sql
 
 -- Versione manuale:
 SELECT sql_id, plan_hash_value, 
@@ -110,8 +110,8 @@ FETCH FIRST 20 ROWS ONLY;
 
 ### 2.3 Waits — cosa sta aspettando il database?
 ```sql
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/locks_waits/sesswait.sql
--- O il leggendario: @studio_ai/03_monitoring_scripts/community_jkstill/locks_waits/snapper.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/locks_waits/sesswait.sql
+-- O il leggendario: @libreria_oracle/03_monitoring_scripts/community_jkstill/locks_waits/snapper.sql
 
 -- Top waits nel sistema:
 SELECT wait_class, event, total_waits, 
@@ -124,8 +124,8 @@ FETCH FIRST 15 ROWS ONLY;
 
 ### 2.4 Lock e sessioni bloccanti
 ```sql
--- Usa: @studio_ai/03_monitoring_scripts/community_gwenshap/locks.sql
--- O: @studio_ai/03_monitoring_scripts/community_jkstill/locks_waits/showlock2.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_gwenshap/locks.sql
+-- O: @libreria_oracle/03_monitoring_scripts/community_jkstill/locks_waits/showlock2.sql
 
 -- Chi blocca chi:
 SELECT 
@@ -155,8 +155,8 @@ EXEC DBMS_WORKLOAD_REPOSITORY.CREATE_SNAPSHOT;
 @$ORACLE_HOME/rdbms/admin/awrrpt.sql
 
 -- Non-interattivo (usa lo script della community):
--- @studio_ai/03_monitoring_scripts/community_jkstill/ash_awr/awr_defined.sql
--- Per RAC: @studio_ai/03_monitoring_scripts/community_jkstill/ash_awr/awr_RAC_defined.sql
+-- @libreria_oracle/03_monitoring_scripts/community_jkstill/ash_awr/awr_defined.sql
+-- Per RAC: @libreria_oracle/03_monitoring_scripts/community_jkstill/ash_awr/awr_RAC_defined.sql
 ```
 
 ### 3.3 Analizzare il report
@@ -176,8 +176,8 @@ Cerca queste sezioni chiave nel report:
 
 ### 4.1 Controlla lo spazio
 ```sql
--- Usa: @studio_ai/03_monitoring_scripts/community_gwenshap/tablespace.sql
--- O: @studio_ai/03_monitoring_scripts/community_jkstill/storage/showtbs.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_gwenshap/tablespace.sql
+-- O: @libreria_oracle/03_monitoring_scripts/community_jkstill/storage/showtbs.sql
 
 -- Versione manuale:
 SELECT tablespace_name, 
@@ -190,7 +190,7 @@ ORDER BY used_percent DESC;
 
 ### 4.2 Controlla i datafile
 ```sql
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/storage/showdf.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/storage/showdf.sql
 
 SELECT file_name, tablespace_name, 
        ROUND(bytes/1024/1024) "SIZE_MB",
@@ -216,17 +216,17 @@ ALTER TABLESPACE USERS ADD DATAFILE '+DATA' SIZE 1G AUTOEXTEND ON NEXT 100M MAXS
 
 ```sql
 -- I/O per tablespace
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/io/ioweight.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/io/ioweight.sql
 
 -- Redo generation rate
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/io/redo-rate.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/io/redo-rate.sql
 
 -- Versione manuale:
 SELECT ROUND(SUM(value)/1024/1024) "REDO_MB_TOTAL"
 FROM gv$sysstat WHERE name = 'redo size';
 
 -- Diagnosi logfile sync (fondamentale!)
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/io/lfsdiag.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/io/lfsdiag.sql
 ```
 
 ---
@@ -237,7 +237,7 @@ FROM gv$sysstat WHERE name = 'redo size';
 
 ```sql
 -- Tabelle con statistiche obsolete
--- Usa: @studio_ai/03_monitoring_scripts/community_jkstill/stats_optimizer/show-stale-stats.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_jkstill/stats_optimizer/show-stale-stats.sql
 
 -- Ultimo analyze:
 SELECT owner, table_name, num_rows, last_analyzed, stale_stats
@@ -275,7 +275,7 @@ DGMGRL> show configuration;
 DGMGRL> switchover to 'RACDB';
 ```
 
-> 📋 **Approfondisci**: Vedi `studio_ai/02_dataguard/` per procedure di recovery post-reboot e verifica GAP
+> 📋 **Approfondisci**: Vedi `libreria_oracle/02_dataguard/` per procedure di recovery post-reboot e verifica GAP
 
 ---
 
@@ -285,7 +285,7 @@ DGMGRL> switchover to 'RACDB';
 
 ```sql
 -- 1. Identifica la sessione problematica
--- Usa: @studio_ai/03_monitoring_scripts/community_gwenshap/check_and_kill.sql
+-- Usa: @libreria_oracle/03_monitoring_scripts/community_gwenshap/check_and_kill.sql
 
 -- 2. Trova il SID da killare
 SELECT sid, serial#, username, program, status, event,

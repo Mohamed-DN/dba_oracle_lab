@@ -1,0 +1,119 @@
+# 📚 Libreria Oracle DBA — Script e Procedure Enterprise
+
+> **~1000 script SQL e procedure** organizzati per area operativa, estratti da ambienti Enterprise reali.
+> Ogni sezione ha un README che spiega **cosa fa**, **quando usarlo**, e **come eseguirlo**.
+
+---
+
+## 🗂️ Mappa della Libreria
+
+```
+libreria_oracle/
+│
+├── 01_asm_storage/          ← Gestione dischi ASM: add, remove, migrate LUN
+├── 02_dataguard/            ← Data Guard: config, verifica GAP, recovery DR
+├── 03_monitoring_scripts/   ← 586 script monitoraggio (sessioni, lock, I/O, ASH, rete)
+│   ├── community_gwenshap/  ← 25 script da GwenShap (Oracle ACE)
+│   └── community_jkstill/   ← 509 script da Jared Still (Oracle guru)
+│       ├── sessions_locks/  ← Lock, blocking, kill session
+│       ├── io_redo/         ← I/O statistiche, redo log analysis
+│       ├── users_logged/    ← Utenti connessi, audit login
+│       ├── dates/           ← Funzioni data Oracle
+│       ├── drcp/            ← Database Resident Connection Pooling
+│       ├── instance_db/     ← Parametri istanza, NLS, versione
+│       ├── metrics/         ← V$METRIC, V$SYSMETRIC
+│       ├── mviews/          ← Materialized Views: refresh, log, stato
+│       ├── plsql/           ← PL/SQL utilities
+│       ├── rdbms_utilities/ ← DBMS_SCHEDULER, DBMS_STATS, etc.
+│       ├── resource_manager/← Resource Manager plans
+│       ├── temp_sorts/      ← TEMP usage, sort operations
+│       └── general/         ← 359 script generali (il cuore della collezione)
+│
+├── 04_user_management/      ← Creazione utenti, profili password, Oracle Vault
+├── 05_patching/             ← Procedure patching, Golden Images (OHCTL)
+├── 06_backup_recovery/      ← Flashback, Restore Point, verifiche RMAN
+├── 07_performance_tuning/   ← 225 script: SPM, AWR analysis, statistiche
+│   └── community_scripts/   ← Script performance dalla community Oracle
+│
+├── 08_tde_security/         ← Transparent Data Encryption, Vault, audit
+├── 09_compression/          ← Compressione HCC, DBMS_REDEFINITION online
+├── 10_partition_manager/    ← Package gestione automatica partizioni
+├── 11_sql_templates/        ← Template DDL/DML standard con error handling
+└── 12_utilities/            ← Utility: TEMP/UNDO monitor, MView refresh, profili
+    └── community_scripts/   ← 98 script utility dalla community
+        ├── bin/             ← Script bash/perl operativi
+        ├── cdb_pdb/         ← Query CDB/PDB
+        ├── scheduler/       ← Oracle Scheduler jobs
+        └── storage/         ← Storage e tablespace
+```
+
+---
+
+## 📊 Indice per Area (con conteggio script)
+
+| # | Area | Script | Cosa Trovi | Quando Lo Usi |
+|---|---|---|---|---|
+| 01 | [ASM & Storage](./01_asm_storage/) | 20 | Add/remove disco ASM, migrate LUN (ASMLib + AFD) | Capacity planning, sostituzione LUN |
+| 02 | [Data Guard](./02_dataguard/) | 6 | Config DG, Active DG, verifica GAP, recovery DR | Setup standby, troubleshooting replica |
+| 03 | [Monitoring](./03_monitoring_scripts/) | **586** | Sessioni, lock, CPU, I/O, ASH, rete, DRCP, MView | **Ogni giorno!** Morning check, incident |
+| 04 | [Utenti](./04_user_management/) | 6 | Creazione utenti, profili, policy password, Vault | Richiesta HR, nuova applicazione |
+| 05 | [Patching](./05_patching/) | 6 | Procedure patching, Golden Images (OHCTL) | Quarterly patching window |
+| 06 | [Backup & Recovery](./06_backup_recovery/) | 13 | Flashback, Restore Point, RMAN checks | Pre-upgrade, disaster recovery |
+| 07 | [Performance](./07_performance_tuning/) | **225** | SPM, AWR, analisi statistiche, SQL tuning | Query lente, capacity, review settimanale |
+| 08 | [TDE & Security](./08_tde_security/) | 9 | Transparent Data Encryption, audit, Vault | Compliance, audit sicurezza |
+| 09 | [Compressione](./09_compression/) | 2 | DBMS_REDEFINITION online, HCC | Ridurre storage, near-zero downtime |
+| 10 | [Partition Manager](./10_partition_manager/) | 3 | Package gestione partizioni automatiche | Tabelle > 100M righe |
+| 11 | [Template SQL](./11_sql_templates/) | 18 | Template DDL/DML standard con error handling | Sviluppo, standardizzazione |
+| 12 | [Utility](./12_utilities/) | **103** | TEMP/UNDO monitor, MView refresh, profili UNIX | Supporto quotidiano, troubleshooting |
+| | **TOTALE** | **~1000** | | |
+
+---
+
+## 🔍 Guida Rapida: "Ho un problema, quale script mi serve?"
+
+| Problema | Dove Cercare | Script Chiave |
+|---|---|---|
+| "L'app è bloccata!" | `03_monitoring_scripts/community_jkstill/sessions_locks/` | `blocking_sessions.sql`, `lock_tree.sql` |
+| "Il database è lento!" | `07_performance_tuning/community_scripts/` | Top SQL, wait events, ASH |
+| "Tablespace pieno!" | `12_utilities/community_scripts/storage/` | `showdf.sql`, `showfree.sql`, `showtbs.sql` |
+| "UNDO pieno!" | `12_utilities/community_scripts/storage/` | `undo_stats.sql`, `undo_retention_available.sql` |
+| "Chi è connesso?" | `03_monitoring_scripts/community_jkstill/users_logged/` | Login audit, sessioni attive |
+| "Job fallito" | `12_utilities/community_scripts/scheduler/` | `dba_jobs_running.sql`, `show_jobs.sql` |
+| "MView non refresha" | `03_monitoring_scripts/community_jkstill/mviews/` | MView log, refresh status |
+| "Serve un nuovo utente" | `04_user_management/` | Template con profili e grant |
+| "Data Guard in GAP" | `02_dataguard/` | Verifica GAP, MRP status |
+| "Serve compressione" | `09_compression/` | DBMS_REDEFINITION online |
+
+---
+
+## 🚀 Come Usare Questa Libreria
+
+```bash
+# 1. Collegati al database
+sqlplus / as sysdba
+
+# 2. Esegui lo script che ti serve
+@libreria_oracle/03_monitoring_scripts/community_jkstill/sessions_locks/blocking_sessions.sql
+
+# 3. Oppure copia-incolla i blocchi SQL che ti servono
+```
+
+### ⚠️ Regole di Sicurezza
+
+- **Leggi SEMPRE lo script prima di eseguirlo** — alcuni fanno modifiche (ALTER, DROP)
+- **Testa in lab PRIMA** della produzione
+- **I community_scripts** vengono da DBA Oracle riconosciuti, ma adatta a tuo ambiente
+
+---
+
+## 🔗 Collegamento al Progetto Principale
+
+| Libreria | Si collega a | Nel progetto |
+|---|---|---|
+| ASM & Storage | Guida Aggiunta Dischi | [docs/04_administration/](../docs/04_administration/) |
+| Monitoring | Comandi DBA + Health Check | [procedure_operative/](../procedure_operative/) |
+| Data Guard | Fase 4 Data Guard + DGMGRL | [docs/02_high_availability/](../docs/02_high_availability/) |
+| Performance | Guida Troubleshooting | [docs/05_performance/](../docs/05_performance/) |
+| Backup | Guida RMAN Completa | [docs/03_backup_recovery/](../docs/03_backup_recovery/) |
+
+> Vedi anche: [scripts_operativi/](../scripts_operativi/) — 10 script SQL sintetici per scenario (la versione "quick" di questa libreria).

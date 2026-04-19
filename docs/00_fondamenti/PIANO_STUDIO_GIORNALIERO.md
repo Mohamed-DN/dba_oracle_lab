@@ -395,20 +395,20 @@ Sett 8:                                     ██████████ 🎯 
 
 ---
 
-## 📚 Risorse Extra: Enterprise DBA Toolkit (studio_ai/)
+## 📚 Risorse Extra: Enterprise DBA Toolkit (libreria_oracle/)
 
 > Usa queste risorse per arricchire lo studio con procedure e script operativi reali.
 
-| Settimana | Quando Usare | Cartella studio_ai |
+| Settimana | Quando Usare | Cartella libreria_oracle |
 |---|---|---|
-| **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](./studio_ai/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) |
-| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](./studio_ai/05_patching/) |
-| **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](./studio_ai/02_dataguard/) |
-| **Sett. 3** (Giorno 13: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./studio_ai/06_backup_recovery/) |
-| **Sett. 3** (Giorno 14: EM) | Dopo l'installazione di Enterprise Manager | [03_monitoring_scripts/](./studio_ai/03_monitoring_scripts/) |
-| **Sett. 4** (Giorno 19: HA) | Dopo Switchover / Failover | [04_user_management/](./studio_ai/04_user_management/) |
-| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](./studio_ai/07_performance_tuning/) |
-| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](./studio_ai/08_tde_security/) |
+| **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](./libreria_oracle/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) |
+| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](./libreria_oracle/05_patching/) |
+| **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](./libreria_oracle/02_dataguard/) |
+| **Sett. 3** (Giorno 13: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./libreria_oracle/06_backup_recovery/) |
+| **Sett. 3** (Giorno 14: EM) | Dopo l'installazione di Enterprise Manager | [03_monitoring_scripts/](./libreria_oracle/03_monitoring_scripts/) |
+| **Sett. 4** (Giorno 19: HA) | Dopo Switchover / Failover | [04_user_management/](./libreria_oracle/04_user_management/) |
+| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](./libreria_oracle/07_performance_tuning/) |
+| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](./libreria_oracle/08_tde_security/) |
 
 ---
 
