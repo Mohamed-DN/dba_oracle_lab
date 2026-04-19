@@ -1,0 +1,22 @@
+####################################################################
+# Ansible Jinja2 Template per NETCA (Configurazione Listener)
+####################################################################
+
+[GENERAL]
+RESPONSEFILE_VERSION="19.0"
+CREATE_TYPE="CUSTOM"
+
+[profile]
+log_file=""
+
+[oracle.net.ca]
+INSTALLED_COMPONENTS={"server","net8","javavm"}
+INSTALL_TYPE="custom"
+LISTENER_NUMBER=1
+LISTENER_NAMES={"{{ listener_name | default('LISTENER') }}"}
+LISTENER_PROTOCOLS={"TCP;1521"}
+LISTENER_START="TRUE"
+
+# Configuration for RAC Scan
+SCAN_LISTENER_NAME="{{ scan_listener_name | default('LISTENER_SCAN1') }}"
+SCAN_LISTENER_PORT="1521"
