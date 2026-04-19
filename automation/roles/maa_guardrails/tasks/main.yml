@@ -64,12 +64,18 @@
   ansible.builtin.debug:
     var: maa_db_params.stdout_lines
 
+- name: Build expected MAA parameter map
+  ansible.builtin.set_fact:
+    maa_expected_checks:
+      db_block_checking: "{{ maa_expected_db_block_checking }}"
+      db_block_checksum: "{{ maa_expected_db_block_checksum }}"
+      db_lost_write_protect: "{{ maa_expected_db_lost_write_protect }}"
+      flashback_on: "{{ maa_expected_flashback_on }}"
+
 - name: Enforce expected MAA protection parameters
   ansible.builtin.assert:
     that:
-      - "'db_block_checking=' ~ (maa_expected_db_block_checking | lower) in (maa_db_params.stdout | lower)"
-      - "'db_block_checksum=' ~ (maa_expected_db_block_checksum | lower) in (maa_db_params.stdout | lower)"
-      - "'db_lost_write_protect=' ~ (maa_expected_db_lost_write_protect | lower) in (maa_db_params.stdout | lower)"
-      - "'flashback_on=' ~ (maa_expected_flashback_on | lower) in (maa_db_params.stdout | lower)"
-    fail_msg: "MAA protection parameters are not compliant with expected baseline."
+      - "(item.key ~ '=' ~ (item.value | lower)) in (maa_db_params.stdout | lower)"
+    fail_msg: "Parameter {{ item.key }} is not compliant with expected value {{ item.value }}."
+  loop: "{{ maa_expected_checks | dict2items }}"
   when: maa_enforce_compliance | bool
