@@ -2,6 +2,7 @@
 
 ## Runbook Operativi
 - [README Runbook](./README.md)
+- [Troubleshooting Decision Tree](../14_enterprise_governance/TROUBLESHOOTING_DECISION_TREE.md)
 - [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md)
 - [04 Lock Sessioni Bloccate](./04_LOCK_SESSIONI_BLOCCATE.md)
 - [05 Query Lenta](./05_QUERY_LENTA.md)

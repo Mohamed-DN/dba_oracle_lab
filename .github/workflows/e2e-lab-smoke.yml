@@ -1,0 +1,77 @@
+name: E2E Lab Smoke (RAC/DG/CDB-PDB)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      - "automation/**"
+      - "vagrant_rac_dataguard/**"
+      - ".github/workflows/e2e-lab-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-e2e-assets:
+    name: Validate E2E assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required playbooks exist
+        run: |
+          test -f automation/playbooks/04_daily_health_check.yml
+          test -f automation/playbooks/06_dataguard_switchover.yml
+          test -f automation/playbooks/11_create_cdb_pdb.yml
+
+      - name: Verify lab provisioning assets exist
+        run: |
+          test -f vagrant_rac_dataguard/Vagrantfile
+          test -f vagrant_rac_dataguard/shared_scripts/preflight_checks.sh
+
+      - name: Verify key controls are encoded in playbooks
+        run: |
+          grep -q "v\\$dataguard_stats" automation/playbooks/04_daily_health_check.yml
+          grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
+          grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
+
+  e2e-lab-reduced:
+    name: Real E2E reduced lab
+    runs-on: [self-hosted, linux, oracle-lab]
+    needs: validate-e2e-assets
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preflight host dependencies
+        run: |
+          vagrant --version
+          virtualboxmanage --version
+          ansible --version
+
+      - name: Provision reduced topology
+        working-directory: vagrant_rac_dataguard
+        env:
+          LAB_REDUCED: "true"
+        run: |
+          vagrant up dns
+          vagrant up rac1
+
+      - name: Functional verification RAC/Data Guard/CDB-PDB
+        run: |
+          ansible-playbook -i automation/inventory/lab.ini automation/playbooks/04_daily_health_check.yml
+          ansible-playbook -i automation/inventory/lab.ini automation/playbooks/11_create_cdb_pdb.yml -e pdb_create_if_missing=true -e cdb_create_if_missing=false
+          ansible-playbook -i automation/inventory/lab.ini automation/playbooks/06_dataguard_switchover.yml --check
+
+      - name: Upload E2E evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-lab-smoke-evidence
+          path: |
+            automation/**/*.log
+            vagrant_rac_dataguard/**/logs/**
+          if-no-files-found: ignore
