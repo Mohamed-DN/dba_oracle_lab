@@ -562,15 +562,16 @@ L'installer si fermerà allo **Step 17** e ti mostrerà un pop-up che chiede di 
 /u01/app/19.0.0/grid/root.sh
 ```
 
-> 💡 **Cosa rispondere al prompt?**
+> [!TIP]
+> **Cosa rispondere al prompt?**
 > Appena lanciato, lo script chiederà: `Enter the full pathname of the local bin directory: [/usr/local/bin]:`
 > Premi semplicemente **Invio** per accettare il default.
 >
 > **Questo è lo script più importante di tutta l'installazione**. Esegue:
-> - Configura Oracle Clusterware (CRS) e OHAS
-> - Crea il CRS daemon (`crsd`, `cssd`, `evmd`)
-> - Inizializza il disk group ASM `CRS`
-> - Avvia il cluster su questo nodo
+> - Configurazione Oracle Clusterware (CRS) e OHAS
+> - Creazione del CRS daemon (`crsd`, `cssd`, `evmd`)
+> - Inizializzazione del disk group ASM `CRS`
+> - Avvio del cluster su questo nodo
 >
 > **ASPETTA (ci vorranno 5-10 minuti)** che finisca completamente e ritorni al prompt dei comandi prima di passare al nodo 2!
 
@@ -723,7 +724,9 @@ asmcmd lsdg
 
 ## 2.8 Patching Grid Infrastructure (Release Update)
 
-> **Perché patchare?** Oracle 19c base (19.3) è la versione iniziale rilasciata nel 2019. Le Release Update (RU) contengono fix di sicurezza, bug fix e miglioramenti di stabilità. In produzione, patchare è **obbligatorio**. Nel lab, ti insegna il processo che userai nel mondo reale.
+> [!IMPORTANT]
+> **Perché patchare?** Oracle 19c base (19.3) è la versione iniziale rilasciata nel 2019. Le Release Update (RU) contengono fix di sicurezza, bug fix e miglioramenti di stabilità. In produzione, patchare è **obbligatorio** prima di aprire i servizi.
+> Nel lab, ti insegna il processo DBA critico che userai nel mondo reale per evitare attacchi ransomware o data corruption noti.
 
 I patch che ti servono (già presenti nei tuoi download):
 
