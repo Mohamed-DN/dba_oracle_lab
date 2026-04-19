@@ -110,10 +110,10 @@ sqlplus / as sysdba
 
 | Libreria | Si collega a | Nel progetto |
 |---|---|---|
-| ASM & Storage | Guida Aggiunta Dischi | [docs/04_administration/](../docs/04_administration/) |
-| Monitoring | Comandi DBA + Health Check | [procedure_operative/](../procedure_operative/) |
-| Data Guard | Fase 4 Data Guard + DGMGRL | [docs/02_high_availability/](../docs/02_high_availability/) |
-| Performance | Guida Troubleshooting | [docs/05_performance/](../docs/05_performance/) |
-| Backup | Guida RMAN Completa | [docs/03_backup_recovery/](../docs/03_backup_recovery/) |
+| ASM & Storage | Guida Aggiunta Dischi | [04_administration/](../04_administration/) |
+| Monitoring | Comandi DBA + Health Check | [11_runbook_operativi/](../11_runbook_operativi/) |
+| Data Guard | Fase 4 Data Guard + DGMGRL | [02_high_availability/](../02_high_availability/) |
+| Performance | Guida Troubleshooting | [05_performance/](../05_performance/) |
+| Backup | Guida RMAN Completa | [03_backup_recovery/](../03_backup_recovery/) |
 
-> Vedi anche: [scripts_operativi/](../scripts_operativi/) — 10 script SQL sintetici per scenario (la versione "quick" di questa libreria).
+> Vedi anche: [12_scripts_sql_pronti/](../12_scripts_sql_pronti/) — 10 script SQL sintetici per scenario (la versione "quick" di questa libreria).

@@ -659,4 +659,4 @@ WHERE name IN ('transport lag', 'apply lag');
 
 ---
 
-**→ Prossimo: [FASE 7: Configurazione GoldenGate Locale e Cloud](./GUIDA_FASE7_GOLDENGATE.md)**
+**→ Prossimo: [FASE 7: Configurazione GoldenGate Locale e Cloud](../07_replication/GUIDA_FASE7_GOLDENGATE.md)**

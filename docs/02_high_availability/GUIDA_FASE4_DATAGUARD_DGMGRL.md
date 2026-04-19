@@ -617,4 +617,4 @@ DGMGRL> SHOW DATABASE RACDB_STBY;
 
 ---
 
-**→ Prossimo: [FASE 5: Strategia RMAN Backup](./GUIDA_FASE5_RMAN_BACKUP.md)**
+**→ Prossimo: [FASE 5: Strategia RMAN Backup](../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)**

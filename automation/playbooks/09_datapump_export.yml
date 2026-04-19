@@ -1,36 +1,59 @@
 ---
 - name: Logical Backup - DataPump Export Automation
-  hosts: databases
-  become: yes
+  hosts: oracle_primary[0]
+  become: true
   become_user: oracle
-  gather_facts: no
+  gather_facts: false
   vars:
-    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
-    db_name: "RACDB"
     export_schema: "APP_USER"
     dump_dir: "DATA_PUMP_DIR"
+    datapump_parallel: 2
+
+  pre_tasks:
+    - name: Generate timestamp
+      ansible.builtin.command: date +%Y%m%d_%H%M
+      register: current_time
+      changed_when: false
+
+    - name: Pre-check - verify Data Pump directory object
+      ansible.builtin.shell: |
+        export ORACLE_SID={{ oracle_sid }}
+        export ORACLE_HOME={{ oracle_home }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        SET HEAD OFF FEED OFF
+        SELECT COUNT(*) FROM dba_directories WHERE directory_name = UPPER('{{ dump_dir }}');
+        EXIT;
+        SQL
+      register: dp_dir_exists
+      changed_when: false
+
+    - name: Assert Data Pump directory exists
+      ansible.builtin.assert:
+        that:
+          - dp_dir_exists.stdout | trim | int == 1
+        fail_msg: "Directory object {{ dump_dir }} non esiste nel database."
 
   tasks:
-    - name: Generate timestamp
-      command: date +%Y%m%d_%H%M
-      register: current_time
-
     - name: Run expdp
-      shell: |
-        export ORACLE_SID={{ db_name }}1
+      ansible.builtin.shell: |
+        export ORACLE_SID={{ oracle_sid }}
         export ORACLE_HOME={{ oracle_home }}
-        $ORACLE_HOME/bin/expdp \
-          userid="\"/ as sysdba\"" \
+        export PATH={{ oracle_home }}/bin:$PATH
+        expdp userid="\"/ as sysdba\"" \
           schemas={{ export_schema }} \
           directory={{ dump_dir }} \
           dumpfile={{ export_schema }}_{{ current_time.stdout }}.dmp \
           logfile={{ export_schema }}_{{ current_time.stdout }}.log \
           compression=all \
-          parallel=2
+          parallel={{ datapump_parallel }}
       register: expdp_out
-      async: 7200
-      poll: 30
+      changed_when: "'successfully completed' in expdp_out.stdout | lower"
+      failed_when:
+        - expdp_out.rc != 0
+        - "'ORA-' in expdp_out.stdout"
+        - "'UDE-' in expdp_out.stdout"
 
-    - name: Display Export log
-      debug:
-        msg: "{{ expdp_out.stdout_lines[-10:] }}"
+    - name: Display export tail
+      ansible.builtin.debug:
+        msg: "{{ expdp_out.stdout_lines[-15:] }}"

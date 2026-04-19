@@ -32,7 +32,7 @@ Requisiti:
 - Replicat `RUNNING` sul **target** (`dbtarget`)
 - Primary in `READ WRITE`, standby in apply
 
-Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) sezione 7.13.
+Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](../07_replication/GUIDA_FASE7_GOLDENGATE.md) sezione 7.13.
 
 ## 8.1 Test Data Guard — Verifica Redo Transport
 

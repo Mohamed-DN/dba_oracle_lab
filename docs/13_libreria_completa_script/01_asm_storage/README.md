@@ -36,4 +36,4 @@ Esempio reale di aggiunta dischi AFD in produzione (database P1NDREHP).
 ---
 
 ## 🔗 Collegamento
-Vedi anche la guida formativa: [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../GUIDA_AGGIUNTA_DISCHI_ASM.md)
+Vedi anche la guida formativa: [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md)

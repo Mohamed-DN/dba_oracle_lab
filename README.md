@@ -6,7 +6,12 @@
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🌐 Piano IP](#-piano-ip)
+> Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
+> **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
+
+### 📑 Navigazione Rapida
+
+[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
 
 ---
 
@@ -42,7 +47,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 | 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
 | 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
 | 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 13 runbook |
-| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 10 playbook |
+| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 12 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
 
 ---
@@ -58,7 +63,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 > 💡 **Non vuoi fare tutto a mano?**
 > - **Parziale**: La cartella `scripts/` ha bash script per storage e Grid.
-> - **Completa**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automatizza le **Fasi 0→4** in un click (33GB RAM). **Importante**: Richiede binari Oracle nella cartella `/software`.
+> - **Completa**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automatizza le **Fasi 0→4** in un click (33GB RAM).
 
 ---
 
@@ -233,10 +238,13 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### 🎓 Esami & Carriera
 
-| [**Ripasso & Colloqui (Mega Guide)**](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | **MASTER GUIDE**: Q1 - Q106, Mindset, Metodo STAR e Teoria Senior |
+| Guida | Cosa Impari |
+|---|---|
+| [Ripasso Concetti DBA](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 sezioni Q&A su architettura, RAC, DG, performance, scenari |
 | [Preparazione Esami](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
 | [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
 | [Attività DBA](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR, Patching, DataPump |
+| [Preparazione Attività DBA](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Attività reali, responsabilità operative e mindset professionale |
 | [Validazione Best Practices](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98% |
 
 ---
@@ -311,8 +319,11 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Risorse Extra (Archivio)
 
+| Documento | Descrizione |
+|---|---|
 | [Catalogo Attività DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
 | [Checklist Operativa](./docs/10_esami_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
+| [Domande Tecniche DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande e risposte per esami e certificazioni |
 
 ---
 

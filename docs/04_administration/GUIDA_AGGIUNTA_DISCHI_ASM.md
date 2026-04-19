@@ -105,7 +105,7 @@ Se invece si vuole espandere un Disk Group esistente (es. abbiamo già `+DATA` e
 ## 📚 Approfondisci
 
 Per procedure operative reali da ambiente Enterprise (con multipath, VMAX, Pure Storage), consulta:
-- [Procedura Aggiunta Dischi ASM (da Produzione)](./libreria_oracle/01_asm_storage/procedura_aggiunta_dischi_asm.md)
-- [Deallocazione Dischi ASM](./libreria_oracle/01_asm_storage/deallocazione_dischi_asm.md)
+- [Procedura Aggiunta Dischi ASM (da Produzione)](../13_libreria_completa_script/01_asm_storage/procedura_aggiunta_dischi_asm.md)
+- [Deallocazione Dischi ASM](../13_libreria_completa_script/01_asm_storage/deallocazione_dischi_asm.md)
 
-*Torna alla guida principale per le attività di [Preparazione Storage e Grid](./GUIDA_FASE2_GRID_E_RAC.md).*
+*Torna alla guida principale per le attività di [Preparazione Storage e Grid](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md).*

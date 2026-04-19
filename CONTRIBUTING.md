@@ -15,10 +15,11 @@ Contributi, fix e suggerimenti sono benvenuti!
 - **Guide**: Mantieni il formato Markdown consistente con le guide esistenti
 - **Naming**: Segui le convenzioni di naming (MAIUSCOLO per guide, snake_case per script)
 - **Lingua**: Le guide sono in italiano, i commenti SQL in italiano/inglese
+- **Release hygiene**: Se cambi comportamento utente, aggiorna `CHANGELOG.md` (sezione Unreleased) e verifica `VERSION` semantico
 
 ## Segnala un Bug
 
-Apri una [Issue](../../issues) con:
+Apri una [Issue](https://github.com/Mohamed-DN/dba_oracle_lab/issues) con:
 - Versione Oracle in uso
 - Fase del lab o script coinvolto
 - Errore completo (copia/incolla dall'alert log o terminale)

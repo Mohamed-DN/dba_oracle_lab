@@ -1,0 +1,40 @@
+name: DR Drill Periodic
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dr-drill:
+    name: DR switchover/failover/reinstate drill
+    runs-on: [self-hosted, linux, oracle-lab]
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run planned DR drill
+        run: |
+          mkdir -p reliability/evidence
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          out="reliability/evidence/dr-drill-${ts}.log"
+          {
+            echo "DR drill timestamp: ${ts}"
+            echo "Step 1: show Data Guard configuration"
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/04_daily_health_check.yml
+            echo "Step 2: execute controlled switchover"
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/06_dataguard_switchover.yml
+            echo "Step 3: capture post-check"
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/04_daily_health_check.yml
+            echo "Step 4: failover/reinstate must be executed using approved runbook"
+          } | tee "${out}"
+
+      - name: Upload DR evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-drill-evidence
+          path: reliability/evidence/*.log

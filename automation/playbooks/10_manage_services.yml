@@ -1,29 +1,42 @@
 ---
 - name: Manage RAC Database Services
-  hosts: grid_infrastructure
-  become: yes
+  hosts: oracle_primary
+  become: true
   become_user: oracle
-  gather_facts: no
+  gather_facts: false
   vars:
-    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
-    db_name: "RACDB"
     service_name: "APP_SVC"
-    desired_state: "start" # Can be start, stop, status
+    desired_state: "status" # start|stop|status|restart
+
+  pre_tasks:
+    - name: Validate desired_state
+      ansible.builtin.assert:
+        that:
+          - desired_state in ['start', 'stop', 'status', 'restart']
+        fail_msg: "desired_state deve essere start|stop|status|restart"
 
   tasks:
-    - name: Execute SRVCTL command
-      shell: |
-        source ~/.bash_profile
-        srvctl {{ desired_state }} service -d {{ db_name }} -s {{ service_name }}
+    - name: Execute srvctl command
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ grid_home }}
+        export PATH={{ grid_home }}/bin:$PATH
+        srvctl {{ desired_state }} service -d {{ oracle_db_name }} -s {{ service_name }}
       register: srvctl_out
-      ignore_errors: yes
+      changed_when: "desired_state in ['start', 'stop', 'restart']"
+      failed_when:
+        - srvctl_out.rc != 0
+        - "'PRCR-' in srvctl_out.stdout"
+        - "'CRS-' in srvctl_out.stdout"
 
-    - name: Verify Service Status
-      shell: |
-        source ~/.bash_profile
-        srvctl status service -d {{ db_name }} -s {{ service_name }}
+    - name: Verify service status
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ grid_home }}
+        export PATH={{ grid_home }}/bin:$PATH
+        srvctl status service -d {{ oracle_db_name }} -s {{ service_name }}
       register: service_status
+      changed_when: false
+      failed_when: service_status.rc != 0
 
-    - name: Display Service Status
-      debug:
+    - name: Display service status
+      ansible.builtin.debug:
         msg: "{{ service_status.stdout }}"

@@ -41,4 +41,4 @@ DROP RESTORE POINT BEFORE_UPGRADE;
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDA_FASE5_RMAN_BACKUP.md](../../GUIDA_FASE5_RMAN_BACKUP.md)
+Vedi anche: [GUIDA_FASE5_RMAN_BACKUP.md](../../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)

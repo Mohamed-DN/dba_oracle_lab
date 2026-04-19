@@ -836,4 +836,4 @@ ALTER DATABASE TEMPFILE '+DATA/RACDB/tempfile/temp01.dbf' RESIZE 500M;
 
 ---
 
-> **Prossimo**: [GUIDA_MAA_BEST_PRACTICES.md](./GUIDA_MAA_BEST_PRACTICES.md) — Validazione del lab contro Oracle MAA
+> **Prossimo**: [GUIDA_MAA_BEST_PRACTICES.md](../02_high_availability/GUIDA_MAA_BEST_PRACTICES.md) — Validazione del lab contro Oracle MAA

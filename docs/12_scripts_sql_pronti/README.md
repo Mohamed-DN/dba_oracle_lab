@@ -1,51 +1,37 @@
-# 🛠️ Script SQL Operativi (Triage Rapido)
+# Script Operativi per Scenario
 
-> Raccolta di script SQL **Architect-Ready** organizzati per dominio operativo, ottimizzati per la velocità di esecuzione in emergenza.
+> Raccolta di script SQL **pronti al copia-incolla** organizzati per **scenario operativo**.
+> Ogni file contiene: diagnosi, azione correttiva, verifica, e note per la produzione.
+
+> [!WARNING]
+> **DEPRECATION NOTICE (Livello Junior)**
+> Gli script in questa cartella sono didattici e "basici", perfetti per capire come funzionano le viste sottostanti (`V$SESSION`, `DBA_TABLESPACE`).  
+> Se stai affrontando un vero incidente o vuoi usare tool di livello "Senior DBA", spostati nella cartella **[../13_libreria_completa_script](../13_libreria_completa_script)**. Lì troverai il **Catalogo Top 20** con script avanzatissimi (come i tool di Tanel Poder) per un'analisi professionale in stile _Top Tier_.
 
 ---
 
-## 🏗️ Mappa dei Domini Operativi
-Gli script sono mappati sulle aree critiche del database per identificare immediatamente il collo di bottiglia.
+## Come Usarli
 
-```mermaid
-mindmap
-  root((DB Monitoring))
-    Storage
-      Tablespace Pieno
-      ASM Diskgroups
-      FRA & Archive
-    Performance
-      Top SQL
-      Wait Events
-      Undo & Temp
-    Sincronizzazione
-      Data Guard Lag
-      Gap Analysis
-    Amministrazione
-      Sessioni & Lock
-      Data Pump Jobs
-      Oggetti Invalidi
+```bash
+# Da terminale con sqlplus:
+sqlplus / as sysdba @scripts_operativi/01_tablespace_datafile.sql
+
+# Oppure copia-incolla i blocchi che ti servono direttamente in sqlplus.
 ```
 
 ---
 
-## 📂 Indice degli Script
+## Indice per Scenario
 
-| Area | Script | Scenario d'Uso |
-|---|---|---|
-| 📦 **Storage** | [01: Tablespace](./01_tablespace_datafile.sql) | Risoluzione ORA-01653/4 e resize datafile. |
-| 🔄 **Infrastruttura** | [03: FRA & Archive](./03_fra_archivelog.sql) | Sblocco database "Hanged" per area backup piena. |
-| 🏎️ **Performance** | [07: Performance Quick](./07_performance_quick.sql) | Identificazione immediata dei Top 5 Wait Events. |
-| 🔐 **Concurrency** | [06: Sessioni & Lock](./06_sessioni_lock.sql) | Trovare la "Final Blocking Session" e risolvere blocchi applicativi. |
-| 🛡️ **Assicurazione** | [09: Data Guard](./09_dataguard_status.sql) | Verifica salute Sito DR e secondi di ritardo (Lag). |
-
----
-
-## 🚀 Come Usarli (Best Practices)
-
-1. **Usa SQL*Plus**: Gli script sono formattati per la riga di comando.
-2. **Pagine di Output**: La maggior parte degli script ha un `set linesize 200` per evitare wrap fastidiosi.
-3. **Copia & Incolla**: Puoi copiare singole sezioni invece di lanciare l'intero file per una diagnosi più mirata.
-
-> [!TIP]
-> **Livello Senior?** Se hai bisogno di un'analisi profonda (es. ASH dump o profili SQL), consulta la **[Libreria Enterprise (1000+ Script)](../13_libreria_completa_script/README.md)**.
+| # | File | Scenario | Quando lo usi |
+|---|---|---|---|
+| 01 | [Tablespace e Datafile](./01_tablespace_datafile.sql) | Tablespace pieno, maxsize, bigfile, resize, add datafile | Alert "ORA-01654", "ORA-01653" |
+| 02 | [UNDO e TEMP](./02_undo_temp.sql) | Undo pieno, ORA-30036, temp piena, sort disk | "ORA-01555", query lentissime, temp 100% |
+| 03 | [FRA e Archivelog](./03_fra_archivelog.sql) | FRA piena, archivelog che crescono, pulizia | Alert "DB Suspended", Data Pump che riempie la FRA |
+| 04 | [Data Pump (expdp/impdp)](./04_datapump_operativo.sql) | Monitor export/import, impatto su FRA/TEMP/UNDO | Richiesta Dev, refresh test, migrazione |
+| 05 | [ASM Storage](./05_asm_storage.sql) | Spazio ASM, diskgroup, AU_SIZE, limiti fisici | Capacity planning, add disk |
+| 06 | [Sessioni e Lock](./06_sessioni_lock.sql) | Chi blocca chi, kill session, deadlock | "L'app è bloccata!" |
+| 07 | [Performance Quick](./07_performance_quick.sql) | Top SQL, wait events, buffer cache hit | "Il database è lento!" |
+| 08 | [RMAN e Backup Status](./08_rman_backup_status.sql) | Ultimo backup, validate, crosscheck | Morning check, pre-upgrade |
+| 09 | [Data Guard Status](./09_dataguard_status.sql) | Lag, transport, apply, GAP | Morning check, before switchover |
+| 10 | [Oggetti e Schema](./10_oggetti_schema.sql) | Invalidi, segment size, tabelle grandi, indici | Pulizia, tuning, capacity |

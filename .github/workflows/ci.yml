@@ -6,16 +6,19 @@ on:
   pull_request:
     branches: [ "master", "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   lint-ansible:
     name: Lint Ansible Playbooks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -24,18 +27,17 @@ jobs:
           pip install ansible-lint ansible
 
       - name: Run Ansible Lint
-        # Ignoriamo regole eccessivamente rigide per i lab o warning di formattazione non critici
-        run: ansible-lint -q automation/playbooks/*.yml || echo "Ansible Linting completed (some warnings ignored)."
+        run: ansible-lint -q automation/playbooks/*.yml
 
   lint-shell:
     name: Lint Bash Scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: './scripts'
         env:
@@ -47,12 +49,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Markdown Lint
         uses: avto-dev/markdown-lint@v1
         with:
           config: '.markdownlint.json'
-          args: 'docs/**/*.md procedure_operative/**/*.md'
-          ignore_missing: true
-        continue-on-error: true # Non blocca la pipeline per un a capo sbagliato
+          args: 'README.md CONTRIBUTING.md docs/**/*.md automation/**/*.md vagrant_rac_dataguard/**/*.md'
+
+  check-markdown-links:
+    name: Check Markdown Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Link check
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --exclude-mail
+            --accept 200,429
+            README.md
+            CONTRIBUTING.md
+            automation/README.md
+            docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md
+            docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md
+            docs/04_administration/CHECKLIST_SECURITY_BASELINE.md
+            docs/11_runbook_operativi/*.md
+            docs/12_scripts_sql_pronti/README.md
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
