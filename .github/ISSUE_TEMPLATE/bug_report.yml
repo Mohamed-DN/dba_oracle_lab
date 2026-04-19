@@ -1,0 +1,31 @@
+name: Bug report
+about: Segnala un problema riproducibile
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Descrizione
+      description: Cosa non funziona?
+    validations:
+      required: true
+  - type: input
+    id: area
+    attributes:
+      label: Area impattata
+      description: Es. automation/playbooks/06_dataguard_switchover.yml
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passi per riprodurre
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Evidenze/Log
+      description: Incolla output rilevante (senza secret)
+    validations:
+      required: true

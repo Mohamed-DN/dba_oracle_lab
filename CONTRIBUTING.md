@@ -32,3 +32,11 @@ Apri una [Issue](https://github.com/Mohamed-DN/dba_oracle_lab/issues) con:
 - [ ] Template Grafana dashboard per Oracle
 - [ ] Playbook Ansible aggiuntivi (es. DR automation)
 - [ ] Traduzione guide in inglese
+
+## Governance minima per PR
+
+- Compila il template PR, inclusa sezione **Go/No-Go**.
+- Per modifiche in `automation/`, `policy/`, `docs/14_enterprise_governance/` o workflow, completa la **Security Checklist**.
+- Se cambi compatibilità o standard MAA, aggiorna `docs/14_enterprise_governance/` nello stesso PR.
+- Usa le issue template per bug/proposte così da mantenere KPI e roadmap tracciabili.
+

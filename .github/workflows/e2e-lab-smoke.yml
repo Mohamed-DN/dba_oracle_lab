@@ -28,14 +28,38 @@ jobs:
 
       - name: Verify lab provisioning assets exist
         run: |
-          test -f vagrant_rac_dataguard/Vagrantfile
+          test -f vagrant_rac_dataguard/dns/Vagrantfile
+          test -f vagrant_rac_dataguard/rac1/Vagrantfile
           test -f vagrant_rac_dataguard/shared_scripts/preflight_checks.sh
 
       - name: Verify key controls are encoded in playbooks
         run: |
-          grep -q "v\\$dataguard_stats" automation/playbooks/04_daily_health_check.yml
+          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml
           grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
           grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
+
+      - name: Build PR evidence log
+        run: |
+          mkdir -p reliability/evidence
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          out="reliability/evidence/e2e-asset-validation-${ts}.log"
+          {
+            echo "timestamp=${ts}"
+            echo "run_type=pr_asset_validation"
+            echo "checked=automation/playbooks/04_daily_health_check.yml"
+            echo "checked=automation/playbooks/06_dataguard_switchover.yml"
+            echo "checked=automation/playbooks/11_create_cdb_pdb.yml"
+            echo "checked=vagrant_rac_dataguard/dns/Vagrantfile"
+            echo "checked=vagrant_rac_dataguard/rac1/Vagrantfile"
+            echo "checked=vagrant_rac_dataguard/shared_scripts/preflight_checks.sh"
+          } | tee "${out}"
+
+      - name: Upload PR validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-pr-asset-validation-evidence
+          path: reliability/evidence/e2e-asset-validation-*.log
+          if-no-files-found: error
 
   e2e-lab-reduced:
     name: Real E2E reduced lab
@@ -50,16 +74,15 @@ jobs:
       - name: Preflight host dependencies
         run: |
           vagrant --version
-          virtualboxmanage --version
+          VBoxManage --version
           ansible --version
 
       - name: Provision reduced topology
-        working-directory: vagrant_rac_dataguard
         env:
           LAB_REDUCED: "true"
         run: |
-          vagrant up dns
-          vagrant up rac1
+          (cd vagrant_rac_dataguard/dns && vagrant up)
+          (cd vagrant_rac_dataguard/rac1 && vagrant up)
 
       - name: Functional verification RAC/Data Guard/CDB-PDB
         run: |
