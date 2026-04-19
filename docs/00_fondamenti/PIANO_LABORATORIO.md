@@ -53,7 +53,7 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 | **4.1** | **Come fare Troubleshooting** | [Troubleshooting Completo](../05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | Il manuale definitivo top-down. Impari a leggere le *Wait Classes* ("Db file sequential read"). Sblocca la skill più rara. |
 | **4.2** | **Misurare le Prestazioni** | [Guida AWR, ASH e ADDM](../05_performance/GUIDA_AWR_ASH_ADDM.md) | Generi i report `awrrpt.sql` e interpreti i grafici. Metti in quarantena SQL lenti (SQL Plan Management). |
 | **4.3** | **Schedulare Lavori** | [Oracle Scheduler](../04_administration/GUIDA_SCHEDULER_JOBS.md) | Sostituisci il banale `cron` di Linux con i potentissimi Job e Chains interni ad Oracle. |
-| **4.4** | **Libreria Script DBA** | [Directory Scripts Operativi](../../scripts_operativi/README.md) | Smetti di scrivere query a mano. Usa la nostra raccolta di script SQL pronti all'uso per vedere lock, CPU session e top I/O. |
+| **4.4** | **Libreria Script DBA** | [Directory Scripts Operativi](../12_scripts_sql_pronti/README.md) | Smetti di scrivere query a mano. Usa la nostra raccolta di script SQL pronti all'uso per vedere lock, CPU session e top I/O. |
 | **4.5** | **Esportazione Eterogenea** | [GoldenGate (Oracle -> PostgreSQL)](../07_replication/GUIDA_FASE7_GOLDENGATE.md) | Usi la replica logica estrema per mandare i commit da Oracle verso un database PostgreSQL. L'esame finale di architettura. |
 
 ---
@@ -66,7 +66,7 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 | **5.1** | **Vagrant (Infrastruttura Come Codice)** | [Vagrant 1-Click](../../vagrant_rac_dataguard/README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. |
 | **5.2** | **Automation via Ansible** | [Ansible Playbook Library](../../automation/README.md) | Impari perché Ansible ha sostituito Jenkins per le patch Oracle. Esegui patching rolling e check mattutini con playbook pronti. |
 | **5.3** | **Templates (Jinja2)** | [Ansible Templates Guide](../04_administration/GUIDA_ANSIBLE_TEMPLATES.md) | Il segreto delle Enterprise: esegui le installazioni (Grid, RDBMS, DBCA) in modalità `silent` al 100% nascondendo le password nel Vault. |
-| **5.4** | **Runbook Giornaliero** | [Procedure Operative Standard](../../procedure_operative/README.md) | Impari i processi da DBA turnista. Cosa guardare alle 8:30 del mattino (Health Check), come reagire ai ticket P1. |
+| **5.4** | **Runbook Giornaliero** | [Procedure Operative Standard](../11_runbook_operativi/README.md) | Impari i processi da DBA turnista. Cosa guardare alle 8:30 del mattino (Health Check), come reagire ai ticket P1. |
 | **BOSS** | **L'Intervista Tecnica** | [Ripasso Concetti DBA (Colloquio)](../10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Metti alla prova tutto. Domande trappola su architettura (Split Brain, Node Eviction, Hard Parse, Multiplexing) scritte da un vero CTO. |
 
 ---
