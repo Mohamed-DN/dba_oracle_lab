@@ -22,6 +22,9 @@ Prima di lanciare qualsiasi comando, devi scaricare i binari originali Oracle e 
 
 *(Nota: L'ISO di Oracle Linux viene scaricata in automatico da Vagrant Cloud tramite il box base di ol7)*
 
+> ✅ Nuovo: durante il provisioning RAC/Standby viene eseguito un **preflight check automatico**
+> che blocca subito l'esecuzione se i file Oracle non sono presenti in `software/`.
+
 ## Istruzioni di Avvio (L'Ordine è TASSATIVO)
 L'architettura RAC dipende strettamente dal DNS, e il Nodo 2 dipende dal Nodo 1. Apri 5 terminali diversi e lancia in quest'ordine:
 

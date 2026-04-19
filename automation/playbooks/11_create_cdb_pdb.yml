@@ -1,0 +1,124 @@
+---
+- name: Create CDB/PDB when missing
+  hosts: oracle_primary[0]
+  become: true
+  become_user: oracle
+  gather_facts: false
+  vars:
+    cdb_name: "{{ oracle_db_name }}"
+    pdb_name: "{{ oracle_pdb_name }}"
+    cdb_character_set: "AL32UTF8"
+    cdb_create_if_missing: false
+    pdb_create_if_missing: true
+    cdb_admin_password: "{{ vault_cdb_admin_password | default('CHANGEME_VAULT') }}"
+
+  pre_tasks:
+    - name: Check if CDB is already configured in CRS
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ grid_home }}
+        export PATH={{ grid_home }}/bin:$PATH
+        srvctl config database -d {{ cdb_name }}
+      register: cdb_cfg
+      changed_when: false
+      failed_when: false
+
+    - name: Guardrail for CDB creation
+      ansible.builtin.assert:
+        that:
+          - cdb_create_if_missing | bool or cdb_cfg.rc == 0
+        fail_msg: >-
+          CDB {{ cdb_name }} non trovata. Imposta cdb_create_if_missing=true
+          per abilitarne la creazione automatica.
+
+    - name: Guardrail for Vault password when creating CDB
+      ansible.builtin.assert:
+        that:
+          - cdb_admin_password != 'CHANGEME_VAULT'
+        fail_msg: >-
+          Definisci vault_cdb_admin_password in group_vars/vault.yml
+          prima di creare il CDB.
+      when:
+        - cdb_create_if_missing | bool
+        - cdb_cfg.rc != 0
+
+  tasks:
+    - name: Create CDB with DBCA (single-instance)
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        dbca -silent -createDatabase \
+          -createAsContainerDatabase true \
+          -templateName General_Purpose.dbc \
+          -gdbname {{ cdb_name }} \
+          -sid {{ cdb_name }} \
+          -characterSet {{ cdb_character_set }} \
+          -sysPassword '{{ cdb_admin_password }}' \
+          -systemPassword '{{ cdb_admin_password }}' \
+          -createListener LISTENER:1521 \
+          -datafileDestination +DATA
+      register: cdb_create
+      when:
+        - cdb_create_if_missing | bool
+        - cdb_cfg.rc != 0
+      changed_when: true
+      failed_when:
+        - cdb_create.rc != 0
+
+    - name: Check if PDB already exists
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        SET HEAD OFF FEED OFF
+        SELECT COUNT(*) FROM v\$pdbs WHERE name = UPPER('{{ pdb_name }}');
+        EXIT;
+        SQL
+      register: pdb_exists
+      changed_when: false
+
+    - name: Create PDB when missing
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        CREATE PLUGGABLE DATABASE {{ pdb_name }}
+          ADMIN USER pdbadmin IDENTIFIED BY "{{ cdb_admin_password }}"
+          FILE_NAME_CONVERT = (
+            '/u01/app/oracle/oradata/{{ cdb_name }}/',
+            '/u01/app/oracle/oradata/{{ cdb_name }}/{{ pdb_name }}/'
+          );
+        ALTER PLUGGABLE DATABASE {{ pdb_name }} OPEN;
+        ALTER PLUGGABLE DATABASE {{ pdb_name }} SAVE STATE;
+        EXIT;
+        SQL
+      register: create_pdb
+      when:
+        - pdb_create_if_missing | bool
+        - pdb_exists.stdout | trim | int == 0
+      changed_when: true
+      failed_when:
+        - create_pdb.rc != 0
+
+    - name: Ensure PDB is open and saved
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        ALTER PLUGGABLE DATABASE {{ pdb_name }} OPEN;
+        ALTER PLUGGABLE DATABASE {{ pdb_name }} SAVE STATE;
+        EXIT;
+        SQL
+      register: pdb_open
+      changed_when: false
+      failed_when: pdb_open.rc != 0
+
+    - name: Show CDB/PDB summary
+      ansible.builtin.debug:
+        msg: >-
+          CDB {{ cdb_name }} status rc={{ cdb_cfg.rc }};
+          PDB {{ pdb_name }} exists={{ pdb_exists.stdout | trim }}.

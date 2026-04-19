@@ -1,5 +1,7 @@
 . /vagrant_config/install_primary.env
 
+sh /vagrant_scripts/preflight_checks.sh
+
 sh /vagrant_scripts/prepare_u01_disk.sh
 
 sh /vagrant_scripts/install_os_packages.sh
