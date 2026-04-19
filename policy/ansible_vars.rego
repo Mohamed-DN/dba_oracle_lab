@@ -20,7 +20,7 @@ deny[msg] {
 
 deny[msg] {
   is_ansible_vars
-  val := lower(sprintf("%v", [input.app_user_password]))
+  val := lower(sprintf("%s", [input.app_user_password]))
   contains(val, "changeme")
   msg := "app_user_password must not keep CHANGEME default"
 }
