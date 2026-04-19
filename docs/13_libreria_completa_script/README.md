@@ -3,6 +3,8 @@
 > **~1000 script SQL e procedure** organizzati per area operativa, estratti da ambienti Enterprise reali.
 > Ogni sezione ha un README che spiega **cosa fa**, **quando usarlo**, e **come eseguirlo**.
 
+📘 **Nuovo catalogo completo script-per-script**: [CATALOGO_COMPLETO_SCRIPT.md](./CATALOGO_COMPLETO_SCRIPT.md)
+
 ---
 
 ## 🗂️ Mappa della Libreria
@@ -49,23 +51,23 @@ libreria_oracle/
 
 ---
 
-## 📊 Indice per Area (con conteggio script)
+## 📊 Indice per Area (conteggio script operativi)
 
-| # | Area | Script | Cosa Trovi | Quando Lo Usi |
+| # | Area | Script operativi | Cosa Trovi | Quando Lo Usi |
 |---|---|---|---|---|
-| 01 | [ASM & Storage](./01_asm_storage/) | 20 | Add/remove disco ASM, migrate LUN (ASMLib + AFD) | Capacity planning, sostituzione LUN |
-| 02 | [Data Guard](./02_dataguard/) | 6 | Config DG, Active DG, verifica GAP, recovery DR | Setup standby, troubleshooting replica |
-| 03 | [Monitoring](./03_monitoring_scripts/) | **586** | Sessioni, lock, CPU, I/O, ASH, rete, DRCP, MView | **Ogni giorno!** Morning check, incident |
-| 04 | [Utenti](./04_user_management/) | 6 | Creazione utenti, profili, policy password, Vault | Richiesta HR, nuova applicazione |
-| 05 | [Patching](./05_patching/) | 6 | Procedure patching, Golden Images (OHCTL) | Quarterly patching window |
-| 06 | [Backup & Recovery](./06_backup_recovery/) | 13 | Flashback, Restore Point, RMAN checks | Pre-upgrade, disaster recovery |
-| 07 | [Performance](./07_performance_tuning/) | **225** | SPM, AWR, analisi statistiche, SQL tuning | Query lente, capacity, review settimanale |
-| 08 | [TDE & Security](./08_tde_security/) | 9 | Transparent Data Encryption, audit, Vault | Compliance, audit sicurezza |
-| 09 | [Compressione](./09_compression/) | 2 | DBMS_REDEFINITION online, HCC | Ridurre storage, near-zero downtime |
-| 10 | [Partition Manager](./10_partition_manager/) | 3 | Package gestione partizioni automatiche | Tabelle > 100M righe |
-| 11 | [Template SQL](./11_sql_templates/) | 18 | Template DDL/DML standard con error handling | Sviluppo, standardizzazione |
-| 12 | [Utility](./12_utilities/) | **103** | TEMP/UNDO monitor, MView refresh, profili UNIX | Supporto quotidiano, troubleshooting |
-| | **TOTALE** | **~1000** | | |
+| 01 | [ASM & Storage](./01_asm_storage/) | 26 | Add/remove disco ASM, health check storage, failgroup | Capacity planning, sostituzione LUN |
+| 02 | [Data Guard](./02_dataguard/) | 0 | Categoria documentale/runbook DG | Setup standby, troubleshooting replica |
+| 03 | [Monitoring](./03_monitoring_scripts/) | **560** | Sessioni, lock, CPU, I/O, ASH, rete, DRCP, MView | **Ogni giorno!** Morning check, incident |
+| 04 | [Utenti](./04_user_management/) | 5 | Template creazione utenti, profili, password policy | Richiesta HR, nuova applicazione |
+| 05 | [Patching](./05_patching/) | 2 | Template/asset patching operativi | Quarterly patching window |
+| 06 | [Backup & Recovery](./06_backup_recovery/) | 12 | Flashback, Restore Point, RMAN checks | Pre-upgrade, disaster recovery |
+| 07 | [Performance](./07_performance_tuning/) | **230** | SPM, AWR, analisi statistiche, SQL tuning | Query lente, capacity, review settimanale |
+| 08 | [TDE & Security](./08_tde_security/) | 8 | Transparent Data Encryption, audit, Vault | Compliance, audit sicurezza |
+| 09 | [Compressione](./09_compression/) | 1 | DDL di supporto a compressione/redefinition | Ridurre storage, near-zero downtime |
+| 10 | [Partition Manager](./10_partition_manager/) | 2 | Package gestione partizioni automatiche | Tabelle > 100M righe |
+| 11 | [Template SQL](./11_sql_templates/) | 17 | Template DDL/DML standard con error handling | Sviluppo, standardizzazione |
+| 12 | [Utility](./12_utilities/) | **102** | TEMP/UNDO monitor, MView refresh, profili UNIX | Supporto quotidiano, troubleshooting |
+| | **TOTALE** | **965** | | |
 
 ---
 
