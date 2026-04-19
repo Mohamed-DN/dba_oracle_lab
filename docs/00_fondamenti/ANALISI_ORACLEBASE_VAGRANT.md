@@ -1,12 +1,12 @@
-# Analisi: Oracle Base Vagrant RAC vs Nostro Lab — Best Practice Estratte
+# Analysis: Oracle Base Vagrant RAC vs Our Lab — Extracted Best Practices
 
-> **Nota**: Questo documento è un'analisi comparativa. Il nostro lab usa **ASMLib (`oracleasm`)** per i dischi ASM, non udev. Oracle Base usa udev nel suo Vagrant, ma ASMLib rimane supportato e preferito per il nostro approccio didattico.
+> **Note**: This document is a comparative analysis. Our lab uses **ASMLib (`oracleasm`)** for ASM disks, not udev. Oracle Base uses udev in its Vagrant, but ASMLib remains supported and preferred for our educational approach.
 
-> Fonte: [oraclebase/vagrant/rac/ol7_19](https://github.com/oraclebase/vagrant/tree/master/rac/ol7_19) + [oracle-base.com articolo dettagliato](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox)
+> Source: [oraclebase/vagrant/rac/ol7_19](https://github.com/oraclebase/vagrant/tree/master/rac/ol7_19) + [oracle-base.com detailed article](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox)
 
 ---
 
-## Confronto Architettura
+## Architecture Comparison
 
 ```
 ╔═══════════════════════════════╦══════════════════════╦═══════════════════════╗
@@ -33,17 +33,17 @@
 
 ---
 
-## Top 10 Miglioramenti da Integrare
+## Top 10 Improvements to Integrate
 
-### 1. 🔧 udev Rules per ASM Disks (Alternativa a oracleasm)
+### 1. 🔧 udev Rules for ASM Disks (Alternative to oracleasm)
 
-Oracle Base usa **udev rules** invece del driver `oracleasm`. Questo è il metodo **raccomandato da Oracle per 19c+** e non richiede driver aggiuntivi.
+Oracle Base uses **udev rules** instead of the `oracleasm` driver. This is the **Oracle-recommended method for 19c+** and does not require additional drivers.
 
 ```bash
-# Identifica i dischi con scsi_id
+# Identify disks with scsi_id
 ASM_DISK1=$(/usr/lib/udev/scsi_id -g -u -d /dev/sdc)
 
-# Crea regole udev persistenti
+# Create persistent udev rules
 cat > /etc/udev/rules.d/99-oracle-asmdevices.rules <<EOF
 KERNEL=="sd?1", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d /dev/\$parent", \
   RESULT=="${ASM_DISK1}", SYMLINK+="oracleasm/asm-crs-disk1", OWNER="oracle", GROUP="dba", MODE="0660"
@@ -54,9 +54,9 @@ EOF
 /sbin/partprobe /dev/sdc1
 ```
 
-**Vantaggio**: Non serve `oracleasm init/scandisks/configure`. I dischi appaiono come `/dev/oracleasm/asm-*` con permessi corretti automaticamente dopo ogni reboot.
+**Advantage**: No need for `oracleasm init/scandisks/configure`. Disks appear as `/dev/oracleasm/asm-*` with correct permissions automatically after each reboot.
 
-### 2. 🕐 chrony Time Sync (Moderno)
+### 2. 🕐 chrony Time Sync (Modern)
 
 ```bash
 systemctl enable chronyd
@@ -65,32 +65,32 @@ chronyc -a 'burst 4/4'    # Sincronizza velocemente all'avvio
 chronyc -a makestep         # Forza step di correzione
 ```
 
-**Vantaggio**: Clusterware richiede sincronizzazione tempo tra nodi. chrony è più veloce e preciso di ntpd.
+**Advantage**: Clusterware requires time synchronization between nodes. chrony is faster and more accurate than ntpd.
 
 ### 3. 🌐 NetworkManager dns=none
 
 ```bash
-# Impedisce a NetworkManager di sovrascrivere /etc/resolv.conf
+# Prevent NetworkManager from overwriting /etc/resolv.conf
 sed -i -e "s|\[main\]|\[main\]\ndns=none|g" /etc/NetworkManager/NetworkManager.conf
 systemctl restart NetworkManager.service
 ```
 
-**Vantaggio**: Senza questo, NetworkManager può sovrascrivere il tuo `/etc/resolv.conf` e **rompere la risoluzione SCAN** — un problema insidioso che può apparire dopo un reboot!
+**Advantage**: Without this, NetworkManager can overwrite your `/etc/resolv.conf` and **break SCAN resolution** — an insidious issue that can appear after a reboot!
 
-### 4. 📀 /u01 su Disco Dedicato (XFS)
+### 4. 📀 /u01 on Dedicated Disk (XFS)
 
 ```bash
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdb    # Partiziona
-mkfs.xfs -f /dev/sdb1                           # Formatta XFS
+echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdb    # Partition
+mkfs.xfs -f /dev/sdb1                           # Format XFS
 UUID=$(blkid -o value /dev/sdb1 | grep -v xfs)
 mkdir /u01
 echo "UUID=${UUID}  /u01    xfs    defaults 1 2" >> /etc/fstab
 mount /u01
 ```
 
-**Vantaggio**: Separa i binari Oracle dal disco OS. Se il disco OS si riempie, Oracle continua a funzionare.
+**Advantage**: Separates Oracle binaries from the OS disk. If the OS disk fills up, Oracle continues to function.
 
-### 5. 🏗️ CRS NORMAL Redundancy (3 Dischi)
+### 5. 🏗️ CRS NORMAL Redundancy (3 Disks)
 
 ```
 oracle.install.asm.diskGroup.name=CRS
@@ -101,11 +101,11 @@ oracle.install.asm.diskGroup.disksWithFailureGroupNames=\
   /dev/oracleasm/asm-crs-disk3,CRSFG3
 ```
 
-**Vantaggio**: Anche nel lab, usare NORMAL con Failure Groups ti insegna come funziona la ridondanza ASM reale.
+**Advantage**: Even in the lab, using NORMAL with Failure Groups teaches you how real ASM redundancy works.
 
 ### 6. 📦 Grid Silent Install (Response File)
 
-Tutto il `gridSetup.sh` con parametri in linea di comando — documentato e riproducibile:
+The full `gridSetup.sh` with command-line parameters — documented and reproducible:
 
 ```bash
 ${GRID_HOME}/gridSetup.sh -ignorePrereq -waitforcompletion -silent \
@@ -116,7 +116,7 @@ ${GRID_HOME}/gridSetup.sh -ignorePrereq -waitforcompletion -silent \
   ...
 ```
 
-### 7. 🗃️ CDB + PDB con Auto-Start
+### 7. 🗃️ CDB + PDB with Auto-Start
 
 ```bash
 dbca -silent -createDatabase \
@@ -124,20 +124,20 @@ dbca -silent -createDatabase \
   -numberOfPDBs 1 \
   -pdbName pdb1 ...
 
-# IMPORTANTE: salva lo stato della PDB per auto-start!
+# IMPORTANT: save PDB state for auto-start!
 ALTER PLUGGABLE DATABASE pdb1 SAVE STATE;
 ```
 
-**Vantaggio**: Oracle 21c+ richiede CDB. Meglio imparare subito.
+**Advantage**: Oracle 21c+ requires CDB. Better to learn it right away.
 
-### 8. 🔑 SSH Automatizzato con sshpass
+### 8. 🔑 Automated SSH with sshpass
 
 ```bash
 ssh-keyscan -H ${NODE2_HOSTNAME} >> ~/.ssh/known_hosts
 sshpass -f /tmp/temp.txt ssh-copy-id ${NODE2_HOSTNAME}
 ```
 
-**Vantaggio**: Elimina l'interazione manuale "Are you sure you want to continue connecting?"
+**Advantage**: Eliminates the manual "Are you sure you want to continue connecting?" interaction.
 
 ### 9. 📀 ASM Compatibility Attributes
 
@@ -146,21 +146,21 @@ CREATE DISKGROUP data EXTERNAL REDUNDANCY DISK '/dev/oracleasm/asm-data-disk1'
   ATTRIBUTE 'compatible.asm'='19.0','compatible.rdbms'='19.0';
 ```
 
-**Vantaggio**: Senza questi attributi, ASM usa il livello di compatibilità più basso, disabilitando features nuove.
+**Advantage**: Without these attributes, ASM uses the lowest compatibility level, disabling new features.
 
-### 10. 📦 cvuqdisk RPM (Pre-requisito Grid)
+### 10. 📦 cvuqdisk RPM (Grid Pre-requisite)
 
 ```bash
 yum install -y ${GRID_HOME}/cv/rpm/cvuqdisk-1.0.10-1.rpm
-# Su TUTTI i nodi!
+# On ALL nodes!
 ```
 
-**Vantaggio**: Senza cvuqdisk, il Grid installer non riesce a scoprire i dischi ASM durante la configurazione.
+**Advantage**: Without cvuqdisk, the Grid installer cannot discover ASM disks during configuration.
 
 ---
 
-## Nota su dnsmasq vs BIND
+## Note on dnsmasq vs BIND
 
-Oracle Base usa **dnsmasq** (leggero, ~1 file di config) su una VM dedicata. Nel nostro lab usiamo **BIND** (più potente, ma complesso) sullo stesso nodo rac1. Entrambi funzionano. BIND è più vicino a un setup enterprise reale, dnsmasq è più semplice per il lab.
+Oracle Base uses **dnsmasq** (lightweight, ~1 config file) on a dedicated VM. Our lab uses **BIND** (more powerful, but complex) on the same rac1 node. Both work. BIND is closer to a real enterprise setup; dnsmasq is simpler for the lab.
 
-**Decisione**: Manteniamo BIND nel nostro lab (più formativo) ma aggiungiamo una nota su dnsmasq come alternativa leggera.
+**Decision**: We keep BIND in our lab (more educational) but add a note on dnsmasq as a lightweight alternative.

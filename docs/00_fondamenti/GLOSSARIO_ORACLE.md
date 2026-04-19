@@ -1,83 +1,83 @@
-# Glossario Oracle — Tutti gli Acronimi del Lab
+# Oracle Glossary — All Lab Acronyms
 
-> Riferimento rapido per tutti i termini e acronimi Oracle usati in questo repository.
+> Quick reference for all Oracle terms and acronyms used in this repository.
 
 ---
 
-## Architettura Database
+## Database Architecture
+
+| Term | Definition |
+|---------|------------|
+| **CDB** | Container Database — the "container" database that hosts PDBs |
+| **PDB** | Pluggable Database — a "pluggable" database inside a CDB |
+| **SGA** | System Global Area — shared database memory (buffer cache, shared pool, etc.) |
+| **PGA** | Program Global Area — private memory for each session/process |
+| **DBID** | Database IDentifier — unique number identifying a database (used by RMAN) |
+| **SCN** | System Change Number — database change counter (the "logical timestamp") |
+| **REDO** | Transactional log file — records every change for recovery |
+| **UNDO** | Rollback segment — stores "before" values for rollback and read consistency |
+| **FRA** | Fast Recovery Area — disk area for backups, archivelogs, flashback logs |
+| **BCT** | Block Change Tracking — file that tracks modified blocks to speed up incremental backups |
+| **SPFILE** | Server Parameter File — binary file with database parameters |
+| **PFILE** | Parameter File — text file with parameters (init.ora, used as fallback) |
+
+## Processes
 
 | Termine | Definizione |
 |---------|------------|
-| **CDB** | Container Database — il database "contenitore" che ospita i PDB |
-| **PDB** | Pluggable Database — un database "innestabile" dentro un CDB |
-| **SGA** | System Global Area — memoria condivisa del database (buffer cache, shared pool, ecc.) |
-| **PGA** | Program Global Area — memoria privata di ogni sessione/processo |
-| **DBID** | Database IDentifier — numero unico che identifica un database (usato da RMAN) |
-| **SCN** | System Change Number — contatore delle modifiche del database (il "timestamp logico") |
-| **REDO** | File di log transazionale — registra ogni modifica per il recovery |
-| **UNDO** | Segmento di rollback — conserva i valori "prima" per rollback e read consistency |
-| **FRA** | Fast Recovery Area — area su disco per backup, archivelog, flashback logs |
-| **BCT** | Block Change Tracking — file che traccia i blocchi modificati per velocizzare backup incrementali |
-| **SPFILE** | Server Parameter File — file binario con i parametri del database |
-| **PFILE** | Parameter File — file testo con i parametri (init.ora, usato come fallback) |
-
-## Processi
-
-| Termine | Definizione |
-|---------|------------|
-| **LGWR** | Log Writer — scrive il redo buffer nei redo log files (COMMIT) |
-| **DBWR/DBWn** | Database Writer — scrive i dirty blocks dalla buffer cache ai datafile |
-| **ARCH/ARCn** | Archiver — copia i redo log pieni negli archivelog (ARCHIVELOG mode) |
-| **CKPT** | Checkpoint — aggiorna gli header dei datafile con l'ultimo SCN |
-| **SMON** | System Monitor — recovery automatico al startup, pulizia |
-| **PMON** | Process Monitor — pulizia sessioni morte, rilascio lock orfani |
-| **MMON** | Manageability Monitor — raccoglie statistiche AWR, lancia ADDM |
-| **MRP0** | Managed Recovery Process — applica i redo sullo standby (Data Guard) |
-| **RFS** | Remote File Server — riceve i redo dal primary (Data Guard) |
-| **DMON** | Data Guard Monitor — il processo del Broker |
-| **RVWR** | Recovery Writer — scrive i flashback logs |
+| **LGWR** | Log Writer — writes the redo buffer to redo log files (COMMIT) |
+| **DBWR/DBWn** | Database Writer — writes dirty blocks from the buffer cache to datafiles |
+| **ARCH/ARCn** | Archiver — copies full redo logs into archivelogs (ARCHIVELOG mode) |
+| **CKPT** | Checkpoint — updates datafile headers with the latest SCN |
+| **SMON** | System Monitor — automatic recovery at startup, cleanup |
+| **PMON** | Process Monitor — cleanup of dead sessions, release of orphaned locks |
+| **MMON** | Manageability Monitor — collects AWR statistics, launches ADDM |
+| **MRP0** | Managed Recovery Process — applies redo on the standby (Data Guard) |
+| **RFS** | Remote File Server — receives redo from the primary (Data Guard) |
+| **DMON** | Data Guard Monitor — the Broker process |
+| **RVWR** | Recovery Writer — writes flashback logs |
 
 ## RAC (Real Application Clusters)
 
 | Termine | Definizione |
 |---------|------------|
-| **RAC** | Real Application Clusters — più istanze Oracle su nodi diversi, un database condiviso |
-| **ASM** | Automatic Storage Management — volume manager Oracle per dischi condivisi |
-| **CRS** | Cluster Ready Services — il framework di clustering di Oracle |
-| **OCR** | Oracle Cluster Registry — configurazione del cluster (quali risorse, dove) |
-| **OLR** | Oracle Local Registry — copia locale dell'OCR su ogni nodo |
-| **VIP** | Virtual IP — IP virtuale che migra tra nodi per HA |
-| **SCAN** | Single Client Access Name — VIP + DNS round-robin per connessioni client |
-| **Cache Fusion** | Meccanismo RAC per condividere blocchi tra istanze via interconnect |
-| **GES** | Global Enqueue Service — gestisce i lock distribuiti tra nodi RAC |
-| **GCS** | Global Cache Service — gestisce il trasferimento blocchi tra nodi |
-| **HAIP** | High Availability IP — IP ridondante per l'interconnect RAC |
+| **RAC** | Real Application Clusters — multiple Oracle instances on different nodes, one shared database |
+| **ASM** | Automatic Storage Management — Oracle volume manager for shared disks |
+| **CRS** | Cluster Ready Services — Oracle's clustering framework |
+| **OCR** | Oracle Cluster Registry — cluster configuration (which resources, where) |
+| **OLR** | Oracle Local Registry — local copy of the OCR on each node |
+| **VIP** | Virtual IP — virtual IP that migrates between nodes for HA |
+| **SCAN** | Single Client Access Name — VIP + DNS round-robin for client connections |
+| **Cache Fusion** | RAC mechanism for sharing blocks between instances via interconnect |
+| **GES** | Global Enqueue Service — manages distributed locks between RAC nodes |
+| **GCS** | Global Cache Service — manages block transfer between nodes |
+| **HAIP** | High Availability IP — redundant IP for RAC interconnect |
 
 ## Data Guard
 
 | Termine | Definizione |
 |---------|------------|
-| **DG** | Data Guard — tecnologia Oracle per replica sincrona/asincrona del database |
-| **DGMGRL** | Data Guard Manager (CLI) — il client a riga di comando per gestire il Broker |
-| **Broker** | Data Guard Broker — framework di gestione automatica di Data Guard |
-| **FAL** | Fetch Archive Log — meccanismo per richiedere archivelog mancanti |
-| **FSFO** | Fast-Start Failover — failover automatico con Observer |
-| **Observer** | Processo che monitora Primary/Standby e avvia FSFO |
-| **MaxPerformance** | Protection mode: nessun impatto sul Primary (ASYNC) |
-| **MaxAvailability** | Protection mode: sincrono ma degrada a async se standby non raggiungibile |
-| **MaxProtection** | Protection mode: sincrono assoluto, Primary si ferma se standby non risponde |
-| **ADG** | Active Data Guard — standby aperto in READ ONLY con apply attivo |
+| **DG** | Data Guard — Oracle technology for synchronous/asynchronous database replication |
+| **DGMGRL** | Data Guard Manager (CLI) — the command-line client for managing the Broker |
+| **Broker** | Data Guard Broker — automatic Data Guard management framework |
+| **FAL** | Fetch Archive Log — mechanism for requesting missing archivelogs |
+| **FSFO** | Fast-Start Failover — automatic failover with Observer |
+| **Observer** | Process that monitors Primary/Standby and initiates FSFO |
+| **MaxPerformance** | Protection mode: no impact on Primary (ASYNC) |
+| **MaxAvailability** | Protection mode: synchronous but degrades to async if standby unreachable |
+| **MaxProtection** | Protection mode: absolute synchronous, Primary stops if standby does not respond |
+| **ADG** | Active Data Guard — standby open in READ ONLY with active apply |
 
 ## RMAN
 
 | Termine | Definizione |
 |---------|------------|
-| **RMAN** | Recovery Manager — tool Oracle per backup e recovery |
-| **Backupset** | Formato nativo RMAN: contiene solo blocchi utilizzati (compatto) |
-| **Image Copy** | Copia 1:1 dei datafile (come `cp`, ma gestita da RMAN) |
-| **Level 0** | Backup incrementale base: copia tutti i blocchi |
-| **Level 1** | Backup incrementale: copia solo i blocchi modificati dal Level 0 |
-| **PITR** | Point-In-Time Recovery — ripristino a un momento specifico |
+| **RMAN** | Recovery Manager — Oracle tool for backup and recovery |
+| **Backupset** | Native RMAN format: contains only used blocks (compact) |
+| **Image Copy** | 1:1 copy of datafiles (like `cp`, but managed by RMAN) |
+| **Level 0** | Base incremental backup: copies all blocks |
+| **Level 1** | Incremental backup: copies only blocks changed since Level 0 |
+| **PITR** | Point-In-Time Recovery — restore to a specific point in time |
 | **TSPITR** | Tablespace Point-In-Time Recovery |
 | **DBPITR** | Database Point-In-Time Recovery |
 
@@ -85,58 +85,58 @@
 
 | Termine | Definizione |
 |---------|------------|
-| **GG/OGG** | Oracle GoldenGate — replica logica in tempo reale |
-| **Extract** | Processo GG che cattura le modifiche dai redo log |
-| **Pump** | Processo GG secondario che trasporta i trail via rete |
-| **Replicat** | Processo GG che applica le modifiche sul database target |
-| **Trail** | File binario GG contenente le transazioni catturate |
-| **GGSCI** | GoldenGate Software Command Interface — CLI di GoldenGate |
-| **MGR** | Manager — processo supervisore di GoldenGate |
-| **DEFGEN** | Definition Generator — genera file di definizione tabelle per target eterogenei |
+| **GG/OGG** | Oracle GoldenGate — real-time logical replication |
+| **Extract** | GG process that captures changes from redo logs |
+| **Pump** | Secondary GG process that transports trails over the network |
+| **Replicat** | GG process that applies changes to the target database |
+| **Trail** | GG binary file containing captured transactions |
+| **GGSCI** | GoldenGate Software Command Interface — GoldenGate CLI |
+| **MGR** | Manager — GoldenGate supervisor process |
+| **DEFGEN** | Definition Generator — generates table definition files for heterogeneous targets |
 
 ## Performance
 
 | Termine | Definizione |
 |---------|------------|
-| **AWR** | Automatic Workload Repository — statistiche performance persistenti |
-| **ASH** | Active Session History — campionamento sessioni attive in tempo reale |
-| **ADDM** | Automatic Database Diagnostic Monitor — analisi automatica AWR |
-| **SQL Profile** | Set di hint che l'optimizer usa per una query specifica |
-| **SQL Plan Baseline** | Piano di esecuzione "congelato" per una query |
-| **Wait Event** | Cosa sta aspettando una sessione (I/O, lock, CPU, ecc.) |
-| **DB Time** | Tempo totale speso dalle sessioni nel database |
+| **AWR** | Automatic Workload Repository — persistent performance statistics |
+| **ASH** | Active Session History — real-time sampling of active sessions |
+| **ADDM** | Automatic Database Diagnostic Monitor — automatic AWR analysis |
+| **SQL Profile** | Set of hints the optimizer uses for a specific query |
+| **SQL Plan Baseline** | "Frozen" execution plan for a query |
+| **Wait Event** | What a session is waiting for (I/O, lock, CPU, etc.) |
+| **DB Time** | Total time spent by sessions in the database |
 
-## Alta Disponibilità
-
-| Termine | Definizione |
-|---------|------------|
-| **HA** | High Availability — alta disponibilità |
-| **MAA** | Maximum Availability Architecture — architettura Oracle per HA massima |
-| **TAF** | Transparent Application Failover — reconnect automatico del client |
-| **FCF** | Fast Connection Failover — failover rapido basato su FAN events |
-| **FAN** | Fast Application Notification — eventi push dal cluster ai client |
-| **CLB** | Connection Load Balancing — bilanciamento connessioni tra nodi |
-| **RLB** | Runtime Load Balancing — bilanciamento dinamico basato sul carico |
-| **RPO** | Recovery Point Objective — massimo dato perdibile ("quanti dati perdo?") |
-| **RTO** | Recovery Time Objective — tempo massimo di ripristino ("quanto sto fermo?") |
-
-## Sicurezza
+## High Availability
 
 | Termine | Definizione |
 |---------|------------|
-| **TDE** | Transparent Data Encryption — encryption dei datafile a riposo |
-| **NNE** | Native Network Encryption — encryption delle connessioni di rete |
-| **Wallet** | Keystore Oracle per chiavi di encryption e certificati |
+| **HA** | High Availability |
+| **MAA** | Maximum Availability Architecture — Oracle architecture for maximum HA |
+| **TAF** | Transparent Application Failover — automatic client reconnect |
+| **FCF** | Fast Connection Failover — rapid failover based on FAN events |
+| **FAN** | Fast Application Notification — push events from cluster to clients |
+| **CLB** | Connection Load Balancing — balancing connections between nodes |
+| **RLB** | Runtime Load Balancing — dynamic balancing based on load |
+| **RPO** | Recovery Point Objective — maximum data loss allowable ("how much data can I lose?") |
+| **RTO** | Recovery Time Objective — maximum restore time ("how long am I down?") |
 
-## Strumenti
+## Security
 
 | Termine | Definizione |
 |---------|------------|
-| **OEM/EM** | Oracle Enterprise Manager — console di monitoring centralizzata |
-| **OMS** | Oracle Management Service — server centrale di Enterprise Manager |
-| **OPatch** | Tool Oracle per applicare patch ai binari |
+| **TDE** | Transparent Data Encryption — encryption of datafiles at rest |
+| **NNE** | Native Network Encryption — encryption of network connections |
+| **Wallet** | Oracle keystore for encryption keys and certificates |
+
+## Tools
+
+| Termine | Definizione |
+|---------|------------|
+| **OEM/EM** | Oracle Enterprise Manager — centralized monitoring console |
+| **OMS** | Oracle Management Service — central Enterprise Manager server |
+| **OPatch** | Oracle tool for applying patches to binaries |
 | **OUI** | Oracle Universal Installer |
-| **sqlplus** | Client SQL a riga di comando Oracle |
+| **sqlplus** | Oracle command-line SQL client |
 | **adrci** | Automatic Diagnostic Repository Command Interpreter |
-| **orachk** | Tool Oracle per health check automatizzato |
+| **orachk** | Oracle tool for automated health check |
 | **expdp/impdp** | Data Pump Export/Import |

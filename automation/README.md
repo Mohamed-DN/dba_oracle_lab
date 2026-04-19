@@ -1,65 +1,65 @@
-# Automazione Oracle DBA con Ansible
+# Oracle DBA Automation with Ansible
 
-> Playbook production-grade per l'automazione delle attività Oracle DBA.
-> Ispirati alle best practice di [oravirt/ansible-oracle](https://github.com/oravirt/ansible-oracle) (366★),
+> Production-grade playbooks for Oracle DBA activity automation.
+> Inspired by the best practices of [oravirt/ansible-oracle](https://github.com/oravirt/ansible-oracle) (366★),
 > [CruGlobal/ansible-oracle-db-upgrade](https://github.com/CruGlobal/ansible-oracle-db-upgrade),
-> e [Oracle DevOps Series](https://medium.com/oracledevs).
+> and [Oracle DevOps Series](https://medium.com/oracledevs).
 
 ---
 
-## Perché Ansible (e NON Jenkins)
+## Why Ansible (and NOT Jenkins)
 
-| Criterio | Ansible ✅ | Jenkins ❌ |
+| Criterion | Ansible ✅ | Jenkins ❌ |
 |---|---|---|
-| Architettura | **Agentless** (SSH) — nulla da installare sui DB server | Richiede Agent Java su ogni server |
-| Natura | Configuration Management + Orchestration | CI/CD Pipeline (nato per builds) |
-| Idempotenza | **Nativa** — ogni modulo è idempotente di default | Da gestire manualmente in Groovy |
-| Oracle Support | Oracle pubblica Ansible Collections ufficiali | Nessun plugin Oracle nativo |
-| Sicurezza | SSH key-based + **Ansible Vault** per password | Token/credenziali in Jenkins Store |
-| DBA-friendly | **YAML dichiarativo** — un DBA lo legge subito | Groovy Pipeline DSL — curva ripida |
-| Rollback | Modulo `block/rescue` nativo per error handling | Try/catch in Groovy da sviluppare |
+| Architecture | **Agentless** (SSH) — nothing to install on DB servers | Requires Java Agent on every server |
+| Nature | Configuration Management + Orchestration | CI/CD Pipeline (built for builds) |
+| Idempotency | **Native** — every module is idempotent by default | Must be managed manually in Groovy |
+| Oracle Support | Oracle publishes official Ansible Collections | No native Oracle plugin |
+| Security | SSH key-based + **Ansible Vault** for passwords | Tokens/credentials in Jenkins Store |
+| DBA-friendly | **Declarative YAML** — a DBA can read it immediately | Groovy Pipeline DSL — steep curve |
+| Rollback | Native `block/rescue` module for error handling | Try/catch in Groovy to be developed |
 
-> **Verdetto**: Per gestire infrastruttura Oracle (install, patch, upgrade, backup, health check), Ansible è lo strumento corretto. Jenkins è superiore solo per pipeline CI/CD di applicazioni software.
+> **Verdict**: For managing Oracle infrastructure (install, patch, upgrade, backup, health check), Ansible is the right tool. Jenkins is superior only for CI/CD pipelines of software applications.
 
 ---
 
-## Struttura Directory
+## Directory Structure
 
 ```
 automation/
-├── README.md                              ← Questo file
-├── ansible.cfg                            ← Configurazione Ansible
+├── README.md                              ← This file
+├── ansible.cfg                            ← Ansible configuration
 ├── inventory/
-│   ├── production.ini                     ← Server di produzione
-│   └── lab.ini                            ← Server del lab
+│   ├── production.ini                     ← Production servers
+│   └── lab.ini                            ← Lab servers
 ├── group_vars/
-│   ├── all.yml                            ← Variabili globali
-│   ├── oracle_primary.yml                 ← Variabili RAC Primary
-│   └── oracle_standby.yml                 ← Variabili RAC Standby
+│   ├── all.yml                            ← Global variables
+│   ├── oracle_primary.yml                 ← RAC Primary variables
+│   └── oracle_standby.yml                 ← RAC Standby variables
 ├── playbooks/
-│   ├── 01_oracle_install.yml              ← Installazione 19c Software-Only
-│   ├── 02_oracle_patching.yml             ← Patching RU (rolling RAC)
-│   ├── 03_oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
-│   ├── 04_daily_health_check.yml          ← Health Check giornaliero
-│   ├── 05_rman_backup.yml                 ← Backup RMAN con validazione
-│   ├── 06_dataguard_switchover.yml        ← Switchover DG automatizzato
-│   ├── 07_create_users_tablespaces.yml    ← Automazione User/Tablespace
-│   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
-│   ├── 09_datapump_export.yml             ← Logical backup con expdp
-│   └── 10_manage_services.yml             ← Gestione RAC services
+│   ├── 01_oracle_install.yml              ← 19c Software-Only installation
+│   ├── 02_oracle_patching.yml             ← RU Patching (rolling RAC)
+│   ├── 03_oracle_autoupgrade.yml          ← AutoUpgrade (3 phases CruGlobal-style)
+│   ├── 04_daily_health_check.yml          ← Daily Health Check
+│   ├── 05_rman_backup.yml                 ← RMAN Backup with validation
+│   ├── 06_dataguard_switchover.yml        ← Automated DG Switchover
+│   ├── 07_create_users_tablespaces.yml    ← User/Tablespace Automation
+│   ├── 08_gather_stats.yml                ← Schema statistics collection
+│   ├── 09_datapump_export.yml             ← Logical backup with expdp
+│   └── 10_manage_services.yml             ← RAC services management
 ├── templates/
-│   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
-│   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
-│   ├── dbca_rac.rsp.j2                    ← Template Creazione RAC DB
-│   └── netca_rac.rsp.j2                   ← Template Configurazione Reti
+│   ├── grid_install.rsp.j2                ← Silent Install Grid Template (19c)
+│   ├── db_install.rsp.j2                  ← Silent Install RDBMS Template (19c)
+│   ├── dbca_rac.rsp.j2                    ← RAC DB Creation Template
+│   └── netca_rac.rsp.j2                   ← Network Configuration Template
 └── roles/
-    ├── oracle_precheck/                   ← Pre-flight checks comuni
+    ├── oracle_precheck/                   ← Common pre-flight checks
     │   └── tasks/main.yml
-    ├── oracle_install/                    ← Installazione DB software
+    ├── oracle_install/                    ← DB software installation
     │   ├── tasks/main.yml
     │   ├── templates/db_install.rsp.j2
     │   └── defaults/main.yml
-    ├── oracle_patching/                   ← Patching RU
+    ├── oracle_patching/                   ← RU Patching
     │   ├── tasks/main.yml
     │   └── defaults/main.yml
     └── oracle_health_check/               ← Health check
@@ -69,81 +69,81 @@ automation/
 
 ---
 
-## Prerequisiti
+## Prerequisites
 
 ```bash
-# 1. Installa Ansible sul Control Node (il tuo PC/jump host)
+# 1. Install Ansible on the Control Node (your PC/jump host)
 pip install ansible
-# oppure su RHEL/OL 8+:
+# or on RHEL/OL 8+:
 dnf install ansible-core
 
-# 2. SSH key-based auth verso i server Oracle
+# 2. SSH key-based auth to Oracle servers
 ssh-copy-id oracle@rac1
 ssh-copy-id oracle@rac2
 ssh-copy-id oracle@racstby1
 ssh-copy-id oracle@racstby2
 
-# 3. Verifica connettività
+# 3. Verify connectivity
 ansible -i inventory/lab.ini all -m ping
 ```
 
 ---
 
-## Uso Rapido
+## Quick Usage
 
 ```bash
-# ---- HEALTH CHECK GIORNALIERO ----
+# ---- DAILY HEALTH CHECK ----
 ansible-playbook -i inventory/production.ini playbooks/04_daily_health_check.yml
 
 # ---- DATAGUARD SWITCHOVER ----
 ansible-playbook -i inventory/production.ini playbooks/06_dataguard_switchover.yml
 
-# ---- BACKUP RMAN ----
+# ---- RMAN BACKUP ----
 ansible-playbook -i inventory/production.ini playbooks/05_rman_backup.yml
 
 # ---- DATAPUMP EXPORT ----
 ansible-playbook -i inventory/production.ini playbooks/09_datapump_export.yml
 
 # ---- PATCHING (rolling, zero downtime) ----
-# Dry-run prima:
+# Dry-run first:
 ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml --check
-# Esecuzione reale:
+# Real execution:
 ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml
 
-# ---- AUTOUPGRADE (3 fasi) ----
-# Fase 1: Pre-upgrade (24h prima, NO downtime):
+# ---- AUTOUPGRADE (3 phases) ----
+# Phase 1: Pre-upgrade (24h before, NO downtime):
 ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags pre_upgrade
-# Fase 2: Upgrade reale (DOWNTIME!):
+# Phase 2: Real upgrade (DOWNTIME!):
 ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags upgrade
-# Fase 3: Finalizzazione (7 gg dopo, NO downtime):
+# Phase 3: Finalization (7 days after, NO downtime):
 ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags finalize
 
-# ---- INSTALLAZIONE SOFTWARE ----
+# ---- SOFTWARE INSTALLATION ----
 ansible-playbook -i inventory/lab.ini playbooks/01_oracle_install.yml
 ```
 
 ---
 
-## Sicurezza: Ansible Vault
+## Security: Ansible Vault
 
-Le password NON vanno mai in chiaro. Usa Ansible Vault:
+Passwords must NEVER be stored in plain text. Use Ansible Vault:
 
 ```bash
-# Crea il vault
+# Create the vault
 ansible-vault create group_vars/vault.yml
-# Contenuto:
+# Content:
 #   vault_oracle_sys_password: "MiaPassword123!"
 #   vault_oracle_rman_password: "BackupSecure!"
 
-# Usa il vault nei playbook:
+# Use the vault in playbooks:
 ansible-playbook playbooks/05_rman_backup.yml --ask-vault-pass
 ```
 
 ---
 
-## Riferimenti
+## References
 
-- [oravirt/ansible-oracle](https://github.com/oravirt/ansible-oracle) — Collection completa (366★, 56 release)
-- [CruGlobal/ansible-oracle-db-upgrade](https://github.com/CruGlobal/ansible-oracle-db-upgrade) — Pattern 3-fasi per upgrade
+- [oravirt/ansible-oracle](https://github.com/oravirt/ansible-oracle) — Complete collection (366★, 56 releases)
+- [CruGlobal/ansible-oracle-db-upgrade](https://github.com/CruGlobal/ansible-oracle-db-upgrade) — 3-phase pattern for upgrades
 - [Oracle DevOps Series: Automate 19c with Ansible](https://medium.com/oracledevs/devops-series-automate-oracle-19c-rdbms-installations-with-ansible-github-43cfdf344a4a)
-- [oravirt Feature List](https://github.com/oravirt/ansible-oracle/blob/master/doc/featurelist.adoc) — Matrice compatibilità completa
+- [oravirt Feature List](https://github.com/oravirt/ansible-oracle/blob/master/doc/featurelist.adoc) — Full compatibility matrix

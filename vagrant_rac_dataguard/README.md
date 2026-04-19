@@ -1,72 +1,72 @@
-# Automazione Completa: RAC Primario + RAC Standby + Data Guard
-> Basato sui repository ufficiali `oraclebase/vagrant`, riadattato per simulare interamente le **Fasi da 0 a 4** del tuo piano di studi.
+# Full Automation: Primary RAC + Standby RAC + Data Guard
+> Based on the official `oraclebase/vagrant` repositories, re-adapted to fully simulate **Phases 0 through 4** of your study plan.
 
-Questo modulo Vagrant ti permette di alzare l'intera infrastruttura del lab con soli pochi comandi, automatizzando ore di noiose configurazioni manuali (installazione Grid, DBCA, cloni, Standby Redo Logs, RMAN Duplicate e Broker).
+This Vagrant module lets you bring up the entire lab infrastructure with just a few commands, automating hours of tedious manual configuration (Grid installation, DBCA, clones, Standby Redo Logs, RMAN Duplicate and Broker).
 
-## ⚠️ Requisiti Hardware (ATTENZIONE)
-Avrai 5 VM accese in contemporanea:
+## ⚠️ Hardware Requirements (ATTENTION)
+You will have 5 VMs running simultaneously:
 - `dnsnode` (1 GB)
 - `rac1` (8 GB)
 - `rac2` (8 GB)
 - `racstby1` (8 GB)
 - `racstby2` (8 GB)
 
-**Totale RAM richiesta: 33 GB Fisici sul tuo Host**. Se non hai almeno 64 GB di RAM sul tuo computer, la macchina esploderà o andrà in Swap pesantissimo rallentando tutto. In tal caso, dovrai editare il file `config/vagrant.yml` per abbassare la `mem_size` a `4096` (a discapito della lentezza dell'installer Oracle).
+**Total RAM required: 33 GB physical on your host**. If you don't have at least 64 GB of RAM on your machine, it will swap heavily and slow everything down. In that case, edit `config/vagrant.yml` to lower `mem_size` to `4096` (at the cost of a slower Oracle installer).
 
-## Preparazione Software (MANUALE)
-Prima di lanciare qualsiasi comando, devi scaricare i binari originali Oracle e inserirli nella cartella `/software`.
-1. Crea la cartella `software` qui nella root: `mkdir software`
-2. Mettici dentro i due zip di Oracle 19c per Linux:
+## Software Preparation (MANUAL)
+Before running any command, you must download the original Oracle binaries and place them in the `/software` folder.
+1. Create the `software` folder here in the root: `mkdir software`
+2. Place the two Oracle 19c zip files for Linux inside it:
    - `LINUX.X64_193000_grid_home.zip`
    - `LINUX.X64_193000_db_home.zip`
 
-*(Nota: L'ISO di Oracle Linux viene scaricata in automatico da Vagrant Cloud tramite il box base di ol7)*
+*(Note: The Oracle Linux ISO is automatically downloaded from Vagrant Cloud via the ol7 base box)*
 
-## Istruzioni di Avvio (L'Ordine è TASSATIVO)
-L'architettura RAC dipende strettamente dal DNS, e il Nodo 2 dipende dal Nodo 1. Apri 5 terminali diversi e lancia in quest'ordine:
+## Startup Instructions (Order is MANDATORY)
+The RAC architecture strictly depends on DNS, and Node 2 depends on Node 1. Open 5 different terminals and launch in this order:
 
-### 1. Il Cuore (DNS)
+### 1. The Core (DNS)
 ```bash
 cd dns
 vagrant up
 ```
-*(Attendi fine installazione)*
+*(Wait for installation to complete)*
 
-### 2. RAC Primario (Produzione)
+### 2. Primary RAC (Production)
 ```bash
 cd rac1
 vagrant up
 ```
-*(Attendi 40-50 minuti. Installerà Grid e configurerà `RACDB` mettendo il DB in ARCHIVELOG e creando gli SRLs)*
+*(Wait 40-50 minutes. It will install Grid and configure `RACDB`, setting the DB to ARCHIVELOG mode and creating the SRLs)*
 
 ```bash
 cd rac2
 vagrant up
 ```
-*(Attendi 30 minuti. Si aggancia al cluster e avvia l'istanza 2).*
+*(Wait 30 minutes. It joins the cluster and starts instance 2).*
 
-### 3. RAC Standby (Protezione)
+### 3. Standby RAC (Protection)
 ```bash
 cd racstby1
 vagrant up
 ```
-*(Attendi 40 minuti. Installerà Grid, poi lancerà un `RMAN DUPLICATE FOR STANDBY FROM ACTIVE DATABASE` per copiare fisicamente `RACDB` via rete sul sito di Standby)*
+*(Wait 40 minutes. It will install Grid, then run an `RMAN DUPLICATE FOR STANDBY FROM ACTIVE DATABASE` to physically copy `RACDB` over the network to the Standby site)*
 
 ```bash
 cd racstby2
 vagrant up
 ```
-*(Attendi 30 minuti. Si aggancia allo Standby Cluster)*
+*(Wait 30 minutes. It joins the Standby Cluster)*
 
-### 4. Attivazione del Broker (DGMGRL)
-A differenza del resto, l'attivazione del Broker DEVE essere attivata quando tutte e 5 le macchine sono 100% operative e si vedono sulla rete.
-Da una sessione SSH verso `rac1`:
+### 4. Broker Activation (DGMGRL)
+Unlike the rest, Broker activation MUST be performed when all 5 machines are 100% operational and visible on the network.
+From an SSH session to `rac1`:
 ```bash
 sh /vagrant_scripts/configure_broker.sh
 ```
 
-## Come distruggere il Laboratorio
-Quando hai finito l'esperimento:
+## How to Destroy the Lab
+When you have finished the experiment:
 ```bash
 cd racstby2 && vagrant destroy -f
 cd racstby1 && vagrant destroy -f
@@ -74,7 +74,7 @@ cd rac2 && vagrant destroy -f
 cd rac1 && vagrant destroy -f
 cd dns && vagrant destroy -f
 ```
-Per rimuovere fisicamente anche i pesanti dischi ASM condivisi generati in `/shared_disks`:
+To also physically remove the heavy shared ASM disks generated in `/shared_disks`:
 ```bash
 rm -rf ../shared_disks/*
 ```
