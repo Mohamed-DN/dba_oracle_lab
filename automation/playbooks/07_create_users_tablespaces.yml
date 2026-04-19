@@ -1,0 +1,41 @@
+---
+- name: Automate User and Tablespace Creation
+  hosts: databases
+  become: yes
+  become_user: oracle
+  gather_facts: no
+  vars:
+    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
+    db_name: "RACDB"
+    pdb_name: "PDB1"
+    new_tablespace: "APP_DATA_TBS"
+    tbs_size: "10G"
+    new_user: "app_user"
+    user_pass: "Oracle_123!"
+
+  tasks:
+    - name: Create Tablespace SQL File
+      copy:
+        dest: "/tmp/create_tbs_user.sql"
+        content: |
+          ALTER SESSION SET CONTAINER = {{ pdb_name }};
+          CREATE BIGFILE TABLESPACE {{ new_tablespace }} DATAFILE '+DATA' SIZE {{ tbs_size }} AUTOEXTEND ON NEXT 1G MAXSIZE UNLIMITED;
+          CREATE USER {{ new_user }} IDENTIFIED BY "{{ user_pass }}" DEFAULT TABLESPACE {{ new_tablespace }} QUOTA UNLIMITED ON {{ new_tablespace }};
+          GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE TO {{ new_user }};
+          EXIT;
+
+    - name: Execute SQL Script
+      shell: |
+        export ORACLE_SID={{ db_name }}1
+        export ORACLE_HOME={{ oracle_home }}
+        $ORACLE_HOME/bin/sqlplus -s / as sysdba @/tmp/create_tbs_user.sql
+      register: sql_output
+
+    - name: Cleanup Temp File
+      file:
+        path: "/tmp/create_tbs_user.sql"
+        state: absent
+
+    - name: Display Result
+      debug:
+        msg: "Tablespace and User Created Successfully"

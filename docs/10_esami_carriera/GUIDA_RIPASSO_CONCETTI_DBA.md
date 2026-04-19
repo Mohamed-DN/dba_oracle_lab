@@ -139,6 +139,14 @@ Si applica a due componenti fondamentali:
 **Follow-up trappola**: "E i lock del nodo morto?"
 → LMON (Lock Manager) fa **lock recovery** —rilascia i lock del nodo morto dopo il crash recovery.
 
+### Q: "Cos'è lo Split-Brain nel RAC e come interviene il Node Eviction?"
+
+**Domanda per Senior DBA**:
+Se la rete privata (Interconnect) cade tra i due nodi, il *Node 1* pensa che il *Node 2* sia morto e viceversa. Entrambi provano a scrivere sugli stessi dischi. Questo è il problema dello **Split-Brain** (data corruption mortale).
+
+**Cosa fa Oracle**:
+Usa il **Voting Disk** su ASM (deve esserci un numero dispari di dischi di voto). Entrambi i nodi "votano" per dichiararsi vivi e isolare l'altro nodo. Il nodo (o il gruppo di nodi) che ha la maggioranza accede all'ASM, mentre l'altro si rende conto di essere isolato e commette un **Node Eviction** — fa volontariamente un kernel panic (reboot forzato) per fermare i propri I/O ed evitare la corruzione dei dati.
+
 ### Q: "Cos'è un service in RAC? Perché è importante?"
 
 Un **service** è un nome logico che i client usano per connettersi. Puoi configurarlo per:
@@ -361,6 +369,18 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123def', NULL, 'ALLSTATS LAST'
 1. `ALTER SYSTEM FLUSH SHARED_POOL;` (svuota la cache, dà respiro momentaneo ma causa un picco di CPU subito dopo per i nuovi hard parse).
 2. Se il parametro `CURSOR_SHARING` è `EXACT`, valuta di impostarlo temporaneamente a `FORCE` (anche se in 19c è deprecato usarlo come fix a lungo termine).
 **Soluzione Permanente**: Correggere l'applicazione introducendo le **Bind Variables**.
+
+### Q: "Differenza esatta tra Hard Parse, Soft Parse e Soft-Soft Parse?"
+
+1. **Hard Parse**: La query è nuova. Oracle deve controllare sintassi, semantica ( privileges e oggetti), l'optimizer genera vari piani, sceglie il migliore e lo carica nella Shared Pool. *Processo molto costoso in termini di CPU e Latch/Mutex.*
+2. **Soft Parse**: La query arriva, Oracle controlla sintassi e permessi, ma vedendo che il testo esatto (`SQL_ID`) esiste già nella Shared Pool, "salta" l'optimizer e riutilizza il vecchio piano esecutivo.
+3. **Soft-Soft Parse (Session Cached Cursors)**: Il cursore viene trovato direttamente nella memoria PGA della sessione utente (se `SESSION_CACHED_CURSORS` è abilitato). Non c'è nemmeno bisogno di chiedere i Latch alla Shared Pool globale. *Massima velocità.*
+
+### Q: "Differenza tra Row Chaining e Row Migration?"
+
+**Domanda d'architettura fisica (Storage)**:
+- **Row Migration**: Fai un `UPDATE` su una riga esistente che la fa diventare più grande. Non c'è più spazio nel suo blocco originale. Oracle lascia un "puntatore" nel blocco originale e sposta "interamente" la riga in un nuovo blocco. L'accesso via indice fa 2 I/O invece di 1 (legge il puntatore, poi segue il puntatore). *Soluzione: Riorganizzare la tabella (es. `ALTER TABLE MOVE`) o aumentare la `PCTFREE`.*
+- **Row Chaining**: Inserisci una riga che è *già più grande* della dimensione massima del blocco database (es. blocchi da 8KB ma inserisci un LOB/VARCHAR2 da 12KB). La riga deve fisiologicamente essere spezzata su più blocchi contigui "incatenati". *Soluzione: Usare tablespace con blocchi più grandi (es. 16K o 32K) se si gestiscono molti dati text-blob.*
 
 ---
 

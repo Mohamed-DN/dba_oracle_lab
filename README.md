@@ -47,7 +47,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 | 🛠️ [Script Operativi](./scripts_operativi/) | SQL pronti al copia-incolla per scenari reali | 10 script |
 | 📂 [Libreria Oracle](./libreria_oracle/) | Raccolta Enterprise di script e procedure | **~1000 script** |
 | 📋 [Procedure Operative](./procedure_operative/) | Runbook giornalieri per attività DBA | 13 runbook |
-| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 5 playbook |
+| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 10 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
 
 ---
@@ -264,7 +264,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Ansible Automation (`automation/`)
 
-> **5 playbook production-grade** — [Indice completo](./automation/README.md)
+> **10 playbook production-grade** — [Indice completo](./automation/README.md)
 
 | Playbook | Cosa Fa |
 |---|---|
@@ -273,6 +273,11 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [03 AutoUpgrade](./automation/playbooks/03_oracle_autoupgrade.yml) | 3 fasi: pre_upgrade → upgrade → finalize |
 | [04 Health Check](./automation/playbooks/04_daily_health_check.yml) | Morning check automatizzato |
 | [05 RMAN Backup](./automation/playbooks/05_rman_backup.yml) | Backup + crosscheck + validate |
+| [06 DG Switchover](./automation/playbooks/06_dataguard_switchover.yml) | Switchover Data Guard automatizzato |
+| [07 Users & TBS](./automation/playbooks/07_create_users_tablespaces.yml) | Creazione BIGFILE Tablespace e Utenti |
+| [08 Gather Stats](./automation/playbooks/08_gather_stats.yml) | DBMS_STATS automatizzato via Ansible |
+| [09 DataPump Export](./automation/playbooks/09_datapump_export.yml) | Export parallelo di schemi applicativi |
+| [10 RAC Services](./automation/playbooks/10_manage_services.yml) | Start/Stop srvctl dei servizi RAC |
 
 ---
 

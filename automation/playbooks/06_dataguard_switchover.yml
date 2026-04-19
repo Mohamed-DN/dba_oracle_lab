@@ -1,0 +1,43 @@
+---
+- name: Oracle Data Guard Switchover Automation
+  hosts: grid_infrastructure
+  become: yes
+  become_user: oracle
+  gather_facts: no
+  vars:
+    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
+    primary_db: "RACDB"
+    standby_db: "RACDB_STBY"
+
+  tasks:
+    - name: Pre-check - Ensure DGMGRL is ready
+      shell: |
+        source ~/.bash_profile
+        dgmgrl / "show configuration"
+      register: dgmgrl_config
+      failed_when: "'SUCCESS' not in dgmgrl_config.stdout"
+
+    - name: Pre-check - Ensure databases are synchronized
+      shell: |
+        source ~/.bash_profile
+        dgmgrl / "show database {{ standby_db }}"
+      register: standby_status
+      failed_when: "'Transport Lag: 0 seconds' not in standby_status.stdout and 'Apply Lag: 0 seconds' not in standby_status.stdout"
+
+    - name: Execute Switchover
+      shell: |
+        source ~/.bash_profile
+        dgmgrl / "switchover to {{ standby_db }}"
+      register: switchover_result
+      async: 600
+      poll: 15
+
+    - name: Verify new Primary state
+      shell: |
+        source ~/.bash_profile
+        dgmgrl / "show configuration"
+      register: new_config
+      
+    - name: Display Switchover Result
+      debug:
+        msg: "{{ new_config.stdout_lines }}"
