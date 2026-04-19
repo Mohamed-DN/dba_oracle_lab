@@ -28,9 +28,4 @@ and this project follows Semantic Versioning.
 ## [0.1.0] - 2026-04-19
 
 ### Added
-- PR Go/No-Go gate workflow and mandatory PR checklist template for merge readiness.
-- Critical scenario regression workflow with periodic and PR-triggered RAC/DG controls validation.
-- Governance docs: public KPI scoreboard, go/no-go merge policy, didactic excellence standard, and community roadmap.
-- GitHub issue templates for structured bug reports and feature requests.
-- Reliability KPI baseline extended with public governance KPIs (CI success rate, MTTR, runbook coverage, docs/link health).
 - Initial project governance baseline for release/versioning and operational reliability.
