@@ -6,6 +6,8 @@ on:
     paths:
       - "VERSION"
       - "CHANGELOG.md"
+      - "reliability/release/**"
+      - "scripts/build_release_artifacts.sh"
       - "docs/14_enterprise_governance/**"
       - ".github/workflows/release-governance.yml"
   workflow_dispatch:
@@ -38,3 +40,22 @@ jobs:
           grep -q "supported" docs/14_enterprise_governance/COMPATIBILITY_POLICY.md
           test -f docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
           grep -qi "go/no-go" docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
+
+      - name: Validate release compatibility matrix exists
+        run: |
+          test -f reliability/release/compatibility_matrix.yml
+          grep -q "^oracle:" reliability/release/compatibility_matrix.yml
+          grep -q "^os:" reliability/release/compatibility_matrix.yml
+          grep -q "^ansible:" reliability/release/compatibility_matrix.yml
+
+      - name: Build versioned release artifacts
+        run: |
+          chmod +x scripts/build_release_artifacts.sh
+          scripts/build_release_artifacts.sh
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-governance-artifacts
+          path: reliability/release/artifacts/*
+          if-no-files-found: error

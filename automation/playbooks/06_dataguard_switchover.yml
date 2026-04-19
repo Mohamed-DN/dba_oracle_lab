@@ -6,60 +6,6 @@
   gather_facts: false
   vars:
     standby_db: "{{ oracle_standby_db_name }}"
-
-  pre_tasks:
-    - name: Safety gate - confirm switchover enabled
-      ansible.builtin.assert:
-        that:
-          - switchover_require_confirmation | bool
-        fail_msg: >-
-          Switchover disabilitato. Imposta switchover_require_confirmation=true
-          in group_vars/all.yml per eseguire il cambio ruolo.
-
-    - name: Confirm planned operation
-      ansible.builtin.pause:
-        prompt: >-
-          Procedo con switchover verso {{ standby_db }} su {{ inventory_hostname }}?
-          Premi ENTER per continuare o Ctrl+C per interrompere.
-
-  tasks:
-    - name: Pre-check - verify Data Guard configuration health
-      ansible.builtin.shell: |
-        dgmgrl -silent / "show configuration"
-      register: dgmgrl_config
-      changed_when: false
-      failed_when:
-        - dgmgrl_config.rc != 0
-        - "'SUCCESS' not in dgmgrl_config.stdout"
-
-    - name: Pre-check - verify standby lag is zero
-      ansible.builtin.shell: |
-        dgmgrl -silent / "show database verbose {{ standby_db }}"
-      register: standby_status
-      changed_when: false
-      failed_when:
-        - standby_status.rc != 0
-        - "'Transport Lag:      0 seconds' not in standby_status.stdout"
-        - "'Apply Lag:          0 seconds' not in standby_status.stdout"
-
-    - name: Execute switchover
-      ansible.builtin.shell: |
-        dgmgrl -silent / "switchover to {{ standby_db }}"
-      register: switchover_result
-      changed_when: true
-      failed_when:
-        - switchover_result.rc != 0
-        - "'Switchover succeeded' not in switchover_result.stdout"
-
-    - name: Verify new configuration state
-      ansible.builtin.shell: |
-        dgmgrl -silent / "show configuration"
-      register: new_config
-      changed_when: false
-      failed_when:
-        - new_config.rc != 0
-        - "'SUCCESS' not in new_config.stdout"
-
-    - name: Display switchover result
-      ansible.builtin.debug:
-        msg: "{{ new_config.stdout_lines }}"
+  roles:
+    - role: oracle_dataguard_switchover
+      tags: [dataguard, switchover]

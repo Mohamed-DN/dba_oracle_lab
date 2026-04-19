@@ -15,6 +15,16 @@
 
 ---
 
+## 🧭 Capability Enterprise (stato attuale)
+
+- ✅ Test E2E funzionali ripetibili per playbook principali: `tests/e2e/ansible/` + workflow dedicato.
+- ✅ Automazione più modulare: ruoli Ansible riusabili (`automation/roles/`).
+- ✅ Governance OSS standard: `SECURITY.md`, `.github/CODEOWNERS`, policy disclosure.
+- ✅ Release engineering con artifact versionati: `scripts/build_release_artifacts.sh`.
+- ✅ Matrice compatibilità Oracle/OS/Ansible: `reliability/release/compatibility_matrix.yml`.
+
+---
+
 ## 🚀 Quick Start (5 minuti)
 
 ```bash
@@ -50,7 +60,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 | 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
 | 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
 | 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 14 runbook |
-| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 12 playbook |
+| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade + ruoli library-grade | 13 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
 
 ---
@@ -290,7 +300,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Ansible Automation (`automation/`)
 
-> **10 playbook production-grade** — [Indice completo](./automation/README.md)
+> **13 playbook production-grade** + ruoli modulari — [Indice completo](./automation/README.md)
 
 | Playbook | Cosa Fa |
 |---|---|
@@ -304,6 +314,9 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [08 Gather Stats](./automation/playbooks/08_gather_stats.yml) | DBMS_STATS automatizzato via Ansible |
 | [09 DataPump Export](./automation/playbooks/09_datapump_export.yml) | Export parallelo di schemi applicativi |
 | [10 RAC Services](./automation/playbooks/10_manage_services.yml) | Start/Stop srvctl dei servizi RAC |
+| [11 CDB/PDB](./automation/playbooks/11_create_cdb_pdb.yml) | Creazione CDB/PDB idempotente |
+| [12 DBA Maintenance](./automation/playbooks/12_dba_maintenance.yml) | Maintenance periodica DB |
+| [13 MAA Guardrails](./automation/playbooks/13_maa_guardrails.yml) | Validazioni MAA e compliance DG |
 
 ---
 

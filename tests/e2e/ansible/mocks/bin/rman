@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+input="$(cat)"
+if [[ "$input" == *"CROSSCHECK"* ]]; then
+  echo "deleted obsolete backup"
+  echo "RMAN completed"
+elif [[ "$input" == *"RESTORE DATABASE VALIDATE"* ]]; then
+  echo "Finished restore at 19-APR-26"
+else
+  echo "backup piece created"
+  echo "RMAN completed"
+fi
