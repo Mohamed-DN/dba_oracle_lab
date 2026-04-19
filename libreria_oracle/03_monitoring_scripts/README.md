@@ -88,15 +88,31 @@
 
 ---
 
-## 🎯 Come Usarli
+## 🎯 Come Usare Questo Toolkit in Emergenza
+
+Un DBA professionista non lancia script a caso. L'approccio deve essere metodico. Ecco come combinare questi script in uno scenario di crisi (es. "Il DB è piantato, il cliente è al telefono"):
+
+### Fase 1: Il "Triage" (Rilevamento Globale)
+Inizia sempre dallo script `___ Situation.sql`.
+* **Cosa fa**: Ti restituisce in un solo colpo lo stato dell'istanza, l'uptime, l'utilizzo dei processi (rispetto al limite `processes`), le sessioni bloccate e i principali wait event del sistema.
+* **Perché usarlo**: Ti evita di navigare ciecamente. Capisci sùbito se il problema è CPU, I/O o concorrenza (Lock).
+
+### Fase 2: Approfondimento per Categoria
+In base al risultato del Triage:
+* **Se ci sono Lock**: Esegui sùbito `View_Blocking.sql`. Trova il **root blocker** (la sessione in cima all'albero che blocca tutte le altre). Usa `Processsi.sql` per capire quale server applicativo sta tenendo aperta la transazione.
+* **Se ci sono attese di I/O**: Usa `View_IO_RealTime.sql` per capire quale datafile o disco ASM è sotto stress. Spesso è un *Full Table Scan* causato da un indice mancante (in tal caso, passa ad ASH).
+* **Se la CPU è al 100%**: Usa `View_Cpu_Consumer.sql`. L'Output ti darà il `SQL_ID` colpevole.
+
+### Fase 3: SQL Tuning (Root Cause)
+Una volta trovato il **SQL_ID** problematico (grazie ad `AshTopSql.sql` o all'analisi CPU):
+1. Usa `SQL Stats.sql` (inserisci l'ID) per vedere quante esecuzioni fa e quante righe legge a esecuzione.
+2. Controlla se il piano è instabile con `View_UnstablePlan.sql`.
+3. Se l'optimizer è impazzito di colpo (a causa di gather stats sbagliato), puoi usare la suite `SPM` per bloccare o ripristinare il vecchio piano (es. usando `SQL_Profile_Other_SqlID.sql`).
 
 ```bash
-# Da SQL*Plus, connesso come DBA:
-sqlplus / as sysdba
-
-# Esecuzione di uno script
-@/path/to/libreria_oracle/03_monitoring_scripts/ViewSession.sql
+# Esecuzione rapida da terminale
+sqlplus / as sysdba @/path/to/libreria_oracle/03_monitoring_scripts/___ Situation.sql
 ```
 
 > [!TIP]
-> Lo script `___ Situation.sql` è il "tuttfare": dà una panoramica completa della situazione del database in un colpo solo. Ideale come primo controllo.
+> **Consiglio per il colloquio (Intervista)**: Quando ti chiedono "Come monitori il database?", non rispondere "Guardo Enterprise Manager". Rispondi: "Uso script SQL customizzati interrogando le viste dinamiche (`v$session`, `v$sql`, `v$active_session_history`) perché permettono un'indagine millimetrica sui lock e sui wait events prima ancora di aprire grafici."
