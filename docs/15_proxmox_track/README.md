@@ -15,6 +15,7 @@ sicurezza e verificabilità già presenti nel repository.
 
 ## Percorso consigliato
 
+- [Guida completa production-grade](./GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md)
 - [Fase 1 - Proxmox Foundation](./PHASE_1_PROXMOX_FOUNDATION.md)
 - [Fase 2 - Terraform Proxmox](../../../infrastructure/proxmox/terraform/README.md)
 - [Fase 3 - Ansible + AWX](./PHASE_3_ANSIBLE_AWX.md)
