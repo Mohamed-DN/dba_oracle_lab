@@ -1,0 +1,23 @@
+name: Feature request
+about: Proponi un miglioramento tecnico/didattico
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema/Opportunità
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impatto atteso
+      description: Qualità, affidabilità, sicurezza o didattica
+    validations:
+      required: true

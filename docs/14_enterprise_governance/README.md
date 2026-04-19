@@ -4,7 +4,16 @@ Questa sezione raccoglie gli standard enterprise per qualità, sicurezza, releas
 
 ## Contenuti
 - [Compatibility Policy](./COMPATIBILITY_POLICY.md)
+- [Compatibility Matrix (Ufficiale)](./COMPATIBILITY_MATRIX.md)
 - [Release Engineering Policy](./RELEASE_ENGINEERING_POLICY.md)
 - [Quickstart Enterprise 10 Minuti](./QUICKSTART_10_MINUTI.md)
 - [Troubleshooting Decision Tree](./TROUBLESHOOTING_DECISION_TREE.md)
 - [Reliability Framework (SLO/SLI/KPI)](./RELIABILITY_FRAMEWORK.md)
+- [MAA Scorecard](./MAA_SCORECARD.md)
+- [MAA Scorecard Source of Truth (YAML)](./MAA_SCORECARD_SOURCE_OF_TRUTH.yml)
+- [Production Profile](./PRODUCTION_PROFILE.md)
+- [Public KPI Scoreboard](./PUBLIC_KPI_SCOREBOARD.md)
+- [Go/No-Go Merge Policy](./GO_NO_GO_MASTER_MERGE_POLICY.md)
+- [Didactic Excellence Standard](./DIDACTIC_EXCELLENCE_STANDARD.md)
+- [Community Roadmap](./COMMUNITY_ROADMAP.md)
+

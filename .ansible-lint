@@ -1,0 +1,14 @@
+---
+# Repository didattico: applichiamo regole high-signal
+# e demandiamo il refactor stilistico completo a una fase dedicata.
+exclude_paths:
+  - vagrant_rac_dataguard/
+
+skip_list:
+  - fqcn[action-core]
+  - partial-become
+  - no-changed-when
+  - command-instead-of-shell
+  - risky-shell-pipe
+  - yaml[truthy]
+  - yaml[trailing-spaces]

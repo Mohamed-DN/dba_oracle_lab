@@ -45,16 +45,20 @@ automation/
 │   ├── 07_create_users_tablespaces.yml    ← Automazione User/Tablespace
 │   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
 │   ├── 09_datapump_export.yml             ← Logical backup con expdp
-│   └── 10_manage_services.yml             ← Gestione RAC services
+│   ├── 10_manage_services.yml             ← Gestione RAC services
 │   ├── 11_create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
-│   └── 12_dba_maintenance.yml             ← Maintenance DBA periodica
+│   ├── 12_dba_maintenance.yml             ← Maintenance DBA periodica
+│   └── 13_maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
+├── roles/
+│   └── maa_guardrails/                    ← Primo ruolo modulare (baseline enterprise)
+│       ├── defaults/main.yml
+│       └── tasks/main.yml
 ├── templates/
 │   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
 │   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
 │   ├── dbca_rac.rsp.j2                    ← Template Creazione RAC DB
 │   └── netca_rac.rsp.j2                   ← Template Configurazione Reti
-└── (Nessuna cartella roles al momento)
-    Struttura attuale: playbook-centric con template condivisi.
+└── Struttura in transizione playbook-centric → role-centric.
 ```
 
 ---
@@ -120,6 +124,11 @@ ansible-playbook -i inventory/lab.ini playbooks/11_create_cdb_pdb.yml \
 
 # ---- DBA MAINTENANCE (invalid objects, stats dizionario, audit purge) ----
 ansible-playbook -i inventory/production.ini playbooks/12_dba_maintenance.yml
+
+# ---- MAA GUARDRAILS (baseline production) ----
+ansible-playbook -i inventory/production.ini playbooks/13_maa_guardrails.yml \
+  -e maa_enforce_compliance=true \
+  -e maa_set_broker_thresholds=true
 ```
 
 ---
