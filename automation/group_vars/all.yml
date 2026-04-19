@@ -29,10 +29,19 @@ autoupgrade_jar: "{{ oracle_home }}/rdbms/admin/autoupgrade.jar"
 autoupgrade_config_dir: /home/oracle/autoupgrade
 autoupgrade_log_dir: /home/oracle/autoupgrade/logs
 
+# ---- Data Guard ----
+oracle_standby_db_name: RACDB_STBY
+switchover_require_confirmation: true
+
 # ---- Health Check ----
 tablespace_alert_pct: 85
 archivelog_alert_pct: 80
 fra_alert_pct: 80
+
+# ---- Security / Vault placeholders ----
+# Definire in group_vars/vault.yml (Ansible Vault):
+# vault_app_user_password: "StrongPasswordHere"
+app_user_password: "{{ vault_app_user_password | default('CHANGEME_VAULT') }}"
 
 # ---- Notifiche (opzionale, decommentare) ----
 # notification_email: dba-team@company.com
