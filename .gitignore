@@ -23,6 +23,9 @@ software/
 oraInventory/
 *.log
 
+# Ansible
+*.retry
+
 # Sensitive files (wallets, keys)
 *.wallet
 *.p12

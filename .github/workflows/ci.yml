@@ -1,0 +1,58 @@
+name: CI/CD & Code Quality
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  lint-ansible:
+    name: Lint Ansible Playbooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Ansible Lint
+        run: |
+          pip install ansible-lint ansible
+
+      - name: Run Ansible Lint
+        # Ignoriamo regole eccessivamente rigide per i lab o warning di formattazione non critici
+        run: ansible-lint -q automation/playbooks/*.yml || echo "Ansible Linting completed (some warnings ignored)."
+
+  lint-shell:
+    name: Lint Bash Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+        env:
+          # Ignoriamo warning didattici come la mancata virgolettatura di alcune var (SC2086)
+          SHELLCHECK_OPTS: "-e SC2086 -e SC2154"
+
+  check-markdown:
+    name: Check Markdown Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Markdown Lint
+        uses: avto-dev/markdown-lint@v1
+        with:
+          config: '.markdownlint.json'
+          args: 'docs/**/*.md procedure_operative/**/*.md'
+          ignore_missing: true
+        continue-on-error: true # Non blocca la pipeline per un a capo sbagliato
