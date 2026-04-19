@@ -89,15 +89,35 @@ def load_ci_kpi_from_actions():
     token = os.getenv('GITHUB_TOKEN', '')
     all_runs = []
     for workflow_file in WORKFLOWS_FOR_CI_KPI:
-        all_runs.extend(fetch_workflow_runs(owner, repo, workflow_file, token))
+        all_runs.extend(
+            {**run, '_workflow_file': workflow_file}
+            for run in fetch_workflow_runs(owner, repo, workflow_file, token)
+        )
     if not all_runs:
         return None
-    ci_total_runs = len(all_runs)
-    ci_success_runs = sum(1 for run in all_runs if run.get('conclusion') == 'success')
+    latest_daily_workflow_runs = {}
+    for run in all_runs:
+        created_at = run.get('created_at')
+        workflow_file = run.get('_workflow_file')
+        if not created_at or not workflow_file:
+            continue
+        created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        key = (created_dt.date().isoformat(), workflow_file)
+        existing = latest_daily_workflow_runs.get(key)
+        if not existing:
+            latest_daily_workflow_runs[key] = run
+            continue
+        existing_dt = datetime.fromisoformat(existing['created_at'].replace('Z', '+00:00'))
+        if created_dt > existing_dt:
+            latest_daily_workflow_runs[key] = run
+
+    scoped_runs = list(latest_daily_workflow_runs.values())
+    ci_total_runs = len(scoped_runs)
+    ci_success_runs = sum(1 for run in scoped_runs if run.get('conclusion') == 'success')
     return {
         'ci_total_runs': ci_total_runs,
         'ci_success_runs': ci_success_runs,
-        'source': f'github_actions:{owner}/{repo}:{",".join(WORKFLOWS_FOR_CI_KPI)}'
+        'source': f'github_actions_latest_daily:{owner}/{repo}:{",".join(WORKFLOWS_FOR_CI_KPI)}'
     }
 
 

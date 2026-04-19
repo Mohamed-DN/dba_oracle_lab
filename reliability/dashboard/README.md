@@ -11,7 +11,8 @@ python3 scripts/generate_mock_kpi_dashboard.py
 Input health-check: `reliability/evidence/ansible_health_checks/latest_healthcheck.json`
 
 Il KPI `ci_success_rate_30d` viene calcolato con priorità da GitHub Actions
-(`ci.yml`, `security-gates.yml`, `release-governance.yml`, ultimi 30 giorni).
+(`ci.yml`, `security-gates.yml`, `release-governance.yml`, ultimi 30 giorni),
+considerando l'ultimo run completato per workflow in ciascun giorno.
 Se l'API non è disponibile, viene usato il fallback dai dati health-check locali.
 Output:
 - `reliability/dashboard/public_kpi_dashboard.json`

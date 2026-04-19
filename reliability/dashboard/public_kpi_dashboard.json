@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-19T20:27:28.237379+00:00",
-  "source": "github_actions:Mohamed-DN/dba_oracle_lab:ci.yml,security-gates.yml,release-governance.yml",
+  "generated_at": "2026-04-19T20:48:13.875233+00:00",
+  "source": "github_actions_latest_daily:Mohamed-DN/dba_oracle_lab:ci.yml,security-gates.yml,release-governance.yml",
   "kpi": {
     "ci_success_rate_30d": {
-      "value": 0.8788,
-      "display_percent": 87.88,
+      "value": 1.0,
+      "display_percent": 100.0,
       "target": 0.95,
-      "status": "FAIL"
+      "status": "PASS"
     },
     "mttr_incident_hours": {
       "value": 7.75,
