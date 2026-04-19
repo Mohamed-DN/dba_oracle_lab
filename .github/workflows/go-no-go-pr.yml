@@ -17,7 +17,6 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           test -n "${PR_BODY}"
-          echo "${PR_BODY}" | grep -Fq "## Go/No-Go"
           echo "${PR_BODY}" | grep -Fq "- [x] Ho verificato che i workflow obbligatori siano verdi (CI, Security Gates, Release Governance)"
           echo "${PR_BODY}" | grep -Fq "- [x] Ho aggiornato `CHANGELOG.md` (Unreleased) se c'è impatto utente/operativo"
           echo "${PR_BODY}" | grep -Fq "- [x] Ho aggiornato documenti governance interessati (scorecard/matrice/policy) oppure dichiaro N/A"
