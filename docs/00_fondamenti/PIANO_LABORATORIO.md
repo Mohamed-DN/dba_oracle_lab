@@ -406,7 +406,7 @@ Sett 8:                                     ██████████ 🎯 
 | [scripts_operativi/](../../scripts_operativi/) | **Ogni giorno** — diagnosi rapida | 10 script SQL per scenario (tablespace, FRA, lock, performance) |
 | [procedure_operative/](../../procedure_operative/) | **Ogni mattina** — morning check | 13 runbook pronti (health check, backup, DG, lock, CPU) |
 | [automation/](../../automation/) | Setup e patching | 5 playbook Ansible production-grade |
-| [PREPARAZIONE_INTERVIEW_DBA.md](../10_esami_carriera/PREPARAZIONE_INTERVIEW_DBA.md) | Prima di un colloquio | 12 sezioni, 40+ domande con risposte, scenari produzione |
+| [GUIDA_RIPASSO_CONCETTI_DBA.md](../10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Prima di un colloquio | 12 sezioni, 40+ domande con risposte, scenari produzione |
 
 ### Libreria Enterprise (~1000 script)
 
