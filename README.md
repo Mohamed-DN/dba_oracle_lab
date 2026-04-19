@@ -404,15 +404,6 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | Oracle DB 19c Docs | [docs.oracle.com](https://docs.oracle.com/en/database/oracle/oracle-database/19/) |
 
 ---
-
-## 🧭 Capability Enterprise (stato attuale)
-
-- ✅ Test E2E funzionali ripetibili per playbook principali: `tests/e2e/ansible/` + workflow dedicato.
-- ✅ Automazione più modulare: ruoli Ansible riusabili (`automation/roles/`).
-- ✅ Governance OSS standard: `SECURITY.md`, `.github/CODEOWNERS`, policy disclosure.
-- ✅ Release engineering con artifact versionati: `scripts/build_release_artifacts.sh`.
-- ✅ Matrice compatibilità Oracle/OS/Ansible: `reliability/release/compatibility_matrix.yml`.
----
 <p align="center">
   <sub>Built with ☕ and <code>ORA-00001</code> errors — <a href="./LICENSE">MIT License</a> — <a href="./CONTRIBUTING.md">Contributing</a></sub>
 </p>
