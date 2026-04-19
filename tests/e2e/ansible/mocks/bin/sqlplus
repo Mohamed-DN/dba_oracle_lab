@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+input="$(cat)"
+if [[ "$input" == *"status || '|' || log_mode"* ]]; then
+  echo "OPEN|ARCHIVELOG"
+elif [[ "$input" == *"v\$recovery_file_dest"* ]]; then
+  echo "35"
+elif [[ "$input" == *"v\$diag_alert_ext"* ]]; then
+  echo "19-APR 07:00 | ORA-00000 mock entry"
+elif [[ "$input" == *"dba_tablespace_usage_metrics"* ]]; then
+  echo "USERS 10.0 20.0 50.0"
+elif [[ "$input" == *"v\$asm_diskgroup"* ]]; then
+  echo "DATA EXTERN 100000 50000 50.0"
+elif [[ "$input" == *"v\$rman_backup_job_details"* ]]; then
+  echo "DB FULL COMPLETED 19-APR 01:00 19-APR 02:00"
+elif [[ "$input" == *"v\$dataguard_stats"* ]]; then
+  echo "transport lag 0 seconds now"
+elif [[ "$input" == *"v\$session"* ]]; then
+  echo "Active sessions: 5"
+  echo "Blocking sessions: 0"
+else
+  echo "sqlplus mock output"
+fi
