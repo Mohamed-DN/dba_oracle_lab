@@ -1,13 +1,13 @@
-# 🎯 Preparazione Interview Oracle DBA — Livello Mid/Senior
+# 🎯 Ripasso Concetti Oracle DBA — Note di Studio Avanzate
 
-> **Obiettivo**: Prepararti in 7 giorni per 2 colloqui tecnici.
-> Ogni sezione ha: domande tipiche + risposte da sapere + trappole da evitare.
+> **Obiettivo**: Consolidare i concetti fondamentali Oracle DBA in forma di domande e risposte.
+> Ogni sezione ha: domande chiave + risposte strutturate + note tecniche.
 >
-> ⏱️ **Piano studio**: 3h/giorno × 7 giorni = 21 ore. Basta e avanza.
+> ⏱️ **Formato**: 12 sezioni tematiche, ~3h di lettura totale.
 
 ---
 
-## 📅 Piano 7 Giorni
+## 📅 Piano di Ripasso
 
 | Giorno | Tema | Sezione | Tempo |
 |---|---|---|---|
@@ -15,11 +15,9 @@
 | 2 | Data Guard + Backup | Sez. 3-4 | 3h |
 | 3 | Performance & Troubleshooting | Sez. 5-6 | 3h |
 | 4 | Storage + Patching + Admin | Sez. 7-8-9 | 3h |
-| 5 | Scenari Produzione (i più importanti!) | Sez. 10 | 3h |
-| 6 | Ripasso + domande deboli | Tutto | 3h |
-| 7 | Simulazione colloquio (rispondi ad alta voce) | Tutto | 2h |
-
-> ⚠️ **REGOLA D'ORO**: Se non sai una risposta, **NON inventare**. Dì: *"Non ho avuto esperienza diretta su questo, ma il mio approccio sarebbe..."* — è molto meglio che dire una cosa sbagliata.
+| 5 | Scenari Produzione | Sez. 10 | 3h |
+| 6 | Ripasso + punti deboli | Tutto | 3h |
+| 7 | Quiz pratico (rispondi ad alta voce) | Tutto | 2h |
 
 ---
 
@@ -624,11 +622,11 @@ EXEC DBMS_STATS.GATHER_TABLE_STATS('SCHEMA', 'TABELLA');
 
 ---
 
-## 11. DOMANDE COMPORTAMENTALI (Non Tecniche)
+## 11. SOFT SKILLS DBA (Gestione Incidenti & Comunicazione)
 
-### "Perché vuoi lasciare la tua posizione attuale?"
+### "Come gestisci la crescita professionale?"
 
-**Template**: *"Sto cercando un ambiente dove posso crescere tecnicamente. Nel ruolo attuale ho costruito delle basi solide [Lab RAC, Data Guard, GoldenGate], ma sento di aver bisogno di sfide più complesse e di un team da cui imparare."*
+**Approccio**: *Cercare sempre ambienti dove si può crescere tecnicamente. Costruire basi solide (Lab RAC, Data Guard, GoldenGate), poi cercare sfide più complesse e team da cui imparare.*
 
 ### "Come gestisci una situazione di emergenza alle 3 di notte?"
 
@@ -684,10 +682,10 @@ crsctl check crs
 
 ---
 
-## 📌 Tips Finali per il Colloquio
+## 📌 Note Finali
 
-1. **Disegna**: Se c'è una lavagna, disegna l'architettura. Dimostra che pensi visivamente.
-2. **Sii strutturato**: Rispondi sempre in STEP (1, 2, 3...). I senior organizzano il caos.
-3. **Ammetti i limiti**: "Non ho esperienza diretta su Exadata, ma conosco i principi di..." è 100x meglio di inventare.
-4. **Mostra il repository**: Se possibile, mostra il tuo lab. Hai un repo GitHub con RAC, Data Guard, GoldenGate, Ansible automation e 1000+ script. **Questo vale più di qualsiasi risposta.**
-5. **Fai domande TU**: "Quanti database gestite?", "Che versione usate?", "Avete Data Guard?", "Come è il vostro ciclo di patching?" → Dimostra interesse reale.
+1. **Disegna**: Quando spieghi, disegna l'architettura. Pensare visivamente aiuta a comunicare.
+2. **Sii strutturato**: Rispondi sempre in STEP (1, 2, 3...). L'organizzazione è la chiave.
+3. **Ammetti i limiti**: Non conoscere tutto è normale — l'importante è sapere DOVE cercare.
+4. **Documenta tutto**: Un lab ben documentato dimostra disciplina professionale.
+5. **Continua a studiare**: "Quanti database gestite?", "Che versione usate?", "Avete Data Guard?" — fai sempre domande.
