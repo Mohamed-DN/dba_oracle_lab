@@ -26,5 +26,5 @@ Sono presenti script aggiuntivi per:
 
 ## Riferimenti
 
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+- [GUIDA_ATTIVITA_DBA.md](../../10_esami_carriera/GUIDA_ATTIVITA_DBA.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)

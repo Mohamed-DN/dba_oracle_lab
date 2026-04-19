@@ -1,0 +1,50 @@
+profile_name: oracle-linux-cis-like-l1
+version: 1.0.0
+controls:
+  - id: CIS-ORACLE-001
+    title: No cleartext credentials in repository
+    severity: critical
+    check_command: "gitleaks detect --no-banner"
+  - id: CIS-ORACLE-002
+    title: Ansible Vault used for privileged DB passwords
+    severity: high
+    check_command: "grep -R 'vault_' automation/group_vars"
+  - id: CIS-ORACLE-003
+    title: Password placeholders removed from runtime variables
+    severity: high
+    check_command: "! grep -R 'CHANGEME' automation/group_vars"
+  - id: CIS-ORACLE-004
+    title: SSH key-based authentication required
+    severity: medium
+    check_command: "grep -R 'ssh-copy-id' automation/README.md"
+  - id: CIS-ORACLE-005
+    title: Data Guard lag verification enforced
+    severity: medium
+    check_command: "grep -R 'Transport Lag' automation/playbooks/06_dataguard_switchover.yml"
+  - id: CIS-ORACLE-006
+    title: Switchover requires explicit confirmation
+    severity: high
+    check_command: "grep -R 'switchover_require_confirmation' automation/group_vars/all.yml"
+  - id: CIS-ORACLE-007
+    title: Daily health check covers alert log and RMAN status
+    severity: medium
+    check_command: "grep -R 'v\\$rman_backup_job_details' automation/playbooks/04_daily_health_check.yml"
+  - id: CIS-ORACLE-008
+    title: CDB/PDB creation protected by guardrails
+    severity: high
+    check_command: "grep -R 'Guardrail' automation/playbooks/11_create_cdb_pdb.yml"
+  - id: CIS-ORACLE-009
+    title: CI includes markdown and shell quality gates
+    severity: low
+    check_command: "grep -R 'Check Markdown Formatting' .github/workflows/ci.yml"
+  - id: CIS-ORACLE-010
+    title: DR runbook and periodic drill workflow present
+    severity: medium
+    check_command: "test -f .github/workflows/dr-drill.yml"
+scoring:
+  pass_threshold_percent: 90
+  weighting:
+    critical: 5
+    high: 3
+    medium: 2
+    low: 1

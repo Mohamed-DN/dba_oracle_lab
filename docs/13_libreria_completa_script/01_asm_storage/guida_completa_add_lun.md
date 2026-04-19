@@ -17,4 +17,4 @@ Procedure dettagliate gia presenti in questa cartella:
 
 Riferimento formativo esteso:
 
-- [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../GUIDA_AGGIUNTA_DISCHI_ASM.md)
+- [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md)

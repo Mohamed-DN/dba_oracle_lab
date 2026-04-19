@@ -1,0 +1,106 @@
+---
+- name: Oracle DBA maintenance tasks
+  hosts: oracle_primary[0]
+  become: true
+  become_user: oracle
+  gather_facts: false
+  vars:
+    maintenance_pdb_name: "{{ oracle_pdb_name }}"
+    audit_purge_days: 30
+    gather_dictionary_stats: true
+
+  tasks:
+    - name: Verify target PDB exists
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        SET HEAD OFF FEED OFF
+        SELECT COUNT(*) FROM v\$pdbs WHERE name = UPPER('{{ maintenance_pdb_name }}');
+        EXIT;
+        SQL
+      register: maintenance_pdb_exists
+      changed_when: false
+
+    - name: Assert maintenance PDB exists
+      ansible.builtin.assert:
+        that:
+          - maintenance_pdb_exists.stdout | trim | int == 1
+        fail_msg: "PDB {{ maintenance_pdb_name }} non trovata."
+
+    - name: Compile invalid objects (CDB)
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        @{{ oracle_home }}/rdbms/admin/utlrp.sql
+        EXIT;
+        SQL
+      register: compile_invalid
+      changed_when: true
+      failed_when: compile_invalid.rc != 0
+
+    - name: Gather dictionary stats (optional)
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        BEGIN
+          DBMS_STATS.GATHER_DICTIONARY_STATS;
+        END;
+        /
+        EXIT;
+        SQL
+      register: dictionary_stats
+      when: gather_dictionary_stats | bool
+      changed_when: true
+      failed_when: dictionary_stats.rc != 0
+
+    - name: Purge old unified audit records
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        BEGIN
+          DBMS_AUDIT_MGMT.SET_LAST_ARCHIVE_TIMESTAMP(
+            audit_trail_type  => DBMS_AUDIT_MGMT.AUDIT_TRAIL_UNIFIED,
+            last_archive_time => SYSTIMESTAMP - INTERVAL '{{ audit_purge_days }}' DAY
+          );
+          DBMS_AUDIT_MGMT.CLEAN_AUDIT_TRAIL(
+            audit_trail_type        => DBMS_AUDIT_MGMT.AUDIT_TRAIL_UNIFIED,
+            use_last_arch_timestamp => TRUE
+          );
+        END;
+        /
+        EXIT;
+        SQL
+      register: audit_purge
+      changed_when: true
+      failed_when: audit_purge.rc != 0
+
+    - name: Purge recyclebin in target PDB
+      ansible.builtin.shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        ALTER SESSION SET CONTAINER = {{ maintenance_pdb_name }};
+        PURGE DBA_RECYCLEBIN;
+        EXIT;
+        SQL
+      register: purge_recyclebin
+      changed_when: true
+      failed_when: purge_recyclebin.rc != 0
+
+    - name: DBA maintenance summary
+      ansible.builtin.debug:
+        msg: >-
+          Maintenance completata su {{ inventory_hostname }} per PDB {{ maintenance_pdb_name }}.

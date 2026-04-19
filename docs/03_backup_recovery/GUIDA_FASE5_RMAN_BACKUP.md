@@ -1507,7 +1507,7 @@ rman TARGET / <<< "RESTORE DATABASE VALIDATE;"
 
 ---
 
-**→ Prossimo consigliato: [FASE 6: Enterprise Manager Cloud Control](./GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)**
+**→ Prossimo consigliato: [FASE 6: Enterprise Manager Cloud Control](../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)**
 
 ---
 

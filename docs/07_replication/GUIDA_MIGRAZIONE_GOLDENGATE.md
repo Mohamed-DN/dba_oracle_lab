@@ -62,13 +62,13 @@ Per il tuo lab, lo scenario piu realistico non e un generico `source -> target`,
 - `HA/DR`: Data Guard locale
 - `capture GG`: sul primary locale
 - `target`: database Oracle su OCI compute
-- `rete`: IP pubblico ristretto oppure VPN, in base a [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+- `rete`: IP pubblico ristretto oppure VPN, in base a [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](../09_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
 
 Documenti da leggere prima del cutover:
 
 1. [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
-2. [GUIDA_GOLDENGATE_OCI_ARM.md](./GUIDA_GOLDENGATE_OCI_ARM.md)
-3. [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+2. [GUIDA_GOLDENGATE_OCI_ARM.md](../09_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md)
+3. [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](../09_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
 
 Regola importante:
 

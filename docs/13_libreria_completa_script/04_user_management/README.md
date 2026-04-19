@@ -19,5 +19,5 @@ Procedure operative per la creazione e gestione utenti Oracle nel lab.
 
 ## Riferimenti
 
-- [GUIDA_CDB_PDB_UTENTI.md](../../GUIDA_CDB_PDB_UTENTI.md)
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
+- [GUIDA_CDB_PDB_UTENTI.md](../../04_administration/GUIDA_CDB_PDB_UTENTI.md)
+- [GUIDA_ATTIVITA_DBA.md](../../10_esami_carriera/GUIDA_ATTIVITA_DBA.md)

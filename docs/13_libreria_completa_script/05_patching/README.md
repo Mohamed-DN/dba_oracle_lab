@@ -30,4 +30,4 @@ Note di supporto Oracle per i casi comuni di patching.
 ---
 
 ## 🔗 Collegamento
-Vedi anche: [GUIDA_FASE2_GRID_E_RAC.md](../../GUIDA_FASE2_GRID_E_RAC.md) - sezione patching.
+Vedi anche: [GUIDA_FASE2_GRID_E_RAC.md](../../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) - sezione patching.

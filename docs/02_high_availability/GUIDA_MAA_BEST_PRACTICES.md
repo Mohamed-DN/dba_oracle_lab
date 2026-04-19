@@ -330,4 +330,4 @@ ORCL_HA =
 
 ---
 
-> **Prossimo**: Torna al [README.md](./README.md) per l'indice completo di tutte le guide.
+> **Prossimo**: Torna al [README.md](../../README.md) per l'indice completo di tutte le guide.

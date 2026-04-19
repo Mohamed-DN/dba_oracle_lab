@@ -6,4 +6,4 @@ Documento ponte verso contenuto esistente:
 
 Riferimento generale DBA:
 
-- [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)
