@@ -1,0 +1,491 @@
+# Guida Completa: Monitoraggio Oracle Database e Linux
+
+> Come installare e configurare un sistema di monitoraggio opensource per i tuoi server Oracle e Linux.
+> Confronto pratico tra le 3 opzioni migliori + guida installazione passo-passo.
+
+---
+
+## Quale Scegliere? Confronto Rapido
+
+| | **Checkmk** | **Zabbix** | **Prometheus + Grafana** |
+|---|---|---|---|
+| **Filosofia** | "Tutto incluso e funziona subito" | "Potentissimo, controllo totale" | "Modulare, cloud-native" |
+| **Ideale per** | DBA che vuole monitorare SUBITO | Ambiente grande e complesso | Infrastruttura Kubernetes/DevOps |
+| **Monitoraggio Oracle** | ⭐⭐⭐ Plugin nativo, auto-discovery | ⭐⭐⭐ Template ODBC nativi | ⭐⭐ Richiede exporter esterno |
+| **Monitoraggio Linux** | ⭐⭐⭐ Agent leggero, auto-discovery | ⭐⭐⭐ Agent + agentless | ⭐⭐⭐ node_exporter standard |
+| **Curva apprendimento** | 🟢 Facile (1-2 ore) | 🔴 Ripida (giorni) | 🟡 Media (PromQL da imparare) |
+| **Dashboard** | Buone, preconfigurate | Buone, personalizzabili | ⭐⭐⭐ Grafana è il migliore |
+| **Costo** | Free (Raw Edition, fino a 750 host) | Free (completamente) | Free (completamente) |
+| **Setup** | Pacchetto RPM/DEB, singolo server | Server + DB backend (PostgreSQL) | 3-4 componenti da integrare |
+
+### 🏆 Raccomandazione per DBA Oracle
+
+> **Per iniziare**: usa **Checkmk** — è il più veloce da installare e ha il miglior plugin Oracle nativo.
+>
+> **Per ambienti grandi** (>50 server): valuta **Zabbix** per la scalabilità.
+>
+> **Se hai già Kubernetes/Docker**: usa **Prometheus + Grafana** per uniformità.
+>
+> **La combinazione migliore**: molti DBA usano **Prometheus + Grafana per le dashboard** + **Checkmk per gli alert** perché ognuno eccelle nel suo ambito.
+
+---
+
+## OPZIONE 1: Checkmk (Consigliata per DBA)
+
+### Perché Checkmk per Oracle?
+
+- **Auto-discovery**: installi l'agent, Checkmk scopre automaticamente le istanze Oracle, tablespace, ASM
+- **Plugin Oracle nativo**: monitora senza configurazione aggiuntiva:
+  - Tablespace (uso %, autoextend, maxsize)
+  - Sessions (attive, bloccanti, totali)
+  - RMAN backup (stato, età ultimo backup)
+  - Data Guard (lag, apply status)
+  - ASM diskgroup (uso, rebalance)
+  - Alert log (ORA- errors)
+  - Performance (buffer cache hit, library cache)
+- **Alert intelligenti**: soglie dinamiche che si adattano al tuo carico
+
+### Installazione Checkmk (Oracle Linux / RHEL)
+
+```bash
+# ---- 1. INSTALLAZIONE SERVER (sul monitoring server) ----
+
+# Scarica Checkmk Raw (Free) — ultima versione stabile
+wget https://download.checkmk.com/checkmk/2.3.0p1/check-mk-raw-2.3.0p1-el8-38.x86_64.rpm
+
+# Installa
+sudo yum install -y check-mk-raw-2.3.0p1-el8-38.x86_64.rpm
+
+# Crea un'istanza di monitoraggio (nome: oracledba)
+sudo omd create oracledba
+
+# Avvia l'istanza
+sudo omd start oracledba
+
+# Accedi alla web UI:
+# http://<IP_SERVER>:5000/oracledba
+# Username: cmkadmin
+# Password: (mostrata dal comando omd create)
+
+
+# ---- 2. INSTALLAZIONE AGENT (su OGNI server Oracle) ----
+
+# Scarica l'agent dal server Checkmk:
+wget http://<MONITORING_SERVER>:5000/oracledba/check_mk/agents/check-mk-agent-2.3.0-1.noarch.rpm
+
+# Installa
+sudo rpm -Uvh check-mk-agent-2.3.0-1.noarch.rpm
+
+# Verifica che funziona
+check_mk_agent | head -20
+
+
+# ---- 3. ATTIVA IL PLUGIN ORACLE ----
+
+# Copia il plugin Oracle sull'agent
+sudo cp /opt/omd/versions/default/share/check_mk/agents/plugins/mk_oracle \
+        /usr/lib/check_mk_agent/plugins/
+
+# Crea la configurazione Oracle per l'agent
+sudo mkdir -p /etc/check_mk
+cat > /etc/check_mk/mk_oracle.cfg << 'EOF'
+# Connessione al database Oracle
+DBUSER=C##MONITOR:MonitorPassword123:RACDB:localhost:1521
+# Per ASM (opzionale):
+# ASMUSER=ASMSNMP:AsmPassword123
+
+# Controlla tablespace, sessions, backup, alert log
+SECTIONS="instance sessions logswitches undostat recovery_area processes
+          tablespaces rman dataguard_stats performance"
+EOF
+
+# Imposta permessi
+sudo chmod 600 /etc/check_mk/mk_oracle.cfg
+
+
+# ---- 4. CREA L'UTENTE DI MONITORAGGIO NEL DB ----
+# Esegui come SYS:
+```
+
+```sql
+-- Crea utente dedicato al monitoraggio (read-only!)
+CREATE USER C##MONITOR IDENTIFIED BY "MonitorPassword123"
+    DEFAULT TABLESPACE USERS
+    QUOTA 0 ON USERS
+    CONTAINER=ALL;
+
+-- Grant MINIMI necessari (principio least-privilege)
+GRANT CREATE SESSION TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT_CATALOG_ROLE TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$DATABASE TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$INSTANCE TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$SESSION TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$LOG TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$TABLESPACE TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$ARCHIVED_LOG TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$DATAGUARD_STATS TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$RMAN_BACKUP_JOB_DETAILS TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$ASM_DISKGROUP TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$RECOVERY_FILE_DEST TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT ON SYS.V_$DIAG_ALERT_EXT TO C##MONITOR CONTAINER=ALL;
+```
+
+```bash
+# ---- 5. REGISTRA L'HOST IN CHECKMK ----
+
+# Dalla Web UI:
+# Setup → Hosts → Add host
+# Hostname: rac1
+# IP: 192.168.56.101
+# Save → Run service discovery → Activate changes
+
+# Ripeti per rac2, racstby1, racstby2, dnsnode
+```
+
+### Cosa Monitora Checkmk su Oracle (automaticamente)
+
+| Check | Cosa Mostra | Alert Default |
+|---|---|---|
+| Tablespace Usage | % uso con maxsize | WARN 85%, CRIT 95% |
+| Sessions | Attive, totali, bloccanti | CRIT se > max_sessions |
+| RMAN Backup | Età ultimo backup | WARN > 24h, CRIT > 48h |
+| Alert Log | ORA- errors nelle ultime 24h | WARN se presente |
+| Data Guard Lag | Transport + Apply lag | WARN > 30min |
+| ASM Diskgroup | % uso per diskgroup | WARN 85%, CRIT 95% |
+| Processes | Uso vs max_processes | WARN 80%, CRIT 90% |
+
+---
+
+## OPZIONE 2: Prometheus + Grafana (Dashboard Migliori)
+
+### Architettura
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│ Oracle DB Server │     │ Prometheus Server │     │   Grafana    │
+│                  │     │                  │     │              │
+│ ┌──────────────┐ │     │ Scrape ogni 30s  │     │ Dashboard    │
+│ │ oracledb     │─┼────►│ Salva metriche   │────►│ interattive  │
+│ │ _exporter    │ │     │ Alert rules      │     │ + alert      │
+│ │ :9161        │ │     │ :9090            │     │ :3000        │
+│ └──────────────┘ │     └──────────────────┘     └──────────────┘
+│ ┌──────────────┐ │
+│ │ node         │─┼────► (metriche OS: CPU, RAM, disco, rete)
+│ │ _exporter    │ │
+│ │ :9100        │ │
+│ └──────────────┘ │
+└─────────────────┘
+```
+
+### Installazione Prometheus + Grafana
+
+```bash
+# ============================================================
+# STEP 1: node_exporter (su OGNI server Oracle)
+# Monitora: CPU, RAM, disco, rete, filesystem
+# ============================================================
+
+# Scarica
+cd /tmp
+wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+tar xzf node_exporter-1.7.0.linux-amd64.tar.gz
+sudo cp node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+
+# Crea servizio systemd
+sudo cat > /etc/systemd/system/node_exporter.service << 'EOF'
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=nobody
+ExecStart=/usr/local/bin/node_exporter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now node_exporter
+
+# Verifica: http://<IP>:9100/metrics
+
+
+# ============================================================
+# STEP 2: oracle_exporter (su OGNI server Oracle)
+# Monitora: tablespace, sessions, wait events, backup, DG
+# ============================================================
+
+# Usa l'exporter ufficiale:
+# https://github.com/iamseth/oracledb_exporter
+wget https://github.com/iamseth/oracledb_exporter/releases/latest/download/oracledb_exporter-linux-amd64.tar.gz
+tar xzf oracledb_exporter-linux-amd64.tar.gz
+sudo cp oracledb_exporter /usr/local/bin/
+
+# Configura connessione Oracle
+export DATA_SOURCE_NAME="C##MONITOR/MonitorPassword123@//localhost:1521/RACDB"
+# Oppure crea un file di env:
+sudo cat > /etc/default/oracledb_exporter << 'EOF'
+DATA_SOURCE_NAME=C##MONITOR/MonitorPassword123@//localhost:1521/RACDB
+EOF
+
+# Crea servizio systemd
+sudo cat > /etc/systemd/system/oracledb_exporter.service << 'EOF'
+[Unit]
+Description=Oracle DB Exporter
+After=network.target
+
+[Service]
+User=oracle
+EnvironmentFile=/etc/default/oracledb_exporter
+ExecStart=/usr/local/bin/oracledb_exporter \
+    --web.listen-address=:9161 \
+    --default.metrics=/etc/oracledb_exporter/default-metrics.toml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now oracledb_exporter
+
+# Verifica: http://<IP>:9161/metrics
+
+
+# ============================================================
+# STEP 3: Prometheus (sul monitoring server)
+# ============================================================
+
+cd /tmp
+wget https://github.com/prometheus/prometheus/releases/download/v2.50.0/prometheus-2.50.0.linux-amd64.tar.gz
+tar xzf prometheus-2.50.0.linux-amd64.tar.gz
+sudo cp prometheus-2.50.0.linux-amd64/{prometheus,promtool} /usr/local/bin/
+sudo mkdir -p /etc/prometheus /var/lib/prometheus
+
+# Configurazione: chi monitorare
+sudo cat > /etc/prometheus/prometheus.yml << 'EOF'
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+# Regole di alert
+rule_files:
+  - "oracle_alerts.yml"
+
+scrape_configs:
+  # OS Metrics (tutti i server)
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - 'rac1:9100'
+        - 'rac2:9100'
+        - 'racstby1:9100'
+        - 'racstby2:9100'
+        - 'dnsnode:9100'
+
+  # Oracle DB Metrics
+  - job_name: 'oracle'
+    static_configs:
+      - targets:
+        - 'rac1:9161'
+        - 'rac2:9161'
+        - 'racstby1:9161'
+        - 'racstby2:9161'
+    labels:
+      env: 'lab'
+EOF
+
+# Alert rules per Oracle
+sudo cat > /etc/prometheus/oracle_alerts.yml << 'EOF'
+groups:
+  - name: oracle_alerts
+    rules:
+      - alert: OracleTablespaceFull
+        expr: oracledb_tablespace_used_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tablespace {{ $labels.tablespace }} al {{ $value }}%"
+
+      - alert: OracleBackupOld
+        expr: (time() - oracledb_last_backup_timestamp) > 86400
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nessun backup nelle ultime 24h!"
+
+      - alert: HighCPU
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU al {{ $value }}% su {{ $labels.instance }}"
+
+      - alert: DiskFull
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disco < 15% libero su {{ $labels.mountpoint }}"
+EOF
+
+# Servizio systemd
+sudo cat > /etc/systemd/system/prometheus.service << 'EOF'
+[Unit]
+Description=Prometheus
+After=network.target
+
+[Service]
+User=prometheus
+ExecStart=/usr/local/bin/prometheus \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/var/lib/prometheus \
+    --storage.tsdb.retention.time=90d
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo useradd -rs /bin/false prometheus
+sudo chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
+sudo systemctl daemon-reload
+sudo systemctl enable --now prometheus
+
+# Verifica: http://<IP>:9090
+
+
+# ============================================================
+# STEP 4: Grafana (sul monitoring server)
+# ============================================================
+
+# Aggiungi repository Grafana
+sudo cat > /etc/yum.repos.d/grafana.repo << 'EOF'
+[grafana]
+name=grafana
+baseurl=https://rpm.grafana.com
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://rpm.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+EOF
+
+sudo yum install -y grafana
+sudo systemctl enable --now grafana-server
+
+# Accedi: http://<IP>:3000
+# Username: admin / Password: admin (cambiarla subito!)
+
+# Configura Prometheus come Data Source:
+# Configuration → Data Sources → Add → Prometheus
+# URL: http://localhost:9090 → Save & Test
+```
+
+### Dashboard Grafana Consigliate
+
+Importa queste dashboard già pronte dalla community (Dashboard → Import → ID):
+
+| ID | Dashboard | Cosa Mostra |
+|---|---|---|
+| **1860** | Node Exporter Full | CPU, RAM, disco, rete, I/O per host |
+| **3333** | Oracle DB Overview | Sessioni, tablespace, wait events |
+| **14175** | Oracle Performance | Buffer cache, redo, undo, temp |
+
+---
+
+## OPZIONE 3: Zabbix (per ambienti grandi)
+
+### Installazione Rapida
+
+```bash
+# ---- SERVER ----
+# Zabbix 7.0 LTS su Oracle Linux 8
+sudo rpm -Uvh https://repo.zabbix.com/zabbix/7.0/oracle/8/x86_64/zabbix-release-7.0-1.el8.noarch.rpm
+sudo dnf install -y zabbix-server-pgsql zabbix-web-pgsql zabbix-nginx-conf zabbix-sql-scripts zabbix-selinux-policy zabbix-agent
+
+# Crea DB PostgreSQL per Zabbix
+sudo -u postgres createuser --pwprompt zabbix
+sudo -u postgres createdb -O zabbix zabbix
+zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u zabbix psql zabbix
+
+# Configura e avvia
+sudo systemctl enable --now zabbix-server zabbix-agent nginx php-fpm
+# Web UI: http://<IP>/zabbix
+
+# ---- AGENT (su ogni server Oracle) ----
+sudo rpm -Uvh https://repo.zabbix.com/zabbix/7.0/oracle/8/x86_64/zabbix-release-7.0-1.el8.noarch.rpm
+sudo dnf install -y zabbix-agent2 zabbix-agent2-plugin-oracle-database
+sudo systemctl enable --now zabbix-agent2
+```
+
+### Template Oracle per Zabbix
+
+Zabbix 7.0 include un **template nativo** per Oracle:
+1. Web UI → Configuration → Templates → "Oracle by ODBC"
+2. Applica al tuo host
+3. Configura le macro: `{$ORACLE.DSN}`, `{$ORACLE.USER}`, `{$ORACLE.PASSWORD}`
+
+---
+
+## Best Practice Comuni (Tutti i Tool)
+
+### 1. Utente Monitoraggio Dedicato
+
+```sql
+-- SEMPRE creare un utente read-only dedicato. MAI usare SYS o SYSTEM!
+CREATE USER C##MONITOR IDENTIFIED BY "PasswordSicura123"
+    DEFAULT TABLESPACE USERS QUOTA 0 ON USERS CONTAINER=ALL;
+GRANT CREATE SESSION TO C##MONITOR CONTAINER=ALL;
+GRANT SELECT_CATALOG_ROLE TO C##MONITOR CONTAINER=ALL;
+```
+
+### 2. Cosa Monitorare (Checklist)
+
+| Layer | Metriche | Alert |
+|---|---|---|
+| **OS** | CPU, RAM, swap, disco, I/O, rete | CPU >90%, disco <15%, swap >50% |
+| **Database** | Sessioni, tablespace, buffer cache | TBS >85%, backup >24h, invalids |
+| **Data Guard** | Transport lag, apply lag, GAP | Lag >30min, GAP presente |
+| **ASM** | Diskgroup usage, rebalance | DG >85% |
+| **Alert Log** | ORA- errors, WARNING | Qualsiasi ORA- critico |
+| **Backup** | Ultimo backup, validate | >24h senza backup |
+| **Listener** | Stato, connessioni reject | Listener down |
+
+### 3. Frequenza di Controllo
+
+| Metriche | Intervallo | Note |
+|---|---|---|
+| CPU, RAM, rete | 30 secondi | Real-time |
+| Tablespace, sessioni | 5 minuti | Non troppo frequente |
+| Backup, Data Guard | 15 minuti | |
+| Alert log | 5 minuti | Cerca pattern ORA- |
+| Capacity trend | 1 ora | Per grafici storici |
+
+### 4. Alert: NON Esagerare!
+
+> ⚠️ **Alert fatigue** è il nemico #1. Se ricevi 100 alert al giorno, finirai per ignorarli tutti.
+>
+> Regola d'oro: **Se un alert non richiede un'azione immediata, NON è un alert — è un log.**
+>
+> - **CRITICAL** = Qualcuno deve agire ADESSO (svegliare il reperibile)
+> - **WARNING** = Da gestire domani mattina
+> - **INFO** = Solo dashboard, niente notifiche
+
+---
+
+## Riepilogo: Quale Scegliere
+
+```
+Hai 1-10 server Oracle?                    → Checkmk (setup in 1 ora)
+Hai 50+ server, ambiente enterprise?       → Zabbix (investimento iniziale alto, poi scala)
+Hai Kubernetes/Docker/DevOps?              → Prometheus + Grafana
+Vuoi dashboard belle + alert affidabili?   → Prometheus + Grafana (dashboard) + Checkmk (alert)
+```

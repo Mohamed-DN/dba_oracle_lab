@@ -10,7 +10,7 @@
 - Mantieni separati:
   - `lab base`: costruzione ambiente e runbook di setup;
   - `extra_dba`: attivita operative post-lab;
-  - `studio_ai`: script e note reali da riuso.
+  - `libreria_oracle`: script e note reali da riuso.
 
 ## 2. Le macro-aree del lavoro DBA
 

@@ -95,7 +95,7 @@
 sqlplus / as sysdba
 
 # Esecuzione di uno script
-@/path/to/studio_ai/03_monitoring_scripts/ViewSession.sql
+@/path/to/libreria_oracle/03_monitoring_scripts/ViewSession.sql
 ```
 
 > [!TIP]

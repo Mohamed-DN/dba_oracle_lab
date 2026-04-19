@@ -1,6 +1,6 @@
 # Catalogo Script Studio AI - Raggruppamento e Top 20 per Categoria
 
-Questo catalogo organizza gli script presenti in `studio_ai/` per categoria operativa, con una selezione "Top 20" dove possibile.
+Questo catalogo organizza gli script presenti in `libreria_oracle/` per categoria operativa, con una selezione "Top 20" dove possibile.
 
 Data catalogazione: 13 marzo 2026  
 Perimetro script conteggiati: `.sql`, `.sh`, `.pl`, `.py`, `.ksh`, `.ps1`
@@ -284,5 +284,5 @@ Se aggiungi nuovi script, aggiorna:
 
 1. questo catalogo (`CATALOGO_SCRIPT_TOP20_PER_CATEGORIA.md`)
 2. il README della categoria impattata
-3. il README principale di `studio_ai` (se cambia la navigazione)
+3. il README principale di `libreria_oracle` (se cambia la navigazione)
 
