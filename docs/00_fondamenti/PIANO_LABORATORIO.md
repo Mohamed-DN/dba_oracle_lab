@@ -1,6 +1,6 @@
-# 📅 Piano di Studio Giornaliero — 3 Ore al Giorno
+# 🔬 Piano Laboratorio Oracle RAC — 3 Ore al Giorno
 
-> **Obiettivo**: Completare il lab Oracle RAC + DG + GG + Cloud + PostgreSQL → poi preparare esami 1Z0-082 e 1Z0-083.
+> **Obiettivo**: Costruire un lab Enterprise completo: RAC + Data Guard + GoldenGate + Monitoring + Automazione → poi preparare esami 1Z0-082 e 1Z0-083.
 > **Ritmo**: 3 ore al giorno, 5 giorni a settimana.
 > **Durata**: 8 settimane (40 giorni).
 
@@ -382,33 +382,51 @@ Sett 8:                                     ██████████ 🎯 
 │  ✅ ASM Storage Management (NORMAL/HIGH redundancy, ASMLib)  │
 │  ✅ Oracle Patching (OPatch, opatchauto, datapatch)           │
 │  ✅ Performance Tuning (AWR, ADDM, ASH, SQL Tuning Advisor)  │
-│  ✅ DBA Automation (DBMS_SCHEDULER, Health Checks)            │
+│  ✅ DBA Automation (Ansible + DBMS_SCHEDULER)                 │
+│  ✅ Monitoring (Checkmk/Prometheus+Grafana/Zabbix)            │
 │  ✅ Security (Profiles, Unified Auditing, TDE concepts)      │
 │  ✅ Oracle MAA Gold Architecture (FSFO, FAN, Block Checking)  │
 │  ✅ PostgreSQL 16 Administration (basics)                     │
+│  ✅ Infrastructure as Code (Ansible, Vagrant)                 │
 │                                                              │
 │  Progetto Lab: Architettura enterprise ibrida con            │
 │  RAC → Data Guard → GoldenGate → OCI Cloud → PostgreSQL   │
-│  su 6+ nodi                                                  │
+│  su 6+ nodi, 1000+ script, 5 playbook Ansible               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📚 Risorse Extra: Enterprise DBA Toolkit (libreria_oracle/)
+## 📚 Risorse del Repository (usa durante il lab)
 
-> Usa queste risorse per arricchire lo studio con procedure e script operativi reali.
+### Strumenti Operativi
+
+| Risorsa | Quando Usarla | Cosa Contiene |
+|---|---|---|
+| [scripts_operativi/](../../scripts_operativi/) | **Ogni giorno** — diagnosi rapida | 10 script SQL per scenario (tablespace, FRA, lock, performance) |
+| [procedure_operative/](../../procedure_operative/) | **Ogni mattina** — morning check | 13 runbook pronti (health check, backup, DG, lock, CPU) |
+| [automation/](../../automation/) | Setup e patching | 5 playbook Ansible production-grade |
+| [PREPARAZIONE_INTERVIEW_DBA.md](../10_esami_carriera/PREPARAZIONE_INTERVIEW_DBA.md) | Prima di un colloquio | 12 sezioni, 40+ domande con risposte, scenari produzione |
+
+### Libreria Enterprise (~1000 script)
 
 | Settimana | Quando Usare | Cartella libreria_oracle |
 |---|---|---|
-| **Sett. 1** (Giorno 4: ASM disks) | Dopo aver configurato ASMLib | [01_asm_storage/](./libreria_oracle/01_asm_storage/) + [GUIDA_AGGIUNTA_DISCHI_ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) |
-| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](./libreria_oracle/05_patching/) |
-| **Sett. 3** (Giorno 11: DG) | Dopo aver configurato Data Guard | [02_dataguard/](./libreria_oracle/02_dataguard/) |
-| **Sett. 3** (Giorno 13: RMAN) | Dopo aver configurato RMAN | [06_backup_recovery/](./libreria_oracle/06_backup_recovery/) |
-| **Sett. 3** (Giorno 14: EM) | Dopo l'installazione di Enterprise Manager | [03_monitoring_scripts/](./libreria_oracle/03_monitoring_scripts/) |
-| **Sett. 4** (Giorno 19: HA) | Dopo Switchover / Failover | [04_user_management/](./libreria_oracle/04_user_management/) |
-| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](./libreria_oracle/07_performance_tuning/) |
-| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](./libreria_oracle/08_tde_security/) |
+| **Sett. 1** (Giorno 4: ASM) | Dopo aver configurato ASMLib | [01_asm_storage/](../../libreria_oracle/01_asm_storage/) |
+| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](../../libreria_oracle/05_patching/) |
+| **Sett. 3** (Giorno 11: DG) | Dopo Data Guard | [02_dataguard/](../../libreria_oracle/02_dataguard/) |
+| **Sett. 3** (Giorno 13: RMAN) | Dopo RMAN | [06_backup_recovery/](../../libreria_oracle/06_backup_recovery/) |
+| **Sett. 3** (Giorno 14: EM) | Dopo Enterprise Manager | [03_monitoring_scripts/](../../libreria_oracle/03_monitoring_scripts/) |
+| **Sett. 4** (Giorno 19: HA) | Dopo Switchover/Failover | [04_user_management/](../../libreria_oracle/04_user_management/) |
+| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](../../libreria_oracle/07_performance_tuning/) |
+| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](../../libreria_oracle/08_tde_security/) |
+
+### Guide Monitoring (nuove)
+
+| Guida | Quando Usarla |
+|---|---|
+| [GUIDA_MONITORING_OPENSOURCE.md](../08_monitoring/GUIDA_MONITORING_OPENSOURCE.md) | Sett. 3-5: dopo EM, installa Checkmk o Prometheus |
+| [GUIDA_TROUBLESHOOTING_COMPLETO.md](../05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | Da Sett. 2 in poi: meglio su, per ogni problema |
 
 ---
 

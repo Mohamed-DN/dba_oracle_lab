@@ -465,4 +465,4 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 ---
 
 > → **Precedente**: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md) — Ripasso Esami Oracle
-> → **Piano Studio**: [PIANO_STUDIO_GIORNALIERO.md](./PIANO_STUDIO_GIORNALIERO.md) — Vedi Settimana 6
+> → **Piano Studio**: [PIANO_LABORATORIO.md](./PIANO_LABORATORIO.md) — Vedi Settimana 6

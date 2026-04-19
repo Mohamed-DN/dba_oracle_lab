@@ -84,7 +84,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, ASM, Cache Fusion |
 | [Comandi DBA](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md) | 100+ query SQL essenziali per il DBA |
 | [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) | 100+ acronimi e termini Oracle spiegati |
-| [Piano Studio](./docs/00_fondamenti/PIANO_STUDIO_GIORNALIERO.md) | 8 settimane × 3h/giorno, roadmap completa |
+| [Piano Studio](./docs/00_fondamenti/PIANO_LABORATORIO.md) | 8 settimane × 3h/giorno, roadmap completa |
 
 ### 🔵 High Availability (Data Guard, Switchover, Failover)
 
@@ -248,7 +248,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | 7 | Esame 1Z0-082 | 2 mock exam + revisione errori |
 | 8 | Esame 1Z0-083 | 2 mock exam + runbook finali |
 
-> Piano dettagliato: [PIANO_STUDIO_GIORNALIERO.md](./docs/00_fondamenti/PIANO_STUDIO_GIORNALIERO.md)
+> Piano dettagliato: [PIANO_LABORATORIO.md](./docs/00_fondamenti/PIANO_LABORATORIO.md)
 
 ---
 
