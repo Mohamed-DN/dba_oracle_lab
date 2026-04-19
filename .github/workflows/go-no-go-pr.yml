@@ -6,15 +6,34 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   go-no-go:
     name: Validate mandatory Go/No-Go checklist
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch current PR body
+        id: pr_body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          body="$(curl -sSfL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin).get("body",""))')"
+          {
+            echo 'pr_body<<EOF'
+            echo "${body}"
+            echo 'EOF'
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Validate PR body contains required checked items
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BODY: ${{ steps.pr_body.outputs.pr_body }}
         run: |
           test -n "${PR_BODY}"
           echo "${PR_BODY}" | grep -Fq -- "- [x] Ho verificato che i workflow obbligatori siano verdi (CI, Security Gates, Release Governance)"

@@ -86,14 +86,14 @@
 | 53 | [explain_plan.sql](../13_libreria_completa_script/03_monitoring_scripts/community_gwenshap/explain_plan.sql) | Explain plan formattato | Ogni giorno |
 | 54 | [advisor_profile_recs.sql](../13_libreria_completa_script/03_monitoring_scripts/community_gwenshap/advisor_profile_recs.sql) | Raccomandazioni SQL Advisor | SQL lento |
 | 55 | [index_efficiency.sql](../13_libreria_completa_script/03_monitoring_scripts/community_gwenshap/index_efficiency.sql) | Efficienza indici (clustering factor) | Indice inutile? |
-| 56 | [SPM.sql](../13_libreria_completa_script/03_monitoring_scripts/SPM.sql) | SQL Plan Management baselines | Piano instabile |
-| 57 | [SPM_from_AWR_old_fashioned.sql](../13_libreria_completa_script/03_monitoring_scripts/SPM_from_AWR_old_fashioned.sql) | Crea baseline da AWR | Forza piano vecchio |
-| 58 | [SQL_Profile_Other_SqlID.sql](../13_libreria_completa_script/03_monitoring_scripts/SQL_Profile_Other_SqlID.sql) | Applica profilo di un SQL_ID ad un altro | Trick avanzato |
-| 59 | [View_UnstablePlan.sql](../13_libreria_completa_script/03_monitoring_scripts/View_UnstablePlan.sql) | Piani instabili nel tempo | Piano flip-flop |
+| 56 | [SPM.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SPM.sql) | SQL Plan Management baselines | Piano instabile |
+| 57 | [SPM_from_AWR_old_fashioned.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SPM_from_AWR_old_fashioned.sql) | Crea baseline da AWR | Forza piano vecchio |
+| 58 | [SQL_Profile_Other_SqlID.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SQL_Profile_Other_SqlID.sql) | Applica profilo di un SQL_ID ad un altro | Trick avanzato |
+| 59 | [View_UnstablePlan.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/View_UnstablePlan.sql) | Piani instabili nel tempo | Piano flip-flop |
 | 60 | [PerfTuningAnalisys.sql](../13_libreria_completa_script/03_monitoring_scripts/PerfTuningAnalisys.sql) | Analisi performance completa | Report tuning |
-| 61 | [SQL Plan Change.sql](../13_libreria_completa_script/03_monitoring_scripts/SQL%20Plan%20Change.sql) | Detect cambio piano esecuzione | Piano cambiato |
-| 62 | [SQL Stats.sql](../13_libreria_completa_script/03_monitoring_scripts/SQL%20Stats.sql) | Statistiche SQL dettagliate | SQL analysis |
-| 63 | [SQL Bind.sql](../13_libreria_completa_script/03_monitoring_scripts/SQL%20Bind.sql) | Bind variable peeking | Bind sensitivity |
+| 61 | [SQL Plan Change.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SQL%20Plan%20Change.sql) | Detect cambio piano esecuzione | Piano cambiato |
+| 62 | [SQL Stats.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SQL%20Stats.sql) | Statistiche SQL dettagliate | SQL analysis |
+| 63 | [SQL Bind.sql](../13_libreria_completa_script/07_performance_tuning/community_scripts/tuning/SQL%20Bind.sql) | Bind variable peeking | Bind sensitivity |
 | 64 | [find_sql.sql](../13_libreria_completa_script/03_monitoring_scripts/community_gwenshap/find_sql.sql) | Trova SQL per SQL_ID | Cercare SQL |
 | 65 | [my_sqlmon.sql](../13_libreria_completa_script/03_monitoring_scripts/community_gwenshap/my_sqlmon.sql) | SQL Monitor report | Real-time SQL |
 
@@ -120,7 +120,7 @@
 
 | # | Script | Cosa Fa | Quando |
 |---|---|---|---|
-| 76 | [Asm_Diskgroups.sql](../13_libreria_completa_script/03_monitoring_scripts/Asm_Diskgroups.sql) | Spazio disk group (nostro) | Controllo spazio |
+| 76 | [Asm_Diskgroups.sql](../13_libreria_completa_script/01_asm_storage/community_scripts/Asm_Diskgroups.sql) | Spazio disk group (nostro) | Controllo spazio |
 | 77 | [asm_diskgroups.sql](../13_libreria_completa_script/01_asm_storage/community_scripts/asm_diskgroups.sql) | Diskgroups dettagliato | Controllo ASM |
 | 78 | [asm_disks.sql](../13_libreria_completa_script/01_asm_storage/community_scripts/asm_disks.sql) | Dettaglio dischi ASM | Verifica dischi |
 | 79 | [asm_disk_errors.sql](../13_libreria_completa_script/01_asm_storage/community_scripts/asm_disk_errors.sql) | Errori disco ASM | Check proattivo! |
@@ -163,8 +163,8 @@
 
 | # | Script | Cosa Fa | Quando |
 |---|---|---|---|
-| 98 | [BACKUP CHECKS.sql](../13_libreria_completa_script/03_monitoring_scripts/BACKUP%20CHECKS.sql) | Verifica stato backup RMAN | Ogni mattina |
-| 99 | [MONITOR__RMAN_BACKUP.sql](../13_libreria_completa_script/03_monitoring_scripts/MONITOR__RMAN_BACKUP.sql) | Monitoraggio RMAN in corso | Backup running |
+| 98 | [BACKUP CHECKS.sql](../13_libreria_completa_script/06_backup_recovery/community_scripts/BACKUP%20CHECKS.sql) | Verifica stato backup RMAN | Ogni mattina |
+| 99 | [MONITOR__RMAN_BACKUP.sql](../13_libreria_completa_script/06_backup_recovery/community_scripts/MONITOR__RMAN_BACKUP.sql) | Monitoraggio RMAN in corso | Backup running |
 | 100 | [rman-bkup-status.sql](../13_libreria_completa_script/06_backup_recovery/community_scripts/rman-bkup-status.sql) | Stato backup RMAN (community) | Verifica backup |
 
 ---

@@ -9,6 +9,7 @@
 - [07 CPU Alta](./07_CPU_ALTA.md)
 - [11 Review AWR](./11_REVIEW_AWR.md)
 - [12 Capacity Planning Limiti](./12_CAPACITY_PLANNING_LIMITI.md)
+- [14 Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md)
 
 ## Catalogo Script Enterprise (Top 20)
 - [Top 100 Script DBA](../05_performance/TOP_100_SCRIPT_DBA.md)

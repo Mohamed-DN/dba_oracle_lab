@@ -6,7 +6,7 @@ Questa matrice definisce il perimetro supportato e testato del repository.
 
 | Componente | Versioni supportate | Note |
 |---|---|---|
-| Oracle Database | 19c (target primario), 26ai (guide di evoluzione) | Lab centrato su 19c |
+| Oracle Database | 19c (target primario), 21c, 23ai, 26c/26ai | 19c supporto pieno; 21c/23ai/26c supporto progressivo per area |
 | Oracle Linux | OL7.9 (lab attuale), OL8+ (automazione consigliata) | Alcune guide richiamano OL7 per allineamento a VirtualBox |
 | Ansible Core | >= 2.14 | Allineato a oravirt/ansible-oracle |
 | Collections | `oravirt.oracle`, `community.oracle`, `community.general` | Vedi `automation/collections_requirements.yml` |
@@ -27,3 +27,4 @@ Questa matrice definisce il perimetro supportato e testato del repository.
 
 - Se viene introdotta una nuova versione target (DB/OS/tool), aggiornare questa matrice nello stesso PR.
 - Ogni incompatibilità nota va documentata qui prima del merge.
+- La vista dettagliata per area è mantenuta in [Compatibility by Area 19c/21c/23ai/26c](./COMPATIBILITY_BY_AREA_19c_21c_23ai_26c.md).
