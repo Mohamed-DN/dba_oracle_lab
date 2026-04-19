@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-19T20:00:14.449119+00:00",
-  "source": "reliability/evidence/ansible_health_checks/latest_healthcheck.json",
+  "generated_at": "2026-04-19T20:27:28.237379+00:00",
+  "source": "github_actions:Mohamed-DN/dba_oracle_lab:ci.yml,security-gates.yml,release-governance.yml",
   "kpi": {
     "ci_success_rate_30d": {
-      "value": 0.9667,
-      "display_percent": 96.67,
+      "value": 0.8788,
+      "display_percent": 87.88,
       "target": 0.95,
-      "status": "PASS"
+      "status": "FAIL"
     },
     "mttr_incident_hours": {
       "value": 7.75,
