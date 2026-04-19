@@ -81,6 +81,20 @@ Un checkpoint forza DBWR a scrivere tutti i dirty blocks su disco. Serve per:
 | `IMMEDIATE` | Disconnette tutti | Rollback automatico | No | **Uso normale** |
 | `ABORT` | Kill brutale | Nessun rollback | **SÌ** (instance recovery) | Emergenza |
 
+### Q: "Cos'è il Multiplexing e cosa si multiplexa in Oracle?"
+
+**Risposta**: Il multiplexing è la pratica di mantenere **copie multiple (mirroring a livello Oracle)** dei file critici su dischi fisici diversi per prevenire la perdita del database.
+
+Si applica a due componenti fondamentali:
+1. **Control Files** (`CONTROL_FILES` parameter): Contengono la struttura fisica del DB e l'SCN corrente. Se perdi tutti i control file, il DB va giù e serve il recovery. Regola d'oro: minimo 2 copie in percorsi diversi.
+2. **Redo Log Groups**: Ogni gruppo dovrebbe avere almeno 2 **membri** su dischi diversi. Se un disco si brucia mentre LGWR sta scrivendo, il DB continua a funzionare scrivendo sull'altro membro.
+
+*Nota moderna*: Con ASM in ridondanza NORMAL o HIGH, il multiplexing a livello logico (Oracle) spesso non è più "strettamente" necessario perché ASM fa già il mirroring dei blocchi sotto il cofano, ma le best practice MAA raccomandano ancora il multiplexing dei redo su diskgroup ASM separati (es. `+DATA` e `+RECO`).
+
+### Q: "Perché LGWR scrive prima di DBWR? (Write-Ahead Logging)"
+
+È il fondamento dei database relazionali per garantire l'integrità anche in caso di crash di corrente. **Prima** che il DBWR possa scrivere un blocco dati modificato (dirty block) sul datafile, il LGWR **deve** aver già scritto nel Redo Log File il record di quella transazione. Questo perché, in caso di crash, Oracle usa il Redo Log per ricostruire i dati che erano in memoria e non ancora scritti su disco.
+
 ---
 
 ## 2. RAC (Real Application Clusters)
@@ -338,6 +352,15 @@ STEP 5: AWR Report
 -- Vedi il piano reale (non quello stimato!)
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123def', NULL, 'ALLSTATS LAST'));
 ```
+
+### Q: "Shared Pool piena: ORA-04031. Cos'è e come risolvi?"
+
+**Sintomo**: Il database restituisce errore ORA-04031 e le sessioni non possono fare parse di nuove query.
+**Causa**: La Shared Pool (dove Oracle tiene i piani di esecuzione e lo sql compilato) è così frammentata o piena che non si trova un chunk di memoria contiguo. Spesso causato da **Hard Parsing cronico** per colpa di un'applicazione che non usa le bind variables (es. `SELECT * FROM emp WHERE id = 1`, `WHERE id = 2`, ecc.).
+**Soluzione Rapida**:
+1. `ALTER SYSTEM FLUSH SHARED_POOL;` (svuota la cache, dà respiro momentaneo ma causa un picco di CPU subito dopo per i nuovi hard parse).
+2. Se il parametro `CURSOR_SHARING` è `EXACT`, valuta di impostarlo temporaneamente a `FORCE` (anche se in 19c è deprecato usarlo come fix a lungo termine).
+**Soluzione Permanente**: Correggere l'applicazione introducendo le **Bind Variables**.
 
 ---
 
