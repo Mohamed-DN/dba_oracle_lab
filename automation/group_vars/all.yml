@@ -43,7 +43,7 @@ fra_alert_pct: 80
 # Definire in group_vars/vault.yml (Ansible Vault):
 # vault_app_user_password: "StrongPasswordHere"
 # vault_cdb_admin_password: "StrongCdbPasswordHere"
-app_user_password: "{{ vault_app_user_password | default('CHANGEME_VAULT') }}"
+app_user_password: "{{ vault_app_user_password | default('VAULT_REQUIRED') }}"
 
 # ---- Notifiche (opzionale, decommentare) ----
 # notification_email: dba-team@company.com

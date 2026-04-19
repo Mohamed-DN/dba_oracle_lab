@@ -1,0 +1,75 @@
+---
+- name: Validate required variables for MAA guardrails
+  ansible.builtin.assert:
+    that:
+      - oracle_db_name is defined
+      - oracle_standby_db_name is defined
+    fail_msg: "Define oracle_db_name e oracle_standby_db_name in inventory/group_vars."
+
+- name: Data Guard Broker health and validate checks
+  become: true
+  become_user: oracle
+  ansible.builtin.shell: |
+    set -o pipefail
+    dgmgrl -silent / <<'EOF'
+    show configuration verbose;
+    validate database {{ oracle_db_name }};
+    validate database {{ oracle_standby_db_name }};
+    EOF
+  args:
+    executable: /bin/bash
+  register: maa_dg_validate
+  changed_when: false
+
+- name: Show Data Guard Broker output
+  ansible.builtin.debug:
+    var: maa_dg_validate.stdout_lines
+
+- name: Enforce successful Data Guard broker output
+  ansible.builtin.assert:
+    that:
+      - "'SUCCESS' in maa_dg_validate.stdout"
+    fail_msg: "DGMGRL validation did not return SUCCESS."
+  when: maa_enforce_compliance | bool
+
+- name: Optionally set lag thresholds in Data Guard broker
+  become: true
+  become_user: oracle
+  ansible.builtin.shell: |
+    dgmgrl -silent / <<'EOF'
+    edit database {{ oracle_standby_db_name }} set property ApplyLagThreshold='{{ maa_apply_lag_threshold_seconds }}';
+    edit database {{ oracle_standby_db_name }} set property TransportLagThreshold='{{ maa_transport_lag_threshold_seconds }}';
+    edit database {{ oracle_standby_db_name }} set property TransportDisconnectedThreshold='{{ maa_transport_disconnected_threshold_seconds }}';
+    EOF
+  register: maa_thresholds
+  changed_when: maa_set_broker_thresholds | bool
+  when: maa_set_broker_thresholds | bool
+
+- name: Read MAA protection parameters from primary
+  become: true
+  become_user: oracle
+  ansible.builtin.shell: |
+    sqlplus -s / as sysdba <<'EOF'
+    set heading off feedback off pages 0 verify off
+    select 'db_block_checking=' || value from v$parameter where name='db_block_checking';
+    select 'db_block_checksum=' || value from v$parameter where name='db_block_checksum';
+    select 'db_lost_write_protect=' || value from v$parameter where name='db_lost_write_protect';
+    select 'flashback_on=' || flashback_on from v$database;
+    exit;
+    EOF
+  register: maa_db_params
+  changed_when: false
+
+- name: Show MAA protection parameters
+  ansible.builtin.debug:
+    var: maa_db_params.stdout_lines
+
+- name: Enforce expected MAA protection parameters
+  ansible.builtin.assert:
+    that:
+      - "'db_block_checking=' ~ (maa_expected_db_block_checking | lower) in (maa_db_params.stdout | lower)"
+      - "'db_block_checksum=' ~ (maa_expected_db_block_checksum | lower) in (maa_db_params.stdout | lower)"
+      - "'db_lost_write_protect=' ~ (maa_expected_db_lost_write_protect | lower) in (maa_db_params.stdout | lower)"
+      - "'flashback_on=' ~ (maa_expected_flashback_on | lower) in (maa_db_params.stdout | lower)"
+    fail_msg: "MAA protection parameters are not compliant with expected baseline."
+  when: maa_enforce_compliance | bool

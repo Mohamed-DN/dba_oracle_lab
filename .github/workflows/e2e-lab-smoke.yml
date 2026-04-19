@@ -37,6 +37,28 @@ jobs:
           grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
           grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
 
+      - name: Build PR evidence log
+        run: |
+          mkdir -p reliability/evidence
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          out="reliability/evidence/e2e-asset-validation-${ts}.log"
+          {
+            echo "timestamp=${ts}"
+            echo "run_type=pr_asset_validation"
+            echo "checked=automation/playbooks/04_daily_health_check.yml"
+            echo "checked=automation/playbooks/06_dataguard_switchover.yml"
+            echo "checked=automation/playbooks/11_create_cdb_pdb.yml"
+            echo "checked=vagrant_rac_dataguard/Vagrantfile"
+            echo "checked=vagrant_rac_dataguard/shared_scripts/preflight_checks.sh"
+          } | tee "${out}"
+
+      - name: Upload PR validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-pr-asset-validation-evidence
+          path: reliability/evidence/e2e-asset-validation-*.log
+          if-no-files-found: error
+
   e2e-lab-reduced:
     name: Real E2E reduced lab
     runs-on: [self-hosted, linux, oracle-lab]

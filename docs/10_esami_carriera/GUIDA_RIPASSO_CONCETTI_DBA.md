@@ -63,8 +63,8 @@ graph TD
     3.  **Redo Log Buffer**: Un buffer circolare velocissimo dove vengono scritte le modifiche prima di essere riversate nei Redo Log files.
     4.  **Large Pool**: Usata per alleggerire la Shared Pool da compiti pesanti come backup RMAN o parallel execution.
 *   **Dettaglio PGA**:
-    - **Session Memory**: Memorizza i dati del logon e le variabili di sessione.
-    - **SQL Work Areas**: Fondamentale per le performance, qui avvengono i **Sort** (ordinamenti) e gli **Hash Joins**. Se questa zona è troppo piccola, Oracle trasloca il calcolo sul disco (Tablespace TEMP), causando rallentamenti drammatici.
+    **Session Memory**: Memorizza i dati del logon e le variabili di sessione.  
+    **SQL Work Areas**: Fondamentale per le performance, qui avvengono i **Sort** (ordinamenti) e gli **Hash Joins**. Se questa zona è troppo piccola, Oracle trasloca il calcolo sul disco (Tablespace TEMP), causando rallentamenti drammatici.
 *   **Visualizzazione**:
 ```mermaid
 graph LR
@@ -212,12 +212,8 @@ flowchart LR
 
 ### Q20: Spiegami la gerarchia dello Storage Oracle.
 *   **Definizione**: È la struttura a cipolla che organizza lo spazio:
-    - **Physical**: Datafiles (File sul disco OS).
-    - **Logical**: 
-        1. **Tablespace**: Contenitore logico superiore.
-        2. **Segment**: L'oggetto vero e proprio (una Tabella o un Indice).
-        3. **Extent**: Insieme di blocchi contigui allocati insieme.
-        4. **Block**: L'unità minima di input/output (tipicamente 8 KB).
+    **Physical**: Datafiles (file sul disco OS).  
+    **Logical**: Tablespace (contenitore) → Segment (tabella/indice) → Extent (gruppo di blocchi) → Block (unità minima I/O, tipicamente 8 KB).
 *   **Visualizzazione**:
 ```mermaid
 graph TD
