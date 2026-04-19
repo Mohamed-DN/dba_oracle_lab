@@ -9,7 +9,7 @@
 |---|---|---|
 | **Catalogo completo attività DBA** | Quando vuoi vedere tutto il perimetro del lavoro DBA Oracle, organizzato per dominio operativo | [GUIDA_CATALOGO_ATTIVITA_DBA.md](./GUIDA_CATALOGO_ATTIVITA_DBA.md) |
 | **Checklist operativa DBA** | Quando vuoi una sequenza pratica giornaliera, settimanale, mensile, trimestrale e pre/post change | [GUIDA_CHECKLIST_ATTIVITA_DBA.md](./GUIDA_CHECKLIST_ATTIVITA_DBA.md) |
-| **Guida domande DBA Oracle** | Quando vuoi ripassare domande tecniche, risposte chiare, scenari realistici e follow-up tipici | [GUIDA_DOMANDE_DBA_ORACLE.md](./GUIDA_DOMANDE_DBA_ORACLE.md) |
+| **Guida domande DBA Oracle** | La nuova Master Guide consolidata con tutte le domande Q1-Q106 e scenari reali | [GUIDA_RIPASSO_CONCETTI_DBA.md](../GUIDA_RIPASSO_CONCETTI_DBA.md) |
 | **PDB + Data Guard + Services** | Quando vuoi testare la propagazione PDB verso standby e pubblicare servizi RAC | [GUIDA_PDB_DATAGUARD_SERVICES.md](./GUIDA_PDB_DATAGUARD_SERVICES.md) |
 
 ## Come usare questa area
