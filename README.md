@@ -4,9 +4,37 @@
 [![Ansible](https://img.shields.io/badge/Ansible-Automation-black?logo=ansible)](./automation/)
 [![Scripts](https://img.shields.io/badge/Scripts-1000%2B-blue)](./libreria_oracle/)
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 > Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
 > **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
+
+### 📑 Navigazione Rapida
+
+[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🌐 Piano IP](#-piano-ip)
+
+---
+
+## 🚀 Quick Start (5 minuti)
+
+```bash
+# 1. Clona il repo
+git clone https://github.com/Mohamed-DN/dba_oracle_lab.git
+cd dba_oracle_lab
+
+# 2A. PERCORSO MANUALE (impari di più, ~30 ore)
+#     Segui le 9 guide in ordine → docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md
+
+# 2B. PERCORSO AUTOMATICO (1-click, servono 33GB RAM)
+cd vagrant_rac_dataguard
+vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
+
+# 3. Dopo il lab, usa gli script operativi ogni giorno
+#    → scripts_operativi/    (10 script SQL per emergenze)
+#    → procedure_operative/  (13 runbook DBA)
+```
+
+> 💡 **Primo giorno?** Leggi prima [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) e [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md).
 
 ---
 
@@ -331,5 +359,5 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 ---
 
 <p align="center">
-  <sub>Built with ☕ and <code>ORA-00001</code> errors</sub>
+  <sub>Built with ☕ and <code>ORA-00001</code> errors — <a href="./LICENSE">MIT License</a> — <a href="./CONTRIBUTING.md">Contributing</a></sub>
 </p>

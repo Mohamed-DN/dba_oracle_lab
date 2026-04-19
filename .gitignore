@@ -1,24 +1,57 @@
-# Binaries and large files
-*.zip
-*.tar.gz
-*.iso
-*.vdi
-
-# Software directory (Oracle installers are too large for git)
-software/
-
-# Old/backup files
-vecchio/
+# ═══════════════════════════════════════════
+# .gitignore — Oracle RAC DBA Lab
+# ═══════════════════════════════════════════
 
 # OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Temp
+# Binaries and large files
+*.zip
+*.tar.gz
+*.iso
+*.vdi
+*.vmdk
+*.ova
+*.rpm
+
+# Oracle Software (installers are too large for git)
+software/
+
+# Oracle Install Logs & Temp
+oraInventory/
+*.log
+
+# Sensitive files (wallets, keys)
+*.wallet
+*.p12
+*.jks
+cwallet.sso
+ewallet.p12
+
+# Vagrant
+.vagrant/
+vagrant_rac_dataguard/.vagrant/
+
+# IDE
+.vscode/
+.idea/
+
+# Old/backup files
+vecchio/
+guida.zip/
+en/
+
+# Temp files
 *.tmp
 *.bak
 *.swp
+*.swo
+*~
+*.old
 
-guida.zip/
-en/
+# Python
+__pycache__/
+*.pyc
+.env
