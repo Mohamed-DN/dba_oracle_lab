@@ -48,7 +48,7 @@ Esegui lo script:
 
 Esegui lo script:
 ```sql
-@../13_libreria_completa_script/03_monitoring_scripts/tbs_maxsize_limits.sql
+@../13_libreria_completa_script/12_utilities/community_scripts/storage/tbs_maxsize_limits.sql
 ```
 
 ### Come interpretarlo:
@@ -70,7 +70,7 @@ Il generatore fornisce il comando esatto per portare il limite al **170%** del v
 
 Esegui:
 ```sql
-@../13_libreria_completa_script/03_monitoring_scripts/gen_bigfile_autoextend.sql
+@../13_libreria_completa_script/12_utilities/community_scripts/storage/gen_bigfile_autoextend.sql
 ```
 
 ### Esempio output (da copiare e lanciare):

@@ -57,6 +57,43 @@ jobs:
           config: '.markdownlint.json'
           args: 'README.md CONTRIBUTING.md docs/**/*.md automation/**/*.md vagrant_rac_dataguard/**/*.md'
 
+  check-didactic-compliance:
+    name: Check Didactic Compliance (Changed Guides)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect changed guides
+        id: changed-guides
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          HEAD="${{ github.sha }}"
+
+          FILES="$(git diff --name-only "$BASE" "$HEAD" -- \
+            ':(glob)docs/**/GUIDA*.md' \
+            ':(glob)docs/**/RUNBOOK*.md' | sort -u)"
+
+          {
+            echo "files<<EOF"
+            echo "$FILES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate didactic compliance
+        run: |
+          if [ -z "${{ steps.changed-guides.outputs.files }}" ]; then
+            echo "Nessuna guida modificata: controllo skipped."
+            exit 0
+          fi
+          python3 scripts/validate_didactic_compliance.py ${{ steps.changed-guides.outputs.files }}
+
   check-markdown-links:
     name: Check Markdown Links
     runs-on: ubuntu-latest

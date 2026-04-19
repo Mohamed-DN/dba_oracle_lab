@@ -23,3 +23,4 @@
 
 ## Regola di avanzamento
 - Passa al livello successivo solo dopo aver completato almeno un ciclo pratico del livello corrente nel lab.
+- Usa quiz/esercizi con criteri pass/fail: [QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md](./QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md)

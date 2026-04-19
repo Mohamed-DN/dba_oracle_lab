@@ -16,3 +16,9 @@ Questa pagina definisce i KPI pubblici minimi per misurare la qualità reale del
 1. Ogni release deve riportare lo stato dei 4 KPI nella sezione Unreleased del changelog o nella release note.
 2. Se un KPI scende sotto target, il merge su `main/master` richiede piano di remediation.
 3. Le evidenze devono essere verificabili da repository/artifact CI.
+
+## Dashboard pubblica KPI
+
+- Output machine-readable: `reliability/dashboard/public_kpi_dashboard.json`
+- Output leggibile: `reliability/dashboard/public_kpi_dashboard.md`
+- Generazione automatica: workflow `.github/workflows/kpi-dashboard.yml`

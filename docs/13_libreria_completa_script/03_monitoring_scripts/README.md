@@ -3,6 +3,12 @@
 > 48 script SQL per il monitoraggio quotidiano di database Oracle RAC.
 > Questi sono gli script che un DBA Enterprise usa **ogni giorno** per diagnosticare problemi.
 
+> ℹ️ Nota riordino: alcuni script storici sono stati riclassificati fuori da Monitoring:
+> - ASM → `../01_asm_storage/community_scripts/`
+> - Backup RMAN → `../06_backup_recovery/community_scripts/`
+> - SQL tuning/SPM → `../07_performance_tuning/community_scripts/tuning/`
+> - Capacity storage (MAXSIZE/BIGFILE) → `../12_utilities/community_scripts/storage/`
+
 ---
 
 ## 📂 Organizzazione per Categoria
