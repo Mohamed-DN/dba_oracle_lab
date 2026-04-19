@@ -98,7 +98,7 @@ Raggruppamento operativo:
 | 17 | [AshTopProcedure.sql](./03_monitoring_scripts/AshTopProcedure.sql) | top PL/SQL in ASH |
 | 18 | [SQL Plan Change.sql](./03_monitoring_scripts/SQL Plan Change.sql) | cambi plan hash |
 | 19 | [SQL Stats.sql](./03_monitoring_scripts/SQL Stats.sql) | statistiche SQL |
-| 20 | [View_UnstablePlan.sql](./03_monitoring_scripts/View_UnstablePlan.sql) | rileva piani instabili |
+| 20 | [View_UnstablePlan.sql](./07_performance_tuning/community_scripts/tuning/View_UnstablePlan.sql) | rileva piani instabili |
 
 Nota: la cartella include anche i pack `community_gwenshap` e `community_jkstill` con molte utility specialistiche.
 
