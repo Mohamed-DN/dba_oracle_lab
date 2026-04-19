@@ -15,6 +15,7 @@ graph TD
         Node1[rac1]
         Node2[rac2]
         Node3[racstby1]
+        Node4[racstby2]
     end
     
     Inventory[(Inventory file: production.ini)]
@@ -25,11 +26,13 @@ graph TD
     ControlNode -- "3. Push via SSH (Idempotent)" --> Node1
     ControlNode -- "3. Push via SSH (Idempotent)" --> Node2
     ControlNode -- "3. Push via SSH (Idempotent)" --> Node3
+    ControlNode -- "3. Push via SSH (Idempotent)" --> Node4
     
     style ControlNode fill:#f9f,stroke:#333,stroke-width:2px
     style Node1 fill:#dff,stroke:#333
     style Node2 fill:#dff,stroke:#333
     style Node3 fill:#dff,stroke:#333
+    style Node4 fill:#dff,stroke:#333
 ```
 
 ---
