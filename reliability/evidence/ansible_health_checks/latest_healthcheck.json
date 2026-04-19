@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-19T19:54:13Z",
+  "ansible_health_checks": {
+    "runbook_validation_passed": 12,
+    "runbook_validation_total": 13,
+    "e2e_passed": 4,
+    "e2e_total": 5,
+    "ci_success_runs": 58,
+    "ci_total_runs": 60,
+    "docs_links_ok": 1240,
+    "docs_links_total": 1248,
+    "incidents": [
+      {"id": "INC-101", "mttr_hours": 6.0},
+      {"id": "INC-102", "mttr_hours": 9.5}
+    ]
+  }
+}

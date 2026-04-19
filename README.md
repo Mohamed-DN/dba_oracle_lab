@@ -11,7 +11,7 @@
 
 ### 📑 Navigazione Rapida
 
-[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md) · [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
 
 ---
 
@@ -29,9 +29,12 @@ cd dba_oracle_lab
 cd vagrant_rac_dataguard
 vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
+# 2C. PERCORSO LITE (single-node, 12-16GB RAM)
+#     docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md
+
 # 3. Dopo il lab, usa gli script operativi ogni giorno
 #    → docs/12_scripts_sql_pronti/  (10 script SQL per emergenze)
-#    → docs/11_runbook_operativi/   (13 runbook DBA)
+#    → docs/11_runbook_operativi/   (14 runbook DBA)
 ```
 
 > 💡 **Primo giorno?** Leggi prima [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) e [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md).
@@ -46,7 +49,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 | 📚 [Documentazione](./docs/) | Guide tematiche per ogni area DBA | 40+ guide |
 | 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
 | 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
-| 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 13 runbook |
+| 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 14 runbook |
 | 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 12 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
 
@@ -56,7 +59,7 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 | Requisito | Dettaglio |
 |---|---|
-| **RAM minima** | **32GB** per l'intero ambiente (4 nodi RAC + DNS). Con 16GB: solo 2 nodi, senza Standby |
+| **RAM minima** | **32GB** per lab full (4 nodi + DNS). **12-16GB** per percorso Lite single-node |
 | **Disco** | ~150GB liberi (VM + ASM disks + software Oracle) |
 | **CPU** | 4+ core consigliati (VirtualBox con VT-x/AMD-V abilitato) |
 | **OS Host** | Windows, Linux, o macOS con VirtualBox 7+ |
@@ -272,7 +275,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Runbook Operativi (`docs/11_runbook_operativi/`)
 
-> **13 runbook giornalieri** — [Indice completo](./docs/11_runbook_operativi/README.md)
+> **14 runbook giornalieri** — [Indice completo](./docs/11_runbook_operativi/README.md)
 
 | # | Procedura | Frequenza |
 |---|---|---|

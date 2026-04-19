@@ -1,0 +1,25 @@
+name: Good first issue
+about: Task guidato per nuovi contributor
+labels: [good first issue, onboarding]
+body:
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope del task
+      description: Definisci il perimetro minimo e i file coinvolti
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criteri di accettazione
+      description: Checklist pass/fail per chi prende il task
+    validations:
+      required: true
+  - type: input
+    id: mentor
+    attributes:
+      label: Mentor/reviewer suggerito
+      description: GitHub handle del reviewer
+    validations:
+      required: true

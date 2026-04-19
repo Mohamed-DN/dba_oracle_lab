@@ -37,6 +37,7 @@
 | 11 | [Review AWR Settimanale](./11_REVIEW_AWR.md) | Ogni venerdì |
 | 12 | [Capacity Planning e Hard Limits](./12_CAPACITY_PLANNING_LIMITI.md) | Controllo mensile limiti ASM/Tablespace |
 | 13 | [Refresh Ambiente di Test](./13_REFRESH_SCHEMA_TEST.md) | Clone schema produzione su Sviluppo (DataPump) |
+| 14 | [Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md) | Drill resilienza rete su laboratorio |
 
 ---
 

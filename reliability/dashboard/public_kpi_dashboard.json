@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-04-19T19:58:06.136833+00:00",
+  "source": "reliability/evidence/ansible_health_checks/latest_healthcheck.json",
+  "kpi": {
+    "ci_success_rate_30d": {
+      "value": 0.9667,
+      "display_percent": 96.67,
+      "target": 0.95,
+      "status": "PASS"
+    },
+    "mttr_incident_hours": {
+      "value": 7.75,
+      "target": 24,
+      "status": "PASS"
+    },
+    "validated_runbook_coverage": {
+      "value": 0.9231,
+      "display_percent": 92.31,
+      "target": 0.9,
+      "status": "PASS"
+    },
+    "docs_link_health": {
+      "value": 0.9936,
+      "display_percent": 99.36,
+      "target": 0.99,
+      "status": "PASS"
+    }
+  },
+  "sli": {
+    "e2e_pass_rate": {
+      "value": 0.8,
+      "display_percent": 80.0
+    }
+  }
+}

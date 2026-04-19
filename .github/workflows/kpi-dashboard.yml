@@ -1,0 +1,32 @@
+name: Public KPI Dashboard
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-kpi-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Generate mock KPI dashboard
+        run: python3 scripts/generate_mock_kpi_dashboard.py
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-kpi-dashboard
+          path: |
+            reliability/dashboard/public_kpi_dashboard.json
+            reliability/dashboard/public_kpi_dashboard.md
