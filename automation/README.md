@@ -41,7 +41,12 @@ automation/
 │   ├── 02_oracle_patching.yml             ← Patching RU (rolling RAC)
 │   ├── 03_oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
 │   ├── 04_daily_health_check.yml          ← Health Check giornaliero
-│   └── 05_rman_backup.yml                 ← Backup RMAN con validazione
+│   ├── 05_rman_backup.yml                 ← Backup RMAN con validazione
+│   ├── 06_dataguard_switchover.yml        ← Switchover DG automatizzato
+│   ├── 07_create_users_tablespaces.yml    ← Automazione User/Tablespace
+│   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
+│   ├── 09_datapump_export.yml             ← Logical backup con expdp
+│   └── 10_manage_services.yml             ← Gestione RAC services
 └── roles/
     ├── oracle_precheck/                   ← Pre-flight checks comuni
     │   └── tasks/main.yml
@@ -85,8 +90,14 @@ ansible -i inventory/lab.ini all -m ping
 # ---- HEALTH CHECK GIORNALIERO ----
 ansible-playbook -i inventory/production.ini playbooks/04_daily_health_check.yml
 
+# ---- DATAGUARD SWITCHOVER ----
+ansible-playbook -i inventory/production.ini playbooks/06_dataguard_switchover.yml
+
 # ---- BACKUP RMAN ----
 ansible-playbook -i inventory/production.ini playbooks/05_rman_backup.yml
+
+# ---- DATAPUMP EXPORT ----
+ansible-playbook -i inventory/production.ini playbooks/09_datapump_export.yml
 
 # ---- PATCHING (rolling, zero downtime) ----
 # Dry-run prima:

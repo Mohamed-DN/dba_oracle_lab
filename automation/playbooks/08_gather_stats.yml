@@ -1,0 +1,42 @@
+---
+- name: Gather Optimizer Statistics Automation
+  hosts: databases
+  become: yes
+  become_user: oracle
+  gather_facts: no
+  vars:
+    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
+    db_name: "RACDB"
+    schema_name: "APP_USER"
+
+  tasks:
+    - name: Generate Gather Stats Script
+      copy:
+        dest: "/tmp/gather_stats.sql"
+        content: |
+          EXEC DBMS_STATS.GATHER_SCHEMA_STATS( -
+            ownname => '{{ schema_name }}', -
+            estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE, -
+            block_sample => TRUE, -
+            method_opt => 'FOR ALL COLUMNS SIZE AUTO', -
+            degree => 4, -
+            cascade => TRUE);
+          EXIT;
+
+    - name: Run DBMS_STATS
+      shell: |
+        export ORACLE_SID={{ db_name }}1
+        export ORACLE_HOME={{ oracle_home }}
+        $ORACLE_HOME/bin/sqlplus -s / as sysdba @/tmp/gather_stats.sql
+      register: stats_output
+      async: 3600
+      poll: 30
+
+    - name: Cleanup File
+      file:
+        path: "/tmp/gather_stats.sql"
+        state: absent
+
+    - name: Output Result
+      debug:
+        msg: "Statistics gathered for {{ schema_name }}: {{ stats_output.stdout }}"

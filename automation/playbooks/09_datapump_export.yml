@@ -1,0 +1,36 @@
+---
+- name: Logical Backup - DataPump Export Automation
+  hosts: databases
+  become: yes
+  become_user: oracle
+  gather_facts: no
+  vars:
+    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
+    db_name: "RACDB"
+    export_schema: "APP_USER"
+    dump_dir: "DATA_PUMP_DIR"
+
+  tasks:
+    - name: Generate timestamp
+      command: date +%Y%m%d_%H%M
+      register: current_time
+
+    - name: Run expdp
+      shell: |
+        export ORACLE_SID={{ db_name }}1
+        export ORACLE_HOME={{ oracle_home }}
+        $ORACLE_HOME/bin/expdp \
+          userid="\"/ as sysdba\"" \
+          schemas={{ export_schema }} \
+          directory={{ dump_dir }} \
+          dumpfile={{ export_schema }}_{{ current_time.stdout }}.dmp \
+          logfile={{ export_schema }}_{{ current_time.stdout }}.log \
+          compression=all \
+          parallel=2
+      register: expdp_out
+      async: 7200
+      poll: 30
+
+    - name: Display Export log
+      debug:
+        msg: "{{ expdp_out.stdout_lines[-10:] }}"
