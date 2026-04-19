@@ -2,7 +2,8 @@ environment           = "lab"
 pm_api_url            = "https://pve.example.local:8006/api2/json"
 pm_api_token_id       = "terraform@pve!lab"
 pm_api_token_secret   = "CHANGEME"
-pm_tls_insecure       = true
+# Keep false for production; set true only in lab with self-signed/untrusted certs.
+pm_tls_insecure       = false
 target_node           = "pve1"
 cloud_init_template   = "tmpl-debian12-cloudinit-v1"
 network_bridge        = "vmbr0"
