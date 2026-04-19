@@ -15,8 +15,8 @@ Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può supera
 > [!TIP]
 > **🚀 L'approccio "Top Tier" (Senior DBA)**
 > Sfrutta gli script provati della community presenti nella tua libreria per analizzare rapidamente lo spazio invece di affidarti a query base:
-> 1. **Check Metriche ASM**: `@./libreria_oracle/01_asm_storage/community_scripts/asm-diskgroup-stat.sql`
-> 2. **Analisi Spazio Oggetti**: `@./libreria_oracle/12_utilities/community_scripts/storage/showspace.sql`
+> 1. **Check Metriche ASM**: `@../13_libreria_completa_script/01_asm_storage/community_scripts/asm-diskgroup-stat.sql`
+> 2. **Analisi Spazio Oggetti**: `@../13_libreria_completa_script/12_utilities/community_scripts/storage/showspace.sql`
 
 ---
 
@@ -24,7 +24,7 @@ Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può supera
 
 Esegui lo script:
 ```sql
-@libreria_oracle/01_asm_storage/asm_limits_ausize.sql
+@../13_libreria_completa_script/01_asm_storage/asm_limits_ausize.sql
 ```
 
 ### Cosa analizzare nell'output:
@@ -48,7 +48,7 @@ Esegui lo script:
 
 Esegui lo script:
 ```sql
-@libreria_oracle/03_monitoring_scripts/tbs_maxsize_limits.sql
+@../13_libreria_completa_script/03_monitoring_scripts/tbs_maxsize_limits.sql
 ```
 
 ### Come interpretarlo:
@@ -70,7 +70,7 @@ Il generatore fornisce il comando esatto per portare il limite al **170%** del v
 
 Esegui:
 ```sql
-@libreria_oracle/03_monitoring_scripts/gen_bigfile_autoextend.sql
+@../13_libreria_completa_script/03_monitoring_scripts/gen_bigfile_autoextend.sql
 ```
 
 ### Esempio output (da copiare e lanciare):

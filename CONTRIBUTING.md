@@ -18,7 +18,7 @@ Contributi, fix e suggerimenti sono benvenuti!
 
 ## Segnala un Bug
 
-Apri una [Issue](../../issues) con:
+Apri una [Issue](https://github.com/Mohamed-DN/dba_oracle_lab/issues) con:
 - Versione Oracle in uso
 - Fase del lab o script coinvolto
 - Errore completo (copia/incolla dall'alert log o terminale)
