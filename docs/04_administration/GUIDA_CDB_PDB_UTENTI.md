@@ -658,4 +658,4 @@ FETCH FIRST 5 ROWS ONLY;
 
 ---
 
-> **→ Prossimo: [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md)** per batch jobs, AWR/ADDM, patching, e sicurezza avanzata.
+> **→ Prossimo: [GUIDA_ATTIVITA_DBA.md](../10_esami_carriera/GUIDA_ATTIVITA_DBA.md)** per batch jobs, AWR/ADDM, patching, e sicurezza avanzata.

@@ -876,4 +876,4 @@ systemctl enable oracle-db goldengate-mgr
 
 ---
 
-> **Prossimo**: [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) — Batch Jobs, AWR, Patching, Data Pump, Security
+> **Prossimo**: [GUIDA_ATTIVITA_DBA.md](../10_esami_carriera/GUIDA_ATTIVITA_DBA.md) — Batch Jobs, AWR, Patching, Data Pump, Security

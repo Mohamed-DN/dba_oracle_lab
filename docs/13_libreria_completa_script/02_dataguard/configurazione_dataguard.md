@@ -4,7 +4,7 @@ Questa pagina e un ponte rapido verso la guida completa del lab.
 
 Guida principale:
 
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 
 Checklist rapida:
 

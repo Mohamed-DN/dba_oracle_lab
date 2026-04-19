@@ -16,4 +16,4 @@ SELECT process, status, sequence# FROM v$managed_standby;
 
 Approfondimento:
 
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md)

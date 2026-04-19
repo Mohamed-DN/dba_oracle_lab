@@ -7,7 +7,7 @@
 
 ## PARTE 1: Architettura Oracle Database
 
-> 📖 Riferimento Lab: [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md)
+> 📖 Riferimento Lab: [GUIDA_ARCHITETTURA_ORACLE.md](../00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md)
 
 ### 1.1 Configurazioni dell'Istanza
 
@@ -78,7 +78,7 @@ Tablespace ──────────────────── Datafile
 
 ## PARTE 2: Gestione delle Istanze
 
-> 📖 Riferimento Lab: [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md)
+> 📖 Riferimento Lab: [GUIDA_COMANDI_DBA.md](../00_fondamenti/GUIDA_COMANDI_DBA.md)
 
 ### 2.1 Startup e Shutdown
 
@@ -169,7 +169,7 @@ CREATE PFILE='/tmp/init_backup.ora' FROM SPFILE;
 
 ## PARTE 3: Utenti, Ruoli e Privilegi
 
-> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md)
+> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md)
 
 ### 3.1 Creazione Utenti e Quote
 
@@ -362,7 +362,7 @@ sqlldr hr/password CONTROL=loader.ctl LOG=load.log BAD=load.bad DISCARD=load.dsc
 
 ## PARTE 6: Strumenti di Accesso
 
-> 📖 Riferimento Lab: [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md)
+> 📖 Riferimento Lab: [GUIDA_COMANDI_DBA.md](../00_fondamenti/GUIDA_COMANDI_DBA.md)
 
 | Strumento | Uso | Comando/URL |
 |---|---|---|
@@ -376,7 +376,7 @@ sqlldr hr/password CONTROL=loader.ctl LOG=load.log BAD=load.bad DISCARD=load.dsc
 
 ## PARTE 7: Oracle Net Services
 
-> 📖 Riferimento Lab: [GUIDA_LISTENER_SERVICES_DBA.md](./GUIDA_LISTENER_SERVICES_DBA.md)
+> 📖 Riferimento Lab: [GUIDA_LISTENER_SERVICES_DBA.md](../04_administration/GUIDA_LISTENER_SERVICES_DBA.md)
 
 ### 7.1 Listener
 
@@ -720,11 +720,11 @@ ALTER DISKGROUP data REBALANCE POWER 8;
 ALTER DISKGROUP data DROP DISK data_03;
 ```
 
-> Nel nostro lab usiamo **ASMLib (`oracleasm`)** per la gestione dei dischi, vedi [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md) e [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md).
+> Nel nostro lab usiamo **ASMLib (`oracleasm`)** per la gestione dei dischi, vedi [Fase 0](../01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) e [Fase 2](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md).
 
 ### 11.2 High Availability: RAC e Data Guard
 
-> 📖 Riferimento Lab: [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md), [Fase 3](./GUIDA_FASE3_RAC_STANDBY.md), [Fase 4](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+> 📖 Riferimento Lab: [Fase 2](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md), [Fase 3](../02_high_availability/GUIDA_FASE3_RAC_STANDBY.md), [Fase 4](../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 
 ```bash
 # RAC — comandi chiave
@@ -750,7 +750,7 @@ dgmgrl sys/<password>
 
 ### 11.3 RMAN Avanzato
 
-> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
+> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
 
 ```bash
 # Backup incrementale Level 0 (full base)
@@ -781,7 +781,7 @@ ALTER DATABASE OPEN RESETLOGS;
 
 ### 11.4 CDB/PDB (Multitenant)
 
-> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md)
+> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md)
 
 ```sql
 -- Crea PDB
@@ -873,7 +873,7 @@ ALTER TABLESPACE sensitive_data ENCRYPTION ONLINE ENCRYPT;
 
 ### 11.7 Patching e Upgrades
 
-> 📖 Riferimento Lab: [Fase 2 — sezione 2.8](./GUIDA_FASE2_GRID_E_RAC.md)
+> 📖 Riferimento Lab: [Fase 2 — sezione 2.8](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md)
 
 ```bash
 # Workflow patching RAC
@@ -903,10 +903,10 @@ SELECT patch_id, status FROM dba_registry_sqlpatch;
 
 ### 11.8 Multitenant Architecture — CDB e PDB (Approfondimento)
 
-> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md)
+> 📖 Riferimento Lab: [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md)
 > **Corso**: Oracle Database: Managing Multitenant Architecture Ed 1
 
-![Oracle Multitenant Architecture](./images/oracle_multitenant_cdb_pdb.png)
+![Oracle Multitenant Architecture](../02_high_availability/images/oracle_multitenant_cdb_pdb.png)
 
 #### 11.8.1 Creare CDB e PDB
 
@@ -1044,7 +1044,7 @@ SELECT * FROM unified_audit_trail WHERE dbusername = 'APP_USER' ORDER BY event_t
 
 ### 11.9 RMAN Backup & Recovery Workshop (Approfondimento)
 
-> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
+> 📖 Riferimento Lab: [GUIDA_FASE5_RMAN_BACKUP.md](../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
 > **Corso**: Oracle Database: Backup and Recovery Workshop
 
 #### 11.9.1 Strategie e Terminologia
@@ -1173,7 +1173,7 @@ RMAN> RESYNC CATALOG;
 
 ### 11.10 Deploy, Patch e Upgrade Workshop
 
-> 📖 Riferimento Lab: [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md), [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md)
+> 📖 Riferimento Lab: [Fase 0](../01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md), [Fase 2 — sez. 2.8](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md)
 > **Corso**: Oracle Database: Deploy, Patch and Upgrade Workshop
 
 #### 11.10.1 Grid Infrastructure per Standalone Server
@@ -1563,12 +1563,12 @@ SELECT DBMS_ADVISOR.GET_TASK_SCRIPT(task_name => 'access_advisor_task') FROM dua
 
 | Argomento Esame | Dove lo Pratichi nel Lab |
 |---|---|
-| DB Architecture | [GUIDA_ARCHITETTURA_ORACLE.md](./GUIDA_ARCHITETTURA_ORACLE.md) |
-| Instance Management | [GUIDA_COMANDI_DBA.md](./GUIDA_COMANDI_DBA.md) |
-| Users/Roles/Privileges | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) |
+| DB Architecture | [GUIDA_ARCHITETTURA_ORACLE.md](../00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) |
+| Instance Management | [GUIDA_COMANDI_DBA.md](../00_fondamenti/GUIDA_COMANDI_DBA.md) |
+| Users/Roles/Privileges | [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md) |
 | Storage Management | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
 | Data Pump / SQL*Loader | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
-| Net Services / Listener | [GUIDA_LISTENER_SERVICES_DBA.md](./GUIDA_LISTENER_SERVICES_DBA.md) |
+| Net Services / Listener | [GUIDA_LISTENER_SERVICES_DBA.md](../04_administration/GUIDA_LISTENER_SERVICES_DBA.md) |
 | Tablespaces / Undo | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) |
 | SQL Fundamentals | Parte 10 di questa guida |
 
@@ -1576,21 +1576,21 @@ SELECT DBMS_ADVISOR.GET_TASK_SCRIPT(task_name => 'access_advisor_task') FROM dua
 
 | Argomento Esame | Dove lo Pratichi nel Lab |
 |---|---|
-| ASM | [Fase 0](./GUIDA_FASE0_SETUP_MACCHINE.md) + [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md) |
-| RAC (High Availability) | [Fase 2](./GUIDA_FASE2_GRID_E_RAC.md) |
-| Data Guard | [Fase 3](./GUIDA_FASE3_RAC_STANDBY.md) + [Fase 4](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
-| Switchover/Failover | [GUIDA_SWITCHOVER](./GUIDA_SWITCHOVER_COMPLETO.md) + [GUIDA_FAILOVER](./GUIDA_FAILOVER_E_REINSTATE.md) |
-| Multitenant (CDB/PDB) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.8 |
-| RMAN Backup/Recovery | [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) + Sezione 11.9 |
+| ASM | [Fase 0](../01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) + [Fase 2](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) |
+| RAC (High Availability) | [Fase 2](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) |
+| Data Guard | [Fase 3](../02_high_availability/GUIDA_FASE3_RAC_STANDBY.md) + [Fase 4](../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
+| Switchover/Failover | [GUIDA_SWITCHOVER](../02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md) + [GUIDA_FAILOVER](../02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md) |
+| Multitenant (CDB/PDB) | [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.8 |
+| RMAN Backup/Recovery | [GUIDA_FASE5_RMAN_BACKUP.md](../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md) + Sezione 11.9 |
 | Flashback Technologies | Sezione 11.9.3 |
-| Deploy/Patch/Upgrade | [Fase 2 — sez. 2.8](./GUIDA_FASE2_GRID_E_RAC.md) + Sezione 11.10 |
+| Deploy/Patch/Upgrade | [Fase 2 — sez. 2.8](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) + Sezione 11.10 |
 | 19c New Features | Sezione 11.11 |
 | Performance Tuning (AWR/ADDM) | [GUIDA_ATTIVITA_DBA.md](./GUIDA_ATTIVITA_DBA.md) + Sezione 11.12 |
 | SQL Tuning | Sezione 11.13 |
-| Security (TDE, Audit) | [GUIDA_CDB_PDB_UTENTI.md](./GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.6 |
-| GoldenGate | [Fase 7](./GUIDA_FASE7_GOLDENGATE.md) |
-| Oracle→PostgreSQL | [GUIDA_MIGRAZIONE_PG](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
+| Security (TDE, Audit) | [GUIDA_CDB_PDB_UTENTI.md](../04_administration/GUIDA_CDB_PDB_UTENTI.md) + Sezione 11.6 |
+| GoldenGate | [Fase 7](../07_replication/GUIDA_FASE7_GOLDENGATE.md) |
+| Oracle→PostgreSQL | [GUIDA_MIGRAZIONE_PG](../07_replication/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) |
 
 ---
 
-> → **Prossimo**: [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) — Migrazione Oracle → PostgreSQL con GoldenGate
+> → **Prossimo**: [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](../07_replication/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) — Migrazione Oracle → PostgreSQL con GoldenGate

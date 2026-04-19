@@ -13,4 +13,4 @@ Checklist:
 
 Guida completa RMAN:
 
-- [GUIDA_RMAN_COMPLETA_19C.md](../../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md)
