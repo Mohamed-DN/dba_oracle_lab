@@ -21,5 +21,5 @@ Questa area contiene script SQL orientati a audit trail e controlli sessione, ad
 
 ## Riferimenti
 
-- [GUIDA_ATTIVITA_DBA.md](../../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_MAA_BEST_PRACTICES.md](../../GUIDA_MAA_BEST_PRACTICES.md)
+- [GUIDA_ATTIVITA_DBA.md](../../10_esami_carriera/GUIDA_ATTIVITA_DBA.md)
+- [GUIDA_MAA_BEST_PRACTICES.md](../../02_high_availability/GUIDA_MAA_BEST_PRACTICES.md)

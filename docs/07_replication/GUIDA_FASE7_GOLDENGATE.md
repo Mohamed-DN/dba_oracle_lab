@@ -186,7 +186,7 @@ Criteri minimi:
 - Standby sano e apply attivo
 - Source stabile prima di toccare GoldenGate
 
-Se Data Guard non è stabile, torna a [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md).
+Se Data Guard non è stabile, torna a [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md).
 
 ---
 
@@ -1316,4 +1316,4 @@ tar czf /tmp/ogg_config_backup_$(date +%Y%m%d).tar.gz \
 
 ---
 
-**→ Prossimo: [FASE 8: Test di Verifica (Data Guard + RMAN + EM + GoldenGate)](./GUIDA_FASE8_TEST_VERIFICA.md)**
+**→ Prossimo: [FASE 8: Test di Verifica (Data Guard + RMAN + EM + GoldenGate)](../01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md)**

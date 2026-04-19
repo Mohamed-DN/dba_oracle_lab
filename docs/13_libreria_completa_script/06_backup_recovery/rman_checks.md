@@ -10,5 +10,5 @@ Query principali in questa cartella:
 
 Riferimenti principali:
 
-- [GUIDA_FASE5_RMAN_BACKUP.md](../../GUIDA_FASE5_RMAN_BACKUP.md)
-- [GUIDA_RMAN_COMPLETA_19C.md](../../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDA_FASE5_RMAN_BACKUP.md](../../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
+- [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md)

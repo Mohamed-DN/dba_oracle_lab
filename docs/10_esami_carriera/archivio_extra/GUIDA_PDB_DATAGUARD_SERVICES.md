@@ -6,7 +6,7 @@
 
 Esegui questa guida:
 
-1. dopo [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md), scenario consigliato;
+1. dopo [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md), scenario consigliato;
 2. oppure subito dopo la Fase 3 solo se Data Guard manuale e stabile.
 
 Scenario raccomandato:

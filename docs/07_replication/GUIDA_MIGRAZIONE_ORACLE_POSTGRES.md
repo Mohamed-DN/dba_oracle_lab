@@ -7,7 +7,7 @@
 
 ## Architettura della Migrazione
 
-![Architettura Migrazione Oracle-PostgreSQL](./images/oracle_to_postgres_flow.png)
+![Architettura Migrazione Oracle-PostgreSQL](../02_high_availability/images/oracle_to_postgres_flow.png)
 
 ```
 ┌──────────────────────┐                    ┌──────────────────────┐
@@ -464,5 +464,5 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 
 ---
 
-> → **Precedente**: [GUIDA_ESAME_REVIEW.md](./GUIDA_ESAME_REVIEW.md) — Ripasso Esami Oracle
-> → **Piano Studio**: [PIANO_LABORATORIO.md](./PIANO_LABORATORIO.md) — Vedi Settimana 6
+> → **Precedente**: [GUIDA_ESAME_REVIEW.md](../10_esami_carriera/GUIDA_ESAME_REVIEW.md) — Ripasso Esami Oracle
+> → **Piano Studio**: [PIANO_LABORATORIO.md](../00_fondamenti/PIANO_LABORATORIO.md) — Vedi Settimana 6

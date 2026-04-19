@@ -14,4 +14,4 @@ Flusso tipico:
 
 Consulta anche:
 
-- [GUIDA_COMANDI_DBA.md](../../GUIDA_COMANDI_DBA.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)

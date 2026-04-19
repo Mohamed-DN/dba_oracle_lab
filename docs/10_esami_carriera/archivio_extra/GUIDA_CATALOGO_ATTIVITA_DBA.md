@@ -16,19 +16,19 @@
 
 | Area | Cosa fa il DBA | Frequenza tipica | Dove la fai nel repo |
 |---|---|---|---|
-| **Disponibilita e startup/shutdown** | Verifica istanze, servizi, listener, cluster resources, restart controllati | Giornaliera / su change | [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md), [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
-| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
-| **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md), [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
-| **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche | Giornaliera / settimanale / su incidente | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md) |
-| **Storage, ASM e capacity** | Controlla tablespace, FRA, ASM disk group, crescita dati, autoextend, soglie | Giornaliera / settimanale / mensile | [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md), [GUIDA_AGGIUNTA_DISCHI_ASM.md](../GUIDA_AGGIUNTA_DISCHI_ASM.md) |
-| **Security e accessi** | Gestisce utenti, ruoli, privilegi, auditing, wallet, TDE, hardening | Settimanale / mensile / su richiesta | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
+| **Disponibilita e startup/shutdown** | Verifica istanze, servizi, listener, cluster resources, restart controllati | Giornaliera / su change | [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md), [GUIDA_LISTENER_SERVICES_DBA.md](../../04_administration/GUIDA_LISTENER_SERVICES_DBA.md) |
+| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
+| **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDA_FASE5_RMAN_BACKUP.md](../../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md), [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) |
+| **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche | Giornaliera / settimanale / su incidente | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md) |
+| **Storage, ASM e capacity** | Controlla tablespace, FRA, ASM disk group, crescita dati, autoextend, soglie | Giornaliera / settimanale / mensile | [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md), [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) |
+| **Security e accessi** | Gestisce utenti, ruoli, privilegi, auditing, wallet, TDE, hardening | Settimanale / mensile / su richiesta | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_CDB_PDB_UTENTI.md](../../04_administration/GUIDA_CDB_PDB_UTENTI.md) |
 | **Scheduler e batch** | Controlla job, finestre, chains, fallimenti, credenziali e retry | Giornaliera / settimanale | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
-| **HA e DR** | Gestisce RAC, Data Guard, switchover, failover, reinstate, lag, protection mode | Giornaliera / mensile / drill | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md), [GUIDA_SWITCHOVER_COMPLETO.md](../GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](../GUIDA_FAILOVER_E_REINSTATE.md) |
-| **Network, listener e services** | Verifica SCAN, listener statici/dinamici, srvctl, TNS, service placement | Giornaliera / su incident | [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md) |
-| **Multitenant e lifecycle PDB** | Crea, clona, apre/chiude, plug/unplug, refresh, controlla servizi PDB | Su richiesta / mensile | [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
-| **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB | Su richiesta / progetto | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
-| **Patching e lifecycle software** | Applica RU/OJVM, aggiorna OPatch, esegue rollback piano, verifica post-patch | Mensile / trimestrale / change | [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md), [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md) |
-| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | [TESTLOG_GOLDENGATE_TEMPLATE.md](../TESTLOG_GOLDENGATE_TEMPLATE.md), [PIANO_LABORATORIO.md](../PIANO_LABORATORIO.md) |
+| **HA e DR** | Gestisce RAC, Data Guard, switchover, failover, reinstate, lag, protection mode | Giornaliera / mensile / drill | [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md), [GUIDA_SWITCHOVER_COMPLETO.md](../../02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md), [GUIDA_FAILOVER_E_REINSTATE.md](../../02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md) |
+| **Network, listener e services** | Verifica SCAN, listener statici/dinamici, srvctl, TNS, service placement | Giornaliera / su incident | [GUIDA_LISTENER_SERVICES_DBA.md](../../04_administration/GUIDA_LISTENER_SERVICES_DBA.md) |
+| **Multitenant e lifecycle PDB** | Crea, clona, apre/chiude, plug/unplug, refresh, controlla servizi PDB | Su richiesta / mensile | [GUIDA_CDB_PDB_UTENTI.md](../../04_administration/GUIDA_CDB_PDB_UTENTI.md) |
+| **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB | Su richiesta / progetto | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) |
+| **Patching e lifecycle software** | Applica RU/OJVM, aggiorna OPatch, esegue rollback piano, verifica post-patch | Mensile / trimestrale / change | [GUIDA_PATCHING_RAC.md](../../06_patching_upgrade/GUIDA_PATCHING_RAC.md), [GUIDA_UPGRADE_RU_RAC.md](../../06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md) |
+| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | [TESTLOG_GOLDENGATE_TEMPLATE.md](../../07_replication/TESTLOG_GOLDENGATE_TEMPLATE.md), [PIANO_LABORATORIO.md](../../00_fondamenti/PIANO_LABORATORIO.md) |
 
 ## 3. Attivita complete per dominio operativo
 
@@ -67,8 +67,8 @@ Attivita tipiche:
 - tuning soglie e notifiche.
 
 Nel tuo repo:
-- [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
-- [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md)
+- [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)
 
 ## 3.3 Backup, restore test e recovery readiness
 
@@ -87,8 +87,8 @@ Segnali di maturita:
 - RPO/RTO devono essere esplicitati e verificati.
 
 Nel tuo repo:
-- [GUIDA_FASE5_RMAN_BACKUP.md](../GUIDA_FASE5_RMAN_BACKUP.md)
-- [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDA_FASE5_RMAN_BACKUP.md](../../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
+- [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md)
 
 ## 3.4 Performance e tuning
 
@@ -109,8 +109,8 @@ In RAC serve anche guardare:
 
 Nel tuo repo:
 - [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md)
-- [TOP_100_SCRIPT_DBA.md](../TOP_100_SCRIPT_DBA.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)
+- [TOP_100_SCRIPT_DBA.md](../../05_performance/TOP_100_SCRIPT_DBA.md)
 
 ## 3.5 Storage, tablespace, ASM e capacity planning
 
@@ -131,8 +131,8 @@ Output minimo:
 - soglie operative condivise.
 
 Nel tuo repo:
-- [GUIDA_COMANDI_DBA.md](../GUIDA_COMANDI_DBA.md)
-- [GUIDA_AGGIUNTA_DISCHI_ASM.md](../GUIDA_AGGIUNTA_DISCHI_ASM.md)
+- [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)
+- [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md)
 
 ## 3.6 Security, account lifecycle e auditing
 
@@ -153,7 +153,7 @@ Controlli chiave:
 
 Nel tuo repo:
 - [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md)
+- [GUIDA_CDB_PDB_UTENTI.md](../../04_administration/GUIDA_CDB_PDB_UTENTI.md)
 
 ## 3.7 Scheduler, batch e manutenzione automatica
 
@@ -186,9 +186,9 @@ Attivita tipiche:
 - verifica che backup e monitoraggio continuino dopo role transition.
 
 Nel tuo repo:
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../GUIDA_FASE4_DATAGUARD_DGMGRL.md)
-- [GUIDA_SWITCHOVER_COMPLETO.md](../GUIDA_SWITCHOVER_COMPLETO.md)
-- [GUIDA_FAILOVER_E_REINSTATE.md](../GUIDA_FAILOVER_E_REINSTATE.md)
+- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDA_SWITCHOVER_COMPLETO.md](../../02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md)
+- [GUIDA_FAILOVER_E_REINSTATE.md](../../02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md)
 
 ## 3.9 Listener, SCAN, services e connettivita
 
@@ -206,7 +206,7 @@ Attivita tipiche:
 - relocate di servizi per manutenzione o bilanciamento.
 
 Nel tuo repo:
-- [GUIDA_LISTENER_SERVICES_DBA.md](../GUIDA_LISTENER_SERVICES_DBA.md)
+- [GUIDA_LISTENER_SERVICES_DBA.md](../../04_administration/GUIDA_LISTENER_SERVICES_DBA.md)
 
 ## 3.10 Multitenant: CDB/PDB lifecycle
 
@@ -221,7 +221,7 @@ Attivita tipiche:
 - controllare stato e monitoraggio per singola PDB.
 
 Nel tuo repo:
-- [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md)
+- [GUIDA_CDB_PDB_UTENTI.md](../../04_administration/GUIDA_CDB_PDB_UTENTI.md)
 
 ## 3.11 Data movement: Data Pump, clone, refresh
 
@@ -241,7 +241,7 @@ Attivita tipiche:
 
 Nel tuo repo:
 - [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md)
 
 ## 3.12 Patching, upgrade e software lifecycle
 
@@ -262,8 +262,8 @@ Per RAC/Data Guard il DBA deve anche:
 - documentare baseline prima e dopo.
 
 Nel tuo repo:
-- [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md)
-- [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md)
+- [GUIDA_PATCHING_RAC.md](../../06_patching_upgrade/GUIDA_PATCHING_RAC.md)
+- [GUIDA_UPGRADE_RU_RAC.md](../../06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md)
 
 ## 3.13 Documentazione, evidenze e change management
 

@@ -273,7 +273,7 @@ ip -6 addr show enp0s3
 
 L'errore `PRVG-2019` durante `cluvfy` indica che la trust SSH non è pronta.
 Configura l'equivalenza utenti su **entrambi i nodi** per tutte le utenze operative:
-Per reset completo e troubleshooting (Permission denied, Host key verification failed), vedi anche: [GUIDA_SSH_KEYS_RAC](./GUIDA_SSH_KEYS_RAC.md).
+Per reset completo e troubleshooting (Permission denied, Host key verification failed), vedi anche: [GUIDA_SSH_KEYS_RAC](../01_lab_setup/GUIDA_SSH_KEYS_RAC.md).
 
 ```bash
 # Step 0 (opzionale) reset totale chiavi su entrambi i nodi

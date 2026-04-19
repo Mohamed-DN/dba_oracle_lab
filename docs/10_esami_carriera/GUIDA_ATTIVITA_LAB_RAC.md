@@ -377,4 +377,4 @@ SELECT * FROM hr.test_gg ORDER BY 1 DESC FETCH FIRST 5 ROWS ONLY;
 
 ---
 
-*Torna al [README principale](./README.md) — Vedi anche il [Piano di Studio](./PIANO_LABORATORIO.md)*
+*Torna al [README principale](../../README.md) — Vedi anche il [Piano di Studio](../00_fondamenti/PIANO_LABORATORIO.md)*
