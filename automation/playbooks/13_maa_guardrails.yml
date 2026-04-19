@@ -1,0 +1,18 @@
+---
+- name: Oracle MAA guardrails baseline
+  hosts: oracle_primary[0]
+  gather_facts: false
+  vars:
+    oracle_env:
+      ORACLE_HOME: "{{ oracle_home }}"
+      ORACLE_SID: "{{ oracle_sid }}"
+      PATH: "{{ oracle_home }}/bin:{{ ansible_env.PATH }}"
+  environment: "{{ oracle_env }}"
+  tasks:
+    - name: Apply MAA guardrails role
+      ansible.builtin.include_role:
+        name: maa_guardrails
+      tags:
+        - maa
+        - dataguard
+        - reliability

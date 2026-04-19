@@ -1,0 +1,58 @@
+metadata:
+  owner: dba_oracle_lab
+  version: 1
+  last_reviewed_utc: "2026-04-19T00:00:00Z"
+  oracle_framework: "Oracle Maximum Availability Architecture (MAA)"
+  notes:
+    - "Questa è la fonte unica per la compliance MAA del repository."
+    - "Le evidenze devono puntare a file/versioni presenti nel repository."
+
+controls:
+  - id: MAA-01
+    title: Data Guard Broker validation
+    status: partial
+    evidence:
+      - automation/playbooks/06_dataguard_switchover.yml
+      - automation/playbooks/13_maa_guardrails.yml
+  - id: MAA-02
+    title: Protection parameters (db_block_*, lost_write)
+    status: partial
+    evidence:
+      - docs/02_high_availability/GUIDA_MAA_BEST_PRACTICES.md
+      - automation/roles/maa_guardrails/tasks/main.yml
+  - id: MAA-03
+    title: Flashback readiness
+    status: partial
+    evidence:
+      - docs/02_high_availability/GUIDA_FLASHBACK_DATABASE.md
+      - automation/roles/maa_guardrails/tasks/main.yml
+  - id: MAA-04
+    title: FSFO operationalization
+    status: planned
+    evidence:
+      - docs/02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md
+  - id: MAA-05
+    title: E2E validation evidence on PR
+    status: implemented
+    evidence:
+      - .github/workflows/e2e-lab-smoke.yml
+      - reliability/evidence/
+  - id: MAA-06
+    title: DR periodic drills with evidence
+    status: implemented
+    evidence:
+      - .github/workflows/dr-drill.yml
+      - reliability/evidence/
+  - id: MAA-07
+    title: Security gates (secret scan, SAST, IaC, policies)
+    status: implemented
+    evidence:
+      - .github/workflows/security-gates.yml
+      - policy/ansible_vars.rego
+  - id: MAA-08
+    title: Release governance (SemVer + changelog)
+    status: implemented
+    evidence:
+      - .github/workflows/release-governance.yml
+      - VERSION
+      - CHANGELOG.md

@@ -1,0 +1,11 @@
+---
+maa_enforce_compliance: true
+maa_set_broker_thresholds: false
+maa_apply_lag_threshold_seconds: 900
+maa_transport_lag_threshold_seconds: 900
+maa_transport_disconnected_threshold_seconds: 45
+
+maa_expected_db_block_checking: "MEDIUM"
+maa_expected_db_block_checksum: "TYPICAL"
+maa_expected_db_lost_write_protect: "TYPICAL"
+maa_expected_flashback_on: "YES"
