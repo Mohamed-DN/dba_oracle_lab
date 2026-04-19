@@ -64,7 +64,7 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [` Gestione code oracle per NIX.sql`](./03_monitoring_scripts/%20Gestione%20code%20oracle%20per%20NIX.sql) | `-` | MEDIO | OK | grant da dare anche all'utente OWNER delle queue tables per corretto funzionamento |
+| [`Gestione code oracle per NIX.sql`](./03_monitoring_scripts/%20Gestione%20code%20oracle%20per%20NIX.sql) | `-` | MEDIO | OK | grant da dare anche all'utente OWNER delle queue tables per corretto funzionamento |
 | [`___ Situation.sql`](./03_monitoring_scripts/___%20Situation.sql) | `-` | ALTO | OK | ACTIVE SESSIONS |
 | [`ActiveSessionHistoryQueries.sql`](./03_monitoring_scripts/ActiveSessionHistoryQueries.sql) | `-` | BASSO | OK | Script operativo Oracle per: ActiveSessionHistoryQueries. |
 | [`ASH.sql`](./03_monitoring_scripts/ASH.sql) | `-` | MEDIO | OK | https://blogs.oracle.com/oraclemagazine/beginning-performance-tuning-active-session-history |
@@ -618,7 +618,7 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`sysaux_fix.sql`](./03_monitoring_scripts/sysaux_fix.sql) | `-` | ALTO | OK | WRI$_OPTSTAT_HISTGRM_HISTORY non può essere shrinkata... dovrebbe contenere 1 mese di dati |
 | [`View_Blocking.sql`](./03_monitoring_scripts/View_Blocking.sql) | `-` | BASSO | OK | Mostra le sessioni bloccanti |
 | [`View_Cpu_Consumer.sql`](./03_monitoring_scripts/View_Cpu_Consumer.sql) | `-` | ALTO | OK | Script operativo Oracle per: View Cpu Consumer. |
-| [`View_Cpu_Hist.sql`](./03_monitoring_scripts/View_Cpu_Hist.sql) | `-` | MEDIO | OK | round((round((nw.value - ol.value) / 100)) / ((cast(nw.end_interval_time as date) - cast(ol.end_interval_time as date)) * 24 *60 * 60),2) us |
+| [`View_Cpu_Hist.sql`](./03_monitoring_scripts/View_Cpu_Hist.sql) | `-` | MEDIO | OK | `round((round((nw.value - ol.value) / 100)) / ((cast(nw.end_interval_time as date) - cast(ol.end_interval_time as date)) * 24 *60 * 60),2)` us |
 | [`View_IO_Database.sql`](./03_monitoring_scripts/View_IO_Database.sql) | `-` | BASSO | OK | Total|Small|IOPS" questa colonna quella da considerare per calcolare il numero di I/O al secondo fatti dal database |
 | [`View_IO_Hist.sql`](./03_monitoring_scripts/View_IO_Hist.sql) | `-` | BASSO | OK | 'control file parallel write', |
 | [`View_IO_RealTime.sql`](./03_monitoring_scripts/View_IO_RealTime.sql) | `-` | BASSO | OK | 'control file parallel write' |
@@ -1048,4 +1048,3 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`Job monitoring TEMP e UNDO TABLESPACE.sql`](./12_utilities/Job%20monitoring%20TEMP%20e%20UNDO%20TABLESPACE.sql) | `-` | ALTO | OK | Connettersi con utenza DBA_OP |
 | [`mview_refresh_procedure.txt`](./12_utilities/mview_refresh_procedure.txt) | `-` | ALTO | OK | inserimento tabelle di configurazione |
 | [`TEMP_and_UNDO_monitor.sql`](./12_utilities/TEMP_and_UNDO_monitor.sql) | `-` | ALTO | OK | Monitoraggio capacità tablespace/TEMP/UNDO e prevenzione saturazione. |
-
