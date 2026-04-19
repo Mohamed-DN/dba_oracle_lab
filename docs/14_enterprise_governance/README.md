@@ -12,3 +12,8 @@ Questa sezione raccoglie gli standard enterprise per qualità, sicurezza, releas
 - [MAA Scorecard](./MAA_SCORECARD.md)
 - [MAA Scorecard Source of Truth (YAML)](./MAA_SCORECARD_SOURCE_OF_TRUTH.yml)
 - [Production Profile](./PRODUCTION_PROFILE.md)
+- [Public KPI Scoreboard](./PUBLIC_KPI_SCOREBOARD.md)
+- [Go/No-Go Merge Policy](./GO_NO_GO_MASTER_MERGE_POLICY.md)
+- [Didactic Excellence Standard](./DIDACTIC_EXCELLENCE_STANDARD.md)
+- [Community Roadmap](./COMMUNITY_ROADMAP.md)
+

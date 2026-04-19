@@ -16,3 +16,13 @@ Questa cartella definisce i KPI/SLO minimi da tracciare con evidenze continue.
 - Salvare i log in `reliability/evidence/`.
 - Ogni drill o test deve produrre artifact.
 - Le evidenze vanno collegate nella scorecard MAA SOT.
+
+## KPI pubblici aggiuntivi (governance)
+
+| KPI | Descrizione | Target iniziale |
+|---|---|---|
+| ci_success_rate_30d | Success rate workflow principali su 30 giorni | >= 0.95 |
+| mttr_incident_hours | Tempo medio ripristino incidenti P1/P2 | <= 24 |
+| validated_runbook_coverage | Copertura runbook critici validati | >= 0.90 |
+| docs_link_health | Salute link documentazione in CI | >= 0.99 |
+
