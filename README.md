@@ -69,26 +69,38 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 ## 🏗️ Architettura del Lab
 
-```text
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                        IL TUO PC (HOST VIRTUALBOX)                       ║
-║                                                                           ║
-║   Rete Pubblica: 192.168.56.0/24                                         ║
-║   ┌─────────┐  ┌────────┐  ┌────────┐  ┌──────────┐  ┌──────────┐       ║
-║   │ dnsnode │  │  rac1  │  │  rac2  │  │ racstby1 │  │ racstby2 │       ║
-║   │  .56.50 │  │.56.101 │  │.56.102 │  │ .56.111  │  │ .56.112  │       ║
-║   │ DNS     │  │ 8G/4CPU│  │ 8G/4CPU│  │ 8G/4CPU  │  │ 8G/4CPU  │       ║
-║   └─────────┘  └───┬────┘  └───┬────┘  └────┬─────┘  └────┬─────┘       ║
-║                     │           │            │              │              ║
-║               Interconnect 1         Interconnect 2                       ║
-║               192.168.1.0/24         192.168.2.0/24                       ║
-║               (Cache Fusion)         (Cache Fusion)                       ║
-║                                                                           ║
-║   RAC PRIMARY (RACDB)  ←── Data Guard (LGWR ASYNC) ──→  RAC STANDBY     ║
-║   +CRS(6GB) +DATA(20GB)                                 +CRS +DATA +RECO║
-║   +RECO(15GB)                                                             ║
-║   GoldenGate Extract ──────────────────────→ Target (locale/OCI)          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
+```mermaid
+flowchart TD
+    subgraph "Host (Il Tuo PC)"
+        dns("DNS Node\n192.168.56.50")
+        
+        subgraph "Primary DataCenter"
+            rac1[("rac1\n192.168.56.101\n8G/4CPU")]
+            rac2[("rac2\n192.168.56.102\n8G/4CPU")]
+            db1>"RAC PRIMARY (RACDB)\nASM: +CRS, +DATA, +RECO"]
+            rac1 --- db1
+            rac2 --- db1
+        end
+        
+        subgraph "Standby DataCenter"
+            racstby1[("racstby1\n192.168.56.111\n8G/4CPU")]
+            racstby2[("racstby2\n192.168.56.112\n8G/4CPU")]
+            db2>"RAC STANDBY (RACDB_DG)\nASM: +CRS, +DATA, +RECO"]
+            racstby1 --- db2
+            racstby2 --- db2
+        end
+        
+        dns -.-> rac1
+        dns -.-> rac2
+        dns -.-> racstby1
+        
+        db1 == "Data Guard (LGWR ASYNC)" ==> db2
+        db1 -. "GoldenGate Extract" .-> gg("Target (Locale / OCI)")
+        
+        style db1 fill:#f9d0c4,stroke:#333,stroke-width:2px
+        style db2 fill:#c4e2f9,stroke:#333,stroke-width:2px
+        style gg fill:#d4c4f9,stroke:#333
+    end
 ```
 
 ---
