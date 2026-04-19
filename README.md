@@ -11,7 +11,7 @@
 
 ### 📑 Navigazione Rapida
 
-[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md) · [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [🧭 Percorsi supportati](#-percorsi-supportati-vagrant-storico-vs-proxmox-moderno) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md) · [🧱 Track Proxmox 1→5](./docs/15_proxmox_track/README.md) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md) · [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
 
 ---
 
@@ -41,6 +41,17 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 ---
 
+## 🧭 Percorsi supportati: Vagrant storico vs Proxmox moderno
+
+| Percorso | Quando usarlo | Stack principale | Link |
+|---|---|---|---|
+| **Vagrant storico (attuale)** | Vuoi riprodurre rapidamente il lab RAC/Data Guard classico in locale | VirtualBox + Vagrant + Oracle RAC/DG | [vagrant_rac_dataguard/README.md](./vagrant_rac_dataguard/README.md) |
+| **Proxmox moderno (nuovo track)** | Vuoi evolvere verso IaC + control plane + Kubernetes | Proxmox + Terraform + Ansible/AWX + K3s/RKE2 | [docs/15_proxmox_track/README.md](./docs/15_proxmox_track/README.md) |
+
+> Il percorso Vagrant resta pienamente supportato; il track Proxmox introduce una roadmap moderna in 5 fasi.
+
+---
+
 ## ⚡ Cosa Trovi in Questo Repository
 
 | Sezione | Contenuto | Quantità |
@@ -52,6 +63,8 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 | 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 14 runbook |
 | 🤖 [Automazione Ansible](./automation/) | Playbook production-grade + ruoli library-grade | 13 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
+| 🧱 [Track Proxmox 1→5](./docs/15_proxmox_track/README.md) | Foundation Proxmox, IaC Terraform, AWX, Oracle silent, K8s | percorso guidato |
+| 🌍 [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md) | Provisioning 3 VM con output metadati per Ansible/AWX | baseline IaC |
 
 ---
 

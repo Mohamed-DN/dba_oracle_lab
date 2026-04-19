@@ -24,6 +24,9 @@ and this project follows Semantic Versioning.
 - Reliability KPI baseline document (`reliability/kpi/README.md`).
 - New role-based Ansible baseline (`automation/roles/maa_guardrails`) and playbook `13_maa_guardrails.yml`.
 - PR E2E asset validation now uploads mandatory evidence artifact.
+- New Proxmox modernization track documentation (`docs/15_proxmox_track/`) with phased roadmap 1->5.
+- Terraform Proxmox baseline (`infrastructure/proxmox/terraform/`) for 3-VM provisioning and metadata export to Ansible/AWX.
+- CI baseline job to validate Proxmox-track required artifacts and Terraform formatting.
 
 ## [0.1.0] - 2026-04-19
 
