@@ -28,12 +28,13 @@ jobs:
 
       - name: Verify lab provisioning assets exist
         run: |
-          test -f vagrant_rac_dataguard/Vagrantfile
+          test -f vagrant_rac_dataguard/dns/Vagrantfile
+          test -f vagrant_rac_dataguard/rac1/Vagrantfile
           test -f vagrant_rac_dataguard/shared_scripts/preflight_checks.sh
 
       - name: Verify key controls are encoded in playbooks
         run: |
-          grep -q "v\\$dataguard_stats" automation/playbooks/04_daily_health_check.yml
+          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml
           grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
           grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
 
@@ -48,7 +49,8 @@ jobs:
             echo "checked=automation/playbooks/04_daily_health_check.yml"
             echo "checked=automation/playbooks/06_dataguard_switchover.yml"
             echo "checked=automation/playbooks/11_create_cdb_pdb.yml"
-            echo "checked=vagrant_rac_dataguard/Vagrantfile"
+            echo "checked=vagrant_rac_dataguard/dns/Vagrantfile"
+            echo "checked=vagrant_rac_dataguard/rac1/Vagrantfile"
             echo "checked=vagrant_rac_dataguard/shared_scripts/preflight_checks.sh"
           } | tee "${out}"
 
@@ -72,16 +74,15 @@ jobs:
       - name: Preflight host dependencies
         run: |
           vagrant --version
-          virtualboxmanage --version
+          VBoxManage --version
           ansible --version
 
       - name: Provision reduced topology
-        working-directory: vagrant_rac_dataguard
         env:
           LAB_REDUCED: "true"
         run: |
-          vagrant up dns
-          vagrant up rac1
+          (cd vagrant_rac_dataguard/dns && vagrant up)
+          (cd vagrant_rac_dataguard/rac1 && vagrant up)
 
       - name: Functional verification RAC/Data Guard/CDB-PDB
         run: |
