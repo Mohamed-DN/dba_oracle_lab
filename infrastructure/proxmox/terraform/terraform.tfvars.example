@@ -1,0 +1,20 @@
+environment           = "lab"
+pm_api_url            = "https://pve.example.local:8006/api2/json"
+pm_api_token_id       = "terraform@pve!lab"
+pm_api_token_secret   = "CHANGEME"
+# Keep false for production; set true only in lab with self-signed/untrusted certs.
+pm_tls_insecure       = false
+target_node           = "pve1"
+cloud_init_template   = "tmpl-debian12-cloudinit-v1"
+network_bridge        = "vmbr0"
+storage_pool          = "local-lvm"
+vm_gateway            = "192.168.56.1"
+vm_dns                = "1.1.1.1"
+ci_user               = "dbaadmin"
+ci_ssh_public_key     = "ssh-ed25519 AAAA..."
+
+vms = {
+  vm01 = { ip = "192.168.56.201", role = "control-plane" }
+  vm02 = { ip = "192.168.56.202", role = "worker" }
+  vm03 = { ip = "192.168.56.203", role = "worker" }
+}
