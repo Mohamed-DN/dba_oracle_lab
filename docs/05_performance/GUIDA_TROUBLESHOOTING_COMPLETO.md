@@ -15,40 +15,47 @@
   "Non so cosa sia → chiamo Oracle Support"
 
 ✅ GIUSTO (il DBA metodico):
-  1. OSSERVA: qual è il SINTOMO esatto?
-  2. MISURA: cosa dicono i DATI (AWR, ASH, v$session)?
-  3. IPOTIZZA: basandoti sui dati, qual è la CAUSA più probabile?
-  4. VERIFICA: il cambiamento ha risolto il problema?
-  5. DOCUMENTA: scrivi cosa hai fatto per la prossima volta.
+
+```mermaid
+flowchart TD
+    Start[Problema: Performance Lenta] --> Observe[OSSERVA: Qual è il sintomo esatto?]
+    Observe --> Measure[MISURA: Cosa dicono i dati?<br/>AWR, ASH, v$session]
+    Measure --> Hypothesize[IPOTIZZA: Qual è la causa più probabile?]
+    Hypothesize --> Verify[VERIFICA: Il cambiamento ha risolto?]
+    Verify -- No --> Hypothesize
+    Verify -- Yes --> Document[DOCUMENTA: Scrivi il runbook per il futuro]
+```
+
+1. **OSSERVA**: qual è il SINTOMO esatto?
+2. **MISURA**: cosa dicono i DATI (AWR, ASH, v$session)?
+3. **IPOTIZZA**: basandoti sui dati, qual è la CAUSA più probabile?
+4. **VERIFICA**: il cambiamento ha risolto il problema?
+5. **DOCUMENTA**: scrivi cosa hai fatto per la prossima volta.
 ```
 
 ### 1.2 La Piramide del Tuning (Top-Down)
 
-Oracle raccomanda un approccio **top-down**: parti dal livello più alto (business) e scendi verso il basso (hardware). Ogni livello ha un impatto decrescente.
+Oracle raccomanda un approccio **top-down**: parti dal livello più alto (business) e scendi verso il basso (hardware).
 
+```mermaid
+graph TD
+    Level1[1. Business Rules & Requirements] --- Level2[2. Data Design - Schema/Partitioning]
+    Level2 --- Level3[3. Application Design - SQL Design]
+    Level3 --- Level4[4. SQL Tuning - Plans/Indexes]
+    Level4 --- Level5[5. Instance Tuning - SGA/PGA]
+    Level5 --- Level6[6. I/O & Storage Tuning]
+    Level6 --- Level7[7. OS & Network Tuning]
+    
+    style Level1 fill:#f96,stroke:#333,stroke-width:4px
+    style Level2 fill:#f96,stroke:#333,stroke-width:3px
+    style Level3 fill:#f96,stroke:#333,stroke-width:2px
+    style Level4 fill:#ff9,stroke:#333
+    style Level5 fill:#ff9,stroke:#333
+    style Level6 fill:#9cf,stroke:#333
+    style Level7 fill:#9cf,stroke:#333
 ```
-               ▲ IMPATTO MASSIMO
-              ╱ ╲
-             ╱   ╲
-            ╱  1  ╲   Business Rules & Requirements
-           ╱───────╲   "Serve davvero questa query? Può girare di notte?"
-          ╱    2    ╲   Data Design (Schema, Partitioning)
-         ╱───────────╲   "La tabella ha 500M righe senza partizioni?"
-        ╱      3      ╲   Application Design (SQL, round trips)
-       ╱───────────────╲   "L'app fa 10.000 query per caricare una pagina?"
-      ╱        4        ╲   SQL Tuning (Plan, Indici)
-     ╱───────────────────╲   "La query fa full table scan su 500M righe?"
-    ╱          5          ╲   Instance Tuning (SGA, PGA, parametri)
-   ╱───────────────────────╲   "La buffer cache è troppo piccola?"
-  ╱            6            ╲   I/O & Storage
- ╱─────────────────────────╲   "Il disco è saturo?"
-╱              7              ╲   OS & Network
-───────────────────────────────   "La CPU è al 100%?"
-               ▼ IMPATTO MINIMO
 
-REGOLA: Non ottimizzare il livello 7 se non hai verificato i livelli 1-6.
-Un indice mancante (livello 4) ha più impatto di 100 GB di RAM extra (livello 5).
-```
+> **Regola d'oro**: Non ottimizzare il livello 7 (OS) se non hai verificato i livelli 1-4. Un indice mancante (livello 4) ha molto più impatto di 100 GB di RAM extra (livello 5).
 
 ### 1.3 Il Concetto Fondamentale: DB Time e Wait Events
 
@@ -106,23 +113,14 @@ I wait events sono organizzati in Wait Classes:
 
 ### 2.1 Mappa degli Strumenti
 
-```
-  URGENZA / TEMPO
-  ▲
-  │  "È ADESSO!"              "È successo IERI"           "Trend MENSILE"
-  │
-  │  ┌──────────────┐         ┌──────────────┐           ┌──────────────┐
-  │  │ v$session     │         │ AWR Report   │           │ AWR Baseline │
-  │  │ v$session_wait│         │ (30-60 min)  │           │ AWR Compare  │
-  │  │ v$active_     │         │              │           │ Periods      │
-  │  │  session_     │         │ ASH Report   │           │              │
-  │  │  history      │         │ (periodo     │           │ ADDM History │
-  │  │              │         │  specifico)  │           │              │
-  │  │ TOP command  │         │              │           │ Statspack    │
-  │  │ iostat       │         │ ADDM Report  │           │              │
-  │  └──────────────┘         └──────────────┘           └──────────────┘
-  │      REAL-TIME                STORICO                  TREND
-  └────────────────────────────────────────────────────────────────────▶
+Scegli lo strumento giusto in base alla "finestra temporale" del problema.
+
+```mermaid
+timeline
+    title Strategia di Diagnostica Oracle
+    Real-Time (Adesso) : v$session : v$session_wait : ASH (v$active_session_history) : TOP/iostat
+    Storico (Ieri/Ore fa) : AWR Report (awrrpt) : ASH Report (ashrpt) : ADDM Report : Alert Log
+    Trend (Settimane/Mesi) : AWR Baseline : AWR Compare Periods : Staistics History
 ```
 
 ### 2.2 Strumento 1: v$session — "Cosa sta succedendo ADESSO"
