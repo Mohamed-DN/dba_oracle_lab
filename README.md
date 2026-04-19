@@ -77,6 +77,8 @@ flowchart TD
         subgraph "Primary DataCenter"
             rac1[("rac1\n192.168.56.101\n8G/4CPU")]
             rac2[("rac2\n192.168.56.102\n8G/4CPU")]
+            
+            rac1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> rac2
             db1>"RAC PRIMARY (RACDB)\nASM: +CRS, +DATA, +RECO"]
             rac1 --- db1
             rac2 --- db1
@@ -85,6 +87,8 @@ flowchart TD
         subgraph "Standby DataCenter"
             racstby1[("racstby1\n192.168.56.111\n8G/4CPU")]
             racstby2[("racstby2\n192.168.56.112\n8G/4CPU")]
+            
+            racstby1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> racstby2
             db2>"RAC STANDBY (RACDB_DG)\nASM: +CRS, +DATA, +RECO"]
             racstby1 --- db2
             racstby2 --- db2
@@ -93,13 +97,11 @@ flowchart TD
         dns -.-> rac1
         dns -.-> rac2
         dns -.-> racstby1
+        dns -.-> racstby2
         
         db1 == "Data Guard (LGWR ASYNC)" ==> db2
         db1 -. "GoldenGate Extract" .-> gg("Target (Locale / OCI)")
         
-        style db1 fill:#f9d0c4,stroke:#333,stroke-width:2px
-        style db2 fill:#c4e2f9,stroke:#333,stroke-width:2px
-        style gg fill:#d4c4f9,stroke:#333
     end
 ```
 
