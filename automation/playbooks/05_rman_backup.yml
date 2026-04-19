@@ -10,6 +10,8 @@
   become: yes
   become_user: oracle
   gather_facts: yes
-  roles:
-    - role: oracle_rman_backup
+  tasks:
+    - name: Apply RMAN backup role
+      ansible.builtin.include_role:
+        name: oracle_rman_backup
       tags: [backup, rman]

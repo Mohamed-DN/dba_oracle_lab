@@ -6,6 +6,8 @@
   gather_facts: false
   vars:
     standby_db: "{{ oracle_standby_db_name }}"
-  roles:
-    - role: oracle_dataguard_switchover
+  tasks:
+    - name: Apply Data Guard switchover role
+      ansible.builtin.include_role:
+        name: oracle_dataguard_switchover
       tags: [dataguard, switchover]
