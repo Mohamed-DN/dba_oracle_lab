@@ -12,6 +12,8 @@
   become: yes
   become_user: oracle
   gather_facts: yes
-  roles:
-    - role: oracle_daily_health
+  tasks:
+    - name: Apply daily health role
+      ansible.builtin.include_role:
+        name: oracle_daily_health
       tags: [health, daily]

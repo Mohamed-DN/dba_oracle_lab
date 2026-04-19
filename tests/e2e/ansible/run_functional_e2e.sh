@@ -9,15 +9,17 @@ LOG_DIR="${ROOT_DIR}/tests/e2e/ansible/logs"
 mkdir -p "${LOG_DIR}"
 
 export PATH="${MOCK_BIN}:${PATH}"
+export ANSIBLE_STDOUT_CALLBACK=default
 
 common_args=(
   -i "${ROOT_DIR}/tests/e2e/ansible/inventory.ini"
-  -e oracle_home=/u01/app/oracle/product/19c/dbhome_1
-  -e grid_home=/u01/app/19c/grid
+  -e oracle_home="${ROOT_DIR}/tests/e2e/ansible/mocks"
+  -e grid_home="${ROOT_DIR}/tests/e2e/ansible/mocks"
   -e oracle_sid=RACDB1
   -e oracle_db_name=RACDB
   -e oracle_standby_db_name=RACDB_STBY
   -e switchover_require_confirmation=true
+  -e ansible_become=false
 )
 
 cd "${AUTOMATION_DIR}"
