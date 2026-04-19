@@ -1,6 +1,6 @@
 # Public KPI Dashboard (Mock)
 
-Aggiornato: `2026-04-19T19:58:06.136833+00:00`
+Aggiornato: `2026-04-19T20:00:14.449119+00:00`
 Fonte: `reliability/evidence/ansible_health_checks/latest_healthcheck.json`
 
 | KPI | Valore | Target | Stato |
