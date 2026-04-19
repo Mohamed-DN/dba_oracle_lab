@@ -15,3 +15,22 @@ sli:
     unit: percent
     target: 99.5
     window: monthly
+
+kpi:
+  ci_success_rate_30d:
+    unit: ratio
+    target: 0.95
+    window: rolling_30_days
+  mttr_incident_hours:
+    unit: hours
+    target: 24
+    window: monthly
+  validated_runbook_coverage:
+    unit: ratio
+    target: 0.90
+    window: quarterly
+  docs_link_health:
+    unit: ratio
+    target: 0.99
+    window: rolling_30_days
+

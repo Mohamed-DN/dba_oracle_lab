@@ -1,0 +1,64 @@
+name: Critical Scenario Regression
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      - "automation/playbooks/04_daily_health_check.yml"
+      - "automation/playbooks/06_dataguard_switchover.yml"
+      - "automation/playbooks/11_create_cdb_pdb.yml"
+      - "automation/playbooks/13_maa_guardrails.yml"
+      - ".github/workflows/critical-regression.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  critical-regression:
+    name: Validate critical RAC/DG controls
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required assets and controls
+        run: |
+          test -f automation/playbooks/04_daily_health_check.yml
+          test -f automation/playbooks/06_dataguard_switchover.yml
+          test -f automation/playbooks/11_create_cdb_pdb.yml
+          test -f automation/playbooks/13_maa_guardrails.yml
+          grep -q "v\\$dataguard_stats" automation/playbooks/04_daily_health_check.yml
+          grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
+          grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
+          grep -q "db_lost_write_protect" automation/roles/maa_guardrails/tasks/main.yml
+
+      - name: Lint critical playbooks
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
+          ansible-lint -q \
+            automation/playbooks/04_daily_health_check.yml \
+            automation/playbooks/06_dataguard_switchover.yml \
+            automation/playbooks/11_create_cdb_pdb.yml \
+            automation/playbooks/13_maa_guardrails.yml
+
+      - name: Publish regression evidence
+        run: |
+          mkdir -p reliability/evidence
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          out="reliability/evidence/critical-regression-${ts}.log"
+          {
+            echo "timestamp=${ts}"
+            echo "status=ok"
+            echo "scope=critical_rac_dg_controls"
+          } | tee "${out}"
+
+      - name: Upload regression evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-regression-evidence
+          path: reliability/evidence/critical-regression-*.log
+          if-no-files-found: error

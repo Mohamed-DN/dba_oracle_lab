@@ -36,3 +36,5 @@ jobs:
         run: |
           test -f docs/14_enterprise_governance/COMPATIBILITY_POLICY.md
           grep -q "supported" docs/14_enterprise_governance/COMPATIBILITY_POLICY.md
+          test -f docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
+          grep -qi "go/no-go" docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
