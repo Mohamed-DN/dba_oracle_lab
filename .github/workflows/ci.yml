@@ -119,3 +119,29 @@ jobs:
             docs/12_scripts_sql_pronti/README.md
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  check-proxmox-track-baseline:
+    name: Check Proxmox Track Baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate mandatory Proxmox track files
+        run: |
+          test -f docs/15_proxmox_track/README.md
+          test -f docs/15_proxmox_track/PHASE_1_PROXMOX_FOUNDATION.md
+          test -f docs/15_proxmox_track/PHASE_3_ANSIBLE_AWX.md
+          test -f docs/15_proxmox_track/PHASE_4_ORACLE_SILENT_AUTOMATION.md
+          test -f docs/15_proxmox_track/PHASE_5_K8S_CAPSTONE.md
+          test -f infrastructure/proxmox/terraform/main.tf
+          test -f infrastructure/proxmox/terraform/variables.tf
+          test -f infrastructure/proxmox/terraform/outputs.tf
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Check Terraform formatting
+        run: terraform -chdir=infrastructure/proxmox/terraform fmt -check -recursive

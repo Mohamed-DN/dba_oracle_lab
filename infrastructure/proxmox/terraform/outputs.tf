@@ -1,0 +1,14 @@
+output "vm_inventory" {
+  description = "VM metadata to feed dynamic inventory consumers (Ansible/AWX)."
+  value       = local.vm_metadata
+}
+
+output "vm_hosts" {
+  description = "Hostnames created by Terraform."
+  value       = keys(local.vm_metadata.hosts)
+}
+
+output "metadata_file_path" {
+  description = "Path of generated VM metadata JSON file."
+  value       = local_file.terraform_metadata.filename
+}
