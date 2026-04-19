@@ -28,7 +28,7 @@
 | **Multitenant e lifecycle PDB** | Crea, clona, apre/chiude, plug/unplug, refresh, controlla servizi PDB | Su richiesta / mensile | [GUIDA_CDB_PDB_UTENTI.md](../GUIDA_CDB_PDB_UTENTI.md) |
 | **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB | Su richiesta / progetto | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_RMAN_COMPLETA_19C.md](../GUIDA_RMAN_COMPLETA_19C.md) |
 | **Patching e lifecycle software** | Applica RU/OJVM, aggiorna OPatch, esegue rollback piano, verifica post-patch | Mensile / trimestrale / change | [GUIDA_PATCHING_RAC.md](../GUIDA_PATCHING_RAC.md), [GUIDA_UPGRADE_RU_RAC.md](../GUIDA_UPGRADE_RU_RAC.md) |
-| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | [TESTLOG_GOLDENGATE_TEMPLATE.md](../TESTLOG_GOLDENGATE_TEMPLATE.md), [PIANO_STUDIO_GIORNALIERO.md](../PIANO_STUDIO_GIORNALIERO.md) |
+| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | [TESTLOG_GOLDENGATE_TEMPLATE.md](../TESTLOG_GOLDENGATE_TEMPLATE.md), [PIANO_LABORATORIO.md](../PIANO_LABORATORIO.md) |
 
 ## 3. Attivita complete per dominio operativo
 

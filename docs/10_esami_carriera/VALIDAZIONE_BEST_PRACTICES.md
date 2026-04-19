@@ -206,7 +206,7 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 ║  📋 RIFERIMENTO                                                  ║
 ║  ├── GUIDA_DA_LAB_A_PRODUZIONE.md    ← Sizing, HugePages        ║
 ║  ├── ANALISI_ORACLEBASE_VAGRANT.md   ← Confronto Oracle Base    ║
-║  ├── PIANO_STUDIO_GIORNALIERO.md     ← 22 giorni, CV            ║
+║  ├── PIANO_LABORATORIO.md     ← 22 giorni, CV            ║
 ║  └── README.md                       ← Indice + Architettura    ║
 ║                                                                  ║
 ║  📂 scripts/                                                     ║
