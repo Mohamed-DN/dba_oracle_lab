@@ -147,6 +147,13 @@
   - Installazione 19c silent, Rolling Patching RAC, AutoUpgrade 3-fasi
   - Daily Health Check automatizzato, RMAN Backup + Validate
 
+#### 🛠️ Script Operativi per Scenario
+- [scripts_operativi/](./scripts_operativi/README.md) — 🆕 **10 script SQL organizzati per scenario**, pronti al copia-incolla:
+  - Tablespace/Datafile (bigfile, maxsize, resize), UNDO/TEMP (ORA-01555, ORA-30036)
+  - FRA/Archivelog (pulizia, impatto Data Pump), Data Pump operativo (export/import sicuri)
+  - ASM Storage (diskgroup, AU_SIZE, limiti), Sessioni/Lock (chi blocca chi, kill)
+  - Performance Quick (top SQL, wait events), RMAN/Backup, Data Guard, Oggetti/Schema
+
 #### Script & Riferimenti
 - [GLOSSARIO_ORACLE.md](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) — 🆕 100+ acronimi e termini Oracle spiegati
 - [GUIDA_ARCHITETTURA_ORACLE.md](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) — Architettura Oracle: SGA, PGA, processi, storage
