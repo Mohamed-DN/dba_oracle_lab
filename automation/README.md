@@ -33,9 +33,7 @@ automation/
 │   ├── production.ini                     ← Server di produzione
 │   └── lab.ini                            ← Server del lab
 ├── group_vars/
-│   ├── all.yml                            ← Variabili globali
-│   ├── oracle_primary.yml                 ← Variabili RAC Primary
-│   └── oracle_standby.yml                 ← Variabili RAC Standby
+│   └── all.yml                            ← Variabili globali (lab + produzione)
 ├── playbooks/
 │   ├── 01_oracle_install.yml              ← Installazione 19c Software-Only
 │   ├── 02_oracle_patching.yml             ← Patching RU (rolling RAC)
@@ -52,19 +50,8 @@ automation/
 │   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
 │   ├── dbca_rac.rsp.j2                    ← Template Creazione RAC DB
 │   └── netca_rac.rsp.j2                   ← Template Configurazione Reti
-└── roles/
-    ├── oracle_precheck/                   ← Pre-flight checks comuni
-    │   └── tasks/main.yml
-    ├── oracle_install/                    ← Installazione DB software
-    │   ├── tasks/main.yml
-    │   ├── templates/db_install.rsp.j2
-    │   └── defaults/main.yml
-    ├── oracle_patching/                   ← Patching RU
-    │   ├── tasks/main.yml
-    │   └── defaults/main.yml
-    └── oracle_health_check/               ← Health check
-        ├── tasks/main.yml
-        └── templates/health_check.sql.j2
+└── (Nessuna cartella roles al momento)
+    Struttura attuale: playbook-centric con template condivisi.
 ```
 
 ---

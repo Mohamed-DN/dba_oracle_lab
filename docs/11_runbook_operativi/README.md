@@ -2,6 +2,7 @@
 
 > **Runbook pronti per l'uso quotidiano.** Ogni procedura è un flusso completo: prerequisiti → comandi → verifiche → rollback.
 > Copia-incolla direttamente in produzione.
+> Per la navigazione rapida con script avanzati: [Indice Centrale Runbook + Top20](./INDICE_CENTRALE_RUNBOOK_TOP20.md)
 
 ---
 
