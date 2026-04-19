@@ -141,7 +141,7 @@
       {{ alert_log.stdout | default('Nessun errore') }}
 
       ── 3. TABLESPACE > {{ tablespace_alert_pct }}% ──
-      {{ tablespace_check.stdout | default('OK — Nessun tablespace criticol') }}
+      {{ tablespace_check.stdout | default('OK — Nessun tablespace critico') }}
 
       ── 4. ASM DISKGROUP ──
       {{ asm_check.stdout | default('N/A') }}
