@@ -1,0 +1,39 @@
+---
+# Variabili globali condivise fra tutti i playbook
+
+# ---- Oracle Homes ----
+oracle_base: /u01/app/oracle
+oracle_home_19c: "{{ oracle_base }}/product/19c/dbhome_1"
+oracle_home_26c: "{{ oracle_base }}/product/26c/dbhome_1"
+grid_home: /u01/app/19c/grid
+
+# ---- Oracle attivo (impostare in base all'operazione) ----
+oracle_home: "{{ oracle_home_19c }}"
+
+# ---- ASM ----
+asm_diskgroup_data: +DATA
+asm_diskgroup_reco: +RECO
+
+# ---- RMAN ----
+rman_backup_dest: "{{ asm_diskgroup_reco }}"
+rman_retention_days: 7
+rman_parallel_channels: 4
+rman_compression: "YES"
+
+# ---- Patching ----
+patch_stage_dir: /u01/stage/patches
+opatch_version_min: "12.2.0.1.48"
+
+# ---- AutoUpgrade ----
+autoupgrade_jar: "{{ oracle_home }}/rdbms/admin/autoupgrade.jar"
+autoupgrade_config_dir: /home/oracle/autoupgrade
+autoupgrade_log_dir: /home/oracle/autoupgrade/logs
+
+# ---- Health Check ----
+tablespace_alert_pct: 85
+archivelog_alert_pct: 80
+fra_alert_pct: 80
+
+# ---- Notifiche (opzionale, decommentare) ----
+# notification_email: dba-team@company.com
+# smtp_server: smtp.company.com

@@ -1,0 +1,176 @@
+---
+# ============================================================================
+# Playbook: Oracle 19c Software-Only Installation
+# Ispirato a: oravirt/ansible-oracle (role: oraswdb_install)
+#              Oracle DevOps Series (Medium article)
+# Uso: ansible-playbook -i inventory/lab.ini playbooks/01_oracle_install.yml
+# ============================================================================
+
+- name: "Oracle 19c — Software-Only Install"
+  hosts: oracle_primary
+  become: yes
+  gather_facts: yes
+
+  vars:
+    oracle_installer_zip: LINUX.X64_193000_db_home.zip
+    response_file: /tmp/db_install.rsp
+
+  pre_tasks:
+
+    - name: "Verifica — OS è supportato (OL7/OL8/RHEL)"
+      assert:
+        that:
+          - ansible_os_family == "RedHat"
+          - ansible_distribution_major_version | int >= 7
+        fail_msg: "Oracle 19c richiede Oracle Linux 7+ o RHEL 7+"
+
+    - name: "Verifica — RAM sufficiente (min 4GB)"
+      assert:
+        that: ansible_memtotal_mb >= 4096
+        fail_msg: "Servono almeno 4GB di RAM. Trovati: {{ ansible_memtotal_mb }}MB"
+
+    - name: "Verifica — Swap sufficiente"
+      assert:
+        that: ansible_swaptotal_mb >= 2048
+        fail_msg: "Servono almeno 2GB di swap. Trovati: {{ ansible_swaptotal_mb }}MB"
+
+    - name: "Verifica — Spazio disco ORACLE_HOME (min 10GB)"
+      shell: df -BG {{ oracle_base }} | tail -1 | awk '{print $4}' | sed 's/G//'
+      register: disk_space
+      changed_when: false
+
+    - name: "Assert spazio disco"
+      assert:
+        that: disk_space.stdout | int >= 10
+        fail_msg: "Servono almeno 10GB liberi in {{ oracle_base }}. Trovati: {{ disk_space.stdout }}GB"
+
+  tasks:
+
+    # ---- PRE-REQUISITI OS ----
+
+    - name: "Installa pacchetti prerequisiti Oracle"
+      become_user: root
+      yum:
+        name:
+          - oracle-database-preinstall-19c
+          - bc
+          - binutils
+          - compat-libcap1
+          - compat-libstdc++-33
+          - elfutils-libelf
+          - elfutils-libelf-devel
+          - fontconfig-devel
+          - glibc
+          - glibc-devel
+          - ksh
+          - libaio
+          - libaio-devel
+          - libXrender
+          - libX11
+          - libXau
+          - libXi
+          - libXtst
+          - libgcc
+          - libstdc++
+          - libstdc++-devel
+          - libxcb
+          - make
+          - net-tools
+          - nfs-utils
+          - smartmontools
+          - sysstat
+          - unixODBC
+        state: present
+      when: ansible_distribution_major_version | int >= 7
+
+    # ---- SETUP DIRECTORY ----
+
+    - name: "Crea directory Oracle"
+      become_user: root
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0775'
+      loop:
+        - "{{ oracle_base }}"
+        - "{{ oracle_home }}"
+        - "{{ oracle_base }}/oraInventory"
+        - /u01/stage
+
+    # ---- INSTALLAZIONE SOFTWARE ----
+
+    - name: "Verifica se Oracle è già installato"
+      stat:
+        path: "{{ oracle_home }}/bin/oracle"
+      register: oracle_binary
+
+    - name: "Decomprimi Oracle 19c nel ORACLE_HOME"
+      become_user: oracle
+      unarchive:
+        src: "/u01/stage/{{ oracle_installer_zip }}"
+        dest: "{{ oracle_home }}"
+        remote_src: yes
+        creates: "{{ oracle_home }}/bin/oracle"
+      when: not oracle_binary.stat.exists
+
+    - name: "Genera Response File per installazione silent"
+      become_user: oracle
+      copy:
+        dest: "{{ response_file }}"
+        content: |
+          oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v19.0.0
+          oracle.install.option=INSTALL_DB_SWONLY
+          UNIX_GROUP_NAME=oinstall
+          INVENTORY_LOCATION={{ oracle_base }}/oraInventory
+          ORACLE_HOME={{ oracle_home }}
+          ORACLE_BASE={{ oracle_base }}
+          oracle.install.db.InstallEdition=EE
+          oracle.install.db.OSDBA_GROUP=dba
+          oracle.install.db.OSOPER_GROUP=oper
+          oracle.install.db.OSBACKUPDBA_GROUP=dba
+          oracle.install.db.OSDGDBA_GROUP=dba
+          oracle.install.db.OSKMDBA_GROUP=dba
+          oracle.install.db.OSRACDBA_GROUP=dba
+          oracle.install.db.rootconfig.executeRootScript=false
+          DECLINE_SECURITY_UPDATES=true
+        mode: '0644'
+      when: not oracle_binary.stat.exists
+
+    - name: "Esegui runInstaller in modalità silent"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        {{ oracle_home }}/runInstaller -silent -responseFile {{ response_file }} \
+          -waitForCompletion -ignorePrereqFailure
+      register: install_result
+      failed_when: install_result.rc not in [0, 6]
+      when: not oracle_binary.stat.exists
+
+    - name: "Esegui root scripts"
+      become_user: root
+      shell: |
+        {{ oracle_base }}/oraInventory/orainstRoot.sh
+        {{ oracle_home }}/root.sh
+      when:
+        - not oracle_binary.stat.exists
+        - install_result is defined
+        - install_result.rc is defined
+
+  post_tasks:
+
+    - name: "Verifica installazione"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        {{ oracle_home }}/bin/sqlplus -V
+      register: sqlplus_version
+      changed_when: false
+
+    - name: "Report"
+      debug:
+        msg: |
+          ✅ Oracle installato con successo!
+          Versione: {{ sqlplus_version.stdout_lines[0] | default('N/A') }}
+          ORACLE_HOME: {{ oracle_home }}

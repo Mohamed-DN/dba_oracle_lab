@@ -1,0 +1,141 @@
+---
+# ============================================================================
+# Playbook: Oracle RAC Rolling Patching
+# Ispirato a: oravirt/ansible-oracle (role: oraswdb_manage_patches)
+# Pattern: Rolling patch — un nodo alla volta, zero downtime
+# Uso:
+#   DRY-RUN: ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml --check
+#   REALE:   ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml
+# ============================================================================
+
+- name: "Oracle RAC — Rolling Patch (Release Update)"
+  hosts: oracle_primary
+  become: yes
+  become_user: oracle
+  serial: 1                    # ← UN NODO ALLA VOLTA (rolling!)
+  max_fail_percentage: 0       # ← Se un nodo fallisce, STOP totale
+  gather_facts: yes
+
+  vars:
+    patch_id: "36912597"            # ← Modifica con il Patch ID del tuo RU
+    patch_zip: "p{{ patch_id }}_190000_Linux-x86-64.zip"
+    patch_path: "{{ patch_stage_dir }}/{{ patch_id }}"
+
+  pre_tasks:
+
+    - name: "Pre-Check — Verifica versione OPatch"
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        {{ oracle_home }}/OPatch/opatch version | head -1
+      register: opatch_ver
+      changed_when: false
+
+    - name: "Pre-Check — Mostra versione OPatch"
+      debug:
+        msg: "OPatch version: {{ opatch_ver.stdout }}"
+
+    - name: "Pre-Check — Verifica conflicts"
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export PATH={{ oracle_home }}/OPatch:$PATH
+        cd {{ patch_path }}
+        opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+      register: conflict_check
+      changed_when: false
+      failed_when: "'Prereq \"checkConflictAgainstOH\" passed' not in conflict_check.stdout"
+
+    - name: "Pre-Check — Spazio disco per patch"
+      shell: df -BM {{ oracle_home }} | tail -1 | awk '{print $4}' | sed 's/M//'
+      register: disk_free
+      changed_when: false
+
+    - name: "Assert spazio sufficiente (min 5GB)"
+      assert:
+        that: disk_free.stdout | int >= 5120
+        fail_msg: "Spazio insufficiente: {{ disk_free.stdout }}MB. Servono almeno 5GB."
+
+  tasks:
+
+    # ---- STEP 1: STOP istanza locale ----
+
+    - name: "Ferma istanza locale (rolling)"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ grid_home }}
+        {{ grid_home }}/bin/srvctl stop instance -d {{ oracle_db_name }} -i {{ oracle_sid }} -o immediate
+      register: stop_instance
+      ignore_errors: yes
+
+    - name: "Verifica che le altre istanze siano ancora attive"
+      shell: |
+        export ORACLE_HOME={{ grid_home }}
+        {{ grid_home }}/bin/srvctl status database -d {{ oracle_db_name }}
+      register: db_status
+      changed_when: false
+
+    - name: "Mostra stato database"
+      debug:
+        msg: "{{ db_status.stdout_lines }}"
+
+    # ---- STEP 2: APPLICA PATCH ----
+
+    - name: "Applica Release Update con opatchauto"
+      become_user: root
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export PATH={{ oracle_home }}/OPatch:$PATH
+        opatchauto apply {{ patch_path }} -oh {{ oracle_home }}
+      register: patch_result
+
+    - name: "Mostra risultato patching"
+      debug:
+        msg: "{{ patch_result.stdout_lines[-10:] }}"
+
+    # ---- STEP 3: RIAVVIA ISTANZA ----
+
+    - name: "Avvia istanza locale"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ grid_home }}
+        {{ grid_home }}/bin/srvctl start instance -d {{ oracle_db_name }} -i {{ oracle_sid }}
+      register: start_instance
+
+    # ---- STEP 4: DATAPATCH ----
+
+    - name: "Esegui datapatch"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        {{ oracle_home }}/OPatch/datapatch -verbose
+      register: datapatch_result
+
+    # ---- STEP 5: VERIFICA ----
+
+    - name: "Verifica patch applicata"
+      become_user: oracle
+      shell: |
+        export ORACLE_HOME={{ oracle_home }}
+        export ORACLE_SID={{ oracle_sid }}
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<EOF
+        SET HEAD OFF FEED OFF
+        SELECT patch_id, status, action_time FROM dba_registry_sqlpatch ORDER BY action_time DESC FETCH FIRST 3 ROWS ONLY;
+        EXIT;
+        EOF
+      register: verify_patch
+      changed_when: false
+
+    - name: "Mostra patch applicate"
+      debug:
+        msg: "{{ verify_patch.stdout_lines }}"
+
+  post_tasks:
+
+    - name: "Riepilogo nodo {{ inventory_hostname }}"
+      debug:
+        msg: |
+          ✅ Patching completato su {{ inventory_hostname }}
+          Patch: {{ patch_id }}
+          Il nodo successivo verrà patchato automaticamente (serial: 1)
