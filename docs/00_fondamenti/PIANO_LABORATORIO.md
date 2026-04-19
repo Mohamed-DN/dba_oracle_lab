@@ -1,552 +1,80 @@
-# 🔬 Piano Laboratorio Oracle RAC — 3 Ore al Giorno
+# 🎮 Road-Map: Da Zero a Senior DBA (Il Percorso)
 
-> **Obiettivo**: Costruire un lab Enterprise completo: RAC + Data Guard + GoldenGate + Monitoring + Automazione → poi preparare esami 1Z0-082 e 1Z0-083.
-> **Ritmo**: 3 ore al giorno, 5 giorni a settimana.
-> **Durata**: 8 settimane (40 giorni).
+> **Benvenuto nel Laboratorio Oracle RAC "Enterprise Gold".**
+> Questo non è un semplice elenco di guide, ma una vera e propria **Road-Map didattica a livelli**. Immaginalo come un videogioco: non puoi affrontare i boss della *Fase 4* (Disaster Recovery e Automazione) se prima non hai farmato le skill della *Fase 1* (Sopravvivenza su Linux e Storage).
 
----
-
-## 📊 Mappa delle 8 Settimane
-
-```
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║                    LE 8 SETTIMANE — CON MILESTONE ESAMI                         ║
-╠═════════════╦════════════════════════════════════════╦══════════════════════════╣
-║ SETTIMANA   ║ COSA IMPARI                            ║ RISULTATO               ║
-╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
-║  1 (G 1-5)  ║ Teoria + VirtualBox + OS + Grid       ║ Cluster RAC ONLINE      ║
-║  2 (G 6-10) ║ Database + Standby RAC                ║ RMAN Duplicate OK       ║
-║  3 (G11-15) ║ Data Guard + RMAN + EM                ║ DG + Backup + Monitor OK║
-║  4 (G16-20) ║ GoldenGate + Test Verifica + DBA      ║ GG + HA completa testata║
-║  5 (G21-25) ║ OCI target + rete + MAA             ║ 🏆 LAB COMPLETATO!     ║
-╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
-║             ║  ═══ MILESTONE: LAB FINITO ═══         ║                         ║
-╠═════════════╬════════════════════════════════════════╬══════════════════════════╣
-║  6 (G26-30) ║ Ripasso Esame + Oracle→PostgreSQL     ║ Migrazione PG OK        ║
-║  7 (G31-35) ║ 🎯 PREP ESAME 1Z0-082 (Admin I+SQL)  ║ ⭐ PRONTO PER ESAME 1  ║
-║  8 (G36-40) ║ 🎯 PREP ESAME 1Z0-083 (DBA Pro 2)    ║ ⭐ PRONTO PER ESAME 2  ║
-╚═════════════╩════════════════════════════════════════╩══════════════════════════╝
-```
+Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al giorno)**, ma alla fine avrai una preparazione tecnica pratica superiore all'80% dei DBA Junior/Mid in circolazione.
 
 ---
 
-## 🗓️ SETTIMANA 1: Fondamenta (Giorni 1-5)
+## 🟢 Livello 1: "The Core" (DBA Junior)
+*L'obiettivo di questo livello è farti capire su cosa poggia un database Oracle. Imparerai a muoverti su Linux, a capire lo storage condiviso e l'architettura Multitenant (CDB/PDB).*
 
-> **Obiettivo**: Leggere la teoria, creare le VM, configurare l'OS, installare Grid Infrastructure.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Leggi GUIDA_ARCHITETTURA      ║                           ║
-║ Giorno 1  ║   (SGA, PGA, Redo, Undo, Temp, ASM) ║ Teoria assimilata         ║
-║           ║ 📖 30min: Leggi GUIDA_CDB_PDB (P.1)  ║ Scaricato tutto il SW     ║
-║           ║ 💻 1.5h: Scarica tutto il software    ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1.5h: Crea VM rac1 in VirtualBox ║                           ║
-║ Giorno 2  ║   (CPU, RAM, dischi, 2 NIC)          ║ rac1: OL7.9 installato    ║
-║           ║ 💻 1.5h: Installa Oracle Linux 7.9   ║ 📸 SNAP-01               ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Configura rete su rac1        ║                           ║
-║ Giorno 3  ║   (hosts, DNS BIND, ifcfg)           ║ rac1: rete + DNS OK       ║
-║           ║ 💻 1h: Pacchetti, firewall, kernel   ║ nslookup rac-scan OK      ║
-║           ║ 💻 1h: Utenti, SSH, env vars          ║ 📸 SNAP-02               ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Clona rac1 → rac2             ║                           ║
-║ Giorno 4  ║   (aggiusta hostname, IP)            ║ rac1↔rac2 ping+SSH OK    ║
-║           ║ 💻 1h: Dischi ASM (oracleasm/ASMLib) ║ Dischi ASM visibili       ║
-║           ║ 💻 1h: cluvfy → tutti i check PASSED ║ 📸 SNAP-03 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 2h: Grid installer (GUI o silent) ║                           ║
-║ Giorno 5  ║   + root.sh nodo 1 poi nodo 2        ║ CRS ONLINE su 2 nodi!     ║
-║           ║ 💻 1h: crsctl check crs + DATA/FRA  ║ 📸 SNAP-05 ⭐            ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
+| Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
+|:---:|---|---|---|
+| **1.1** | **Studio Architettura Base** | [GUIDA_ATTIVITA_LAB_RAC.md](./../GUIDA_ATTIVITA_LAB_RAC.md) | Capisci cosa sono SGA, PGA, e Redo Logs. |
+| **1.2** | **Setup Virtuale e Rete** | [Fase 0: Setup Macchine e DNS](./01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | Scopri come VirtualBox emula l'hardware e come DNS/Bind e NAT fanno parlare le VM. |
+| **1.3** | **Hardening OS (Linux)** | [Fase 1: Preparazione OS (Linux 7.9)](./01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md) | Sconfiggi il mostro Systemd, impari i limiti kernel e crei l'utente `oracle`. |
+| **1.4** | **Dominare i PDB & CDB** | [CDB, PDB e Ruoli](./04_administration/GUIDA_CDB_PDB_UTENTI.md) | Impari a creare Pluggable Database, clonarli e creare utenze `C##` vs locali. |
+| **1.5** | **Basi Sicurezza** | [Security Hardening](./04_administration/GUIDA_SECURITY_HARDENING.md) | Applichi l'auditing unificato, password profile e impari cosa è la TDE (Transparent Data Encryption). |
 
 ---
 
-## 🗓️ SETTIMANA 2: Database e RAC Standby (Giorni 6-10)
+## 🟡 Livello 2: "Disaster & Recovery" (Mid-Level)
+*I database esplodono. È un dato di fatto. In questo livello imparerai l'arte di non perdere i dati del cliente e di dormire sereno di notte.*
 
-> **Obiettivo**: Creare il database RACDB, preparare i nodi standby, eseguire RMAN Duplicate.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Patch Grid (opatchauto RU)    ║                           ║
-║ Giorno 6  ║ 💻 1h: Installa DB Software + patch ║ DB Software patchato      ║
-║           ║ 💻 1h: DBCA → crea RACDB (GUI)      ║ RACDB RUNNING 2 nodi!     ║
-║           ║                                       ║ 📸 SNAP-09 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 30min: Force Logging + datapatch  ║                           ║
-║ Giorno 7  ║ 💻 2.5h: Crea VM racstby1           ║ Standby VM creata         ║
-║           ║   installa OL 7.9 (come Fase 0)      ║ OL7.9 installato          ║
-║           ║                                       ║ 📸 SNAP-01-stby          ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 2h: Fase 1 su racstby1            ║                           ║
-║ Giorno 8  ║   (rete, DNS, utenti, SSH...)        ║ racstby1 preparato        ║
-║           ║ 💻 1h: Clona → racstby2 + fix IP    ║ 2 nodi standby pronti     ║
-║           ║                                       ║ 📸 SNAP-03-stby ⭐      ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 3h: Grid + DB Software su standby ║                           ║
-║ Giorno 9  ║   (Fase 2 SENZA DBCA)               ║ Grid + DB SW su standby   ║
-║           ║   ASM, Grid, root.sh, DATA+FRA,      ║ (NO database ancora)      ║
-║           ║   patch RU + OJVM                     ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Listener statico + TNS        ║                           ║
-║ Giorno 10 ║ 💻 30min: Standby Redo Logs          ║ RMAN Duplicate OK!        ║
-║           ║ 💻 1.5h: RMAN DUPLICATE from active  ║ MRP attivo, 0 gap         ║
-║           ║   (attenzione: ~30-60 min di attesa) ║ 📸 SNAP-12 ⭐            ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
+| Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
+|:---:|---|---|---|
+| **2.1** | **Basi di Backup Assoluto** | [Fase 5: RMAN & CRON](./03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | Scrivi il tuo primo script Bash di backup incrementale (Level 0 e Level 1) schedulato via cron. |
+| **2.2** | **Restore Completo RMAN** | [Guida RMAN Completa 19c](./03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Impari a distruggere volontariamente un datafile del DB e a ripristinarlo senza fermare tutto. |
+| **2.3** | **La Macchina del Tempo** | [Flashback Database](./03_backup_recovery/GUIDA_FLASHBACK_DATABASE.md) | Usi la tecnologia Flashback per "riavvolgere" il database nel tempo prima di una `DROP TABLE` accidentale. |
+| **2.4** | **Muovere i Dati (Logico)** | [Oracle Data Pump](./03_backup_recovery/GUIDA_DATA_PUMP.md) | Capisci la differenza tra backup fisico e logico. Usi `expdp/impdp` via network link e PARFILE. |
 
 ---
 
-## 🗓️ SETTIMANA 3: Data Guard + RMAN Backup + Enterprise Manager (Giorni 11-15)
+## 🟠 Livello 3: "High Availability" (DBA Senior)
+*Qui si fa sul serio. Se perdi il server primario, il business non se ne deve nemmeno accorgere.*
 
-> **Obiettivo**: Configurare DGMGRL, strategia RMAN, e installare Cloud Control 13c.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: DGMGRL create + enable        ║                           ║
-║ Giorno 11 ║ 💻 1h: SHOW CONFIG → SUCCESS        ║ DG Broker operativo       ║
-║           ║ 💻 1h: Test switchover rapido         ║ Switch + Switchback OK    ║
-║           ║                                       ║ 📸 SNAP-14 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Active Data Guard (ADG)       ║                           ║
-║ Giorno 12 ║ 📖 1h: Leggi GUIDA_FASE5 (RMAN)      ║ ADG configurato           ║
-║           ║ 💻 1h: RMAN backup su standby       ║ Backup su standby OK      ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: RMAN backup su primary        ║ Backup su primary OK      ║
-║ Giorno 13 ║ 💻 1h: BCT + Crontab + Test restore  ║ Strategia RMAN testata    ║
-║           ║ 📖 1h: Leggi GUIDA_FASE6 (EM 13c)    ║ 📸 SNAP-15 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Prerequisiti VM emcc1         ║                           ║
-║ Giorno 14 ║ 💻 2h: Installazione OMS 13.5        ║ Enterprise Manager        ║
-║           ║   (GUI installer)                     ║ Installato (OMS Up)       ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Deploy Agent target           ║ Agent deployati           ║
-║ Giorno 15 ║ 💻 1h: Onboarding Target Oracle      ║ Target monitorati         ║
-║           ║ 💻 1h: Setup metriche e notifiche     ║ 📸 SNAP-16 ⭐            ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
+| Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
+|:---:|---|---|---|
+| **3.1** | **Costruire il Cluster (RAC)** | [Fase 2: Grid & RAC](./01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) | Usalo per installare Clusterware. Affronti dischi ASM e Patching `opatchauto`. Sblocca il tuo primo DB a 2 Nodi. |
+| **3.2** | **Gestire lo Storage Pieno** | [Aggiunta/Rimozione Dischi ASM](./04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Espandi il cluster a caldo aggiungendo dischi ad ASM senza `downtime`. |
+| **3.3** | **Lo Standby Fisico** | [Fase 3: Standby Database](./02_high_availability/GUIDA_FASE3_RAC_STANDBY.md) | Usando *RMAN Active Duplicate*, duplichi un cluster intero via rete su un datacenter secondario. |
+| **3.4** | **Data Guard Broker** | [Fase 4: Configurare Data Guard](./02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Installi il Broker (`dgmgrl`) per gestire la sincronizzazione in tempo reale e fare Switchover. |
+| **3.5** | **Servizi Infrangibili** | [Servizi Applicativi RAC](./04_administration/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | Impari Load Balancing (CLB/RLB) e Application Continuity (le query non cadono se un nodo muore). |
 
 ---
 
-## 🗓️ SETTIMANA 4: GoldenGate + Test Verifica + HA Avanzata (Giorni 16-20)
+## 🔴 Livello 4: "Il Risolutore" (Architect)
+*Oracle è lento e i programmatori danno la colpa al Database. Devi imparare a leggere Matrix (Wait Events).*
 
-> **Obiettivo**: Installare GoldenGate, Test End-to-End, Switchover/Failover, attività DBA.
-
-Aggiornamento del percorso GG:
-- Scegli esplicitamente target locale (`dbtarget`) o OCI seguendo Fase 7.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_FASE7 (GG)     ║                           ║
-║ Giorno 16 ║ 💻 1.5h: Crea Target (Locale o Cloud)║ Target completato         ║
-║           ║ 💻 1h: Installa GG e crea Extract     ║ Extract running           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Initial Load (expdp/CSN)      ║                           ║
-║ Giorno 17 ║ 💻 1h: Crea Replicat Target          ║ GG end-to-end RUNNING!    ║
-║           ║ 💻 1h: Test DML smoke test            ║ 📸 SNAP-17 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_FASE8 (Test)   ║                           ║
-║ Giorno 18 ║ 💻 1.5h: Validazione end-to-end      ║ Test completati           ║
-║           ║ 💻 1h: Simula Crash Nodo (Eviction)   ║ Cluster robusto           ║
-║           ║                                       ║ 📸 SNAP-18 ⭐            ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_FAILOVER       ║                           ║
-║ Giorno 19 ║ 💻 1h: Switchover e Switchback        ║ HA testata                ║
-║           ║ 💻 1h: Simulazione Failover reale     ║ Target cloud non perso    ║
-║           ║ 💻 30min: Flashback Reinstate         ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_LISTENER_DBA   ║                           ║
-║ Giorno 20 ║ 💻 1h: Setup Services + EM Express   ║ Services online           ║
-║           ║ 💻 1.5h: DBA Jobs, AWR, Export        ║ Routine DBA consolidate   ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
+| Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
+|:---:|---|---|---|
+| **4.1** | **Come fare Troubleshooting** | [Troubleshooting Completo](./05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | Il manuale definitivo top-down. Impari a leggere le *Wait Classes* ("Db file sequential read"). Sblocca la skill più rara. |
+| **4.2** | **Misurare le Prestazioni** | [Guida AWR, ASH e ADDM](./05_performance/GUIDA_AWR_ASH_ADDM.md) | Generi i report `awrrpt.sql` e interpreti i grafici. Metti in quarantena SQL lenti (SQL Plan Management). |
+| **4.3** | **Schedulare Lavori** | [Oracle Scheduler](./04_administration/GUIDA_SCHEDULER_JOBS.md) | Sostituisci il banale `cron` di Linux con i potentissimi Job e Chains interni ad Oracle. |
+| **4.4** | **Libreria Script DBA** | [Directory Scripts Operativi](./../scripts_operativi/README.md) | Smetti di scrivere query a mano. Usa la nostra raccolta di script SQL pronti all'uso per vedere lock, CPU session e top I/O. |
+| **4.5** | **Esportazione Eterogenea** | [GoldenGate (Oracle -> PostgreSQL)](./02_high_availability/GUIDA_FASE7_GOLDENGATE.md) | Usi la replica logica estrema per mandare i commit da Oracle verso un database PostgreSQL. L'esame finale di architettura. |
 
 ---
 
-## 🗓️ SETTIMANA 5: Cloud + MAA + Ripasso Finale (Giorni 21-25)
+## 🔮 Livello 5: "The Automator" (DevOps / SRE)
+*Perché fare le cose a mano quando i robot possono farle per te? L'apice moderno del DBA.*
 
-> **Obiettivo**: costruire il target OCI, chiarire la rete, preparare la migrazione GG verso cloud e validare MAA.
-
-Aggiornamento del percorso cloud:
-
-- il target OCI del lab principale non va confuso con `GoldenGate Free` come percorso base;
-- il focus e: `compute target`, `listener`, `porte`, `NSG o VPN`, `initial load`, `cutover`;
-- `GoldenGate Free` resta una variante separata per mini-lab `Free-to-Free`, non la base del lab RAC 19c.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_CLOUD_GG       ║                           ║
-║ Giorno 21 ║ 💻 1.5h: Crea OCI, VCN, NSG e     ║ VM ARM creata su OCI      ║
-║           ║   Security List, VM ARM               ║ SSH funzionante           ║
-║           ║ 💻 1h: Installa target Oracle coerente        ║ DB CLOUDDB creato         ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Verifica modello GG target     ║                           ║
-║ Giorno 22 ║ 💻 1h: TNS, porte, NSG o VPN       ║ GG Replicat su OCI OK     ║
-║           ║ 💻 1h: Initial load + Replicat cloud          ║ Primary→Cloud ✅         ║
-║           ║   test INSERT → OCI                   ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_MAA             ║                           ║
-║ Giorno 23 ║ 💻 1h: Applica MAA fix               ║ DB_BLOCK_CHECKING ON      ║
-║           ║   (block checking, flashback, FSFO)  ║ Flashback ON              ║
-║           ║ 💻 1h: Security (profile, audit)      ║ FSFO configurato          ║
-║           ║ 💻 30min: FAN + Connection String     ║ Lab MAA GOLD! ✅         ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Rileggi CDB/PDB + Comandi ║                           ║
-║ Giorno 24 ║ 💻 1h: SQL Tuning Advisor su RACDB  ║ SQL Tuning testato        ║
-║           ║ 💻 1h: Patching workflow (dry run)    ║ Patching compreso         ║
-║           ║ 💻 30min: Verifica VALIDAZIONE_BP     ║ 54/54 check ✅           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Ripasso: accendi tutto,        ║                           ║
-║ Giorno 25 ║   verifica DG + GG + Cloud            ║ TUTTO funziona!           ║
-║           ║ 💻 1h: Test completo end-to-end       ║ Test finale superato      ║
-║           ║ 📝 1h: Aggiorna CV con competenze    ║ 🏆 LAB COMPLETATO! 🏆    ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
+| Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
+|:---:|---|---|---|
+| **5.1** | **Vagrant (Infrastruttura Come Codice)** | [Vagrant 1-Click](./../vagrant_rac_dataguard/README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. |
+| **5.2** | **Automation via Ansible** | [Ansible Playbook Library](./../automation/README.md) | Impari perché Ansible ha sostituito Jenkins per le patch Oracle. Esegui patching rolling e check mattutini con playbook pronti. |
+| **5.3** | **Templates (Jinja2)** | [Ansible Templates Guide](./04_administration/GUIDA_ANSIBLE_TEMPLATES.md) | Il segreto delle Enterprise: esegui le installazioni (Grid, RDBMS, DBCA) in modalità `silent` al 100% nascondendo le password nel Vault. |
+| **5.4** | **Runbook Giornaliero** | [Procedure Operative Standard](./../procedure_operative/README.md) | Impari i processi da DBA turnista. Cosa guardare alle 8:30 del mattino (Health Check), come reagire ai ticket P1. |
+| **BOSS** | **L'Intervista Tecnica** | [Ripasso Concetti DBA (Colloquio)](./10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Metti alla prova tutto. Domande trappola su architettura (Split Brain, Node Eviction, Hard Parse, Multiplexing) scritte da un vero CTO. |
 
 ---
 
-## 📊 Progresso Visivo
+## 🎯 Consigli per Sopravvivere al Lab
 
-```
-Giorno:  1    5    10   15   20   25   30   35   40
-         │    │    │    │    │    │    │    │    │
-Sett 1:  ████████████              Teoria + VM + OS + Grid
-Sett 2:       ████████████         Database + Standby + RMAN Dup
-Sett 3:            ████████████    DG + RMAN Backup + EM 13c
-Sett 4:                 ███████████ GoldenGate + Test Verifica + HA
-Sett 5:                      ██████████ Cloud + MAA + Ripasso
-         │ ────── 🏆 MILESTONE: LAB FINITO ─────  │
-Sett 6:                           ██████████ Migrazione Oracle→PG
-Sett 7:                                ██████████ 🎯 ESAME 1Z0-082
-Sett 8:                                     ██████████ 🎯 ESAME 1Z0-083
-         │    │    │    │    │    │    │    │    │
-         S1   S1   S2   S3   S4   S5   S6   S7   S8
-```
+1. **Snapshots are your best friends**: Fai snapshot su VirtualBox alla fine del *Livello 1* e prima di iniziare il *Livello 3*. Se spacchi l'ASM (succederà), torni indietro in 10 secondi e risparmi una giornata di reinstallazione.
+2. **Non fare copia-incolla cieco**: I PDF e le guide sul web non funzionano mai al primo colpo perché `19.3` non si comporta come `12c` o `23ai`. Cerca di capire *perché* stai eseguendo `root.sh` e cosa ci sta nei log.
+3. **MobaXterm obbligatorio**: Usa X11-forwarding e la funzione *Multi-Exec* per lanciare gli stessi comandi di rete su 4 macchine in simultanea.
 
----
-
-## 🗓️ SETTIMANA 6: Ripasso Esame + Migrazione Oracle → PostgreSQL (Giorni 26-30)
-
-> **Obiettivo**: Ripasso completo argomenti esame (1Z0-082 + 1Z0-083), migrazione Oracle→PostgreSQL con GoldenGate.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1.5h: Leggi GUIDA_ESAME Parti 1-5 ║                           ║
-║ Giorno 26 ║   (Architettura, Instance, Users,    ║ Concetti base rivisti     ║
-║           ║    Storage, Data Movement)            ║                           ║
-║           ║ 💻 1.5h: Esercizi SQL (Parte 10)     ║ SQL fluente               ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Leggi GUIDA_ESAME Parti 6-9   ║                           ║
-║ Giorno 27 ║   (Tools, Net Services, Tablespace,  ║ Net Services + Undo OK    ║
-║           ║    Undo)                              ║                           ║
-║           ║ 💻 2h: Leggi Parte 11 (DBA Pro 2)    ║ 1Z0-083 topics rivisti    ║
-║           ║   AWR/ADDM/ASH, Resource Manager      ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 30min: Leggi GUIDA_MIGRAZIONE_PG  ║                           ║
-║ Giorno 28 ║ 💻 1h: Installa PostgreSQL 16         ║ PG installato             ║
-║           ║ 💻 1h: ora2pg + converti schema       ║ Schema HR su PG           ║
-║           ║ 💻 30min: Configura ODBC + GG for PG  ║ GG for PG pronto          ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Configura Extract + Pump       ║                           ║
-║ Giorno 29 ║ 💻 1h: Initial Load + Replicat        ║ Replica Oracle→PG attiva  ║
-║           ║ 💻 1h: Test CDC (INSERT/UPDATE/DELETE)║ CDC funzionante!          ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 1h: Cutover simulato              ║                           ║
-║ Giorno 30 ║ 💻 1h: Validazione post-migrazione    ║ Migrazione completata!    ║
-║           ║ 📝 1h: Aggiorna CV + ripasso finale   ║ 🏆 LAB COMPLETO! 🏆       ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
-
----
-
-## 🏗️ SETTIMANA 7: 🎯 Preparazione Esame 1Z0-082 — Admin I + SQL (Giorni 31-35)
-
-> **Obiettivo**: Ripasso intensivo di tutti gli argomenti d'esame 1Z0-082. Pratica SQL e concetti di amministrazione.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso Parte 1-2 (Architet-  ║                           ║
-║ Giorno 31 ║   tura, Instance Mgmt, Startup/SHUT) ║ Architecture OK           ║
-║           ║ 💻 1h: Pratica startup/shutdown su   ║ V$ e DBA_ views OK        ║
-║           ║   lab RAC + query V$, DBA_ views     ║                           ║
-║           ║ 📖 1h: Ripasso Parte 3 (Users/Roles) ║ Profiles + Audit OK       ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso Parte 4-5 (Storage,   ║                           ║
-║ Giorno 32 ║   Data Movement, External Tables)    ║ DataPump + SQL*Loader OK  ║
-║           ║ 💻 1h: Pratica expdp/impdp + sqlldr  ║                           ║
-║           ║ 📖 1h: Ripasso Parte 7 (Net Svc)     ║ Listener + TNS OK         ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso Parte 8-9 (Tablespace ║                           ║
-║ Giorno 33 ║   Undo, OMF)                         ║ Tablespace + Undo OK      ║
-║           ║ 💻 2h: SQL intensivo Parte 10 —      ║ 100 query SQL eseguite     ║
-║           ║   JOIN, subqueries, group functions   ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 💻 2h: SQL avanzato — DDL, DML,      ║                           ║
-║ Giorno 34 ║   SET operators, conversioni, NVL,   ║ SQL padroneggiato         ║
-║           ║   sequences, views, constraints      ║                           ║
-║           ║ 💻 1h: Pratica su lab con HR schema   ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📝 2h: Simulazione esame 1Z0-082     ║                           ║
-║ Giorno 35 ║   (practice exam online)              ║ Score ≥ 75% target        ║
-║           ║ 📖 1h: Rivedi risposte sbagliate     ║ ⭐ PRONTO PER 1Z0-082!   ║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
-
----
-
-## 🏗️ SETTIMANA 8: 🎯 Preparazione Esame 1Z0-083 — DBA Professional 2 (Giorni 36-40)
-
-> **Obiettivo**: Ripasso intensivo argomenti avanzati 1Z0-083. Multitenant, RMAN, Performance, Security, Patching.
-
-```
-╔═══════════╦══════════════════════════════════════╦═══════════════════════════╗
-║  GIORNO   ║  COSA FAI (3 ore)                    ║  OBIETTIVO FINE GIORNATA  ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1.5h: Ripasso 11.8 (Multitenant  ║                           ║
-║ Giorno 36 ║   CDB/PDB, App containers, Lockdown)║ Multitenant padroneggiato ║
-║           ║ 💻 1.5h: Pratica CDB/PDB su lab —   ║ Plug/Unplug testato       ║
-║           ║   create, clone, plug, unplug PDB    ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso 11.9 (RMAN Backup &  ║                           ║
-║ Giorno 37 ║   Recovery Workshop, Flashback)      ║ RMAN avanzato OK          ║
-║           ║ 💻 1h: Pratica RMAN su lab — backup  ║ Flashback PDB testato     ║
-║           ║   PDB, validate, flashback table     ║                           ║
-║           ║ 📖 1h: Ripasso 11.10 (Deploy/Patch)  ║ Upgrade path compreso     ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso 11.12 (Performance   ║                           ║
-║ Giorno 38 ║   AWR/ADDM/ASH, Memory, Wait Events)║ AWR report generato       ║
-║           ║ 💻 1h: Genera AWR/ADDM su lab RAC    ║ ADDM raccomandazioni OK   ║
-║           ║ 📖 1h: Ripasso 11.13 (SQL Tuning     ║ Optimizer compreso        ║
-║           ║   Advisor, Optimizer Statistics)      ║                           ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📖 1h: Ripasso 11.1-11.2 (ASM, RAC  ║                           ║
-║ Giorno 39 ║   Data Guard, HA, Security)          ║ HA + Security OK          ║
-║           ║ 💻 1h: Ripasso 11.6 (TDE, Audit)    ║ TDE concetti chiari       ║
-║           ║ 📖 1h: Ripasso 11.11 (19c Features) ║ New Features comprese     ║
-╠═══════════╬══════════════════════════════════════╬═══════════════════════════╣
-║           ║ 📝 2h: Simulazione esame 1Z0-083     ║                           ║
-║ Giorno 40 ║   (practice exam online)              ║ Score ≥ 75% target        ║
-║           ║ 📖 1h: Rivedi risposte sbagliate     ║ ⭐ PRONTO PER 1Z0-083!   ║
-║           ║                                      ║ 🏆🏆 PERCORSO COMPLETO! 🏆🏆║
-╚═══════════╩══════════════════════════════════════╩═══════════════════════════╝
-```
-
----
-
-## ⚡ Consigli per Andare Veloce
-
-| Consiglio | Perché |
-|---|---|
-| **Scarica TUTTO il primo giorno** | Non perdere tempo aspettando download da 3GB a metà installazione |
-| **Usa 2 terminali** | Uno per i comandi, uno per l'alert log (`tail -f alert*.log`) |
-| **Copia i comandi dalla guida** | Non digitarli a mano — errori di battitura = nemico n.1 |
-| **Fai SEMPRE lo snapshot PRIMA** | 30 secondi di snapshot vs 3 ore di reinstallazione |
-| **Se qualcosa fallisce, leggi l'alert log** | La risposta è quasi sempre lì |
-| **Non saltare i test intermedi** | Un `ping` che fallisce al giorno 2 diventa un incubo al giorno 10 |
-
----
-
-## 🎯 Dopo il Lab: Cosa Mettere nel CV
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    COMPETENZE ORACLE                         │
-│                                                              │
-│  ✅ Oracle RAC 19c (2-Node cluster, Cache Fusion, ASM)       │
-│  ✅ Oracle Data Guard (Physical Standby, DGMGRL, ADG)        │
-│  ✅ Data Guard Switchover & Failover (FSFO, Reinstate)       │
-│  ✅ Oracle GoldenGate (Integrated Extract, CDC, Migration)   │
-│  ✅ Oracle → PostgreSQL Migration con GoldenGate             │
-│  ✅ Oracle Cloud Infrastructure (OCI) — Free Tier ARM        │
-│  ✅ Hybrid Architecture (On-Prem → Cloud via SSH Tunnel)     │
-│  ✅ Zero-Downtime Migration con GoldenGate                   │
-│  ✅ RMAN Backup/Recovery (Level 0/1, BCT, Restore)           │
-│  ✅ CDB/PDB Multitenant Architecture                         │
-│  ✅ Oracle Linux Administration (7.9, 8.10, ARM)             │
-│  ✅ Grid Infrastructure & Clusterware                        │
-│  ✅ ASM Storage Management (NORMAL/HIGH redundancy, ASMLib)  │
-│  ✅ Oracle Patching (OPatch, opatchauto, datapatch)           │
-│  ✅ Performance Tuning (AWR, ADDM, ASH, SQL Tuning Advisor)  │
-│  ✅ DBA Automation (Ansible + DBMS_SCHEDULER)                 │
-│  ✅ Monitoring (Checkmk/Prometheus+Grafana/Zabbix)            │
-│  ✅ Security (Profiles, Unified Auditing, TDE concepts)      │
-│  ✅ Oracle MAA Gold Architecture (FSFO, FAN, Block Checking)  │
-│  ✅ PostgreSQL 16 Administration (basics)                     │
-│  ✅ Infrastructure as Code (Ansible, Vagrant)                 │
-│                                                              │
-│  Progetto Lab: Architettura enterprise ibrida con            │
-│  RAC → Data Guard → GoldenGate → OCI Cloud → PostgreSQL   │
-│  su 6+ nodi, 1000+ script, 5 playbook Ansible               │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 📚 Risorse del Repository (usa durante il lab)
-
-### Strumenti Operativi
-
-| Risorsa | Quando Usarla | Cosa Contiene |
-|---|---|---|
-| [scripts_operativi/](../../scripts_operativi/) | **Ogni giorno** — diagnosi rapida | 10 script SQL per scenario (tablespace, FRA, lock, performance) |
-| [procedure_operative/](../../procedure_operative/) | **Ogni mattina** — morning check | 13 runbook pronti (health check, backup, DG, lock, CPU) |
-| [automation/](../../automation/) | Setup e patching | 5 playbook Ansible production-grade |
-| [GUIDA_RIPASSO_CONCETTI_DBA.md](../10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Prima di un colloquio | 12 sezioni, 40+ domande con risposte, scenari produzione |
-
-### Libreria Enterprise (~1000 script)
-
-| Settimana | Quando Usare | Cartella libreria_oracle |
-|---|---|---|
-| **Sett. 1** (Giorno 4: ASM) | Dopo aver configurato ASMLib | [01_asm_storage/](../../libreria_oracle/01_asm_storage/) |
-| **Sett. 2** (Giorno 9: Grid) | Dopo aver installato Grid | [05_patching/](../../libreria_oracle/05_patching/) |
-| **Sett. 3** (Giorno 11: DG) | Dopo Data Guard | [02_dataguard/](../../libreria_oracle/02_dataguard/) |
-| **Sett. 3** (Giorno 13: RMAN) | Dopo RMAN | [06_backup_recovery/](../../libreria_oracle/06_backup_recovery/) |
-| **Sett. 3** (Giorno 14: EM) | Dopo Enterprise Manager | [03_monitoring_scripts/](../../libreria_oracle/03_monitoring_scripts/) |
-| **Sett. 4** (Giorno 19: HA) | Dopo Switchover/Failover | [04_user_management/](../../libreria_oracle/04_user_management/) |
-| **Sett. 4** (Giorno 20: DBA) | Dopo attività DBA | [07_performance_tuning/](../../libreria_oracle/07_performance_tuning/) |
-| **Sett. 5** (Giorno 24: Patching) | Dopo ripasso patching | [08_tde_security/](../../libreria_oracle/08_tde_security/) |
-
-### Guide Monitoring (nuove)
-
-| Guida | Quando Usarla |
-|---|---|
-| [GUIDA_MONITORING_OPENSOURCE.md](../08_monitoring/GUIDA_MONITORING_OPENSOURCE.md) | Sett. 3-5: dopo EM, installa Checkmk o Prometheus |
-| [GUIDA_TROUBLESHOOTING_COMPLETO.md](../05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | Da Sett. 2 in poi: meglio su, per ogni problema |
-
----
-
-## Addendum Operativo: Sprint GoldenGate Esteso (40 test)
-
-Per stressare il lab GoldenGate con piu casi possibili, usa come riferimento principale [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md).
-
-### Piano pratico (Settimana 4 -> Settimana 5)
-
-1. Giorno 17: esegui `GG-01..GG-08` (DML, LOB, transazioni, commit storm).
-2. Giorno 18: esegui `GG-09..GG-18` (DDL policy, rete, restart processi, lag stress).
-3. Giorno 19: esegui `GG-19..GG-28` (switchover/failover DG, re-instantiate, long tx, concorrenza).
-4. Giorno 20-21: esegui `GG-29..GG-40` (charset/timezone, restart DB/host, purge trail, dress rehearsal 120 minuti).
-
-### KPI di uscita (obbligatori)
-
-- almeno `32/40` test in stato `PASS`
-- pass dei test critici: `GG-01`, `GG-05`, `GG-12`, `GG-19`, `GG-20`, `GG-33`, `GG-35`, `GG-40`
-- nessun processo `ABENDED` oltre 10 minuti
-- lag entro soglia in finestra test prolungata
-
-### Deliverable da creare nel repo
-
-1. `TESTLOG_GOLDENGATE.md` con colonne: Data/Ora, ID Test, Scenario, Esito, Lag max, Evidenza, Note/Fix (partendo da `TESTLOG_GOLDENGATE_TEMPLATE.md`).
-2. Cartella screenshot/log con evidenze di `INFO ALL`, `LAG`, `VIEW REPORT`, query count/checksum.
-3. Mini-runbook per ogni fail: sintomo, root cause, fix, validazione post-fix.
-
-### Regola tempo/risorse per lab domestico
-
-- Se hai poco tempo, chiudi prima `GG-01..GG-24` durante la settimana.
-- Completa `GG-25..GG-40` nel weekend o in due sessioni dedicate.
-
----
-
-## Addendum 2026: Carico Studio Ribilanciato (consigliato)
-
-Questo blocco aggiorna il piano esistente per distribuire meglio fatica mentale, pratica lab e ripasso.
-La regola resta **3 ore al giorno**, ma con intensita diverse.
-
-### 1) Modello giornaliero fisso (3 ore)
-
-- `Blocco A (50 min)`: teoria mirata su un solo tema
-- `Pausa (10 min)`
-- `Blocco B (50 min)`: lab pratico sullo stesso tema
-- `Pausa (10 min)`
-- `Blocco C (50 min)`: verifica attiva (quiz, comandi a memoria, mini runbook)
-
-### 2) Pattern settimanale consigliato
-
-| Giorno | Intensita | Uso consigliato |
-|---|---|---|
-| Giorno 1 | HIGH | Nuovo argomento + lab nuovo |
-| Giorno 2 | HIGH | Continuazione + troubleshooting |
-| Giorno 3 | MEDIUM | Consolidamento e test guidati |
-| Giorno 4 | HIGH | Nuovo blocco tecnico |
-| Giorno 5 | LIGHT | Ripasso attivo + documentazione + backlog fix |
-| Giorno 6 (opzionale) | BUFFER | Recupero task slittati o test extra |
-| Giorno 7 | OFF | Stop tecnico (solo lettura leggera, max 30 min) |
-
-### 3) Ripasso distribuito (spaced repetition)
-
-Per ogni argomento nuovo fatto in `D0`, pianifica:
-
-- `D+1`: 20 minuti di recall senza appunti
-- `D+3`: 20 minuti di quiz + 1 test pratico rapido
-- `D+7`: 30 minuti di mini simulazione + correzione errori
-
-### 4) Carico ribilanciato per le 8 settimane
-
-| Settimana | Focus | Giorni HIGH | Giorni MEDIUM | Giorni LIGHT/BUFFER | Uscita minima |
-|---|---|---|---|---|---|
-| 1 | OS + Grid + ASM | 3 | 1 | 1 + buffer opzionale | Grid stabile + checklist prerequisiti |
-| 2 | RAC + standby prep | 3 | 1 | 1 + buffer opzionale | RAC operativo + standby pronto |
-| 3 | Data Guard + RMAN + EM | 2 | 2 | 1 + buffer opzionale | broker ok + backup validato + EM up |
-| 4 | GoldenGate + Test + HA | 3 | 1 | 1 + buffer opzionale | test end-to-end + HA completa testata |
-| 5 | GG Avanzato + Cloud + MAA| 2 | 2 | 1 + buffer opzionale | sprint 40 test GG + db target OCI |
-| 6 | Migrazione Oracle->PostgreSQL | 2 | 2 | 1 + buffer opzionale | flusso migrazione end-to-end |
-| 7 | Esame 1Z0-082 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + error log classificato |
-| 8 | Esame 1Z0-083 prep | 2 | 2 | 1 + buffer opzionale | 2 mock + runbook finali |
-
-### 5) Regole anti-overload (pratiche)
-
-- Mai fare due task "nuovi e critici" nello stesso giorno.
-- Se un blocco supera 30 minuti di troubleshooting senza progresso, spostalo in backlog e passa al blocco successivo.
-- Mantieni un solo obiettivo tecnico "must close" al giorno.
-- Chiudi sempre con evidenza scritta: 5-10 righe di cosa ha funzionato, cosa no, prossimo step.
-
-### 6) Cadenza mock exam (allineata a Oracle)
-
-Valori verificati su Oracle Japan (consultati il 13 marzo 2026):
-
-- `1Z0-082-JPN`: `120 minuti`, `72 domande`, `passing score 60%`
-- `1Z0-083-JPN`: `120 minuti`, `68 domande`, `passing score 57%`
-
-Uso pratico nel lab:
-
-- Settimana 7: 2 simulazioni da 120 minuti (giorno 3 e giorno 5)
-- Settimana 8: 2 simulazioni da 120 minuti (giorno 2 e giorno 5)
-- Dopo ogni mock: 40-60 minuti di "error review" per categoria (SQL, backup, HA, security, tuning)
-
-### 7) Riallocazione GoldenGate (piu casi, meno stress)
-
-Per i 40 test GoldenGate:
-
-- settimana 4: `GG-01..GG-18`
-- settimana 4 tardi: `GG-19..GG-32`
-- buffer settimana 5: `GG-33..GG-40` + retest dei fail
-
-Criterio: almeno `8 test` per settimana devono essere "difficili" (failover, lag, restart, recovery trail).
-
-### 8) Fonti usate (internet + Oracle ufficiale)
-
-- Oracle University Japan, `1Z0-082-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
-- Oracle University Japan, `1Z0-083-JPN` exam page: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-ii-1z0-083-exam/
-- Oracle exam registration FAQ: https://education.oracle.com/oracle-certification-exams-registration-faq
-- Oracle Database 19c Administrator's Guide: https://docs.oracle.com/en/database/oracle/oracle-database/19/admin/index.html
-- Oracle Database 19c Backup and Recovery User's Guide: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/index.html
-- Oracle Data Guard Broker 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/index.html
-- Oracle RAC Installation Guide 19c (Linux/UNIX): https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/index.html
-- Karpicke et al., retrieval practice and retention (PubMed): https://pubmed.ncbi.nlm.nih.gov/20951630/
-- Cepeda et al., distributed practice review (PubMed): https://pubmed.ncbi.nlm.nih.gov/16719566/
-
-
+Mettiti le cuffie, apri il terminale, e comincia lo *Step 1.1*!
