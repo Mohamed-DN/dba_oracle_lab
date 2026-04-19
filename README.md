@@ -6,72 +6,72 @@
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
-> **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
+> Complete step-by-step guide to building an Oracle Enterprise architecture in a lab environment.
+> **98% Validated** against the official Oracle MAA Gold best practices.
 
-### 📑 Navigazione Rapida
+### 📑 Quick Navigation
 
-[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🌐 Piano IP](#-piano-ip)
+[⚡ What's Inside](#-whats-in-this-repository) · [🚀 Quick Start](#-quick-start-5-minutes) · [📖 Lab Phases 0→8](#-run-the-lab-phase-0--8) · [📚 Thematic Guides](#-guides-by-topic) · [🛠️ Tools](#️-operational-tools) · [📅 Roadmap](#-lab-roadmap-8-weeks-3hday) · [🌐 IP Plan](#-ip-plan)
 
 ---
 
-## 🚀 Quick Start (5 minuti)
+## 🚀 Quick Start (5 minutes)
 
 ```bash
-# 1. Clona il repo
+# 1. Clone the repo
 git clone https://github.com/Mohamed-DN/dba_oracle_lab.git
 cd dba_oracle_lab
 
-# 2A. PERCORSO MANUALE (impari di più, ~30 ore)
-#     Segui le 9 guide in ordine → docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md
+# 2A. MANUAL PATH (learn more, ~30 hours)
+#     Follow the 9 guides in order → docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md
 
-# 2B. PERCORSO AUTOMATICO (1-click, servono 33GB RAM)
+# 2B. AUTOMATED PATH (1-click, requires 33GB RAM)
 cd vagrant_rac_dataguard
-vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
+vagrant up    # → creates DNS + 2 RAC Primary nodes + 2 Standby nodes + Data Guard
 
-# 3. Dopo il lab, usa gli script operativi ogni giorno
-#    → docs/12_scripts_sql_pronti/  (10 script SQL per emergenze)
-#    → docs/11_runbook_operativi/   (13 runbook DBA)
+# 3. After the lab, use the operational scripts every day
+#    → docs/12_scripts_sql_pronti/  (10 SQL scripts for emergencies)
+#    → docs/11_runbook_operativi/   (13 DBA runbooks)
 ```
 
-> 💡 **Primo giorno?** Leggi prima [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) e [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md).
+> 💡 **First day?** Read [Oracle Architecture](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) and [Glossary](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) first.
 
 ---
 
-## ⚡ Cosa Trovi in Questo Repository
+## ⚡ What's in This Repository
 
-| Sezione | Contenuto | Quantità |
+| Section | Content | Quantity |
 |---|---|---|
-| 📖 [Guide Lab (Fasi 0→8)](#-esegui-il-lab-fase-0--8) | Costruisci da zero un RAC + Data Guard + GoldenGate | 9 guide |
-| 📚 [Documentazione](./docs/) | Guide tematiche per ogni area DBA | 40+ guide |
-| 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
-| 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
-| 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 13 runbook |
-| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 10 playbook |
-| 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
+| 📖 [Lab Guides (Phases 0→8)](#-run-the-lab-phase-0--8) | Build a RAC + Data Guard + GoldenGate from scratch | 9 guides |
+| 📚 [Documentation](./docs/) | Thematic guides for every DBA area | 40+ guides |
+| 🛠️ [Operational Scripts](./docs/12_scripts_sql_pronti/) | Copy-paste-ready SQL for real-world scenarios | 10 scripts |
+| 📂 [Oracle Library](./docs/13_libreria_completa_script/) | Enterprise collection of scripts and procedures | **~1000 scripts** |
+| 📋 [Operational Runbooks](./docs/11_runbook_operativi/) | Daily runbooks for DBA activities | 13 runbooks |
+| 🤖 [Ansible Automation](./automation/) | Production-grade playbooks | 10 playbooks |
+| 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Fully automated environment (Phases 0→4) | 1-click setup |
 
 ---
 
-## ⚠️ Prima di Iniziare
+## ⚠️ Before You Start
 
-| Requisito | Dettaglio |
+| Requirement | Detail |
 |---|---|
-| **RAM minima** | **32GB** per l'intero ambiente (4 nodi RAC + DNS). Con 16GB: solo 2 nodi, senza Standby |
-| **Disco** | ~150GB liberi (VM + ASM disks + software Oracle) |
-| **CPU** | 4+ core consigliati (VirtualBox con VT-x/AMD-V abilitato) |
-| **OS Host** | Windows, Linux, o macOS con VirtualBox 7+ |
+| **Minimum RAM** | **32GB** for the full environment (4 RAC nodes + DNS). With 16GB: only 2 nodes, no Standby |
+| **Disk** | ~150GB free (VMs + ASM disks + Oracle software) |
+| **CPU** | 4+ cores recommended (VirtualBox with VT-x/AMD-V enabled) |
+| **Host OS** | Windows, Linux, or macOS with VirtualBox 7+ |
 
-> 💡 **Non vuoi fare tutto a mano?**
-> - **Parziale**: La cartella `scripts/` ha bash script per storage e Grid.
-> - **Completa**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automatizza le **Fasi 0→4** in un click (33GB RAM).
+> 💡 **Don't want to do everything manually?**
+> - **Partial**: The `scripts/` folder has bash scripts for storage and Grid.
+> - **Full**: [`vagrant_rac_dataguard/`](vagrant_rac_dataguard/README.md) automates **Phases 0→4** in one click (33GB RAM).
 
 ---
 
-## 🏗️ Architettura del Lab
+## 🏗️ Lab Architecture
 
 ```mermaid
 flowchart TD
-    subgraph "Host (Il Tuo PC)"
+    subgraph "Host (Your PC)"
         dns("DNS Node\n192.168.56.50")
         
         subgraph "Primary DataCenter"
@@ -107,42 +107,42 @@ flowchart TD
 
 ---
 
-## 📖 Esegui il Lab (Fase 0 → 8)
+## 📖 Run the Lab (Phase 0 → 8)
 
-Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
+Follow the phases **in order**. Each phase depends on the previous one.
 
-| # | Fase | Guida | Cosa Fai | Tempo |
+| # | Phase | Guide | What You Do | Time |
 |---|---|---|---|---|
-| 0 | **Setup Macchine** | [GUIDA_FASE0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS, dischi ASM | 3-4h |
-| 1 | **Preparazione OS** | [GUIDA_FASE1](./docs/01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md) | Rete, DNS, utenti, SSH, kernel | 2-3h |
+| 0 | **Machine Setup** | [GUIDA_FASE0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | Create VirtualBox VMs, DNS, ASM disks | 3-4h |
+| 1 | **OS Preparation** | [GUIDA_FASE1](./docs/01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md) | Network, DNS, users, SSH, kernel | 2-3h |
 | 2 | **Grid + RAC** | [GUIDA_FASE2](./docs/01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) | Grid Infrastructure, ASM, Database | 4-5h |
-| 3 | **RAC Standby** | [GUIDA_FASE3](./docs/02_high_availability/GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP | 3-4h |
+| 3 | **RAC Standby** | [GUIDA_FASE3](./docs/02_high_availability/GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, static Listener, MRP | 3-4h |
 | 4 | **Data Guard** | [GUIDA_FASE4](./docs/02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Protection Mode, FASTSYNC | 2-3h |
 | 5 | **RMAN Backup** | [GUIDA_FASE5](./docs/03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup, cron, BCT, restore | 2h |
 | 6 | **Enterprise Manager** | [GUIDA_FASE6](./docs/08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | OEM Cloud Control 13.5 + Agent | 4-5h |
 | 7 | **GoldenGate** | [GUIDA_FASE7](./docs/07_replication/GUIDA_FASE7_GOLDENGATE.md) | Extract, Pump, Replicat (Oracle + PG) | 3-4h |
-| 8 | **Test Verifica** | [GUIDA_FASE8](./docs/01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
+| 8 | **Verification Tests** | [GUIDA_FASE8](./docs/01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md) | End-to-end tests, stress, node crash | 2-3h |
 
-> **Tempo totale stimato**: ~30 ore di lavoro pratico.
+> **Estimated total time**: ~30 hours of hands-on work.
 
 ---
 
-## 📚 Guide per Area Tematica
+## 📚 Guides by Topic
 
-### 🟢 Fondamenti — leggi prima del lab
+### 🟢 Fundamentals — read before the lab
 
-| Guida | Cosa Impari |
+| Guide | What You Learn |
 |---|---|
-| [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, ASM, Cache Fusion |
-| [**Ciclo di Vita di una Transazione**](./docs/00_fondamenti/GUIDA_CICLO_DI_VITA_TRANSAZIONE.md) | Anatomia di un UPDATE: Parsing, Cache, ITL, Redo, DBWR, LGWR |
+| [Oracle Architecture](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, ASM, Cache Fusion |
+| [**Transaction Lifecycle**](./docs/00_fondamenti/GUIDA_CICLO_DI_VITA_TRANSAZIONE.md) | Anatomy of an UPDATE: Parsing, Cache, ITL, Redo, DBWR, LGWR |
 | [Memory Architecture (SGA/PGA)](./docs/00_fondamenti/GUIDA_MEMORIA_ORACLE_SGA_PGA.md) | Deep Dive: Buffer Cache, Shared Pool, AMM vs ASMM, HugePages |
 | [Redo/Undo & Crash Recovery](./docs/00_fondamenti/GUIDA_REDO_UNDO_CRASH_RECOVERY.md) | Deep Dive: Write-Ahead Logging, Checkpoint, Roll Forward/Back |
 | [Locking, Concurrency & Wait Events](./docs/00_fondamenti/GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md) | Deep Dive: MVCC, ITL, Deadlocks, e Top 15 Wait Events |
-| [Comandi DBA](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md) | 100+ query SQL essenziali per il DBA |
-| [**Analisi Base Vagrant**](./docs/00_fondamenti/ANALISI_ORACLEBASE_VAGRANT.md) | Studio approfondito della configurazione automatizzata |
-| [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) | 100+ acronimi e termini Oracle spiegati |
-| [Piano Laboratorio](./docs/00_fondamenti/PIANO_LABORATORIO.md) | 8 settimane × 3h/giorno, roadmap completa |
-| [Diario di Bordo](./docs/00_fondamenti/DIARIO_DI_BORDO.md) | Note e avanzamento lavori del lab |
+| [DBA Commands](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md) | 100+ essential SQL queries for the DBA |
+| [**Vagrant Base Analysis**](./docs/00_fondamenti/ANALISI_ORACLEBASE_VAGRANT.md) | In-depth study of the automated configuration |
+| [Glossary](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) | 100+ Oracle acronyms and terms explained |
+| [Lab Plan](./docs/00_fondamenti/PIANO_LABORATORIO.md) | 8 weeks × 3h/day, complete roadmap |
+| [Lab Journal](./docs/00_fondamenti/DIARIO_DI_BORDO.md) | Notes and lab progress log |
 
 ---
 
@@ -150,15 +150,15 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [Switchover Completo](./docs/02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
-| [Failover + Reinstate](./docs/02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md) | ⚠️ **NON obbligatorio nel lab** — vedi nota sotto |
-| [Flashback Database](./docs/02_high_availability/GUIDA_FLASHBACK_DATABASE.md) | "Macchina del tempo" Oracle |
+| [Complete Switchover](./docs/02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback step-by-step |
+| [Failover + Reinstate](./docs/02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md) | ⚠️ **NOT mandatory in the lab** — see note below |
+| [Flashback Database](./docs/02_high_availability/GUIDA_FLASHBACK_DATABASE.md) | Oracle "time machine" |
 | [MAA Best Practices](./docs/02_high_availability/GUIDA_MAA_BEST_PRACTICES.md) | Oracle Maximum Availability Architecture |
 
-> ⚠️ **FAILOVER**: Operazione distruttiva. **Prima** di tentarla:
-> 1. Spegni TUTTE le VM
-> 2. **Copia/zippa l'intera cartella VirtualBox VMs** come backup
-> 3. Poi prosegui — se si rompe tutto, ripristini dalla copia
+> ⚠️ **FAILOVER**: Destructive operation. **Before** attempting it:
+> 1. Shut down ALL VMs
+> 2. **Copy/zip the entire VirtualBox VMs folder** as a backup
+> 3. Then proceed — if everything breaks, restore from the copy
 
 ---
 
@@ -166,33 +166,33 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [RMAN Completa 19c](./docs/03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
+| [Complete RMAN 19c](./docs/03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, practical tests |
 | [Data Pump](./docs/03_backup_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
 
 ---
 
-### 🟠 Amministrazione
+### 🟠 Administration
 
 | Guida | Cosa Impari |
 |---|---|
-| [CDB/PDB/Utenti](./docs/04_administration/GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, ruoli |
-| [Listener e Services](./docs/04_administration/GUIDA_LISTENER_SERVICES_DBA.md) | Listener, TNS, services in dettaglio |
-| [Servizi Applicativi RAC](./docs/04_administration/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | TAF, FAN, CLB/RLB, Application Continuity |
-| [Ansible Response Templates](./docs/04_administration/GUIDA_ANSIBLE_TEMPLATES.md) | **Nuovo**: Come fare *silent install* al 100% con Jinja2 |
-| [Gestione Dischi ASM](./docs/04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove dischi ASM (ASMLib + AFD) |
-| [Oracle Scheduler](./docs/04_administration/GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks, monitoring |
+| [CDB/PDB/Users](./docs/04_administration/GUIDA_CDB_PDB_UTENTI.md) | Multitenant, PDB create/clone/plug, roles |
+| [Listener and Services](./docs/04_administration/GUIDA_LISTENER_SERVICES_DBA.md) | Listener, TNS, services in detail |
+| [RAC Application Services](./docs/04_administration/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | TAF, FAN, CLB/RLB, Application Continuity |
+| [Ansible Response Templates](./docs/04_administration/GUIDA_ANSIBLE_TEMPLATES.md) | **New**: How to do 100% *silent install* with Jinja2 |
+| [ASM Disk Management](./docs/04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove ASM disks (ASMLib + AFD) |
+| [Oracle Scheduler](./docs/04_administration/GUIDA_SCHEDULER_JOBS.md) | Jobs, chains, auto-tasks, monitoring |
 | [Security Hardening](./docs/04_administration/GUIDA_SECURITY_HARDENING.md) | TDE, Auditing, Encryption, Password Profiles |
-| [**Identità Oracle e Servizi**](./docs/04_administration/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | **MEGA-GUIDA**: DB_NAME vs SID vs SERVICE_NAME, Listener, Role-Based Services, Switchover |
+| [**Oracle Identity and Services**](./docs/04_administration/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | **MEGA-GUIDE**: DB_NAME vs SID vs SERVICE_NAME, Listener, Role-Based Services, Switchover |
 
 ---
 
-### 🔴 Performance & Diagnostica
+### 🔴 Performance & Diagnostics
 
 | Guida | Cosa Impari |
 |---|---|
-| [Troubleshooting Completo](./docs/05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | **MEGA-GUIDA**: metodo da zero, wait events, scenari reali |
+| [Complete Troubleshooting](./docs/05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | **MEGA-GUIDE**: from-scratch method, wait events, real-world scenarios |
 | [AWR/ASH/ADDM](./docs/05_performance/GUIDA_AWR_ASH_ADDM.md) | SQL Monitor, SPM, SQL Quarantine |
-| [Top 100 Script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md) | I 100 script più utili ogni giorno |
+| [Top 100 DBA Scripts](./docs/05_performance/TOP_100_SCRIPT_DBA.md) | The 100 most useful daily scripts |
 
 ---
 
@@ -200,19 +200,19 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [Patching RAC](./docs/06_patching_upgrade/GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, cleanup |
-| [Upgrade RU RAC](./docs/06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md) | Rolling upgrade, skip version, rollback |
+| [RAC Patching](./docs/06_patching_upgrade/GUIDA_PATCHING_RAC.md) | Combo Patch, OJVM, cleanup |
+| [RU Upgrade RAC](./docs/06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md) | Rolling upgrade, skip version, rollback |
 | [AutoUpgrade 12c → 19c](./docs/06_patching_upgrade/GUIDA_AUTOUPGRADE_12C_TO_19C.md) | AutoUpgrade completo con config.cfg |
-| [AutoUpgrade 19c → 26c](./docs/06_patching_upgrade/GUIDA_AUTOUPGRADE_19C_TO_26.md) | Nuova Long-Term Release |
+| [AutoUpgrade 19c → 26c](./docs/06_patching_upgrade/GUIDA_AUTOUPGRADE_19C_TO_26.md) | New Long-Term Release |
 
 ---
 
-### 🔄 Replica & Migrazione
+### 🔄 Replication & Migration
 
 | Guida | Cosa Impari |
 |---|---|
-| [Migrazione GoldenGate](./docs/07_replication/GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration |
-| [Oracle → PostgreSQL](./docs/07_replication/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione con GG, ora2pg, ODBC |
+| [GoldenGate Migration](./docs/07_replication/GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration |
+| [Oracle → PostgreSQL](./docs/07_replication/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migration with GG, ora2pg, ODBC |
 
 ---
 
@@ -220,133 +220,133 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [Monitoring Opensource](./docs/08_monitoring/GUIDA_MONITORING_OPENSOURCE.md) | **Checkmk vs Zabbix vs Prometheus+Grafana** — guida installazione completa |
+| [Open Source Monitoring](./docs/08_monitoring/GUIDA_MONITORING_OPENSOURCE.md) | **Checkmk vs Zabbix vs Prometheus+Grafana** — complete installation guide |
 | [Enterprise Manager 13c](./docs/08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | OEM Cloud Control: OMS, Agent, discovery |
 
 ---
 
-### ☁️ Cloud OCI — Opzionale
+### ☁️ Cloud OCI — Optional
 
-> Percorso alternativo avanzato: replicare verso Oracle Cloud (OCI ARM Free Tier).
-
-| Guida | Cosa Impari |
-|---|---|
-| [GoldenGate verso OCI](./docs/09_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md) | Target su OCI, Free vs Enterprise |
-| [Rete Lab ↔ OCI](./docs/09_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | VPN, SSH tunnel, NSG |
-
----
-
-### 🎓 Esami & Carriera
+> Advanced alternative path: replicate to Oracle Cloud (OCI ARM Free Tier).
 
 | Guida | Cosa Impari |
 |---|---|
-| [Ripasso Concetti DBA](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 sezioni Q&A su architettura, RAC, DG, performance, scenari |
-| [Preparazione Esami](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
-| [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
-| [Attività DBA](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR, Patching, DataPump |
-| [**Preparazione Colloqui**](./docs/10_esami_carriera/GUIDA_PREPARAZIONE_COLLOQUIO_TECNICO.md) | **MEGA-GUIDA**: mindset, metodo STAR e 18 domande avanzate |
-| [Validazione Best Practices](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98% |
+| [GoldenGate to OCI](./docs/09_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md) | OCI target, Free vs Enterprise |
+| [Lab ↔ OCI Network](./docs/09_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | VPN, SSH tunnel, NSG |
 
 ---
 
-## 🛠️ Strumenti Operativi
+### 🎓 Exams & Career
 
-### Script SQL per Scenario (`docs/12_scripts_sql_pronti/`)
+| Guida | Cosa Impari |
+|---|---|
+| [DBA Concepts Review](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 Q&A sections on architecture, RAC, DG, performance, scenarios |
+| [Exam Preparation](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md) | Complete 1Z0-082 + 1Z0-083 |
+| [From Lab to Production](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
+| [DBA Activities](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR, Patching, DataPump |
+| [**Interview Preparation**](./docs/10_esami_carriera/GUIDA_PREPARAZIONE_COLLOQUIO_TECNICO.md) | **MEGA-GUIDE**: mindset, STAR method and 18 advanced questions |
+| [Best Practices Validation](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md) | 54-point audit, 98% scorecard |
 
-> **10 script pronti al copia-incolla** — [Indice completo](./docs/12_scripts_sql_pronti/README.md)
+---
 
-| Script | Scenario | Errori Coperti |
+## 🛠️ Operational Tools
+
+### SQL Scripts by Scenario (`docs/12_scripts_sql_pronti/`)
+
+> **10 copy-paste-ready scripts** — [Full index](./docs/12_scripts_sql_pronti/README.md)
+
+| Script | Scenario | Errors Covered |
 |---|---|---|
 | [01 Tablespace/Datafile](./docs/12_scripts_sql_pronti/01_tablespace_datafile.sql) | Bigfile vs Smallfile, maxsize, resize | ORA-01654, ORA-01653 |
-| [02 UNDO/TEMP](./docs/12_scripts_sql_pronti/02_undo_temp.sql) | Undo pieno, temp piena, retention | ORA-01555, ORA-30036 |
-| [03 FRA/Archivelog](./docs/12_scripts_sql_pronti/03_fra_archivelog.sql) | FRA piena → DB SUSPEND! Data Pump impact | ORA-19815, ORA-00257 |
-| [04 Data Pump](./docs/12_scripts_sql_pronti/04_datapump_operativo.sql) | Export/Import sicuri, pre-check FRA | Prevenzione |
-| [05 ASM Storage](./docs/12_scripts_sql_pronti/05_asm_storage.sql) | Diskgroup, AU_SIZE, limiti | Capacity planning |
-| [06 Sessioni/Lock](./docs/12_scripts_sql_pronti/06_sessioni_lock.sql) | Chi blocca chi, kill session | "App bloccata!" |
-| [07 Performance](./docs/12_scripts_sql_pronti/07_performance_quick.sql) | Top SQL, wait events, hit ratio | "DB lento!" |
-| [08 RMAN Backup](./docs/12_scripts_sql_pronti/08_rman_backup_status.sql) | Ultimo backup, fallimenti | Morning check |
+| [02 UNDO/TEMP](./docs/12_scripts_sql_pronti/02_undo_temp.sql) | Full undo, full temp, retention | ORA-01555, ORA-30036 |
+| [03 FRA/Archivelog](./docs/12_scripts_sql_pronti/03_fra_archivelog.sql) | Full FRA → DB SUSPEND! Data Pump impact | ORA-19815, ORA-00257 |
+| [04 Data Pump](./docs/12_scripts_sql_pronti/04_datapump_operativo.sql) | Safe Export/Import, pre-check FRA | Prevention |
+| [05 ASM Storage](./docs/12_scripts_sql_pronti/05_asm_storage.sql) | Diskgroup, AU_SIZE, limits | Capacity planning |
+| [06 Sessions/Lock](./docs/12_scripts_sql_pronti/06_sessioni_lock.sql) | Who is blocking whom, kill session | "App stuck!" |
+| [07 Performance](./docs/12_scripts_sql_pronti/07_performance_quick.sql) | Top SQL, wait events, hit ratio | "DB slow!" |
+| [08 RMAN Backup](./docs/12_scripts_sql_pronti/08_rman_backup_status.sql) | Last backup, failures | Morning check |
 | [09 Data Guard](./docs/12_scripts_sql_pronti/09_dataguard_status.sql) | Lag, GAP, MRP, switchover ready | Morning check |
-| [10 Oggetti/Schema](./docs/12_scripts_sql_pronti/10_oggetti_schema.sql) | Invalidi, segmenti grandi, recyclebin | Post-upgrade |
+| [10 Objects/Schema](./docs/12_scripts_sql_pronti/10_oggetti_schema.sql) | Invalid objects, large segments, recyclebin | Post-upgrade |
 
 ---
 
-### Runbook Operativi (`docs/11_runbook_operativi/`)
+### Operational Runbooks (`docs/11_runbook_operativi/`)
 
-> **13 runbook giornalieri** — [Indice completo](./docs/11_runbook_operativi/README.md)
+> **13 daily runbooks** — [Full index](./docs/11_runbook_operativi/README.md)
 
-| # | Procedura | Frequenza |
+| # | Procedure | Frequency |
 |---|---|---|
-| 01 | [Morning Health Check](./docs/11_runbook_operativi/01_MORNING_HEALTH_CHECK.md) | Ogni mattina |
-| 02 | [Verifica Backup](./docs/11_runbook_operativi/02_VERIFICA_BACKUP.md) | Ogni mattina |
-| 03 | [Check Data Guard](./docs/11_runbook_operativi/03_CHECK_DATAGUARD.md) | Ogni mattina |
-| 04-08 | Lock, Query Lenta, TBS Pieno, CPU, ORA-Errors | Su richiesta / alert |
-| 09-11 | Gestione Utenti, Start/Stop RAC, Review AWR | Settimanale |
-| 12-13 | Capacity Planning, Refresh Schema Test | Mensile |
+| 01 | [Morning Health Check](./docs/11_runbook_operativi/01_MORNING_HEALTH_CHECK.md) | Every morning |
+| 02 | [Backup Verification](./docs/11_runbook_operativi/02_VERIFICA_BACKUP.md) | Every morning |
+| 03 | [Data Guard Check](./docs/11_runbook_operativi/03_CHECK_DATAGUARD.md) | Every morning |
+| 04-08 | Lock, Slow Query, Full TBS, CPU, ORA-Errors | On demand / alert |
+| 09-11 | User Management, Start/Stop RAC, AWR Review | Weekly |
+| 12-13 | Capacity Planning, Test Schema Refresh | Monthly |
 
 ---
 
 ### Ansible Automation (`automation/`)
 
-> **10 playbook production-grade** — [Indice completo](./automation/README.md)
+> **10 production-grade playbooks** — [Full index](./automation/README.md)
 
-| Playbook | Cosa Fa |
+| Playbook | What It Does |
 |---|---|
-| [01 Oracle Install](./automation/playbooks/01_oracle_install.yml) | Installazione 19c silent |
+| [01 Oracle Install](./automation/playbooks/01_oracle_install.yml) | Silent 19c installation |
 | [02 Oracle Patching](./automation/playbooks/02_oracle_patching.yml) | Rolling patch (zero downtime) |
 | [03 AutoUpgrade](./automation/playbooks/03_oracle_autoupgrade.yml) | 3 fasi: pre_upgrade → upgrade → finalize |
-| [04 Health Check](./automation/playbooks/04_daily_health_check.yml) | Morning check automatizzato |
+| [04 Health Check](./automation/playbooks/04_daily_health_check.yml) | Automated morning check |
 | [05 RMAN Backup](./automation/playbooks/05_rman_backup.yml) | Backup + crosscheck + validate |
-| [06 DG Switchover](./automation/playbooks/06_dataguard_switchover.yml) | Switchover Data Guard automatizzato |
-| [07 Users & TBS](./automation/playbooks/07_create_users_tablespaces.yml) | Creazione BIGFILE Tablespace e Utenti |
-| [08 Gather Stats](./automation/playbooks/08_gather_stats.yml) | DBMS_STATS automatizzato via Ansible |
-| [09 DataPump Export](./automation/playbooks/09_datapump_export.yml) | Export parallelo di schemi applicativi |
-| [10 RAC Services](./automation/playbooks/10_manage_services.yml) | Start/Stop srvctl dei servizi RAC |
+| [06 DG Switchover](./automation/playbooks/06_dataguard_switchover.yml) | Automated Data Guard Switchover |
+| [07 Users & TBS](./automation/playbooks/07_create_users_tablespaces.yml) | BIGFILE Tablespace and User creation |
+| [08 Gather Stats](./automation/playbooks/08_gather_stats.yml) | Automated DBMS_STATS via Ansible |
+| [09 DataPump Export](./automation/playbooks/09_datapump_export.yml) | Parallel export of application schemas |
+| [10 RAC Services](./automation/playbooks/10_manage_services.yml) | Start/Stop srvctl for RAC services |
 
 ---
 
-### Libreria Oracle (`docs/13_libreria_completa_script/`)
+### Oracle Library (`docs/13_libreria_completa_script/`)
 
-> **~1000 script** dalla community Oracle — [Indice completo](./docs/13_libreria_completa_script/README.md)
+> **~1000 scripts** from the Oracle community — [Full index](./docs/13_libreria_completa_script/README.md)
 
-| Area | Script | Cosa Trovi |
+| Area | Scripts | What You Find |
 |---|---|---|
-| [Monitoring](./docs/13_libreria_completa_script/03_monitoring_scripts/) | 586 | Sessioni, lock, CPU, I/O, ASH, rete |
+| [Monitoring](./docs/13_libreria_completa_script/03_monitoring_scripts/) | 586 | Sessions, lock, CPU, I/O, ASH, network |
 | [Performance](./docs/13_libreria_completa_script/07_performance_tuning/) | 225 | SPM, AWR, statistiche, SQL tuning |
-| [Utilities](./docs/13_libreria_completa_script/12_utilities/) | 103 | Scheduler, storage, CDB/PDB, profili |
-| [Altro](./docs/13_libreria_completa_script/README.md) | 86 | ASM, DG, utenti, patching, TDE, partizioni |
+| [Utilities](./docs/13_libreria_completa_script/12_utilities/) | 103 | Scheduler, storage, CDB/PDB, profiles |
+| [Other](./docs/13_libreria_completa_script/README.md) | 86 | ASM, DG, users, patching, TDE, partitions |
 
 ---
 
-### Risorse Extra (Archivio)
+### Extra Resources (Archive)
 
-| Documento | Descrizione |
+| Document | Description |
 |---|---|
-| [Catalogo Attività DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
-| [Checklist Operativa](./docs/10_esami_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
-| [Domande Tecniche DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande e risposte per esami e certificazioni |
+| [DBA Activity Catalog](./docs/10_esami_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Complete overview of real DBA activities |
+| [Operational Checklist](./docs/10_esami_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Daily/weekly/monthly runbook |
+| [DBA Technical Questions](./docs/10_esami_carriera/archivio_extra/GUIDA_DOMANDE_DBA_ORACLE.md) | Questions and answers for exams and certifications |
 
 ---
 
-## 📅 Roadmap Lab (8 settimane, 3h/giorno)
+## 📅 Lab Roadmap (8 weeks, 3h/day)
 
-| Settimana | Focus | Output |
+| Week | Focus | Output |
 |---|---|---|
-| 1 | OS + Grid + ASM | Grid stabile, prerequisiti chiusi |
-| 2 | RAC + standby | RAC operativo + standby pronto |
-| 3 | Data Guard + RMAN + GG | Broker OK, backup validato, GG base |
-| 4 | GG avanzato + HA test | 24+ test GoldenGate completati |
-| 5 | EM + monitoring + cloud | OMS/Agent attivi, alerting funzionante |
-| 6 | Migrazione Oracle → PG | Flusso end-to-end completato |
-| 7 | Esame 1Z0-082 | 2 mock exam + revisione errori |
-| 8 | Esame 1Z0-083 | 2 mock exam + runbook finali |
+| 1 | OS + Grid + ASM | Stable Grid, prerequisites complete |
+| 2 | RAC + standby | Operational RAC + standby ready |
+| 3 | Data Guard + RMAN + GG | Broker OK, backup validated, GG basics |
+| 4 | Advanced GG + HA tests | 24+ GoldenGate tests completed |
+| 5 | EM + monitoring + cloud | OMS/Agent active, alerting functional |
+| 6 | Oracle → PG migration | End-to-end flow completed |
+| 7 | Exam 1Z0-082 | 2 mock exams + error review |
+| 8 | Exam 1Z0-083 | 2 mock exams + final runbooks |
 
-> Piano dettagliato giorno per giorno: [PIANO_LABORATORIO.md](./docs/00_fondamenti/PIANO_LABORATORIO.md)
+> Detailed day-by-day plan: [PIANO_LABORATORIO.md](./docs/00_fondamenti/PIANO_LABORATORIO.md)
 
 ---
 
-## 🌐 Piano IP
+## 🌐 IP Plan
 
-| Hostname | IP Pubblica | IP Privata | IP VIP | Ruolo |
+| Hostname | Public IP | Private IP | VIP | Role |
 |---|---|---|---|---|
 | dnsnode | 192.168.56.50 | — | — | DNS (Dnsmasq) |
 | rac1 | 192.168.56.101 | 192.168.1.101 | .56.103 | RAC Primary N.1 |
@@ -358,9 +358,9 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ---
 
-## 📦 Software Necessario
+## 📦 Required Software
 
-| Software | Versione | Download |
+| Software | Version | Download |
 |---|---|---|
 | Oracle Linux | 7.9 | [Oracle Linux ISOs](https://yum.oracle.com/oracle-linux-isos.html) |
 | Grid Infrastructure | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
@@ -369,13 +369,13 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | Enterprise Manager | 13.5 | [eDelivery](https://edelivery.oracle.com) |
 | VirtualBox | 7.x | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |
 
-> 💡 Scarica TUTTO prima di iniziare! Lista completa in [Fase 0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md).
+> 💡 Download EVERYTHING before starting! Full list in [Phase 0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md).
 
 ---
 
-## 📎 Riferimenti
+## 📎 References
 
-| Risorsa | Link |
+| Resource | Link |
 |---|---|
 | Oracle Base — RAC 19c on VirtualBox | [oracle-base.com](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox) |
 | Oracle MAA Best Practices | [oracle.com/maa](https://www.oracle.com/database/technologies/high-availability/maa.html) |

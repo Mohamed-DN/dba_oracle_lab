@@ -1,33 +1,33 @@
 # Contributing
 
-Contributi, fix e suggerimenti sono benvenuti!
+Contributions, fixes, and suggestions are welcome!
 
-## Come Contribuire
+## How to Contribute
 
-1. **Fork** del repository
-2. Crea un **branch** con un nome descrittivo (`fix/tablespace-script`, `feat/new-guide`)
-3. Fai le modifiche e testa
-4. Apri una **Pull Request** con descrizione chiara
+1. **Fork** the repository
+2. Create a **branch** with a descriptive name (`fix/tablespace-script`, `feat/new-guide`)
+3. Make your changes and test them
+4. Open a **Pull Request** with a clear description
 
-## Regole
+## Rules
 
-- **Script SQL**: Testa sempre su un lab prima di proporre
-- **Guide**: Mantieni il formato Markdown consistente con le guide esistenti
-- **Naming**: Segui le convenzioni di naming (MAIUSCOLO per guide, snake_case per script)
-- **Lingua**: Le guide sono in italiano, i commenti SQL in italiano/inglese
+- **SQL Scripts**: Always test on a lab environment before proposing
+- **Guides**: Keep the Markdown format consistent with existing guides
+- **Naming**: Follow the naming conventions (UPPERCASE for guides, snake_case for scripts)
+- **Language**: Guides are in English, SQL comments in English
 
-## Segnala un Bug
+## Report a Bug
 
-Apri una [Issue](../../issues) con:
-- Versione Oracle in uso
-- Fase del lab o script coinvolto
-- Errore completo (copia/incolla dall'alert log o terminale)
-- Cosa hai già provato
+Open an [Issue](../../issues) with:
+- Oracle version in use
+- Lab phase or script involved
+- Full error (copy/paste from the alert log or terminal)
+- What you have already tried
 
-## Idee per Contributi
+## Contribution Ideas
 
-- [ ] Nuove procedure operative per scenari non coperti
-- [ ] Script per Oracle 23ai / 26c
-- [ ] Template Grafana dashboard per Oracle
-- [ ] Playbook Ansible aggiuntivi (es. DR automation)
-- [ ] Traduzione guide in inglese
+- [ ] New operational procedures for uncovered scenarios
+- [ ] Scripts for Oracle 23ai / 26c
+- [ ] Grafana dashboard templates for Oracle
+- [ ] Additional Ansible playbooks (e.g., DR automation)
+- [ ] Translation of guides into English
