@@ -9,6 +9,8 @@ Per aumentare qualità didattica e riuso operativo, ogni guida nuova o aggiornat
 3. **Validazione**: check SQL/CLI per confermare esito.
 4. **Troubleshooting**: errori tipici, diagnosi rapida, fix.
 
+Checklist operativa: [Didactic Compliance Checklist](./DIDACTIC_COMPLIANCE_CHECKLIST.md).
+
 ## Percorso progressivo
 
 - **Base**: esecuzione guidata e concetti fondamentali.

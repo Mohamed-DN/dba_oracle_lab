@@ -4,6 +4,9 @@
 > Ogni sezione ha un README che spiega **cosa fa**, **quando usarlo**, e **come eseguirlo**.
 
 📘 **Nuovo catalogo completo script-per-script**: [CATALOGO_COMPLETO_SCRIPT.md](./CATALOGO_COMPLETO_SCRIPT.md)
+  
+🏷️ **Etichette script**: [SCRIPT_QUALITY_LABELS.csv](./SCRIPT_QUALITY_LABELS.csv) · [Policy etichette](./SCRIPT_LABELING_POLICY.md)  
+✅ **Top script certificati**: [TOP_SCRIPT_CERTIFICATI.md](./TOP_SCRIPT_CERTIFICATI.md)
 
 ---
 
