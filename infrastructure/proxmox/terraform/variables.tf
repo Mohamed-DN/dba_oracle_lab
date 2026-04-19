@@ -23,7 +23,7 @@ variable "pm_api_token_secret" {
 variable "pm_tls_insecure" {
   description = "Allow insecure TLS to Proxmox API"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "target_node" {

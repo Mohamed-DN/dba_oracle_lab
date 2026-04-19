@@ -28,6 +28,8 @@ terraform plan
 terraform apply
 ```
 
+> Nota sicurezza: `pm_tls_insecure` ha default `false`; usare `true` solo in lab con certificati non trusted.
+
 Destroy completo:
 
 ```bash
