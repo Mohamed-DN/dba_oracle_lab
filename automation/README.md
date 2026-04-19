@@ -47,6 +47,11 @@ automation/
 │   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
 │   ├── 09_datapump_export.yml             ← Logical backup con expdp
 │   └── 10_manage_services.yml             ← Gestione RAC services
+├── templates/
+│   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
+│   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
+│   ├── dbca_rac.rsp.j2                    ← Template Creazione RAC DB
+│   └── netca_rac.rsp.j2                   ← Template Configurazione Reti
 └── roles/
     ├── oracle_precheck/                   ← Pre-flight checks comuni
     │   └── tasks/main.yml

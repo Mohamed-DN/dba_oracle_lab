@@ -1,0 +1,35 @@
+####################################################################
+# Ansible Jinja2 Template per Creazione DB RAC (DBCA)
+####################################################################
+
+responseFileVersion=/oracle/assistants/rspfmt_dbca_response_schema_v19.0.0
+gdbName={{ db_uniq_name | default('RACDB') }}
+sid={{ db_name | default('RACDB') }}
+databaseConfigType=RAC
+policyManaged=false
+createServerPool=false
+nodeList={{ cluster_nodes | join(',') }}
+templateName=General_Purpose.dbc
+
+# Password dal Vault Ansible
+sysPassword={{ vault_oracle_sys_password }}
+systemPassword={{ vault_oracle_sys_password }}
+emConfiguration=NONE
+
+# Storage
+storageType=ASM
+diskGroupName={{ data_diskgroup | default('+DATA') }}
+recoveryGroupName={{ reco_diskgroup | default('+RECO') }}
+asmsnmpPassword={{ vault_oracle_sys_password }}
+
+# Architecture
+databaseType=MULTIPURPOSE
+memoryPercentage=40
+useOracleManagedFiles=true
+characterset=AL32UTF8
+nationalCharacterSet=AL16UTF16
+
+createAsContainerDatabase=true
+numberOfPDBs={{ num_pdbs | default('1') }}
+pdbName={{ pdb_name | default('PDB1') }}
+pdbAdminPassword={{ vault_oracle_sys_password }}

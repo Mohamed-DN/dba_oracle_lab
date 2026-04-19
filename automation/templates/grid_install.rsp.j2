@@ -1,0 +1,33 @@
+####################################################################
+# Copyright (c) 1999, 2019, Oracle and/or its affiliates. 
+# Ansible Jinja2 Template per Grid Infrastructure Setup (19c RAC)
+####################################################################
+
+oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v19.0.0
+
+#-------------------------------------------------------------------------------
+# Valori Iniettati da Ansible
+#-------------------------------------------------------------------------------
+INVENTORY_LOCATION={{ ora_inventory_loc | default('/u01/app/oraInventory') }}
+oracle.install.option=CRS_SWONLY
+ORACLE_BASE={{ grid_base | default('/u01/app/grid') }}
+oracle.install.asm.OSDBA=asmdba
+oracle.install.asm.OSOPER=asmoper
+oracle.install.asm.OSASM=asmadmin
+
+oracle.install.crs.config.clusterNodes={{ cluster_nodes | join(',') }}
+oracle.install.crs.config.networkInterfaceList={{ network_interface_list | default('eth0:1,eth1:2') }}
+oracle.install.crs.config.scanType=LOCAL_SCAN
+oracle.install.crs.config.scanName={{ scan_name | default('rac-scan') }}
+oracle.install.crs.config.scanPort=1521
+
+oracle.install.crs.config.ClusterConfiguration=STANDALONE
+oracle.install.crs.config.configureAsExtendedCluster=false
+
+oracle.install.crs.config.diskGroups={{ crs_diskgroup | default('+CRS') }}
+oracle.install.crs.config.diskDiscoveryString={{ asm_disk_discovery | default('/dev/oracleasm/disks/*') }}
+oracle.install.crs.config.ignoreDiskWarning=true
+
+# Ansible Vault Password
+oracle.install.crs.config.sharedFileSystemStorage.authOSUser=oracle
+oracle.install.crs.config.sharedFileSystemStorage.authOSPassword={{ vault_oracle_os_password }}
