@@ -1,0 +1,15 @@
+# Default owners for all files
+* @Mohamed-DN
+
+# Security and governance
+SECURITY.md @Mohamed-DN
+security/** @Mohamed-DN
+policy/** @Mohamed-DN
+.github/workflows/** @Mohamed-DN
+
+# Automation
+automation/** @Mohamed-DN
+tests/e2e/** @Mohamed-DN
+
+# Governance docs
+docs/14_enterprise_governance/** @Mohamed-DN

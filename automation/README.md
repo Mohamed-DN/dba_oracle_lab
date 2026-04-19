@@ -50,9 +50,10 @@ automation/
 │   ├── 12_dba_maintenance.yml             ← Maintenance DBA periodica
 │   └── 13_maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
 ├── roles/
-│   └── maa_guardrails/                    ← Primo ruolo modulare (baseline enterprise)
-│       ├── defaults/main.yml
-│       └── tasks/main.yml
+│   ├── maa_guardrails/                    ← Ruolo MAA baseline enterprise
+│   ├── oracle_daily_health/               ← Ruolo riusabile health-check
+│   ├── oracle_rman_backup/                ← Ruolo riusabile RMAN backup
+│   └── oracle_dataguard_switchover/       ← Ruolo riusabile switchover DG
 ├── templates/
 │   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
 │   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
@@ -158,3 +159,17 @@ ansible-playbook playbooks/05_rman_backup.yml --ask-vault-pass
 - [CruGlobal/ansible-oracle-db-upgrade](https://github.com/CruGlobal/ansible-oracle-db-upgrade) — Pattern 3-fasi per upgrade
 - [Oracle DevOps Series: Automate 19c with Ansible](https://medium.com/oracledevs/devops-series-automate-oracle-19c-rdbms-installations-with-ansible-github-43cfdf344a4a)
 - [oravirt Feature List](https://github.com/oravirt/ansible-oracle/blob/master/doc/featurelist.adoc) — Matrice compatibilità completa
+
+---
+
+## Test funzionali E2E ripetibili
+
+Suite locale mockata (senza Oracle installato) per verificare il comportamento reale
+dei playbook principali:
+
+```bash
+tests/e2e/ansible/run_functional_e2e.sh
+```
+
+La stessa suite è eseguita automaticamente nel workflow GitHub Actions:
+`.github/workflows/e2e-functional-playbooks.yml`.

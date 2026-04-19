@@ -11,6 +11,9 @@ on:
       - "automation/playbooks/06_dataguard_switchover.yml"
       - "automation/playbooks/11_create_cdb_pdb.yml"
       - "automation/playbooks/13_maa_guardrails.yml"
+      - "automation/roles/oracle_daily_health/**"
+      - "automation/roles/oracle_dataguard_switchover/**"
+      - "automation/roles/maa_guardrails/**"
       - ".github/workflows/critical-regression.yml"
 
 permissions:
@@ -30,7 +33,8 @@ jobs:
           test -f automation/playbooks/06_dataguard_switchover.yml
           test -f automation/playbooks/11_create_cdb_pdb.yml
           test -f automation/playbooks/13_maa_guardrails.yml
-          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml
+          grep -Fq 'v\$dataguard_stats' automation/playbooks/04_daily_health_check.yml || \
+            grep -Fq 'v\$dataguard_stats' automation/roles/oracle_daily_health/tasks/main.yml
           grep -q "switchover" automation/playbooks/06_dataguard_switchover.yml
           grep -q "CREATE PLUGGABLE DATABASE" automation/playbooks/11_create_cdb_pdb.yml
           grep -q "db_lost_write_protect" automation/roles/maa_guardrails/tasks/main.yml
