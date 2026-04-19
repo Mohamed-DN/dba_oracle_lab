@@ -63,7 +63,7 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 
 | Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
 |:---:|---|---|---|
-| **5.1** | **Vagrant (Infrastruttura Come Codice)** | [Vagrant 1-Click](../../vagrant_rac_dataguard/README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. |
+| **5.1** | **Vagrant (Infrastruttura Come Codice)** | [Vagrant 1-Click](../../vagrant_rac_dataguard/README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. **Nota**: Richiede binari in `./software/`. |
 | **5.2** | **Automation via Ansible** | [Ansible Playbook Library](../../automation/README.md) | Impari perché Ansible ha sostituito Jenkins per le patch Oracle. Esegui patching rolling e check mattutini con playbook pronti. |
 | **5.3** | **Templates (Jinja2)** | [Ansible Templates Guide](../04_administration/GUIDA_ANSIBLE_TEMPLATES.md) | Il segreto delle Enterprise: esegui le installazioni (Grid, RDBMS, DBCA) in modalità `silent` al 100% nascondendo le password nel Vault. |
 | **5.4** | **Runbook Giornaliero** | [Procedure Operative Standard](../11_runbook_operativi/README.md) | Impari i processi da DBA turnista. Cosa guardare alle 8:30 del mattino (Health Check), come reagire ai ticket P1. |

@@ -6,6 +6,11 @@
 
 ---
 
+> [!WARNING]
+> **PREQUISITO SOFTWARE VAGRANT**: Se utilizzi l'automazione Vagrant, devi creare manualmente una cartella `software/` nella root del modulo Vagrant (`vagrant_rac_dataguard/`) e inserirvi i binari `LINUX.X64_193000_grid_home.zip` e `LINUX.X64_193000_db_home.zip`. Senza questi file, il `vagrant up` fallirà.
+
+---
+
 ## Confronto Architettura
 
 ```
