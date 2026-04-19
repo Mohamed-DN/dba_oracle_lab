@@ -34,6 +34,7 @@ automation/
 │   └── lab.ini                            ← Server del lab
 ├── group_vars/
 │   └── all.yml                            ← Variabili globali (lab + produzione)
+├── collections_requirements.yml           ← Collections consigliate (oravirt/community)
 ├── playbooks/
 │   ├── 01_oracle_install.yml              ← Installazione 19c Software-Only
 │   ├── 02_oracle_patching.yml             ← Patching RU (rolling RAC)
@@ -63,6 +64,9 @@ automation/
 pip install ansible
 # oppure su RHEL/OL 8+:
 dnf install ansible-core
+
+# 1b. Installa collections Oracle (oravirt + community)
+ansible-galaxy collection install -r collections_requirements.yml
 
 # 2. SSH key-based auth verso i server Oracle
 ssh-copy-id oracle@rac1
@@ -121,6 +125,7 @@ ansible-vault create group_vars/vault.yml
 # Contenuto:
 #   vault_oracle_sys_password: "MiaPassword123!"
 #   vault_oracle_rman_password: "BackupSecure!"
+#   vault_app_user_password: "StrongAppUserPassword!"
 
 # Usa il vault nei playbook:
 ansible-playbook playbooks/05_rman_backup.yml --ask-vault-pass

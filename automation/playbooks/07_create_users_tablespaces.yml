@@ -1,41 +1,73 @@
 ---
 - name: Automate User and Tablespace Creation
-  hosts: databases
-  become: yes
+  hosts: oracle_primary[0]
+  become: true
   become_user: oracle
-  gather_facts: no
+  gather_facts: false
   vars:
-    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
-    db_name: "RACDB"
     pdb_name: "PDB1"
     new_tablespace: "APP_DATA_TBS"
     tbs_size: "10G"
     new_user: "app_user"
-    user_pass: "Oracle_123!"
+    user_pass: "{{ app_user_password }}"
+
+  pre_tasks:
+    - name: Safety gate - enforce Vault-backed password
+      ansible.builtin.assert:
+        that:
+          - user_pass != 'CHANGEME_VAULT'
+        fail_msg: >-
+          Password non configurata. Definisci vault_app_user_password in
+          group_vars/vault.yml (Ansible Vault).
 
   tasks:
-    - name: Create Tablespace SQL File
-      copy:
-        dest: "/tmp/create_tbs_user.sql"
-        content: |
-          ALTER SESSION SET CONTAINER = {{ pdb_name }};
-          CREATE BIGFILE TABLESPACE {{ new_tablespace }} DATAFILE '+DATA' SIZE {{ tbs_size }} AUTOEXTEND ON NEXT 1G MAXSIZE UNLIMITED;
-          CREATE USER {{ new_user }} IDENTIFIED BY "{{ user_pass }}" DEFAULT TABLESPACE {{ new_tablespace }} QUOTA UNLIMITED ON {{ new_tablespace }};
-          GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE TO {{ new_user }};
-          EXIT;
-
-    - name: Execute SQL Script
-      shell: |
-        export ORACLE_SID={{ db_name }}1
+    - name: Apply idempotent tablespace/user SQL
+      ansible.builtin.shell: |
+        export ORACLE_SID={{ oracle_sid }}
         export ORACLE_HOME={{ oracle_home }}
-        $ORACLE_HOME/bin/sqlplus -s / as sysdba @/tmp/create_tbs_user.sql
+        export PATH={{ oracle_home }}/bin:$PATH
+        sqlplus -s / as sysdba <<'SQL'
+        WHENEVER SQLERROR EXIT SQL.SQLCODE;
+        SET SERVEROUTPUT ON FEEDBACK OFF VERIFY OFF
+        ALTER SESSION SET CONTAINER = {{ pdb_name }};
+
+        DECLARE
+          v_cnt NUMBER;
+        BEGIN
+          SELECT COUNT(*) INTO v_cnt FROM dba_tablespaces WHERE tablespace_name = UPPER('{{ new_tablespace }}');
+          IF v_cnt = 0 THEN
+            EXECUTE IMMEDIATE 'CREATE BIGFILE TABLESPACE {{ new_tablespace }} DATAFILE ''+DATA'' SIZE {{ tbs_size }} AUTOEXTEND ON NEXT 1G MAXSIZE UNLIMITED';
+            DBMS_OUTPUT.PUT_LINE('TABLESPACE_CREATED');
+          ELSE
+            DBMS_OUTPUT.PUT_LINE('TABLESPACE_EXISTS');
+          END IF;
+        END;
+        /
+
+        DECLARE
+          v_cnt NUMBER;
+        BEGIN
+          SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = UPPER('{{ new_user }}');
+          IF v_cnt = 0 THEN
+            EXECUTE IMMEDIATE 'CREATE USER {{ new_user }} IDENTIFIED BY "{{ user_pass }}" ' ||
+                              'DEFAULT TABLESPACE {{ new_tablespace }} QUOTA UNLIMITED ON {{ new_tablespace }}';
+            EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE TO {{ new_user }}';
+            DBMS_OUTPUT.PUT_LINE('USER_CREATED');
+          ELSE
+            DBMS_OUTPUT.PUT_LINE('USER_EXISTS');
+          END IF;
+        END;
+        /
+        EXIT;
+        SQL
       register: sql_output
+      changed_when: >-
+        'TABLESPACE_CREATED' in sql_output.stdout or
+        'USER_CREATED' in sql_output.stdout
+      failed_when:
+        - sql_output.rc != 0
+        - "'ORA-' in sql_output.stdout"
 
-    - name: Cleanup Temp File
-      file:
-        path: "/tmp/create_tbs_user.sql"
-        state: absent
-
-    - name: Display Result
-      debug:
-        msg: "Tablespace and User Created Successfully"
+    - name: Display result
+      ansible.builtin.debug:
+        msg: "{{ sql_output.stdout_lines }}"
