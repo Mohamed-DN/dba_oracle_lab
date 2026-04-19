@@ -1,23 +1,43 @@
-# 🎯 Ripasso Concetti Oracle DBA — Note di Studio Avanzate
+# 🎯 Ripasso Concetti Oracle DBA — Note di Studio e Preparazione Colloqui
 
 > **Obiettivo**: Consolidare i concetti fondamentali Oracle DBA in forma di domande e risposte.
 > Ogni sezione ha: domande chiave + risposte strutturate + note tecniche.
 >
-> ⏱️ **Formato**: 12 sezioni tematiche, ~3h di lettura totale.
+> ⏱️ **Formato**: 15 sezioni tematiche, inclusa la preparazione ai colloqui tecnici.
 
 ---
 
-## 📅 Piano di Ripasso
+## 📅 Piano di Ripasso & Strategia
 
 | Giorno | Tema | Sezione | Tempo |
 |---|---|---|---|
-| 1 | Architettura + RAC | Sez. 1-2 | 3h |
-| 2 | Data Guard + Backup | Sez. 3-4 | 3h |
-| 3 | Performance & Troubleshooting | Sez. 5-6 | 3h |
-| 4 | Storage + Patching + Admin | Sez. 7-8-9 | 3h |
-| 5 | Scenari Produzione | Sez. 10 | 3h |
-| 6 | Ripasso + punti deboli | Tutto | 3h |
-| 7 | Quiz pratico (rispondi ad alta voce) | Tutto | 2h |
+| 1 | Mindset & Architettura | [Sez. 0-1](#0-mindset-e-strategia-di-risposta) | 3h |
+| 2 | RAC + Data Guard | [Sez. 2-3](#2-rac-real-application-clusters) | 3h |
+| 3 | Backup + Performance | [Sez. 4-5](#4-backup--recovery-rman) | 3h |
+| 4 | Troubleshooting + ASM | [Sez. 6-7](#6-troubleshooting-scenari-reali) | 3h |
+| 5 | Patching + Admin | [Sez. 8-9](#8-patching--upgrade) | 3h |
+| 6 | Scenari PRO + Replica | [Sez. 10-11](#10-scenari-di-produzione-le-domande-killer) | 3h |
+| 7 | Cloud + Crisi + Skills | [Sez. 12-13-14-15](#12-cloud--oci-oracle-cloud-infrastructure) | 3h |
+
+---
+
+## 🧠 0. MINDSET E STRATEGIA DI RISPOSTA
+
+### Il Mindset del DBA Senior
+Un DBA Junior risponde dicendo *quale comando lanciare*. Un DBA Senior risponde spiegando *perché lo lancia* e *come funziona il motore sotto il cofano*.
+
+**Regole d'Oro per il Colloquio:**
+1. **Padroneggia il vocabolario**: Non dire "la memoria sbarella". Di' "ho una forte contesa di latch sulla shared pool, causando il wait event `cursor: pin S wait on X`".
+2. **Vai a fondo**: Se ti chiedono un comando, tu spiega prima la teoria. (Es: "Faccio `ALTER SYSTEM SWITCH LOGFILE`, questo forza il processo LGWR a chiudere il gruppo corrente, scatenando poi l'ARCn...").
+3. **Pensa in ottica MAA (Maximum Availability Architecture)**: Ogni tua risposta deve contemplare l'impatto sul business (niente downtime, niente perdita di dati).
+4. **Non indovinare**: Se non sai un comando a memoria, dillo apertamente: *"Non ricordo la sintassi esatta, andrei sulla documentazione ufficiale, ma so che serve per fare X tramite il processo Y."* La teoria conta più del comando mnemonico.
+
+### La Metodologia di Risposta (Metodo STAR)
+Quando ti fanno domande del tipo *"Parlami di quella volta che hai avuto un server giù"*, usa il framework **STAR**:
+*   **S (Situation)**: Contesto. *"Avevo un RAC a 2 nodi in produzione."* (Fornisci dettagli tecnici: versione DB, piattaforma).
+*   **T (Task)**: Il problema. *"Il nodo 1 crashava misteriosamente alle 3 di notte senza evidente picco di CPU."*
+*   **A (Action)**: Cosa hai fatto TU. *"Ho usato il metodo Top-Down. Ho analizzato AWR e wait events. Ho verificato i dischi redo."*
+*   **R (Result)**: L'impatto. *"Problema risolto e latenza query abbattuta del 40%."*
 
 ---
 
@@ -94,6 +114,12 @@ Si applica a due componenti fondamentali:
 ### Q: "Perché LGWR scrive prima di DBWR? (Write-Ahead Logging)"
 
 È il fondamento dei database relazionali per garantire l'integrità anche in caso di crash di corrente. **Prima** che il DBWR possa scrivere un blocco dati modificato (dirty block) sul datafile, il LGWR **deve** aver già scritto nel Redo Log File il record di quella transazione. Questo perché, in caso di crash, Oracle usa il Redo Log per ricostruire i dati che erano in memoria e non ancora scritti su disco.
+
+### Q: "Spiegami la differenza tra un Logical Read e un Physical Read."
+**Risposta Perfetta**: "Un **Physical Read** avviene quando Oracle deve andare sul disco per leggere un blocco e portarlo in memoria (SGA - Buffer Cache). Questo è lento (latenza di ms) ed è indicato dai wait event `db file sequential/scattered read`. Un **Logical Read** (o memory hit) avviene quando Oracle trova il blocco già presente nel Buffer Cache. È estremamente veloce (microsecondi), consuma solo CPU e latch."
+
+### Q: "Cosa è un ITL all'interno di un blocco Oracle e perché ci interessa?"
+L'ITL (Interested Transaction List) è una struttura dati presente nell'header di ogni blocco Oracle. È il registro delle transazioni che stanno attualmente bloccando delle righe all'interno di quel blocco. Ci interessa perché se abbiamo un'alta concorrenza su un unico blocco (hot block) e le slot ITL finiscono, le sessioni si bloccheranno con l'evento `enq: TX - allocate ITL entry`. In questi casi, devo ricreare l'oggetto aumentando il parametro `INITRANS`.
 
 ---
 
@@ -191,6 +217,14 @@ PRIMARY (RACDB)                    STANDBY (RACDB_STBY)
 | **Dopo** | Puoi fare switchback | Devi fare **reinstate** del vecchio primary |
 | **Comando** | `SWITCHOVER TO 'RACDB_STBY'` | `FAILOVER TO 'RACDB_STBY'` |
 
+### Q: "Cosa accade durante un processo di Switchover sotto il cofano?"
+Durante uno Switchover effettuato con DGMGRL:
+1. Il Primary chiude i servizi applicativi (se configurati con l'attributo `-role`).
+2. Termina la scrittura dei dati correnti, fa lo switch dell'ultimo log e si assicura che lo Standby riceva e applichi l'ultimo redo (Data Guard Sync).
+3. Il Primary smonta i datafiles e cambia ruolo in Standby.
+4. Lo Standby originario finisce di applicare i redo, apre il database in modalità READ WRITE, e diventa il nuovo Primary.
+5. Clusterware avvia in automatico i Servizi sul nuovo Primary.
+
 ### Q: "Cosa sono i Protection Mode?"
 
 | Mode | Perdita dati | Come funziona | Impatto |
@@ -200,7 +234,7 @@ PRIMARY (RACDB)                    STANDBY (RACDB_STBY)
 | **Maximum Protection** | Mai, garantito | SYNC — se lo standby va giù, il primary si **ferma** | ⚠️ Rischio disponibilità |
 
 **Trappola**: "Quale consigli per la produzione?"
-→ **Maximum Availability** — è il giusto compromesso. MaxProtection è troppo rischioso (il primary si blocca se lo standby muore).
+→ **Maximum Availability** — è il giusto compromesso. MaxProtection è troppo rischioso.
 
 ### Q: "Come verifichi che il Data Guard funziona?"
 
@@ -210,14 +244,9 @@ SELECT name, value FROM v$dataguard_stats WHERE name LIKE '%lag%';
 
 -- 2. Controlla lo switchover status
 SELECT switchover_status FROM v$database;
--- Deve essere: TO STANDBY (sul primary) o TO PRIMARY (sullo standby)
 
 -- 3. Controlla il MRP (deve fare APPLYING)
 SELECT process, status, sequence# FROM v$managed_standby WHERE process = 'MRP0';
-
--- 4. Controlla i GAP
-SELECT * FROM v$archive_gap;
--- Se esce qualcosa → c'è un buco → lo standby è indietro
 ```
 
 ---
@@ -241,6 +270,9 @@ SEMPRE ATTIVO:
 - Validate settimanale
 ```
 
+### Q: "Abbiamo perso il Recovery Catalog di RMAN. Possiamo ancora recuperare il database? Come?"
+Sì, assolutamente. Oracle memorizza i metadati dei backup anche nel **Controlfile** del database (secondo il parametro `CONTROL_FILE_RECORD_KEEP_TIME`). Posso puntare RMAN al target DB e usare le informazioni nel controlfile per il restore.
+
 ### Q: "Differenza fra backup full, Level 0 e Level 1?"
 
 | Tipo | Cosa include | Usabile come base incrementale? |
@@ -254,21 +286,14 @@ SEMPRE ATTIVO:
 
 ```bash
 # Scenario: tablespace USERS corrotto
-
 # 1. Metti il datafile offline
 ALTER DATABASE DATAFILE '/path/users01.dbf' OFFLINE;
-
 # 2. Restore il datafile da backup
 RMAN> RESTORE DATAFILE '/path/users01.dbf';
-
 # 3. Recovery (applica i redo/archivelog fino all'ultimo)
 RMAN> RECOVER DATAFILE '/path/users01.dbf';
-
 # 4. Rimetti online
 ALTER DATABASE DATAFILE '/path/users01.dbf' ONLINE;
-
-# 5. Verifica
-SELECT file#, status FROM v$datafile WHERE name LIKE '%users%';
 ```
 
 ### Q: "Cos'è un Flashback Database?"
@@ -279,12 +304,6 @@ SELECT file#, status FROM v$datafile WHERE name LIKE '%users%';
 -- Prerequisiti: flashback ON + guaranteed restore point
 ALTER DATABASE FLASHBACK ON;
 CREATE RESTORE POINT BEFORE_UPGRADE GUARANTEE FLASHBACK DATABASE;
-
--- Uso: "Oh no, l'upgrade è andato male!"
-SHUTDOWN IMMEDIATE;
-STARTUP MOUNT;
-FLASHBACK DATABASE TO RESTORE POINT BEFORE_UPGRADE;
-ALTER DATABASE OPEN RESETLOGS;
 ```
 
 ---
@@ -293,94 +312,35 @@ ALTER DATABASE OPEN RESETLOGS;
 
 ### Q: "Il database è lento. Come fai troubleshooting?"
 
-**Metodo sistematico in 5 step** (questa risposta vale ORO):
+**Metodo sistematico in 5 step**:
 
 ```
-STEP 1: È veramente il DB?
-   → top / vmstat / iostat → se CPU/IO è al 100% ma il DB è idle, non è Oracle
-
-STEP 2: Quali WAIT EVENTS?
-   → SELECT event, count(*) FROM v$session WHERE status='ACTIVE' GROUP BY event;
+STEP 1: È veramente il DB? (top / vmstat / iostat)
+STEP 2: Quali WAIT EVENTS? (v$session)
    I wait events ti DICONO il problema:
-   - "db file sequential read" → troppi I/O (indici mancanti o full scan)
-   - "log file sync"          → commit troppo frequenti o disco lento
-   - "enq: TX"                → lock/contesa fra sessioni
-   - "latch free"             → contesa in memoria (hard parse eccessivi)
-
-STEP 3: Top SQL
-   → SELECT sql_id, elapsed_time, executions FROM v$sql ORDER BY elapsed_time DESC;
-   → Trova le query che consumano di più
-
-STEP 4: Execution Plan
-   → SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('sql_id'));
-   → Cerca: FULL TABLE SCAN su tabelle grandi, nested loops su molte righe
-
-STEP 5: AWR Report
-   → @$ORACLE_HOME/rdbms/admin/awrrpt.sql
-   → Confronta periodo "lento" vs periodo "normale"
+   - "db file sequential read" → troppi I/O (indici mancanti)
+   - "log file sync"          → commit troppo frequenti
+   - "enq: TX"                → lock/contesa
+   - "latch free"             → contesa in memoria (hard parse)
+STEP 3: Top SQL (v$sql)
+STEP 4: Execution Plan (DBMS_XPLAN)
+STEP 5: AWR Report (@$ORACLE_HOME/rdbms/admin/awrrpt.sql)
 ```
 
-### Q: "Quali sono i wait event più comuni e come li risolvi?"
+### Q: "Il server è lentissimo. Vedi che l'80% del DB Time è consumato dall'evento `log file sync`. Come indaghi?"
+Questo indica che il processo **LGWR** è lento a scrivere il Redo Log Buffer sui dischi, oppure che l'applicazione committa troppo spesso. Indago in due direzioni:
+1. Lato applicazione: Verifico il numero di 'user commits' al secondo. Se è troppo alto, l'applicazione fa commit per ogni riga in cicli `FOR` invece di fare commit in batch.
+2. Lato Storage: Controllo la latenza dei Redo Log. I redo non dovrebbero mai stare su dischi RAID-5, ma su dischi ultra veloci (SSD/NVMe).
 
-| Wait Event | Significato | Soluzione |
-|---|---|---|
-| `db file sequential read` | Lettura singolo blocco (index access) | Indici mancanti, statistiche stale |
-| `db file scattered read` | Full table scan | Aggiungi indice o partiziona |
-| `log file sync` | Aspetta che LGWR scriva il commit | Batch commit, disco redo più veloce |
-| `enq: TX - row lock contention` | Due sessioni vogliono la stessa riga | Fix applicativo (reduce lock time) |
-| `gc buffer busy` | RAC: contesa su blocco fra nodi | Partizionare per ridurre inter-node |
-| `library cache: mutex X` | Hard parse eccessivi | Usa bind variable! |
-| `latch: shared pool` | Shared pool sotto stress | Aumenta shared_pool_size, bind var |
+### Q: "Perché l'ottimizzatore sceglie una FULL TABLE SCAN su una colonna con indice?"
+L'ottimizzatore sceglie saggiamente una full table scan (`db file scattered read`) se la colonna ha **bassa selettività** (solo due valori distinti, quindi ~5 milioni di righe per valore su 10M). Leggere l'indice per poi estrarre milioni di righe tramite ROWID provocherebbe tantissimi I/O randomici (`db file sequential read`) risultando più lento di una lettura multiblock.
 
-### Q: "Cos'è un AWR report e come lo leggi?"
+### Q: "Vedo molte attese su `cursor: pin S wait on X`. Cosa succede in memoria?"
+C'è una forte contesa nella Shared Pool (Library Cache). Una sessione sta cercando di ottenere un lock esclusivo (X) su un cursore — spesso per fare un **Hard Parse** — mentre altre sessioni stanno cercando di eseguirlo. La causa primaria nel 99% dei casi è la **mancanza di bind variables**.
 
-**Risposta**: AWR (Automatic Workload Repository) cattura snapshot ogni ora. Il report confronta 2 snapshot e mostra:
-
-1. **Top 5 Timed Events** ← GUARDA PRIMA QUESTO!
-   - Ti dice dove il DB sta "perdendo tempo"
-2. **Top SQL** — le query che consumano di più (per elapsed, CPU, I/O)
-3. **Instance Efficiency** — buffer cache hit ratio (deve essere >95%)
-4. **Wait Event Histogram** — distribuzione dei tempi di attesa
-
-```sql
--- Genera AWR report
-@$ORACLE_HOME/rdbms/admin/awrrpt.sql
--- Scegli: HTML, periodo (inizio/fine snapshot), output file
-```
-
-### Q: "Cos'è un Execution Plan? Come capisci se è buono?"
-
-**Segnali di un piano cattivo**:
-- `TABLE ACCESS FULL` su tabelle grandi (milioni di righe)
-- `NESTED LOOPS` con molte righe nella outer table (meglio HASH JOIN)
-- `Cardinality Feedback` che cambia il piano → statistiche imprecise
-- Costo reale >> costo stimato
-
-```sql
--- Vedi il piano reale (non quello stimato!)
-SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123def', NULL, 'ALLSTATS LAST'));
-```
-
-### Q: "Shared Pool piena: ORA-04031. Cos'è e come risolvi?"
-
-**Sintomo**: Il database restituisce errore ORA-04031 e le sessioni non possono fare parse di nuove query.
-**Causa**: La Shared Pool (dove Oracle tiene i piani di esecuzione e lo sql compilato) è così frammentata o piena che non si trova un chunk di memoria contiguo. Spesso causato da **Hard Parsing cronico** per colpa di un'applicazione che non usa le bind variables (es. `SELECT * FROM emp WHERE id = 1`, `WHERE id = 2`, ecc.).
-**Soluzione Rapida**:
-1. `ALTER SYSTEM FLUSH SHARED_POOL;` (svuota la cache, dà respiro momentaneo ma causa un picco di CPU subito dopo per i nuovi hard parse).
-2. Se il parametro `CURSOR_SHARING` è `EXACT`, valuta di impostarlo temporaneamente a `FORCE` (anche se in 19c è deprecato usarlo come fix a lungo termine).
-**Soluzione Permanente**: Correggere l'applicazione introducendo le **Bind Variables**.
-
-### Q: "Differenza esatta tra Hard Parse, Soft Parse e Soft-Soft Parse?"
-
-1. **Hard Parse**: La query è nuova. Oracle deve controllare sintassi, semantica ( privileges e oggetti), l'optimizer genera vari piani, sceglie il migliore e lo carica nella Shared Pool. *Processo molto costoso in termini di CPU e Latch/Mutex.*
-2. **Soft Parse**: La query arriva, Oracle controlla sintassi e permessi, ma vedendo che il testo esatto (`SQL_ID`) esiste già nella Shared Pool, "salta" l'optimizer e riutilizza il vecchio piano esecutivo.
-3. **Soft-Soft Parse (Session Cached Cursors)**: Il cursore viene trovato direttamente nella memoria PGA della sessione utente (se `SESSION_CACHED_CURSORS` è abilitato). Non c'è nemmeno bisogno di chiedere i Latch alla Shared Pool globale. *Massima velocità.*
-
-### Q: "Differenza tra Row Chaining e Row Migration?"
-
-**Domanda d'architettura fisica (Storage)**:
-- **Row Migration**: Fai un `UPDATE` su una riga esistente che la fa diventare più grande. Non c'è più spazio nel suo blocco originale. Oracle lascia un "puntatore" nel blocco originale e sposta "interamente" la riga in un nuovo blocco. L'accesso via indice fa 2 I/O invece di 1 (legge il puntatore, poi segue il puntatore). *Soluzione: Riorganizzare la tabella (es. `ALTER TABLE MOVE`) o aumentare la `PCTFREE`.*
-- **Row Chaining**: Inserisci una riga che è *già più grande* della dimensione massima del blocco database (es. blocchi da 8KB ma inserisci un LOB/VARCHAR2 da 12KB). La riga deve fisiologicamente essere spezzata su più blocchi contigui "incatenati". *Soluzione: Usare tablespace con blocchi più grandi (es. 16K o 32K) se si gestiscono molti dati text-blob.*
+### Q: "Chiaro il concetto di Hard Parse vs Soft Parse?"
+1. **Hard Parse**: La query è nuova. Oracle deve controllare sintassi, semantica, l'optimizer genera vari piani e sceglie il migliore. *Costoso in CPU e Mutex.*
+2. **Soft Parse**: La query esiste già nella Shared Pool. Oracle riutilizza il vecchio piano esecutivo.
 
 ---
 
@@ -390,8 +350,7 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123def', NULL, 'ALLSTATS LAST'
 
 1. **Non panico** — Oracle risolve automaticamente il deadlock (killa UNA delle sessioni)
 2. Vai a leggere il **trace file** generato (contiene l'albero del deadlock)
-3. Trova le **due tabelle/righe** coinvolte
-4. Chiedi al team applicativo di **cambiare l'ordine dei DML** (i deadlock sono sempre colpa dell'applicazione)
+3. Trova le **due tabelle/righe** coinvolte e chiedi al team dev di cambiare l'ordine dei DML.
 
 ### Q: "Il tablespace è pieno (ORA-01654). Cosa fai?"
 
@@ -399,57 +358,27 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123def', NULL, 'ALLSTATS LAST'
 -- 1. DIAGNOSTICA: quanto è pieno?
 SELECT tablespace_name, ROUND(used_percent,1) AS pct FROM dba_tablespace_usage_metrics
 WHERE used_percent > 85 ORDER BY pct DESC;
-
--- 2. Chi sta occupando spazio?
-SELECT owner, segment_name, ROUND(bytes/1024/1024) AS mb
-FROM dba_segments WHERE tablespace_name = 'USERS' ORDER BY bytes DESC FETCH FIRST 5 ROWS ONLY;
-
--- 3. FIX IMMEDIATO: aggiungi datafile
+-- 2. FIX IMMEDIATO: aggiungi datafile
 ALTER TABLESPACE USERS ADD DATAFILE '+DATA' SIZE 10G AUTOEXTEND ON MAXSIZE 30G;
-
--- 4. FIX LUNGO TERMINE: capisci perché cresce (tabelle di log? purge mancante?)
 ```
 
 ### Q: "La FRA è piena, il database si blocca. Cosa fai?"
 
 ```bash
 # EMERGENZA! La FRA piena = archivelog non si possono scrivere = DB HANG!
-
-# 1. Entra con RMAN
-rman target /
-
-# 2. Cancella archivelog vecchi (> 1 giorno)
+# 1. Entra con RMAN e cancella archivelog vecchi (> 1 giorno)
 RMAN> DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';
-RMAN> DELETE NOPROMPT OBSOLETE;
-
-# 3. Se non basta, aumenta la FRA
+# 2. Se non basta, aumenta la FRA
 ALTER SYSTEM SET db_recovery_file_dest_size = 100G SCOPE=BOTH;
-
-# 4. Capire PERCHÉ si è riempita:
-#    - I backup non cancellano gli archivelog?
-#    - Il Data Guard è in GAP e non consuma gli archivelog?
-#    - Flashback log troppo grossi?
 ```
 
 ### Q: "Un utente dice che la sua sessione è bloccata. Come indaghi?"
 
 ```sql
 -- 1. Chi blocca chi? (l'albero dei blocchi)
-SELECT
-    'SID ' || s1.sid || ' (' || s1.username || ')' AS blocker,
-    'SID ' || s2.sid || ' (' || s2.username || ')' AS blocked,
-    s2.seconds_in_wait
-FROM v$session s1
-JOIN v$session s2 ON s1.sid = s2.blocking_session
-WHERE s2.blocking_session IS NOT NULL;
-
--- 2. Che SQL sta eseguendo il bloccante?
-SELECT sql_text FROM v$sql WHERE sql_id = (
-    SELECT sql_id FROM v$session WHERE sid = <SID_BLOCCANTE>
-);
-
--- 3. Contatta l'utente bloccante. Se non risponde:
-ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
+SELECT blocker.sid, blocked.sid, blocked.seconds_in_wait
+FROM v$session blocker
+JOIN v$session blocked ON blocker.sid = blocked.blocking_session;
 ```
 
 ---
@@ -458,277 +387,105 @@ ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 
 ### Q: "Cos'è ASM e come funziona?"
 
-**Risposta**: ASM è un **volume manager + filesystem** fatto da Oracle, specifico per database. Sostituisce LVM + filesystem tradizionale.
-
+**Risposta**: ASM è un **volume manager + filesystem** fatto da Oracle.
 Vantaggi:
-- **Striping automatico** su tutti i dischi
-- **Mirroring** integrato (NORMAL = 2 copie, HIGH = 3 copie)
-- **Rebalance automatico** quando aggiungi/rimuovi dischi
-
-```
-Diskgroup +DATA (NORMAL redundancy):
-├── Disco 1 (LUN1) — 20GB
-├── Disco 2 (LUN2) — 20GB   → Totale USABILE: 20GB (perché mirrored)
-```
-
-**Trappola**: "Se ho +DATA con NORMAL redundancy e 2 dischi da 100GB, quanti dati posso salvare?"
-→ **100GB** (non 200GB), perché NORMAL = 2 copie di ogni blocco.
+- **Striping automatico**
+- **Mirroring** (NORMAL = 2 copie)
+- **Rebalance automatico**
 
 ### Q: "Come aggiungi un disco ad ASM in produzione?"
-
-```sql
--- 1. Lo storage team presenta la nuova LUN al server OS
--- 2. Il DBA la tagga con ASMLib o AFD:
-oracleasm createdisk DATA_DISK5 /dev/sdd1
-
--- 3. Aggiunge al diskgroup (SENZA downtime!):
-ALTER DISKGROUP DATA ADD DISK '/dev/oracleasm/data_disk5';
-
--- 4. Il rebalance parte automaticamente
--- Per controllare:
-SELECT * FROM v$asm_operation;
-```
+1. Lo storage team presenta la LUN. 2. Tagga con ASMLib/AFD. 3. Aggiunge: `ALTER DISKGROUP DATA ADD DISK '...';`.
 
 ---
 
 ## 8. PATCHING & UPGRADE
 
 ### Q: "Descrivi il processo di patching in RAC"
-
-**Risposta chiave**: In RAC si fa **rolling patching** — un nodo alla volta, **ZERO downtime**!
-
-```
-1. Ferma l'istanza sul NODO 1 (le sessioni vanno al NODO 2)
-2. Applica la patch sul NODO 1 con opatchauto
-3. Riavvia l'istanza sul NODO 1
-4. Esegui datapatch (aggiorna il dizionario dati)
-5. Ripeti per il NODO 2
-```
-
-**Comandi chiave**:
-```bash
-# Pre-check
-opatch prereq CheckConflictAgainstOH -ph ./
-
-# Applica
-opatchauto apply /path/to/patch -oh $ORACLE_HOME
-
-# Post-patch
-datapatch -verbose
-```
-
-### Q: "Cosa fai PRIMA di un patching?"
-
-1. **Backup RMAN Level 0** (completo, verificato)
-2. **Guaranteed Restore Point** (per rollback veloce con flashback)
-3. **Verifica spazio disco** (la patch ha bisogno di spazio)
-4. **Verifica OPatch** è alla versione richiesta
-5. **Comunica il CAB** (Change Advisory Board) + applicativi
+In RAC si fa **rolling patching** — un nodo alla volta, **ZERO downtime**!
+1. Ferma l'istanza sul NODO 1. 2. Applica patch con `opatchauto`. 3. Riavvia ed esegui `datapatch`. 4. Ripeti sul NODO 2.
 
 ---
 
 ## 9. AMMINISTRAZIONE QUOTIDIANA
 
 ### Q: "Cosa fai come DBA ogni mattina?"
-
-**Morning Check (5-10 minuti)**:
-1. ✅ **Istanze e CRS**: `srvctl status database -d RACDB` → tutte le istanze sono UP?
-2. ✅ **Alert log**: Cerco ORA- nelle ultime 24h
-3. ✅ **Backup**: L'ultimo RMAN è completato con successo?
-4. ✅ **Data Guard**: Il lag è < qualche minuto?
-5. ✅ **Tablespace**: Nessuno > 85%?
-6. ✅ **ASM**: Diskgroup non pieni?
-7. ✅ **Listener**: SCAN e listener locali UP?
-
-### Q: "Come crei un utente in Oracle?"
-
-```sql
--- 1. In un CDB, crei un utente LOCAL nella PDB
-ALTER SESSION SET CONTAINER = PDB_APP;
-
-CREATE USER scott IDENTIFIED BY "Password123!"
-    DEFAULT TABLESPACE USERS
-    TEMPORARY TABLESPACE TEMP
-    QUOTA 500M ON USERS;
-
--- 2. Grant
-GRANT CREATE SESSION TO scott;
-GRANT CREATE TABLE, CREATE VIEW, CREATE PROCEDURE TO scott;
-
--- 3. Se serve read-only su un altro schema:
-GRANT SELECT ANY TABLE TO scott;  -- ⚠️ troppo permissivo!
--- Meglio:
-GRANT SELECT ON hr.employees TO scott;
-```
-
-### Q: "Differenza fra CDB, PDB, e perché Oracle Multitenant?"
-
-```
-CDB (Container Database) = il "contenitore"
-├── CDB$ROOT    → Dizionario dati master, non toccare
-├── PDB$SEED    → Template per nuove PDB
-├── PDB_APP1    → Database dell'applicazione 1
-├── PDB_APP2    → Database dell'applicazione 2
-└── PDB_TEST    → Database di test
-```
-
-**Perché**: Consolida N database in 1 istanza → meno RAM, meno patching, più facile da gestire.
+1. ✅ **Istanze e CRS** UP?
+2. ✅ **Alert log**: Cerco ORA- nelle ultime 24h.
+3. ✅ **Backup**: L'ultimo RMAN è OK?
+4. ✅ **Data Guard**: Lag sotto controllo?
+5. ✅ **Tablespace/ASM**: Spazio sufficiente?
 
 ---
 
 ## 10. SCENARI DI PRODUZIONE (Le Domande Killer!)
 
-> Queste sono le domande che separano un junior da un senior. **Studia bene questa sezione.**
+### Scenario 1: "È sabato notte, il primary è andato giù e non riparte."
+1. Guarda l'ALERT LOG. 2. Se è corruzione hardware/file: `DGMGRL> FAILOVER TO standby`.
 
-### Scenario 1: "È sabato notte, il primary è andato giù e non riparte. Cosa fai?"
-
-```
-1. CALMA. Non fare panic.
-2. Prova a riavviare:
-   srvctl start database -d RACDB
-3. Se non parte, guarda l'ALERT LOG:
-   tail -100 $ORACLE_BASE/diag/rdbms/racdb/RACDB1/trace/alert_RACDB1.log
-4. Se è corruzione di controlfile:
-   RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-5. Se è corruzione di un datafile:
-   RMAN> RESTORE DATAFILE X; RECOVER DATAFILE X;
-6. Se NULLA funziona e il business deve andare avanti:
-   → FAILOVER sullo standby:
-   DGMGRL> FAILOVER TO 'RACDB_STBY';
-   → Chiama il DBA senior / apri un SR con Oracle Support
-```
-
-### Scenario 2: "Dev ti dice: 'Ho cancellato tutti i dati dalla tabella CLIENTI per sbaglio!'"
-
-```sql
--- OPZIONE 1: Flashback Table (se < qualche ora e row movement è attivo)
-FLASHBACK TABLE clienti TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '2' HOUR);
-
--- OPZIONE 2: Flashback Query (ricostruisci i dati)
-INSERT INTO clienti
-SELECT * FROM clienti AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '2' HOUR);
-
--- OPZIONE 3: Se è troppo tardi per flashback → RMAN point-in-time recovery
--- (ma richiede downtime e restore completo)
-
--- OPZIONE 4: Auxiliary instance (restore su un altro server, poi estrai i dati)
--- → Questo è il metodo PRO perché non tocchi la produzione
-```
+### Scenario 2: "Dev dice: 'Ho cancellato i dati da CLIENTI per sbaglio!'"
+1. **Flashback Table** o **Flashback Query**. 2. Se tardi: RMAN auxiliary instance restore.
 
 ### Scenario 3: "CPU al 100% sul server database. Cosa fai?"
-
-```sql
--- 1. È Oracle o altro?
--- top → guarda chi consuma CPU. Se è un processo "ora_*" → è Oracle.
-
--- 2. Quale sessione?
-SELECT s.sid, s.serial#, s.username, s.sql_id,
-       p.spid AS os_pid  -- ← questo è il PID che vedi in top!
-FROM v$session s
-JOIN v$process p ON s.paddr = p.addr
-WHERE s.status = 'ACTIVE'
-ORDER BY p.spid;
-
--- 3. Quale SQL?
-SELECT sql_text FROM v$sql WHERE sql_id = 'abc123';
-
--- 4. Perché consuma tanto? (execution plan)
-SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('abc123'));
-
--- 5. FIX:
--- a) Se è una query nuova con piano cattivo → raccogli statistiche:
-EXEC DBMS_STATS.GATHER_TABLE_STATS('SCHEMA', 'TABELLA');
--- b) Se manca un indice → crealo
--- c) Se è un job impazzito → kill session
--- d) Se è un parallel query che ha preso troppi core → limita il DOP
-```
-
-### Scenario 4: "L'import Data Pump sta per riempire la FRA. Cosa fai?"
-
-```
-1. PRIMA DI TUTTO: controlla la FRA ADESSO:
-   SELECT ROUND(space_used*100/space_limit,1) FROM v$recovery_file_dest;
-
-2. Se > 80%:
-   a) Pulisci archivelog vecchi con RMAN
-   b) Oppure aumenta la FRA: ALTER SYSTEM SET db_recovery_file_dest_size = 150G SCOPE=BOTH;
-
-3. Se > 95% e il DB si sta bloccando:
-   a) SOSPENDI l'import (Ctrl+C oppure STOP_JOB nel Data Pump)
-   b) Pulisci con RMAN
-   c) Riprendi l'import
-
-4. LEZIONE: La prossima volta, PRIMA dell'import
-   → controlla FRA e pulisci archivelog
-   → valuta NOLOGGING sulle tabelle grandi
-```
+1. Verifico con `top` se è un processo `ora_*`. 2. Trovo il `sql_id` del processo. 3. Analizzo l'execution plan. 4. Fix (indice, stats o kill session).
 
 ---
 
-## 11. SOFT SKILLS DBA (Gestione Incidenti & Comunicazione)
+## 11. GOLDENGATE & REPLICA AVANZATA
 
-### "Come gestisci la crescita professionale?"
+### Q: "Se il Replicat è in forte lag, quali sono i primi 3 controlli?"
+1. `stats replicat`: Guardo se ci sono lock o query lente sul target.
+2. `lag replicat`: Verifico se il ritardo è nel network o nel caricamento dei trail file.
+3. Transazioni lunghe: Verifico se c'è un unico update gigante che occupa il processo.
 
-**Approccio**: *Cercare sempre ambienti dove si può crescere tecnicamente. Costruire basi solide (Lab RAC, Data Guard, GoldenGate), poi cercare sfide più complesse e team da cui imparare.*
-
-### "Come gestisci una situazione di emergenza alle 3 di notte?"
-
-**Template**: *"Prima di tutto, non faccio nulla senza capire il problema. Leggo l'alert log, verifico lo stato dei servizi, e seguo le procedure operative documentate. Se il fix è semplice (restart, kill session), lo faccio. Se è qualcosa che non ho mai visto, escalo subito al senior DBA e nel frattempo raccolgo tutte le informazioni (screenshot, log, timestamp) per facilitare la diagnosi."*
-
-### "Come ti tieni aggiornato sulle tecnologie Oracle?"
-
-- My Oracle Support (MOS) per le advisory e patch
-- Blog: Oracle Base, Tim Hall, Jonathan Lewis, Tanel Poder
-- Reddit r/oracle
-- Oracle ACE program
-- Release notes di ogni nuovo RU
+### Q: "Integrated Capture vs Classic Capture?"
+- **Classic**: Estrazione esterna (legge i log dal file system).
+- **Integrated**: LogMiner integrato nel DB kernel. Più performante per compressione, multitenant e RAC.
 
 ---
 
-## 12. COMANDI CHE DEVI SAPERE A MEMORIA
+## 12. CLOUD & OCI (Oracle Cloud Infrastructure)
+
+### Q: "DBA in OCI: DBCS vs Autonomous?"
+- **Base DB Service (PaaS)**: Hai accesso root, gestisci patching, backup e configurazione.
+- **Autonomous Database**: Oracle gestisce tutto il ciclo di vita (self-patching/tuning/backup). Il DBA diventa Architect.
+
+---
+
+## 13. CRISIS MANAGEMENT (Il database è HANG)
+
+### Q: "Database bloccato (HANG), login SYSDBA impossibile."
+Uso una **Preliminary Connection** (`sqlplus -prelim / as sysdba`). Lancio `ORADEBUG HANGANALYZE 3` per trovare il 'final blocker' e intervenire lato OS se necessario.
+
+---
+
+## 14. SOFT SKILLS DBA (Gestione Incidenti & Comunicazione)
+
+### "Emergenza alle 3 di notte: come ti comporti?"
+*"Non agisco d'impulso. Diagnostico (alert log, ASH), seguo i runbook. Se il tempo di risoluzione supera la soglia critica, escalo al team e comunico in modo chiaro."*
+
+---
+
+## 15. COMANDI CHE DEVI SAPERE A MEMORIA
 
 ```sql
--- Istanza
-SELECT instance_name, status, version_full FROM v$instance;
+SELECT instance_name, status FROM v$instance;
 SELECT name, open_mode, database_role FROM v$database;
-
--- Tablespace
-SELECT tablespace_name, ROUND(used_percent,1) FROM dba_tablespace_usage_metrics ORDER BY 2 DESC;
-
--- Sessioni attive
-SELECT sid, username, sql_id, event, seconds_in_wait FROM v$session WHERE status='ACTIVE' AND type='USER';
-
--- Lock
-SELECT * FROM v$lock WHERE block=1;
-
--- Top SQL
-SELECT sql_id, elapsed_time/1000000 AS sec, executions FROM v$sql ORDER BY elapsed_time DESC FETCH FIRST 5 ROWS ONLY;
-
--- Alert log (ultimi errori)
-SELECT originating_timestamp, message_text FROM v$diag_alert_ext 
-WHERE message_text LIKE '%ORA-%' AND originating_timestamp > SYSDATE-1;
-
--- Data Guard
-SELECT name, value FROM v$dataguard_stats WHERE name LIKE '%lag%';
-
--- ASM
-SELECT name, total_mb, free_mb, ROUND((1-free_mb/total_mb)*100,1) AS pct FROM v$asm_diskgroup;
-
--- Backup
-SELECT input_type, status, start_time FROM v$rman_backup_job_details WHERE start_time > SYSDATE-2 ORDER BY start_time DESC;
-
--- RAC
-srvctl status database -d RACDB
-srvctl status listener
-crsctl check crs
+SELECT event, count(*) FROM v$session WHERE status='ACTIVE' GROUP BY event;
+SELECT name, total_mb, free_mb FROM v$asm_diskgroup;
+srvctl status database -d RACDB;
 ```
 
 ---
 
-## 📌 Note Finali
+## ✅ CHECKLIST PERMANENTE DEL DBA SENIOR
+- [ ] Ho verificato l'Alert Log oggi?
+- [ ] L'ultimo backup RMAN è "VALIDATED"?
+- [ ] I servizi RAC sono bilanciati correttamente?
+- [ ] Ho testato lo Switchover negli ultimi 6 mesi?
+- [ ] Le HugePages sono attive sul server?
 
-1. **Disegna**: Quando spieghi, disegna l'architettura. Pensare visivamente aiuta a comunicare.
-2. **Sii strutturato**: Rispondi sempre in STEP (1, 2, 3...). L'organizzazione è la chiave.
-3. **Ammetti i limiti**: Non conoscere tutto è normale — l'importante è sapere DOVE cercare.
-4. **Documenta tutto**: Un lab ben documentato dimostra disciplina professionale.
-5. **Continua a studiare**: "Quanti database gestite?", "Che versione usate?", "Avete Data Guard?" — fai sempre domande.
+---
+
+<p align="center">
+  <sub>Questa guida è parte del repository <b>Oracle RAC Lab</b>. Condividila con saggezza.</sub>
+</p>

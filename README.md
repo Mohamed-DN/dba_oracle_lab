@@ -2,7 +2,7 @@
 
 [![Oracle 19c](https://img.shields.io/badge/Oracle-19c-red?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
 [![Ansible](https://img.shields.io/badge/Ansible-Automation-black?logo=ansible)](./automation/)
-[![Scripts](https://img.shields.io/badge/Scripts-1000%2B-blue)](./libreria_oracle/)
+[![Scripts](https://img.shields.io/badge/Scripts-1000%2B-blue)](./docs/13_libreria_completa_script/)
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
@@ -30,8 +30,8 @@ cd vagrant_rac_dataguard
 vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 
 # 3. Dopo il lab, usa gli script operativi ogni giorno
-#    → scripts_operativi/    (10 script SQL per emergenze)
-#    → procedure_operative/  (13 runbook DBA)
+#    → docs/12_scripts_sql_pronti/  (10 script SQL per emergenze)
+#    → docs/11_runbook_operativi/   (13 runbook DBA)
 ```
 
 > 💡 **Primo giorno?** Leggi prima [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) e [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md).
@@ -44,9 +44,9 @@ vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
 |---|---|---|
 | 📖 [Guide Lab (Fasi 0→8)](#-esegui-il-lab-fase-0--8) | Costruisci da zero un RAC + Data Guard + GoldenGate | 9 guide |
 | 📚 [Documentazione](./docs/) | Guide tematiche per ogni area DBA | 40+ guide |
-| 🛠️ [Script Operativi](./scripts_operativi/) | SQL pronti al copia-incolla per scenari reali | 10 script |
-| 📂 [Libreria Oracle](./libreria_oracle/) | Raccolta Enterprise di script e procedure | **~1000 script** |
-| 📋 [Procedure Operative](./procedure_operative/) | Runbook giornalieri per attività DBA | 13 runbook |
+| 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
+| 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
+| 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 13 runbook |
 | 🤖 [Automazione Ansible](./automation/) | Playbook production-grade | 10 playbook |
 | 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
 
@@ -139,8 +139,10 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Redo/Undo & Crash Recovery](./docs/00_fondamenti/GUIDA_REDO_UNDO_CRASH_RECOVERY.md) | Deep Dive: Write-Ahead Logging, Checkpoint, Roll Forward/Back |
 | [Locking, Concurrency & Wait Events](./docs/00_fondamenti/GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md) | Deep Dive: MVCC, ITL, Deadlocks, e Top 15 Wait Events |
 | [Comandi DBA](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md) | 100+ query SQL essenziali per il DBA |
+| [**Analisi Base Vagrant**](./docs/00_fondamenti/ANALISI_ORACLEBASE_VAGRANT.md) | Studio approfondito della configurazione automatizzata |
 | [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) | 100+ acronimi e termini Oracle spiegati |
 | [Piano Laboratorio](./docs/00_fondamenti/PIANO_LABORATORIO.md) | 8 settimane × 3h/giorno, roadmap completa |
+| [Diario di Bordo](./docs/00_fondamenti/DIARIO_DI_BORDO.md) | Note e avanzamento lavori del lab |
 
 ---
 
@@ -242,40 +244,41 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Preparazione Esami](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
 | [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
 | [Attività DBA](./docs/10_esami_carriera/GUIDA_ATTIVITA_DBA.md) | Batch Jobs, AWR, Patching, DataPump |
+| [**Preparazione Colloqui**](./docs/10_esami_carriera/GUIDA_PREPARAZIONE_COLLOQUIO_TECNICO.md) | **MEGA-GUIDA**: mindset, metodo STAR e 18 domande avanzate |
 | [Validazione Best Practices](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md) | Audit 54 punti, scorecard 98% |
 
 ---
 
 ## 🛠️ Strumenti Operativi
 
-### Script SQL per Scenario (`scripts_operativi/`)
+### Script SQL per Scenario (`docs/12_scripts_sql_pronti/`)
 
-> **10 script pronti al copia-incolla** — [Indice completo](./scripts_operativi/README.md)
+> **10 script pronti al copia-incolla** — [Indice completo](./docs/12_scripts_sql_pronti/README.md)
 
 | Script | Scenario | Errori Coperti |
 |---|---|---|
-| [01 Tablespace/Datafile](./scripts_operativi/01_tablespace_datafile.sql) | Bigfile vs Smallfile, maxsize, resize | ORA-01654, ORA-01653 |
-| [02 UNDO/TEMP](./scripts_operativi/02_undo_temp.sql) | Undo pieno, temp piena, retention | ORA-01555, ORA-30036 |
-| [03 FRA/Archivelog](./scripts_operativi/03_fra_archivelog.sql) | FRA piena → DB SUSPEND! Data Pump impact | ORA-19815, ORA-00257 |
-| [04 Data Pump](./scripts_operativi/04_datapump_operativo.sql) | Export/Import sicuri, pre-check FRA | Prevenzione |
-| [05 ASM Storage](./scripts_operativi/05_asm_storage.sql) | Diskgroup, AU_SIZE, limiti | Capacity planning |
-| [06 Sessioni/Lock](./scripts_operativi/06_sessioni_lock.sql) | Chi blocca chi, kill session | "App bloccata!" |
-| [07 Performance](./scripts_operativi/07_performance_quick.sql) | Top SQL, wait events, hit ratio | "DB lento!" |
-| [08 RMAN Backup](./scripts_operativi/08_rman_backup_status.sql) | Ultimo backup, fallimenti | Morning check |
-| [09 Data Guard](./scripts_operativi/09_dataguard_status.sql) | Lag, GAP, MRP, switchover ready | Morning check |
-| [10 Oggetti/Schema](./scripts_operativi/10_oggetti_schema.sql) | Invalidi, segmenti grandi, recyclebin | Post-upgrade |
+| [01 Tablespace/Datafile](./docs/12_scripts_sql_pronti/01_tablespace_datafile.sql) | Bigfile vs Smallfile, maxsize, resize | ORA-01654, ORA-01653 |
+| [02 UNDO/TEMP](./docs/12_scripts_sql_pronti/02_undo_temp.sql) | Undo pieno, temp piena, retention | ORA-01555, ORA-30036 |
+| [03 FRA/Archivelog](./docs/12_scripts_sql_pronti/03_fra_archivelog.sql) | FRA piena → DB SUSPEND! Data Pump impact | ORA-19815, ORA-00257 |
+| [04 Data Pump](./docs/12_scripts_sql_pronti/04_datapump_operativo.sql) | Export/Import sicuri, pre-check FRA | Prevenzione |
+| [05 ASM Storage](./docs/12_scripts_sql_pronti/05_asm_storage.sql) | Diskgroup, AU_SIZE, limiti | Capacity planning |
+| [06 Sessioni/Lock](./docs/12_scripts_sql_pronti/06_sessioni_lock.sql) | Chi blocca chi, kill session | "App bloccata!" |
+| [07 Performance](./docs/12_scripts_sql_pronti/07_performance_quick.sql) | Top SQL, wait events, hit ratio | "DB lento!" |
+| [08 RMAN Backup](./docs/12_scripts_sql_pronti/08_rman_backup_status.sql) | Ultimo backup, fallimenti | Morning check |
+| [09 Data Guard](./docs/12_scripts_sql_pronti/09_dataguard_status.sql) | Lag, GAP, MRP, switchover ready | Morning check |
+| [10 Oggetti/Schema](./docs/12_scripts_sql_pronti/10_oggetti_schema.sql) | Invalidi, segmenti grandi, recyclebin | Post-upgrade |
 
 ---
 
-### Procedure Operative (`procedure_operative/`)
+### Runbook Operativi (`docs/11_runbook_operativi/`)
 
-> **13 runbook giornalieri** — [Indice completo](./procedure_operative/README.md)
+> **13 runbook giornalieri** — [Indice completo](./docs/11_runbook_operativi/README.md)
 
 | # | Procedura | Frequenza |
 |---|---|---|
-| 01 | [Morning Health Check](./procedure_operative/01_MORNING_HEALTH_CHECK.md) | Ogni mattina |
-| 02 | [Verifica Backup](./procedure_operative/02_VERIFICA_BACKUP.md) | Ogni mattina |
-| 03 | [Check Data Guard](./procedure_operative/03_CHECK_DATAGUARD.md) | Ogni mattina |
+| 01 | [Morning Health Check](./docs/11_runbook_operativi/01_MORNING_HEALTH_CHECK.md) | Ogni mattina |
+| 02 | [Verifica Backup](./docs/11_runbook_operativi/02_VERIFICA_BACKUP.md) | Ogni mattina |
+| 03 | [Check Data Guard](./docs/11_runbook_operativi/03_CHECK_DATAGUARD.md) | Ogni mattina |
 | 04-08 | Lock, Query Lenta, TBS Pieno, CPU, ORA-Errors | Su richiesta / alert |
 | 09-11 | Gestione Utenti, Start/Stop RAC, Review AWR | Settimanale |
 | 12-13 | Capacity Planning, Refresh Schema Test | Mensile |
@@ -301,26 +304,26 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ---
 
-### Libreria Oracle (`libreria_oracle/`)
+### Libreria Oracle (`docs/13_libreria_completa_script/`)
 
-> **~1000 script** dalla community Oracle — [Indice completo](./libreria_oracle/README.md)
+> **~1000 script** dalla community Oracle — [Indice completo](./docs/13_libreria_completa_script/README.md)
 
 | Area | Script | Cosa Trovi |
 |---|---|---|
-| [Monitoring](./libreria_oracle/03_monitoring_scripts/) | 586 | Sessioni, lock, CPU, I/O, ASH, rete |
-| [Performance](./libreria_oracle/07_performance_tuning/) | 225 | SPM, AWR, statistiche, SQL tuning |
-| [Utilities](./libreria_oracle/12_utilities/) | 103 | Scheduler, storage, CDB/PDB, profili |
-| [Altro](./libreria_oracle/README.md) | 86 | ASM, DG, utenti, patching, TDE, partizioni |
+| [Monitoring](./docs/13_libreria_completa_script/03_monitoring_scripts/) | 586 | Sessioni, lock, CPU, I/O, ASH, rete |
+| [Performance](./docs/13_libreria_completa_script/07_performance_tuning/) | 225 | SPM, AWR, statistiche, SQL tuning |
+| [Utilities](./docs/13_libreria_completa_script/12_utilities/) | 103 | Scheduler, storage, CDB/PDB, profili |
+| [Altro](./docs/13_libreria_completa_script/README.md) | 86 | ASM, DG, utenti, patching, TDE, partizioni |
 
 ---
 
-### Extra DBA (`extra_dba/`)
+### Risorse Extra (Archivio)
 
 | Documento | Descrizione |
 |---|---|
-| [Catalogo Attività DBA](./extra_dba/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
-| [Checklist Operativa](./extra_dba/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
-| [Domande Tecniche DBA](./extra_dba/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande e risposte per esami e certificazioni |
+| [Catalogo Attività DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
+| [Checklist Operativa](./docs/10_esami_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
+| [Domande Tecniche DBA](./docs/10_esami_carriera/archivio_extra/GUIDA_DOMANDE_DBA_ORACLE.md) | Domande e risposte per esami e certificazioni |
 
 ---
 
