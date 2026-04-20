@@ -11,29 +11,9 @@
 
 ## 📑 Navigazione Rapida
 
-### Inizia da qui
-- [🚀 Quick Start](#-quick-start-5-minuti)
-- [🧭 Percorsi supportati](#-percorsi-supportati-vagrant-storico-vs-proxmox-moderno)
-- [⚠️ Prima di iniziare](#️-prima-di-iniziare)
-- [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8)
-
-### Percorsi e guide chiave
-- [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
-- [🧱 Track Proxmox 1→5](./docs/15_proxmox_track/README.md)
-- [📚 Guide Tematiche](#-guide-per-area-tematica)
-- [🛠️ Strumenti Operativi](#️-strumenti-operativi)
-
-### Governance e risorse
-- [⚡ Cosa contiene il repository](#-cosa-trovi-in-questo-repository)
-- [🗂️ Struttura principale (ordinata)](#️-struttura-principale-ordinata)
-- [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md)
-- [🌐 Piano IP](#-piano-ip)
-- [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md)
-- [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
-- [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md)
-- [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md)
-- [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md)
-- [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+- 🤖 **Automazione**: [Playbook Ansible](./automation/) · [Track Proxmox 1→5](./docs/15_proxmox_track/README.md) · [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- 🏛️ **Lab Oracle**: [Quick Start](#-quick-start-5-minuti) · [Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
+- 📚 **Resto utile**: [Guide Tematiche](#-guide-per-area-tematica) · [Strumenti Operativi](#️-strumenti-operativi) · [Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
 
 ---
 
@@ -42,8 +22,8 @@
 Ordine consigliato per orientarti velocemente nella root del repository:
 
 1. [`README.md`](./README.md) — entrypoint principale del lab
-2. [`docs/`](./docs/) — documentazione guidata e runbook operativi
-3. [`automation/`](./automation/) — playbook e ruoli Ansible
+2. [`automation/`](./automation/) — playbook e ruoli Ansible
+3. [`docs/`](./docs/) — lab Oracle, documentazione guidata e runbook operativi
 4. [`infrastructure/`](./infrastructure/) — IaC e baseline Proxmox/Terraform
 5. [`vagrant_rac_dataguard/`](./vagrant_rac_dataguard/) — ambiente storico one-click RAC + DG
 6. [`scripts/`](./scripts/) — script di supporto e utilità operative
@@ -90,15 +70,15 @@ cd vagrant_rac_dataguard && vagrant up
 
 | Sezione | Contenuto | Quantità |
 |---|---|---|
+| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade + ruoli library-grade | 13 playbook |
+| 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
+| 🧱 [Track Proxmox 1→5](./docs/15_proxmox_track/README.md) | Foundation Proxmox, IaC Terraform, AWX, Oracle silent, K8s | percorso guidato |
+| 🌍 [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md) | Provisioning 3 VM con output metadati per Ansible/AWX | baseline IaC |
 | 📖 [Guide Lab (Fasi 0→8)](#-esegui-il-lab-fase-0--8) | Costruisci da zero un RAC + Data Guard + GoldenGate | 9 guide |
 | 📚 [Documentazione](./docs/) | Guide tematiche per ogni area DBA | 40+ guide |
 | 🛠️ [Script Operativi](./docs/12_scripts_sql_pronti/) | SQL pronti al copia-incolla per scenari reali | 10 script |
 | 📂 [Libreria Oracle](./docs/13_libreria_completa_script/) | Raccolta Enterprise di script e procedure | **~1000 script** |
 | 📋 [Runbook Operativi](./docs/11_runbook_operativi/) | Runbook giornalieri per attività DBA | 14 runbook |
-| 🤖 [Automazione Ansible](./automation/) | Playbook production-grade + ruoli library-grade | 13 playbook |
-| 🖥️ [Vagrant One-Click](./vagrant_rac_dataguard/) | Ambiente completo automatizzato (Fasi 0→4) | 1-click setup |
-| 🧱 [Track Proxmox 1→5](./docs/15_proxmox_track/README.md) | Foundation Proxmox, IaC Terraform, AWX, Oracle silent, K8s | percorso guidato |
-| 🌍 [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md) | Provisioning 3 VM con output metadati per Ansible/AWX | baseline IaC |
 
 ---
 
