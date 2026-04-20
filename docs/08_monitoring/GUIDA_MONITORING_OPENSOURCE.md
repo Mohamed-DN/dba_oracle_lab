@@ -186,6 +186,7 @@ getent hosts <CHECKMK_SERVER_FQDN> || true
 # Solo se necessario, aggiungere entry in coda (mai usare ">" su /etc/hosts)
 HOSTS_LINE="<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>"
 grep -qxF "$HOSTS_LINE" /etc/hosts || echo "$HOSTS_LINE" | sudo tee -a /etc/hosts
+grep -qxF "$HOSTS_LINE" /etc/hosts && echo "hosts entry OK" || { echo "hosts entry FAILED"; exit 1; }
 ```
 
 ##### 2) Installazione agent + registrazione TLS
