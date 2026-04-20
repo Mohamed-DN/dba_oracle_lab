@@ -184,7 +184,8 @@ sudo apt install -y smartmontools lsscsi pciutils
 getent hosts <CHECKMK_SERVER_FQDN> || true
 
 # Solo se necessario, aggiungere entry in coda (mai usare ">" su /etc/hosts)
-echo "<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>" | sudo tee -a /etc/hosts
+HOSTS_LINE="<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>"
+grep -qxF "$HOSTS_LINE" /etc/hosts || echo "$HOSTS_LINE" | sudo tee -a /etc/hosts
 ```
 
 ##### 2) Installazione agent + registrazione TLS

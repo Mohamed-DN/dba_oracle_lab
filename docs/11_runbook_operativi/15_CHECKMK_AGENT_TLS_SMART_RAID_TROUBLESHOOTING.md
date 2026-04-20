@@ -32,7 +32,8 @@ ping -c 2 <CHECKMK_SERVER_FQDN>
 Se manca DNS, aggiungere solo una riga in coda (mai sovrascrivere `/etc/hosts`):
 
 ```bash
-echo "<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>" | sudo tee -a /etc/hosts
+HOSTS_LINE="<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>"
+grep -qxF "$HOSTS_LINE" /etc/hosts || echo "$HOSTS_LINE" | sudo tee -a /etc/hosts
 ```
 
 ### 2) Installazione agent package
