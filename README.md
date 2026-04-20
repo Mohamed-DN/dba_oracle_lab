@@ -25,6 +25,7 @@
 
 ### Governance e risorse
 - [⚡ Cosa contiene il repository](#-cosa-trovi-in-questo-repository)
+- [🗂️ Struttura principale (ordinata)](#️-struttura-principale-ordinata)
 - [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md)
 - [🌐 Piano IP](#-piano-ip)
 - [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md)
@@ -33,6 +34,22 @@
 - [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md)
 - [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md)
 - [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+
+---
+
+## 🗂️ Struttura principale (ordinata)
+
+Ordine consigliato per orientarti velocemente nella root del repository:
+
+1. [`README.md`](./README.md) — entrypoint principale del lab
+2. [`docs/`](./docs/) — documentazione guidata e runbook operativi
+3. [`automation/`](./automation/) — playbook e ruoli Ansible
+4. [`infrastructure/`](./infrastructure/) — IaC e baseline Proxmox/Terraform
+5. [`vagrant_rac_dataguard/`](./vagrant_rac_dataguard/) — ambiente storico one-click RAC + DG
+6. [`scripts/`](./scripts/) — script di supporto e utilità operative
+7. [`reliability/`](./reliability/) — governance release, dashboard e SLO
+8. [`security/`](./security/) — profili e controlli sicurezza
+9. [`tests/`](./tests/) — test e2e e verifiche funzionali
 
 ---
 
