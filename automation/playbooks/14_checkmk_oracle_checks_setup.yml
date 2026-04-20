@@ -106,6 +106,7 @@
           try:
               data = json.load(sys.stdin)
           except Exception:
+              print("smartctl_json_parse_error", file=sys.stderr)
               print(0); raise SystemExit(0)
 
           value = data.get("temperature", {}).get("current")
@@ -170,6 +171,7 @@
       ansible.builtin.command: check_mk_agent -u
       register: force_update_result
       changed_when: false
+      # rc=1 è tollerato in alcuni ambienti quando non è disponibile update immediato.
       failed_when: force_update_result.rc not in [0, 1]
       when: checkmk_force_initial_update_check | bool
 

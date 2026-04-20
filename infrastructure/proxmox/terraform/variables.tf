@@ -132,9 +132,3 @@ variable "checkmk_host_prefix" {
   type        = string
   default     = "edc"
 }
-
-variable "automation_group_vars_relpath" {
-  description = "Relative path (from this module) to automation/group_vars directory."
-  type        = string
-  default     = "../../../automation/group_vars"
-}
