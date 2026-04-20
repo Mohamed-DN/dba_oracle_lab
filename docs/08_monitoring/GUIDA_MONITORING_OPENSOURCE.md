@@ -5,28 +5,22 @@
 
 ---
 
-## Quale Scegliere? Confronto Rapido
+## Quick Pick (scelta immediata)
 
-| | **Checkmk** | **Zabbix** | **Prometheus + Grafana** |
-|---|---|---|---|
-| **Filosofia** | "Tutto incluso e funziona subito" | "Potentissimo, controllo totale" | "Modulare, cloud-native" |
-| **Ideale per** | DBA che vuole monitorare SUBITO | Ambiente grande e complesso | Infrastruttura Kubernetes/DevOps |
-| **Monitoraggio Oracle** | ⭐⭐⭐ Plugin nativo, auto-discovery | ⭐⭐⭐ Template ODBC nativi | ⭐⭐ Richiede exporter esterno |
-| **Monitoraggio Linux** | ⭐⭐⭐ Agent leggero, auto-discovery | ⭐⭐⭐ Agent + agentless | ⭐⭐⭐ node_exporter standard |
-| **Curva apprendimento** | 🟢 Facile (1-2 ore) | 🔴 Ripida (giorni) | 🟡 Media (PromQL da imparare) |
-| **Dashboard** | Buone, preconfigurate | Buone, personalizzabili | ⭐⭐⭐ Grafana è il migliore |
-| **Costo** | Free (Raw Edition, fino a 750 host) | Free (completamente) | Free (completamente) |
-| **Setup** | Pacchetto RPM/DEB, singolo server | Server + DB backend (PostgreSQL) | 3-4 componenti da integrare |
+| Scenario | Scelta consigliata | Perché |
+|---|---|---|
+| Vuoi partire subito in lab Oracle | **Checkmk** | Setup veloce, plugin Oracle nativo, discovery automatico |
+| Hai tanti host e policy centrali complesse | **Zabbix** | Grande flessibilità e governance su larga scala |
+| Sei già orientato Kubernetes/DevOps | **Prometheus + Grafana** | Standard cloud-native e dashboard avanzate |
+| Vuoi alert robusti + dashboard top | **Checkmk + Grafana** | Alerting operativo + visualizzazione avanzata |
 
-### 🏆 Raccomandazione per DBA Oracle
+### Confronto rapido sintetico
 
-> **Per iniziare**: usa **Checkmk** — è il più veloce da installare e ha il miglior plugin Oracle nativo.
->
-> **Per ambienti grandi** (>50 server): valuta **Zabbix** per la scalabilità.
->
-> **Se hai già Kubernetes/Docker**: usa **Prometheus + Grafana** per uniformità.
->
-> **La combinazione migliore**: molti DBA usano **Prometheus + Grafana per le dashboard** + **Checkmk per gli alert** perché ognuno eccelle nel suo ambito.
+| Tool | Oracle | Linux | Curva apprendimento | Setup |
+|---|---|---|---|---|
+| **Checkmk** | ⭐⭐⭐ nativo | ⭐⭐⭐ | 🟢 facile | singolo server |
+| **Zabbix** | ⭐⭐⭐ template ODBC | ⭐⭐⭐ | 🔴 ripida | server + DB backend |
+| **Prometheus + Grafana** | ⭐⭐ exporter | ⭐⭐⭐ | 🟡 media | stack multi-componente |
 
 ---
 
@@ -90,9 +84,9 @@ sudo cp /opt/omd/versions/default/share/check_mk/agents/plugins/mk_oracle \
 sudo mkdir -p /etc/check_mk
 cat > /etc/check_mk/mk_oracle.cfg << 'EOF'
 # Connessione al database Oracle
-DBUSER=C##MONITOR:MonitorPassword123:RACDB:localhost:1521
+DBUSER=C##MONITOR:<MONITOR_DB_PASSWORD>:RACDB:localhost:1521
 # Per ASM (opzionale):
-# ASMUSER=ASMSNMP:AsmPassword123
+# ASMUSER=ASMSNMP:<ASM_MONITOR_PASSWORD>
 
 # Controlla tablespace, sessions, backup, alert log
 SECTIONS="instance sessions logswitches undostat recovery_area processes
@@ -109,7 +103,7 @@ sudo chmod 600 /etc/check_mk/mk_oracle.cfg
 
 ```sql
 -- Crea utente dedicato al monitoraggio (read-only!)
-CREATE USER C##MONITOR IDENTIFIED BY "MonitorPassword123"
+CREATE USER C##MONITOR IDENTIFIED BY "<MONITOR_DB_PASSWORD>"
     DEFAULT TABLESPACE USERS
     QUOTA 0 ON USERS
     CONTAINER=ALL;
@@ -153,6 +147,121 @@ GRANT SELECT ON SYS.V_$DIAG_ALERT_EXT TO C##MONITOR CONTAINER=ALL;
 | Data Guard Lag | Transport + Apply lag | WARN > 30min |
 | ASM Diskgroup | % uso per diskgroup | WARN 85%, CRIT 95% |
 | Processes | Uso vs max_processes | WARN 80%, CRIT 90% |
+
+### Checkmk enterprise-ready (TLS + Agent Update + SMART/RAID)
+
+> Runbook operativo dedicato: [15 Checkmk Agent TLS + SMART/RAID Troubleshooting](../11_runbook_operativi/15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md)
+
+#### Obiettivo
+
+Portare in produzione un onboarding Checkmk sicuro e ripetibile su host Linux Oracle, con:
+- registrazione TLS dell'agent controller
+- auto-update agent via HTTPS
+- monitoraggio dischi SAS/RAID con SMART
+- checklist di validazione e rollback.
+
+#### Naming standard EDC (host/site/folder)
+
+- `site`: `edc_<environment>` (es. `edc_lab`, `edc_prod`)
+- `folder`: `/EDC/<ENVIRONMENT>/ORACLE` (es. `/EDC/LAB/ORACLE`)
+- `host`: `edc-<environment>-<hostname>` (es. `edc-lab-rac1`)
+
+#### Prerequisiti OS
+
+```bash
+sudo apt update
+sudo apt install -y smartmontools lsscsi pciutils
+```
+
+> Sicurezza: ruota sempre credenziali/token prima dell'uso e non salvare password in chiaro in guide, ticket o shell history.
+
+#### Procedura operativa
+
+##### 1) Onboarding host e DNS/hosts (senza sovrascrivere `/etc/hosts`)
+
+```bash
+# Validare risoluzione (preferibile DNS)
+getent hosts <CHECKMK_SERVER_FQDN> || true
+
+# Solo se necessario, aggiungere entry in coda (mai usare ">" su /etc/hosts)
+HOSTS_LINE="<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>"
+grep -qxF "$HOSTS_LINE" /etc/hosts || echo "$HOSTS_LINE" | sudo tee -a /etc/hosts
+grep -qxF "$HOSTS_LINE" /etc/hosts && echo "hosts entry OK" || { echo "hosts entry FAILED"; exit 1; }
+```
+
+##### 2) Installazione agent + registrazione TLS
+
+```bash
+# Esempio pacchetto scaricato dalla UI Checkmk (Agents)
+sudo dpkg -i /home/<USER>/check-mk-agent_<VERSION>_all.deb
+
+# Verifica certificati endpoint (443 consigliato; 8000 opzionale secondo setup sito)
+openssl s_client -showcerts -connect <CHECKMK_SERVER_IP>:443 </dev/null 2>/dev/null | sed -n -e '/BEGIN CERTIFICATE/,/END CERTIFICATE/ p'
+
+# Registrazione controller TLS (preferire automation user/token o secret manager)
+sudo cmk-agent-ctl register \
+  --server <CHECKMK_SERVER_FQDN> \
+  --site <CHECKMK_SITE_ID> \
+  --hostname "$(hostname -f)" \
+  -U <AUTOMATION_USER> \
+  -P '<AUTOMATION_SECRET>'
+```
+
+##### 3) Registrazione update agent + verifica
+
+```bash
+sudo cmk-update-agent register \
+  -s <CHECKMK_SERVER_FQDN> \
+  -i <CHECKMK_SITE_ID> \
+  -H "$(hostname -f)" \
+  -p https \
+  -U <AUTOMATION_USER> \
+  -P '<AUTOMATION_SECRET>' \
+  -v
+
+sudo cmk-update-agent -v
+# Forza update check immediato dal server (se configurato)
+sudo check_mk_agent -u
+```
+
+##### 4) Validazione finale
+
+```bash
+sudo systemctl status cmk-agent-ctl-daemon --no-pager
+sudo systemctl status cmk-update-agent.timer --no-pager
+check_mk_agent | head -20
+sudo cmk-agent-ctl status
+```
+
+##### 5) Troubleshooting rapido
+
+- `cmk-agent-ctl register` fallisce: verificare CN/SAN del certificato e risoluzione FQDN.
+- `cmk-update-agent` non aggiorna: verificare registration status, proxy e accesso HTTPS al site.
+- host senza servizi scoperti: rifare service discovery e activate changes dalla UI.
+
+#### SAS + MegaRAID + SMART (casi reali)
+
+Quando il server espone dischi SAS dietro controller (`megaraid_sas`), mappare sempre controller, device Linux e seriali.
+
+```bash
+sudo lspci | grep -i -E "raid|sas|scsi|storage"
+lsblk -o NAME,HCTL,TYPE,SIZE,MODEL,SERIAL
+sudo lsscsi -v
+lsmod | grep -E 'megaraid|mpt3sas|mpt2sas|aacraid|hpsa|3w_9xxx|arcmsr|isci'
+sudo smartctl -a /dev/sda
+```
+
+| Scenario | Metodo consigliato | Output atteso |
+|---|---|---|
+| Disco SAS visibile come `/dev/sdX` | `smartctl -a /dev/sdX` | SMART Health, temperatura, error counter, self-test |
+| RAID controller presente + dischi non diretti | Plugin controller Checkmk + comandi vendor | Stato virtual drive, stato physical drive, predictive failure |
+| Doppia visibilità (OS + controller) | Usare entrambe le fonti con naming coerente | Correlazione seriale/HCTL/controller slot |
+
+**Check minimi obbligatori (disco fisico):**
+- SMART Health Status
+- temperatura corrente e soglia/trip
+- error counter log (uncorrected/non-medium errors)
+- età ultimo self-test + durata extended test.
 
 ---
 
@@ -224,10 +333,10 @@ tar xzf oracledb_exporter-linux-amd64.tar.gz
 sudo cp oracledb_exporter /usr/local/bin/
 
 # Configura connessione Oracle
-export DATA_SOURCE_NAME="C##MONITOR/MonitorPassword123@//localhost:1521/RACDB"
+export DATA_SOURCE_NAME="C##MONITOR/<MONITOR_DB_PASSWORD>@//localhost:1521/RACDB"
 # Oppure crea un file di env:
 sudo cat > /etc/default/oracledb_exporter << 'EOF'
-DATA_SOURCE_NAME=C##MONITOR/MonitorPassword123@//localhost:1521/RACDB
+DATA_SOURCE_NAME=C##MONITOR/<MONITOR_DB_PASSWORD>@//localhost:1521/RACDB
 EOF
 
 # Crea servizio systemd
@@ -441,7 +550,7 @@ Zabbix 7.0 include un **template nativo** per Oracle:
 
 ```sql
 -- SEMPRE creare un utente read-only dedicato. MAI usare SYS o SYSTEM!
-CREATE USER C##MONITOR IDENTIFIED BY "PasswordSicura123"
+CREATE USER C##MONITOR IDENTIFIED BY "<MONITOR_DB_PASSWORD>"
     DEFAULT TABLESPACE USERS QUOTA 0 ON USERS CONTAINER=ALL;
 GRANT CREATE SESSION TO C##MONITOR CONTAINER=ALL;
 GRANT SELECT_CATALOG_ROLE TO C##MONITOR CONTAINER=ALL;

@@ -48,3 +48,26 @@ app_user_password: "{{ vault_app_user_password | default('VAULT_REQUIRED') }}"
 # ---- Notifiche (opzionale, decommentare) ----
 # notification_email: dba-team@company.com
 # smtp_server: smtp.company.com
+
+# ---- Checkmk (naming EDC + Oracle checks) ----
+checkmk_environment: "{{ lab_environment | default('lab') }}"
+checkmk_site_id: "edc_{{ checkmk_environment }}"
+checkmk_folder_path: "/EDC/{{ checkmk_environment | upper }}/ORACLE"
+checkmk_host_prefix: "edc-{{ checkmk_environment }}"
+checkmk_server_fqdn: "<CHECKMK_SERVER_FQDN>"
+checkmk_server_ip: "192.168.56.10"
+checkmk_server_alias: "checkmk"
+checkmk_automation_user: "automation"
+checkmk_automation_secret: "{{ vault_checkmk_automation_secret | default('VAULT_REQUIRED') }}"
+checkmk_register_tls: false
+checkmk_register_update: false
+checkmk_force_initial_update_check: true
+
+checkmk_oracle_monitor_user: "C##MONITOR"
+checkmk_oracle_monitor_password: "{{ vault_checkmk_oracle_monitor_password | default('VAULT_REQUIRED') }}"
+checkmk_oracle_db_name: "{{ oracle_db_name | default('RACDB') }}"
+checkmk_oracle_host: "localhost"
+checkmk_oracle_port: 1521
+checkmk_oracle_sections: >-
+  instance sessions logswitches undostat recovery_area processes
+  tablespaces rman dataguard_stats performance
