@@ -116,7 +116,7 @@ variable "vms" {
 }
 
 variable "checkmk_site_id" {
-  description = "Checkmk site id for the environment."
+  description = "Checkmk site ID for the environment."
   type        = string
   default     = ""
 }
@@ -131,4 +131,10 @@ variable "checkmk_host_prefix" {
   description = "Prefix used for Checkmk host naming."
   type        = string
   default     = "edc"
+}
+
+variable "automation_group_vars_relpath" {
+  description = "Relative path (from this module) to automation/group_vars directory."
+  type        = string
+  default     = "../../../automation/group_vars"
 }

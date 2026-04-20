@@ -86,6 +86,11 @@
           fi
 
           dev="/dev/${first_disk}"
+          if [ ! -b "${dev}" ]; then
+            echo "2 \"SMART_${first_disk}\" - device non valido: ${dev}"
+            exit 0
+          fi
+
           if smartctl -H "${dev}" 2>/dev/null | grep -Eq 'PASSED|OK'; then
             health_code=0
             health_msg="PASSED"
@@ -94,12 +99,24 @@
             health_msg="WARN"
           fi
 
-          temp="$(smartctl -A "${dev}" 2>/dev/null | awk '
-            /Temperature_Celsius|Current Drive Temperature/ {
-              for (i=NF; i>=1; i--) {
-                if ($i ~ /^[0-9]+$/) { print $i; exit }
-              }
-            }')"
+          temp="$(smartctl -a -j "${dev}" 2>/dev/null | python3 -c '
+          import json,sys
+          try:
+              data = json.load(sys.stdin)
+          except Exception:
+              print(0); raise SystemExit(0)
+
+          value = data.get("temperature", {}).get("current")
+          if value is None:
+              table = data.get("ata_smart_attributes", {}).get("table", [])
+              for row in table:
+                  name = str(row.get("name", "")).lower()
+                  raw_value = row.get("raw", {}).get("value")
+                  if "temp" in name and isinstance(raw_value, int):
+                      value = raw_value
+                      break
+          print(value if isinstance(value, int) else 0)
+          ')"
           temp="${temp:-0}"
           echo "${health_code} \"SMART_${first_disk}\" temp=${temp};55;60 SMART=${health_msg} device=${dev}"
 

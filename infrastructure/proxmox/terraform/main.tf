@@ -67,7 +67,7 @@ resource "local_file" "terraform_metadata" {
 }
 
 resource "local_file" "checkmk_ansible_vars" {
-  filename = "${path.module}/../../../automation/group_vars/checkmk_generated.yml"
+  filename = "${abspath("${path.module}/${var.automation_group_vars_relpath}")}/checkmk_generated.yml"
   content = yamlencode({
     checkmk_site_id     = local.checkmk_profile.site_id
     checkmk_folder_path = local.checkmk_profile.folder_path
