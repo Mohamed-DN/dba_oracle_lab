@@ -20,8 +20,8 @@
 ### Percorsi e guide chiave
 - [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
 - [🧱 Track Proxmox 1→5](./docs/15_proxmox_track/README.md)
-- [📚 Guide tematiche](#-guide-per-area-tematica)
-- [🛠️ Strumenti operativi](#️-strumenti-operativi)
+- [📚 Guide Tematiche](#-guide-per-area-tematica)
+- [🛠️ Strumenti Operativi](#️-strumenti-operativi)
 
 ### Governance e risorse
 - [⚡ Cosa contiene il repository](#-cosa-trovi-in-questo-repository)
