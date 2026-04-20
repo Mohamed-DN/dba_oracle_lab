@@ -18,6 +18,7 @@
           - checkmk_site_id | length > 0
           - checkmk_folder_path | length > 0
           - checkmk_server_fqdn | length > 0
+          - checkmk_server_fqdn is not match('^<.*>$')
           - checkmk_automation_user | length > 0
         fail_msg: "Variabili Checkmk non valorizzate: verificare group_vars/all.yml o checkmk_generated.yml."
 
@@ -106,8 +107,7 @@
           try:
               data = json.load(sys.stdin)
           except Exception:
-              print("smartctl_json_parse_error", file=sys.stderr)
-              print(0); raise SystemExit(0)
+              print("PARSE_ERROR"); raise SystemExit(0)
 
           value = data.get("temperature", {}).get("current")
           if value is None:
@@ -118,8 +118,12 @@
                   if "temp" in name and isinstance(raw_value, int):
                       value = raw_value
                       break
-          print(value if isinstance(value, int) else 0)
+          print(value if isinstance(value, int) else "PARSE_ERROR")
           ')"
+          if [ "${temp}" = "PARSE_ERROR" ]; then
+            echo "1 \"SMART_${first_disk}\" temp=0;55;60 SMART=${health_msg} device=${dev} parse_error=1"
+            exit 0
+          fi
           temp="${temp:-0}"
           echo "${health_code} \"SMART_${first_disk}\" temp=${temp};55;60 SMART=${health_msg} device=${dev}"
 
@@ -171,7 +175,7 @@
       ansible.builtin.command: check_mk_agent -u
       register: force_update_result
       changed_when: false
-      # rc=1 è tollerato in alcuni ambienti quando non è disponibile update immediato.
+      # rc=1 è tollerato quando il server non espone update immediati o il canale update non è attivo.
       failed_when: force_update_result.rc not in [0, 1]
       when: checkmk_force_initial_update_check | bool
 
