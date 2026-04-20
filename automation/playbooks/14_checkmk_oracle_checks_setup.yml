@@ -49,9 +49,11 @@
     - name: "Build mk_oracle DBUSER string"
       ansible.builtin.set_fact:
         checkmk_oracle_dbuser_string: >-
-          {{ '%s:%s:%s:%s:%s' | format(checkmk_oracle_monitor_user,
-          checkmk_oracle_monitor_password, checkmk_oracle_db_name,
-          checkmk_oracle_host, checkmk_oracle_port) }}
+          {{ checkmk_oracle_monitor_user ~ ':' ~
+          checkmk_oracle_monitor_password ~ ':' ~
+          checkmk_oracle_db_name ~ ':' ~
+          checkmk_oracle_host ~ ':' ~
+          checkmk_oracle_port }}
       no_log: true
 
     - name: "Deploy mk_oracle.cfg con placeholder/vault"
@@ -168,7 +170,7 @@
       ansible.builtin.command: check_mk_agent -u
       register: force_update_result
       changed_when: false
-      failed_when: false
+      failed_when: force_update_result.rc not in [0, 1]
       when: checkmk_force_initial_update_check | bool
 
     - name: "Warn se update check iniziale fallisce"
