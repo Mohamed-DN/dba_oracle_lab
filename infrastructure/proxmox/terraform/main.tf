@@ -47,6 +47,7 @@ locals {
     host_name_prefix = "${var.checkmk_host_prefix}-${var.environment}"
     hosts            = local.checkmk_host_map
   }
+  checkmk_ansible_output_dir = var.checkmk_ansible_vars_output_path != "" ? var.checkmk_ansible_vars_output_path : abspath("${path.module}/../../../automation/group_vars")
 
   vm_metadata = {
     environment  = var.environment
@@ -67,7 +68,7 @@ resource "local_file" "terraform_metadata" {
 }
 
 resource "local_file" "checkmk_ansible_vars" {
-  filename = abspath("${path.module}/../../../automation/group_vars/checkmk_generated.yml")
+  filename = "${local.checkmk_ansible_output_dir}/checkmk_generated.yml"
   content = yamlencode({
     checkmk_site_id     = local.checkmk_profile.site_id
     checkmk_folder_path = local.checkmk_profile.folder_path
