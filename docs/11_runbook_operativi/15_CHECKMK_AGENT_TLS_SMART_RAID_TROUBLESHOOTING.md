@@ -29,7 +29,7 @@ getent hosts <CHECKMK_SERVER_FQDN>
 ping -c 2 <CHECKMK_SERVER_FQDN>
 ```
 
-Se manca DNS, aggiungere solo una riga in coda (mai sovrascrivere `/etc/hosts`):
+Se manca DNS, aggiungere solo una riga in coda (mai sostituire integralmente `/etc/hosts`):
 
 ```bash
 HOSTS_LINE="<CHECKMK_SERVER_IP> <CHECKMK_SERVER_FQDN> <CHECKMK_SERVER_ALIAS>"
