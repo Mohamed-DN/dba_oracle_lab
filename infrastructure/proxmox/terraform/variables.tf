@@ -114,3 +114,21 @@ variable "vms" {
     }
   }
 }
+
+variable "checkmk_site_id" {
+  description = "Checkmk site id for the environment."
+  type        = string
+  default     = ""
+}
+
+variable "checkmk_folder_root" {
+  description = "Root folder for Checkmk host organization."
+  type        = string
+  default     = "/EDC"
+}
+
+variable "checkmk_host_prefix" {
+  description = "Prefix used for Checkmk host naming."
+  type        = string
+  default     = "edc"
+}

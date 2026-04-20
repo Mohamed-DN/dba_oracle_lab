@@ -49,7 +49,8 @@ automation/
 │   ├── 10_manage_services.yml             ← Gestione RAC services
 │   ├── 11_create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
 │   ├── 12_dba_maintenance.yml             ← Maintenance DBA periodica
-│   └── 13_maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
+│   ├── 13_maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
+│   └── 14_checkmk_oracle_checks_setup.yml ← Bootstrap automatico Checkmk + check Oracle/SMART
 ├── roles/
 │   ├── maa_guardrails/                    ← Ruolo MAA baseline enterprise
 │   ├── oracle_daily_health/               ← Ruolo riusabile health-check
@@ -131,6 +132,9 @@ ansible-playbook -i inventory/production.ini playbooks/12_dba_maintenance.yml
 ansible-playbook -i inventory/production.ini playbooks/13_maa_guardrails.yml \
   -e maa_enforce_compliance=true \
   -e maa_set_broker_thresholds=true
+
+# ---- CHECKMK + ORACLE CHECKS BOOTSTRAP ----
+ansible-playbook -i inventory/lab.ini playbooks/14_checkmk_oracle_checks_setup.yml
 ```
 
 ## Integrazione Proxmox + Terraform + AWX

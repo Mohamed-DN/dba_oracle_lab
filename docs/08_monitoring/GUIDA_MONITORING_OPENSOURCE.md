@@ -5,28 +5,22 @@
 
 ---
 
-## Quale Scegliere? Confronto Rapido
+## Quick Pick (scelta immediata)
 
-| | **Checkmk** | **Zabbix** | **Prometheus + Grafana** |
-|---|---|---|---|
-| **Filosofia** | "Tutto incluso e funziona subito" | "Potentissimo, controllo totale" | "Modulare, cloud-native" |
-| **Ideale per** | DBA che vuole monitorare SUBITO | Ambiente grande e complesso | Infrastruttura Kubernetes/DevOps |
-| **Monitoraggio Oracle** | ⭐⭐⭐ Plugin nativo, auto-discovery | ⭐⭐⭐ Template ODBC nativi | ⭐⭐ Richiede exporter esterno |
-| **Monitoraggio Linux** | ⭐⭐⭐ Agent leggero, auto-discovery | ⭐⭐⭐ Agent + agentless | ⭐⭐⭐ node_exporter standard |
-| **Curva apprendimento** | 🟢 Facile (1-2 ore) | 🔴 Ripida (giorni) | 🟡 Media (PromQL da imparare) |
-| **Dashboard** | Buone, preconfigurate | Buone, personalizzabili | ⭐⭐⭐ Grafana è il migliore |
-| **Costo** | Free (Raw Edition, fino a 750 host) | Free (completamente) | Free (completamente) |
-| **Setup** | Pacchetto RPM/DEB, singolo server | Server + DB backend (PostgreSQL) | 3-4 componenti da integrare |
+| Scenario | Scelta consigliata | Perché |
+|---|---|---|
+| Vuoi partire subito in lab Oracle | **Checkmk** | Setup veloce, plugin Oracle nativo, discovery automatico |
+| Hai tanti host e policy centrali complesse | **Zabbix** | Grande flessibilità e governance su larga scala |
+| Sei già orientato Kubernetes/DevOps | **Prometheus + Grafana** | Standard cloud-native e dashboard avanzate |
+| Vuoi alert robusti + dashboard top | **Checkmk + Grafana** | Alerting operativo + visualizzazione avanzata |
 
-### 🏆 Raccomandazione per DBA Oracle
+### Confronto rapido sintetico
 
-> **Per iniziare**: usa **Checkmk** — è il più veloce da installare e ha il miglior plugin Oracle nativo.
->
-> **Per ambienti grandi** (>50 server): valuta **Zabbix** per la scalabilità.
->
-> **Se hai già Kubernetes/Docker**: usa **Prometheus + Grafana** per uniformità.
->
-> **La combinazione migliore**: molti DBA usano **Prometheus + Grafana per le dashboard** + **Checkmk per gli alert** perché ognuno eccelle nel suo ambito.
+| Tool | Oracle | Linux | Curva apprendimento | Setup |
+|---|---|---|---|---|
+| **Checkmk** | ⭐⭐⭐ nativo | ⭐⭐⭐ | 🟢 facile | singolo server |
+| **Zabbix** | ⭐⭐⭐ template ODBC | ⭐⭐⭐ | 🔴 ripida | server + DB backend |
+| **Prometheus + Grafana** | ⭐⭐ exporter | ⭐⭐⭐ | 🟡 media | stack multi-componente |
 
 ---
 
@@ -165,6 +159,12 @@ Portare in produzione un onboarding Checkmk sicuro e ripetibile su host Linux Or
 - auto-update agent via HTTPS
 - monitoraggio dischi SAS/RAID con SMART
 - checklist di validazione e rollback.
+
+#### Naming standard EDC (host/site/folder)
+
+- `site`: `edc_<environment>` (es. `edc_lab`, `edc_prod`)
+- `folder`: `/EDC/<ENVIRONMENT>/ORACLE` (es. `/EDC/LAB/ORACLE`)
+- `host`: `edc-<environment>-<hostname>` (es. `edc-lab-rac1`)
 
 #### Prerequisiti OS
 

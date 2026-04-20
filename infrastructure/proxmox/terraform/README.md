@@ -4,7 +4,8 @@ Questa cartella fornisce una baseline IaC per Proxmox con:
 
 - naming coerente per ambiente,
 - provisioning di 3 VM con un solo comando,
-- export automatico metadati host in JSON per Ansible/AWX.
+- export automatico metadati host in JSON per Ansible/AWX,
+- generazione profilo Checkmk (site/folder/host naming) per bootstrap automatico check.
 
 ## File principali
 
@@ -12,6 +13,7 @@ Questa cartella fornisce una baseline IaC per Proxmox con:
 - `variables.tf`: variabili standard e naming conventions.
 - `main.tf`: provisioning VM e generazione `terraform_metadata.json`.
 - `outputs.tf`: output strutturati per pipeline downstream.
+- `checkmk_generated.yml` (generato): variabili Ansible per setup check Checkmk.
 - `terraform.tfvars.example`: esempio configurazione lab.
 
 ## Naming convention
@@ -41,8 +43,10 @@ terraform destroy
 Dopo `terraform apply` viene generato:
 
 - `terraform_metadata.json` (host, IP, ruolo, timestamp)
+- `automation/group_vars/checkmk_generated.yml` (naming EDC + host map per Checkmk)
 
-Questo file è consumabile da job AWX o pipeline Ansible per creare inventory dinamico.
+Questi file sono consumabili da job AWX o pipeline Ansible per creare inventory dinamico
+e applicare il bootstrap automatico dei check.
 
 ## Integrazione minima AWX
 
