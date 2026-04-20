@@ -219,6 +219,7 @@ sudo cmk-update-agent register \
   -v
 
 sudo cmk-update-agent -v
+# Forza update check immediato dal server (se configurato)
 sudo check_mk_agent -u
 ```
 
