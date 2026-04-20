@@ -10,6 +10,7 @@
 - [11 Review AWR](./11_REVIEW_AWR.md)
 - [12 Capacity Planning Limiti](./12_CAPACITY_PLANNING_LIMITI.md)
 - [14 Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md)
+- [15 Checkmk Agent TLS + SMART/RAID Troubleshooting](./15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md)
 
 ## Catalogo Script Enterprise (Top 20)
 - [Top 100 Script DBA](../05_performance/TOP_100_SCRIPT_DBA.md)
