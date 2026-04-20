@@ -114,3 +114,31 @@ variable "vms" {
     }
   }
 }
+
+variable "checkmk_site_id" {
+  description = "Checkmk site ID for the environment."
+  type        = string
+  default     = ""
+}
+
+variable "checkmk_folder_root" {
+  description = "Root folder for Checkmk host organization."
+  type        = string
+  default     = "/EDC"
+}
+
+variable "checkmk_host_prefix" {
+  description = "Prefix used for Checkmk host naming."
+  type        = string
+  default     = "edc"
+}
+
+variable "checkmk_ansible_vars_output_path" {
+  description = "Optional absolute path for generated checkmk ansible vars directory."
+  type        = string
+  default     = ""
+  validation {
+    condition     = var.checkmk_ansible_vars_output_path == "" || can(regex("^/.+", var.checkmk_ansible_vars_output_path))
+    error_message = "checkmk_ansible_vars_output_path deve essere vuoto o un path assoluto."
+  }
+}

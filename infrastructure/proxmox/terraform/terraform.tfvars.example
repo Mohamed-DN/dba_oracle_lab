@@ -12,6 +12,9 @@ vm_gateway            = "192.168.56.1"
 vm_dns                = "1.1.1.1"
 ci_user               = "dbaadmin"
 ci_ssh_public_key     = "ssh-ed25519 AAAA..."
+checkmk_site_id       = "edc_lab"
+checkmk_folder_root   = "/EDC"
+checkmk_host_prefix   = "edc"
 
 vms = {
   vm01 = { ip = "192.168.56.201", role = "control-plane" }

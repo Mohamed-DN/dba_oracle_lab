@@ -9,9 +9,47 @@
 > Guida completa passo-passo per costruire un'architettura Oracle Enterprise in laboratorio.
 > **Validata al 98%** contro le best practice ufficiali Oracle MAA Gold.
 
-### 📑 Navigazione Rapida
+## 📑 Navigazione Rapida
 
-[⚡ Cosa Contiene](#-cosa-trovi-in-questo-repository) · [🚀 Quick Start](#-quick-start-5-minuti) · [🧭 Percorsi supportati](#-percorsi-supportati-vagrant-storico-vs-proxmox-moderno) · [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8) · [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md) · [🧱 Track Proxmox 1→5](./docs/15_proxmox_track/README.md) · [📚 Guide Tematiche](#-guide-per-area-tematica) · [🛠️ Strumenti](#️-strumenti-operativi) · [📅 Roadmap](#-roadmap-lab-8-settimane-3hgiorno) · [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md) · [🌐 Piano IP](#-piano-ip) · [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md) · [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md) · [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md) · [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md) · [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md) · [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+### Inizia da qui
+- [🚀 Quick Start](#-quick-start-5-minuti)
+- [🧭 Percorsi supportati](#-percorsi-supportati-vagrant-storico-vs-proxmox-moderno)
+- [⚠️ Prima di iniziare](#️-prima-di-iniziare)
+- [📖 Lab Fasi 0→8](#-esegui-il-lab-fase-0--8)
+
+### Percorsi e guide chiave
+- [🪶 Percorso Lite](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
+- [🧱 Track Proxmox 1→5](./docs/15_proxmox_track/README.md)
+- [📚 Guide Tematiche](#-guide-per-area-tematica)
+- [🛠️ Strumenti Operativi](#️-strumenti-operativi)
+
+### Governance e risorse
+- [⚡ Cosa contiene il repository](#-cosa-trovi-in-questo-repository)
+- [🗂️ Struttura principale (ordinata)](#️-struttura-principale-ordinata)
+- [🏛️ Governance Enterprise](./docs/14_enterprise_governance/README.md)
+- [🌐 Piano IP](#-piano-ip)
+- [🎯 Learning Path](./docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md)
+- [✅ Obiettivi Fasi](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
+- [🧪 Quiz Hands-on](./docs/00_fondamenti/QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md)
+- [🧱 Standard Guide](./docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md)
+- [🔐 Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md)
+- [🧭 Indice Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+
+---
+
+## 🗂️ Struttura principale (ordinata)
+
+Ordine consigliato per orientarti velocemente nella root del repository:
+
+1. [`README.md`](./README.md) — entrypoint principale del lab
+2. [`docs/`](./docs/) — documentazione guidata e runbook operativi
+3. [`automation/`](./automation/) — playbook e ruoli Ansible
+4. [`infrastructure/`](./infrastructure/) — IaC e baseline Proxmox/Terraform
+5. [`vagrant_rac_dataguard/`](./vagrant_rac_dataguard/) — ambiente storico one-click RAC + DG
+6. [`scripts/`](./scripts/) — script di supporto e utilità operative
+7. [`reliability/`](./reliability/) — governance release, dashboard e SLO
+8. [`security/`](./security/) — profili e controlli sicurezza
+9. [`tests/`](./tests/) — test e2e e verifiche funzionali
 
 ---
 
@@ -22,15 +60,11 @@
 git clone https://github.com/Mohamed-DN/dba_oracle_lab.git
 cd dba_oracle_lab
 
-# 2A. PERCORSO MANUALE (impari di più, ~30 ore)
-#     Segui le 9 guide in ordine → docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md
+# 2A. Percorso manuale (consigliato per imparare)
+#     docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md
 
-# 2B. PERCORSO AUTOMATICO (1-click, servono 33GB RAM)
-cd vagrant_rac_dataguard
-vagrant up    # → crea DNS + 2 nodi RAC Primary + 2 nodi Standby + Data Guard
-
-# 2C. PERCORSO LITE (single-node, 12-16GB RAM)
-#     docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md
+# 2B. Percorso automatico Vagrant (1-click, ~33GB RAM)
+cd vagrant_rac_dataguard && vagrant up
 
 # 3. Dopo il lab, usa gli script operativi ogni giorno
 #    → docs/12_scripts_sql_pronti/  (10 script SQL per emergenze)

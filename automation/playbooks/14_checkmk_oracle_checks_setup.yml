@@ -1,0 +1,212 @@
+---
+# ============================================================================
+# Playbook: Checkmk Agent + Oracle Checks Bootstrap
+# Obiettivo: setup automatico baseline check OS/SMART + Oracle (mk_oracle)
+# Uso:
+# ansible-playbook -i inventory/lab.ini playbooks/14_checkmk_oracle_checks_setup.yml
+# ============================================================================
+
+- name: "Checkmk + Oracle checks bootstrap"
+  hosts: oracle_primary:oracle_standby
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - name: "Assert variabili obbligatorie Checkmk"
+      ansible.builtin.assert:
+        that:
+          - checkmk_site_id | length > 0
+          - checkmk_folder_path | length > 0
+          - checkmk_server_fqdn | length > 0
+          - checkmk_server_fqdn is not match('^<.*>$')
+          - checkmk_automation_user | length > 0
+        fail_msg: "Variabili Checkmk non valorizzate: verificare group_vars/all.yml o checkmk_generated.yml."
+
+  tasks:
+    - name: "Install prerequisiti monitoraggio (SMART/RAID)"
+      ansible.builtin.package:
+        name:
+          - smartmontools
+          - lsscsi
+          - pciutils
+        state: present
+
+    - name: "Ensure directory /etc/check_mk"
+      ansible.builtin.file:
+        path: /etc/check_mk
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: "Ensure local checks directory"
+      ansible.builtin.file:
+        path: /usr/lib/check_mk_agent/local
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: "Build mk_oracle DBUSER string"
+      ansible.builtin.set_fact:
+        checkmk_oracle_dbuser_string: >-
+          {{ checkmk_oracle_monitor_user ~ ':' ~
+          checkmk_oracle_monitor_password ~ ':' ~
+          checkmk_oracle_db_name ~ ':' ~
+          checkmk_oracle_host ~ ':' ~
+          checkmk_oracle_port }}
+      no_log: true
+
+    - name: "Deploy mk_oracle.cfg con placeholder/vault"
+      ansible.builtin.copy:
+        dest: /etc/check_mk/mk_oracle.cfg
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          DBUSER={{ checkmk_oracle_dbuser_string }}
+          SECTIONS="{{ checkmk_oracle_sections }}"
+      no_log: true
+
+    - name: "Deploy local check SMART baseline"
+      ansible.builtin.copy:
+        dest: /usr/lib/check_mk_agent/local/20_smart_oracle_baseline.sh
+        owner: root
+        group: root
+        mode: "0755"
+        content: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if ! command -v smartctl >/dev/null 2>&1; then
+            echo '2 "SMART_tools" - smartctl non installato'
+            exit 0
+          fi
+
+          first_disk="$(lsblk -dn -o NAME,TYPE | awk '$2=="disk"{print $1; exit}')"
+          if [ -z "${first_disk}" ]; then
+            echo '1 "SMART_disks" - Nessun disk rilevato'
+            exit 0
+          fi
+
+          dev="/dev/${first_disk}"
+          if [ ! -b "${dev}" ]; then
+            echo "2 \"SMART_${first_disk}\" - device non valido: ${dev}"
+            exit 0
+          fi
+
+          if smartctl -H "${dev}" 2>/dev/null | grep -Eq 'PASSED|OK'; then
+            health_code=0
+            health_msg="PASSED"
+          else
+            health_code=1
+            health_msg="WARN"
+          fi
+
+          temp="$(smartctl -a -j "${dev}" 2>/dev/null | python3 -c '
+          import json,sys
+          try:
+              data = json.load(sys.stdin)
+          except Exception:
+              print("PARSE_ERROR"); raise SystemExit(0)
+
+          value = data.get("temperature", {}).get("current")
+          if value is None:
+              table = data.get("ata_smart_attributes", {}).get("table", [])
+              for row in table:
+                  name = str(row.get("name", "")).lower()
+                  raw_value = row.get("raw", {}).get("value")
+                  if "temp" in name and isinstance(raw_value, int):
+                      value = raw_value
+                      break
+          print(value if isinstance(value, int) else "PARSE_ERROR")
+          ')"
+          if [ "${temp}" = "PARSE_ERROR" ]; then
+            echo "1 \"SMART_${first_disk}\" temp=0;55;60 SMART=${health_msg} device=${dev} parse_error=1"
+            exit 0
+          fi
+          temp="${temp:-0}"
+          echo "${health_code} \"SMART_${first_disk}\" temp=${temp};55;60 SMART=${health_msg} device=${dev}"
+
+    - name: "Check presenza cmk-agent-ctl"
+      ansible.builtin.stat:
+        path: /usr/bin/cmk-agent-ctl
+      register: cmk_agent_ctl_bin
+
+    - name: "Check presenza cmk-update-agent"
+      ansible.builtin.stat:
+        path: /usr/bin/cmk-update-agent
+      register: cmk_update_agent_bin
+
+    - name: "Register TLS agent controller (opzionale)"
+      ansible.builtin.command: >
+        cmk-agent-ctl register
+        --server {{ checkmk_server_fqdn }}
+        --site {{ checkmk_site_id }}
+        --hostname {{ ansible_fqdn | default(inventory_hostname) }}
+        -U {{ checkmk_automation_user }}
+        -P {{ checkmk_automation_secret }}
+      register: tls_register_result
+      changed_when: tls_register_result.rc == 0
+      failed_when: tls_register_result.rc != 0
+      when:
+        - checkmk_register_tls | bool
+        - cmk_agent_ctl_bin.stat.exists
+      no_log: true
+
+    - name: "Register update-agent (opzionale)"
+      ansible.builtin.command: >
+        cmk-update-agent register
+        -s {{ checkmk_server_fqdn }}
+        -i {{ checkmk_site_id }}
+        -H {{ ansible_fqdn | default(inventory_hostname) }}
+        -p https
+        -U {{ checkmk_automation_user }}
+        -P {{ checkmk_automation_secret }}
+        -v
+      register: update_register_result
+      changed_when: update_register_result.rc == 0
+      failed_when: update_register_result.rc != 0
+      when:
+        - checkmk_register_update | bool
+        - cmk_update_agent_bin.stat.exists
+      no_log: true
+
+    - name: "Forza update check iniziale (opzionale)"
+      ansible.builtin.command: check_mk_agent -u
+      register: force_update_result
+      changed_when: false
+      # rc=1 è tollerato quando il server non espone update immediati o il canale update non è attivo.
+      failed_when: force_update_result.rc not in [0, 1]
+      when: checkmk_force_initial_update_check | bool
+
+    - name: "Warn se update check iniziale fallisce"
+      ansible.builtin.debug:
+        msg: >-
+          check_mk_agent -u rc={{ force_update_result.rc }},
+          stderr={{ force_update_result.stderr | default('') | trim }}
+      when:
+        - checkmk_force_initial_update_check | bool
+        - force_update_result.rc is defined
+        - force_update_result.rc != 0
+
+    - name: "Verify servizi agent/timer"
+      ansible.builtin.shell: |
+        set -o pipefail
+        systemctl is-enabled cmk-agent-ctl-daemon 2>/dev/null || true
+        systemctl is-active cmk-agent-ctl-daemon 2>/dev/null || true
+        systemctl is-enabled cmk-update-agent.timer 2>/dev/null || true
+        systemctl is-active cmk-update-agent.timer 2>/dev/null || true
+      args:
+        executable: /bin/bash
+      register: service_status
+      changed_when: false
+
+    - name: "Report bootstrap checkmk/oracle"
+      ansible.builtin.debug:
+        msg: |
+          Checkmk site={{ checkmk_site_id }} folder={{ checkmk_folder_path }}
+          Host naming prefix={{ checkmk_host_prefix }}
+          cmk-agent-ctl present={{ cmk_agent_ctl_bin.stat.exists | default(false) }}
+          cmk-update-agent present={{ cmk_update_agent_bin.stat.exists | default(false) }}
+          service status:
+          {{ service_status.stdout | default('N/A') }}
