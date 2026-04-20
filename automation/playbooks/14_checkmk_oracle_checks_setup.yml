@@ -79,7 +79,7 @@
             exit 0
           fi
 
-          first_disk="$(lsblk -dn -o NAME | head -1)"
+          first_disk="$(lsblk -dn -o NAME,TYPE | awk '$2=="disk"{print $1; exit}')"
           if [ -z "${first_disk}" ]; then
             echo '1 "SMART_disks" - Nessun disk rilevato'
             exit 0
@@ -94,8 +94,13 @@
             health_msg="WARN"
           fi
 
-          temp="$(smartctl -A "${dev}" 2>/dev/null | awk '/Temperature_Celsius|Current Drive Temperature/ {print $10; exit}')"
-          temp="${temp:-N/A}"
+          temp="$(smartctl -A "${dev}" 2>/dev/null | awk '
+            /Temperature_Celsius|Current Drive Temperature/ {
+              for (i=NF; i>=1; i--) {
+                if ($i ~ /^[0-9]+$/) { print $i; exit }
+              }
+            }')"
+          temp="${temp:-0}"
           echo "${health_code} \"SMART_${first_disk}\" temp=${temp};55;60 SMART=${health_msg} device=${dev}"
 
     - name: "Check presenza cmk-agent-ctl"
@@ -148,6 +153,16 @@
       changed_when: false
       failed_when: false
       when: checkmk_force_initial_update_check | bool
+
+    - name: "Warn se update check iniziale fallisce"
+      ansible.builtin.debug:
+        msg: >-
+          check_mk_agent -u rc={{ force_update_result.rc }},
+          stderr={{ force_update_result.stderr | default('') | trim }}
+      when:
+        - checkmk_force_initial_update_check | bool
+        - force_update_result.rc is defined
+        - force_update_result.rc != 0
 
     - name: "Verify servizi agent/timer"
       ansible.builtin.shell: |
