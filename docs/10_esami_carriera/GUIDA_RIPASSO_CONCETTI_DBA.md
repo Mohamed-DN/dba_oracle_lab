@@ -9,6 +9,30 @@
 
 ---
 
+## Obiettivo
+
+Usare questa guida come ripasso tecnico strutturato per colloqui, supporto operativo e consolidamento dei concetti Oracle DBA.
+
+## Procedura operativa
+
+1. Seleziona il blocco tematico da ripassare (Core, RMAN, DG, RAC, Security, Performance).
+2. Associa ogni blocco ai runbook e script pratici collegati.
+3. Verifica i concetti direttamente con query/comandi in laboratorio.
+
+## Validazione finale
+
+- Riesci a spiegare il concetto in termini di definizione, impatto e operatività.
+- Sai indicare almeno un comando/query per verificare il tema in ambiente reale.
+- Riesci a collegare il tema a un runbook operativo.
+
+## Troubleshooting rapido
+
+- Se un concetto non è chiaro, riparti dai fondamenti correlati in `docs/00_fondamenti`.
+- Se manca contesto operativo, apri prima runbook e cheat sheet specialistiche.
+- Se il problema è di memorizzazione, usa il percorso rapido e ripeti i blocchi ad alta frequenza.
+
+---
+
 ## ⚡ Come usare questa guida (modalità operativa)
 
 > **Quando usarla:** prima di colloqui tecnici, prima di una maintenance window, o come ripasso veloce post-incidente.
