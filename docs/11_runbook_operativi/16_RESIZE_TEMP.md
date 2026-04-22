@@ -75,7 +75,7 @@ ALTER DATABASE TEMPFILE '&tempfile_name' RESIZE 8G;
 ## Step 4: Riduzione TEMP (quando serve davvero)
 
 ```sql
--- Strategia raccomandata: crea TEMP2, switch, drop TEMP vecchio
+-- Strategia raccomandata: crea TEMP2, imposta TEMP2 come default e rimuovi TEMP precedente
 CREATE TEMPORARY TABLESPACE TEMP2 TEMPFILE '+DATA' SIZE 4G AUTOEXTEND ON NEXT 512M MAXSIZE 32G;
 ALTER DATABASE DEFAULT TEMPORARY TABLESPACE TEMP2;
 
