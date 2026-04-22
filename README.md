@@ -9,13 +9,85 @@
 > Guida pratica e operativa per costruire e gestire un laboratorio Oracle RAC + Data Guard.
 > **Core del repository: Lab Fase 0→8.** Tutto il resto è estensione operativa/avanzata.
 
-## 📑 Navigazione Rapida (ordine consigliato)
+## 📑 Navigazione Rapida (livello 1)
 
-- 📚 **Fondamenti (leggi prima):** [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md) · [Glossario](./docs/00_fondamenti/GLOSSARIO_ORACLE.md) · [Comandi DBA](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md)
-- 🏛️ **Core Lab 0→8:** [Fasi 0→8](#-esegui-il-core-lab-fase-08) · [Checklist Core](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
-- 🛠️ **Operatività quotidiana DBA:** [Runbook](./docs/11_runbook_operativi/README.md) · [Script SQL pronti](./docs/12_scripts_sql_pronti/README.md) · [Top script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md)
-- 📖 **Approfondimenti:** [Indice docs per attività/argomento](./docs/README.md) · [High Availability](./docs/02_high_availability/) · [Backup & Recovery](./docs/03_backup_recovery/)
-- 🤖 **Automazione/IaC (avanzato):** [Ansible](./automation/README.md) · [Track Proxmox](./docs/15_proxmox_track/README.md) · [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- 🟢 **Fondamenti:** [Indice area](./docs/00_fondamenti/README.md)
+- 🏛️ **Core Lab 0→8:** [Indice area](./docs/01_lab_setup/README.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
+- 🔵 **High Availability:** [Indice area](./docs/02_high_availability/README.md)
+- 🟡 **Backup & Recovery:** [Indice area](./docs/03_backup_recovery/README.md)
+- 🟠 **Amministrazione:** [Indice area](./docs/04_administration/README.md)
+- 🔴 **Performance & Diagnostica:** [Indice area](./docs/05_performance/README.md)
+- 🟣 **Patching & Upgrade:** [Indice area](./docs/06_patching_upgrade/README.md)
+- 🔄 **Replica & Migrazione:** [Indice area](./docs/07_replication/README.md)
+- 📊 **Monitoring:** [Indice area](./docs/08_monitoring/README.md)
+- ☁️ **Cloud OCI (opzionale):** [Indice area](./docs/09_cloud_oci/README.md)
+- 🎓 **Esami & Carriera:** [Indice area](./docs/10_esami_carriera/README.md)
+- 🛠️ **Strumenti operativi:** [Runbook](./docs/11_runbook_operativi/README.md) · [Script SQL](./docs/12_scripts_sql_pronti/README.md) · [Libreria script](./docs/13_libreria_completa_script/README.md)
+- 🤖 **Automazione/IaC:** [Ansible](./automation/README.md) · [Track Proxmox](./docs/15_proxmox_track/README.md) · [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- 🧭 **Indice totale unico:** [docs/README.md](./docs/README.md)
+
+---
+
+## 🧩 Indice esteso (interattivo)
+
+<details>
+  <summary>🟢 Fondamenti — leggi prima del lab</summary>
+
+- [Architettura Oracle](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md)
+- [Ciclo di Vita di una Transazione](./docs/00_fondamenti/GUIDA_CICLO_DI_VITA_TRANSAZIONE.md)
+- [Memory Architecture (SGA/PGA)](./docs/00_fondamenti/GUIDA_MEMORIA_ORACLE_SGA_PGA.md)
+- [Redo/Undo & Crash Recovery](./docs/00_fondamenti/GUIDA_REDO_UNDO_CRASH_RECOVERY.md)
+- [Locking, Concurrency & Wait Events](./docs/00_fondamenti/GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md)
+- [Comandi DBA](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md)
+- [Glossario Oracle](./docs/00_fondamenti/GLOSSARIO_ORACLE.md)
+- [Indice completo area](./docs/00_fondamenti/README.md)
+
+</details>
+
+<details>
+  <summary>🔵 High Availability — Data Guard, Switchover, Failover</summary>
+
+- [Switchover Completo](./docs/02_high_availability/GUIDA_SWITCHOVER_COMPLETO.md)
+- [Failover + Reinstate](./docs/02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md)
+- [Flashback Database](./docs/02_high_availability/GUIDA_FLASHBACK_DATABASE.md)
+- [MAA Best Practices](./docs/02_high_availability/GUIDA_MAA_BEST_PRACTICES.md)
+- [Indice completo area](./docs/02_high_availability/README.md)
+
+> ⚠️ FAILOVER è distruttivo: spegni tutte le VM e fai backup della cartella VirtualBox VMs prima del test.
+
+</details>
+
+<details>
+  <summary>🛠️ Strumenti operativi (Runbook, Script SQL, Automation, Libreria)</summary>
+
+- [Script SQL per Scenario — 10 script pronti](./docs/12_scripts_sql_pronti/README.md)
+- [Runbook Operativi — indice completo](./docs/11_runbook_operativi/README.md)
+- [Ansible Automation — 13 playbook](./automation/README.md)
+- [Libreria Oracle script (~1000)](./docs/13_libreria_completa_script/README.md)
+- [Catalogo completo libreria script](./docs/13_libreria_completa_script/CATALOGO_COMPLETO_SCRIPT.md)
+
+</details>
+
+<details>
+  <summary>🎓 Roadmap, Esami, Piano IP e Risorse</summary>
+
+- [Piano Laboratorio (8 settimane)](./docs/00_fondamenti/PIANO_LABORATORIO.md)
+- [Preparazione Esami 1Z0-082 + 1Z0-083](./docs/10_esami_carriera/GUIDA_ESAME_REVIEW.md)
+- [Ripasso Concetti DBA](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md)
+- [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md)
+- [Piano IP e rete lab](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md)
+- [Riferimenti Oracle ufficiali](#-riferimenti-ufficiali-oracle)
+
+</details>
+
+---
+
+## 📏 Regole indice (limite di profondità)
+
+- **Root README:** massimo 2 livelli (Area + link chiave)
+- **README di area (`docs/*/README.md`):** fino a 3 livelli (Categoria + documento)
+- **Oltre 12–15 voci in una sezione:** spezza in sotto-indice locale
+- **Fonte unica indice totale:** [docs/README.md](./docs/README.md)
 
 ---
 
@@ -38,21 +110,12 @@ cd vagrant_rac_dataguard && vagrant up
 
 ---
 
-## 📚 Leggi prima del Lab
-
-1. [GUIDA_ARCHITETTURA_ORACLE.md](./docs/00_fondamenti/GUIDA_ARCHITETTURA_ORACLE.md)
-2. [GUIDA_COMANDI_DBA.md](./docs/00_fondamenti/GUIDA_COMANDI_DBA.md)
-3. [GUIDA_REDO_UNDO_CRASH_RECOVERY.md](./docs/00_fondamenti/GUIDA_REDO_UNDO_CRASH_RECOVERY.md)
-4. [GLOSSARIO_ORACLE.md](./docs/00_fondamenti/GLOSSARIO_ORACLE.md)
-
----
-
 ## 📖 Esegui il Core Lab (Fase 0→8)
 
 > ✅ **Questo è il percorso principale del repository.**
 
 | # | Fase | Guida | Output principale |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 0 | Setup Macchine | [GUIDA_FASE0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | VM + DNS + dischi ASM |
 | 1 | Preparazione OS | [GUIDA_FASE1](./docs/01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md) | OS hardening base + rete |
 | 2 | Grid + RAC | [GUIDA_FASE2](./docs/01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) | Cluster RAC operativo |
@@ -62,67 +125,6 @@ cd vagrant_rac_dataguard && vagrant up
 | 6 | Enterprise Manager | [GUIDA_FASE6](./docs/08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | Monitoring enterprise |
 | 7 | GoldenGate | [GUIDA_FASE7](./docs/07_replication/GUIDA_FASE7_GOLDENGATE.md) | Replica logica |
 | 8 | Test Verifica | [GUIDA_FASE8](./docs/01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md) | Validazione end-to-end |
-
----
-
-## 🛠️ Operatività quotidiana DBA (priorità alta)
-
-- [Runbook operativi](./docs/11_runbook_operativi/README.md)
-- [Script SQL pronti per scenario](./docs/12_scripts_sql_pronti/README.md)
-- [Indice Centrale Runbook + Top20](./docs/11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
-- [Top 100 Script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md)
-
-### Cheat Sheet rapide (nuove)
-
-- [Cheat Sheet RMAN](./docs/11_runbook_operativi/CHEAT_SHEET_RMAN.md)
-- [Cheat Sheet DGMGRL](./docs/11_runbook_operativi/CHEAT_SHEET_DGMGRL.md)
-- [Cheat Sheet GoldenGate](./docs/11_runbook_operativi/CHEAT_SHEET_GOLDENGATE.md)
-- [GUIDA ADRCI + Diagnostica Oracle](./docs/05_performance/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
-
----
-
-## 🧭 Indice docs completo (per attività e per argomento)
-
-Per navigazione globale ordinata usa: **[docs/README.md](./docs/README.md)**
-
-- vista **per attività DBA** (giornaliero, incidente, manutenzione, progetto)
-- vista **per argomento** (HA, backup, performance, sicurezza, replica, monitoring)
-
----
-
-## 📝 Appunti e ripasso (snelli e utili)
-
-- [GUIDA_RIPASSO_CONCETTI_DBA.md](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) — ripasso strutturato con uso rapido
-- [DIARIO_DI_BORDO.md](./docs/00_fondamenti/DIARIO_DI_BORDO.md) — changelog tecnico compatto
-- Archivio storico: [docs/10_esami_carriera/archivio_extra](./docs/10_esami_carriera/archivio_extra/README.md)
-
----
-
-## ⚡ Cosa trovi nel repository (sintesi)
-
-| Area | Contenuto |
-|---|---|
-| Core Lab | Fasi 0→8 per costruire RAC + Data Guard + GoldenGate |
-| Operatività | Runbook giornalieri + script SQL pronti + top script |
-| Libreria estesa | ~1000 script in `docs/13_libreria_completa_script/` |
-| Governance | standard qualità, reliability, security e release policy |
-
----
-
-## 🤖 Automazione/IaC (estensione avanzata)
-
-- [automation/README.md](./automation/README.md) — playbook e ruoli Ansible
-- [docs/15_proxmox_track/README.md](./docs/15_proxmox_track/README.md) — track moderno Proxmox 1→5
-- [infrastructure/proxmox/terraform/README.md](./infrastructure/proxmox/terraform/README.md) — baseline Terraform
-
----
-
-## 🧭 Confronto percorsi (in fondo)
-
-| Percorso | Quando usarlo | Link |
-|---|---|---|
-| **Vagrant storico (core attuale)** | Vuoi completare rapidamente il lab RAC + DG in locale | [vagrant_rac_dataguard/README.md](./vagrant_rac_dataguard/README.md) |
-| **Proxmox moderno (avanzato)** | Vuoi evolvere verso IaC + control plane + K8s | [docs/15_proxmox_track/README.md](./docs/15_proxmox_track/README.md) |
 
 ---
 

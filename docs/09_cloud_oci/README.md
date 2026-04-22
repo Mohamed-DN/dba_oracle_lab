@@ -1,0 +1,13 @@
+# ☁️ Cloud OCI (Opzionale) — Indice Area
+
+> Percorso avanzato: estensione lab verso Oracle Cloud Infrastructure.
+
+| Guida | Cosa impari |
+| --- | --- |
+| [GoldenGate verso OCI](./GUIDA_GOLDENGATE_OCI_ARM.md) | Target OCI ARM, scenari free vs enterprise |
+| [Rete Lab ↔ OCI](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | VPN, SSH tunnel, NSG |
+| [Cloud GoldenGate](./GUIDA_CLOUD_GOLDENGATE.md) | Panorama integrazione cloud |
+
+---
+
+Indice totale documentazione: [../README.md](../README.md)
