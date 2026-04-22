@@ -10,6 +10,8 @@
 | [Oracle Scheduler](./GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks |
 | [Security Hardening](./GUIDA_SECURITY_HARDENING.md) | TDE, auditing, encryption, profili |
 | [Identità Oracle e Servizi](./GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | DB_NAME, SID, SERVICE_NAME |
+| [ACL Network Oracle](./GUIDA_ACL_NETWORK_ORACLE.md) | ORA-24247, ACL host/porta, UTL_HTTP/SMTP |
+| [Package Monitor DDL](./GUIDA_PACKAGE_MONITOR_DDL.md) | Trigger DDL + package di audit operativo |
 
 ## Checklist operativa
 

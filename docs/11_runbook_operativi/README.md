@@ -56,6 +56,9 @@
 | 13 | [Refresh Ambiente di Test](./13_REFRESH_SCHEMA_TEST.md) | Clone schema produzione su Sviluppo (DataPump) |
 | 14 | [Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md) | Drill resilienza rete su laboratorio |
 | 15 | [Checkmk Agent TLS + SMART/RAID Troubleshooting](./15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md) | Onboarding host e troubleshooting monitoraggio disco/RAID |
+| 16 | [Resize TEMP (Tempfile) in Sicurezza](./16_RESIZE_TEMP.md) | ORA-01652, sort su disco, temp al limite |
+| 17 | [Purge Log Oracle (ADR, Audit, Archivelog)](./17_PURGE_LOG_ORACLE.md) | Saturazione spazio log/FRA/diag |
+| 18 | [Gestione Statistiche Optimizer (DBMS_STATS)](./18_GESTIONE_STATISTICHE_OPTIMIZER.md) | Regressioni query e statistiche stale |
 
 ---
 

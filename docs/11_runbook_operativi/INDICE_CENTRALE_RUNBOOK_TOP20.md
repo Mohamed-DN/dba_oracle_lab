@@ -11,6 +11,9 @@
 - [12 Capacity Planning Limiti](./12_CAPACITY_PLANNING_LIMITI.md)
 - [14 Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md)
 - [15 Checkmk Agent TLS + SMART/RAID Troubleshooting](./15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md)
+- [16 Resize TEMP](./16_RESIZE_TEMP.md)
+- [17 Purge Log Oracle (ADR/Audit/Archivelog)](./17_PURGE_LOG_ORACLE.md)
+- [18 Gestione Statistiche Optimizer](./18_GESTIONE_STATISTICHE_OPTIMIZER.md)
 
 ## Catalogo Script Enterprise (Top 20)
 - [Top 100 Script DBA](../05_performance/TOP_100_SCRIPT_DBA.md)

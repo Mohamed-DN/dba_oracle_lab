@@ -34,6 +34,10 @@
 | 08 | [RMAN e Backup Status](./08_rman_backup_status.sql) | Ultimo backup, validate, crosscheck | Morning check, pre-upgrade |
 | 09 | [Data Guard Status](./09_dataguard_status.sql) | Lag, transport, apply, GAP | Morning check, pre-switchover |
 | 10 | [Oggetti e Schema](./10_oggetti_schema.sql) | Invalidi, segment size, tabelle grandi, indici | Pulizia, tuning, capacity |
+| 11 | [TEMP Resize & Capacity](./11_temp_resize.sql) | Diagnosi TEMP, tempfile, autoextend/resize | ORA-01652, temp al 100% |
+| 12 | [Log Purge (FRA + Unified Audit)](./12_log_purge_audit.sql) | Stato FRA, cleanup audit, note RMAN/ADRCI | Spazio log in crescita |
+| 13 | [Monitor DDL (Package + Trigger)](./13_monitor_ddl_package.sql) | Audit DDL centralizzato con retention | Tracking cambi schema |
+| 14 | [Optimizer Stats Operations](./14_optimizer_stats.sql) | Individua stale stats e gather sicuro | Regressioni piani SQL |
 
 ---
 
