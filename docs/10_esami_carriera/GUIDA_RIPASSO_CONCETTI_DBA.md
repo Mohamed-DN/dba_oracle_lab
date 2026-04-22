@@ -9,6 +9,23 @@
 
 ---
 
+## ⚡ Come usare questa guida (modalità operativa)
+
+> **Quando usarla:** prima di colloqui tecnici, prima di una maintenance window, o come ripasso veloce post-incidente.
+
+### Percorso rapido consigliato
+
+1. Ripassa blocchi Core: architettura, RMAN, Data Guard, RAC/ASM
+2. Esegui in parallelo i runbook correlati:
+   - [Runbook operativi](../11_runbook_operativi/README.md)
+   - [Script SQL pronti](../12_scripts_sql_pronti/README.md)
+3. Per comandi veloci usa cheat sheet:
+   - [RMAN](../11_runbook_operativi/CHEAT_SHEET_RMAN.md)
+   - [DGMGRL](../11_runbook_operativi/CHEAT_SHEET_DGMGRL.md)
+   - [GoldenGate](../11_runbook_operativi/CHEAT_SHEET_GOLDENGATE.md)
+
+---
+
 ## 🧠 0. MINDSET E STRATEGIA DI RISPOSTA
 
 ### Il Mindset del DBA Senior
@@ -230,8 +247,6 @@ graph TD
 *   **Operatività**: Gestiti tramite `v$tempfile` e il tablespace di tipo `TEMPORARY`.
 
 ---
-
-## 💾 BACKUP, RECOVERY E RMAN
 
 ## 💾 BACKUP, RECOVERY E RMAN
 
