@@ -1,0 +1,20 @@
+# 🟠 Amministrazione — Indice Area
+
+| Guida | Cosa impari |
+| --- | --- |
+| [CDB/PDB/Utenti](./GUIDA_CDB_PDB_UTENTI.md) | Multitenant, clone/plug, ruoli |
+| [Listener e Services](./GUIDA_LISTENER_SERVICES_DBA.md) | Listener, TNS, service management |
+| [Servizi Applicativi RAC](./GUIDA_SERVIZI_APPLICATIVI_RAC.md) | TAF, FAN, CLB/RLB, AC |
+| [Ansible Response Templates](./GUIDA_ANSIBLE_TEMPLATES.md) | Silent install con template |
+| [Gestione Dischi ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove dischi ASM |
+| [Oracle Scheduler](./GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks |
+| [Security Hardening](./GUIDA_SECURITY_HARDENING.md) | TDE, auditing, encryption, profili |
+| [Identità Oracle e Servizi](./GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | DB_NAME, SID, SERVICE_NAME |
+
+## Checklist operativa
+
+- [Checklist Security Baseline](./CHECKLIST_SECURITY_BASELINE.md)
+
+---
+
+Indice totale documentazione: [../README.md](../README.md)

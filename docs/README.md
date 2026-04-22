@@ -37,18 +37,21 @@
 ## 2) Indice per argomento
 
 | Argomento | Link principali |
-|---|---|
-| Fondamenti | [00_fondamenti](./00_fondamenti/) |
-| High Availability / Data Guard | [02_high_availability](./02_high_availability/) |
-| Backup & Recovery (RMAN) | [03_backup_recovery](./03_backup_recovery/) |
-| Administration | [04_administration](./04_administration/) |
-| Performance & Diagnostica | [05_performance](./05_performance/) |
-| Patching & Upgrade | [06_patching_upgrade](./06_patching_upgrade/) |
-| Replica / GoldenGate | [07_replication](./07_replication/) |
-| Monitoring | [08_monitoring](./08_monitoring/) |
-| Runbook operativi | [11_runbook_operativi](./11_runbook_operativi/) |
-| Script SQL rapidi | [12_scripts_sql_pronti](./12_scripts_sql_pronti/) |
-| Libreria completa script | [13_libreria_completa_script](./13_libreria_completa_script/) |
+| --- | --- |
+| Fondamenti | [00_fondamenti/README.md](./00_fondamenti/README.md) |
+| Core Lab setup | [01_lab_setup/README.md](./01_lab_setup/README.md) |
+| High Availability / Data Guard | [02_high_availability/README.md](./02_high_availability/README.md) |
+| Backup & Recovery (RMAN) | [03_backup_recovery/README.md](./03_backup_recovery/README.md) |
+| Administration | [04_administration/README.md](./04_administration/README.md) |
+| Performance & Diagnostica | [05_performance/README.md](./05_performance/README.md) |
+| Patching & Upgrade | [06_patching_upgrade/README.md](./06_patching_upgrade/README.md) |
+| Replica / GoldenGate | [07_replication/README.md](./07_replication/README.md) |
+| Monitoring | [08_monitoring/README.md](./08_monitoring/README.md) |
+| Cloud OCI (opzionale) | [09_cloud_oci/README.md](./09_cloud_oci/README.md) |
+| Esami & Carriera | [10_esami_carriera/README.md](./10_esami_carriera/README.md) |
+| Runbook operativi | [11_runbook_operativi/README.md](./11_runbook_operativi/README.md) |
+| Script SQL rapidi | [12_scripts_sql_pronti/README.md](./12_scripts_sql_pronti/README.md) |
+| Libreria completa script | [13_libreria_completa_script/README.md](./13_libreria_completa_script/README.md) |
 
 ---
 
