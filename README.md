@@ -76,7 +76,7 @@
 - [Ripasso Concetti DBA](./docs/10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md)
 - [Da Lab a Produzione](./docs/10_esami_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md)
 - [Piano IP e rete lab](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md)
-- [Riferimenti Oracle ufficiali](#-riferimenti-ufficiali-oracle)
+- [Riferimenti e Crediti](./REFERENCES.md)
 
 </details>
 
@@ -259,14 +259,11 @@ cd vagrant_rac_dataguard && vagrant up
 
 ---
 
-## 📎 Riferimenti ufficiali Oracle
+## 📎 Riferimenti e Crediti
 
-- Oracle Database 19c Documentation: <https://docs.oracle.com/en/database/oracle/oracle-database/19/>
-- Oracle Database Backup and Recovery User's Guide (RMAN): <https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/>
-- Oracle Data Guard Broker (DGMGRL): <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/>
-- Oracle GoldenGate Core Documentation: <https://docs.oracle.com/en/middleware/goldengate/core/21.3/>
-- Oracle ADR Command Interpreter (ADRCI): <https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/oracle-adr-command-interpreter-adrci.html>
-- Oracle MAA Best Practices: <https://www.oracle.com/database/technologies/high-availability/maa.html>
+> Documentazione ufficiale Oracle, repository di ispirazione e tool di terze parti raccolti in un unico documento.
+
+👉 **[REFERENCES.md](./REFERENCES.md)** — Oracle Docs · GoldenGate · OCI · Community repos (oraclebase, gwenshap, oravirt…) · Monitoring · IaC
 
 ---
 
