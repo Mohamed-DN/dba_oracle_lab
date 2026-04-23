@@ -17,6 +17,35 @@
 
 ---
 
+## Obiettivo
+
+Fornire una guida pratica per amministrare CDB/PDB in Oracle 19c, includendo anche la
+gestione di scenari con **Transparent Data Encryption (TDE)** già attiva o da attivare.
+
+## Procedura operativa
+
+Questa guida segue il flusso:
+
+1. Fondamenti CDB/PDB e operazioni core (create/clone/unplug/plug)
+2. Gestione utenti, ruoli e profili in contesto enterprise
+3. Sezione dedicata: creazione e gestione PDB in presenza di TDE
+
+## Validazione finale
+
+A fine guida verifica sempre:
+
+- stato PDB (`SHOW PDBS`, `V$PDBS`);
+- stato utenti/ruoli/profili (`DBA_USERS`, `DBA_ROLE_PRIVS`);
+- se TDE è coinvolta: stato keystore e chiavi (`V$ENCRYPTION_WALLET`, `V$ENCRYPTION_KEYS`).
+
+## Troubleshooting rapido
+
+- PDB non apre dopo clone/plug: controlla compatibilità, path file e stato servizi.
+- Errori privilege su utenti: verifica `GRANT` effettivi e container corrente.
+- Errori TDE/keystore: apri wallet corretto e verifica modalità united/isolated.
+
+---
+
 ## PARTE 1: Architettura Multitenant (CDB/PDB)
 
 ### Cos'è il Multitenant e Perché Esiste?
@@ -185,6 +214,75 @@ ALTER PLUGGABLE DATABASE PDB2 OPEN;
 ```
 
 > **Perché è importante per il CV?** In produzione si usa Unplug/Plug per migrare applicazioni tra CDB senza Export/Import. È il modo più veloce per muovere un database tra server.
+
+---
+
+## PARTE 1B: Creazione PDB quando è presente TDE
+
+### Quando serve questa procedura
+
+Usa questa sezione quando:
+
+- il CDB usa TDE (keystore già configurato),
+- cloni/sposti PDB con dati cifrati,
+- prepari ambienti con policy security enterprise.
+
+### Procedura consigliata (United Mode)
+
+```sql
+-- 1) Dal ROOT: verifica stato wallet/keystore
+ALTER SESSION SET CONTAINER = CDB$ROOT;
+SELECT status, wallet_type, keystore_mode
+FROM   v$encryption_wallet;
+
+-- 2) Se CLOSED, apri il keystore
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "Wallet#Pass123" CONTAINER=ALL;
+
+-- 3) Verifica presenza chiave master
+SELECT con_id, key_id, creation_time
+FROM   v$encryption_keys
+ORDER  BY creation_time DESC;
+```
+
+Creazione PDB da seed con TDE già operativo nel CDB:
+
+```sql
+CREATE PLUGGABLE DATABASE PDB_SEC
+  ADMIN USER pdbsec_admin IDENTIFIED BY "StrongPdb#2026"
+  FILE_NAME_CONVERT = ('+DATA/CDBRAC/pdbseed/', '+DATA/CDBRAC/pdb_sec/');
+
+ALTER PLUGGABLE DATABASE PDB_SEC OPEN;
+ALTER PLUGGABLE DATABASE PDB_SEC SAVE STATE;
+```
+
+Clone/spostamento PDB cifrata (quando richiesto dal caso operativo):
+
+```sql
+CREATE PLUGGABLE DATABASE PDB_SEC_CLONE FROM PDB_SEC
+  FILE_NAME_CONVERT = ('+DATA/CDBRAC/pdb_sec/', '+DATA/CDBRAC/pdb_sec_clone/')
+  KEYSTORE IDENTIFIED BY "Wallet#Pass123";
+```
+
+### Validazione specifica TDE su PDB
+
+```sql
+ALTER SESSION SET CONTAINER = PDB_SEC;
+
+-- Stato wallet visibile dalla PDB
+SELECT status, wallet_type, keystore_mode
+FROM   v$encryption_wallet;
+
+-- Tablespace cifrati nella PDB
+SELECT tablespace_name, encrypted
+FROM   dba_tablespaces
+ORDER  BY tablespace_name;
+```
+
+### Note operative importanti
+
+- In RAC, keystore e configurazione TDE devono essere coerenti su tutti i nodi.
+- Prima di switchover/failover Data Guard, verifica sincronizzazione chiavi/keystore.
+- Prima di clone/migrazione PDB cifrata, pianifica backup keystore e rollback.
 
 ---
 

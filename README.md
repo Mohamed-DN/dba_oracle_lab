@@ -1,6 +1,9 @@
 # 🏛️ Oracle RAC + Data Guard — Enterprise DBA Lab
 
 [![Oracle 19c](https://img.shields.io/badge/Oracle-19c-red?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
+[![CI/CD](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/ci.yml)
+[![Security Gates](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/security-gates.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/security-gates.yml)
+[![Release Governance](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/release-governance.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/release-governance.yml)
 [![Ansible](https://img.shields.io/badge/Ansible-Automation-black?logo=ansible)](./automation/)
 [![Scripts](https://img.shields.io/badge/Scripts-1000%2B-blue)](./docs/13_libreria_completa_script/)
 [![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/10_esami_carriera/VALIDAZIONE_BEST_PRACTICES.md)
@@ -83,6 +86,7 @@
 | [Gestione Dischi ASM](./docs/04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove dischi ASM (ASMLib + AFD) |
 | [Oracle Scheduler](./docs/04_administration/GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks, monitoring |
 | [Security Hardening](./docs/04_administration/GUIDA_SECURITY_HARDENING.md) | TDE, Auditing, Encryption, Password Profiles |
+| [TDE in Profondità](./docs/04_administration/GUIDA_TDE_IN_PROFONDITA.md) | Keystore, master key, colonna/tablespace encryption, backup e operatività RAC/DG |
 | [**Identità Oracle e Servizi**](./docs/04_administration/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | **MEGA-GUIDA**: DB_NAME vs SID vs SERVICE_NAME, Listener, Role-Based Services, Switchover |
 
 ---
@@ -205,6 +209,7 @@
 | [11 CDB/PDB](./automation/playbooks/11_create_cdb_pdb.yml) | Creazione CDB/PDB idempotente |
 | [12 DBA Maintenance](./automation/playbooks/12_dba_maintenance.yml) | Maintenance periodica DB |
 | [13 MAA Guardrails](./automation/playbooks/13_maa_guardrails.yml) | Validazioni MAA e compliance DG |
+| [14 Checkmk Bootstrap](./automation/playbooks/14_checkmk_oracle_checks_setup.yml) | Bootstrap Checkmk + check Oracle/SMART |
 
 ---
 

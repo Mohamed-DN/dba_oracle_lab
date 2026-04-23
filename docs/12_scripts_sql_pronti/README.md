@@ -39,6 +39,26 @@
 | 13 | [Monitor DDL (Package + Trigger)](./13_monitor_ddl_package.sql) | Audit DDL centralizzato con retention | Tracking cambi schema |
 | 14 | [Optimizer Stats Operations](./14_optimizer_stats.sql) | Individua stale stats e gather sicuro | Regressioni piani SQL |
 
+<details>
+  <summary>📂 Elenco completo file SQL disponibili (click per espandere)</summary>
+
+- [01_tablespace_datafile.sql](./01_tablespace_datafile.sql)
+- [02_undo_temp.sql](./02_undo_temp.sql)
+- [03_fra_archivelog.sql](./03_fra_archivelog.sql)
+- [04_datapump_operativo.sql](./04_datapump_operativo.sql)
+- [05_asm_storage.sql](./05_asm_storage.sql)
+- [06_sessioni_lock.sql](./06_sessioni_lock.sql)
+- [07_performance_quick.sql](./07_performance_quick.sql)
+- [08_rman_backup_status.sql](./08_rman_backup_status.sql)
+- [09_dataguard_status.sql](./09_dataguard_status.sql)
+- [10_oggetti_schema.sql](./10_oggetti_schema.sql)
+- [11_temp_resize.sql](./11_temp_resize.sql)
+- [12_log_purge_audit.sql](./12_log_purge_audit.sql)
+- [13_monitor_ddl_package.sql](./13_monitor_ddl_package.sql)
+- [14_optimizer_stats.sql](./14_optimizer_stats.sql)
+
+</details>
+
 ---
 
 ## Cheat Sheet correlate
