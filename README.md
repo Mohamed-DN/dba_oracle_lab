@@ -50,6 +50,66 @@
 
 ---
 
+## 🏗️ Architettura del Lab
+
+```mermaid
+flowchart TD
+    subgraph "Host (Il Tuo PC)"
+        dns("DNS Node\n192.168.56.50")
+        
+        subgraph "Primary DataCenter"
+            rac1[("rac1\n192.168.56.101\n8G/4CPU")]
+            rac2[("rac2\n192.168.56.102\n8G/4CPU")]
+            
+            rac1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> rac2
+            db1>"RAC PRIMARY (RACDB)\nASM: +CRS, +DATA, +RECO"]
+            rac1 --- db1
+            rac2 --- db1
+        end
+        
+        subgraph "Standby DataCenter"
+            racstby1[("racstby1\n192.168.56.111\n8G/4CPU")]
+            racstby2[("racstby2\n192.168.56.112\n8G/4CPU")]
+            
+            racstby1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> racstby2
+            db2>"RAC STANDBY (RACDB_DG)\nASM: +CRS, +DATA, +RECO"]
+            racstby1 --- db2
+            racstby2 --- db2
+        end
+        
+        dns -.-> rac1
+        dns -.-> rac2
+        dns -.-> racstby1
+        dns -.-> racstby2
+        
+        db1 == "Data Guard (LGWR ASYNC)" ==> db2
+        db1 -. "GoldenGate Extract" .-> gg("Target (Locale / OCI)")
+        
+    end
+```
+
+---
+
+## 📖 Esegui il Lab (Fase 0 → 8)
+
+Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
+
+| # | Fase | Guida | Cosa Fai | Tempo |
+|---|---|---|---|---|
+| 0 | **Setup Macchine** | [GUIDA_FASE0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS, dischi ASM | 3-4h |
+| 1 | **Preparazione OS** | [GUIDA_FASE1](./docs/01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md) | Rete, DNS, utenti, SSH, kernel | 2-3h |
+| 2 | **Grid + RAC** | [GUIDA_FASE2](./docs/01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md) | Grid Infrastructure, ASM, Database | 4-5h |
+| 3 | **RAC Standby** | [GUIDA_FASE3](./docs/02_high_availability/GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP | 3-4h |
+| 4 | **Data Guard** | [GUIDA_FASE4](./docs/02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Protection Mode, FASTSYNC | 2-3h |
+| 5 | **RMAN Backup** | [GUIDA_FASE5](./docs/03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup, cron, BCT, restore | 2h |
+| 6 | **Enterprise Manager** | [GUIDA_FASE6](./docs/08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) | OEM Cloud Control 13.5 + Agent | 4-5h |
+| 7 | **GoldenGate** | [GUIDA_FASE7](./docs/07_replication/GUIDA_FASE7_GOLDENGATE.md) | Extract, Pump, Replicat (Oracle + PG) | 3-4h |
+| 8 | **Test Verifica** | [GUIDA_FASE8](./docs/01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
+
+> **Tempo totale stimato**: ~30 ore di lavoro pratico.
+
+---
+
 ### 🔵 High Availability — Data Guard, Switchover, Failover
 
 | Guida | Cosa Impari |
