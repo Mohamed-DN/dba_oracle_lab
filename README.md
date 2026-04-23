@@ -80,6 +80,137 @@
 
 </details>
 
+<details>
+  <summary>🏛️ Core Lab 0→8 — Setup, Grid, RAC, Verifica</summary>
+
+- [Fase 0: Setup Macchine](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md)
+- [Fase 1: Preparazione OS](./docs/01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md)
+- [Fase 2: Grid e RAC](./docs/01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md)
+- [Fase 8: Test e Verifica](./docs/01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md)
+- [Percorso Lite Single Node](./docs/01_lab_setup/GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
+- [SSH Keys RAC](./docs/01_lab_setup/GUIDA_SSH_KEYS_RAC.md)
+- [Obiettivi e Checklist Fasi 0→8](./docs/01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
+- [Indice completo area](./docs/01_lab_setup/README.md)
+
+</details>
+
+<details>
+  <summary>🟡 Backup & Recovery — RMAN, Data Pump</summary>
+
+- [Data Pump](./docs/03_backup_recovery/GUIDA_DATA_PUMP.md)
+- [Fase 5: RMAN Backup](./docs/03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
+- [RMAN Completa 19c](./docs/03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md)
+- [Indice completo area](./docs/03_backup_recovery/README.md)
+
+</details>
+
+<details>
+  <summary>🟠 Amministrazione — Sicurezza, ASM, Scheduler, Servizi</summary>
+
+- [Checklist Security Baseline](./docs/04_administration/CHECKLIST_SECURITY_BASELINE.md)
+- [ACL Network Oracle](./docs/04_administration/GUIDA_ACL_NETWORK_ORACLE.md)
+- [Aggiunta Dischi ASM](./docs/04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md)
+- [Ansible Templates](./docs/04_administration/GUIDA_ANSIBLE_TEMPLATES.md)
+- [CDB, PDB e Utenti](./docs/04_administration/GUIDA_CDB_PDB_UTENTI.md)
+- [Identità Oracle e Servizi](./docs/04_administration/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md)
+- [Listener e Servizi DBA](./docs/04_administration/GUIDA_LISTENER_SERVICES_DBA.md)
+- [Package Monitor DDL](./docs/04_administration/GUIDA_PACKAGE_MONITOR_DDL.md)
+- [Scheduler Jobs](./docs/04_administration/GUIDA_SCHEDULER_JOBS.md)
+- [Security Hardening](./docs/04_administration/GUIDA_SECURITY_HARDENING.md)
+- [Servizi Applicativi RAC](./docs/04_administration/GUIDA_SERVIZI_APPLICATIVI_RAC.md)
+- [Indice completo area](./docs/04_administration/README.md)
+
+</details>
+
+<details>
+  <summary>🔴 Performance & Diagnostica — AWR, ASH, Troubleshooting</summary>
+
+- [ADRCI Diagnostica Oracle](./docs/05_performance/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
+- [AWR, ASH e ADDM](./docs/05_performance/GUIDA_AWR_ASH_ADDM.md)
+- [Troubleshooting Completo](./docs/05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md)
+- [Top 100 Script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md)
+- [Indice completo area](./docs/05_performance/README.md)
+
+</details>
+
+<details>
+  <summary>🟣 Patching & Upgrade — AutoUpgrade, RU, RAC</summary>
+
+- [AutoUpgrade 12c → 19c](./docs/06_patching_upgrade/GUIDA_AUTOUPGRADE_12C_TO_19C.md)
+- [AutoUpgrade 19c → 26](./docs/06_patching_upgrade/GUIDA_AUTOUPGRADE_19C_TO_26.md)
+- [Patching RAC](./docs/06_patching_upgrade/GUIDA_PATCHING_RAC.md)
+- [Upgrade RU RAC](./docs/06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md)
+- [Indice completo area](./docs/06_patching_upgrade/README.md)
+
+</details>
+
+<details>
+  <summary>🔄 Replica & Migrazione — GoldenGate, Oracle→Postgres</summary>
+
+- [Fase 7: GoldenGate](./docs/07_replication/GUIDA_FASE7_GOLDENGATE.md)
+- [Migrazione GoldenGate](./docs/07_replication/GUIDA_MIGRAZIONE_GOLDENGATE.md)
+- [Migrazione Oracle → Postgres](./docs/07_replication/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
+- [Testlog GoldenGate Template](./docs/07_replication/TESTLOG_GOLDENGATE_TEMPLATE.md)
+- [Indice completo area](./docs/07_replication/README.md)
+
+</details>
+
+<details>
+  <summary>📊 Monitoring — Enterprise Manager, Open Source</summary>
+
+- [Fase 6: Enterprise Manager 13c](./docs/08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
+- [Monitoring Open Source](./docs/08_monitoring/GUIDA_MONITORING_OPENSOURCE.md)
+- [Indice completo area](./docs/08_monitoring/README.md)
+
+</details>
+
+<details>
+  <summary>☁️ Cloud OCI — GoldenGate OCI, Rete Lab</summary>
+
+- [Cloud GoldenGate](./docs/09_cloud_oci/GUIDA_CLOUD_GOLDENGATE.md)
+- [GoldenGate OCI ARM](./docs/09_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md)
+- [Rete Lab OCI GoldenGate](./docs/09_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
+- [Indice completo area](./docs/09_cloud_oci/README.md)
+
+</details>
+
+<details>
+  <summary>🏢 Enterprise Governance — Standard, KPI, Policy, Community</summary>
+
+- [Compatibility Policy](./docs/14_enterprise_governance/COMPATIBILITY_POLICY.md)
+- [Compatibility Matrix](./docs/14_enterprise_governance/COMPATIBILITY_MATRIX.md)
+- [Compatibility by Area 19c/21c/23ai/26c](./docs/14_enterprise_governance/COMPATIBILITY_BY_AREA_19c_21c_23ai_26c.md)
+- [Release Engineering Policy](./docs/14_enterprise_governance/RELEASE_ENGINEERING_POLICY.md)
+- [Quickstart Enterprise 10 Minuti](./docs/14_enterprise_governance/QUICKSTART_10_MINUTI.md)
+- [Troubleshooting Decision Tree](./docs/14_enterprise_governance/TROUBLESHOOTING_DECISION_TREE.md)
+- [Reliability Framework (SLO/SLI/KPI)](./docs/14_enterprise_governance/RELIABILITY_FRAMEWORK.md)
+- [MAA Scorecard](./docs/14_enterprise_governance/MAA_SCORECARD.md)
+- [Production Profile](./docs/14_enterprise_governance/PRODUCTION_PROFILE.md)
+- [Public KPI Scoreboard](./docs/14_enterprise_governance/PUBLIC_KPI_SCOREBOARD.md)
+- [Go/No-Go Merge Policy](./docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md)
+- [Didactic Excellence Standard](./docs/14_enterprise_governance/DIDACTIC_EXCELLENCE_STANDARD.md)
+- [Didactic Compliance Checklist](./docs/14_enterprise_governance/DIDACTIC_COMPLIANCE_CHECKLIST.md)
+- [Community Roadmap](./docs/14_enterprise_governance/COMMUNITY_ROADMAP.md)
+- [Community Onboarding Path](./docs/14_enterprise_governance/COMMUNITY_ONBOARDING_PATH.md)
+- [Vulnerability Disclosure Policy](./docs/14_enterprise_governance/VULNERABILITY_DISCLOSURE_POLICY.md)
+- [Indice completo area](./docs/14_enterprise_governance/README.md)
+
+</details>
+
+<details>
+  <summary>🖥️ Track Proxmox Moderno — Infrastruttura moderna (Fasi 1→5)</summary>
+
+- [Guida completa production-grade](./docs/15_proxmox_track/GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md)
+- [Fase 1: Proxmox Foundation](./docs/15_proxmox_track/PHASE_1_PROXMOX_FOUNDATION.md)
+- [Fase 2: Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- [Fase 3: Ansible + AWX](./docs/15_proxmox_track/PHASE_3_ANSIBLE_AWX.md)
+- [Fase 4: Oracle Silent Automation](./docs/15_proxmox_track/PHASE_4_ORACLE_SILENT_AUTOMATION.md)
+- [Fase 5: K3s/RKE2 Capstone](./docs/15_proxmox_track/PHASE_5_K8S_CAPSTONE.md)
+- [Roadmap di adozione](./docs/15_proxmox_track/ADOPTION_ROADMAP.md)
+- [Indice completo area](./docs/15_proxmox_track/README.md)
+
+</details>
+
 ---
 
 ## 📏 Regole indice (limite di profondità)

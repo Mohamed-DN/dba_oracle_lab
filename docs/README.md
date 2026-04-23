@@ -52,6 +52,8 @@
 | Runbook operativi | [11_runbook_operativi/README.md](./11_runbook_operativi/README.md) |
 | Script SQL rapidi | [12_scripts_sql_pronti/README.md](./12_scripts_sql_pronti/README.md) |
 | Libreria completa script | [13_libreria_completa_script/README.md](./13_libreria_completa_script/README.md) |
+| Enterprise Governance | [14_enterprise_governance/README.md](./14_enterprise_governance/README.md) |
+| Track Proxmox Moderno | [15_proxmox_track/README.md](./15_proxmox_track/README.md) |
 
 ---
 
