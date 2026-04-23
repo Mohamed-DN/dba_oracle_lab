@@ -54,6 +54,26 @@ libreria_oracle/
 
 ---
 
+<details>
+  <summary>🧭 Dettaglio rapido per sottodirectory principali (click per espandere)</summary>
+
+- [01_asm_storage/](./01_asm_storage/) — add/remove ASM disk, procedure storage, note operative.
+- [02_dataguard/](./02_dataguard/) — runbook e note Data Guard (gap, recovery, servizi read-only).
+- [03_monitoring_scripts/](./03_monitoring_scripts/) — monitoraggio esteso (sessioni, lock, I/O, ASH, rete) + community.
+- [04_user_management/](./04_user_management/) — template per utenti, ruoli, profili password.
+- [05_patching/](./05_patching/) — asset di patching e golden image workflow.
+- [06_backup_recovery/](./06_backup_recovery/) — RMAN check, flashback, restore point.
+- [07_performance_tuning/](./07_performance_tuning/) — tuning SQL e performance scripts (SPM/AWR/stats).
+- [08_tde_security/](./08_tde_security/) — script e note security/TDE.
+- [09_compression/](./09_compression/) — compressione e supporto a redefinition.
+- [10_partition_manager/](./10_partition_manager/) — automazione gestione partizioni.
+- [11_sql_templates/](./11_sql_templates/) — template SQL standardizzati con error handling.
+- [12_utilities/](./12_utilities/) — utility operative (TEMP/UNDO, scheduler, CDB/PDB, storage).
+
+</details>
+
+---
+
 ## 📊 Indice per Area (conteggio script operativi)
 
 | # | Area | Script operativi | Cosa Trovi | Quando Lo Usi |
