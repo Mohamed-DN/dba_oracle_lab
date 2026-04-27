@@ -532,12 +532,13 @@ Nel wizard grafico:
 2. **Software Location**:
    - Middleware Home: `/home/oracle/app/emcc/middleware`
    - Agent Base: `/home/oracle/app/emcc/agent`
-3. **Database Connection**:
-   - Host: `localhost` (o il nome del tuo host)
-   - Port: `1521`
-   - SID: `EMREP`
-   - SYS Password: la password che hai scelto
-   - SYSMAN Password: scegli una nuova password per SYSMAN
+3. **Dettagli di connessione al database** (Passo 7):
+   - **Nome host database**: `oem.localdomain` (o il nome host che hai impostato)
+   - **Porta**: `1521`
+   - **Servizio/SID**: `EMREP`
+   - **Password SYS**: la password dell'utente SYS (es. `root`)
+   - **Dimensione distribuzione**: `SMALL` (adatta al nostro lab)
+   *(Non spuntare le opzioni SSL a meno che non le hai esplicitamente configurate sul DB)*
 4. **Tablespace**: lascia i default (verranno creati automaticamente)
 5. **Port Configuration**: lascia i default (7803 per console HTTPS)
 6. **Review e Install**
