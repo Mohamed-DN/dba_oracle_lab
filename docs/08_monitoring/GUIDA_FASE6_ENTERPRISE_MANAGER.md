@@ -490,6 +490,77 @@ lsnrctl status
 echo "=== Stack Oracle OK ==="
 ```
 
+### 6.5.12 Risoluzione Errore "19.3.0.0 is not supported" (Patching a 19.x)
+
+Se durante l'installazione di OEM 24ai ricevi l'errore `Oracle Database version 19.3.0.0 is not supported`, significa che devi patchare la Oracle Home e il database EMREP ad almeno la versione 19.22. Ecco la procedura rapida adattata per il **singolo nodo non-RAC**, usando i file della Combo Patch (es. Jan 2026 `p38658588...` e OPatch `p6880880...`) che hai già scaricato nelle fasi precedenti.
+
+#### Step 1: Ferma il Database e il Listener
+
+```bash
+# Come utente oracle
+source /home/oracle/.bash_profile
+lsnrctl stop
+sqlplus / as sysdba <<< 'SHUTDOWN IMMEDIATE;'
+```
+
+#### Step 2: Aggiorna OPatch
+
+```bash
+# Come utente oracle
+cd /home/oracle/app/product/19.3.0/dbhome_1
+mv OPatch OPatch.bkp
+# Sostituisci il percorso con dove si trova il tuo zip di OPatch
+unzip -q /home/oracle/Scaricati/p6880880_190000_Linux-x86-64.zip -d /home/oracle/app/product/19.3.0/dbhome_1/
+
+# Verifica la versione (deve essere 12.2.0.1.37 o superiore, es. .48)
+/home/oracle/app/product/19.3.0/dbhome_1/OPatch/opatch version
+```
+
+#### Step 3: Estrai la Combo Patch e applica la RU (Release Update)
+
+```bash
+# Come utente oracle
+mkdir -p /home/oracle/app/patch
+cd /home/oracle/app/patch
+# Sostituisci con il nome esatto del tuo zip della patch
+unzip -q /home/oracle/Scaricati/p38658588_190000_Linux-x86-64.zip
+
+# Entra nella cartella della RU (sostituisci i numeri con quelli della tua patch)
+# Esempio per la Jan 2026: 38658588/38629535
+cd /home/oracle/app/patch/38658588/38629535
+
+# Applica la patch ai binari della ORACLE_HOME
+$ORACLE_HOME/OPatch/opatch apply -silent
+```
+
+#### Step 4: Applica la patch OJVM (Opzionale ma raccomandata)
+
+```bash
+# Entra nella cartella OJVM (l'altra sottocartella, es. 38523609)
+cd /home/oracle/app/patch/38658588/38523609
+$ORACLE_HOME/OPatch/opatch apply -silent
+```
+
+#### Step 5: Aggiorna il Data Dictionary (Datapatch)
+
+Ora che i binari sono aggiornati, devi avviare il database e aggiornare gli schemi interni.
+
+```bash
+# Avvia DB e Listener
+lsnrctl start
+sqlplus / as sysdba <<< 'STARTUP;'
+
+# Esegui datapatch (potrebbe impiegare 10-15 minuti)
+cd $ORACLE_HOME/OPatch
+./datapatch -verbose
+
+# Al termine, verifica che l'installazione sia andata a buon fine
+sqlplus / as sysdba <<< "SELECT patch_id, status, description FROM dba_registry_sqlpatch;"
+# Deve restituire SUCCESS per la nuova patch
+```
+
+A questo punto, il tuo database è aggiornato (es. 19.26). Puoi rilanciare il file `./em24100_linux64.bin` e l'installer accetterà il database!
+
 ---
 
 ## 6.6 Installazione OMS 24ai
