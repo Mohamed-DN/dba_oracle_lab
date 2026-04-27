@@ -94,6 +94,8 @@ flowchart TD
 
 Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
+> 📍 **[Indice centralizzato del percorso](./docs/00_lab_percorso/README.md)** — tabella completa, prerequisiti, roadmap e link a tutte le guide.
+
 | # | Fase | Guida | Cosa Fai | Tempo |
 |---|---|---|---|---|
 | 0 | **Setup Macchine** | [GUIDA_FASE0](./docs/01_lab_setup/GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS, dischi ASM | 3-4h |

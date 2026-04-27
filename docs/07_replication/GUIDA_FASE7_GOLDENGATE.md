@@ -1316,4 +1316,4 @@ tar czf /tmp/ogg_config_backup_$(date +%Y%m%d).tar.gz \
 
 ---
 
-**→ Prossimo: [FASE 8: Test di Verifica (Data Guard + RMAN + EM + GoldenGate)](../01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md)**
+**← [FASE 6: Enterprise Manager](../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 8: Test Verifica](../01_lab_setup/GUIDA_FASE8_TEST_VERIFICA.md)**

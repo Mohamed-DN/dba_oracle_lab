@@ -691,4 +691,6 @@ Ripeti questo processo per creare le sessioni salvate per `dnsnode`, `rac1`, `ra
 > 
 > *Nota: Non creare snapshot per lo standby ora. Lo standby sarà un clone di `rac1` dopo la Fase 1 (`SNAP-04`).*
 
-**→ Prossimo: [FASE 1: Preparazione OS e Configurazione](./GUIDA_FASE1_PREPARAZIONE_OS.md)**
+---
+
+📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ Prossimo: [FASE 1: Preparazione OS](./GUIDA_FASE1_PREPARAZIONE_OS.md)**
