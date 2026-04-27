@@ -306,13 +306,28 @@ Nome database globale:EMREP
 Identificativo di sistema (SID):EMREP
 ```
 
-### 6.5.7 Verifica post-creazione
+### 6.5.7 Verifica post-creazione e Tuning Memoria (CRITICO)
+
+> [!CAUTION]
+> **Rischio OOM (Out Of Memory) Killer!**
+> Se la macchina OMS ha 8 o 16 GB di RAM totale, il database e l'application server (WebLogic) entreranno in competizione per la memoria. WebLogic è famelico di RAM. Devi forzare il database a non superare i limiti, altrimenti Linux killerà brutalmente i processi.
 
 ```bash
 sqlplus / as sysdba <<'EOF'
+-- Disabilita la gestione automatica globale (se attiva)
+ALTER SYSTEM SET memory_target=0 SCOPE=BOTH;
+ALTER SYSTEM SET memory_max_target=0 SCOPE=BOTH;
+
+-- Imposta limiti stringenti per SGA e PGA
+ALTER SYSTEM SET sga_target=2G SCOPE=BOTH;
+ALTER SYSTEM SET sga_max_size=2G SCOPE=SPFILE;
+ALTER SYSTEM SET pga_aggregate_target=1G SCOPE=BOTH;
+ALTER SYSTEM SET pga_aggregate_limit=2G SCOPE=BOTH;
+
 SELECT name, open_mode, log_mode FROM v$database;
 SELECT value FROM v$parameter WHERE name='compatible';
 SHOW PARAMETER sga_target;
+SHOW PARAMETER pga;
 EXIT;
 EOF
 ```

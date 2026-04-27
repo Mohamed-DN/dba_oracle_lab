@@ -370,13 +370,15 @@ RUN {
     # Tutti i comandi dentro RUN vengono eseguiti come un'unità.
     # Se uno fallisce, gli altri si fermano.
 
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
-    # ^^^ Apre 2 "lavoratori" paralleli.
-    #     ch1 leggerà i datafile dispari, ch2 quelli pari (più o meno).
-    #     Risultato: backup ~2x più veloce rispetto a 1 solo canale.
-    #     Con ALLOCATE esplicito dentro RUN, hai più controllo
-    #     rispetto al CONFIGURE DEVICE TYPE DISK PARALLELISM.
+    -- Best Practice RAC: Bilanciamento del carico
+    -- Anziché allocare canali solo sull'istanza locale, forziamo i canali
+    -- a connettersi alle specifiche istanze del cluster (RACDB1_STBY e RACDB2_STBY).
+    -- In questo modo, il lavoro di lettura/compressione viene distribuito
+    -- su tutti i nodi, dimezzando l'impatto CPU e I/O sul singolo server.
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
+    # ^^^ Apre 2 "lavoratori" paralleli distribuiti sui 2 nodi.
+    #     ch1 lavorerà su racstby1, ch2 lavorerà su racstby2.
 
     -- Backup Full Database (Level 0)
     BACKUP AS COMPRESSED BACKUPSET
@@ -477,8 +479,9 @@ mkdir -p $LOG_DIR
 
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
+    -- Bilanciamento RAC: un canale per nodo
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
 
     -- Backup Incrementale Level 1
     BACKUP AS COMPRESSED BACKUPSET
@@ -611,7 +614,9 @@ mkdir -p $LOG_DIR
 
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
+    -- Bilanciamento RAC sul primario
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2';
 
     -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
     BACKUP AS COMPRESSED BACKUPSET
@@ -627,6 +632,7 @@ RUN {
     BACKUP SPFILE TAG 'PRIMARY_SPFILE';
 
     RELEASE CHANNEL ch1;
+    RELEASE CHANNEL ch2;
 }
 
 DELETE NOPROMPT OBSOLETE;
