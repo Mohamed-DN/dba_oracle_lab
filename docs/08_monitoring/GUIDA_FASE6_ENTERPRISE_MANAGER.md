@@ -136,6 +136,26 @@ Usa DNS risolvibile per tutti gli host coinvolti.
 - middleware home OMS: `/home/oracle/app/emcc/middleware`
 - agent base: `/home/oracle/app/emcc/agent`
 
+### 6.3.5 Naming Convention: Rinomina Hostname (Best Practice)
+
+Per evitare problemi con l'installer (che potrebbe prendere nomi generici o legati al router di casa, es. `Host-010.homenet...`), è **fortemente raccomandato** assegnare alla macchina un nome pulito e descrittivo prima di iniziare.
+
+Nome consigliato: `oem` oppure `oms`.
+
+**Come rinominare la macchina correttamente:**
+```bash
+# 1. Imposta il nuovo nome host a livello OS
+sudo hostnamectl set-hostname oem
+
+# 2. Aggiorna il file hosts locale (IMPORTANTE)
+# Aggiungi il nuovo nome accanto al tuo IP (es. 192.168.x.x oem Host-010)
+sudo nano /etc/hosts
+
+# 3. Riavvia la sessione SSH per applicare le modifiche
+```
+
+> ⚠️ **Attenzione**: Il campo "Nome host" all'interno del wizard di installazione Oracle **NON** rinomina la macchina. L'installer si aspetta che la macchina Linux sia già configurata con il nome corretto e che questo sia risolvibile tramite `ping oem`.
+
 ---
 
 ## 6.4 Analisi risorse — Esempio reale con 8 GB RAM
