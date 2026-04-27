@@ -875,4 +875,4 @@ Dopo questa fase puoi:
 
 ---
 
-**→ Prossimo: [FASE 7: Configurazione GoldenGate Locale e Cloud](../07_replication/GUIDA_FASE7_GOLDENGATE.md)**
+**← [FASE 5: RMAN Backup](../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 7: GoldenGate](../07_replication/GUIDA_FASE7_GOLDENGATE.md)**

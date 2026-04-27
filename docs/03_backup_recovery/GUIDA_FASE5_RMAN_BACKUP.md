@@ -1533,4 +1533,4 @@ Hai imparato:
 5. **Statistiche & Maintenance**: Health check, statistiche dell'ottimizzatore, monitoraggio proattivo.
 6. **Patching**: OPatch, opatchauto, datapatch per Grid e Database.
 
-Passo successivo naturale: centralizzare monitoraggio e governance con Enterprise Manager (Fase 6).
+**← [FASE 4: Data Guard](../02_high_availability/GUIDA_FASE4_DATAGUARD_DGMGRL.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 6: Enterprise Manager](../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER.md)**

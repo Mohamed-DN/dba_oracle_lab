@@ -2609,4 +2609,4 @@ WHERE name IN ('db_name','db_unique_name','log_archive_config',
 
 ---
 
-**→ Prossimo: [FASE 4: Configurazione Data Guard e DGMGRL](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**
+**← [FASE 2: Grid + RAC](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 4: Data Guard](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**

@@ -1239,4 +1239,4 @@ su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT force_logging FROM v\\\$data
 
 ---
 
-**→ Prossimo: [FASE 3: Preparazione e Creazione Oracle RAC Standby](../02_high_availability/GUIDA_FASE3_RAC_STANDBY.md)**
+**← [FASE 1: Preparazione OS](../01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 3: RAC Standby](../02_high_availability/GUIDA_FASE3_RAC_STANDBY.md)**

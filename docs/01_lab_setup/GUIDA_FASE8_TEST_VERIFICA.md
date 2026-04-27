@@ -555,3 +555,7 @@ cat $OGG_HOME/dirrpt/ext_racdb.rpt
 ## 🎉 Congratulazioni (Lab Oracle Completo)
 
 Hai verificato accuratamente tutti i componenti dell'ecosistema. Questo conclude le guide passo-passo della tua infrastruttura di base.
+
+---
+
+**← [FASE 7: GoldenGate](../07_replication/GUIDA_FASE7_GOLDENGATE.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md)

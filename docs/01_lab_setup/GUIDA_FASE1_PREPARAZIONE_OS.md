@@ -1301,4 +1301,4 @@ getenforce
 
 ---
 
-**→ Prossimo: [FASE 2: Installazione Grid Infrastructure e Oracle RAC Primario](./GUIDA_FASE2_GRID_E_RAC.md)**
+**← [FASE 0: Setup Macchine](./GUIDA_FASE0_SETUP_MACCHINE.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 2: Grid + RAC](./GUIDA_FASE2_GRID_E_RAC.md)**
