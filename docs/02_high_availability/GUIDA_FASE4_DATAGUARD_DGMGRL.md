@@ -575,7 +575,81 @@ srvctl start database -d RACDB_STBY
 
 ---
 
-## 4.8 Comandi DGMGRL Utili (Cheat Sheet)
+## 4.8 Fast-Start Failover (FSFO) e Observer (Best Practice MAA)
+
+Per ottenere una vera *Maximum Availability Architecture (MAA)* con Recovery Time Objective (RTO) tendente a zero, il failover manuale non basta. È necessario configurare il **Fast-Start Failover (FSFO)**. 
+
+L'FSFO demanda a un processo terzo indipendente, chiamato **Observer**, il compito di monitorare il primario e lo standby. Se il primario cade, l'Observer attiva *automaticamente* il failover verso lo standby, senza intervento umano e senza "split-brain".
+
+> [!IMPORTANT]
+> **Dove installare l'Observer?** L'Observer NON deve stare né sul server primario né su quello standby. Deve risiedere in un terzo dominio di guasto. Nel nostro lab, il nodo ideale è la macchina **OEM** (Enterprise Manager) che creeremo nella Fase 6.
+
+### 4.8.1 Prerequisiti per FSFO
+1. Flashback Database deve essere attivo su primario e standby (fondamentale per il ripristino post-failover automatico).
+2. Data Guard Broker in stato `SUCCESS`.
+3. Modalità `MaxAvailability` o `MaxPerformance` (in 19c FSFO supporta anche l'asincrono, ma avvisa in caso di potenziale perdita di dati).
+
+```sql
+-- Verifica o attiva Flashback su ENTRAMBI (primario e standby)
+sqlplus / as sysdba
+ALTER SYSTEM SET db_recovery_file_dest_size=10G SCOPE=BOTH;
+ALTER SYSTEM SET db_recovery_file_dest='+RECO' SCOPE=BOTH;
+ALTER DATABASE FLASHBACK ON;
+```
+
+### 4.8.2 Configurazione FSFO dal Primario
+
+```bash
+dgmgrl sys/<password>@RACDB
+```
+
+```
+-- 1. Definisci i target di failover (chi fa failover su chi)
+DGMGRL> EDIT DATABASE RACDB SET PROPERTY FastStartFailoverTarget='RACDB_STBY';
+DGMGRL> EDIT DATABASE RACDB_STBY SET PROPERTY FastStartFailoverTarget='RACDB';
+
+-- 2. Imposta il tempo di attesa prima del failover automatico (es. 30 secondi)
+DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold=30;
+
+-- 3. Abilita il reintegro automatico del vecchio primario
+DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverAutoReinstate=TRUE;
+
+-- 4. Abilita FSFO
+DGMGRL> ENABLE FAST_START FAILOVER;
+```
+
+### 4.8.3 Avvio dell'Observer (Sul nodo OEM)
+
+Sul nodo OEM, assicurati di avere il client Oracle installato, e lancia l'Observer in background.
+
+```bash
+# Sul nodo OEM
+# L'observer richiede il file tnsnames.ora configurato con gli alias RACDB e RACDB_STBY
+nohup dgmgrl sys/<password>@RACDB "start observer file='/home/oracle/fsfo_observer.dat'" > /home/oracle/observer.log 2>&1 &
+```
+
+> [!TIP]
+> **Observer in Background:** L'Observer è un processo continuo. In produzione, usa `nohup`, `screen`, o crea un servizio `systemd` per mantenerlo sempre in esecuzione anche dopo il logout.
+
+### 4.8.4 Verifica dello Stato FSFO
+
+```
+DGMGRL> SHOW FAST_START FAILOVER;
+```
+
+Output atteso:
+```
+Fast-Start Failover: ENABLED
+  Threshold: 30 seconds
+  Target: RACDB_STBY
+  Observer: oem.localdomain
+  Lag Limit: 30 seconds
+...
+```
+
+---
+
+## 4.9 Comandi DGMGRL Utili (Cheat Sheet)
 
 ```
 -- Stato generale
