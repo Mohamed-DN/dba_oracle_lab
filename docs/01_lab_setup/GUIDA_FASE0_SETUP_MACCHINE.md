@@ -426,8 +426,11 @@ Clicca **Fine** dopo aver creato ciascun disco. La creazione dei dischi pre-allo
 
 Sempre nel **Gestore Supporti Virtuali** (dove hai appena creato i dischi):
 
+![Attributi del disco — imposta il Tipo su "Condivisibile" e clicca Applica](./images/vbox_disk_shareable_attribute.png)
+
 1. Seleziona il primo disco ASM (es. `asm-crs-disk1.vdi`).
-2. Nel pannello **Attributi** a destra (o in basso), cerca l'opzione **Tipo** e cambiala in: **Condivisibile (Shareable)** ✅
+2. Nel pannello **Attributi** in basso, cerca il dropdown **Tipo** e cambialo da "Normale" a: **Condivisibile** ✅
+
 3. Clicca **Applica**.
 4. **Ripeti per tutti e 5 i dischi ASM** (crs1, crs2, crs3, data, reco).
 
