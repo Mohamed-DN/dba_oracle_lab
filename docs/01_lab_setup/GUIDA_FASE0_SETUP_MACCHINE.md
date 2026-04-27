@@ -325,26 +325,93 @@ Seleziona `rac1` → **Impostazioni** (Settings):
 
 > **Perché 3 NIC?** Oracle Base usa questo approccio: NIC1=NAT (per yum/update), NIC2=Pubblica cluster (SCAN, VIP, client connections), NIC3=Privata interconnect (Cache Fusion). Questo è più pulito di Bridged perché non dipende dalla tua rete di casa.
 
-#### Archiviazione (Storage)
+#### Archiviazione (Storage) — ISO + Disco `/u01`
 
-1. In **Controller: IDE**, attacca la ISO `OracleLinux-R7-U9-Server-x86_64-dvd.iso`
-2. Aggiungi un **secondo disco** da **100 GB** (per `/u01` — binari Oracle)
+Sempre nelle **Impostazioni** di `rac1`, vai nella sezione **Archiviazione** nel menu a sinistra.
+
+![Pannello Archiviazione — Controller IDE per la ISO, Controller SATA per i dischi](./images/vbox_storage_panel.png)
+
+**1. Attacca la ISO di installazione:**
+- Sotto **Controller: IDE**, clicca sull'icona del disco ottico (💿 Vuoto).
+- A destra, clicca l'icona del CD → **Scegli un file di disco...** → seleziona `OracleLinux-R7-U9-Server-x86_64-dvd.iso`.
+
+**2. Crea e aggiungi il disco `/u01` (100 GB):**
+Questo è il disco dove vivranno tutti i binari Oracle (Grid + Database). Viene creato **senza pre-allocazione** (allocato dinamicamente), perché non è condiviso con altre VM.
+
+- Sotto **Controller: SATA**, clicca l'icona **"Aggiungi disco rigido"** (il quadrato con il `+` verde).
+- Si apre il **Selettore disco fisso**. Clicca **Crea** (il pulsante in alto).
+
+![Crea disco — allocazione dinamica (NO pre-allocazione) per il disco /u01](./images/vbox_create_disk_preallocated.png)
+
+- **Nome**: Inserisci un nome descrittivo (es. `rac1-u01.vdi`).
+- **Dimensione**: Trascina il cursore o digita **100 GB**.
+- **Tipo**: Lascia **VDI (VirtualBox Disk Image)**.
+- ❌ **Pre-allocazione a dimensione intera**: **NON SPUNTARE!** Il disco `/u01` non è condiviso, quindi l'allocazione dinamica va benissimo. Sul tuo PC occuperà solo lo spazio effettivamente usato (es. 15 GB iniziali invece di 100 GB).
+- Clicca **Fine**.
+- Il disco appare nell'elenco del Selettore. Clicca **Aggiungi** per collegarlo al Controller SATA.
+
+> 💡 **Allocazione Dinamica vs Pre-allocazione — Quando usare cosa?**
+>
+> ```
+> ╔══════════════════════════════════════════════════════════════════════════════╗
+> ║           REGOLA D'ORO PER I DISCHI VIRTUALBOX NEL LAB ORACLE             ║
+> ╠═══════════════════════════════╦════════════════════════════════════════════╣
+> ║  ALLOCAZIONE DINAMICA        ║  PRE-ALLOCAZIONE (Dimensione Fissa)       ║
+> ║  (senza spunta)              ║  (con spunta ✅)                          ║
+> ╠═══════════════════════════════╬════════════════════════════════════════════╣
+> ║  • Disco OS (50 GB)          ║  • Dischi ASM condivisi (asm-crs-*)      ║
+> ║  • Disco /u01 (100 GB)       ║  • Dischi ASM condivisi (asm-data-*)     ║
+> ║                               ║  • Dischi ASM condivisi (asm-reco-*)     ║
+> ╠═══════════════════════════════╬════════════════════════════════════════════╣
+> ║  Non condivisi tra VM        ║  Condivisi tra 2 VM (es. rac1 + rac2)    ║
+> ║  Occupano solo lo spazio     ║  Occupano SUBITO tutta la dimensione     ║
+> ║  effettivamente usato        ║  sul tuo PC                              ║
+> ║  (risparmio spazio su PC)    ║  (garanzia di stabilità I/O per ASM)     ║
+> ╚═══════════════════════════════╩════════════════════════════════════════════╝
+> ```
+>
+> **Perché la pre-allocazione per i dischi ASM?** I dischi condivisibili devono essere a **dimensione fissa** per due motivi:
+> 1. **Stabilità I/O**: ASM scrive blocchi in posizioni precise del disco. Con l'allocazione dinamica, VirtualBox deve espandere il file `.vdi` a ogni scrittura, causando latenza variabile che può mandare in timeout il Clusterware.
+> 2. **Requisito tecnico**: VirtualBox permette di impostare un disco come "Condivisibile" (Shareable) **solo se è a dimensione fissa**. Se provi con un disco dinamico, VirtualBox ti darà errore.
 
 ---
 
 ## 0.5 Creazione Dischi Condivisi ASM (per RAC Primario)
 
-### Crea 5 dischi nel Virtual Media Manager
+> 🏗️ **Panoramica**: In questa sezione creeremo 5 dischi virtuali che saranno **condivisi** tra `rac1` e `rac2`. Questi dischi simuleranno una SAN/NAS: entrambi i nodi del RAC li vedranno come "propri" e ci scriveranno simultaneamente. Oracle ASM (Automatic Storage Management) li gestirà come un unico pool di storage.
 
-VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
+### Step 1: Apri il Gestore Supporti Virtuali (Virtual Media Manager)
 
-| Disco | Dimensione | Tipo | Uso |
-|---|---|---|---|
-| `asm-crs-disk1.vdi` | **2 GB** | **Dimensione Fissa** | OCR (Disk Group CRS) |
-| `asm-crs-disk2.vdi` | **2 GB** | **Dimensione Fissa** | Voting (Disk Group CRS) |
-| `asm-crs-disk3.vdi` | **2 GB** | **Dimensione Fissa** | Voting (Disk Group CRS) |
-| `asm-data-disk1.vdi` | **20 GB** | **Dimensione Fissa** | Datafile (Disk Group DATA) |
-| `asm-reco-disk1.vdi` | **15 GB** | **Dimensione Fissa** | Recovery (Disk Group RECO) |
+VirtualBox → **File > Gestore Supporti Virtuali** (oppure `Ctrl+D`).
+
+Si apre la finestra che elenca tutti i dischi virtuali del tuo ambiente. Qui vedrai il tab **Dischi fissi** con tutti i `.vdi` creati finora.
+
+![Gestore Supporti Virtuali — lista di tutti i dischi fissi con dimensione virtuale ed effettiva](./images/vbox_media_manager.png)
+
+> 💡 **Leggi le colonne!** Nota la differenza tra **Dimensione virtuale** e **Dimensione effettiva**:
+> - I dischi ASM (es. `asm-crs-disk1.vdi`: 2 GB virtuale = 2 GB effettiva) → **pre-allocati** (dimensione fissa)
+> - I dischi OS (es. `rac1.vdi`: 50 GB virtuale ≈ 13 GB effettiva) → **allocazione dinamica** (occupano solo lo spazio usato)
+
+### Step 2: Crea i 5 dischi ASM (uno alla volta)
+
+Clicca **Crea** nella barra in alto del Gestore Supporti. Per **ogni** disco, compila così:
+
+![Creazione disco ASM — VDI con Pre-allocazione a dimensione intera SPUNTATA](./images/vbox_create_disk_preallocated.png)
+
+**Impostazioni per ogni disco:**
+- **Tipo**: VDI (VirtualBox Disk Image)
+- ✅ **Pre-allocazione a dimensione intera**: **SPUNTARE!** (Fondamentale per i dischi condivisi)
+- **Nome e Dimensione**: Segui questa tabella:
+
+| # | Nome file | Dimensione | Disk Group ASM | Ruolo |
+|---|---|---|---|---|
+| 1 | `asm-crs-disk1.vdi` | **2 GB** | +CRS | OCR (Oracle Cluster Registry) |
+| 2 | `asm-crs-disk2.vdi` | **2 GB** | +CRS | Voting Disk |
+| 3 | `asm-crs-disk3.vdi` | **2 GB** | +CRS | Voting Disk |
+| 4 | `asm-data-disk1.vdi` | **20 GB** | +DATA | Datafile del Database |
+| 5 | `asm-reco-disk1.vdi` | **15 GB** | +RECO | Recovery / Fast Recovery Area |
+
+Clicca **Fine** dopo aver creato ciascun disco. La creazione dei dischi pre-allocati potrebbe richiedere qualche minuto (VirtualBox sta scrivendo l'intero file `.vdi` su disco).
 
 > 💡 **Oracle Best Practices: Perché 3 dischi da 2 GB per il CRS?**
 >
@@ -355,19 +422,51 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 > 
 > 2. **Perché 2 GB?** OCR (Oracle Cluster Registry) e Voting Disk insieme occupano meno di 500 MB. Tuttavia, assegnare 2 GB è la best practice raccomandata per Oracle 19c per gestire senza problemi futuri upgrade (Grid patching), backup automatici dell'OCR (che vengono tenuti nello stesso disk group) e per garantire abbastanza *Allocation Units* (AU) ad ASM.
 
-### Rendi i dischi Condivisibili (CRITICO!)
+### Step 3: Rendi i dischi Condivisibili (CRITICO!)
 
-1. Nel Virtual Media Manager, seleziona ogni disco ASM
-2. **Attributi** → Tipo: **Condivisibile (Shareable)** ✅
-3. Clicca **Applica**
-4. Ripeti per tutti e 5 i dischi
+Sempre nel **Gestore Supporti Virtuali** (dove hai appena creato i dischi):
 
-### Attacca i dischi a `rac1`
+1. Seleziona il primo disco ASM (es. `asm-crs-disk1.vdi`).
+2. Nel pannello **Attributi** a destra (o in basso), cerca l'opzione **Tipo** e cambiala in: **Condivisibile (Shareable)** ✅
+3. Clicca **Applica**.
+4. **Ripeti per tutti e 5 i dischi ASM** (crs1, crs2, crs3, data, reco).
 
-1. Seleziona `rac1` → **Impostazioni > Archiviazione**
-2. Seleziona **Controller: SATA**
-3. Clicca l'icona "Aggiungi disco rigido" (+)
-4. Aggiungi tutti e 5 i dischi nell'ordine: crs1, crs2, crs3, data, reco
+> ⚠️ **Se il pulsante "Condivisibile" è grigio/disabilitato**, significa che il disco NON è a dimensione fissa. Devi ricrearlo con la pre-allocazione attiva. VirtualBox non permette di condividere dischi ad allocazione dinamica.
+
+### Step 4: Attacca i dischi a `rac1`
+
+Ora che i dischi esistono nel Virtual Media Manager, dobbiamo collegarli fisicamente alla VM `rac1`.
+
+1. Tasto destro su `rac1` → **Impostazioni** (oppure seleziona `rac1` e premi `Ctrl+S`).
+
+![Menu contestuale — clicca Impostazioni per aprire le impostazioni della VM](./images/vbox_vm_context_menu.png)
+
+2. Vai su **Archiviazione** nel menu a sinistra.
+3. Seleziona **Controller: SATA** (dove hai già il disco OS e il disco /u01).
+4. Clicca l'icona **"Aggiungi disco rigido"** (il quadrato con il `+` verde accanto al controller).
+5. Si apre il **Selettore disco fisso**. Qui vedrai tutti i dischi disponibili:
+
+![Selettore disco — clicca Aggiungi per collegare i dischi ASM esistenti alla VM](./images/vbox_disk_selector.png)
+
+6. Clicca su **Aggiungi** e seleziona `asm-crs-disk1.vdi`. Ripeti per tutti e 5 i dischi nell'ordine:
+   - `asm-crs-disk1.vdi`
+   - `asm-crs-disk2.vdi`
+   - `asm-crs-disk3.vdi`
+   - `asm-data-disk1.vdi`
+   - `asm-reco-disk1.vdi`
+7. Clicca **OK** per salvare.
+
+> ✅ **Verifica Finale**: Il Controller SATA di `rac1` deve ora mostrare **7 dischi** totali:
+>
+> | Porta SATA | Disco | Dimensione | Tipo |
+> |---|---|---|---|
+> | 0 | `rac1.vdi` (OS) | 50 GB | Dinamico |
+> | 1 | `rac1-u01.vdi` (/u01) | 100 GB | Dinamico |
+> | 2 | `asm-crs-disk1.vdi` | 2 GB | Fisso/Condiviso |
+> | 3 | `asm-crs-disk2.vdi` | 2 GB | Fisso/Condiviso |
+> | 4 | `asm-crs-disk3.vdi` | 2 GB | Fisso/Condiviso |
+> | 5 | `asm-data-disk1.vdi` | 20 GB | Fisso/Condiviso |
+> | 6 | `asm-reco-disk1.vdi` | 15 GB | Fisso/Condiviso |
 
 ---
 
