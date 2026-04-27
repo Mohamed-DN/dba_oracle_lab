@@ -79,7 +79,7 @@
 
 | Attività | Guida |
 |---|---|
-| Enterprise Manager 13.5 | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md) |
+| Enterprise Manager 24ai | [GUIDA_FASE6_ENTERPRISE_MANAGER.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER.md) |
 
 ### 8. GoldenGate & Replication
 
