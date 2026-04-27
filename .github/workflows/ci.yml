@@ -88,11 +88,13 @@ jobs:
 
       - name: Validate didactic compliance
         run: |
-          if [ -z "${{ steps.changed-guides.outputs.files }}" ]; then
+          FILES='${{ steps.changed-guides.outputs.files }}'
+          if [ -z "$FILES" ]; then
             echo "Nessuna guida modificata: controllo skipped."
             exit 0
           fi
-          python3 scripts/validate_didactic_compliance.py ${{ steps.changed-guides.outputs.files }}
+          mapfile -t FILE_LIST < <(printf '%s\n' "$FILES" | sed '/^$/d')
+          python3 scripts/validate_didactic_compliance.py "${FILE_LIST[@]}"
 
   check-markdown-links:
     name: Check Markdown Links

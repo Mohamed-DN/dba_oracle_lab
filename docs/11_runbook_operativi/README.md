@@ -1,9 +1,26 @@
 # 📋 Procedure Operative DBA Oracle 19c
 
-> **Runbook pronti per l'uso quotidiano.** Ogni procedura è un flusso completo: prerequisiti → comandi → verifiche → rollback.
-> Copia-incolla direttamente in produzione.
-> Per la navigazione rapida con script avanzati: [Indice Centrale Runbook + Top20](./INDICE_CENTRALE_RUNBOOK_TOP20.md)
+> **Runbook pronti per l'uso quotidiano.** Ogni procedura segue un flusso: prerequisiti → comandi → verifiche → rollback.
+> Navigazione avanzata: [Indice Centrale Runbook + Top20](./INDICE_CENTRALE_RUNBOOK_TOP20.md)
 > Decision tree centralizzato: [Troubleshooting Decision Tree](../14_enterprise_governance/TROUBLESHOOTING_DECISION_TREE.md)
+
+---
+
+## ⚡ Priorità operativa (prima da aprire)
+
+1. [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md)
+2. [02 Verifica Backup RMAN](./02_VERIFICA_BACKUP.md)
+3. [03 Check Data Guard](./03_CHECK_DATAGUARD.md)
+4. [08 ORA-Errors Comuni](./08_ORA_ERRORS.md)
+
+---
+
+## 🧾 Cheat Sheet specialistiche
+
+- [Cheat Sheet RMAN](./CHEAT_SHEET_RMAN.md)
+- [Cheat Sheet DGMGRL](./CHEAT_SHEET_DGMGRL.md)
+- [Cheat Sheet GoldenGate](./CHEAT_SHEET_GOLDENGATE.md)
+- [Guida ADRCI + Diagnostica Oracle](../05_performance/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
 
 ---
 
@@ -39,14 +56,17 @@
 | 13 | [Refresh Ambiente di Test](./13_REFRESH_SCHEMA_TEST.md) | Clone schema produzione su Sviluppo (DataPump) |
 | 14 | [Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md) | Drill resilienza rete su laboratorio |
 | 15 | [Checkmk Agent TLS + SMART/RAID Troubleshooting](./15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md) | Onboarding host e troubleshooting monitoraggio disco/RAID |
+| 16 | [Resize TEMP (Tempfile) in Sicurezza](./16_RESIZE_TEMP.md) | ORA-01652, sort su disco, temp al limite |
+| 17 | [Purge Log Oracle (ADR, Audit, Archivelog)](./17_PURGE_LOG_ORACLE.md) | Saturazione spazio log/FRA/diag |
+| 18 | [Gestione Statistiche Optimizer (DBMS_STATS)](./18_GESTIONE_STATISTICHE_OPTIMIZER.md) | Regressioni query e statistiche stale |
 
 ---
 
 ## Come Usare
 
-1. **Apri la procedura** relativa al tuo scenario
-2. **Segui i passi** nell'ordine indicato
-3. **Verifica** con i check di conferma alla fine
-4. **Documenta** l'esito nel tuo log operativo
+1. Apri la procedura per scenario
+2. Segui i passi nell'ordine
+3. Esegui validazione finale
+4. Documenta esito e tempi nel ticket
 
-> **Regola d'oro**: Non saltare i prerequisiti e i check di conferma.
+> Regola d'oro: non saltare prerequisiti e check finali.

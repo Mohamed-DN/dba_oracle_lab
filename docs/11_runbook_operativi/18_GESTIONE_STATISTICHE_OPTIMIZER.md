@@ -1,0 +1,79 @@
+# 18 — Gestione Statistiche Optimizer (DBMS_STATS)
+
+> ⏱️ Tempo: 20-40 minuti | 📅 Frequenza: Settimanale o post-massive load | 👤 Chi: DBA
+> **Scenario tipico**: regressione piani SQL, cardinalità errate, query improvvisamente lente.
+
+---
+
+## Step 1: Verifica stato statistiche
+
+```sql
+sqlplus / as sysdba
+
+SELECT owner, table_name,
+       TO_CHAR(last_analyzed, 'YYYY-MM-DD HH24:MI') AS last_analyzed,
+       stale_stats, num_rows
+FROM dba_tab_statistics
+WHERE owner NOT IN ('SYS','SYSTEM')
+  AND temporary = 'N'
+ORDER BY last_analyzed NULLS FIRST
+FETCH FIRST 50 ROWS ONLY;
+```
+
+---
+
+## Step 2: Raccogli statistiche stale (raccomandato)
+
+```sql
+BEGIN
+  DBMS_STATS.GATHER_DATABASE_STATS(
+    options          => 'GATHER STALE',
+    estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,
+    method_opt       => 'FOR ALL COLUMNS SIZE AUTO',
+    cascade          => TRUE,
+    degree           => DBMS_STATS.AUTO_DEGREE,
+    no_invalidate    => DBMS_STATS.AUTO_INVALIDATE
+  );
+END;
+/
+```
+
+---
+
+## Step 3: Tabella critica (intervento puntuale)
+
+```sql
+EXEC DBMS_STATS.GATHER_TABLE_STATS(
+  ownname          => '&OWNER',
+  tabname          => '&TABLE_NAME',
+  estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,
+  method_opt       => 'FOR ALL COLUMNS SIZE AUTO',
+  cascade          => TRUE,
+  no_invalidate    => DBMS_STATS.AUTO_INVALIDATE
+);
+```
+
+---
+
+## Step 4: Validazione piani e impatto
+
+```sql
+SELECT sql_id, plan_hash_value, executions,
+       ROUND(elapsed_time/1e6,2) AS elapsed_s
+FROM v$sql
+WHERE sql_id = '&SQL_ID';
+```
+
+```sql
+SELECT owner, table_name, stale_stats, last_analyzed
+FROM dba_tab_statistics
+WHERE owner = '&OWNER' AND table_name = '&TABLE_NAME';
+```
+
+---
+
+## Troubleshooting rapido
+
+- **Piano peggiora dopo gather**: valuta SQL Plan Baseline / statistiche storiche.
+- **Statistiche non aggiornate**: verifica permessi e maintenance windows.
+- **Tempo gather elevato**: limita scope per schema/tabella e usa parallelismo controllato.
