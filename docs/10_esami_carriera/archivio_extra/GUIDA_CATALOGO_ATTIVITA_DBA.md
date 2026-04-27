@@ -17,7 +17,7 @@
 | Area | Cosa fa il DBA | Frequenza tipica | Dove la fai nel repo |
 |---|---|---|---|
 | **Disponibilita e startup/shutdown** | Verifica istanze, servizi, listener, cluster resources, restart controllati | Giornaliera / su change | [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md), [GUIDA_LISTENER_SERVICES_DBA.md](../../04_administration/GUIDA_LISTENER_SERVICES_DBA.md) |
-| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
+| **Monitoring e alerting** | Legge alert log, incidenti EM, eventi critici, job falliti, metriche host e DB | Giornaliera | [GUIDA_FASE6_ENTERPRISE_MANAGER.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER.md), [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md) |
 | **Backup e recovery** | Definisce strategia, monitora backup, esegue validate, restore test, recovery runbook | Giornaliera / settimanale / trimestrale | [GUIDA_FASE5_RMAN_BACKUP.md](../../03_backup_recovery/GUIDA_FASE5_RMAN_BACKUP.md), [GUIDA_RMAN_COMPLETA_19C.md](../../03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) |
 | **Performance e tuning** | Analizza AWR/ADDM/ASH, top SQL, wait events, sessioni attive, statistiche | Giornaliera / settimanale / su incidente | [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md), [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md) |
 | **Storage, ASM e capacity** | Controlla tablespace, FRA, ASM disk group, crescita dati, autoextend, soglie | Giornaliera / settimanale / mensile | [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md), [GUIDA_AGGIUNTA_DISCHI_ASM.md](../../04_administration/GUIDA_AGGIUNTA_DISCHI_ASM.md) |
@@ -67,7 +67,7 @@ Attivita tipiche:
 - tuning soglie e notifiche.
 
 Nel tuo repo:
-- [GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER_13C.md)
+- [GUIDA_FASE6_ENTERPRISE_MANAGER.md](../../08_monitoring/GUIDA_FASE6_ENTERPRISE_MANAGER.md)
 - [GUIDA_COMANDI_DBA.md](../../00_fondamenti/GUIDA_COMANDI_DBA.md)
 
 ## 3.3 Backup, restore test e recovery readiness
