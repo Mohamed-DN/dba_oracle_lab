@@ -184,7 +184,15 @@ Swap:  7,8Gi  used: 0B     free: 7,8Gi
 
 ## 6.5 Installazione Database 19c di Repository (da zero)
 
-> **Se hai già un database 19c attivo**, salta al punto 6.6.
+> 🛑 **BLOCCANTE - PREREQUISITO VERSIONE DATABASE PER OEM 24ai** 🛑
+> Oracle Enterprise Manager 24ai **NON** supporta la versione base di Oracle 19c (19.3.0.0). L'installer si bloccherà con un errore fatale.
+> Il database di repository **DEVE** essere aggiornato almeno alla versione **19.22** (Release Update Gennaio 2024) o superiore.
+> 
+> **Opzioni:**
+> 1. Se hai un account Oracle Support (MOS), applica la patch 19.22+ al DB prima di avviare l'installer OEM 24ai.
+> 2. Se non hai accesso alle patch, devi **scaricare e installare OEM 13.5** (che supporta nativamente il database 19.3.0.0 senza patch).
+
+> **Se hai già un database 19c attivo e patchato (>= 19.22)**, salta al punto 6.6.
 
 Questa sezione mostra come installare Oracle 19c da zero e creare il database `EMREP` che OEM userà come repository.
 
