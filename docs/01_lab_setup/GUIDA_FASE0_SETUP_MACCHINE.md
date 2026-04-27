@@ -387,25 +387,88 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 
 > **Perché Server with GUI?** Gli installer Oracle (gridSetup.sh, runInstaller, dbca) usano Java/X11. Senza GUI, devi usare i response file in modalità silente — possibile ma più complesso per un lab.
 
-**Installation Destination**:
-- Seleziona il disco da 50 GB (sda) — NON toccare il disco da 100 GB (sdb, sarà /u01)
-- Partitioning: **Automatic** va bene, oppure manuale:
+### Installation Destination (Selezione Disco)
 
-| Mount Point | Size | Tipo |
-|---|---|---|
-| `/boot` | 1 GB | xfs |
-| `swap` | 8 GB | swap |
-| `/` | Resto (~41 GB) | xfs |
+> 🛑 **ATTENZIONE — IL CONCETTO PIÙ IMPORTANTE DI QUESTA SEZIONE**
+>
+> La VM `rac1` ha **DUE dischi** (più quelli ASM che ignoriamo qui):
+>
+> | Disco | Dimensione | Ruolo | Quando si configura |
+> |---|---|---|---|
+> | **sda** (50 GB) | Sistema Operativo | `/boot`, `swap`, `/` | **ORA** — durante l'installazione |
+> | **sdb** (100 GB) | Binari Oracle (`/u01`) | Grid + Database software | **DOPO** — al primo boot (Sezione 0.7) |
+>
+> L'installer del SO **deve toccare SOLO il disco da 50 GB (sda)**. Il disco da 100 GB verrà partizionato, formattato e montato manualmente **dopo il primo avvio** nella sezione 0.7.
+> Se lo tocchi qui, l'installer potrebbe formattarlo e dovrai ricrearlo.
+
+1. Nella schermata principale dell'installer, clicca su **INSTALLATION DESTINATION**.
+
+2. **Seleziona SOLO il disco da 50 GiB** (`sda`). Il disco deve apparire con un bordo blu e un segno di spunta. Se vedi anche il disco da 100 GB, **NON selezionarlo** — assicurati che solo `sda` abbia la spunta.
+
+![Selezione disco — seleziona SOLO il disco sda da 50 GiB](./images/install_dest_select_disk.png)
+
+3. In basso, sotto **Other Storage Options → Partitioning**, seleziona:
+   - ◉ **I will configure partitioning** (partizionamento manuale)
+4. Clicca **Done** in alto a sinistra.
+
+### Partizionamento Manuale del Disco OS (Step-by-Step Visivo)
+
+Si apre la schermata **MANUAL PARTITIONING**. Il pannello è vuoto — devi creare le partizioni una alla volta usando il pulsante **`+`** in basso a sinistra.
+
+![Schermata iniziale del partizionamento manuale — pannello vuoto, premi il pulsante "+"](./images/install_manual_partitioning_empty.png)
+
+> 💡 **Schema di Partitioning**: Lascia il dropdown in alto su **LVM** (Logical Volume Manager). È lo standard di Oracle Linux e ti permette di ridimensionare le partizioni a posteriori se necessario.
+
+#### Partizione 1: `/boot` (1024 MiB)
+
+5. Clicca il pulsante **`+`** → Si apre il dialogo **"ADD A NEW MOUNT POINT"**.
+
+![Menu Add a New Mount Point — seleziona /boot dal dropdown](./images/install_add_mount_point_menu.png)
+
+6. **Mount Point**: Seleziona `/boot` dal dropdown.
+7. **Desired Capacity**: Scrivi `1024 MiB` (o `1 GiB`).
+8. Clicca **Add mount point**.
+
+#### Partizione 2: `swap` (8192 MiB)
+
+9. Clicca di nuovo **`+`**.
+10. **Mount Point**: Seleziona `swap` dal dropdown.
+11. **Desired Capacity**: Scrivi `8192 MiB` (o `8 GiB`).
+12. Clicca **Add mount point**.
+
+#### Partizione 3: `/` (Tutto il Resto ~41 GiB)
+
+13. Clicca di nuovo **`+`**.
+14. **Mount Point**: Seleziona `/` dal dropdown.
+15. **Desired Capacity**: **Lascia VUOTO** (l'installer assegnerà automaticamente tutto lo spazio rimanente, circa 41 GiB).
+16. Clicca **Add mount point**.
+
+#### Risultato Finale e Verifica
+
+A questo punto il pannello di sinistra deve mostrare **esattamente 3 partizioni**:
+
+![Partizionamento completato — /boot 1024 MiB, / ~41 GiB (root), swap 8192 MiB](./images/install_partitioning_done.png)
+
+| Mount Point | Size | File System | Device Type | Note |
+|---|---|---|---|---|
+| `/boot` | **1024 MiB** | xfs | Standard Partition (sda1) | Kernel e bootloader |
+| `/` | **~41 GiB** | xfs | LVM (ol-root) | Sistema operativo |
+| `swap` | **8192 MiB** | swap | LVM (ol-swap) | Area di swap |
+
+> ✅ **Verifica prima di procedere**: Controlla in basso a sinistra che **AVAILABLE SPACE** sia vicino a **0** (pochi KiB residui). Se vedi ancora decine di GB liberi, hai sbagliato le dimensioni.
+
+17. Clicca **Done** in alto a sinistra.
+18. Nella finestra di conferma **"SUMMARY OF CHANGES"**, clicca **Accept Changes**.
 
 > 💡 **E `/tmp`?** Non serve creare una partizione disco per `/tmp` durante l'installazione. In Fase 1 (Sezione 1.5b) lo monteremo come `tmpfs` — un filesystem velocissimo che vive direttamente in RAM e si pulisce automaticamente ad ogni riavvio.
-
-![Partizionamento Disco OS](./images/os_install_partitions.png)
 
 > 💡 **Oracle Best Practices: Quanta Swap serve davvero?**
 > Assegnare 8 GB di swap è la raccomandazione UFFICIALE ed esatta di Oracle per un server con 8 GB di RAM. La matrice ufficiale di calcolo per Oracle 19c prevede:
 > - **RAM tra 1 GB e 2 GB**: Swap = 1.5 volte la RAM
 > - **RAM tra 2 GB e 16 GB**: Swap = uguale alla RAM (questo è il nostro caso: 8 GB RAM = 8 GB Swap)
 > - **RAM maggiore di 16 GB**: Swap = 16 GB fissi
+
+### Altre Impostazioni dell'Installer
 
 **Network & Host Name**:
 - Attiva **TUTTE** le interfacce (ON)
@@ -416,9 +479,11 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 
 **Root Password**: `oracle` (per il lab)
 
-3. Clicca **Begin Installation** → Aspetta (~15-20 minuti)
-4. Al termine → **Reboot**
-5. Accetta la licenza al primo avvio
+### Avvio Installazione
+
+19. Clicca **Begin Installation** → Aspetta (~15-20 minuti)
+20. Al termine → **Reboot**
+21. Accetta la licenza al primo avvio
 
 > 📸 **SNAPSHOT — "SNAP-01: OS_Base_Installato"**
 > ```bash
@@ -427,16 +492,55 @@ VirtualBox → **File > Gestore Supporti Virtuali** (`Ctrl+D`) → **Crea**:
 
 ---
 
-## 0.7 Preparare il disco /u01
+## 0.7 Preparare il Disco `/u01` (Binari Oracle — 100 GB)
+
+> 🏗️ **IL CONCETTO: Perché un Disco Separato per `/u01`?**
+>
+> ```
+> ╔═══════════════════════════════════════════════════════════════════════╗
+> ║                    ARCHITETTURA DISCHI DI rac1                       ║
+> ╠═════════════════════════════╦════════════════════════════════════════╣
+> ║  DISCO 1: sda (50 GB)      ║  DISCO 2: sdb (100 GB)               ║
+> ║  ─────────────────────────  ║  ───────────────────────────────────  ║
+> ║  /boot   → Kernel (1 GB)   ║  /u01    → Software Oracle           ║
+> ║  swap    → Swap   (8 GB)   ║           ├── Grid Infrastructure    ║
+> ║  /       → OS     (41 GB)  ║           ├── Database 19c           ║
+> ║                             ║           ├── OPatch & Patch         ║
+> ║  Gestito dall'installer     ║           └── oraInventory           ║
+> ║  durante l'installazione    ║                                      ║
+> ║  (Sezione 0.6 ✅ FATTO)     ║  Gestito MANUALMENTE dopo il boot   ║
+> ║                             ║  (Questa sezione 0.7)                ║
+> ╠═════════════════════════════╩════════════════════════════════════════╣
+> ║  PERCHÉ SEPARARE?                                                   ║
+> ║  1. Se il SO si corrompe → reinstalli l'OS senza perdere Oracle    ║
+> ║  2. Se /u01 si riempie → il SO continua a funzionare              ║
+> ║  3. Backup/snapshot indipendenti: salvi lo storage Oracle senza    ║
+> ║     portarti dietro 50 GB di OS                                    ║
+> ║  4. Oracle Base raccomanda esplicitamente questa separazione       ║
+> ╚═════════════════════════════════════════════════════════════════════╝
+> ```
 
 Dopo il primo boot di `rac1`, apri MobaXterm (o usa la console se non hai ancora configurato la rete) ed esegui questi comandi come utente `root` passo dopo passo.
 
 ### Step 1: Identifica il disco corretto
-Assicurati che il disco da 100 GB sia visto come `sdb`.
+Assicurati che il disco da 100 GB sia visto come `sdb`. Se hai già aggiunto i dischi ASM in VirtualBox, potresti vedere anche `sdc`, `sdd`, ecc. — ignorali, ci penseremo nella sezione 0.8.
 
 ```bash
 lsblk
 ```
+
+L'output atteso deve mostrare qualcosa come:
+```
+NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda             8:0    0   50G  0 disk
+├─sda1          8:1    0    1G  0 part /boot
+└─sda2          8:2    0   49G  0 part
+  ├─ol-root   253:0    0   41G  0 lvm  /
+  └─ol-swap   253:1    0    8G  0 lvm  [SWAP]
+sdb             8:16   0  100G  0 disk           ← QUESTO! Nessuna partizione, nessun mount
+```
+
+> ⚠️ **Se `sdb` non è da 100 GB**, controlla le impostazioni di VirtualBox. Potresti aver dimenticato di aggiungere il secondo disco nella sezione 0.4 (Archiviazione → Controller SATA → aggiungi disco da 100 GB).
 
 ### Step 2: Partiziona il disco (/dev/sdb)
 Usa il tool `fdisk` in modo interattivo per creare una nuova partizione primaria.
@@ -453,7 +557,7 @@ La partizione appena creata si chiamerà `sdb1`. Formattala con il file system X
 mkfs.xfs -f /dev/sdb1
 ```
 
-### Step 4: Crea la cartella di mount (u01)
+### Step 4: Crea la cartella di mount (/u01)
 Questa è la directory dove installeremo tutto il software Oracle (Grid e Database).
 
 ```bash
@@ -492,7 +596,15 @@ Scrivere in `fstab` dice al sistema cosa fare al prossimo riavvio. Per montare i
 mount -a
 df -h
 ```
-*(Cerca `/u01` nell'elenco. L'output deve mostrare ~100 GB disponibili e montati).*
+
+L'output di `df -h` deve mostrare la nuova riga:
+```
+Filesystem      Size  Used Avail Use% Mounted on
+...
+/dev/sdb1        100G   33M  100G   1% /u01       ← ECCOLO!
+```
+
+> ✅ **Checkpoint**: Se vedi `/u01` montato con ~100 GB disponibili, hai finito! Questo disco sopravviverà alla clonazione della Golden Image — tutti i nodi clonati (`rac2`, `racstby1`, `racstby2`) avranno già il proprio `/u01` pronto e montato.
 
 ---
 
