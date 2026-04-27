@@ -302,20 +302,164 @@ EXIT;
 
 ```
 
-### 6.5.9 Avvia il Listener
+### 6.5.9 Configura e Avvia il Listener
+
+> ⚠️ **ERRORE COMUNE: `TNS-12541: TNS:no listener`**
+> Se dopo un riavvio della macchina esegui `lsnrctl status` e ottieni questo errore, significa semplicemente che il listener non è stato avviato. Oracle **NON avvia il listener automaticamente al boot** a meno che non lo configuri esplicitamente (vedi sezione 6.5.10).
+
+#### Step 1: Crea il file `listener.ora` (se non esiste)
 
 ```bash
-# Verifica se il listener è attivo
-lsnrctl status
+# Verifica se esiste già
+cat $ORACLE_HOME/network/admin/listener.ora 2>/dev/null || echo "FILE NON TROVATO"
 
-# Se non è attivo, avvialo
+# Se non esiste, crealo:
+cat > $ORACLE_HOME/network/admin/listener.ora <<'EOF'
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521))
+    )
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = EMREP)
+      (ORACLE_HOME = /home/oracle/app/product/19.3.0/dbhome_1)
+      (SID_NAME = EMREP)
+    )
+  )
+EOF
+```
+
+> 💡 **Perché `SID_LIST`?** Il listener "dinamico" registra il database solo quando il DB è già aperto e si auto-registra tramite il processo LREG. Ma se il DB non è ancora avviato (es. dopo un reboot), il listener non sa che EMREP esiste. La sezione `SID_LIST` è una **registrazione statica** che dice al listener: "il database EMREP sta qui, anche se non è ancora partito". Questo è **fondamentale** per permettere all'installer OEM di connettersi al repository.
+
+#### Step 2: Avvia il Listener
+
+```bash
+# Assicurati che le variabili siano caricate
+source /home/oracle/.bash_profile
+
+# Avvia il listener
 lsnrctl start
 
-# Registra il database nel listener
+# Verifica che sia attivo
+lsnrctl status
+# Deve mostrare: "TNS-12541" → NO!
+# Deve mostrare: "The listener supports no services" (se il DB non è ancora up)
+# Oppure: "Service EMREP has 1 instance(s)" (se il DB è già up)
+```
+
+#### Step 3: Avvia il Database e Registralo
+
+```bash
+# Avvia il database
 sqlplus / as sysdba <<'EOF'
+STARTUP;
 ALTER SYSTEM REGISTER;
 EXIT;
 EOF
+
+# Verifica che il listener ora veda il servizio
+lsnrctl status
+# Deve mostrare: Service "EMREP" has 1 instance(s).
+```
+
+> 💡 **`ALTER SYSTEM REGISTER`** forza la registrazione immediata del database nel listener. Senza questo comando, il processo LREG del database si registra automaticamente, ma solo ogni 60 secondi.
+
+### 6.5.10 Avvio automatico al boot (FONDAMENTALE!)
+
+Senza questa configurazione, ogni volta che riavvii Host-010 dovrai avviare manualmente listener e database. Ecco come automatizzare.
+
+#### Opzione A: Usa `/etc/oratab` + `dbstart` (Metodo Oracle Standard)
+
+```bash
+# 1. Configura /etc/oratab per avvio automatico
+# Cambia la 'N' finale in 'Y' per il database EMREP
+sudo sed -i 's/^EMREP:.*/EMREP:\/home\/oracle\/app\/product\/19.3.0\/dbhome_1:Y/' /etc/oratab
+
+# Verifica:
+grep EMREP /etc/oratab
+# Deve mostrare: EMREP:/home/oracle/app/product/19.3.0/dbhome_1:Y
+```
+
+#### Opzione B: Crea un servizio systemd (Metodo Moderno)
+
+```bash
+# Crea lo script di avvio/spegnimento
+sudo cat > /usr/local/bin/oracle_emrep.sh <<'SCRIPT'
+#!/bin/bash
+export ORACLE_HOME=/home/oracle/app/product/19.3.0/dbhome_1
+export ORACLE_SID=EMREP
+export PATH=$ORACLE_HOME/bin:$PATH
+
+case "$1" in
+  start)
+    su - oracle -c "$ORACLE_HOME/bin/lsnrctl start"
+    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'STARTUP;'"
+    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'ALTER SYSTEM REGISTER;'"
+    ;;
+  stop)
+    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'SHUTDOWN IMMEDIATE;'"
+    su - oracle -c "$ORACLE_HOME/bin/lsnrctl stop"
+    ;;
+esac
+SCRIPT
+sudo chmod +x /usr/local/bin/oracle_emrep.sh
+
+# Crea il servizio systemd
+sudo cat > /etc/systemd/system/oracle-emrep.service <<'SVC'
+[Unit]
+Description=Oracle Database EMREP + Listener
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/oracle_emrep.sh start
+ExecStop=/usr/local/bin/oracle_emrep.sh stop
+TimeoutStartSec=300
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target
+SVC
+
+# Abilita e testa
+sudo systemctl daemon-reload
+sudo systemctl enable oracle-emrep
+
+# Test manuale (senza dover riavviare la macchina)
+sudo systemctl start oracle-emrep
+sudo systemctl status oracle-emrep
+```
+
+> 💡 **Quale scegliere?** L'Opzione A è più semplice ma richiede che qualcosa invochi `dbstart`. L'Opzione B è autonoma: systemd avvia tutto automaticamente al boot senza intervento manuale.
+
+### 6.5.11 Procedura di avvio manuale dopo un reboot (Cheat Sheet)
+
+> 🛑 **Sei appena rientrato su Host-010 dopo un riavvio e non funziona niente?**
+> Copia e incolla questo blocco intero:
+
+```bash
+# === RIAVVIO COMPLETO STACK ORACLE SU HOST-010 ===
+source /home/oracle/.bash_profile
+
+# 1. Avvia il Listener
+lsnrctl start
+
+# 2. Avvia il Database
+sqlplus / as sysdba <<'EOF'
+STARTUP;
+ALTER SYSTEM REGISTER;
+SELECT name, open_mode FROM v$database;
+EXIT;
+EOF
+
+# 3. Verifica finale
+lsnrctl status
+echo "=== Stack Oracle OK ==="
 ```
 
 ---
@@ -328,11 +472,11 @@ Scarica tutti i 5 file ZIP da [Oracle Software Delivery Cloud](https://edelivery
 
 | File | Descrizione | Dimensione |
 |------|------------|------------|
-| V1048951-01.zip | Oracle Enterprise Manager 24ai R1 (1 of 5) | 1.8 GB |
-| V1048952-01.zip | Oracle Enterprise Manager 24ai R1 (2 of 5) | 1.4 GB |
-| V1048953-01.zip | Oracle Enterprise Manager 24ai R1 (3 of 5) | 1.6 GB |
-| V1048954-01.zip | Oracle Enterprise Manager 24ai R1 (4 of 5) | 1.6 GB |
-| V1048955-01.zip | Oracle Enterprise Manager 24ai R1 (5 of 5) | 1.5 GB |
+| V1046951-01.zip | Oracle Enterprise Manager 24ai R1 (1 of 5) | 1.8 GB |
+| V1046952-01.zip | Oracle Enterprise Manager 24ai R1 (2 of 5) | 1.4 GB |
+| V1046953-01.zip | Oracle Enterprise Manager 24ai R1 (3 of 5) | 1.6 GB |
+| V1046954-01.zip | Oracle Enterprise Manager 24ai R1 (4 of 5) | 1.6 GB |
+| V1046955-01.zip | Oracle Enterprise Manager 24ai R1 (5 of 5) | 1.5 GB |
 
 > **Totale**: ~7.8 GB. Scarica TUTTI i file, altrimenti l'installazione fallisce.
 
@@ -345,11 +489,11 @@ mkdir -p /home/oracle/app/emcc/agent
 mkdir -p /home/oracle/Scaricati/em24ai
 
 # Sposta i file ZIP nella cartella dedicata (modifica il percorso se diverso)
-mv /home/oracle/Scaricati/V104895*.zip /home/oracle/Scaricati/em24ai/
+mv /home/oracle/Scaricati/V104695*.zip /home/oracle/Scaricati/em24ai/
 
 # Scompatta tutti i file
 cd /home/oracle/Scaricati/em24ai
-for f in V104895*.zip; do unzip -o "$f"; done
+for f in V104695*.zip; do unzip -o "$f"; done
 
 # Rendi eseguibile il binario dell'installer
 chmod +x em*.bin 2>/dev/null || chmod +x em_install.pl 2>/dev/null
@@ -654,6 +798,55 @@ Esito atteso:
 ---
 
 ## 6.13 Troubleshooting più comune
+
+### TNS-12541: TNS:no listener (dopo reboot)
+
+Sintomi:
+
+```text
+$ lsnrctl status
+TNS-12541: TNS:no listener
+ TNS-12560: TNS:protocol adapter error
+  TNS-00511: No listener
+   Linux Error: 111: Connection refused
+```
+
+Causa: il listener non è partito al boot (Oracle NON lo avvia automaticamente).
+
+Fix rapido:
+
+```bash
+source /home/oracle/.bash_profile
+lsnrctl start
+sqlplus / as sysdba <<< 'STARTUP;'
+sqlplus / as sysdba <<< 'ALTER SYSTEM REGISTER;'
+lsnrctl status
+```
+
+Fix permanente: configura l'avvio automatico (vedi sezione **6.5.10**).
+
+### ORA-01034: ORACLE not available (database non avviato)
+
+Sintomi:
+
+```text
+SQL> SELECT name FROM v$database;
+ORA-01034: ORACLE not available
+```
+
+Causa: il database non è stato avviato dopo il reboot.
+
+Fix:
+
+```bash
+source /home/oracle/.bash_profile
+echo $ORACLE_SID    # Deve mostrare EMREP
+echo $ORACLE_HOME   # Deve mostrare /home/oracle/app/product/19.3.0/dbhome_1
+
+sqlplus / as sysdba <<< 'STARTUP;'
+```
+
+> Se `ORACLE_SID` o `ORACLE_HOME` sono vuoti, le variabili non sono nel `.bash_profile`. Vedi sezione **6.5.5**.
 
 ### Agent down
 
