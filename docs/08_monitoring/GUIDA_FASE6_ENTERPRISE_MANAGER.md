@@ -292,14 +292,14 @@ EOF
 ### 6.5.8 Configurazione ARCHIVELOG (richiesto da OEM)
 
 ```bash
-sqlplus / as sysdba <<'EOF'
+sqlplus / as sysdba 
 SHUTDOWN IMMEDIATE;
 STARTUP MOUNT;
 ALTER DATABASE ARCHIVELOG;
 ALTER DATABASE OPEN;
 SELECT log_mode FROM v$database;
 EXIT;
-EOF
+
 ```
 
 ### 6.5.9 Avvia il Listener
