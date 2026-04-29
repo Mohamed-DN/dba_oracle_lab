@@ -23,35 +23,32 @@ COL pct_used FOR 999.9
 COL pct_of_max FOR 999.9
 COL autoext FOR A7
 
-WITH 
-  file_stats AS (
-    SELECT 
-        tablespace_name,
-        SUM(bytes) AS total_bytes,
-        SUM(CASE WHEN maxbytes = 0 THEN bytes ELSE maxbytes END) AS total_maxbytes,
-        SUM(CASE WHEN autoextensible = 'YES' THEN 1 ELSE 0 END) AS autoext_count
-    FROM dba_data_files
-    GROUP BY tablespace_name
-  ),
-  free_stats AS (
-    SELECT 
-        tablespace_name, 
-        SUM(bytes) AS free_bytes
-    FROM dba_free_space
-    GROUP BY tablespace_name
-  )
-SELECT 
+SELECT
     t.tablespace_name,
     t.bigfile,
     t.status,
-    ROUND(df.total_bytes / 1024 / 1024 / 1024, 2) AS alloc_gb,
-    ROUND((df.total_bytes - NVL(fs.free_bytes, 0)) / 1024 / 1024 / 1024, 2) AS used_gb,
-    ROUND(df.total_maxbytes / 1024 / 1024 / 1024, 2) AS max_gb,
-    ROUND((df.total_bytes - NVL(fs.free_bytes, 0)) * 100 / NULLIF(df.total_maxbytes, 0), 1) AS pct_of_max,
-    CASE WHEN df.autoext_count > 0 THEN 'YES' ELSE 'NO' END AS autoext
+    ROUND(alloc.alloc_bytes/1024/1024/1024, 2) AS alloc_gb,
+    ROUND((alloc.alloc_bytes - NVL(f.free_bytes, 0))/1024/1024/1024, 2) AS used_gb,
+    ROUND(alloc.max_bytes/1024/1024/1024, 2) AS max_gb,
+    ROUND((alloc.alloc_bytes - NVL(f.free_bytes, 0)) * 100 /
+          NULLIF(alloc.max_bytes, 0), 1) AS pct_of_max,
+    alloc.autoext
 FROM dba_tablespaces t
-JOIN file_stats df ON t.tablespace_name = df.tablespace_name
-LEFT JOIN free_stats fs ON t.tablespace_name = fs.tablespace_name
+JOIN (
+    SELECT
+        tablespace_name,
+        SUM(bytes) AS alloc_bytes,
+        SUM(CASE WHEN maxbytes = 0 THEN bytes ELSE maxbytes END) AS max_bytes,
+        CASE WHEN SUM(CASE WHEN autoextensible = 'YES' THEN 1 ELSE 0 END) > 0
+             THEN 'YES' ELSE 'NO' END AS autoext
+    FROM dba_data_files
+    GROUP BY tablespace_name
+) alloc ON t.tablespace_name = alloc.tablespace_name
+LEFT JOIN (
+    SELECT tablespace_name, SUM(bytes) AS free_bytes
+    FROM dba_free_space
+    GROUP BY tablespace_name
+) f ON alloc.tablespace_name = f.tablespace_name
 ORDER BY pct_of_max DESC NULLS LAST;
 
 
