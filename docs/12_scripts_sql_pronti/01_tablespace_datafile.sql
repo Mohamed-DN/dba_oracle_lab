@@ -12,19 +12,18 @@ PROMPT ====================================================================
 -- È la query più importante: un tablespace può sembrare al 50% ma se il maxsize
 -- è vicino al bytes allocato, sei in pericolo.
 
-SET LINES 250 PAGES 200
-COL tablespace_name FOR A30
-COL bigfile FOR A7
+COL tablespace_name FOR A25
+COL contents FOR A10
 COL status FOR A9
 COL used_gb FOR 999,999.99
 COL alloc_gb FOR 999,999.99
 COL max_gb FOR 999,999.99
-COL pct_used FOR 999.9
 COL pct_of_max FOR 999.9
 COL autoext FOR A7
 
 SELECT
     t.tablespace_name,
+    t.contents,
     t.bigfile,
     t.status,
     ROUND(alloc.alloc_bytes/1024/1024/1024, 2) AS alloc_gb,
@@ -35,18 +34,23 @@ SELECT
     alloc.autoext
 FROM dba_tablespaces t
 JOIN (
-    SELECT
-        tablespace_name,
-        SUM(bytes) AS alloc_bytes,
-        SUM(CASE WHEN maxbytes = 0 THEN bytes ELSE maxbytes END) AS max_bytes,
-        CASE WHEN SUM(CASE WHEN autoextensible = 'YES' THEN 1 ELSE 0 END) > 0
-             THEN 'YES' ELSE 'NO' END AS autoext
-    FROM dba_data_files
+    SELECT tablespace_name, SUM(bytes) AS alloc_bytes,
+           SUM(CASE WHEN maxbytes = 0 THEN bytes ELSE maxbytes END) AS max_bytes,
+           CASE WHEN SUM(CASE WHEN autoextensible = 'YES' THEN 1 ELSE 0 END) > 0 THEN 'YES' ELSE 'NO' END AS autoext
+    FROM (
+        SELECT tablespace_name, bytes, maxbytes, autoextensible FROM dba_data_files
+        UNION ALL
+        SELECT tablespace_name, bytes, maxbytes, autoextensible FROM dba_temp_files
+    )
     GROUP BY tablespace_name
 ) alloc ON t.tablespace_name = alloc.tablespace_name
 LEFT JOIN (
-    SELECT tablespace_name, SUM(bytes) AS free_bytes
-    FROM dba_free_space
+    SELECT tablespace_name, SUM(free_bytes) AS free_bytes
+    FROM (
+        SELECT tablespace_name, bytes AS free_bytes FROM dba_free_space
+        UNION ALL
+        SELECT tablespace_name, free_space AS free_bytes FROM dba_temp_free_space
+    )
     GROUP BY tablespace_name
 ) f ON alloc.tablespace_name = f.tablespace_name
 ORDER BY pct_of_max DESC NULLS LAST;
