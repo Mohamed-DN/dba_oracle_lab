@@ -1271,6 +1271,7 @@ SELECT inst_id, instance_name, host_name FROM gv$instance;
 - Oracle Database 19c Concepts - Process Architecture
 - Oracle Database 19c Concepts - Logical Storage Structures
 - Oracle Database 19c Concepts - Physical Storage Structures
+- Oracle Database 19c Architecture Diagram (PDF)
 - Oracle Database 19c Concepts - Application and Networking Architecture
 - Oracle Database 19c Multitenant - Overview of the Multitenant Architecture
 - Oracle RAC Administration and Deployment Guide - Overview of Oracle RAC Architecture
@@ -1283,6 +1284,7 @@ Link ufficiali:
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/process-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/logical-storage-structures.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/physical-storage-structures.html
+- https://www.oracle.com/webfolder/technetwork/tutorials/architecture-diagrams/19/pdf/db-19c-architecture.pdf
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/application-and-networking-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/overview-of-the-multitenant-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/oracle-net-services-configuration-for-oracle-rac-databases.html

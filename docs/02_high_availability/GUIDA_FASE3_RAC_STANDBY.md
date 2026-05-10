@@ -359,7 +359,6 @@ systemctl is-active vboxservice 2>/dev/null || true
 
 Nota rapida altri hypervisor:
 - VMware: disattiva "Synchronize guest time with host" nelle opzioni VM.
-- Proxmox/KVM: disabilita il time sync guest-side equivalente, poi usa solo `chronyd`.
 
 Hardening Chrony su `racstby1` e `racstby2` (come `root`):
 

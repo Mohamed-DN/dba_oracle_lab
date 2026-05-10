@@ -26,7 +26,7 @@
 - ☁️ **Cloud OCI (opzionale):** [Indice area](./docs/09_cloud_oci/README.md)
 - 🎓 **Esami & Carriera:** [Indice area](./docs/10_esami_carriera/README.md)
 - 🛠️ **Strumenti operativi:** [Runbook](./docs/11_runbook_operativi/README.md) · [Script SQL](./docs/12_scripts_sql_pronti/README.md) · [Libreria script](./docs/13_libreria_completa_script/README.md)
-- 🤖 **Automazione/IaC:** [Ansible](./automation/README.md) · [Track Proxmox](./docs/15_proxmox_track/README.md) · [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- 🤖 **Automazione/IaC:** [Ansible](./automation/README.md)
 - 🧭 **Indice totale unico:** [docs/README.md](./docs/README.md)
 
 ---

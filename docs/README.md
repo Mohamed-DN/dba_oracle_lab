@@ -30,7 +30,6 @@
 
 - [Core Lab Fase 0→8](./01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
 - [GUIDA_FASE7_GOLDENGATE](./07_replication/GUIDA_FASE7_GOLDENGATE.md)
-- [Track Proxmox 1→5](./15_proxmox_track/README.md)
 
 ---
 
@@ -53,7 +52,6 @@
 | Script SQL rapidi | [12_scripts_sql_pronti/README.md](./12_scripts_sql_pronti/README.md) |
 | Libreria completa script | [13_libreria_completa_script/README.md](./13_libreria_completa_script/README.md) |
 | Enterprise Governance | [14_enterprise_governance/README.md](./14_enterprise_governance/README.md) |
-| Track Proxmox Moderno | [15_proxmox_track/README.md](./15_proxmox_track/README.md) |
 
 ---
 

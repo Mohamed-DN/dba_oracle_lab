@@ -31,8 +31,7 @@ automation/
 ├── ansible.cfg                            ← Configurazione Ansible
 ├── inventory/
 │   ├── production.ini                     ← Server di produzione
-│   ├── lab.ini                            ← Server del lab
-│   └── proxmox_dynamic_inventory.yml      ← Esempio inventory dinamico per VM Terraform
+│   └── lab.ini                            ← Server del lab
 ├── group_vars/
 │   └── all.yml                            ← Variabili globali (lab + produzione)
 ├── collections_requirements.yml           ← Collections consigliate (oravirt/community)
@@ -136,18 +135,6 @@ ansible-playbook -i inventory/production.ini playbooks/13_maa_guardrails.yml \
 # ---- CHECKMK + ORACLE CHECKS BOOTSTRAP ----
 ansible-playbook -i inventory/lab.ini playbooks/14_checkmk_oracle_checks_setup.yml
 ```
-
-## Integrazione Proxmox + Terraform + AWX
-
-Per il nuovo track moderno, la baseline inventory è in:
-
-- `automation/inventory/proxmox_dynamic_inventory.yml`
-
-I metadati host sono generati da Terraform in:
-
-- `infrastructure/proxmox/terraform/terraform_metadata.json`
-
-e possono essere ingestiti da AWX come inventory source.
 
 ---
 
