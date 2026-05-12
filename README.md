@@ -161,6 +161,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Troubleshooting Completo](./docs/05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | **MEGA-GUIDA**: metodo da zero, wait events, scenari reali |
 | [AWR/ASH/ADDM](./docs/05_performance/GUIDA_AWR_ASH_ADDM.md) | SQL Monitor, SPM, SQL Quarantine |
 | [Top 100 Script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md) | I 100 script più utili ogni giorno |
+| [ADRCI & Trace Enterprise](./docs/17_adrci_trace/README.md) | ADR, alert log, trace file, incident package |
 
 ---
 
