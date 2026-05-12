@@ -4,6 +4,9 @@
 
 Fornire una scheda rapida RMAN per backup, restore, recovery e monitoraggio quotidiano in ambienti Oracle 19c.
 
+> Versione essenziale: [Cheat Sheet RMAN (Essenziale)](./CHEAT_SHEET_RMAN_ESSENZIALE.md)  
+> Comandi completi: [Guida RMAN — Comandi Dettaglio](../15_rman_comandi/GUIDA_RMAN_COMANDI_DETTAGLIO.md)
+
 ## Teoria
 
 - **RMAN** è il tool nativo Oracle per backup/recovery consistenti.
