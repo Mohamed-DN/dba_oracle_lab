@@ -33,6 +33,21 @@ SHOW PARAMETER db_recovery_file_dest_size;
 SELECT * FROM v$recovery_area_usage;
 ```
 
+Checklist OS/ambiente:
+
+- `ORACLE_HOME` e `ORACLE_SID` corretti.
+- Listener raggiungibile e TNS risolto.
+- Password file presente per connessioni remote (`REMOTE_LOGIN_PASSWORDFILE`).
+- Ora di sistema sincronizzata (NTP) per coerenza timeline backup.
+
+Comandi utili:
+
+```bash
+echo $ORACLE_HOME
+echo $ORACLE_SID
+tnsping PROD
+```
+
 ### 2) Concetti chiave da ricordare
 
 - **Target**: il database di cui fai il backup.
@@ -45,6 +60,12 @@ SELECT * FROM v$recovery_area_usage;
   - **Level 0** = baseline.
   - **Level 1** = delta (cumulative o differential).
 - **Retention policy**: recovery window o redundancy.
+- **Controlfile vs Catalog**:
+  - Solo controlfile = metadati limitati nel tempo (`CONTROL_FILE_RECORD_KEEP_TIME`).
+  - Catalog = storico lungo, reporting avanzato e compliance.
+- **Backup piece**: file fisico generato da RMAN, contenuto nel backupset.
+- **Archivelog deletion policy**: evita cancellazioni premature in Data Guard.
+- **FRA vs non-FRA**: in FRA RMAN gestisce spazio e reclaim, fuori FRA serve gestione manuale.
 
 ### 3) Connessioni e sessione RMAN
 
@@ -86,7 +107,55 @@ RAC:
 CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
 ```
 
-### 5) Comandi RMAN essenziali (con uso tipico)
+### 4.1) Canali e device type (DISK/TAPE)
+
+```rman
+ALLOCATE CHANNEL c1 DEVICE TYPE DISK FORMAT '/backup/%d/%T/%U' MAXPIECESIZE 10G;
+ALLOCATE CHANNEL c2 DEVICE TYPE DISK FORMAT '/backup/%d/%T/%U' FILESPERSET 4;
+BACKUP SECTION SIZE 2G DATABASE;
+```
+
+Note operative:
+
+- `SECTION SIZE` abilita backup parallelo per datafile grandi.
+- Per tape/SBT: `DEVICE TYPE SBT_TAPE` + libreria MML.
+- Usa `MAXPIECESIZE` per limitare dimensione backup piece.
+
+### 4.2) Block Change Tracking (BCT)
+
+```sql
+SELECT status, filename FROM v$block_change_tracking;
+ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '+RECO/DB/bct_db.f';
+```
+
+Accelera gli incremental level 1 e riduce I/O.
+
+### 4.3) Controlfile autobackup e snapshot controlfile
+
+```rman
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/%d/snapcf_%d.f';
+```
+
+Essenziale per recovery in assenza di catalog o controlfile aggiornato.
+
+### 5) Strategie di backup e retention
+
+- **Full settimanale + incremental giornaliero** con archivelog continuo.
+- **Incremental merge** su image copy per restore rapido.
+- **Backup archivelog** frequente per ridurre RPO.
+- **Retention policy** allineata a SLA (es. 14-30 giorni) + `DELETE OBSOLETE`.
+- **Crosscheck** periodico per allineare metadati a storage reale.
+
+Esempio incremental merge:
+
+```rman
+BACKUP AS COPY DATABASE TAG 'INCR_MERGE_BASE';
+BACKUP INCREMENTAL LEVEL 1 FOR RECOVER OF COPY WITH TAG 'INCR_MERGE_BASE' DATABASE;
+RECOVER COPY OF DATABASE WITH TAG 'INCR_MERGE_BASE';
+```
+
+### 6) Comandi RMAN essenziali (con uso tipico)
 
 | Comando | Quando lo usi | Note operative |
 | --- | --- | --- |
@@ -104,9 +173,9 @@ CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
 | `SQL` | Esegue SQL in RMAN | `SQL "ALTER SYSTEM..."` |
 | `RUN` | Blocco atomico | Raggruppa comandi |
 
-### 6) Runbook operativi (scenari principali)
+### 7) Runbook operativi (scenari principali)
 
-#### 6.1 Full + archivelog
+#### 7.1 Full + archivelog
 
 ```rman
 RUN {
@@ -118,28 +187,28 @@ RUN {
 }
 ```
 
-#### 6.2 Incremental Level 0 / Level 1
+#### 7.2 Incremental Level 0 / Level 1
 
 ```rman
 BACKUP INCREMENTAL LEVEL 0 DATABASE TAG 'WEEKLY_L0';
 BACKUP INCREMENTAL LEVEL 1 DATABASE TAG 'DAILY_L1';
 ```
 
-#### 6.3 Backup tablespace / datafile mirato
+#### 7.3 Backup tablespace / datafile mirato
 
 ```rman
 BACKUP TABLESPACE users, indx TAG 'TS_USERS';
 BACKUP DATAFILE 7 TAG 'DF7';
 ```
 
-#### 6.4 Restore e recovery database
+#### 7.4 Restore e recovery database
 
 ```rman
 RESTORE DATABASE;
 RECOVER DATABASE;
 ```
 
-#### 6.5 Point-in-Time Recovery (PITR)
+#### 7.5 Point-in-Time Recovery (PITR)
 
 ```rman
 RUN {
@@ -149,14 +218,14 @@ RUN {
 }
 ```
 
-#### 6.6 Restore singolo datafile
+#### 7.6 Restore singolo datafile
 
 ```rman
 RESTORE DATAFILE 7;
 RECOVER DATAFILE 7;
 ```
 
-#### 6.7 Duplicate per clone/test
+#### 7.7 Duplicate per clone/test
 
 ```rman
 DUPLICATE TARGET DATABASE TO CLONE
@@ -165,7 +234,7 @@ DUPLICATE TARGET DATABASE TO CLONE
   SET CONTROL_FILES='+DATA/CLONE/control01.ctl';
 ```
 
-#### 6.8 Catalog e metadata recovery
+#### 7.8 Catalog e metadata recovery
 
 ```rman
 CREATE CATALOG;
@@ -174,7 +243,55 @@ RESYNC CATALOG;
 CATALOG START WITH '/backup/rman/';
 ```
 
-### 7) Monitoraggio e verifica continua
+#### 7.9 Restore controlfile e SPFILE
+
+```rman
+STARTUP NOMOUNT;
+RESTORE SPFILE FROM AUTOBACKUP;
+SHUTDOWN IMMEDIATE;
+STARTUP NOMOUNT;
+RESTORE CONTROLFILE FROM AUTOBACKUP;
+ALTER DATABASE MOUNT;
+RESTORE DATABASE;
+RECOVER DATABASE;
+```
+
+#### 7.10 Block Media Recovery (BMR)
+
+```rman
+BLOCKRECOVER DATAFILE 7 BLOCK 12345, 12346;
+```
+
+Utile per corruzioni limitate senza restore completo.
+
+#### 7.11 Recover tablespace (TSPITR semplificato)
+
+```rman
+RUN {
+  SET UNTIL TIME "TO_DATE('2026-05-10 10:30:00','YYYY-MM-DD HH24:MI:SS')";
+  RESTORE TABLESPACE users;
+  RECOVER TABLESPACE users;
+}
+```
+
+Per TSPITR complessi è necessario un **auxiliary** dedicato.
+
+#### 7.12 Restore validate (prova recovery)
+
+```rman
+RESTORE DATABASE VALIDATE;
+VALIDATE DATABASE;
+```
+
+#### 7.13 Duplicate per standby (Active Duplicate)
+
+```rman
+DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE
+  DORECOVER
+  NOFILENAMECHECK;
+```
+
+### 8) Monitoraggio e verifica continua
 
 Query utili:
 
@@ -188,6 +305,9 @@ FROM v$recovery_area_usage;
 
 SELECT * FROM v$backup;
 SELECT * FROM v$backup_piece;
+SELECT * FROM v$backup_set_details;
+SELECT * FROM v$rman_backup_job_details;
+SELECT * FROM v$backup_async_io;
 SELECT * FROM v$archived_log WHERE applied = 'NO';
 ```
 
@@ -198,9 +318,12 @@ LIST BACKUP SUMMARY;
 LIST ARCHIVELOG ALL;
 REPORT NEED BACKUP;
 REPORT OBSOLETE;
+SHOW ALL;
+LIST BACKUP BY FILE;
+LIST FAILURE;
 ```
 
-### 8) Best practice enterprise
+### 9) Best practice enterprise
 
 - **Tagga** tutti i backup (`TAG 'WEEKLY_L0'`) per audit.
 - **Compressione** media per bilanciare CPU/IO.
@@ -211,6 +334,21 @@ REPORT OBSOLETE;
 - **Test di restore** schedulati (non solo backup).
 - **Log centralizzati** con retention e alert su failure.
 - **Cifratura** (`CONFIGURE ENCRYPTION`) se richiesto da policy.
+- **Backup del catalogo** (se usato) e password file in copia sicura.
+- **Separazione storage** (backup su target distinto dall’origin).
+- **Documentazione runbook** aggiornata dopo ogni modifica.
+
+#### Sicurezza e compliance
+
+- `CONFIGURE ENCRYPTION FOR DATABASE ON;` con wallet gestito.
+- `CONFIGURE COMPRESSION` compatibile con politiche di cifratura.
+- Accessi RMAN separati (role `SYSBACKUP`).
+
+#### Manutenzione periodica
+
+- `CROSSCHECK BACKUP` + `DELETE EXPIRED` a frequenza fissa.
+- `REPORT OBSOLETE` + `DELETE OBSOLETE` in finestra di manutenzione.
+- Verifica `CONTROL_FILE_RECORD_KEEP_TIME` se usi solo controlfile.
 
 ---
 
@@ -237,6 +375,9 @@ Checklist da eseguire dopo ogni variazione di policy/backup:
 | `ORA-19502` | Write error su device | Verifica filesystem/ASM |
 | `RMAN-06059` | File datafile mancante | `RESTORE DATAFILE` e `RECOVER` |
 | `ORA-27072` | Permessi OS/ASM | Verifica owner e path |
+| `RMAN-08120` | Backup piece corrotto | Rigenera backup, `VALIDATE` |
+| `RMAN-06169` | Accesso catalog fallito | Verifica connessione e `RESYNC` |
+| `ORA-19815` | FRA piena / uso eccessivo | Estendi FRA o `DELETE OBSOLETE` |
 
 Azioni rapide:
 
@@ -253,5 +394,5 @@ Azioni rapide:
   <https://docs.oracle.com/cd/F19136_01/bradv/oracle-ai-database-backup-and-recovery-users-guide.pdf>
 - Oracle RMAN Reference (command syntax):  
   <https://docs.oracle.com/en/database/oracle/oracle-database/19/rcmrf/index.html>
-- Oracle Database Backup and Recovery Concepts:  
+- Oracle Database Backup and Recovery User's Guide (HTML):  
   <https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/index.html>
