@@ -18,6 +18,7 @@
 ## 🧾 Cheat Sheet specialistiche
 
 - [Cheat Sheet RMAN](./CHEAT_SHEET_RMAN.md)
+- [Cheat Sheet RMAN (Essenziale)](./CHEAT_SHEET_RMAN_ESSENZIALE.md)
 - [Cheat Sheet DGMGRL](./CHEAT_SHEET_DGMGRL.md)
 - [Cheat Sheet GoldenGate](./CHEAT_SHEET_GOLDENGATE.md)
 - [Guida ADRCI + Diagnostica Oracle](../05_performance/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
@@ -41,6 +42,7 @@
 | 06 | [Tablespace Pieno](./06_TABLESPACE_PIENO.md) | Alert: tablespace > 85% |
 | 07 | [CPU Alta](./07_CPU_ALTA.md) | Alert: CPU > 90% |
 | 08 | [ORA-Errors Comuni](./08_ORA_ERRORS.md) | Qualsiasi errore ORA- |
+| 19 | [Diagnosi Backup RMAN Falliti + Restore Senza Backup](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | Backup falliti o assenza di backup RMAN |
 
 ### Manutenzione Pianificata
 | # | Procedura | Quando |

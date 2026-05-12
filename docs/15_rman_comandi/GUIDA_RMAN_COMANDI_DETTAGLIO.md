@@ -1,0 +1,177 @@
+# Guida RMAN — Comandi Completi (Dettaglio Operativo)
+
+> Riferimento completo e ordinato dei comandi RMAN richiesti, con placeholder e note operative.
+
+---
+
+## Obiettivo
+
+- Centralizzare **tutti** i comandi richiesti in un unico file dettagliato.
+- Normalizzare la sintassi con placeholder chiari senza perdere i riferimenti originali.
+- Offrire un riferimento operativo pronto all’uso in laboratorio/produzione.
+
+---
+
+## Procedura operativa
+
+### 1) Avvio e connessioni RMAN (shell)
+
+```bash
+$ rman
+$ rman LOCATALOG
+$ rman TARGET SYS/pwd@target
+$ rman TARGET SYS/pwd@target LOCATALOG
+$ rman CATALOG rman/pwd@catdb
+$ rman TARGET=SYS/pwd@target CATALOG=rman/pwd@cat
+$ rman TARGET / CATALOG rman/rman@cat
+$ rman | tee rman.log
+$ rman help=yes
+```
+
+Note:
+- Sostituisci `pwd`, `target`, `catdb` con i tuoi valori reali.
+- `LOCATALOG` forza l’uso del controlfile in locale (senza recovery catalog).
+
+### 2) Gestione catalogo (upgrade/import)
+
+```rman
+RMAN> UPGRADE CATALOG;
+RMAN> IMPORT CATALOG rcat@scrbd;
+RMAN> IMPORT CATALOG rcat@scrbd DBID=<dbid>;
+```
+
+### 3) LIST (inventario, backup, failure, script)
+
+```rman
+RMAN> LIST BACKUP OF DATAFILE SUMMARY;
+RMAN> LIST BACKUP OF CONTROLS; -- refuso storico: usare CONTROLFILE
+RMAN> LIST BACKUP OF CONTROLFILE;
+RMAN> LIST BACKUP OF ARCHIVELOG FROM SEQUENCE <seq>;
+RMAN> LIST COPY OF CONTROLS; -- refuso storico: usare CONTROLFILECOPY
+RMAN> LIST COPY OF CONTROLFILE;
+RMAN> LIST EXPIRED COPY;
+RMAN> LIST BACKUPSET SUMMARY;
+RMAN> LIST BACKUPSET 109;
+RMAN> LIST BACKUPSET OF DATAFILE 1;
+RMAN> LIST ARCHIVELOG;
+RMAN> LIST ARCHIVELOG ALL LIKE '%5515%';
+RMAN> LIST CONTROLFLECOPY "/tmp/cntrlfile.copy"; -- refuso storico: CONTROLFILECOPY
+RMAN> LIST CONTROLFILECOPY "/tmp/cntrlfile.copy";
+RMAN> LIST SCRIPT NAMES;
+RMAN> LIST ALL SCRIPT NAMES;
+RMAN> LIST GLOBAL SCRIPT NAMES;
+RMAN> LIST FAILURE;
+RMAN> LIST FAILURE 420 DETAIL;
+RMAN> LIST FAILURE ALL;
+RMAN> LIST RESTORE POINT ALL;
+```
+
+### 4) SQL dentro RMAN / ALTER
+
+```rman
+RMAN> SQL 'ALTER TABLESPACE users ONLINE';
+RMAN> SQL 'ALTER DATABASE DATAFILE 64 OFFLINE';
+RMAN> SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+RMAN> SQL 'ALTER SYSTEM SWITCH LOGFILE';
+RMAN> SQL 'ALTER DATABASE BACKUP CONTROLS TO TRACE'; -- refuso storico: CONTROLFILE
+RMAN> SQL 'ALTER DATABASE BACKUP CONTROLFILE TO TRACE';
+
+RMAN> ALTER SYSTEM ARCHIVE LOG CURRENT;
+RMAN> ALTER SYSTEM SWITCH LOGFILE;
+```
+
+### 5) CONFIGURE — device type, canali, snapshot, compressione
+
+```rman
+RMAN> CONFIGURE DEFAULT DEVICE TYPE TO sbt_tape;
+RMAN> CONFIGURE DEFAULT DEVICE TYPE TO DISK;
+RMAN> CONFIGURE DEVICE TYPE sbt PARALLELISM 3;
+RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 4;
+RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 3 BACKUP TYPE TO BACKUPSET;
+
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt;
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt PARMS 'ENV=(mml_env_settings)'; -- da traccia: ENV = mml_env_settings
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt PARMS 'ENV=(NSR_SERVER=bksrv1)';
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt PARMS 'BLKSIZE=1048576';
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt FORMAT 'bkupl_%U';
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt CLEAR;
+RMAN> CONFIGURE CHANNEL 2 DEVICE TYPE sbt CONNECT 'SYS/pwd/node2' PARMS 'ENV=(NSR_SERVER=bksrv2)';
+
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/tmp/%U';
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT 'C:\backup\df%t_s%s_s%p';
+RMAN> CONFIGURE CHANNEL 2 DEVICE TYPE DISK FORMAT '/backup/db_%s%d_%p';
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT CLEAR;
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK DEBUG 5;
+
+RMAN> CONFIGURE BACKUP OPTIMIZATION ON;
+RMAN> CONFIGURE BACKUP OPTIMIZATION OFF;
+
+RMAN> CONFIGURE SNAPSHOT CONTROLLINE NAME TO '/backup/snapcf_%d.f'; -- refuso storico: CONTROLFILE
+RMAN> CONFIGURE SNAPSHOT CONTROLLINE NAME TO '+FRA/snap/snapcf_%d.f'; -- refuso storico: CONTROLFILE
+RMAN> CONFIGURE SNAPSHOT CONTROLLE NAME TO '/ocfs/oradata/snapcf'; -- refuso storico: CONTROLFILE
+RMAN> CONFIGURE SNAPSHOT CONTROLLINE NAME TO '/dev/sda'; -- refuso storico: CONTROLFILE
+RMAN> CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/backup/snapcf_%d.f';
+
+RMAN> CONFIGURE MAXSETSIZE TO 100M;
+RMAN> CONFIGURE MAXSETSIZE TO UNLIMITED;
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt MAXPIECESIZE 1G;
+
+RMAN> CONFIGURE EXCLUDE FOR TABLESPACE example;
+RMAN> CONFIGURE EXCLUDE CLEAR;
+
+RMAN> CONFIGURE AUXNAME FOR DATAFILE 4 TO '/oracle/auxfiles/aux_4.f';
+RMAN> CONFIGURE AUXNAME FOR DATAFILE 2 CLEAR;
+
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'BZIP2';
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'Zlib';
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'LOW';
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'HIGH';
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+
+RMAN> CONFIGURE DB_UNIQUE_NAME 'standby' CONNECT IDENTIFIER 'standby_cs';
+RMAN> CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME 'standby';
+RMAN> CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME ALL;
+RMAN> CONFIGURE DEFAULT DEVICE TYPE TO SBT FOR DB_UNIQUE_NAME po;
+```
+
+### 6) Script e RUN
+
+```rman
+RMAN> RUN [EXECUTE SCRIPT backup_whole];
+RMAN> RUN [EXECUTE SCRIPT backup_ts_any USING 'example'];
+RMAN> RUN [EXECUTE SCRIPT backup_df USING 3 test_backup df3];
+RMAN> RUN [EXECUTE GLOBAL SCRIPT global_backup_db];
+
+RMAN> DELETE SCRIPT backup_db;
+RMAN> DELETE GLOBAL SCRIPT global_backup_db;
+```
+
+### 7) SET e CATALOG
+
+```rman
+RMAN> SET ECHO ON;
+RMAN> SET ECHO OFF;
+RMAN> SET DATABASE '<db_unique_name>';
+
+RMAN> CATALOG DATAFILECOPY '<path>' LEVEL 0;
+RMAN> CATALOG CONTROLFILECOPY '/disk3/backup/cf_copy.bkp';
+RMAN> CATALOG ARCHIVELOG '<path/archivelog>';
+```
+
+---
+
+## Validazione finale
+
+- Esegui `LIST BACKUP SUMMARY` e `LIST FAILURE ALL` per assicurarti che inventario e failure siano coerenti.
+- Verifica che `CONFIGURE ...` mostri i valori attesi con `SHOW ALL`.
+- Controlla che i canali siano coerenti con il device type reale (DISK/SBT).
+
+---
+
+## Troubleshooting rapido
+
+- **Refusi in comandi**: usa le versioni corrette `CONTROLFILE/CONTROLFILECOPY`.
+- **Catalog mismatch**: esegui `RESYNC CATALOG` e `CROSSCHECK` prima dei `LIST`.
+- **Snapshot controlfile**: verifica path valido e permessi OS.
+- **SBT/Tape**: controlla libreria MML e variabili `ENV` per il media manager.
