@@ -133,6 +133,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | Guida | Cosa Impari |
 |---|---|
 | [RMAN Completa 19c](./docs/03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
+| [RMAN Comandi Enterprise](./docs/15_rman_comandi/README.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/03_backup_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
 
 ---

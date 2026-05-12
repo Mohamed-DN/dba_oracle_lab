@@ -41,6 +41,7 @@
 | Core Lab setup | [01_lab_setup/README.md](./01_lab_setup/README.md) |
 | High Availability / Data Guard | [02_high_availability/README.md](./02_high_availability/README.md) |
 | Backup & Recovery (RMAN) | [03_backup_recovery/README.md](./03_backup_recovery/README.md) |
+| RMAN Comandi Enterprise | [15_rman_comandi/README.md](./15_rman_comandi/README.md) |
 | Administration | [04_administration/README.md](./04_administration/README.md) |
 | Performance & Diagnostica | [05_performance/README.md](./05_performance/README.md) |
 | Patching & Upgrade | [06_patching_upgrade/README.md](./06_patching_upgrade/README.md) |
