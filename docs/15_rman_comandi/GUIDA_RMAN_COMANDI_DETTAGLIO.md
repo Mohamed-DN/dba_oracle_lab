@@ -17,20 +17,20 @@
 ### 1) Avvio e connessioni RMAN (shell)
 
 ```bash
-$ rman
-$ rman LOCATALOG
-$ rman TARGET SYS/pwd@target
-$ rman TARGET SYS/pwd@target LOCATALOG
-$ rman CATALOG rman/pwd@catdb
-$ rman TARGET=SYS/pwd@target CATALOG=rman/pwd@cat
-$ rman TARGET / CATALOG rman/rman@cat
-$ rman | tee rman.log
-$ rman help=yes
+rman
+rman NOCATALOG
+rman TARGET SYS/pwd@target
+rman TARGET SYS/pwd@target NOCATALOG
+rman CATALOG rman/pwd@catdb
+rman TARGET=SYS/pwd@target CATALOG=rman/pwd@cat
+rman TARGET / CATALOG rman/rman@cat
+rman | tee rman.log
+rman help=yes
 ```
 
 Note:
 - Sostituisci `pwd`, `target`, `catdb` con i tuoi valori reali.
-- `LOCATALOG` forza l’uso del controlfile in locale (senza recovery catalog).
+- `NOCATALOG` forza l’uso del controlfile in locale (senza recovery catalog).
 
 ### 2) Gestione catalogo (upgrade/import)
 
