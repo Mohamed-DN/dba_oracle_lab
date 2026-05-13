@@ -11,9 +11,9 @@
 - **Istanza (Instance)**: I processi in esecuzione e la memoria (RAM) allocata sul server. Esiste solo quando il server è acceso. Se riavvii la macchina, questa "Scompare" per poi ricrearsi.
 - **Database**: I file reali salvati sul disco fisso (l'hard disk). Questi non scompaiono quando spegni la macchina. Contengono sia i tuoi dati che i file di log per la sicurezza.
 - **SGA (System Global Area)**: La grande "memoria condivisa" (pool di RAM) che tutti i processi dell'istanza Oracle utilizzano insieme per lavorare velocemente senza accedere sempre al disco.
-- **PGA (Program Global Area)**: La "memoria privata" assegnata a ogni signola connessione o processo. Ad esempio, se fai un `ORDER BY`, Oracle fa il calcolo qui dentro in privato.
+- **PGA (Program Global Area)**: La "memoria privata" assegnata a ogni singola connessione o processo. Ad esempio, se fai un `ORDER BY`, Oracle fa il calcolo qui dentro in privato.
 - **Tablespace**: Un raccoglitore logico. È come una cartella di Windows: tu salvi i tuoi dati in un "Tablespace", e Oracle si preoccupa di spalmarli nei veri file fisici su disco (Datafiles).
-- **Redo Log**: Il diaro di bordo in cui Oracle scrive *qualsiasi modifica* tu faccia prima ancora di salvarla fisicamente nei Datafile. Serve per il recupero in caso di crash.
+- **Redo Log**: Il diario di bordo in cui Oracle scrive *qualsiasi modifica* tu faccia prima ancora di salvarla fisicamente nei Datafile. Serve per il recupero in caso di crash.
 - **Undo**: I dati temporanei usati per "Tornare indietro" (Rollback) o per permettere agli altri utenti di leggere i vecchi dati intanto che tu li stai modificando (Read Consistency).
 - **Data Guard**: Il sistema di sicurezza primario per avere un "Database Copia" (Standby) costantemente allineato a quello principale (Primary) per il Disaster Recovery.
 - **Oracle RAC (Real Application Clusters)**: Una tecnologia che ti permette di avere *più istanze* (su più server di calcolo) che operano contemporaneamente sullo *stesso database* fisico. Ideale per Alte Prestazioni (High Availability) e Scalabilità (Load Balancing).
@@ -159,27 +159,50 @@ Schema rapido:
 ```mermaid
 graph TB
     subgraph ORACLE_INSTANCE["ORACLE INSTANCE"]
-        subgraph SGA["SGA (System Global Area) - Condivisa"]
-            BC[Buffer Cache]
-            SP[Shared Pool]
-            RB[Redo Buffer]
-            LP["Large/Java/Streams"]
-        end
-        subgraph PGA["PGA (Program Global Area) - Privata"]
-            MEM["Memoria singola sessione: Sort, Hash, Stack"]
-        end
+    subgraph SGA["SGA (System Global Area) - Condivisa"]
+        FSGA["Fixed SGA"]
+        BC[Buffer Cache]
+        SP[Shared Pool]
+        RLB[Redo Log Buffer]
+        LP["Large Pool"]
+        JP["Java Pool"]
+        STP["Streams Pool"]
+        RC["Result Cache"]
+        IMC["In-Memory Column Store (opzionale)"]
+    end
+    subgraph PGA["PGA (Program Global Area) - Privata"]
+        MEM["Work Areas: Sort/Hash/Bitmap Merge"]
+        PSA["Private SQL Area & Cursor State"]
+        STK["Stack/Heap + variabili sessione"]
+    end
     end
 ```
 
 > **Spiegazione del Modello di Memoria (SGA vs PGA):**
 > La topologia della RAM in Oracle è simile a un grande ufficio. La scatola superiore **SGA (System Global Area)** rappresenta l'"area comune condivisa": c'è la **Buffer Cache** (l'immenso tavolo di lavoro dove vengono depositati i dati grezzi estratti dai dischi affinché tutti possano leggerli a velocità-RAM), la **Shared Pool** (l'enorme schedario delle query e dei piani di volo già analizzati) e il **Redo Buffer** (il vassoio dove si accumulano freneticamente le registrazioni delle modifiche prima di esser "scaricate" sul disco fisso).
-> La scatola inferiore **PGA (Program Global Area)** rappresenta invece la "scrivania privata asoolutamente isolata" di ciascun impiegato (il Server Process). Se tu utente hai chiesto di ordinare per ordine alfabetico un milione di record (`ORDER BY`), questo "ordinamento mentale (Sort/Hash)" viene fatto in gran segreto e al riparo da occhi indiscreti nella tua *PGA privata*, non disturbando così la memoria pubblica SGA.
+> La scatola inferiore **PGA (Program Global Area)** rappresenta invece la "scrivania privata assolutamente isolata" di ciascun impiegato (il Server Process). Se tu utente hai chiesto di ordinare per ordine alfabetico un milione di record (`ORDER BY`), questo "ordinamento mentale (Sort/Hash)" viene fatto in gran segreto e al riparo da occhi indiscreti nella tua *PGA privata*, non disturbando così la memoria pubblica SGA.
 
 ### 3.1 SGA: memoria condivisa dell'istanza
 
 Tutti i processi server e background leggono o scrivono la SGA.
 
-Componenti principali.
+Componenti principali della SGA:
+
+- **Fixed SGA**: area statica con puntatori, stato dell'istanza e strutture non ridimensionabili.
+- **Database Buffer Cache**: cache dei blocchi dati letti dai datafile.
+- **Shared Pool**: memoria condivisa per SQL, PL/SQL e metadati.
+- **Redo Log Buffer**: registro circolare dei change vectors prima della scrittura su redo log.
+- **Large Pool**: memoria per RMAN, shared server e parallel execution.
+- **Java Pool**: heap dedicato alla JVM interna (se usata).
+- **Streams Pool**: supporto a Streams/replication e AQ in alcuni scenari.
+- **Result Cache**: risultati SQL/PLSQL riutilizzabili senza riesecuzione.
+- **In-Memory Column Store** (opzionale): copia in formato colonnare per analitiche rapide.
+
+Componenti descritti di seguito.
+
+#### Fixed SGA
+
+Contiene strutture a dimensione fissa (state object, puntatori, buffer di controllo) e non viene "auto-tunata" da ASMM/AMM.
 
 #### Database Buffer Cache
 
@@ -226,6 +249,10 @@ Se la Shared Pool e' piccola o frammentata puoi vedere:
 - invalidazioni;
 - errori `ORA-04031`.
 
+#### Result Cache
+
+Cache di risultati SQL o funzioni PL/SQL riutilizzabili da più sessioni. Riduce parse/execute ripetuti quando i dati non cambiano.
+
 #### Redo Log Buffer
 
 Buffer circolare in RAM dove Oracle accumula i redo records prima che LGWR li scriva sui redo log online.
@@ -254,15 +281,19 @@ Usata se il database esegue componenti Java interni.
 
 Usata da funzionalita' di streaming e replication in alcuni scenari.
 
+#### In-Memory Column Store (opzionale)
+
+Se l'opzione Database In-Memory è attiva, Oracle può mantenere copie colonnari in SGA per velocizzare query analitiche e aggregazioni.
+
 ### 3.2 PGA: memoria privata (Program Global Area)
 
 A differenza della SGA (che è un'enorme piazza pubblica dove tutti i processi leggono e scrivono), la **PGA** è strettamente privata. Ogni singolo server process o background process possiede la propria PGA allocata dal sistema operativo al momento del suo avvio. Nessun altro processo può sbirciare nei dati della tua PGA.
 
 Cosa avviene qui dentro:
-- **Sort Area**: Se scrivi una query con `ORDER BY`, `GROUP BY` o un `ROLLUP`, Oracle usa questo spazio di calcolo in RAM per ordinare i dati. Se la Sort Area è troppo piccola, Oracle "spilla" (riversa) i dati nei file temporanei su disco (Tablespace TEMP), crollando le performance generali.
-- **Hash Area**: Sfruttata matematicamente per eseguire gli *Hash Join* tra tabelle giganti.
-- **Session Information & Cursor State**: Contiene lo stato attuale della connessione (chi sei, che privilegi hai attivi) e lo stato di esecuzione riga per riga di un cursore SQL.
-- **Stack Space**: Variabili locali e array passati alla sessione o ai programmi PL/SQL.
+- **Private SQL Area**: stato del cursore, bind variables, execution state e metriche per ogni SQL attivo.
+- **Work Areas (Sort/Hash/Bitmap Merge)**: memoria per `ORDER BY`, `GROUP BY`, `HASH JOIN`, `DISTINCT`. Se non basta, Oracle spill-a su TEMP.
+- **Session Memory (UGA nel modello dedicated)**: variabili di sessione, package state, contesto NLS, stato transazionale.
+- **Stack/Heap Space**: variabili locali, chiamate PL/SQL e strutture runtime.
 
 Il controllo della PGA è governato da parametri come `PGA_AGGREGATE_TARGET` (in cui imponi un limite soft totale per tutte le PGA sommate) e, da Oracle 12c, dal `PGA_AGGREGATE_LIMIT` (un limite hard per evitare che il DB consumi tutta la RAM del server esplodendo in errori OOM - Out of Memory).
 
@@ -1240,6 +1271,7 @@ SELECT inst_id, instance_name, host_name FROM gv$instance;
 - Oracle Database 19c Concepts - Process Architecture
 - Oracle Database 19c Concepts - Logical Storage Structures
 - Oracle Database 19c Concepts - Physical Storage Structures
+- Oracle Database 19c Architecture Diagram (PDF)
 - Oracle Database 19c Concepts - Application and Networking Architecture
 - Oracle Database 19c Multitenant - Overview of the Multitenant Architecture
 - Oracle RAC Administration and Deployment Guide - Overview of Oracle RAC Architecture
@@ -1252,6 +1284,7 @@ Link ufficiali:
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/process-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/logical-storage-structures.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/physical-storage-structures.html
+- https://www.oracle.com/webfolder/technetwork/tutorials/architecture-diagrams/19/pdf/db-19c-architecture.pdf
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/application-and-networking-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/overview-of-the-multitenant-architecture.html
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/oracle-net-services-configuration-for-oracle-rac-databases.html
@@ -1275,3 +1308,29 @@ Se devi ricordare e padroneggiare solo i concetti più mortali e fraintesi di tu
 6.  **I Multi-Tenant non sono Macchine Virtuali:** In 19c, l'avere 10 PDB inseriti in un CDB_ROOT non significa avere 10 istanze. Significa spartirsi tutti assieme matematicamente *l'unica grande memoria* (SGA e Background Process condivisi).
 7.  **La trinità del RAC (Real Application Clusters):** Sono più server di calcolo brutale che assaltano per vie asincrone una singola, unificata copia fisica dei dati parcheggiata in basso nell'array di dischi ASM usando il protocollo di interconnessione a fibra Cache Fusion per non pestarsi i piedi in memoria.
 8.  **Il Data Guard è un Tubo in Pressione:** L'altissima affidabilità non si fa solo copiando file magici, ma aprendo un tubo di rete e sparando transazionalmente via TCP/IP ogni Change Vector (REDO) generato sul server di Produzione riversandolo freneticamente nei datafiles del server di Emergenza in attesa costante.
+
+---
+
+## 24. Teoria (ripasso rapido)
+
+- L'istanza è RAM + processi; il database sono file permanenti.
+- La **SGA** è condivisa: Buffer Cache, Shared Pool, Redo Log Buffer, pool opzionali e Result Cache.
+- La **PGA** è privata: work area, private SQL area, stack/heap, session memory.
+
+## 25. Esempio (scenario da colloquio)
+
+Un utente lancia `SELECT ... ORDER BY` su una tabella grande. La query viene parsata nella Shared Pool, i blocchi arrivano in Buffer Cache, il sort usa la PGA. Se la PGA non basta, Oracle spill-a su TEMP; il redo log buffer registra le modifiche solo se la query fa DML.
+
+## 26. Validazione (check rapidi)
+
+- `SHOW PARAMETER sga`
+- `SHOW PARAMETER pga`
+- `SELECT name, value FROM v$sga;`
+- `SELECT name, value FROM v$pgastat;`
+- `SELECT component, current_size FROM v$memory_dynamic_components;`
+
+## 27. Troubleshooting (errori tipici)
+
+- `ORA-04031`: Shared Pool frammentata o sottodimensionata.
+- `ORA-04036`: superato `PGA_AGGREGATE_LIMIT` (PGA totale troppo alta).
+- `ORA-04030`: memoria di processo esaurita (stack/heap troppo piccoli o leak).
