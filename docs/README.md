@@ -30,7 +30,6 @@
 
 - [Core Lab Fase 0→8](./01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
 - [GUIDA_FASE7_GOLDENGATE](./07_replication/GUIDA_FASE7_GOLDENGATE.md)
-- [Track Proxmox 1→5](./15_proxmox_track/README.md)
 
 ---
 
@@ -42,8 +41,10 @@
 | Core Lab setup | [01_lab_setup/README.md](./01_lab_setup/README.md) |
 | High Availability / Data Guard | [02_high_availability/README.md](./02_high_availability/README.md) |
 | Backup & Recovery (RMAN) | [03_backup_recovery/README.md](./03_backup_recovery/README.md) |
+| RMAN Comandi Enterprise | [15_rman_comandi/README.md](./15_rman_comandi/README.md) |
 | Administration | [04_administration/README.md](./04_administration/README.md) |
 | Performance & Diagnostica | [05_performance/README.md](./05_performance/README.md) |
+| ADRCI & Trace Enterprise | [17_adrci_trace/README.md](./17_adrci_trace/README.md) |
 | Patching & Upgrade | [06_patching_upgrade/README.md](./06_patching_upgrade/README.md) |
 | Replica / GoldenGate | [07_replication/README.md](./07_replication/README.md) |
 | Monitoring | [08_monitoring/README.md](./08_monitoring/README.md) |
@@ -53,7 +54,6 @@
 | Script SQL rapidi | [12_scripts_sql_pronti/README.md](./12_scripts_sql_pronti/README.md) |
 | Libreria completa script | [13_libreria_completa_script/README.md](./13_libreria_completa_script/README.md) |
 | Enterprise Governance | [14_enterprise_governance/README.md](./14_enterprise_governance/README.md) |
-| Track Proxmox Moderno | [15_proxmox_track/README.md](./15_proxmox_track/README.md) |
 
 ---
 

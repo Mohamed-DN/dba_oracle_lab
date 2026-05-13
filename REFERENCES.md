@@ -135,12 +135,6 @@
 | Strumento | Descrizione | Link |
 |---|---|---|
 | **VirtualBox** | Hypervisor per il lab Vagrant | <https://www.virtualbox.org/wiki/Downloads> |
-| **Proxmox VE** | Piattaforma virtualizzazione per il track Proxmox | <https://pve.proxmox.com/wiki/Main_Page> |
-| Proxmox — Cloud-Init Support | Integrazione Cloud-Init con Proxmox per VM automation | <https://pve.proxmox.com/wiki/Cloud-Init_Support> |
-| Proxmox — Network Configuration | Configurazione rete bridge/VLAN su Proxmox | <https://pve.proxmox.com/wiki/Network_Configuration> |
-| **Terraform** | IaC per provisioning Proxmox | <https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli> |
-| Terraform — Variables | Documentazione variables Terraform | <https://developer.hashicorp.com/terraform/language/values/variables> |
-| Terraform — Outputs | Documentazione outputs Terraform | <https://developer.hashicorp.com/terraform/language/values/outputs> |
 | **Ansible AWX Operator** | Operator K8s per AWX (upstream Ansible Tower) | <https://ansible.readthedocs.io/projects/awx-operator/en/latest/> |
 | **K3s** | Kubernetes leggero per il capstone lab | <https://docs.k3s.io/> |
 | **RKE2** | Kubernetes enterprise-grade per il capstone lab | <https://docs.rke2.io/> |

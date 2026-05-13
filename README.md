@@ -26,7 +26,7 @@
 - ☁️ **Cloud OCI (opzionale):** [Indice area](./docs/09_cloud_oci/README.md)
 - 🎓 **Esami & Carriera:** [Indice area](./docs/10_esami_carriera/README.md)
 - 🛠️ **Strumenti operativi:** [Runbook](./docs/11_runbook_operativi/README.md) · [Script SQL](./docs/12_scripts_sql_pronti/README.md) · [Libreria script](./docs/13_libreria_completa_script/README.md)
-- 🤖 **Automazione/IaC:** [Ansible](./automation/README.md) · [Track Proxmox](./docs/15_proxmox_track/README.md) · [Terraform Proxmox](./infrastructure/proxmox/terraform/README.md)
+- 🤖 **Automazione/IaC:** [Ansible](./automation/README.md)
 - 🧭 **Indice totale unico:** [docs/README.md](./docs/README.md)
 
 ---
@@ -133,6 +133,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | Guida | Cosa Impari |
 |---|---|
 | [RMAN Completa 19c](./docs/03_backup_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
+| [RMAN Comandi Enterprise](./docs/15_rman_comandi/README.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/03_backup_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
 
 ---
@@ -160,6 +161,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Troubleshooting Completo](./docs/05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md) | **MEGA-GUIDA**: metodo da zero, wait events, scenari reali |
 | [AWR/ASH/ADDM](./docs/05_performance/GUIDA_AWR_ASH_ADDM.md) | SQL Monitor, SPM, SQL Quarantine |
 | [Top 100 Script DBA](./docs/05_performance/TOP_100_SCRIPT_DBA.md) | I 100 script più utili ogni giorno |
+| [ADRCI & Trace Enterprise](./docs/17_adrci_trace/README.md) | ADR, alert log, trace file, incident package |
 
 ---
 
