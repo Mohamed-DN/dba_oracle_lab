@@ -4,8 +4,7 @@
 
 | Documento | Descrizione |
 | --- | --- |
-| [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Guida completa ai comandi RMAN, procedure e troubleshooting |
-| [GUIDA_RMAN_COMANDI_DETTAGLIO.md](./GUIDA_RMAN_COMANDI_DETTAGLIO.md) | Elenco completo dei comandi RMAN con note e placeholder |
+| [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Guida completa e operativa RMAN (Multitenant, TDE, Troubleshooting, Backup/Restore) |
 
 ---
 
