@@ -1239,3 +1239,15 @@ su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT force_logging FROM v\\\$data
 ---
 
 **← [FASE 1: Preparazione OS](../01_lab_setup/GUIDA_FASE1_PREPARAZIONE_OS.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 3: RAC Standby](../02_high_availability/GUIDA_FASE3_RAC_STANDBY.md)**
+
+## Obiettivo
+Concludere la Fase 2 con un cluster RAC primario installato, patchato e validato in modo ripetibile.
+
+## Procedura operativa
+Seguire i passi della guida in ordine, senza saltare prerequisiti di rete, storage ASM, pre-check cluvfy e patching.
+
+## Validazione finale
+Confermare esito positivo con verifiche cluster, ASM e database indicate nella guida prima di passare alla fase successiva.
+
+## Troubleshooting rapido
+In caso di errore, rieseguire i controlli su prerequisiti (rete, SSH, tempo, ASM), leggere il messaggio specifico e applicare il fix nella sezione corrispondente.
