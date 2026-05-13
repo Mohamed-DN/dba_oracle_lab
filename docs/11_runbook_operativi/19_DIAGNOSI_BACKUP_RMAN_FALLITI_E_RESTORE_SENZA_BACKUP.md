@@ -18,6 +18,60 @@
 
 ## 2. Triage Iniziale (Primi 5 Minuti)
 
+### 2.0 Dal messaggio di alert al job RMAN (esempio KB3888789)
+
+Esempio notifica:
+`KB3888789 - Profile dk1-pdb-3_cp3neml3, instance CP3NEML3_DK1_CAIUM, DB INCR backup (start time 05/09/2026 05:00) ended at 05/09/2026 05:57 with status FAILED`
+
+| Campo nel messaggio | Significato operativo | Come usarlo subito |
+|---|---|---|
+| **Profile** | Ambiente/cluster | Filtra i log del tool di scheduling (OEM/cron/backup manager) |
+| **Instance** | Istanza Oracle | Connettiti alla giusta istanza o al CDB corretto |
+| **DB INCR backup** | Tipo backup | Mappa su `input_type` (`DB INCR`, `DB FULL`, `ARCHIVELOG`) |
+| **start/end time** | Finestra temporale | Usa la finestra per cercare il job in `v$rman_backup_job_details` |
+| **status FAILED** | Esito | Avvia subito RCA, vedi sezioni 2.x e 3.x |
+
+**Step A — Trova il job RMAN esatto**
+```sql
+-- Ultimi 7 giorni (aggiungi un filtro su input_type solo se necessario).
+SELECT session_key, input_type, status,
+       start_time, end_time,
+       output_device_type,
+       ROUND(elapsed_seconds/60) AS duration_min
+FROM v$rman_backup_job_details
+WHERE start_time >= SYSDATE - 7
+  AND start_time < SYSDATE
+ORDER BY start_time DESC;
+```
+
+**Step B — Estrarre lo stack di errore dal job**
+```sql
+SELECT start_time,
+       operation, status, object_type,
+       SUBSTR(output,1,200) AS error_msg
+FROM v$rman_status
+WHERE session_key = <session_key>
+  AND start_time >= SYSDATE - 7
+  AND status NOT IN ('COMPLETED','RUNNING')
+ORDER BY start_time;
+```
+
+**Step C — Recupera il log RMAN completo**
+```bash
+# 1) Capisci da dove parte il job (cron/OEM/backup manager)
+crontab -l | grep -i rman
+
+# 2) Cerca lo script e il percorso log
+grep -R "rman target" /home/oracle/scripts -n
+grep -R "log=" /home/oracle/scripts -n
+
+# 3) Apri il log del job fallito
+tail -200 /path/log/rman_20260509_0500.log
+```
+
+> Se usi OEM/Cloud Control: apri il job → **Output** → copia l'errore RMAN/ORA.
+> Se usi un backup manager (NetBackup/Commvault/etc), apri il **job log** nel tool.
+
 ### 2.1 Identifica il Fallimento
 
 ```sql
