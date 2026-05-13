@@ -33,15 +33,14 @@ Esempio notifica:
 
 **Step A — Trova il job RMAN esatto**
 ```sql
--- Usa il formato data corretto per il tuo NLS (05/09 = 5 settembre).
+-- Ultimi 7 giorni (aggiungi un filtro su input_type solo se necessario).
 SELECT session_key, input_type, status,
        start_time, end_time,
        output_device_type,
        ROUND(elapsed_seconds/60) AS duration_min
 FROM v$rman_backup_job_details
-WHERE start_time BETWEEN TO_DATE('2026-09-05 05:00', 'YYYY-MM-DD HH24:MI') - (5/1440)
-                    AND TO_DATE('2026-09-05 05:00', 'YYYY-MM-DD HH24:MI') + (120/1440)
-  AND UPPER(input_type) LIKE '%DB INCR%'
+WHERE start_time >= SYSDATE - 7
+  AND start_time < SYSDATE
 ORDER BY start_time DESC;
 ```
 
@@ -52,6 +51,7 @@ SELECT start_time,
        SUBSTR(output,1,200) AS error_msg
 FROM v$rman_status
 WHERE session_key = <session_key>
+  AND start_time >= SYSDATE - 7
   AND status NOT IN ('COMPLETED','RUNNING')
 ORDER BY start_time;
 ```
