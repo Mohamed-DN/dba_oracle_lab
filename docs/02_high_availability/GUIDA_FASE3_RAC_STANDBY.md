@@ -2609,3 +2609,15 @@ WHERE name IN ('db_name','db_unique_name','log_archive_config',
 ---
 
 **← [FASE 2: Grid + RAC](../01_lab_setup/GUIDA_FASE2_GRID_E_RAC.md)** | 📍 [Indice Percorso Lab](../00_lab_percorso/README.md) | **→ [FASE 4: Data Guard](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**
+
+## Obiettivo
+Completare la creazione dello standby RAC e attivare una replica Data Guard stabile e verificabile.
+
+## Procedura operativa
+Eseguire i blocchi della guida in sequenza, dalla preparazione nodi standby fino a duplicate RMAN e avvio apply.
+
+## Validazione finale
+Verificare che lo standby sia registrato, sincronizzato e in apply continuo con i test previsti nella guida.
+
+## Troubleshooting rapido
+Se una fase fallisce, isolare il punto di errore (rete, listener, RMAN, apply) e applicare il recupero indicato nella sezione dedicata.
