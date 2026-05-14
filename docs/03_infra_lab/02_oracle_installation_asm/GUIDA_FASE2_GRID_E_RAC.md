@@ -1040,7 +1040,6 @@ rm -rf /u01/app/patch/*
 rm -f /tmp/p*.zip
 # Ripeti su rac2
 ```
-```
 
 ### Step 5: datapatch (dopo la creazione del DB)
 
