@@ -1032,3 +1032,298 @@ ORDER BY start_time DESC;
 ---
 
 **Documento confidenziale ad uso interno DBA. Aggiornare dopo ogni incidente. Ultima revisione: Maggio 2026.**
+
+
+---
+
+## PARTE V — SCENARI AGGIUNTIVI CRITICI
+
+---
+
+## 19. Backup Fallito per Filesystem OS Pieno (fuori FRA)
+
+### 19.1 Scenario
+
+Il backup scrive su un filesystem locale o NFS (non nella FRA gestita da Oracle)
+e il filesystem raggiunge il 100%. Errori tipici: `ORA-19502`, `ORA-27072`, `ORA-27063`.
+
+### 19.2 Diagnostica
+
+```bash
+# Check immediato spazio
+df -Th /backup /u01 /u02 /opt/oracle /home/oracle
+df -ih /backup  # check inode (filesystem pieno di piccoli file)
+
+# Chi sta occupando spazio?
+du -sh /backup/* | sort -rh | head -20
+du -sh /backup/rman/* | sort -rh | head -20
+
+# File piu grandi
+find /backup -type f -size +1G -exec ls -lh {} \; 2>/dev/null | sort -k5 -rh | head -20
+
+# File vecchi che possono essere rimossi
+find /backup -name "*.bkp" -mtime +30 -exec ls -lh {} \;
+find /backup -name "*.log" -mtime +30 -exec ls -lh {} \;
+```
+
+```sql
+-- Se la destinazione e in ASM
+SELECT name, total_mb, free_mb, ROUND(free_mb/total_mb*100,1) AS pct_free
+FROM v$asm_diskgroup;
+```
+
+### 19.3 Remediation
+
+```bash
+# 1. Libera spazio immediato: comprimi log vecchi
+gzip /backup/logs/*.log
+
+# 2. Cancella backup RMAN obsoleti (SEMPRE via RMAN, mai rm!)
+rman target / <<EOF
+CROSSCHECK BACKUP;
+DELETE NOPROMPT OBSOLETE;
+DELETE NOPROMPT EXPIRED BACKUP;
+EXIT;
+EOF
+
+# 3. Se DEVI usare rm (emergenza assoluta):
+# PRIMA cataloga, poi cancella, poi crosscheck
+# rm /backup/rman/old_file.bkp
+# rman target / -e "CROSSCHECK BACKUP;"
+
+# 4. Estendi filesystem (LVM)
+# lvextend -L +50G /dev/vg_backup/lv_backup
+# resize2fs /dev/vg_backup/lv_backup  # ext4
+# xfs_growfs /backup                   # xfs
+```
+
+### 19.4 Prevenzione
+
+```bash
+# Alert Nagios/CheckMK per filesystem > 85%
+# check_disk -w 15% -c 10% -p /backup
+
+# Script cron per pulizia automatica
+# 0 5 * * * oracle /home/oracle/scripts/cleanup_old_backups.sh
+```
+
+---
+
+## 20. Backup Fallito Durante/Dopo Switchover o Failover
+
+### 20.1 Scenario
+
+Un backup era in esecuzione quando avviene uno switchover (pianificato)
+o un failover (non pianificato) di Data Guard. Il backup fallisce con errori come:
+- `RMAN-03009: failure of backup command`
+- `ORA-01110: data file ... does not exist`  
+- `RMAN-06059: expected archived log not found`
+- `ORA-16000: database open for read-only access` (se la standby non e ADG)
+
+### 20.2 Diagnostica Post-Switchover
+
+```sql
+-- 1. Verifica il ruolo attuale del database
+SELECT database_role, switchover_status, open_mode FROM v$database;
+
+-- 2. Verifica che l'RMAN configuration sia valida per il nuovo ruolo
+-- RMAN> SHOW ALL;
+
+-- 3. Verifica archivelog deletion policy
+-- RMAN> SHOW ARCHIVELOG DELETION POLICY;
+
+-- 4. Se la standby (ora primary) non ha i metadati dei backup:
+SELECT * FROM v$rman_backup_job_details WHERE start_time > SYSDATE-1;
+```
+
+### 20.3 Remediation Post-Switchover
+
+```rman
+-- 1. Crosscheck per aggiornare i metadati nel nuovo primary
+CROSSCHECK BACKUP;
+CROSSCHECK ARCHIVELOG ALL;
+DELETE EXPIRED BACKUP;
+DELETE EXPIRED ARCHIVELOG ALL;
+
+-- 2. Se usi catalog: resync
+RESYNC CATALOG;
+
+-- 3. Forza un nuovo Full L0 sul nuovo primary (nuova baseline)
+BACKUP INCREMENTAL LEVEL 0 
+  AS COMPRESSED BACKUPSET 
+  DATABASE TAG 'POST_SWITCHOVER_L0'
+  PLUS ARCHIVELOG DELETE INPUT;
+
+-- 4. Verifica che la configurazione DG sia aggiornata
+SHOW ALL;
+-- Se necessario riconfigura:
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+```
+
+### 20.4 Remediation Post-Failover
+
+```rman
+-- Dopo un FAILOVER, il vecchio primary e DISMOUNTED.
+-- La nuova primary (ex-standby) potrebbe non avere tutti i backup.
+
+-- 1. Se il catalog e disponibile, tutti i metadati sono li
+RESYNC CATALOG;
+
+-- 2. Se NON c'e catalog, cataloga i backup esistenti
+CATALOG START WITH '+RECO/';
+CATALOG START WITH '/backup/';
+
+-- 3. Nuovo Full L0 obbligatorio (la catena incrementale e rotta)
+BACKUP INCREMENTAL LEVEL 0 DATABASE TAG 'POST_FAILOVER_L0'
+  PLUS ARCHIVELOG DELETE INPUT;
+
+-- 4. Reinstanzia la vecchia primary come standby
+-- (vedi guida Data Guard per REINSTATE)
+```
+
+### 20.5 Prevenzione
+
+- Schedulare i backup FUORI dalla finestra di switchover pianificato
+- Usare un **Recovery Catalog** (i metadati sopravvivono al switchover)
+- Configurare backup sulla STANDBY (offloading) cosi il primary non e impattato
+- Script post-switchover che forza un Full L0 automatico
+
+---
+
+## 21. Backup Killato (Processo Terminato Manualmente)
+
+### 21.1 Scenario
+
+Un DBA o un sysadmin killa il processo RMAN o il server process Oracle:
+- `kill -9` del processo rman o del server process
+- `ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;`
+- Il job scheduler (cron/DBMS_SCHEDULER) va in timeout
+- OOM Killer di Linux killa il processo
+
+Errori tipici:
+- `RMAN-03009: failure of backup command on channel`
+- `ORA-03113: end-of-file on communication channel`
+- `ORA-01013: user requested cancel of current operation`
+- `RMAN-10038: database session for channel ... terminated`
+
+### 21.2 Diagnostica
+
+```sql
+-- 1. Verifica se ci sono sessioni RMAN ancora attive
+SELECT s.sid, s.serial#, s.status, s.program, s.sql_id,
+       p.spid AS os_pid
+FROM v$session s
+JOIN v$process p ON s.paddr = p.addr
+WHERE s.program LIKE '%rman%' OR s.module LIKE '%backup%';
+
+-- 2. Check v$rman_status per lo stato del job
+SELECT operation, status, start_time, end_time, output
+FROM v$rman_status
+WHERE start_time > SYSDATE - 1
+ORDER BY start_time DESC;
+
+-- 3. Verifica se ci sono backup piece "in progress" (incompleti)
+SELECT handle, status, tag, start_time, completion_time
+FROM v$backup_piece
+WHERE status = 'X';  -- X = expired/incomplete
+```
+
+```bash
+# Check OOM Killer (Linux)
+dmesg | grep -i "oom\|kill" | tail -20
+grep -i "oom\|kill" /var/log/messages | tail -20
+
+# Check se il processo e stato killato
+grep -i "rman\|ora_" /var/log/messages | tail -20
+```
+
+### 21.3 Remediation
+
+```rman
+-- 1. Crosscheck per identificare backup incompleti
+CROSSCHECK BACKUP;
+
+-- 2. Cancella i backup piece incompleti
+DELETE NOPROMPT EXPIRED BACKUP;
+
+-- 3. Se ci sono sessioni orfane, killale
+-- SQL> ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
+
+-- 4. Rilancia il backup
+BACKUP AS COMPRESSED BACKUPSET 
+  DATABASE TAG 'POST_KILL_RETRY'
+  PLUS ARCHIVELOG DELETE INPUT;
+```
+
+### 21.4 Prevenzione
+
+- Non usare MAI `kill -9` su processi Oracle. Usa `ALTER SYSTEM CANCEL SESSION`.
+- Configura timeout adeguati in crontab e DBMS_SCHEDULER
+- Configura `vm.overcommit_memory` e swap adeguati per evitare OOM Killer
+- Imposta `RMAN> CONFIGURE CONTROLFILE AUTOBACKUP ON;` (salva metadata anche se kill)
+
+---
+
+## 22. Backup Fallito per Problemi di Performance/Timeout
+
+### 22.1 Scenario
+
+Il backup non fallisce con un errore chiaro ma:
+- Dura troppo tempo (es. 12h invece di 2h)
+- Va in timeout prima di completare
+- Il throughput I/O e molto basso
+
+### 22.2 Diagnostica
+
+```sql
+-- 1. Throughput attuale del backup
+SELECT device_type, type, status,
+       ROUND(bytes/1024/1024) AS mb,
+       ROUND(effective_bytes_per_second/1024/1024) AS mb_per_sec,
+       ROUND(elapsed_seconds/60) AS elapsed_min
+FROM v$backup_async_io
+WHERE type != 'AGGREGATE'
+ORDER BY bytes DESC FETCH FIRST 10 ROWS ONLY;
+
+-- 2. Wait events durante il backup
+SELECT event, wait_class, total_waits, 
+       ROUND(time_waited_micro/1e6,1) AS wait_sec
+FROM v$session_event
+WHERE sid IN (
+  SELECT sid FROM v$session WHERE program LIKE '%rman%'
+)
+ORDER BY time_waited_micro DESC FETCH FIRST 10 ROWS ONLY;
+
+-- 3. I/O stats del sistema
+SELECT name, value FROM v$sysstat 
+WHERE name IN ('physical read total bytes','physical write total bytes');
+
+-- 4. Confronto con storici
+SELECT input_type, 
+       ROUND(AVG(elapsed_seconds)/60) AS avg_min,
+       ROUND(MIN(elapsed_seconds)/60) AS min_min,
+       ROUND(MAX(elapsed_seconds)/60) AS max_min
+FROM v$rman_backup_job_details
+WHERE status = 'COMPLETED' AND start_time > SYSDATE - 30
+GROUP BY input_type;
+```
+
+### 22.3 Remediation
+
+```rman
+-- Aumenta parallelismo
+CONFIGURE DEVICE TYPE DISK PARALLELISM 8;
+
+-- Usa SECTION SIZE per parallelizzare singoli datafile grandi
+BACKUP SECTION SIZE 4G DATABASE;
+
+-- Usa compressione LOW se CPU e il bottleneck
+CONFIGURE COMPRESSION ALGORITHM 'LOW';
+
+-- Aumenta buffer size dei canali
+RUN {
+  ALLOCATE CHANNEL c1 DEVICE TYPE DISK MAXOPENFILES 8;
+  ALLOCATE CHANNEL c2 DEVICE TYPE DISK MAXOPENFILES 8;
+  BACKUP DATABASE;
+}
+```
