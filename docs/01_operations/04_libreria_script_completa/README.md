@@ -15,9 +15,9 @@
 ```
 libreria_oracle/
 │
-├── 01_asm_storage/          ← Gestione dischi ASM: add, remove, migrate LUN
-├── 02_dataguard/            ← Data Guard: config, verifica GAP, recovery DR
-├── 03_monitoring_scripts/   ← 586 script monitoraggio (sessioni, lock, I/O, ASH, rete)
+├── asm_storage/          ← Gestione dischi ASM: add, remove, migrate LUN
+├── dataguard/            ← Data Guard: config, verifica GAP, recovery DR
+├── monitoring_scripts/   ← 586 script monitoraggio (sessioni, lock, I/O, ASH, rete)
 │   ├── community_gwenshap/  ← 25 script da GwenShap (Oracle ACE)
 │   └── community_jkstill/   ← 509 script da Jared Still (Oracle guru)
 │       ├── sessions_locks/  ← Lock, blocking, kill session
@@ -34,17 +34,17 @@ libreria_oracle/
 │       ├── temp_sorts/      ← TEMP usage, sort operations
 │       └── general/         ← 359 script generali (il cuore della collezione)
 │
-├── 04_user_management/      ← Creazione utenti, profili password, Oracle Vault
-├── 05_patching/             ← Procedure patching, Golden Images (OHCTL)
-├── 06_backup_recovery/      ← Flashback, Restore Point, verifiche RMAN
-├── 07_performance_tuning/   ← 225 script: SPM, AWR analysis, statistiche
+├── user_management/      ← Creazione utenti, profili password, Oracle Vault
+├── patching/             ← Procedure patching, Golden Images (OHCTL)
+├── backup_recovery/      ← Flashback, Restore Point, verifiche RMAN
+├── performance_tuning/   ← 225 script: SPM, AWR analysis, statistiche
 │   └── community_scripts/   ← Script performance dalla community Oracle
 │
-├── 08_tde_security/         ← Transparent Data Encryption, Vault, audit
-├── 09_compression/          ← Compressione HCC, DBMS_REDEFINITION online
-├── 10_partition_manager/    ← Package gestione automatica partizioni
-├── 11_sql_templates/        ← Template DDL/DML standard con error handling
-└── 12_utilities/            ← Utility: TEMP/UNDO monitor, MView refresh, profili
+├── tde_security/         ← Transparent Data Encryption, Vault, audit
+├── compression/          ← Compressione HCC, DBMS_REDEFINITION online
+├── partition_manager/    ← Package gestione automatica partizioni
+├── sql_templates/        ← Template DDL/DML standard con error handling
+└── utilities/            ← Utility: TEMP/UNDO monitor, MView refresh, profili
     └── community_scripts/   ← 98 script utility dalla community
         ├── bin/             ← Script bash/perl operativi
         ├── cdb_pdb/         ← Query CDB/PDB
@@ -57,18 +57,18 @@ libreria_oracle/
 <details>
   <summary>🧭 Dettaglio rapido per sottodirectory principali (click per espandere)</summary>
 
-- [01_asm_storage/](./01_asm_storage/) — add/remove ASM disk, procedure storage, note operative.
-- [02_dataguard/](./02_dataguard/) — runbook e note Data Guard (gap, recovery, servizi read-only).
-- [03_monitoring_scripts/](./03_monitoring_scripts/) — monitoraggio esteso (sessioni, lock, I/O, ASH, rete) + community.
-- [04_user_management/](./04_user_management/) — template per utenti, ruoli, profili password.
-- [05_patching/](./05_patching/) — asset di patching e golden image workflow.
-- [06_backup_recovery/](./06_backup_recovery/) — RMAN check, flashback, restore point.
-- [07_performance_tuning/](./07_performance_tuning/) — tuning SQL e performance scripts (SPM/AWR/stats).
-- [08_tde_security/](./08_tde_security/) — script e note security/TDE.
-- [09_compression/](./09_compression/) — compressione e supporto a redefinition.
-- [10_partition_manager/](./10_partition_manager/) — automazione gestione partizioni.
-- [11_sql_templates/](./11_sql_templates/) — template SQL standardizzati con error handling.
-- [12_utilities/](./12_utilities/) — utility operative (TEMP/UNDO, scheduler, CDB/PDB, storage).
+- [asm_storage/](./asm_storage/) — add/remove ASM disk, procedure storage, note operative.
+- [dataguard/](./dataguard/) — runbook e note Data Guard (gap, recovery, servizi read-only).
+- [monitoring_scripts/](./monitoring_scripts/) — monitoraggio esteso (sessioni, lock, I/O, ASH, rete) + community.
+- [user_management/](./user_management/) — template per utenti, ruoli, profili password.
+- [patching/](./patching/) — asset di patching e golden image workflow.
+- [backup_recovery/](./backup_recovery/) — RMAN check, flashback, restore point.
+- [performance_tuning/](./performance_tuning/) — tuning SQL e performance scripts (SPM/AWR/stats).
+- [tde_security/](./tde_security/) — script e note security/TDE.
+- [compression/](./compression/) — compressione e supporto a redefinition.
+- [partition_manager/](./partition_manager/) — automazione gestione partizioni.
+- [sql_templates/](./sql_templates/) — template SQL standardizzati con error handling.
+- [utilities/](./utilities/) — utility operative (TEMP/UNDO, scheduler, CDB/PDB, storage).
 
 </details>
 
@@ -78,18 +78,18 @@ libreria_oracle/
 
 | # | Area | Script operativi | Cosa Trovi | Quando Lo Usi |
 |---|---|---|---|---|
-| 01 | [ASM & Storage](./01_asm_storage/) | 26 | Add/remove disco ASM, health check storage, failgroup | Capacity planning, sostituzione LUN |
-| 02 | [Data Guard](./02_dataguard/) | 0 | Categoria documentale/runbook DG | Setup standby, troubleshooting replica |
-| 03 | [Monitoring](./03_monitoring_scripts/) | **560** | Sessioni, lock, CPU, I/O, ASH, rete, DRCP, MView | **Ogni giorno!** Morning check, incident |
-| 04 | [Utenti](./04_user_management/) | 5 | Template creazione utenti, profili, password policy | Richiesta HR, nuova applicazione |
-| 05 | [Patching](./05_patching/) | 2 | Template/asset patching operativi | Quarterly patching window |
-| 06 | [Backup & Recovery](./06_backup_recovery/) | 12 | Flashback, Restore Point, RMAN checks | Pre-upgrade, disaster recovery |
-| 07 | [Performance](./07_performance_tuning/) | **230** | SPM, AWR, analisi statistiche, SQL tuning | Query lente, capacity, review settimanale |
-| 08 | [TDE & Security](./08_tde_security/) | 8 | Transparent Data Encryption, audit, Vault | Compliance, audit sicurezza |
-| 09 | [Compressione](./09_compression/) | 1 | DDL di supporto a compressione/redefinition | Ridurre storage, near-zero downtime |
-| 10 | [Partition Manager](./10_partition_manager/) | 2 | Package gestione partizioni automatiche | Tabelle > 100M righe |
-| 11 | [Template SQL](./11_sql_templates/) | 17 | Template DDL/DML standard con error handling | Sviluppo, standardizzazione |
-| 12 | [Utility](./12_utilities/) | **102** | TEMP/UNDO monitor, MView refresh, profili UNIX | Supporto quotidiano, troubleshooting |
+| 01 | [ASM & Storage](./asm_storage/) | 26 | Add/remove disco ASM, health check storage, failgroup | Capacity planning, sostituzione LUN |
+| 02 | [Data Guard](./dataguard/) | 0 | Categoria documentale/runbook DG | Setup standby, troubleshooting replica |
+| 03 | [Monitoring](./monitoring_scripts/) | **560** | Sessioni, lock, CPU, I/O, ASH, rete, DRCP, MView | **Ogni giorno!** Morning check, incident |
+| 04 | [Utenti](./user_management/) | 5 | Template creazione utenti, profili, password policy | Richiesta HR, nuova applicazione |
+| 05 | [Patching](./patching/) | 2 | Template/asset patching operativi | Quarterly patching window |
+| 06 | [Backup & Recovery](./backup_recovery/) | 12 | Flashback, Restore Point, RMAN checks | Pre-upgrade, disaster recovery |
+| 07 | [Performance](./performance_tuning/) | **230** | SPM, AWR, analisi statistiche, SQL tuning | Query lente, capacity, review settimanale |
+| 08 | [TDE & Security](./tde_security/) | 8 | Transparent Data Encryption, audit, Vault | Compliance, audit sicurezza |
+| 09 | [Compressione](./compression/) | 1 | DDL di supporto a compressione/redefinition | Ridurre storage, near-zero downtime |
+| 10 | [Partition Manager](./partition_manager/) | 2 | Package gestione partizioni automatiche | Tabelle > 100M righe |
+| 11 | [Template SQL](./sql_templates/) | 17 | Template DDL/DML standard con error handling | Sviluppo, standardizzazione |
+| 12 | [Utility](./utilities/) | **102** | TEMP/UNDO monitor, MView refresh, profili UNIX | Supporto quotidiano, troubleshooting |
 | | **TOTALE** | **965** | | |
 
 ---
@@ -98,16 +98,16 @@ libreria_oracle/
 
 | Problema | Dove Cercare | Script Chiave |
 |---|---|---|
-| "L'app è bloccata!" | `03_monitoring_scripts/community_jkstill/sessions_locks/` | `blocking_sessions.sql`, `lock_tree.sql` |
-| "Il database è lento!" | `07_performance_tuning/community_scripts/` | Top SQL, wait events, ASH |
-| "Tablespace pieno!" | `12_utilities/community_scripts/storage/` | `showdf.sql`, `showfree.sql`, `showtbs.sql` |
-| "UNDO pieno!" | `12_utilities/community_scripts/storage/` | `undo_stats.sql`, `undo_retention_available.sql` |
-| "Chi è connesso?" | `03_monitoring_scripts/community_jkstill/users_logged/` | Login audit, sessioni attive |
-| "Job fallito" | `12_utilities/community_scripts/scheduler/` | `dba_jobs_running.sql`, `show_jobs.sql` |
-| "MView non refresha" | `03_monitoring_scripts/community_jkstill/mviews/` | MView log, refresh status |
-| "Serve un nuovo utente" | `04_user_management/` | Template con profili e grant |
-| "Data Guard in GAP" | `02_dataguard/` | Verifica GAP, MRP status |
-| "Serve compressione" | `09_compression/` | DBMS_REDEFINITION online |
+| "L'app è bloccata!" | `monitoring_scripts/community_jkstill/sessions_locks/` | `blocking_sessions.sql`, `lock_tree.sql` |
+| "Il database è lento!" | `performance_tuning/community_scripts/` | Top SQL, wait events, ASH |
+| "Tablespace pieno!" | `utilities/storage/` | `showdf.sql`, `showfree.sql`, `showtbs.sql` |
+| "UNDO pieno!" | `utilities/storage/` | `undo_stats.sql`, `undo_retention_available.sql` |
+| "Chi è connesso?" | `monitoring_scripts/community_jkstill/users_logged/` | Login audit, sessioni attive |
+| "Job fallito" | `utilities/scheduler/` | `dba_jobs_running.sql`, `show_jobs.sql` |
+| "MView non refresha" | `monitoring_scripts/community_jkstill/mviews/` | MView log, refresh status |
+| "Serve un nuovo utente" | `user_management/` | Template con profili e grant |
+| "Data Guard in GAP" | `dataguard/` | Verifica GAP, MRP status |
+| "Serve compressione" | `compression/` | DBMS_REDEFINITION online |
 
 ---
 
@@ -118,7 +118,7 @@ libreria_oracle/
 sqlplus / as sysdba
 
 # 2. Esegui lo script che ti serve
-@libreria_oracle/03_monitoring_scripts/community_jkstill/sessions_locks/blocking_sessions.sql
+@libreria_oracle/monitoring_scripts/community_jkstill/sessions_locks/blocking_sessions.sql
 
 # 3. Oppure copia-incolla i blocchi SQL che ti servono
 ```
