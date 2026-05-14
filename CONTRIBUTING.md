@@ -1,44 +1,39 @@
-# Contributing
+# Contribuire a Oracle DBA Enterprise Lab
 
-Contributi, fix e suggerimenti sono benvenuti!
+Grazie per l'interesse nel contribuire a questo progetto! Siamo impegnati a mantenere questo repository come lo standard d'eccellenza per la documentazione e l'automazione Oracle DBA.
 
-## Come Contribuire
+## 🤝 Codice di Condotta
+Partecipando a questo progetto, accetti di mantenere un comportamento professionale, collaborativo e orientato alla risoluzione dei problemi.
 
-1. **Fork** del repository
-2. Crea un **branch** con un nome descrittivo (`fix/tablespace-script`, `feat/new-guide`)
-3. Fai le modifiche e testa
-4. Apri una **Pull Request** con descrizione chiara
+## 🛠️ Come Contribuire
 
-## Regole
+### 1. Segnalazione di Bug o Errori Tecnici
+Se trovi un errore in una guida o un bug in uno script Ansible/Terraform:
+- Apri una **Issue** descrivendo il problema.
+- Includi la versione di Oracle, l'OS e il log dell'errore (es. ORA-xxxxx).
 
-- **Script SQL**: Testa sempre su un lab prima di proporre
-- **Guide**: Mantieni il formato Markdown consistente con le guide esistenti
-- **Naming**: Segui le convenzioni di naming (MAIUSCOLO per guide, snake_case per script)
-- **Lingua**: Le guide sono in italiano, i commenti SQL in italiano/inglese
-- **Release hygiene**: Se cambi comportamento utente, aggiorna `CHANGELOG.md` (sezione Unreleased) e verifica `VERSION` semantico
+### 2. Proposta di Nuove Guide o Script
+- Crea un **Fork** del repository.
+- Aggiungi il tuo contributo seguendo lo standard documentale esistente (Papyri Tecnici / MOP).
+- Assicurati che i link siano validati (puoi usare lo script `check_links.py` se disponibile).
+- Invia una **Pull Request**.
 
-## Segnala un Bug
+### 3. Standard di Documentazione
+Tutti i documenti devono:
+- Essere in formato Markdown.
+- Includere una sezione di troubleshooting se applicabile.
+- Usare percorsi relativi per i link interni.
+- Seguire la gerarchia definita nel `README.md` principale.
 
-Apri una [Issue](https://github.com/Mohamed-DN/dba_oracle_lab/issues) con:
-- Versione Oracle in uso
-- Fase del lab o script coinvolto
-- Errore completo (copia/incolla dall'alert log o terminale)
-- Cosa hai già provato
+## 🏗️ Workflow di Sviluppo
+1. `git checkout -b feat/nuova-funzionalita`
+2. Apporta le modifiche.
+3. Verifica la sintassi SQL e l'idempotenza degli script Ansible.
+4. `git commit -m "feat: aggiunta guida alla migrazione verso 23ai"`
+5. `git push origin feat/nuova-funzionalita`
 
-## Idee per Contributi
+## ⚖️ Licenza
+Contribuendo, accetti che il tuo codice e la tua documentazione siano rilasciati sotto la licenza **MIT** presente in questo repository.
 
-- [ ] Nuove procedure operative per scenari non coperti
-- [ ] Script per Oracle 23ai / 26c
-- [ ] Template Grafana dashboard per Oracle
-- [ ] Playbook Ansible aggiuntivi (es. DR automation)
-- [ ] Traduzione guide in inglese
-- [ ] Issue etichettate [good first issue](https://github.com/Mohamed-DN/dba_oracle_lab/labels/good%20first%20issue)
-- [ ] Percorso contributor: [Community Onboarding Path](./docs/04_governance_learning/02_enterprise_standards/COMMUNITY_ONBOARDING_PATH.md)
-
-## Governance minima per PR
-
-- Compila il template PR, inclusa sezione **Go/No-Go**.
-- Per modifiche in `automation/`, `policy/`, `docs/04_governance_learning/02_enterprise_standards/` o workflow, completa la **Security Checklist**.
-- Se cambi compatibilità o standard MAA, aggiorna `docs/04_governance_learning/02_enterprise_standards/` nello stesso PR.
-- Usa le issue template per bug/proposte così da mantenere KPI e roadmap tracciabili.
-- Per vulnerabilità di sicurezza, **non** aprire issue pubbliche: usa `SECURITY.md` e disclosure policy dedicata.
+---
+**Build the future of Oracle DBA Operations together.**
