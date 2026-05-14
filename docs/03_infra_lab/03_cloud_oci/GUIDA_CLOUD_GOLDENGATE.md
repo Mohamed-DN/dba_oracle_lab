@@ -877,3 +877,57 @@ systemctl enable oracle-db goldengate-mgr
 ---
 
 > **Prossimo**: [GUIDA_ATTIVITA_DBA.md](../../04_governance_learning/03_esami_e_carriera/GUIDA_ATTIVITA_DBA.md) — Batch Jobs, AWR, Patching, Data Pump, Security
+
+
+---
+
+# PARTE II: EVOLUZIONE ENTERPRISE — GOLDENGATE MICROSERVICES (MA)
+
+---
+
+## 11. Introduzione alla Microservices Architecture (MA)
+
+Mentre la Parte I di questa guida si è concentrata sull'architettura "Classic" (più semplice per imparare le basi), in un ambiente di produzione moderno si utilizza la **Microservices Architecture (MA)**.
+
+### 11.1 Vantaggi della MA
+- **Interfaccia Web**: Gestione totale via browser (niente più `ggsci` obbligatorio).
+- **REST API**: Integrazione nativa con script Python/Bash e pipeline DevOps.
+- **Sicurezza**: Supporto nativo per SSL/TLS e autenticazione Role-Based.
+- **Isolamento**: Ogni servizio (Extract, Replicat) gira in un microservizio dedicato gestito dal **Service Manager**.
+
+---
+
+## 12. Setup OCI GoldenGate (Servizio Nativo)
+
+Su Oracle Cloud, invece di installare i binari su una VM, puoi usare **OCI GoldenGate**, un servizio completamente gestito (PaaS).
+
+### 12.1 Provisioning
+1. Vai su **Oracle Database** -> **GoldenGate** nella console OCI.
+2. Crea un **Deployment**. Scegli "Oracle Database" come tecnologia.
+3. Specifica la versione (es. 21c).
+4. OCI configurerà automaticamente i 4 microservizi (Administration, Distribution, Receiver, Metrics Server).
+
+### 12.2 Connettività Ibrida
+Per connettere il tuo lab on-premise a OCI GoldenGate:
+1. Registra il database on-premise nella sezione **Connections** di OCI GoldenGate.
+2. Scarica il certificato pubblico del deployment OCI.
+3. Importa il certificato nel tuo server on-premise per permettere al Distribution Server di inviare i trail.
+
+---
+
+## 13. Monitoraggio e Performance Tuning
+
+### 13.1 Metrics Server & Grafana
+Il Metrics Server di GG MA espone statistiche in formato JSON/Prometheus.
+- Puoi vedere il lag in tempo reale senza entrare nella CLI.
+- Puoi configurare alert automatici se il lag supera i 60 secondi.
+
+### 13.2 Parallel Replicat
+Sui database target in cloud (specialmente Autonomous DB), usa sempre il **Parallel Replicat** per massimizzare il throughput e ridurre il lag causato dalla latenza di rete.
+
+```
+ADD REPLICAT rep_oci, PARALLEL, EXTTRAIL ./dirdat/ea
+```
+
+---
+**Questa guida ora copre sia il setup manuale su ARM (per studio) che lo standard Microservices (per produzione).**
