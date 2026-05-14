@@ -8,7 +8,7 @@ on:
       - "CHANGELOG.md"
       - "reliability/release/**"
       - "scripts/build_release_artifacts.sh"
-      - "docs/14_enterprise_governance/**"
+      - "docs/04_governance_learning/02_enterprise_standards/**"
       - ".github/workflows/release-governance.yml"
   workflow_dispatch:
 
@@ -36,10 +36,10 @@ jobs:
 
       - name: Validate compatibility policy exists
         run: |
-          test -f docs/14_enterprise_governance/COMPATIBILITY_POLICY.md
-          grep -q "supported" docs/14_enterprise_governance/COMPATIBILITY_POLICY.md
-          test -f docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
-          grep -qi "go/no-go" docs/14_enterprise_governance/GO_NO_GO_MASTER_MERGE_POLICY.md
+          test -f docs/04_governance_learning/02_enterprise_standards/COMPATIBILITY_POLICY.md
+          grep -q "supported" docs/04_governance_learning/02_enterprise_standards/COMPATIBILITY_POLICY.md
+          test -f docs/04_governance_learning/02_enterprise_standards/GO_NO_GO_MASTER_MERGE_POLICY.md
+          grep -qi "go/no-go" docs/04_governance_learning/02_enterprise_standards/GO_NO_GO_MASTER_MERGE_POLICY.md
 
       - name: Validate release compatibility matrix exists
         run: |

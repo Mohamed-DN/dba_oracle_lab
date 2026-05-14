@@ -113,7 +113,7 @@
 
 | Repository / Autore | Descrizione | Link |
 |---|---|---|
-| **oraclebase/dba** (Tim Hall) | Libreria script DBA Oracle di riferimento, usata come base per `docs/13_libreria_completa_script/` | <https://github.com/oraclebase/dba> |
+| **oraclebase/dba** (Tim Hall) | Libreria script DBA Oracle di riferimento, usata come base per `docs/01_operations/04_libreria_script_completa/` | <https://github.com/oraclebase/dba> |
 | **oraclebase/vagrant** | Vagrantfile Oracle RAC su OL7 19c — base del track Vagrant di questo repo | <https://github.com/oraclebase/vagrant/tree/master/rac/ol7_19> |
 | **oracle-base.com** | Articoli tecnici Oracle (Tim Hall) — fonte principale guide installazione e patching | <https://oracle-base.com> |
 | oracle-base — Installazione 19c OL7 | Guida installazione passo-passo Oracle 19c su Oracle Linux 7 | <https://oracle-base.com/articles/19c/oracle-db-19c-installation-on-oracle-linux-7> |
@@ -145,8 +145,8 @@
 
 | Strumento | Descrizione | Link |
 |---|---|---|
-| **Checkmk Raw** | Monitoring open source — guida setup in `docs/08_monitoring/` | <https://download.checkmk.com/checkmk/2.3.0p1/> |
-| **Zabbix 7.0** | Monitoring alternativo — guida in `docs/08_monitoring/` | <https://repo.zabbix.com/zabbix/7.0/> |
+| **Checkmk Raw** | Monitoring open source — guida setup in `docs/02_core_dba/06_monitoring_systems/` | <https://download.checkmk.com/checkmk/2.3.0p1/> |
+| **Zabbix 7.0** | Monitoring alternativo — guida in `docs/02_core_dba/06_monitoring_systems/` | <https://repo.zabbix.com/zabbix/7.0/> |
 | **Prometheus** | Metrics collection per oracledb_exporter | <https://github.com/prometheus/prometheus> |
 | **Grafana** | Dashboard per metriche Prometheus/Zabbix | <https://rpm.grafana.com> |
 | **oracledb_exporter** | Exporter Oracle per Prometheus | <https://github.com/iamseth/oracledb_exporter> |

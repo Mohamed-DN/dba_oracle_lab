@@ -9,7 +9,7 @@
 - [ ] Ho aggiornato documenti governance interessati (scorecard/matrice/policy) oppure dichiaro N/A
 - [ ] Ho allegato evidenze operative (artifact/log) per cambi DR/RAC/DG oppure dichiaro N/A
 
-## Security Checklist (obbligatoria per modifiche in automation/, policy/, docs/14_enterprise_governance/, .github/workflows/)
+## Security Checklist (obbligatoria per modifiche in automation/, policy/, docs/04_governance_learning/02_enterprise_standards/, .github/workflows/)
 
 - [ ] Nessun secret hardcoded introdotto
 - [ ] Variabili sensibili gestite con Vault/placeholder sicuro

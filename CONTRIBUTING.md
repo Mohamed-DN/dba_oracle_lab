@@ -33,12 +33,12 @@ Apri una [Issue](https://github.com/Mohamed-DN/dba_oracle_lab/issues) con:
 - [ ] Playbook Ansible aggiuntivi (es. DR automation)
 - [ ] Traduzione guide in inglese
 - [ ] Issue etichettate [good first issue](https://github.com/Mohamed-DN/dba_oracle_lab/labels/good%20first%20issue)
-- [ ] Percorso contributor: [Community Onboarding Path](./docs/14_enterprise_governance/COMMUNITY_ONBOARDING_PATH.md)
+- [ ] Percorso contributor: [Community Onboarding Path](./docs/04_governance_learning/02_enterprise_standards/COMMUNITY_ONBOARDING_PATH.md)
 
 ## Governance minima per PR
 
 - Compila il template PR, inclusa sezione **Go/No-Go**.
-- Per modifiche in `automation/`, `policy/`, `docs/14_enterprise_governance/` o workflow, completa la **Security Checklist**.
-- Se cambi compatibilità o standard MAA, aggiorna `docs/14_enterprise_governance/` nello stesso PR.
+- Per modifiche in `automation/`, `policy/`, `docs/04_governance_learning/02_enterprise_standards/` o workflow, completa la **Security Checklist**.
+- Se cambi compatibilità o standard MAA, aggiorna `docs/04_governance_learning/02_enterprise_standards/` nello stesso PR.
 - Usa le issue template per bug/proposte così da mantenere KPI e roadmap tracciabili.
 - Per vulnerabilità di sicurezza, **non** aprire issue pubbliche: usa `SECURITY.md` e disclosure policy dedicata.

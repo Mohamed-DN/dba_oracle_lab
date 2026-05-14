@@ -114,10 +114,10 @@ jobs:
             README.md
             CONTRIBUTING.md
             automation/README.md
-            docs/00_fondamenti/TEMPLATE_GUIDA_STANDARD.md
-            docs/00_fondamenti/LEARNING_PATH_JUNIOR_MID_SENIOR.md
-            docs/04_administration/CHECKLIST_SECURITY_BASELINE.md
-            docs/11_runbook_operativi/*.md
-            docs/12_scripts_sql_pronti/README.md
+            docs/04_governance_learning/01_fondamenti_teorici/TEMPLATE_GUIDA_STANDARD.md
+            docs/04_governance_learning/01_fondamenti_teorici/LEARNING_PATH_JUNIOR_MID_SENIOR.md
+            docs/02_core_dba/01_administration_and_security/CHECKLIST_SECURITY_BASELINE.md
+            docs/01_operations/02_runbooks_incidenti/*.md
+            docs/01_operations/03_scripts_pronti/README.md
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
