@@ -24,7 +24,7 @@ Include: verifica, raccolta manuale, lock/unlock, e troubleshooting.
 Guida completa su SQL Plan Management: come catturare, verificare, e forzare piani di esecuzione stabili.
 
 ### Script di Analisi
-Vedi anche la sezione [03_monitoring_scripts](../03_monitoring_scripts/) per gli script ASH, CPU, I/O.
+Vedi anche la sezione [monitoring_scripts](../monitoring_scripts/) per gli script ASH, CPU, I/O.
 
 ---
 

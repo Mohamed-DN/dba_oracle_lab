@@ -4,10 +4,10 @@
 > Questi sono gli script che un DBA Enterprise usa **ogni giorno** per diagnosticare problemi.
 
 > ℹ️ Nota riordino: alcuni script storici sono stati riclassificati fuori da Monitoring:
-> - ASM → `../01_asm_storage/community_scripts/`
-> - Backup RMAN → `../06_backup_recovery/community_scripts/`
-> - SQL tuning/SPM → `../07_performance_tuning/community_scripts/tuning/`
-> - Capacity storage (MAXSIZE/BIGFILE) → `../12_utilities/community_scripts/storage/`
+> - ASM → `../asm_storage/community_scripts/`
+> - Backup RMAN → `../backup_recovery/community_scripts/`
+> - SQL tuning/SPM → `../performance_tuning/community_scripts/tuning/`
+> - Capacity storage (MAXSIZE/BIGFILE) → `../utilities/storage/`
 
 ---
 
@@ -117,7 +117,7 @@ Una volta trovato il **SQL_ID** problematico (grazie ad `AshTopSql.sql` o all'an
 
 ```bash
 # Esecuzione rapida da terminale
-sqlplus / as sysdba @/path/to/libreria_oracle/03_monitoring_scripts/___ Situation.sql
+sqlplus / as sysdba @/path/to/libreria_oracle/monitoring_scripts/___ Situation.sql
 ```
 
 > [!TIP]
