@@ -1,85 +1,74 @@
-# 📚 Indice Documentazione DBA Oracle Lab
+# 🗄️ DBA Oracle Lab & Documentation Hub
 
-> Indice unificato per navigare il repository in modalità **operativa**.
-> Ogni sezione è numerata progressivamente e copre un'area specifica dell'attività DBA.
+> **Single Source of Truth** per le operazioni, il troubleshooting, la configurazione e gli standard architetturali del database Oracle. Ottimizzato per la rapida consultazione durante la giornata lavorativa e i ticket P1.
 
----
-
-## 1) Indice per attività DBA
-
-### 🟢 Giornaliero
-
-- [01_MORNING_HEALTH_CHECK](./11_runbook_operativi/01_MORNING_HEALTH_CHECK.md)
-- [02_VERIFICA_BACKUP](./11_runbook_operativi/02_VERIFICA_BACKUP.md)
-- [03_CHECK_DATAGUARD](./11_runbook_operativi/03_CHECK_DATAGUARD.md)
-- [Script SQL pronti](./12_scripts_sql_pronti/README.md)
-
-### 🔴 Incidente / Ticket
-
-- [04_LOCK_SESSIONI_BLOCCATE](./11_runbook_operativi/04_LOCK_SESSIONI_BLOCCATE.md)
-- [05_QUERY_LENTA](./11_runbook_operativi/05_QUERY_LENTA.md)
-- [08_ORA_ERRORS](./11_runbook_operativi/08_ORA_ERRORS.md)
-- [19_DIAGNOSI_BACKUP_RMAN_FALLITI](./11_runbook_operativi/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) ⬅️ **Root Cause Analysis backup**
-- [GUIDA_TROUBLESHOOTING_COMPLETO](./05_performance/GUIDA_TROUBLESHOOTING_COMPLETO.md)
-- [ADRCI & Trace Enterprise](./17_adrci_trace/GUIDA_ADRCI_TRACE_ENTERPRISE.md)
-
-### 🟡 Manutenzione
-
-- [10_START_STOP_RAC](./11_runbook_operativi/10_START_STOP_RAC.md)
-- [11_REVIEW_AWR](./11_runbook_operativi/11_REVIEW_AWR.md)
-- [17_PURGE_LOG_ORACLE](./11_runbook_operativi/17_PURGE_LOG_ORACLE.md)
-- [18_GESTIONE_STATISTICHE_OPTIMIZER](./11_runbook_operativi/18_GESTIONE_STATISTICHE_OPTIMIZER.md)
-- [GUIDA_PATCHING_RAC](./06_patching_upgrade/GUIDA_PATCHING_RAC.md)
-- [GUIDA_UPGRADE_RU_RAC](./06_patching_upgrade/GUIDA_UPGRADE_RU_RAC.md)
-
-### 🔵 Progetto / Evoluzione
-
-- [Core Lab Fase 0→8](./01_lab_setup/OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
-- [GUIDA_FASE7_GOLDENGATE](./07_replication/GUIDA_FASE7_GOLDENGATE.md)
+Questo repository contiene script, runbook e guide enterprise ad altissima densità per ambienti Oracle 19c/21c/23ai (RAC, Data Guard, ASM, OEM, CheckMK, TDE).
 
 ---
 
-## 2) Indice per argomento (Directory Map)
+## 🗺️ Struttura del Repository
 
-| # | Argomento | Link |
-| :---: | :--- | :--- |
-| 🗂️ | **Cheat Sheet Centralizzati** | [00_cheat_sheet/](./00_cheat_sheet/README.md) |
-| 00 | Fondamenti Oracle | [00_fondamenti/](./00_fondamenti/README.md) |
-| 00 | Percorso Lab | [00_lab_percorso/](./00_lab_percorso/README.md) |
-| 01 | Core Lab Setup (Grid, ASM, RAC) | [01_lab_setup/](./01_lab_setup/README.md) |
-| 02 | High Availability / Data Guard | [02_high_availability/](./02_high_availability/README.md) |
-| 03 | Backup & Recovery (RMAN base) | [03_backup_recovery/](./03_backup_recovery/README.md) |
-| 04 | Administration (Users, TBS, CDB/PDB) | [04_administration/](./04_administration/README.md) |
-| 05 | Performance & Diagnostica (AWR/ASH) | [05_performance/](./05_performance/README.md) |
-| 06 | Patching & Upgrade | [06_patching_upgrade/](./06_patching_upgrade/README.md) |
-| 07 | Replica / GoldenGate | [07_replication/](./07_replication/README.md) |
-| 08 | Monitoring (OEM, CheckMK) | [08_monitoring/](./08_monitoring/README.md) |
-| 09 | Cloud OCI (opzionale) | [09_cloud_oci/](./09_cloud_oci/README.md) |
-| 10 | Esami & Carriera | [10_esami_carriera/](./10_esami_carriera/README.md) |
-| 11 | Runbook Operativi (Top 20) | [11_runbook_operativi/](./11_runbook_operativi/README.md) |
-| 12 | Script SQL Pronti | [12_scripts_sql_pronti/](./12_scripts_sql_pronti/README.md) |
-| 13 | Libreria Completa Script | [13_libreria_completa_script/](./13_libreria_completa_script/README.md) |
-| 14 | Enterprise Governance | [14_enterprise_governance/](./14_enterprise_governance/README.md) |
-| 15 | **RMAN Enterprise (Comandi & TDE)** | [15_rman_comandi/](./15_rman_comandi/README.md) |
-| 16 | Proxmox Track (Infra Lab) | [16_proxmox_track/](./16_proxmox_track/GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md) |
-| 17 | **ADRCI & Trace Enterprise** | [17_adrci_trace/](./17_adrci_trace/README.md) |
-| 18 | **Setup LDAP (EUS/CMU/AD)** | [18_setup_ldap/](./18_setup_ldap/GUIDA_SETUP_LDAP_ENTERPRISE.md) |
-| 19 | **Setup CheckMK Oracle** | [19_setup_checkmk/](./19_setup_checkmk/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md) |
+Il repository è diviso in **4 Macro-Aree** pensate per l'operatività quotidiana del DBA:
+
+### 🚨 1. OPERATIONS (Uso Quotidiano & Incidenti)
+Le risorse di pronto intervento e uso giornaliero. Quello che ti serve "al volo" durante un ticket.
+
+| Directory | Contenuto Principale |
+|---|---|
+| [`01_operations/01_cheat_sheets`](./01_operations/01_cheat_sheets/) | Cheat sheet a colpo d'occhio: RMAN, DGMGRL, GoldenGate. |
+| [`01_operations/02_runbooks_incidenti`](./01_operations/02_runbooks_incidenti/) | **P1 Runbooks**: Check mattutino, RCA Backup falliti, Sessioni bloccate, Query lente, CPU alta, Capacity limits. |
+| [`01_operations/03_scripts_pronti`](./01_operations/03_scripts_pronti/) | Script SQL isolati per estrazioni e check rapidi. |
+| [`01_operations/04_libreria_script_completa`](./01_operations/04_libreria_script_completa/) | Libreria massiva di script DBA divisi per ambito (ASM, Performance, Patching, Utilities). |
+
+### 📚 2. CORE DBA GUIDES (Guide Enterprise & Configurazione)
+Le guide tecniche monumentali ("Enterprise Grade"). Procedure end-to-end, best practices e configurazioni avanzate.
+
+| Directory | Contenuto Principale |
+|---|---|
+| [`02_core_dba/01_administration_and_security`](./02_core_dba/01_administration_and_security/) | Security hardening, TDE, LDAP/CMU, EUS, ACL, Auditing, Password Rollout, User Management. |
+| [`02_core_dba/02_backup_and_recovery`](./02_core_dba/02_backup_and_recovery/) | Architettura RMAN, Catalog, Duplicate, Data Pump, strategie di restore. |
+| [`02_core_dba/03_performance_and_diagnostics`](./02_core_dba/03_performance_and_diagnostics/) | AWR, ASH, ADDM, ADRCI, SQL Trace (10046), Hanganalyze, Optimizer. |
+| [`02_core_dba/04_high_availability_and_rac`](./02_core_dba/04_high_availability_and_rac/) | Real Application Clusters (RAC), ASM, Data Guard, FSFO (Observer), Servizi. |
+| [`02_core_dba/05_patching_and_upgrades`](./02_core_dba/05_patching_and_upgrades/) | OPatch, RU (Release Updates), OJVM, procedure Out-of-Place. |
+| [`02_core_dba/06_monitoring_systems`](./02_core_dba/06_monitoring_systems/) | Oracle Enterprise Manager (OEM), CheckMK Agent, Alerting, Dashboard. |
+| [`02_core_dba/07_replication_goldengate`](./02_core_dba/07_replication_goldengate/) | Oracle GoldenGate Microservices, migrazioni Zero-Downtime. |
+
+### 🏗️ 3. INFRA LAB & SETUP (Infrastruttura di Base)
+Guide per l'installazione e la creazione dell'infrastruttura di laboratorio o produzione.
+
+| Directory | Contenuto Principale |
+|---|---|
+| [`03_infra_lab/01_proxmox_hardware`](./03_infra_lab/01_proxmox_hardware/) | Setup server bare-metal, Proxmox VE, storage condiviso (TrueNAS/iSCSI). |
+| [`03_infra_lab/02_oracle_installation_asm`](./03_infra_lab/02_oracle_installation_asm/) | Installazione Oracle Linux, Grid Infrastructure, ASM, Database Binaries. |
+| [`03_infra_lab/03_cloud_oci`](./03_infra_lab/03_cloud_oci/) | Setup lab su Oracle Cloud Infrastructure (OCI), GoldenGate on OCI. |
+
+### 🧭 4. GOVERNANCE & LEARNING (Standard, Esami, Percorsi)
+Materiale didattico, concetti teorici, roadmap professionali e standard aziendali.
+
+| Directory | Contenuto Principale |
+|---|---|
+| [`04_governance_learning/01_fondamenti_teorici`](./04_governance_learning/01_fondamenti_teorici/) | Architettura Oracle (SGA/PGA, Redo/Undo, Lock, Transazioni), Glossario. |
+| [`04_governance_learning/02_enterprise_standards`](./04_governance_learning/02_enterprise_standards/) | MAA Scorecard, Troubleshooting Decision Tree, Release Policy, Production Profile. |
+| [`04_governance_learning/03_esami_e_carriera`](./04_governance_learning/03_esami_e_carriera/) | Checklist per attività DBA (Junior/Mid/Senior), guide per esami OCP, transizione da lab a produzione. |
 
 ---
 
-## 3) Materiali operativi ad alta priorità
+## 🚀 Ricerca Rapida (Terminale)
 
-1. [Runbook Operativi](./11_runbook_operativi/README.md)
-2. [Script SQL per Scenario](./12_scripts_sql_pronti/README.md)
-3. [Indice Centrale Runbook + Top20](./11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
-4. [Top 100 Script DBA](./05_performance/TOP_100_SCRIPT_DBA.md)
-5. Cheat Sheet: [RMAN](./00_cheat_sheet/CHEAT_SHEET_RMAN.md) · [DGMGRL](./00_cheat_sheet/CHEAT_SHEET_DGMGRL.md) · [GoldenGate](./00_cheat_sheet/CHEAT_SHEET_GOLDENGATE.md)
+Poiché il repository è progettato per i sistemisti, si consiglia l'uso di `grep` (o `ripgrep`) per trovare rapidamente codici e soluzioni:
+
+```bash
+# Cerca un comando RMAN specifico nei cheat sheet:
+grep -ir "crosscheck" docs/01_operations/01_cheat_sheets/
+
+# Cerca la soluzione a un errore ORA- nei runbooks:
+grep -ir "ORA-01555" docs/01_operations/02_runbooks_incidenti/
+
+# Cerca script per i tablespace:
+grep -irl "dba_tablespaces" docs/01_operations/04_libreria_script_completa/
+```
+
+> **Nota:** Questo repository è mantenuto come *Living Document*. Ogni incidente risolto in produzione dovrebbe generare un aggiornamento nella sezione `runbooks_incidenti` o un nuovo script in `libreria_script_completa`.
 
 ---
-
-## 4) Appunti e archivio
-
-- Uso frequente: [GUIDA_RIPASSO_CONCETTI_DBA](./10_esami_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md)
-- Storico tecnico: [DIARIO_DI_BORDO](./00_fondamenti/DIARIO_DI_BORDO.md)
-- Archivio secondario: [10_esami_carriera/archivio_extra](./10_esami_carriera/archivio_extra/README.md)
+*Ultimo aggiornamento della struttura: Maggio 2026*
