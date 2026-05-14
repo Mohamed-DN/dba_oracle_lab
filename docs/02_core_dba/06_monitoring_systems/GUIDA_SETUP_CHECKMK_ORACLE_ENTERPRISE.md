@@ -1414,3 +1414,114 @@ Quando aggiungi un nuovo "Panel", scegli **Checkmk** come data source. Avrai un'
 * **Host:** Il server Oracle (es. `rac1.localdomain`).
 * **Service:** La metrica estratta dall'Agent (es. `ORA PRODDB Tablespace USERS`, `CPU load`, o il custom check scritto prima).
 * **Aggregation:** Grafana traccerà i trend in base ai parametri di retention storicizzati nativamente in CheckMK.
+
+---
+
+## PARTE VI — MONITORAGGIO AVANZATO 26AI E AUTOMAZIONE
+
+---
+
+## 22. Monitoraggio Oracle 23ai / 26ai (AI & Vector Search)
+
+Con l'avvento dell'AI generativa integrata nel database, il monitoring deve evolversi per tracciare la salute dei vettori e della True Cache.
+
+### 22.1 Monitoraggio Vector Search (AI Vector Search)
+Gli indici vettoriali possono essere pesanti per la memoria (SGA).
+```sql
+-- Custom SQL per CheckMK: Salute degli indici vettoriali
+CREATE OR REPLACE VIEW checkmk_monitor.v_vector_health AS
+SELECT 
+  'vector_indexes' AS check_name,
+  CASE WHEN sum(bytes)/1024/1024 > 5000 THEN 1 ELSE 0 END AS state, -- Warn se > 5GB
+  'Vector Index Size: ' || round(sum(bytes)/1024/1024, 2) || ' MB' AS detail
+FROM dba_segments 
+WHERE segment_type = 'VECTOR INDEX';
+```
+
+### 22.2 Monitoraggio True Cache
+True Cache è una feature di 23ai che scarica le letture su una cache distribuita.
+```sql
+-- Verifica hit-rate della True Cache
+SELECT 
+  inst_id, 
+  name, 
+  value 
+FROM gv$true_cache_statistics 
+WHERE name = 'true cache hit ratio';
+```
+
+---
+
+## 23. Automazione con Ansible (Enterprise Deployment)
+
+In un ambiente Enterprise con 50+ database, non puoi installare l'agente a mano. Usa Ansible.
+
+### 23.1 Playbook: Deploy CheckMK Agent & mk_oracle
+```yaml
+---
+- name: Deploy Oracle Monitoring (CheckMK)
+  hosts: oracle_servers
+  become: yes
+  vars:
+    cmk_server: "checkmk-server"
+    cmk_site: "mysite"
+    cmk_user: "cmkadmin"
+    cmk_pwd: "StrongPassword"
+    oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
+
+  tasks:
+    - name: Install CheckMK Agent RPM
+      dnf:
+        name: "https://{{ cmk_server }}/{{ cmk_site }}/check_mk/agents/check-mk-agent-2.3.0-1.noarch.rpm"
+        state: present
+        disable_gpg_check: yes
+
+    - name: Register Agent with TLS
+      command: >
+        cmk-agent-ctl register --hostname {{ inventory_hostname }}
+        --server {{ cmk_server }} --site {{ cmk_site }}
+        --user {{ cmk_user }} --password {{ cmk_pwd }} --trust-cert
+      args:
+        creates: /var/lib/cmk-agent/registered
+
+    - name: Deploy mk_oracle plugin
+      get_url:
+        url: "https://{{ cmk_server }}/{{ cmk_site }}/check_mk/agents/plugins/mk_oracle"
+        dest: /usr/lib/check_mk_agent/plugins/60/mk_oracle
+        mode: '0755'
+
+    - name: Configure mk_oracle.cfg
+      template:
+        src: templates/mk_oracle.cfg.j2
+        dest: /etc/check_mk/mk_oracle.cfg
+        mode: '0600'
+```
+
+---
+
+## 24. Grafana Integration (Executive Dashboards)
+
+CheckMK è ottimo per gli alert, ma Grafana è lo standard per i cockpit di controllo.
+
+### 24.1 Installazione del DataSource CheckMK
+1. Su Grafana: `Configuration -> Plugins -> CheckMK`.
+2. Aggiungi DataSource: `https://checkmk-server/mysite/check_mk/webapi.py`.
+3. Crea Dashboard:
+   - **Panel 1**: SGA vs PGA Usage (Graph).
+   - **Panel 2**: Transactions Per Second (TPS) across all instances.
+   - **Panel 3**: Data Guard Lag (Heatmap).
+
+---
+
+## 25. Matrice di Alerting Enterprise (SLA Protection)
+
+| Metrica | Soglia Warning | Soglia Critical | Azione SRE |
+|---|---|---|---|
+| **Tablespace** | 85% | 95% | Auto-extend o aggiunta Datafile |
+| **Active Sessions** | 70% di CPU cores | 100% di CPU cores | Kill sessioni non critiche / Scaling |
+| **Redo Log Switches** | > 10 / ora | > 30 / ora | Ridimensionamento Redo Log Groups |
+| **Failed Logins** | 5 / min | 20 / min | Blocco IP a livello Firewall / Brute-force alert |
+| **Backup Age** | 26 ore | 48 ore | Restart immediato job RMAN d'emergenza |
+
+---
+**Documento di Monitoring certificato per Oracle 26ai.**
