@@ -81,63 +81,153 @@ ALTER USER &username ACCOUNT LOCK;
 
 ---
 
-## 4. 🔍 Audit Completo: Chi Ha Quali Privilegi? (Diretti e Indiretti)
+## 4. 🔍 Audit Completo (sola lettura, nessuna modifica)
 
-*In Oracle, i privilegi possono essere assegnati direttamente all'utente o ereditati tramite ruoli (anche annidati). Le query seguenti esplodono l’intero albero delle concessioni.*
+*Tutti i controlli sono in **sola lettura**. Puoi esaminare i privilegi effettivi di un utente passo‑passo o con una query unica.*
 
-### 4.1. Tutti i Ruoli Assegnati (Inclusi i Ruoli Annidati)
+### 4.1 – Ruoli dell’utente (compresi quelli annidati)
 
 ```sql
--- Estrae tutti i ruoli ereditati dall'utente, esplodendo la gerarchia
-SELECT DISTINCT granted_role AS role_name
+-- Elenco di tutti i ruoli ereditati, anche se assegnati ad altri ruoli
+SELECT DISTINCT granted_role AS ruolo
 FROM dba_role_privs
 START WITH grantee = UPPER('&username')
 CONNECT BY NOCYCLE PRIOR granted_role = grantee
 ORDER BY 1;
 ```
 
-### 4.2. Privilegi di Sistema (Diretti e tramite Ruoli)
+### 4.2 – Privilegi di sistema (diretti e via ruoli)
 
 ```sql
--- Trova tutti i system privileges dell'utente e indica da dove derivano
+-- Mostra se il privilegio è DIRETTO o ereditato da un RUOLO
 WITH user_roles AS (
     SELECT granted_role
     FROM dba_role_privs
     START WITH grantee = UPPER('&username')
     CONNECT BY NOCYCLE PRIOR granted_role = grantee
 )
--- Privilegi Diretti
-SELECT privilege, 'DIRECT' AS grant_type, grantee AS granted_via
+SELECT privilege, 'DIRECT' AS tipo, grantee AS provenienza
 FROM dba_sys_privs
 WHERE grantee = UPPER('&username')
 UNION
--- Privilegi Indiretti (tramite ruolo)
-SELECT rsp.privilege, 'INDIRECT' AS grant_type, rsp.role AS granted_via
+SELECT rsp.privilege, 'INDIRECT', rsp.role
 FROM role_sys_privs rsp
 JOIN user_roles ur ON rsp.role = ur.granted_role
-ORDER BY grant_type, privilege;
+ORDER BY tipo, privilege;
 ```
 
-### 4.3. Privilegi sugli Oggetti (Diretti e tramite Ruoli)
+### 4.3 – Privilegi su oggetti (tabelle, viste, procedure, …)
+
+> **Importante**: `dba_tab_privs` contiene i privilegi per **tutti** i tipi di oggetto: tabelle, viste, sequenze, sinonimi, procedure, funzioni, package, tipi, ecc.  
+> Puoi filtrare per un nome oggetto (es. `DB_CRUSCO_DISPO`) oppure **premere semplicemente Invio** (o inserire `%`) per ottenere l’elenco completo di tutti gli oggetti a cui l’utente ha accesso.
 
 ```sql
--- Trova chi ha accesso a quali tabelle/viste/procedure e come
+-- Imposta il nome utente (obbligatorio)
+DEFINE audit_user = '&username'
+
+-- Filtro oggetto: scrivi il nome esatto o lascia vuoto (o '%') per vedere tutto
+-- Se lasci vuoto verrà usato '%' automaticamente
+ACCEPT obj_filter CHAR DEFAULT '%' PROMPT 'Nome oggetto (vuoto = tutti): '
+
+-- Query che unisce privilegi DIRETTI e INDIRETTI (via ruoli annidati)
+SELECT grantee AS utente,
+       NULL AS ruolo_intermedio,          -- NULL = concessione diretta
+       privilege AS permesso,
+       owner AS proprietario,
+       table_name AS oggetto
+FROM dba_tab_privs
+WHERE grantee = UPPER('&audit_user')
+  AND table_name LIKE UPPER('&obj_filter')
+
+UNION ALL
+
+SELECT rp.grantee AS utente,
+       rtp.role AS ruolo_intermedio,
+       rtp.privilege AS permesso,
+       rtp.owner AS proprietario,
+       rtp.table_name AS oggetto
+FROM role_tab_privs rtp
+JOIN (
+    -- Esplode i ruoli annidati
+    SELECT DISTINCT grantee, granted_role
+    FROM dba_role_privs
+    START WITH grantee = UPPER('&audit_user')
+    CONNECT BY NOCYCLE PRIOR granted_role = grantee
+) rp ON rtp.role = rp.granted_role
+WHERE rtp.table_name LIKE UPPER('&obj_filter')
+
+ORDER BY utente, proprietario, oggetto, ruolo_intermedio;
+```
+
+**Esempio di esecuzione:**
+
+```
+SQL> @audit_obj
+Enter value for username: IBK_EXCHANGE_SV
+Nome oggetto (vuoto = tutti):
+... premieresti Invio ...
+-- restituisce tutte le righe come:
+UTENTE           RUOLO_INTERMEDIO PERMESSO PROPRIETARIO OGGETTO
+---------------- ---------------- -------- ------------ ----------------
+IBK_EXCHANGE_SV                    SELECT  IBK          DB_CRUSCO_DISPO
+IBK_EXCHANGE_SV  IBK_RO           SELECT  IBK          DB_CRUSCO_INFO
+```
+
+### 4.4 – Tutto in un colpo solo (ruoli, system, oggetti)
+
+```sql
+-- Blocco unico che esegue tutti e tre gli audit per l'utente indicato
+-- Sostituisci &username con il nome utente (o usa DEFINE)
+
+-- Ruoli
+SELECT DISTINCT granted_role AS ruolo
+FROM dba_role_privs
+START WITH grantee = UPPER('&username')
+CONNECT BY NOCYCLE PRIOR granted_role = grantee
+ORDER BY 1;
+
+-- System privileges
 WITH user_roles AS (
     SELECT granted_role
     FROM dba_role_privs
     START WITH grantee = UPPER('&username')
     CONNECT BY NOCYCLE PRIOR granted_role = grantee
 )
--- Privilegi Diretti
-SELECT owner, table_name, privilege, 'DIRECT' AS grant_type, grantee AS granted_via
-FROM dba_tab_privs
+SELECT privilege, 'DIRECT' AS tipo, grantee AS da
+FROM dba_sys_privs
 WHERE grantee = UPPER('&username')
 UNION
--- Privilegi Indiretti (tramite ruolo)
-SELECT rtp.owner, rtp.table_name, rtp.privilege, 'INDIRECT' AS grant_type, rtp.role AS granted_via
+SELECT rsp.privilege, 'INDIRECT', rsp.role
+FROM role_sys_privs rsp
+JOIN user_roles ur ON rsp.role = ur.granted_role
+ORDER BY tipo, privilege;
+
+-- Oggetti (tutte le viste, tabelle, procedure...)
+ACCEPT obj_filter CHAR DEFAULT '%' PROMPT 'Nome oggetto (vuoto = tutti): '
+
+SELECT grantee AS utente,
+       NULL AS ruolo_intermedio,
+       privilege AS permesso,
+       owner AS proprietario,
+       table_name AS oggetto
+FROM dba_tab_privs
+WHERE grantee = UPPER('&username')
+  AND table_name LIKE UPPER('&obj_filter')
+UNION ALL
+SELECT rp.grantee,
+       rtp.role,
+       rtp.privilege,
+       rtp.owner,
+       rtp.table_name
 FROM role_tab_privs rtp
-JOIN user_roles ur ON rtp.role = ur.granted_role
-ORDER BY owner, table_name, privilege;
+JOIN (
+    SELECT DISTINCT grantee, granted_role
+    FROM dba_role_privs
+    START WITH grantee = UPPER('&username')
+    CONNECT BY NOCYCLE PRIOR granted_role = grantee
+) rp ON rtp.role = rp.granted_role
+WHERE rtp.table_name LIKE UPPER('&obj_filter')
+ORDER BY utente, proprietario, oggetto, ruolo_intermedio;
 ```
 
 ---
@@ -182,7 +272,6 @@ WHERE du.username = UPPER('&username')
   AND dp.resource_type = 'PASSWORD';
 
 -- Crea profilo per applicazioni (no scadenza, no lock automatico)
--- (prima verifica se esiste già, altrimenti lo crea)
 CREATE PROFILE app_profile LIMIT
     PASSWORD_LIFE_TIME UNLIMITED
     PASSWORD_REUSE_TIME UNLIMITED
@@ -211,8 +300,7 @@ ALTER USER &username PROFILE &profile_name;
 | Controllo | Atteso | Azione in caso di Failure |
 | --- | --- | --- |
 | **Stato Utente** | `account_status = OPEN` | Eseguire `ACCOUNT UNLOCK` o verificare `PASSWORD_LIFE_TIME` |
-| **Privilegi** | Solo quelli strettamente necessari | Usare le CTE della sezione 4 per revoche puntuali |
+| **Privilegi** | Solo quelli strettamente necessari | Utilizzare le query di audit per revoche puntuali |
 | **Profilo** | Profilo non di `DEFAULT` per app/utenti | Assegnare `app_profile` o `user_profile` appropriato |
 | **Connettività** | Login testato con successo | Verificare `CREATE SESSION` e configurazione TNS/Listener |
 ```
-
