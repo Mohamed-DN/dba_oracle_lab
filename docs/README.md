@@ -43,6 +43,7 @@
 
 | # | Argomento | Link |
 | :---: | :--- | :--- |
+| 🗂️ | **Cheat Sheet Centralizzati** | [00_cheat_sheet/](./00_cheat_sheet/README.md) |
 | 00 | Fondamenti Oracle | [00_fondamenti/](./00_fondamenti/README.md) |
 | 00 | Percorso Lab | [00_lab_percorso/](./00_lab_percorso/README.md) |
 | 01 | Core Lab Setup (Grid, ASM, RAC) | [01_lab_setup/](./01_lab_setup/README.md) |
@@ -62,6 +63,8 @@
 | 15 | **RMAN Enterprise (Comandi & TDE)** | [15_rman_comandi/](./15_rman_comandi/README.md) |
 | 16 | Proxmox Track (Infra Lab) | [16_proxmox_track/](./16_proxmox_track/GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md) |
 | 17 | **ADRCI & Trace Enterprise** | [17_adrci_trace/](./17_adrci_trace/README.md) |
+| 18 | **Setup LDAP (EUS/CMU/AD)** | [18_setup_ldap/](./18_setup_ldap/GUIDA_SETUP_LDAP_ENTERPRISE.md) |
+| 19 | **Setup CheckMK Oracle** | [19_setup_checkmk/](./19_setup_checkmk/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md) |
 
 ---
 
@@ -71,7 +74,7 @@
 2. [Script SQL per Scenario](./12_scripts_sql_pronti/README.md)
 3. [Indice Centrale Runbook + Top20](./11_runbook_operativi/INDICE_CENTRALE_RUNBOOK_TOP20.md)
 4. [Top 100 Script DBA](./05_performance/TOP_100_SCRIPT_DBA.md)
-5. Cheat Sheet: [RMAN](./11_runbook_operativi/CHEAT_SHEET_RMAN.md) · [DGMGRL](./11_runbook_operativi/CHEAT_SHEET_DGMGRL.md) · [GoldenGate](./11_runbook_operativi/CHEAT_SHEET_GOLDENGATE.md)
+5. Cheat Sheet: [RMAN](./00_cheat_sheet/CHEAT_SHEET_RMAN.md) · [DGMGRL](./00_cheat_sheet/CHEAT_SHEET_DGMGRL.md) · [GoldenGate](./00_cheat_sheet/CHEAT_SHEET_GOLDENGATE.md)
 
 ---
 
