@@ -17,10 +17,10 @@
 
 ## 🧾 Cheat Sheet specialistiche
 
-- [Cheat Sheet RMAN](./CHEAT_SHEET_RMAN.md)
-- [Cheat Sheet RMAN (Essenziale)](./CHEAT_SHEET_RMAN_ESSENZIALE.md)
-- [Cheat Sheet DGMGRL](./CHEAT_SHEET_DGMGRL.md)
-- [Cheat Sheet GoldenGate](./CHEAT_SHEET_GOLDENGATE.md)
+- (../01_cheat_sheets/CHEAT_SHEET_RMAN.md)
+- (../01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md)
+- (../01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
+- (../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
 - [Guida ADRCI + Diagnostica Oracle](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
 
 ---

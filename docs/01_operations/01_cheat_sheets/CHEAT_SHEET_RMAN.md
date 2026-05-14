@@ -5,7 +5,7 @@
 Fornire una scheda rapida RMAN per backup, restore, recovery e monitoraggio quotidiano in ambienti Oracle 19c.
 
 > Versione essenziale: [Cheat Sheet RMAN (Essenziale)](./CHEAT_SHEET_RMAN_ESSENZIALE.md)  
-> Comandi completi: [Guida RMAN — Comandi Dettaglio](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_DETTAGLIO.md)
+> Comandi completi: (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md)
 
 ## Teoria
 
@@ -323,7 +323,7 @@ FROM v$recovery_file_dest;
 
 ## Link correlati
 
-- Runbook: [02_VERIFICA_BACKUP](./02_VERIFICA_BACKUP.md)
+- Runbook: (../02_runbooks_incidenti/02_VERIFICA_BACKUP.md)
 - Guida estesa: [GUIDA_FASE5_RMAN_BACKUP](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md)
 - Guida completa: [GUIDA_RMAN_COMPLETA_19C](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
 - Oracle ufficiale (User's Guide): <https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/>

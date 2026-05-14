@@ -63,6 +63,6 @@
 
 ## Cheat Sheet correlate
 
-- [Cheat Sheet RMAN](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_RMAN.md)
-- [Cheat Sheet DGMGRL](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_DGMGRL.md)
-- [Cheat Sheet GoldenGate](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_GOLDENGATE.md)
+- (../01_cheat_sheets/CHEAT_SHEET_RMAN.md)
+- (../01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
+- (../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)

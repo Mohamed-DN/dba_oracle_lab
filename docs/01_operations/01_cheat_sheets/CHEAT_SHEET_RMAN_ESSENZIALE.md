@@ -4,7 +4,7 @@
 
 Scheda ultra-rapida con i comandi RMAN più usati in operatività quotidiana.
 
-> Per il dettaglio completo: [Guida comandi completi RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_DETTAGLIO.md)
+> Per il dettaglio completo: (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md)
 
 ## Connessione
 

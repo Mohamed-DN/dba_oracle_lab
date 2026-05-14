@@ -287,9 +287,9 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Area | Script | Cosa Trovi |
 |---|---|---|
-| [Monitoring](./docs/01_operations/04_libreria_script_completa/03_monitoring_scripts/) | 586 | Sessioni, lock, CPU, I/O, ASH, rete |
-| [Performance](./docs/01_operations/04_libreria_script_completa/07_performance_tuning/) | 225 | SPM, AWR, statistiche, SQL tuning |
-| [Utilities](./docs/01_operations/04_libreria_script_completa/12_utilities/) | 103 | Scheduler, storage, CDB/PDB, profili |
+| [Monitoring](./docs/01_operations/04_libreria_script_completa/monitoring_scripts/) | 586 | Sessioni, lock, CPU, I/O, ASH, rete |
+| [Performance](./docs/01_operations/04_libreria_script_completa/performance_tuning/) | 225 | SPM, AWR, statistiche, SQL tuning |
+| [Utilities](./docs/01_operations/04_libreria_script_completa/utilities/) | 103 | Scheduler, storage, CDB/PDB, profili |
 | [Altro](./docs/01_operations/04_libreria_script_completa/README.md) | 86 | ASM, DG, utenti, patching, TDE, partizioni |
 
 ---

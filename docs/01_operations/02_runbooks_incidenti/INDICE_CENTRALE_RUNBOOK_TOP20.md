@@ -18,9 +18,9 @@
 ## Catalogo Script Enterprise (Top 20)
 - [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
 - [Libreria completa script](../../01_operations/04_libreria_script_completa/README.md)
-- [Monitoring scripts](../../01_operations/04_libreria_script_completa/03_monitoring_scripts/README.md)
-- [Performance tuning scripts](../../01_operations/04_libreria_script_completa/07_performance_tuning/README.md)
-- [Utilities](../../01_operations/04_libreria_script_completa/12_utilities/README.md)
+- (../../../README.md)
+- (../../../README.md)
+- (../../../README.md)
 
 ## Uso consigliato
 1. Parti dal runbook (diagnosi guidata)

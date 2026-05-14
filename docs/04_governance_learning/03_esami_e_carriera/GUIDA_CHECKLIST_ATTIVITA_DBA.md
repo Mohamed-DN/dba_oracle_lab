@@ -132,9 +132,9 @@ Evidenza minima:
 
 ## 14. Guide del repo da tenere affiancate
 
-- [GUIDA_ATTIVITA_DBA.md](../GUIDA_ATTIVITA_DBA.md)
-- [GUIDA_COMANDI_DBA.md](../../../04_governance_learning/01_fondamenti_teorici/GUIDA_COMANDI_DBA.md)
-- [GUIDA_RMAN_COMPLETA_19C.md](../../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
-- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
-- [GUIDA_LISTENER_SERVICES_DBA.md](../../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
-- [GUIDA_FASE6_ENTERPRISE_MANAGER.md](../../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)
+- (GUIDA_ATTIVITA_DBA.md)
+- (../01_fondamenti_teorici/GUIDA_COMANDI_DBA.md)
+- (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
+- (../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- (../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
+- (../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)
