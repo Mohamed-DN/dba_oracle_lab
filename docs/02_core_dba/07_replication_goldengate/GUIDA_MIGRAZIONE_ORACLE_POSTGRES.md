@@ -7,7 +7,7 @@
 
 ## Architettura della Migrazione
 
-![Architettura Migrazione Oracle-PostgreSQL](../../02_core_dba/04_high_availability_and_rac/images/oracle_to_postgres_flow.png)
+![Architettura Migrazione Oracle-PostgreSQL](../../../images/oracle_to_postgres_flow.png)
 
 ```
 ┌──────────────────────┐                    ┌──────────────────────┐

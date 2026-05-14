@@ -12,11 +12,11 @@
 
 ### 📸 Riferimenti Visivi
 
-![ASM Disk Groups Layout](./images/asm_diskgroups_layout.png)
+![ASM Disk Groups Layout](../../../images/asm_diskgroups_layout.png)
 
-![Grid Infrastructure Installer — Wizard Steps](./images/grid_installer_wizard.png)
+![Grid Infrastructure Installer — Wizard Steps](../../../images/grid_installer_wizard.png)
 
-![DBCA — Creazione Database RAC](./images/dbca_create_database.png)
+![DBCA — Creazione Database RAC](../../../images/dbca_create_database.png)
 
 ### Cosa Costruiamo in Questa Fase
 
@@ -438,7 +438,7 @@ cd /u01/app/19.0.0/grid
 | `enp0s8` | 192.168.56.0 | ✅ **Public** |
 | `enp0s9` | 192.168.1.0 | ✅ **ASM & Private** |
 
-![Step 5 - Network Interface Usage](./images/grid_network_interface_usage.png)
+![Step 5 - Network Interface Usage](../../../images/grid_network_interface_usage.png)
 
 > **Perché questa configurazione?**
 > - `enp0s8` (192.168.56.0) → È la rete **pubblica** (Host-Only). I client si connettono al database attraverso questa rete tramite SCAN.
@@ -453,7 +453,7 @@ cd /u01/app/19.0.0/grid
 
 **Step 8 — Create ASM Disk Group** (per OCR e Voting Disk):
 
-![Step 8 - Create ASM Disk Group — Tutti i 5 dischi ASMLib visibili](./images/grid_asm_disk_group.png)
+![Step 8 - Create ASM Disk Group — Tutti i 5 dischi ASMLib visibili](../../../images/grid_asm_disk_group.png)
 
 **Procedura passo-passo:**
 
@@ -486,7 +486,7 @@ cd /u01/app/19.0.0/grid
 
 **Step 9 — ASM Password**:
 
-![Step 9 - Specify ASM Password](./images/grid_asm_password.png)
+![Step 9 - Specify ASM Password](../../../images/grid_asm_password.png)
 
 - Seleziona: **"Use same passwords for these accounts"** (come nello screenshot)
 - Inserisci la password sia in "Specify Password" che in "Confirm Password"
@@ -519,7 +519,7 @@ cd /u01/app/19.0.0/grid
 
 **Step 15 — Prerequisite Checks**:
 
-![Step 15 - Prerequisite Checks - Ignorare RAM, ma risolvere ASM](./images/grid_prereq_checks.png)
+![Step 15 - Prerequisite Checks - Ignorare RAM, ma risolvere ASM](../../../images/grid_prereq_checks.png)
 
 L'installer eseguirà un `cluvfy` interno. Ecco come interpretare i risultati:
 
@@ -545,7 +545,7 @@ L'installer eseguirà un `cluvfy` interno. Ecco come interpretare i risultati:
 
 L'installer si fermerà allo **Step 17** e ti mostrerà un pop-up che chiede di eseguire 2 script come `root`.
 
-![Execute Configuration Scripts](./images/grid_root_scripts.png)
+![Execute Configuration Scripts](../../../images/grid_root_scripts.png)
 
 > 🛑 **ATTENZIONE:** ESEGUI GLI SCRIPT **UNO ALLA VOLTA**, prima su `rac1`, e **SOLO QUANDO HA FINITO** passali su `rac2`. Se li esegui in parallelo, il cluster si corromperà irrimediabilmente!
 

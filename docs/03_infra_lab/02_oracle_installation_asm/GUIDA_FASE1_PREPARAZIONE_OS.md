@@ -6,9 +6,9 @@
 
 ### 📸 Riferimenti Visivi
 
-![Partizionamento Disco OS](./images/os_install_partitions.png)
+![Partizionamento Disco OS](../../../images/os_install_partitions.png)
 
-![Architettura DNS BIND](./images/dns_bind_architecture.png)
+![Architettura DNS BIND](../../../images/dns_bind_architecture.png)
 
 ---
 

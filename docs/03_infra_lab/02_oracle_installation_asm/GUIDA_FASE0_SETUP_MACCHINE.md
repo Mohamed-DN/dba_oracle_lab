@@ -41,11 +41,11 @@
 
 ### 📸 Riferimenti Visivi
 
-![Impostazioni VM — 8 GB RAM + 4 CPU](./images/virtualbox_vm_settings.png)
+![Impostazioni VM — 8 GB RAM + 4 CPU](../../../images/virtualbox_vm_settings.png)
 
-![Configurazione Rete](./images/virtualbox_network_config.png)
+![Configurazione Rete](../../../images/virtualbox_network_config.png)
 
-![Storage — Dischi condivisi ASM](./images/virtualbox_storage_disks.png)
+![Storage — Dischi condivisi ASM](../../../images/virtualbox_storage_disks.png)
 
 ---
 
@@ -329,7 +329,7 @@ Seleziona `rac1` → **Impostazioni** (Settings):
 
 Sempre nelle **Impostazioni** di `rac1`, vai nella sezione **Archiviazione** nel menu a sinistra.
 
-![Pannello Archiviazione — Controller IDE per la ISO, Controller SATA per i dischi](./images/vbox_storage_panel.png)
+![Pannello Archiviazione — Controller IDE per la ISO, Controller SATA per i dischi](../../../images/vbox_storage_panel.png)
 
 **1. Attacca la ISO di installazione:**
 - Sotto **Controller: IDE**, clicca sull'icona del disco ottico (💿 Vuoto).
@@ -341,7 +341,7 @@ Questo è il disco dove vivranno tutti i binari Oracle (Grid + Database). Viene 
 - Sotto **Controller: SATA**, clicca l'icona **"Aggiungi disco rigido"** (il quadrato con il `+` verde).
 - Si apre il **Selettore disco fisso**. Clicca **Crea** (il pulsante in alto).
 
-![Crea disco — allocazione dinamica (NO pre-allocazione) per il disco /u01](./images/vbox_create_disk_preallocated.png)
+![Crea disco — allocazione dinamica (NO pre-allocazione) per il disco /u01](../../../images/vbox_create_disk_preallocated.png)
 
 - **Nome**: Inserisci un nome descrittivo (es. `rac1-u01.vdi`).
 - **Dimensione**: Trascina il cursore o digita **100 GB**.
@@ -386,7 +386,7 @@ VirtualBox → **File > Gestore Supporti Virtuali** (oppure `Ctrl+D`).
 
 Si apre la finestra che elenca tutti i dischi virtuali del tuo ambiente. Qui vedrai il tab **Dischi fissi** con tutti i `.vdi` creati finora.
 
-![Gestore Supporti Virtuali — lista di tutti i dischi fissi con dimensione virtuale ed effettiva](./images/vbox_media_manager.png)
+![Gestore Supporti Virtuali — lista di tutti i dischi fissi con dimensione virtuale ed effettiva](../../../images/vbox_media_manager.png)
 
 > 💡 **Leggi le colonne!** Nota la differenza tra **Dimensione virtuale** e **Dimensione effettiva**:
 > - I dischi ASM (es. `asm-crs-disk1.vdi`: 2 GB virtuale = 2 GB effettiva) → **pre-allocati** (dimensione fissa)
@@ -396,7 +396,7 @@ Si apre la finestra che elenca tutti i dischi virtuali del tuo ambiente. Qui ved
 
 Clicca **Crea** nella barra in alto del Gestore Supporti. Per **ogni** disco, compila così:
 
-![Creazione disco ASM — VDI con Pre-allocazione a dimensione intera SPUNTATA](./images/vbox_create_disk_preallocated.png)
+![Creazione disco ASM — VDI con Pre-allocazione a dimensione intera SPUNTATA](../../../images/vbox_create_disk_preallocated.png)
 
 **Impostazioni per ogni disco:**
 - **Tipo**: VDI (VirtualBox Disk Image)
@@ -426,7 +426,7 @@ Clicca **Fine** dopo aver creato ciascun disco. La creazione dei dischi pre-allo
 
 Sempre nel **Gestore Supporti Virtuali** (dove hai appena creato i dischi):
 
-![Attributi del disco — imposta il Tipo su "Condivisibile" e clicca Applica](./images/vbox_disk_shareable_attribute.png)
+![Attributi del disco — imposta il Tipo su "Condivisibile" e clicca Applica](../../../images/vbox_disk_shareable_attribute.png)
 
 1. Seleziona il primo disco ASM (es. `asm-crs-disk1.vdi`).
 2. Nel pannello **Attributi** in basso, cerca il dropdown **Tipo** e cambialo da "Normale" a: **Condivisibile** ✅
@@ -442,14 +442,14 @@ Ora che i dischi esistono nel Virtual Media Manager, dobbiamo collegarli fisicam
 
 1. Tasto destro su `rac1` → **Impostazioni** (oppure seleziona `rac1` e premi `Ctrl+S`).
 
-![Menu contestuale — clicca Impostazioni per aprire le impostazioni della VM](./images/vbox_vm_context_menu.png)
+![Menu contestuale — clicca Impostazioni per aprire le impostazioni della VM](../../../images/vbox_vm_context_menu.png)
 
 2. Vai su **Archiviazione** nel menu a sinistra.
 3. Seleziona **Controller: SATA** (dove hai già il disco OS e il disco /u01).
 4. Clicca l'icona **"Aggiungi disco rigido"** (il quadrato con il `+` verde accanto al controller).
 5. Si apre il **Selettore disco fisso**. Qui vedrai tutti i dischi disponibili:
 
-![Selettore disco — clicca Aggiungi per collegare i dischi ASM esistenti alla VM](./images/vbox_disk_selector.png)
+![Selettore disco — clicca Aggiungi per collegare i dischi ASM esistenti alla VM](../../../images/vbox_disk_selector.png)
 
 6. Clicca su **Aggiungi** e seleziona `asm-crs-disk1.vdi`. Ripeti per tutti e 5 i dischi nell'ordine:
    - `asm-crs-disk1.vdi`
@@ -507,7 +507,7 @@ Ora che i dischi esistono nel Virtual Media Manager, dobbiamo collegarli fisicam
 
 2. **Seleziona SOLO il disco da 50 GiB** (`sda`). Il disco deve apparire con un bordo blu e un segno di spunta. Se vedi anche il disco da 100 GB, **NON selezionarlo** — assicurati che solo `sda` abbia la spunta.
 
-![Selezione disco — seleziona SOLO il disco sda da 50 GiB](./images/install_dest_select_disk.png)
+![Selezione disco — seleziona SOLO il disco sda da 50 GiB](../../../images/install_dest_select_disk.png)
 
 3. In basso, sotto **Other Storage Options → Partitioning**, seleziona:
    - ◉ **I will configure partitioning** (partizionamento manuale)
@@ -517,7 +517,7 @@ Ora che i dischi esistono nel Virtual Media Manager, dobbiamo collegarli fisicam
 
 Si apre la schermata **MANUAL PARTITIONING**. Il pannello è vuoto — devi creare le partizioni una alla volta usando il pulsante **`+`** in basso a sinistra.
 
-![Schermata iniziale del partizionamento manuale — pannello vuoto, premi il pulsante "+"](./images/install_manual_partitioning_empty.png)
+![Schermata iniziale del partizionamento manuale — pannello vuoto, premi il pulsante "+"](../../../images/install_manual_partitioning_empty.png)
 
 > 💡 **Schema di Partitioning**: Lascia il dropdown in alto su **LVM** (Logical Volume Manager). È lo standard di Oracle Linux e ti permette di ridimensionare le partizioni a posteriori se necessario.
 
@@ -525,7 +525,7 @@ Si apre la schermata **MANUAL PARTITIONING**. Il pannello è vuoto — devi crea
 
 5. Clicca il pulsante **`+`** → Si apre il dialogo **"ADD A NEW MOUNT POINT"**.
 
-![Menu Add a New Mount Point — seleziona /boot dal dropdown](./images/install_add_mount_point_menu.png)
+![Menu Add a New Mount Point — seleziona /boot dal dropdown](../../../images/install_add_mount_point_menu.png)
 
 6. **Mount Point**: Seleziona `/boot` dal dropdown.
 7. **Desired Capacity**: Scrivi `1024 MiB` (o `1 GiB`).
@@ -549,7 +549,7 @@ Si apre la schermata **MANUAL PARTITIONING**. Il pannello è vuoto — devi crea
 
 A questo punto il pannello di sinistra deve mostrare **esattamente 3 partizioni**:
 
-![Partizionamento completato — /boot 1024 MiB, / ~41 GiB (root), swap 8192 MiB](./images/install_partitioning_done.png)
+![Partizionamento completato — /boot 1024 MiB, / ~41 GiB (root), swap 8192 MiB](../../../images/install_partitioning_done.png)
 
 | Mount Point | Size | File System | Device Type | Note |
 |---|---|---|---|---|

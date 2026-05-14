@@ -2,8 +2,8 @@
 
 Script SPM disponibili nel toolkit:
 
-- `../performance_tuning/community_scripts/tuning/SPM.sql`
-- `../performance_tuning/community_scripts/tuning/SPM_from_AWR_old_fashioned.sql`
+- `../performance_tuning/tuning/SPM.sql`
+- `../performance_tuning/tuning/SPM_from_AWR_old_fashioned.sql`
 
 Flusso tipico:
 
