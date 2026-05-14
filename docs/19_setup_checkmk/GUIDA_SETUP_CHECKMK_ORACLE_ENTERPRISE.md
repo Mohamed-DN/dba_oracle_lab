@@ -500,12 +500,324 @@ EOF
 
 ---
 
-## 14. Riferimenti
 
-- CheckMK Official: Monitoring Oracle
+
+---
+
+## PARTE V — CONFIGURAZIONE AVANZATA E DETTAGLI PLUGIN
+
+---
+
+## 15. mk_oracle.cfg — Riferimento Completo Parametri
+
+### 15.1 Formato DBUSER
+
+```bash
+# Formato completo:
+# DBUSER[_<SID>]="username:password:syspriv:host:port:SID"
+#
+# Campi:
+#   username  - utente monitoring Oracle
+#   password  - password (o vuoto se wallet)
+#   syspriv   - vuoto, SYSDBA, SYSASM, SYSOPER
+#   host      - hostname/IP del DB (vuoto = localhost)
+#   port      - porta listener (vuoto = 1521)
+#   SID       - nome istanza
+
+# Esempio: utente locale, porta default
+DBUSER="checkmk_monitor:StrongP@ss::"
+
+# Esempio: utente con connessione remota
+DBUSER="checkmk_monitor:StrongP@ss::dbserver01:1521:PROD"
+
+# Esempio: istanza specifica
+DBUSER_PROD="checkmk_monitor:StrongP@ss::dbserver01:1521:PROD"
+DBUSER_TEST="checkmk_monitor:TestPwd::dbserver01:1521:TEST"
+
+# Esempio: con SYSDBA (se necessario)
+DBUSER_PROD="checkmk_monitor:StrongP@ss:SYSDBA:dbserver01:1521:PROD"
+
+# Esempio: con wallet (no password nel config!)
+DBUSER="/::"
+# Richiede: wallet configurato in sqlnet.ora + tnsnames.ora
+```
+
+### 15.2 ASM User
+
+```bash
+# Per monitorare ASM diskgroups
+ASMUSER="asmsnmp:AsmP@ss:SYSASM:localhost:1521:+ASM"
+
+# Se ASM ha un ORACLE_HOME diverso
+ASM_ORACLE_HOME=/u01/app/19.0.0/grid
+
+# ASM con wallet
+ASMUSER="/::SYSASM:localhost:1521:+ASM"
+```
+
+### 15.3 Sezioni Disponibili
+
+```bash
+# Sezioni SYNC (eseguite ad ogni check, veloci)
+SYNC_SECTIONS="instance sessions processes"
+
+# Sezioni ASYNC (eseguite periodicamente, cache)
+ASYNC_SECTIONS="tablespaces dataguard_stats rman recovery_area \
+                jobs ts_quotas resumable undostat recovery_status \
+                longactivesessions asm_diskgroup performance locks"
+
+# Sezioni ASM specifiche
+SYNC_ASM_SECTIONS="instance processes"
+ASYNC_ASM_SECTIONS="asm_diskgroup"
+
+# Cache timeout (secondi, default 600)
+CACHE_MAXAGE=600
+
+# Per ESCLUDERE sezioni (alternativa)
+EXCLUDE_SECTIONS="jobs resumable"
+
+# Per ESCLUDERE SID (se ci sono istanze che non vuoi monitorare)
+EXCLUDE_SID="dbtest1 dbdev2"
+```
+
+### 15.4 Remote Instances (Piggyback)
+
+```bash
+# Monitorare database remoti da un host proxy
+# Formato: REMOTE_INSTANCE_<N>="user:pwd:syspriv:host:port:piggyback_host:SID:version"
+
+REMOTE_INSTANCE_1="checkmk_monitor:pwd::remote-db01:1521:remote-db01:PROD:19.0"
+REMOTE_INSTANCE_2="checkmk_monitor:pwd::remote-db02:1521:remote-db02:TEST:19.0"
+REMOTE_INSTANCE_3="checkmk_monitor:pwd::cloud-rds:1521:cloud-rds:RDS01:19.0"
+
+# piggyback_host = hostname come appare in CheckMK
+# version = versione Oracle (opzionale, aiuta il plugin)
+```
+
+### 15.5 Custom SQL Queries
+
+```bash
+# Directory per SQL personalizzati
+CUSTOM_SQLS_PROD="/etc/check_mk/oracle_custom/"
+
+# Struttura file SQL:
+# -- Ogni file .sql nella directory viene eseguito
+# -- L'output deve seguire il formato CheckMK:
+# -- campo1|campo2|campo3
+```
+
+Esempio file SQL custom:
+
+```sql
+-- /etc/check_mk/oracle_custom/pending_tx.sql
+-- CheckMK custom check: pending distributed transactions
+SELECT
+  'pending_tx' AS check_name,
+  CASE WHEN COUNT(*) > 100 THEN 2
+       WHEN COUNT(*) > 10 THEN 1
+       ELSE 0 END AS state,
+  COUNT(*) AS count,
+  'Pending 2PC transactions: ' || COUNT(*) AS detail
+FROM dba_2pc_pending;
+```
+
+```sql
+-- /etc/check_mk/oracle_custom/invalid_objects.sql
+SELECT
+  'invalid_objects' AS check_name,
+  CASE WHEN COUNT(*) > 50 THEN 2
+       WHEN COUNT(*) > 10 THEN 1
+       ELSE 0 END AS state,
+  COUNT(*) AS count,
+  'Invalid objects: ' || COUNT(*) AS detail
+FROM dba_objects
+WHERE status = 'INVALID';
+```
+
+---
+
+## 16. Installazione CheckMK Agent su Windows (Oracle su Windows)
+
+### 16.1 Agent Windows
+
+```powershell
+# 1. Download agent MSI dal server CheckMK
+# https://checkmk-server/mysite/check_mk/agents/windows/check_mk_agent.msi
+
+# 2. Installa
+msiexec /i check_mk_agent.msi /qn
+
+# 3. Plugin mk_oracle per Windows
+# Copia mk_oracle.ps1 in:
+# C:\ProgramData\checkmk\agent\plugins\
+
+# 4. Configurazione
+# C:\ProgramData\checkmk\agent\config\mk_oracle.cfg
+# Stesso formato del Linux (DBUSER, ASMUSER, etc.)
+
+# 5. Registra con TLS
+& "C:\Program Files (x86)\checkmk\service\cmk-agent-ctl.exe" register `
+  --hostname oracledb-win `
+  --server checkmk-server --site mysite `
+  --user cmkadmin --password "pwd" --trust-cert
+```
+
+---
+
+## 17. Dashboard e Visualizzazione
+
+### 17.1 Creare Dashboard Oracle Dedicato
+
+```
+1. CheckMK Web UI -> Customize -> Dashboards -> New Dashboard
+2. Nome: "Oracle Production Overview"
+3. Aggiungi dashlet:
+   a. Service state summary (filter: service label = oracle)
+   b. Host matrix (filter: host label = oracle_db)
+   c. Single metric graph: Tablespace usage top 10
+   d. Single metric graph: RMAN backup age
+   e. Single metric graph: DataGuard lag
+   f. Alert timeline (filter: oracle services)
+```
+
+### 17.2 Graph Collections
+
+```
+Setup -> General -> Graph Collections -> New
+- Nome: "Oracle DB Performance"
+- Graphs:
+  - oracle_sessions: current/max
+  - oracle_tablespace_*: percentage used
+  - oracle_rman: backup age per type
+  - oracle_dataguard_stats: transport/apply lag
+```
+
+---
+
+## 18. Integrazione con OEM (Enterprise Manager)
+
+Se usi sia CheckMK che OEM, ecco come evitare conflitti:
+
+| Metrica | CheckMK | OEM | Note |
+|---|---|---|---|
+| Instance UP/DOWN | mk_oracle | EM Agent | Entrambi, per ridondanza |
+| Tablespace | mk_oracle | EM Metric | Soglie allineate |
+| RMAN Backup Age | mk_oracle | EM Job Status | CheckMK come primary |
+| Data Guard Lag | mk_oracle | DG Broker | CheckMK come primary |
+| Performance (AWR) | Custom SQL | EM Performance Page | OEM preferito per dettaglio |
+| OS Metrics | CheckMK Agent | EM Agent | CheckMK per OS, OEM per DB |
+
+---
+
+## 19. Sicurezza del Plugin
+
+### 19.1 Oracle Wallet (Evitare Password in Chiaro)
+
+```bash
+# 1. Crea wallet per monitoring
+mkstore -wrl /etc/check_mk/oracle_wallet -create
+
+# 2. Aggiungi credenziali
+mkstore -wrl /etc/check_mk/oracle_wallet \
+  -createCredential PROD checkmk_monitor "StrongP@ss"
+
+# 3. Configura sqlnet.ora per il plugin
+cat > /etc/check_mk/sqlnet.ora <<'EOF'
+WALLET_LOCATION =
+  (SOURCE = (METHOD = FILE)
+    (METHOD_DATA = (DIRECTORY = /etc/check_mk/oracle_wallet)))
+SQLNET.WALLET_OVERRIDE = TRUE
+EOF
+
+# 4. Configura tnsnames.ora
+cat > /etc/check_mk/tnsnames.ora <<'EOF'
+PROD =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = dbserver01)(PORT = 1521))
+    (CONNECT_DATA = (SERVICE_NAME = PROD)))
+EOF
+
+# 5. In mk_oracle.cfg: usa wallet
+DBUSER="/::"
+TNS_ADMIN=/etc/check_mk
+```
+
+### 19.2 Permessi File
+
+```bash
+# Il plugin deve essere leggibile solo da root/agent
+chmod 700 /usr/lib/check_mk_agent/plugins/300/mk_oracle
+chmod 600 /etc/check_mk/mk_oracle.cfg
+chmod 700 /etc/check_mk/oracle_wallet/
+chown root:root /etc/check_mk/mk_oracle.cfg
+
+# Se il plugin esegue come utente check_mk_agent:
+# chown check_mk_agent:check_mk_agent /etc/check_mk/mk_oracle.cfg
+```
+
+---
+
+## 20. Troubleshooting Completo
+
+| # | Problema | Causa | Diagnostica | Risoluzione |
+|---|---|---|---|---|
+| 1 | No Oracle services | Plugin non eseguito | `ls -la plugins/300/mk_oracle` | Fix path, chmod 755 |
+| 2 | Cannot find sqlplus | ORACLE_HOME mancante | `echo $ORACLE_HOME` | Set in mk_oracle.cfg |
+| 3 | Permission denied | File non eseguibile | `file mk_oracle` | `chmod 755`, check owner |
+| 4 | CRLF line endings | File editato su Windows | `file mk_oracle` | `dos2unix mk_oracle` |
+| 5 | ORA-01017 | Password errata | Test manuale sqlplus | Aggiorna DBUSER |
+| 6 | ORA-12154 | TNS not found | `tnsping PROD` | Fix tnsnames.ora |
+| 7 | ORA-12541 | Listener down | `lsnrctl status` | Start listener |
+| 8 | Stale data | Intervallo troppo alto | Check directory 300/ vs 60/ | Move to 60/ |
+| 9 | Agent unreachable | Firewall | `telnet host 6556` | Open port 6556 |
+| 10 | TLS registration fail | Cert non trusted | Agent log | `--trust-cert` |
+| 11 | ASM not detected | ASMUSER mancante | Check mk_oracle.cfg | Add ASMUSER |
+| 12 | Binary permission check | CheckMK 2.2+ security | Agent log | Fix binary perms o disable check |
+| 13 | Timeout plugin | Query lente | `time mk_oracle` | Increase CACHE_MAXAGE |
+| 14 | Wrong instance data | SID detection fail | `ps -ef \| grep pmon` | Set explicit DBUSER_SID |
+| 15 | Tablespace UNKNOWN | Missing privileges | `GRANT SELECT ON dba_data_files` | Add grants |
+| 16 | RMAN check empty | No backup metadata | `LIST BACKUP SUMMARY` in RMAN | Ensure backups exist |
+| 17 | DG stats missing | Not Enterprise Edition | `SELECT * FROM v$version` | Requires EE license |
+
+---
+
+## 21. Checklist Post-Installazione
+
+```
+[ ] Agent installato e registrato con TLS
+[ ] Plugin mk_oracle in directory asincrona (60/ o 300/)
+[ ] DBUSER configurato con wallet (no password in chiaro)
+[ ] Utente monitoring creato con grant minimi
+[ ] Connessione testata: sqlplus checkmk_monitor/pwd@SID
+[ ] Plugin testato: /usr/lib/check_mk_agent/plugins/300/mk_oracle
+[ ] Service Discovery eseguita in CheckMK
+[ ] Soglie personalizzate per tablespace, RMAN, DG
+[ ] Notifiche configurate per WARN e CRIT
+[ ] Dashboard Oracle creato
+[ ] Firewall: porta 6556 aperta
+[ ] Permessi file: mk_oracle.cfg protetto (600)
+[ ] Documentate tutte le soglie personalizzate
+[ ] Test notifiche eseguito (simulato CRIT)
+```
+
+---
+
+## 22. Riferimenti Completi
+
+- CheckMK Official: Monitoring Oracle Databases
+  https://docs.checkmk.com/latest/en/monitoring_oracle.html
+- CheckMK Official: Agent Plugin mk_oracle
   https://docs.checkmk.com/latest/en/agent_oracle.html
-- CheckMK Agent Plugin Reference
+- CheckMK Official: Linux Agent Installation
   https://docs.checkmk.com/latest/en/agent_linux.html
+- CheckMK Official: Agent Bakery
+  https://docs.checkmk.com/latest/en/wato_monitoringagents.html
+- CheckMK Official: Notification Configuration
+  https://docs.checkmk.com/latest/en/notifications.html
+- CheckMK Official: Business Intelligence
+  https://docs.checkmk.com/latest/en/bi.html
+- CheckMK Forum: Oracle Plugin Issues
+  https://forum.checkmk.com/c/oracle/
 - MOS: Oracle Database Monitoring Best Practices (Doc ID 466173.1)
 
 ---
