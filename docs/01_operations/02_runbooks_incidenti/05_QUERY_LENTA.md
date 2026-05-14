@@ -9,7 +9,7 @@
 
 > [!TIP]
 > **🚀 L'approccio "Top Tier" (Senior DBA)**
-> Per analizzare performance, i Senior usano il metodo AAS (Average Active Sessions) e leggono da ASH direttamente tramite script specializzati. Tralascia le query manuali sottostanti e usa il tuo arsenale `13_libreria_completa_script/` per una diagnosi immediata:
+> Per analizzare performance, i Senior usano il metodo AAS (Average Active Sessions) e leggono da ASH direttamente tramite script specializzati. Tralascia le query manuali sottostanti e usa il tuo arsenale `01_operations/04_libreria_script_completa/` per una diagnosi immediata:
 > - **Top SQL da ASH (Ultimi N minuti)**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/ash_top_sql.sql`
 > - **Misurare il Carico (AAS)**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/aas.sql`
 > - **Dettaglio Singola Query (Eventi)**: `@../../01_operations/04_libreria_script_completa/03_monitoring_scripts/Event_statistics.sql`

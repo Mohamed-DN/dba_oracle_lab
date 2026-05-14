@@ -27,7 +27,7 @@ Usare questa guida come ripasso tecnico strutturato per colloqui, supporto opera
 
 ## Troubleshooting rapido
 
-- Se un concetto non è chiaro, riparti dai fondamenti correlati in `docs/00_fondamenti`.
+- Se un concetto non è chiaro, riparti dai fondamenti correlati in `docs/04_governance_learning/01_fondamenti_teorici`.
 - Se manca contesto operativo, apri prima runbook e cheat sheet specialistiche.
 - Se il problema è di memorizzazione, usa il percorso rapido e ripeti i blocchi ad alta frequenza.
 
@@ -711,7 +711,7 @@ graph TD
 ---
 
 ## 📅 PIANO DI STUDIO CONSIGLIATO (8 SETTIMANE)
-➔ [Consulta il PIANO_LABORATORIO.md](file:///c:/DBA/oracle_rac_project/docs/00_fondamenti/PIANO_LABORATORIO.md)
+➔ [Consulta il PIANO_LABORATORIO.md](file:///c:/DBA/oracle_rac_project/docs/04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md)
 
 ---
 <p align="center">

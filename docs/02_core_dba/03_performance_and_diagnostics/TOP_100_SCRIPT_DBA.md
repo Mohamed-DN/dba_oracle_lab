@@ -1,7 +1,7 @@
 # ?? Top 100 Script DBA � I Pi� Usati Ogni Giorno
 
 > Selezione curata dei **100 script pi� utili** tra i 914 disponibili nel progetto.
-> Ogni link punta direttamente allo script verificato nella cartella `13_libreria_completa_script/`.
+> Ogni link punta direttamente allo script verificato nella cartella `01_operations/04_libreria_script_completa/`.
 > ?? = Emergenza | ?? = Uso quotidiano | ?? = Tuning | ?? = Utility
 
 ---
@@ -191,4 +191,4 @@ sqlplus / as sysasm
 
 ---
 
-*?? Tutti i 554 script sono in [13_libreria_completa_script/](../../01_operations/04_libreria_script_completa/) � [Attivit� Lab RAC](../../04_governance_learning/03_esami_e_carriera/GUIDA_ATTIVITA_LAB_RAC.md)*
+*?? Tutti i 554 script sono in [01_operations/04_libreria_script_completa/](../../01_operations/04_libreria_script_completa/) � [Attivit� Lab RAC](../../04_governance_learning/03_esami_e_carriera/GUIDA_ATTIVITA_LAB_RAC.md)*

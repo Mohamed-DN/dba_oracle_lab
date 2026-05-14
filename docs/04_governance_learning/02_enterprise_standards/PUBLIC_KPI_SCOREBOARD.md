@@ -8,7 +8,7 @@ Questa pagina definisce i KPI pubblici minimi per misurare la qualità reale del
 |---|---|---|---|
 | ci_success_rate_30d | % workflow principali conclusi con successo negli ultimi 30 giorni | >= 95% | GitHub Actions (CI, Security Gates, Release Governance) |
 | mttr_incident_hours | Mean Time To Recovery per incidenti P1/P2 di automazione/governance | <= 24h | Issue/PR timeline + postmortem |
-| validated_runbook_coverage | % runbook critici validati con evidenza negli ultimi 90 giorni | >= 90% | `docs/11_runbook_operativi/` + `reliability/evidence/` |
+| validated_runbook_coverage | % runbook critici validati con evidenza negli ultimi 90 giorni | >= 90% | `docs/01_operations/02_runbooks_incidenti/` + `reliability/evidence/` |
 | docs_link_health | % link markdown validi sul perimetro CI | >= 99% | workflow CI markdown link check |
 
 ## Regole operative

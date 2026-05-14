@@ -7,7 +7,7 @@
 
 > [!TIP]
 > **🚀 L'approccio "Top Tier" (Senior DBA)**
-> Leggere i report AWR interi in formato di testo è spesso inefficiente. I Senior DBA estraggono direttamente i dati top dall'AWR usando script SQL specifici. Usa il tuo arsenale `13_libreria_completa_script/` per una diagnosi mirata:
+> Leggere i report AWR interi in formato di testo è spesso inefficiente. I Senior DBA estraggono direttamente i dati top dall'AWR usando script SQL specifici. Usa il tuo arsenale `01_operations/04_libreria_script_completa/` per una diagnosi mirata:
 > - **Top Eventi Storici (AWR)**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/awr-top-events.sql`
 > - **Analisi Workload I/O Storico**: `@../../01_operations/04_libreria_script_completa/03_monitoring_scripts/View_IO_Hist.sql`
 > - **Trend di 10 Giorni dei Wait**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/awr-top-10-daily.sql`

@@ -25,7 +25,7 @@
   <summary>📁 Albero dei file</summary>
 
 ```
-docs/14_enterprise_governance/
+docs/04_governance_learning/02_enterprise_standards/
 ├── COMPATIBILITY_POLICY.md
 ├── COMPATIBILITY_MATRIX.md
 ├── COMPATIBILITY_BY_AREA_19c_21c_23ai_26c.md
