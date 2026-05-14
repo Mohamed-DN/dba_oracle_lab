@@ -33,6 +33,6 @@ Per guide dettagliate e approfondite, vedi le sezioni dedicate:
 
 ```bash
 # Dal terminale: cerca un comando rapidamente
-grep -i "switchover" docs/00_cheat_sheet/*.md
-grep -i "backup" docs/00_cheat_sheet/CHEAT_SHEET_RMAN*.md
+grep -i "switchover" docs/01_operations/01_cheat_sheets/*.md
+grep -i "backup" docs/01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN*.md
 ```

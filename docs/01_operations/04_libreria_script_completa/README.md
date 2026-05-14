@@ -135,10 +135,10 @@ sqlplus / as sysdba
 
 | Libreria | Si collega a | Nel progetto |
 |---|---|---|
-| ASM & Storage | Guida Aggiunta Dischi | [04_administration/](../../02_core_dba/01_administration_and_security/) |
-| Monitoring | Comandi DBA + Health Check | [11_runbook_operativi/](../../01_operations/02_runbooks_incidenti/) |
-| Data Guard | Fase 4 Data Guard + DGMGRL | [02_high_availability/](../../02_core_dba/04_high_availability_and_rac/) |
-| Performance | Guida Troubleshooting | [05_performance/](../../02_core_dba/03_performance_and_diagnostics/) |
-| Backup | Guida RMAN Completa | [03_backup_recovery/](../../02_core_dba/02_backup_and_recovery/) |
+| ASM & Storage | Guida Aggiunta Dischi | [02_core_dba/01_administration_and_security/](../../02_core_dba/01_administration_and_security/) |
+| Monitoring | Comandi DBA + Health Check | [01_operations/02_runbooks_incidenti/](../../01_operations/02_runbooks_incidenti/) |
+| Data Guard | Fase 4 Data Guard + DGMGRL | [02_core_dba/04_high_availability_and_rac/](../../02_core_dba/04_high_availability_and_rac/) |
+| Performance | Guida Troubleshooting | [02_core_dba/03_performance_and_diagnostics/](../../02_core_dba/03_performance_and_diagnostics/) |
+| Backup | Guida RMAN Completa | [02_core_dba/02_backup_and_recovery/](../../02_core_dba/02_backup_and_recovery/) |
 
-> Vedi anche: [12_scripts_sql_pronti/](../../01_operations/03_scripts_pronti/) — 10 script SQL sintetici per scenario (la versione "quick" di questa libreria).
+> Vedi anche: [01_operations/03_scripts_pronti/](../../01_operations/03_scripts_pronti/) — 10 script SQL sintetici per scenario (la versione "quick" di questa libreria).

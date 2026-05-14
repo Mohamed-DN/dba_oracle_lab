@@ -423,5 +423,5 @@ con dipendenza Oracle verificata a livello applicativo.
 - Fase 4: `docs/15_proxmox_track/PHASE_4_ORACLE_SILENT_AUTOMATION.md`
 - Fase 5: `docs/15_proxmox_track/PHASE_5_K8S_CAPSTONE.md`
 - Terraform baseline: `infrastructure/proxmox/terraform/README.md`
-- Governance KPI: `docs/14_enterprise_governance/PUBLIC_KPI_SCOREBOARD.md`
+- Governance KPI: `docs/04_governance_learning/02_enterprise_standards/PUBLIC_KPI_SCOREBOARD.md`
 
