@@ -177,3 +177,10 @@
 
 > 📌 Tutti i link sono stati verificati al momento della creazione di questo file.
 > Per aggiornamenti o link rotti apri una issue o una PR.
+
+## Oracle 26ai & Cloud Native
+| Fonte | Descrizione | Link |
+|---|---|---|
+| **Oracle Container Registry** | Immagini ufficiali Docker/Podman per Oracle Database Free | <https://container-registry.oracle.com/> |
+| **Oracle AutoUpgrade** | Tool ufficiale per upgrade da 19c a 26ai (Doc ID 2485457.1) | <https://support.oracle.com/> |
+| **Terraform OCI Provider** | Documentazione ufficiale per sviluppare manifesti IaC per Oracle Cloud | <https://registry.terraform.io/providers/oracle/oci/latest/docs> |
