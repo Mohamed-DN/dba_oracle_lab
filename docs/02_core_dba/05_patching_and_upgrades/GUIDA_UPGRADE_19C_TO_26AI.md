@@ -1,93 +1,142 @@
-# Upgrade a Oracle AI Database 26ai (Tramite AutoUpgrade)
+# Runbook Enterprise: Upgrade da Oracle 19c a Oracle 26ai (AutoUpgrade)
 
-Questa guida illustra il processo per effettuare un upgrade out-of-place dalla vecchia Long Term Release (Oracle 19c) verso la nuova pietra miliare di settore: **Oracle AI Database 26ai**.
-
-L'aggiornamento viene eseguito utilizzando lo strumento Oracle ufficiale **AutoUpgrade**, che minimizza il tempo di downtime, gestisce la pre-analisi, l'upgrade effettivo e le fix post-upgrade.
-
----
-
-## 1. Perché 26ai? (Cosa c'è di nuovo per il DBA)
-A differenza di 19c, l'edizione 26ai ha integrato nativamente concetti di intelligenza artificiale direttamente nel motore RDBMS, rivoluzionando lo sviluppo applicativo e l'amministrazione:
-
-- **AI Vector Search**: Possibilità di memorizzare vettori di embedding come tipi di dato nativi ed eseguire ricerche di similarità (es. `ORDER BY VECTOR_DISTANCE`) fusi in query SQL tradizionali con dati relazionali, spaziali e grafi.
-- **Oracle Select AI Agent**: Un framework per creare agenti LLM (Agentic AI) autonomi che vivono dentro al DB.
-- **JSON Relational Duality**: I dati possono essere letti/scritti tramite REST come documenti JSON, pur essendo salvati in tabelle altamente normalizzate, eliminando il divario relazionale/documentale.
-- **SQL Firewall**: Blocco in tempo reale delle SQL injection direttamente a livello Kernel, isolando e proteggendo i payload malevoli in input.
+Questo **Runbook** documenta la procedura canonica, testata in scenari *Mission Critical*, per effettuare l'upgrade di un database da Oracle 19c (Long Term Release storica) a **Oracle 26ai** (Nuova Long Term Release con funzionalità AI Native).
+A differenza di un semplice upgrade di laboratorio, questa procedura include mitigazioni dei rischi, punti di fallback istantaneo e strategie per minimizzare il downtime (Zero-Downtime Data Guard).
 
 ---
 
-## 2. Prerequisiti per l'Upgrade
-Prima di iniziare il processo su un ambiente di Produzione o nel nostro Lab:
+## 0. Fallback Strategy: Guaranteed Restore Point (GRP)
+La primissima regola di un upgrade Enterprise è la garanzia di un rollback immediato. Se durante la fase di Deploy l'AutoUpgrade si corrompe o se l'applicativo post-upgrade rileva un crollo prestazionale inaccettabile, non si fa il "restore del backup" (che richiede ore/giorni). Si usa il Flashback Database.
 
-1. **Software Oracle 26ai**: Installare la Grid Infrastructure e il Database Software (Oracle Home) versione 26ai sui nodi target.
-2. **AutoUpgrade Tool**: Assicurarsi di scaricare l'ultima versione di `autoupgrade.jar` dal supporto Oracle (Doc ID 2485457.1).
-3. **Validazione OS**: Oracle 26ai richiede Oracle Linux 8.x o 9.x.
-4. **Backup**: Eseguire un Guaranteed Restore Point (GRP) o un backup Full RMAN prima dell'upgrade.
+**Operazioni preliminari (sul DB 19c):**
+```sql
+-- Abilita Flashback se spento
+ALTER SYSTEM SET db_recovery_file_dest_size = 500G SCOPE=BOTH;
+ALTER SYSTEM SET db_recovery_file_dest = '+FRA' SCOPE=BOTH;
+ALTER DATABASE FLASHBACK ON;
+
+-- Crea il Punto di Ripristino Garantito (OBBLIGATORIO)
+CREATE RESTORE POINT PRE_UPG_26AI GUARANTEE FLASHBACK DATABASE;
+```
+*In caso di disastro assoluto, basterà un `FLASHBACK DATABASE TO RESTORE POINT PRE_UPG_26AI;` per tornare alla situazione originaria in 2 minuti.*
 
 ---
 
-## 3. Preparazione: Il File di Configurazione (autoupgrade.cfg)
-AutoUpgrade lavora su un file dichiarativo. Creare un file `upgrade_19c_26ai.cfg`:
+## 1. Fase Pre-Volo (Igiene del Database 19c)
+Un database "sporco" rallenta l'AutoUpgrade e causa invalidazioni a catena.
+Esegui questi step sul database 19c originario 24h prima della finestra di manutenzione:
 
-```ini
-global.autoupg_log_dir=/u01/app/oracle/autoupgrade
-# Configurazione per il database 'ORCL'
-upg1.dbname=ORCL
-upg1.start_time=NOW
-upg1.source_home=/u01/app/oracle/product/19.3.0/dbhome_1
-upg1.target_home=/u01/app/oracle/product/26.0.0/dbhome_1
-upg1.sid=ORCL
-upg1.log_dir=/u01/app/oracle/autoupgrade/ORCL
-upg1.upgrade_node=rac-node-1
-upg1.target_version=26
-```
-
----
-
-## 4. Esecuzione del Processo in Fasi
-
-AutoUpgrade consiglia un approccio a fasi. Entra nell'ambiente con le variabili del database 19c caricate.
-
-### Fase 1: Analyze (Verifica Pre-Upgrade)
-Esegue solo controlli (sola lettura) per identificare blocchi all'upgrade (es. componenti dismessi, dizionari non validi, timezone vecchie).
-
-```bash
-java -jar autoupgrade.jar -config upgrade_19c_26ai.cfg -mode analyze
-```
-Verifica il report generato nella directory dei log e risolvi i warning bloccanti.
-
-### Fase 2: Fixups (Correzione Automatica)
-Esegue correzioni a livello di database per le issue riscontrate in fase di `analyze`.
-
-```bash
-java -jar autoupgrade.jar -config upgrade_19c_26ai.cfg -mode fixups
-```
-
-### Fase 3: Deploy (Upgrade Reale)
-Questo comando fermerà l'istanza 19c, la riavvierà sotto la nuova Oracle Home 26ai, e applicherà tutti gli script del dizionario dati.
-
-```bash
-java -jar autoupgrade.jar -config upgrade_19c_26ai.cfg -mode deploy
-```
-
-Puoi monitorare lo stato aprendo un'altra console di AutoUpgrade e digitando:
-```bash
-lsj  # List Jobs
-status -job 101 # Status dettaglio del job
-```
-
----
-
-## 5. Post-Upgrade e Verifica
-
-Una volta che il comando `deploy` termina con esito positivo:
-1. Verifica l'orario di avvio e i warning dell'alert log del nuovo database 26ai.
-2. Controlla il livello di compatibilità (generalmente non viene alzato in automatico a 26 per permettere downgrade):
+1. **Svuota il Recycle Bin (Cestino)**: L'upgrade del dizionario si "incastra" se cerca di aggiornare tabelle cestinate.
    ```sql
-   SELECT name, value FROM v$parameter WHERE name = 'compatible';
+   PURGE DBA_RECYCLEBIN;
    ```
-   *Se sei sicuro di non voler tornare indietro, eleva la compatibilità a '26.0.0'*.
-3. Avvia i test applicativi!
+2. **Ricompila gli oggetti invalidi**: Non iniziare mai un upgrade se ci sono oggetti utente invalidi.
+   ```bash
+   $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/utlrp.sql
+   ```
+3. **Raccogli Statistiche del Dizionario**: L'AutoUpgrade usa pesantemente il catalogo di sistema. Statistiche vecchie causano upgrade lentissimi (ore invece di minuti).
+   ```sql
+   EXEC DBMS_STATS.GATHER_DICTIONARY_STATS;
+   EXEC DBMS_STATS.GATHER_FIXED_OBJECTS_STATS;
+   ```
 
-> [!CAUTION]
-> L'innalzamento del parametro `compatible` a `26.0.0` è irreversibile. Una volta impostato, **non potrai fare il downgrade a 19c** né montare i backup vecchi sulla nuova istanza. Fallo solo dopo il sign-off finale dell'applicativo.
+---
+
+## 2. Configurazione AutoUpgrade Tool
+Il tool AutoUpgrade (`autoupgrade.jar`) rimpiazza il vecchio `dbua` (Database Upgrade Assistant) e il lentissimo `catupgrd.sql`.
+Scarica sempre l'ultimissima versione rilasciata su MyOracleSupport (Doc ID 2485457.1), e non usare quella fornita di default nella ORACLE_HOME 26ai.
+
+Crea un file di configurazione (`config_26ai.cfg`):
+```ini
+global.autoupg_log_dir=/u01/app/oracle/admin/autoupgrade
+# Parametri del DB
+upg1.dbname=PRDDB
+upg1.start_time=NOW
+upg1.source_home=/u01/app/oracle/product/19.0.0/dbhome_1
+upg1.target_home=/u01/app/oracle/product/26.0.0/dbhome_1
+upg1.sid=PRDDB
+upg1.log_dir=/u01/app/oracle/admin/autoupgrade/PRDDB
+upg1.target_version=26
+# Disabilita il timezone upgrade automatico (meglio farlo a mano dopo test)
+upg1.timezone_upg=no
+```
+
+---
+
+## 3. Esecuzione Multi-Fase (Analyze, Fixups, Deploy)
+
+In un ambiente Enterprise non si lancia l'upgrade in un colpo solo.
+
+### Fase A: `analyze` (Lettura Non Invasiva)
+Si può eseguire anche giorni prima in pieno orario lavorativo. Analizza il DB 19c e identifica problemi strutturali.
+```bash
+java -jar autoupgrade.jar -config config_26ai.cfg -mode analyze
+```
+*Leggere il file `PRDDB_preupgrade.html` nei log.*
+
+### Fase B: `fixups` (Correzioni Automatiche)
+Esegue piccoli script sul 19c per risolvere i warning pre-upgrade.
+```bash
+java -jar autoupgrade.jar -config config_26ai.cfg -mode fixups
+```
+
+### Fase C: `deploy` (Downtime Iniziato)
+**ATTENZIONE**: Inizio del disservizio applicativo. L'istanza verrà chiusa e riaperta sotto i binari 26ai.
+```bash
+java -jar autoupgrade.jar -config config_26ai.cfg -mode deploy
+```
+Monitoraggio in una seconda shell:
+```bash
+java -jar autoupgrade.jar -console
+autoupgrade> lsj
+autoupgrade> status -job 100
+```
+
+---
+
+## 4. Architetture Zero-Downtime (Rolling su Data Guard)
+Se un fermo di 1-2 ore è inaccettabile (SLA stringenti), non si esegue l'upgrade diretto in-place. Si utilizza **Transient Logical Standby (DBMS_ROLLING)**.
+In breve:
+1. Si converte temporaneamente il Data Guard Physical Standby in un Logical Standby.
+2. Si fa l'upgrade dell'istanza Logical (ex-Standby) a 26ai *mentre la Primary 19c è ancora attiva e serve i clienti*.
+3. Si esegue uno switchover fulmineo.
+4. Quella che era la Primary 19c viene ricostruita direttamente agganciandosi alla nuova Primary 26ai.
+
+---
+
+## 5. Attività Post-Upgrade Obbligatorie
+Se l'AutoUpgrade conclude in "Completed", non cantare vittoria, segui questa checklist:
+
+1. **Check Compatibilità**:
+   Di default l'AutoUpgrade lascia `COMPATIBLE=19.0.0`. Questo permette il downgrade. Se i test applicativi vanno bene e decidi di rimanere su 26ai, alza il parametro:
+   ```sql
+   ALTER SYSTEM SET compatible='26.0.0' SCOPE=SPFILE;
+   -- Riavvia istanza
+   ```
+   *(Attenzione: Da questo istante, il comando Flashback per il downgrade è permanentemente disattivato).*
+
+2. **Aggiornamento Timezone (DBMS_DST)**:
+   Ogni major release ha file di fuso orario aggiornati.
+   Esegui gli script `$ORACLE_HOME/rdbms/admin/utltz_upg_check.sql` e `utltz_upg_apply.sql`.
+
+3. **Upgrade Catalogo RMAN**:
+   Se usi un catalogo di ripristino esterno, collegati al catalogo RMAN 26ai e aggiornalo:
+   ```bash
+   rman target / catalog rman/pass@RCAT
+   RMAN> UPGRADE CATALOG;
+   RMAN> UPGRADE CATALOG; -- Va ripetuto due volte per sicurezza per bug noti.
+   ```
+
+4. **Drop Restore Point**:
+   Una volta ottenuto il *Sign-Off* dall'applicativo e dal business, il GRP consuma pesantemente la FRA bloccando gli archivelog. Droppalo per evitare di intasare lo storage e fermare il DB:
+   ```sql
+   DROP RESTORE POINT PRE_UPG_26AI;
+   ```
+
+---
+
+## 6. Perché ai Devs piacerà 26ai? (Cosa Abilitare)
+Dopo l'upgrade, potrai abilitare per gli sviluppatori:
+- **AI Vector Search**: Crea colonne di tipo `VECTOR` nelle tabelle esistenti per far loro eseguire similarity search con Embeddings presi da un LLM, fusi con SQL relazionale.
+- **SQL Firewall**: Addestra il database a intercettare SQL injection analizzando un periodo di log e creando una whitelist autorizzata (`DBMS_SQL_FIREWALL`).
+- **Lock-Free Reservations**: Converti le classiche colonne di giacenza (es. `saldo_conto`) per evitare il lock di riga (`FOR UPDATE`) sui micro-aggiornamenti concomitanti.

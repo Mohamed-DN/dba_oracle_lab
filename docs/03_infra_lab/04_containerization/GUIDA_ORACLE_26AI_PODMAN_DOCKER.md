@@ -1,46 +1,37 @@
-# Oracle AI Database 26ai Free: Containerization Setup (Docker / Podman)
+# Enterprise Containerization: Oracle 26ai su Podman/Docker
 
-Oltre all'architettura Enterprise su VM (Vagrant/Proxmox) per scenari di RAC e Data Guard, i DBA moderni necessitano di istanze effimere e leggere per testare feature, fare unit test sulle procedure PL/SQL, o provare le nuove funzionalità legate all'intelligenza artificiale (AI Vector Search, Agentic AI) senza il peso di un OS completo.
+L'utilizzo di container per i database relazionali Oracle richiede un setup attento. A differenza di un applicativo web *stateless*, un database Enterprise deve gestire memoria condivisa del Kernel (SGA), permessi asincroni su file system e sicurezza profonda del demone container.
 
-Oracle rilascia la versione **Free Edition** del proprio database 26ai direttamente sul [Container Registry](https://container-registry.oracle.com/). Questa guida spiega come lanciare Oracle 26ai in pochi secondi.
-
----
-
-## 1. Prerequisiti
-- **Motore Container**: Docker Desktop, Podman, o Rancher Desktop installati.
-- **Risorse**: Minimo 2GB di RAM allocati al motore container (4GB raccomandati per sfruttare le funzioni AI).
-- **Spazio**: Circa 5-8GB di spazio disco per l'immagine e i volumi.
-
-> [!TIP]
-> Su sistemi Enterprise Linux (RHEL, Oracle Linux) è fortemente raccomandato l'uso di **Podman** in modalità "rootless" per motivi di sicurezza, mentre su Windows/Mac si può usare Docker Desktop.
+Questa guida illustra lo standard aziendale per il deployment rapido di Oracle AI Database 26ai Free tramite Docker Compose o Podman Compose.
 
 ---
 
-## 2. Metodo Veloce: CLI (Command Line)
-
-Se hai solo bisogno di un database "usa e getta" per un test rapido al volo, puoi lanciare un singolo comando:
-
-```bash
-docker run -d --name oracle-26ai \
-  -p 1521:1521 \
-  -e ORACLE_PWD=SysPassword123! \
-  container-registry.oracle.com/database/free:latest
-```
-
-> [!WARNING]
-> Senza l'utilizzo di Volumi, se distruggi il container (`docker rm`), **perderai tutti i dati**. Per la persistenza, usa il metodo con Docker Compose descritto di seguito.
-
-Per controllare i log e capire quando il database è pronto all'uso:
-```bash
-docker logs -f oracle-26ai
-```
-*(Attendi il messaggio "DATABASE IS READY TO USE")*
+## 1. Sicurezza e Architettura: Podman vs Docker
+In contesti Enterprise (Red Hat, Oracle Linux), il demone Docker in esecuzione come root rappresenta un rischio di sicurezza enorme (privilege escalation).
+Lo standard di settore è **Podman**, che esegue i container in modalità **rootless**.
+L'immagine ufficiale Oracle 26ai è certificata per girare *rootless*, garantendo l'isolamento completo dei processi.
 
 ---
 
-## 3. Metodo Consigliato: Docker Compose (Persistenza Dati)
+## 2. Il Problema dei Volumi e SELinux ("Permission Denied")
+Uno degli errori più comuni e bloccanti montando volumi host in un container DB su macchine Enterprise Linux è il famigerato `Permission Denied` in fase di startup.
+Questo accade perché **SELinux** blocca l'accesso del container alla directory host, anche se i permessi `chmod` sembrano corretti.
 
-Per avere un ambiente riproducibile e che mantenga i dati anche al riavvio, crea una cartella di lavoro sul tuo PC e crea al suo interno questo file `docker-compose.yml`:
+**La Soluzione**: Applicare il contesto SELinux al volume.
+Nel `docker-compose.yml`, è tassativo aggiungere il suffisso `:Z` (condivisione privata) o `:z` (condivisione tra più container) al mapping del volume.
+
+---
+
+## 3. Ottimizzazione della Memoria (Kernel shm_size)
+Oracle Database utilizza estensivamente la memoria condivisa (System Global Area - SGA). I container Docker/Podman allocano di default solo **64MB** alla partizione `/dev/shm`.
+Se l'SGA di Oracle supera questo limite, l'istanza va in crash (ORA-00845: MEMORY_TARGET not supported on this system).
+È obbligatorio impostare `shm_size` (es. `2gb`) nel file compose.
+
+---
+
+## 4. Runbook: Deployment con Docker Compose
+
+Crea una directory operativa e salva il seguente file `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -48,54 +39,64 @@ version: '3.8'
 services:
   oracle26ai:
     image: container-registry.oracle.com/database/free:latest
-    container_name: oracle26ai_dev
+    container_name: oracle26ai_ent_dev
+    # Tuning Kernel per la System Global Area (SGA)
+    shm_size: '2gb'
     environment:
-      - ORACLE_PWD=SysPassword123!
+      - ORACLE_PWD=SuperSecureEnterprisePassword123!
+      - ORACLE_SID=FREE
+      - ENABLE_ARCHIVELOG=true # Abilita archivelog in startup per simulazioni di recovery
     ports:
       - "1521:1521"
+      - "5500:5500" # Enterprise Manager Express
     volumes:
-      - oradata:/opt/oracle/oradata
+      # Il suffisso :Z è OBBLIGATORIO per risolvere i conflitti SELinux su OEL/RHEL
+      - /u01/docker_data/oracle_26ai/oradata:/opt/oracle/oradata:Z
+      # Cartella di bootstrap automatico
+      - /u01/docker_data/oracle_26ai/scripts/startup:/opt/oracle/scripts/startup:Z
+      - /u01/docker_data/oracle_26ai/scripts/setup:/opt/oracle/scripts/setup:Z
     restart: unless-stopped
-
-volumes:
-  oradata:
-    driver: local
-```
-
-Avvia il container in background:
-```bash
-docker compose up -d
+    healthcheck:
+      # Verifica lo stato reale del database chiamando PMON
+      test: ["CMD-SHELL", "ps -ef | grep pmon | grep -v grep || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 ```
 
 ---
 
-## 4. Connessione al Database
+## 5. Bootstrap Automatico (Entrypoint Scripts)
+In CI/CD, spesso serve un database già popolato con schemi specifici senza interazione manuale.
+L'immagine Oracle supporta l'esecuzione automatica di script al primissimo avvio.
+Qualsiasi script (`.sql`, `.sh`) inserito nella directory host `/u01/docker_data/oracle_26ai/scripts/startup` verrà eseguito **dopo** la creazione del DB.
 
-Una volta che il container è in stato *healthy*, puoi connetterti dal tuo host (usando DBeaver, SQL Developer, o SQLcl).
-
-### Parametri di Connessione:
-- **Hostname**: `localhost`
-- **Port**: `1521`
-- **Service Name**: `FREEPDB1`
-- **Utente DBA**: `SYS` (connesso as SYSDBA) o `SYSTEM`
-- **Utente App**: `PDBADMIN`
-- **Password**: Quella impostata in `ORACLE_PWD` (`SysPassword123!`)
-
-### Connessione diretta da terminale (tramite shell del container)
-Se non hai tool installati sul tuo PC, puoi usare `sqlplus` o `sqlcl` direttamente da dentro il container:
-
-```bash
-docker exec -it oracle26ai_dev sqlplus sys/SysPassword123!@FREEPDB1 as sysdba
-```
-
----
-
-## 5. Esplorare le Novità di 26ai (Quick Test)
-
-Una volta dentro `sqlplus`, puoi verificare di essere davvero sulla 26ai:
-
+**Esempio di script `/u01/docker_data/oracle_26ai/scripts/startup/01_app_schema.sql`:**
 ```sql
-SELECT * FROM v$version;
+ALTER SESSION SET CONTAINER=FREEPDB1;
+CREATE USER core_app IDENTIFIED BY "CoreApp_PWD_2026";
+GRANT CONNECT, RESOURCE, DBA TO core_app;
+-- Utilizzo della nuova feature 26ai: Duality View
+CREATE JSON RELATIONAL DUALITY VIEW utente_view AS ...
 ```
 
-E provare a creare una tabella con un Vector Type per sperimentare con l'**AI Vector Search** nativa, senza dover configurare cluster complessi!
+---
+
+## 6. Procedura Operativa (Start, Stop & Recovery)
+
+1. **Inizializzazione**:
+   ```bash
+   mkdir -p /u01/docker_data/oracle_26ai/{oradata,scripts/startup,scripts/setup}
+   podman-compose up -d
+   ```
+2. **Controllo dei Log di Init**:
+   L'inizializzazione al primo boot può richiedere dai 5 ai 15 minuti.
+   ```bash
+   podman logs -f oracle26ai_ent_dev
+   # Attendere il messaggio: "DATABASE IS READY TO USE"
+   ```
+3. **Troubleshooting Crash all'avvio**:
+   Se il container esce subito (Exited 1), verifica i permessi della cartella `oradata`. L'utente dentro il container (`oracle`, UID 54321) deve poter scrivere nel volume host. Se il mapping `:Z` non fosse sufficiente:
+   ```bash
+   sudo chown -R 54321:54321 /u01/docker_data/oracle_26ai/oradata
+   ```
