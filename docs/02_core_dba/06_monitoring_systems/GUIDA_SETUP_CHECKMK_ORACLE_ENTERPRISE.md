@@ -1291,3 +1291,83 @@ Setup -> Agents -> Agent auto-update
 ---
 
 **Documento confidenziale ad uso interno DBA. Ultima revisione: Maggio 2026.**
+
+
+---
+
+## 11. 📈 CheckMK Business Intelligence (BI) per Oracle
+
+Il modulo **Business Intelligence (BI)** di CheckMK permette di aggregare lo stato di decine di servizi database (Tablespace, Alert Log, Processi) in un unico **Stato di Servizio Business** (es. "ERP Database Health"). Questo è cruciale in ambienti Enterprise per non sommergere i manager di alert tecnici, ma mostrare solo il "semaforo" del servizio finale.
+
+### Fase 1: Creazione BI Rules (Regole Logiche)
+Le regole definiscono *come* i servizi tecnici influenzano il servizio Business.
+
+1. Vai in `Setup` -> `Business Intelligence` -> `Rules`.
+2. Crea una regola **"Oracle Core Health"**.
+3. Aggiungi i seguenti **Nodi Figli (Child nodes)**:
+   * **Stato Istanza:** `Service: Oracle Instance .*`
+   * **Stato Listener:** `Service: Listener .*`
+   * **Spazio Tablespace:** `Service: ORA .* Tablespace .*` (Imposta come "Worst state" - se un TBS è critico, tutto è critico).
+   * **Errori Alert Log:** `Service: ORA .* Alert Log`
+
+### Fase 2: Creazione BI Aggregation
+1. Vai in `Setup` -> `Business Intelligence` -> `Aggregations`.
+2. Crea una nuova Aggregazione e chiamala **"Produzione ERP Database"**.
+3. Associala alla regola "Oracle Core Health" creata prima.
+4. Ora nella dashboard principale di CheckMK avrai un **Macro-Semaforo** che raggruppa tutti gli allarmi tecnici sotto un'unica voce, filtrando il rumore.
+
+---
+
+## 12. 🛠️ Custom Local Checks per Oracle (Bash & Python)
+
+Se il plugin ufficiale `mk_oracle` non copre un tuo script SQL proprietario o un'esigenza di business molto specifica (es. "Ci sono ordini bloccati in tabella XYZ?"), puoi scrivere un **Local Check**.
+
+Un Local Check è uno script eseguibile che l'Agent CheckMK lancia sul server Oracle e il cui output viene processato automaticamente senza bisogno di scrivere plugin complessi in Python lato server.
+
+### Sintassi di Output CheckMK
+Lo script deve stampare a terminale una riga in questo formato esatto:
+`Stato "Nome Servizio" Metriche Testo Descrittivo`
+* **Stato:** `0` (OK), `1` (WARNING), `2` (CRITICAL), `3` (UNKNOWN).
+
+### Esempio: Check Bash per Errori Custom
+Crea il file `/usr/lib/check_mk_agent/local/oracle_custom_check.sh`:
+
+```bash
+#!/bin/bash
+# Local check per contare righe in una tabella di LOG applicativo Oracle
+
+export ORACLE_HOME=/u01/app/oracle/product/19.3.0/dbhome_1
+export ORACLE_SID=PRODDB
+
+COUNT=$(su - oracle -c "$ORACLE_HOME/bin/sqlplus -S / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF
+SELECT COUNT(*) FROM applicativo.tabella_errori WHERE row_date >= SYSDATE - 1;
+EOF" | xargs)
+
+if [ "$COUNT" -ge 100 ]; then
+    echo "2 \"App Errors\" count=$COUNT Oltre 100 errori ($COUNT) registrati nelle ultime 24h!"
+elif [ "$COUNT" -ge 50 ]; then
+    echo "1 \"App Errors\" count=$COUNT Attenzione: $COUNT errori nelle ultime 24h."
+else
+    echo "0 \"App Errors\" count=$COUNT OK: Nessun errore anomalo ($COUNT)."
+fi
+```
+
+### Esecuzione Asincrona (Efficienza)
+Le query SQL pesanti non devono girare ogni minuto (il default di CheckMK).
+Per far girare questo local check solo **ogni 5 minuti (300 secondi)**:
+1. Crea la cartella: `mkdir -p /usr/lib/check_mk_agent/local/300/`
+2. Sposta lo script lì dentro: `mv oracle_custom_check.sh /usr/lib/check_mk_agent/local/300/`
+3. Dai permessi di esecuzione: `chmod +x /usr/lib/check_mk_agent/local/300/oracle_custom_check.sh`
+
+Al prossimo discovery, CheckMK rileverà automaticamente il nuovo servizio chiamato **App Errors**!
+
+---
+
+## 13. 🌍 Distributed Monitoring (Multi-Datacenter RAC)
+Se hai un Database RAC steso su due Data Center (es. Primary a Milano, Standby a Roma) o se usi il Cloud OCI:
+1. Installa un **CheckMK Central Server** (Milano).
+2. Installa un **CheckMK Remote Site** (Roma / OCI).
+3. Collega il Remote Site al Central Site via Livestatus TCP (porta 6557 criptata con TLS).
+4. Assegna gli host di Roma al server di polling di Roma.
+*Vantaggio:* Se cade la VPN tra Milano e Roma, il server di Roma continua a monitorare il DB Standby e trattiene gli alert. Quando la VPN torna su, invia lo storico al server centrale senza alcun "buco" nei grafici.
