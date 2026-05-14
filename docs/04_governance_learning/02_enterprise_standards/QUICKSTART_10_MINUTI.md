@@ -11,8 +11,8 @@ Arrivare a un primo esito verificabile con provisioning minimo + health check au
 1. `cd vagrant_rac_dataguard/dns && vagrant up`
 2. `cd ../rac1 && vagrant up`
 3. `cd /home/runner/work/dba_oracle_lab/dba_oracle_lab/automation`
-4. `ansible-playbook -i inventory/lab.ini playbooks/04_daily_health_check.yml`
-5. `ansible-playbook -i inventory/lab.ini playbooks/11_create_cdb_pdb.yml -e pdb_create_if_missing=true -e cdb_create_if_missing=false`
+4. `ansible-playbook -i inventory/lab.ini playbooks/daily_health_check.yml`
+5. `ansible-playbook -i inventory/lab.ini playbooks/create_cdb_pdb.yml -e pdb_create_if_missing=true -e cdb_create_if_missing=false`
 
 ## Output atteso
 - Stato CRS e istanze RAC senza errori bloccanti.

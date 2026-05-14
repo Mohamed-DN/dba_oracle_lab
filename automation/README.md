@@ -36,20 +36,20 @@ automation/
 │   └── all.yml                            ← Variabili globali (lab + produzione)
 ├── collections_requirements.yml           ← Collections consigliate (oravirt/community)
 ├── playbooks/
-│   ├── 01_oracle_install.yml              ← Installazione 19c Software-Only
-│   ├── 02_oracle_patching.yml             ← Patching RU (rolling RAC)
-│   ├── 03_oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
-│   ├── 04_daily_health_check.yml          ← Health Check giornaliero
-│   ├── 05_rman_backup.yml                 ← Backup RMAN con validazione
-│   ├── 06_dataguard_switchover.yml        ← Switchover DG automatizzato
-│   ├── 07_create_users_tablespaces.yml    ← Automazione User/Tablespace
-│   ├── 08_gather_stats.yml                ← Raccolta statistiche schema
-│   ├── 09_datapump_export.yml             ← Logical backup con expdp
-│   ├── 10_manage_services.yml             ← Gestione RAC services
-│   ├── 11_create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
-│   ├── 12_dba_maintenance.yml             ← Maintenance DBA periodica
-│   ├── 13_maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
-│   └── 14_checkmk_oracle_checks_setup.yml ← Bootstrap automatico Checkmk + check Oracle/SMART
+│   ├── oracle_install.yml              ← Installazione 19c Software-Only
+│   ├── oracle_patching.yml             ← Patching RU (rolling RAC)
+│   ├── oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
+│   ├── daily_health_check.yml          ← Health Check giornaliero
+│   ├── rman_backup.yml                 ← Backup RMAN con validazione
+│   ├── dataguard_switchover.yml        ← Switchover DG automatizzato
+│   ├── create_users_tablespaces.yml    ← Automazione User/Tablespace
+│   ├── gather_stats.yml                ← Raccolta statistiche schema
+│   ├── datapump_export.yml             ← Logical backup con expdp
+│   ├── manage_services.yml             ← Gestione RAC services
+│   ├── create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
+│   ├── dba_maintenance.yml             ← Maintenance DBA periodica
+│   ├── maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
+│   └── checkmk_oracle_checks_setup.yml ← Bootstrap automatico Checkmk + check Oracle/SMART
 ├── roles/
 │   ├── maa_guardrails/                    ← Ruolo MAA baseline enterprise
 │   ├── oracle_daily_health/               ← Ruolo riusabile health-check
@@ -92,48 +92,48 @@ ansible -i inventory/lab.ini all -m ping
 
 ```bash
 # ---- HEALTH CHECK GIORNALIERO ----
-ansible-playbook -i inventory/production.ini playbooks/04_daily_health_check.yml
+ansible-playbook -i inventory/production.ini playbooks/daily_health_check.yml
 
 # ---- DATAGUARD SWITCHOVER ----
-ansible-playbook -i inventory/production.ini playbooks/06_dataguard_switchover.yml
+ansible-playbook -i inventory/production.ini playbooks/dataguard_switchover.yml
 
 # ---- BACKUP RMAN ----
-ansible-playbook -i inventory/production.ini playbooks/05_rman_backup.yml
+ansible-playbook -i inventory/production.ini playbooks/rman_backup.yml
 
 # ---- DATAPUMP EXPORT ----
-ansible-playbook -i inventory/production.ini playbooks/09_datapump_export.yml
+ansible-playbook -i inventory/production.ini playbooks/datapump_export.yml
 
 # ---- PATCHING (rolling, zero downtime) ----
 # Dry-run prima:
-ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml --check
+ansible-playbook -i inventory/production.ini playbooks/oracle_patching.yml --check
 # Esecuzione reale:
-ansible-playbook -i inventory/production.ini playbooks/02_oracle_patching.yml
+ansible-playbook -i inventory/production.ini playbooks/oracle_patching.yml
 
 # ---- AUTOUPGRADE (3 fasi) ----
 # Fase 1: Pre-upgrade (24h prima, NO downtime):
-ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags pre_upgrade
+ansible-playbook -i inventory/production.ini playbooks/oracle_autoupgrade.yml --tags pre_upgrade
 # Fase 2: Upgrade reale (DOWNTIME!):
-ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags upgrade
+ansible-playbook -i inventory/production.ini playbooks/oracle_autoupgrade.yml --tags upgrade
 # Fase 3: Finalizzazione (7 gg dopo, NO downtime):
-ansible-playbook -i inventory/production.ini playbooks/03_oracle_autoupgrade.yml --tags finalize
+ansible-playbook -i inventory/production.ini playbooks/oracle_autoupgrade.yml --tags finalize
 
 # ---- INSTALLAZIONE SOFTWARE ----
-ansible-playbook -i inventory/lab.ini playbooks/01_oracle_install.yml
+ansible-playbook -i inventory/lab.ini playbooks/oracle_install.yml
 
 # ---- CDB/PDB (se mancanti) ----
-ansible-playbook -i inventory/lab.ini playbooks/11_create_cdb_pdb.yml \
+ansible-playbook -i inventory/lab.ini playbooks/create_cdb_pdb.yml \
   -e cdb_create_if_missing=true --ask-vault-pass
 
 # ---- DBA MAINTENANCE (invalid objects, stats dizionario, audit purge) ----
-ansible-playbook -i inventory/production.ini playbooks/12_dba_maintenance.yml
+ansible-playbook -i inventory/production.ini playbooks/dba_maintenance.yml
 
 # ---- MAA GUARDRAILS (baseline production) ----
-ansible-playbook -i inventory/production.ini playbooks/13_maa_guardrails.yml \
+ansible-playbook -i inventory/production.ini playbooks/maa_guardrails.yml \
   -e maa_enforce_compliance=true \
   -e maa_set_broker_thresholds=true
 
 # ---- CHECKMK + ORACLE CHECKS BOOTSTRAP ----
-ansible-playbook -i inventory/lab.ini playbooks/14_checkmk_oracle_checks_setup.yml
+ansible-playbook -i inventory/lab.ini playbooks/checkmk_oracle_checks_setup.yml
 ```
 
 ---
@@ -152,7 +152,7 @@ ansible-vault create group_vars/vault.yml
 #   vault_cdb_admin_password: "StrongCdbPassword!"
 
 # Usa il vault nei playbook:
-ansible-playbook playbooks/05_rman_backup.yml --ask-vault-pass
+ansible-playbook playbooks/rman_backup.yml --ask-vault-pass
 ```
 
 ---
