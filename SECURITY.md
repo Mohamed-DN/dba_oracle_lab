@@ -26,4 +26,4 @@ Minimum report content:
 - Coordinated disclosure is required before public publication.
 
 Full disclosure process is defined in:
-`docs/14_enterprise_governance/VULNERABILITY_DISCLOSURE_POLICY.md`.
+`docs/04_governance_learning/02_enterprise_standards/VULNERABILITY_DISCLOSURE_POLICY.md`.

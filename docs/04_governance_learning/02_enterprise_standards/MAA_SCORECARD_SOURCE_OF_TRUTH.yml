@@ -18,19 +18,19 @@ controls:
     title: Protection parameters (db_block_*, lost_write)
     status: partial
     evidence:
-      - docs/02_high_availability/GUIDA_MAA_BEST_PRACTICES.md
+      - docs/02_core_dba/04_high_availability_and_rac/GUIDA_MAA_BEST_PRACTICES.md
       - automation/roles/maa_guardrails/tasks/main.yml
   - id: MAA-03
     title: Flashback readiness
     status: partial
     evidence:
-      - docs/02_high_availability/GUIDA_FLASHBACK_DATABASE.md
+      - docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md
       - automation/roles/maa_guardrails/tasks/main.yml
   - id: MAA-04
     title: FSFO operationalization
     status: planned
     evidence:
-      - docs/02_high_availability/GUIDA_FAILOVER_E_REINSTATE.md
+      - docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md
   - id: MAA-05
     title: E2E validation evidence on PR
     status: implemented
