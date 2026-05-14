@@ -14,7 +14,7 @@
 - Controlla lag transport/apply e servizi broker.
 
 ## Sintomo: PDB non disponibile
-- Verifica playbook `11_create_cdb_pdb.yml` e variabili `oracle_pdb_name`.
+- Verifica playbook `create_cdb_pdb.yml` e variabili `oracle_pdb_name`.
 - Controlla `v$pdbs` da SQL*Plus come SYSDBA.
 
 ## Sintomo: backup o recovery in errore

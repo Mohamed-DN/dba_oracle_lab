@@ -263,20 +263,20 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Playbook | Cosa Fa |
 |---|---|
-| [01 Oracle Install](./automation/playbooks/01_oracle_install.yml) | Installazione 19c silent |
-| [02 Oracle Patching](./automation/playbooks/02_oracle_patching.yml) | Rolling patch (zero downtime) |
-| [03 AutoUpgrade](./automation/playbooks/03_oracle_autoupgrade.yml) | 3 fasi: pre_upgrade → upgrade → finalize |
-| [04 Health Check](./automation/playbooks/04_daily_health_check.yml) | Morning check automatizzato |
-| [05 RMAN Backup](./automation/playbooks/05_rman_backup.yml) | Backup + crosscheck + validate |
-| [06 DG Switchover](./automation/playbooks/06_dataguard_switchover.yml) | Switchover Data Guard automatizzato |
-| [07 Users & TBS](./automation/playbooks/07_create_users_tablespaces.yml) | Creazione BIGFILE Tablespace e Utenti |
-| [08 Gather Stats](./automation/playbooks/08_gather_stats.yml) | DBMS_STATS automatizzato via Ansible |
-| [09 DataPump Export](./automation/playbooks/09_datapump_export.yml) | Export parallelo di schemi applicativi |
-| [10 RAC Services](./automation/playbooks/10_manage_services.yml) | Start/Stop srvctl dei servizi RAC |
-| [11 CDB/PDB](./automation/playbooks/11_create_cdb_pdb.yml) | Creazione CDB/PDB idempotente |
-| [12 DBA Maintenance](./automation/playbooks/12_dba_maintenance.yml) | Maintenance periodica DB |
-| [13 MAA Guardrails](./automation/playbooks/13_maa_guardrails.yml) | Validazioni MAA e compliance DG |
-| [14 Checkmk Bootstrap](./automation/playbooks/14_checkmk_oracle_checks_setup.yml) | Bootstrap Checkmk + check Oracle/SMART |
+| [01 Oracle Install](./automation/playbooks/oracle_install.yml) | Installazione 19c silent |
+| [02 Oracle Patching](./automation/playbooks/oracle_patching.yml) | Rolling patch (zero downtime) |
+| [03 AutoUpgrade](./automation/playbooks/oracle_autoupgrade.yml) | 3 fasi: pre_upgrade → upgrade → finalize |
+| [04 Health Check](./automation/playbooks/daily_health_check.yml) | Morning check automatizzato |
+| [05 RMAN Backup](./automation/playbooks/rman_backup.yml) | Backup + crosscheck + validate |
+| [06 DG Switchover](./automation/playbooks/dataguard_switchover.yml) | Switchover Data Guard automatizzato |
+| [07 Users & TBS](./automation/playbooks/create_users_tablespaces.yml) | Creazione BIGFILE Tablespace e Utenti |
+| [08 Gather Stats](./automation/playbooks/gather_stats.yml) | DBMS_STATS automatizzato via Ansible |
+| [09 DataPump Export](./automation/playbooks/datapump_export.yml) | Export parallelo di schemi applicativi |
+| [10 RAC Services](./automation/playbooks/manage_services.yml) | Start/Stop srvctl dei servizi RAC |
+| [11 CDB/PDB](./automation/playbooks/create_cdb_pdb.yml) | Creazione CDB/PDB idempotente |
+| [12 DBA Maintenance](./automation/playbooks/dba_maintenance.yml) | Maintenance periodica DB |
+| [13 MAA Guardrails](./automation/playbooks/maa_guardrails.yml) | Validazioni MAA e compliance DG |
+| [14 Checkmk Bootstrap](./automation/playbooks/checkmk_oracle_checks_setup.yml) | Bootstrap Checkmk + check Oracle/SMART |
 
 ---
 
@@ -297,8 +297,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Documento | Descrizione |
 |---|---|
-| [Catalogo Attività DBA](./docs/04_governance_learning/03_esami_e_carriera/archivio_extra/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
-| [Checklist Operativa](./docs/04_governance_learning/03_esami_e_carriera/archivio_extra/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
+| [Catalogo Attività DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
+| [Checklist Operativa](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
 | [Domande Tecniche DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Domande e risposte per esami e certificazioni |
 
 ---

@@ -22,7 +22,7 @@ and this project follows Semantic Versioning.
 - MAA scorecard single source of truth (`docs/04_governance_learning/02_enterprise_standards/MAA_SCORECARD_SOURCE_OF_TRUTH.yml`).
 - Governance docs for compatibility matrix and production profile.
 - Reliability KPI baseline document (`reliability/kpi/README.md`).
-- New role-based Ansible baseline (`automation/roles/maa_guardrails`) and playbook `13_maa_guardrails.yml`.
+- New role-based Ansible baseline (`automation/roles/maa_guardrails`) and playbook `maa_guardrails.yml`.
 - PR E2E asset validation now uploads mandatory evidence artifact.
 - README root enhanced: added live CI/CD, Security Gates, and Release Governance badges (branch=master); added Level-1 Quick Navigation index and architecture/lab-phases collapsible sections.
 

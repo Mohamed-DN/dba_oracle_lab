@@ -15,7 +15,7 @@ Questo profilo applica baseline più restrittive rispetto al lab didattico.
 
 ```bash
 cd automation
-ansible-playbook -i inventory/production.ini playbooks/13_maa_guardrails.yml \
+ansible-playbook -i inventory/production.ini playbooks/maa_guardrails.yml \
   -e maa_enforce_compliance=true \
   -e maa_set_broker_thresholds=true
 ```
