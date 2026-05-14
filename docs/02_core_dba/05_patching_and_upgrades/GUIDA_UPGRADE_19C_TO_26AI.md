@@ -1,142 +1,314 @@
-# Runbook Enterprise: Upgrade da Oracle 19c a Oracle 26ai (AutoUpgrade)
+# RUNBOOK ENTERPRISE: UPGRADE MISSION-CRITICAL DA ORACLE 19C A 26AI
 
-Questo **Runbook** documenta la procedura canonica, testata in scenari *Mission Critical*, per effettuare l'upgrade di un database da Oracle 19c (Long Term Release storica) a **Oracle 26ai** (Nuova Long Term Release con funzionalità AI Native).
-A differenza di un semplice upgrade di laboratorio, questa procedura include mitigazioni dei rischi, punti di fallback istantaneo e strategie per minimizzare il downtime (Zero-Downtime Data Guard).
+> **Document Classification:** STRICTLY CONFIDENTIAL / ENTERPRISE OPERATIONS  
+> **Last Updated:** Maggio 2026  
+> **Target Audience:** Senior DBA, Database Architects, SREs  
+> **Estimated Execution Time:** 4-6 ore (In-place), 2-3 ore (Zero-Downtime DBMS_ROLLING)
+
+## SOMMARIO ELETTRONICO
+1. [Introduzione e Obiettivi di Business](#1-introduzione-e-obiettivi-di-business)
+2. [Fase 0: Assessment Architetturale e Prerequisiti Hardware/OS](#2-fase-0-assessment-architetturale-e-prerequisiti-hardwareos)
+3. [Fase 1: Pre-Volo e Bonifica del Database (Igiene)](#3-fase-1-pre-volo-e-bonifica-del-database-igiene)
+4. [Fase 2: Disaster Recovery & Fallback Strategy (Il Paracadute)](#4-fase-2-disaster-recovery--fallback-strategy-il-paracadute)
+5. [Fase 3: AutoUpgrade State Machine (In-Place Upgrade)](#5-fase-3-autoupgrade-state-machine-in-place-upgrade)
+6. [Fase 4: Zero-Downtime Upgrade tramite DBMS_ROLLING (Data Guard)](#6-fase-4-zero-downtime-upgrade-tramite-dbms_rolling-data-guard)
+7. [Fase 5: Post-Upgrade Checklist & Timezone Patching](#7-fase-5-post-upgrade-checklist--timezone-patching)
+8. [Fase 6: Validazione Applicativa e Troubleshooting Avanzato](#8-fase-6-validazione-applicativa-e-troubleshooting-avanzato)
 
 ---
 
-## 0. Fallback Strategy: Guaranteed Restore Point (GRP)
-La primissima regola di un upgrade Enterprise è la garanzia di un rollback immediato. Se durante la fase di Deploy l'AutoUpgrade si corrompe o se l'applicativo post-upgrade rileva un crollo prestazionale inaccettabile, non si fa il "restore del backup" (che richiede ore/giorni). Si usa il Flashback Database.
+## 1. Introduzione e Obiettivi di Business
 
-**Operazioni preliminari (sul DB 19c):**
+L'aggiornamento da Oracle 19c (la Long Term Release predominante del decennio 2019-2025) a **Oracle AI Database 26ai** rappresenta un salto architetturale epocale. Oracle 26ai non è un semplice aggiornamento incrementale, ma introduce il motore **AI Vector Search**, il **JSON Relational Duality**, e l'**SQL Firewall** integrato nel Kernel RDBMS. 
+
+Questo documento è un **Method of Procedure (MOP)** di livello Enterprise. Ogni singolo comando, output e possibile eccezione è documentato. L'operatore non deve MAI assumere nulla: deve copiare, incollare e validare.
+
+---
+
+## 2. Fase 0: Assessment Architetturale e Prerequisiti Hardware/OS
+
+### 2.1. Matrice di Compatibilità OS
+Oracle 26ai impone vincoli stringenti sul sistema operativo sottostante.
+- **Supportato**: Oracle Linux 8.8+, Oracle Linux 9.2+, Red Hat Enterprise Linux 8.8+, Red Hat Enterprise Linux 9.2+.
+- **NON Supportato**: Qualsiasi versione di Oracle Linux 7 o RHEL 7.
+
+*Comando di verifica (Eseguire su tutti i nodi RAC/DataGuard):*
+```bash
+cat /etc/os-release | egrep '^(NAME|VERSION)='
+uname -r
+```
+
+*Output Atteso:*
+```text
+NAME="Oracle Linux Server"
+VERSION="8.9"
+5.15.0-202.135.2.el8uek.x86_64
+```
+
+### 2.2. Dimensionamento Memoria (SGA/PGA)
+Le nuove feature di intelligenza artificiale (Vector Search, True Cache) richiedono un footprint di memoria leggermente superiore rispetto a 19c.
+- **Delta richiesto**: +15% SGA, +10% PGA rispetto ai valori attuali di 19c.
+
+*Comando di verifica (Eseguire su SQL*Plus as SYSDBA):*
 ```sql
--- Abilita Flashback se spento
-ALTER SYSTEM SET db_recovery_file_dest_size = 500G SCOPE=BOTH;
-ALTER SYSTEM SET db_recovery_file_dest = '+FRA' SCOPE=BOTH;
+SELECT name, value/1024/1024 AS MB FROM v$parameter WHERE name IN ('sga_target', 'pga_aggregate_target');
+```
+
+### 2.3. Controllo Spazio Disco (FRA e Oracle Home)
+L'installazione dei nuovi binari 26ai (Out-of-place) richiede almeno 15GB di spazio nella partizione `/u01`.
+Inoltre, il Flashback Database (Guaranteed Restore Point) richiederà abbondante spazio nella Fast Recovery Area (FRA) per conservare l'immagine pre-upgrade.
+
+*Comando di verifica:*
+```bash
+df -h /u01
+```
+*Output Atteso:* Minimo 20G Available.
+
+```sql
+SELECT name, space_limit/1024/1024/1024 AS Limit_GB, space_used/1024/1024/1024 AS Used_GB 
+FROM v$recovery_file_dest;
+```
+*Azione:* Garantire che (Limit - Used) sia > 200GB. In caso contrario, svuotare la FRA o estendere il LUN ASM.
+
+---
+
+## 3. Fase 1: Pre-Volo e Bonifica del Database (Igiene)
+
+L'upgrade fallisce o si prolunga per ore se il dizionario dati 19c è "sporco". L'igiene è tassativa e va eseguita **48 ore prima** della finestra di fermo.
+
+### 3.1. Svuotamento Recycle Bin
+Il dizionario Oracle tenterà di analizzare e convertire oggetti presenti nel cestino.
+```sql
+-- Esecuzione: SYSDBA
+PURGE DBA_RECYCLEBIN;
+```
+*Output Atteso:*
+```text
+DBA Recyclebin purged.
+```
+
+### 3.2. Risoluzione Transazioni Distribuite In Sospeso (2PC)
+Transazioni pendenti bloccheranno il db in fase di upgrade causandone il crash immediato.
+```sql
+SELECT local_tran_id, state FROM dba_2pc_pending;
+```
+*Output Atteso:* `no rows selected`.
+*Contingency (se restituisce righe):*
+```sql
+EXECUTE DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY('<local_tran_id>');
+COMMIT;
+```
+
+### 3.3. Compilazione Oggetti Invalidi
+Non avviare mai un upgrade se ci sono oggetti utente invalidi.
+```bash
+$ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/utlrp.sql
+```
+Verifica:
+```sql
+SELECT owner, object_type, count(*) 
+FROM dba_objects 
+WHERE status='INVALID' 
+GROUP BY owner, object_type ORDER BY 1;
+```
+*Output Atteso:* Righe restituite limitate a schemi non essenziali o `no rows selected`.
+
+### 3.4. Raccolta Statistiche Dizionario
+Lo step più critico per le performance di AutoUpgrade.
+```sql
+EXEC DBMS_STATS.GATHER_DICTIONARY_STATS;
+EXEC DBMS_STATS.GATHER_FIXED_OBJECTS_STATS;
+```
+*Attenzione: Questi comandi possono durare dai 5 ai 45 minuti a seconda della frammentazione della Shared Pool.*
+
+---
+
+## 4. Fase 2: Disaster Recovery & Fallback Strategy (Il Paracadute)
+
+In caso l'upgrade si blocchi al 60% per un bug Oracle o un problema di data dictionary corruption, il restore da un backup RMAN di un DB da 10TB richiederebbe 12 ore. Inaccettabile.
+Utilizzeremo un **Guaranteed Restore Point (GRP)**.
+
+### 4.1. Creazione del GRP (Eseguire 5 minuti prima del fermo)
+```sql
+-- Verificare stato Archivelog e Flashback
+SELECT log_mode, flashback_on FROM v$database;
+-- Se FLASHBACK_ON è NO, attivarlo:
 ALTER DATABASE FLASHBACK ON;
 
--- Crea il Punto di Ripristino Garantito (OBBLIGATORIO)
-CREATE RESTORE POINT PRE_UPG_26AI GUARANTEE FLASHBACK DATABASE;
+-- Creare il GRP
+CREATE RESTORE POINT FALLBACK_TO_19C GUARANTEE FLASHBACK DATABASE;
+
+-- Verificare la corretta creazione
+SELECT name, guarantee_flashback_database, time FROM v$restore_point WHERE name = 'FALLBACK_TO_19C';
 ```
-*In caso di disastro assoluto, basterà un `FLASHBACK DATABASE TO RESTORE POINT PRE_UPG_26AI;` per tornare alla situazione originaria in 2 minuti.*
+
+### 4.2. Procedura di Emergenza (MOP Rollback)
+*Scenario:* L'AutoUpgrade fallisce irreversibilmente. Il Management ordina l'abort.
+*Execution Time:* 5 Minuti.
+```sql
+-- Aprire con la VECCHIA Oracle Home (19c)
+STARTUP MOUNT;
+FLASHBACK DATABASE TO RESTORE POINT FALLBACK_TO_19C;
+ALTER DATABASE OPEN RESETLOGS;
+-- Il database è tornato esattamente allo stato pre-upgrade.
+```
 
 ---
 
-## 1. Fase Pre-Volo (Igiene del Database 19c)
-Un database "sporco" rallenta l'AutoUpgrade e causa invalidazioni a catena.
-Esegui questi step sul database 19c originario 24h prima della finestra di manutenzione:
+## 5. Fase 3: AutoUpgrade State Machine (In-Place Upgrade)
 
-1. **Svuota il Recycle Bin (Cestino)**: L'upgrade del dizionario si "incastra" se cerca di aggiornare tabelle cestinate.
-   ```sql
-   PURGE DBA_RECYCLEBIN;
-   ```
-2. **Ricompila gli oggetti invalidi**: Non iniziare mai un upgrade se ci sono oggetti utente invalidi.
-   ```bash
-   $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/utlrp.sql
-   ```
-3. **Raccogli Statistiche del Dizionario**: L'AutoUpgrade usa pesantemente il catalogo di sistema. Statistiche vecchie causano upgrade lentissimi (ore invece di minuti).
-   ```sql
-   EXEC DBMS_STATS.GATHER_DICTIONARY_STATS;
-   EXEC DBMS_STATS.GATHER_FIXED_OBJECTS_STATS;
-   ```
+L'AutoUpgrade tool orchestrerà il tutto tramite un file `.cfg`.
 
----
-
-## 2. Configurazione AutoUpgrade Tool
-Il tool AutoUpgrade (`autoupgrade.jar`) rimpiazza il vecchio `dbua` (Database Upgrade Assistant) e il lentissimo `catupgrd.sql`.
-Scarica sempre l'ultimissima versione rilasciata su MyOracleSupport (Doc ID 2485457.1), e non usare quella fornita di default nella ORACLE_HOME 26ai.
-
-Crea un file di configurazione (`config_26ai.cfg`):
+### 5.1. Costruzione autoupgrade.cfg
+Creare il file `/u01/app/oracle/admin/autoupgrade/config_26ai.cfg`:
 ```ini
 global.autoupg_log_dir=/u01/app/oracle/admin/autoupgrade
-# Parametri del DB
 upg1.dbname=PRDDB
 upg1.start_time=NOW
-upg1.source_home=/u01/app/oracle/product/19.0.0/dbhome_1
+upg1.source_home=/u01/app/oracle/product/19.3.0/dbhome_1
 upg1.target_home=/u01/app/oracle/product/26.0.0/dbhome_1
 upg1.sid=PRDDB
 upg1.log_dir=/u01/app/oracle/admin/autoupgrade/PRDDB
 upg1.target_version=26
-# Disabilita il timezone upgrade automatico (meglio farlo a mano dopo test)
 upg1.timezone_upg=no
+upg1.run_utlrp=yes
 ```
 
----
-
-## 3. Esecuzione Multi-Fase (Analyze, Fixups, Deploy)
-
-In un ambiente Enterprise non si lancia l'upgrade in un colpo solo.
-
-### Fase A: `analyze` (Lettura Non Invasiva)
-Si può eseguire anche giorni prima in pieno orario lavorativo. Analizza il DB 19c e identifica problemi strutturali.
+### 5.2. Mode ANALYZE (Sola lettura, Nessun Downtime)
 ```bash
 java -jar autoupgrade.jar -config config_26ai.cfg -mode analyze
 ```
-*Leggere il file `PRDDB_preupgrade.html` nei log.*
+*Esaminare l'HTML generato in `/u01/app/oracle/admin/autoupgrade/PRDDB/100/prechecks/prddb_preupgrade.html`.*
 
-### Fase B: `fixups` (Correzioni Automatiche)
-Esegue piccoli script sul 19c per risolvere i warning pre-upgrade.
-```bash
-java -jar autoupgrade.jar -config config_26ai.cfg -mode fixups
-```
-
-### Fase C: `deploy` (Downtime Iniziato)
-**ATTENZIONE**: Inizio del disservizio applicativo. L'istanza verrà chiusa e riaperta sotto i binari 26ai.
+### 5.3. Mode DEPLOY (DOWNTIME INIZIATO)
+Fermare le applicazioni. Spegnere i listeners. Lanciare il deploy.
 ```bash
 java -jar autoupgrade.jar -config config_26ai.cfg -mode deploy
 ```
-Monitoraggio in una seconda shell:
-```bash
-java -jar autoupgrade.jar -console
+
+La console interattiva mostrerà i Job ID.
+```text
 autoupgrade> lsj
-autoupgrade> status -job 100
++----+-------+---------+---------+-------+--------------+--------+
+|Job#|DB_NAME|    STAGE|OPERATION| STATUS|    START_TIME| UPDATED|
++----+-------+---------+---------+-------+--------------+--------+
+| 101|  PRDDB|DBUPGRADE|EXECUTING|RUNNING|26/05 02:00:00|02:15:00|
++----+-------+---------+---------+-------+--------------+--------+
+```
+Comandi utili della console:
+- `status -job 101`: Mostra la percentuale esatta dell'avanzamento.
+- `tasks`: Mostra quali worker RDBMS stanno compilando i file PLB.
+- `resume -job 101`: Se il job va in errore per un tablespace pieno, allarga il datafile da un altro terminale e poi lancia resume.
+
+---
+
+## 6. Fase 4: Zero-Downtime Upgrade tramite DBMS_ROLLING (Data Guard)
+
+Per SLA rigorosi (99.999%), un fermo di 2 ore non è ammissibile. Si procede con l'architettura **Transient Logical Standby**. 
+L'infrastruttura DEVE avere un Oracle Data Guard Physical Standby in Maximum Performance mode.
+
+### 6.1. Inizializzazione
+Sulla Primary 19c:
+```sql
+EXEC DBMS_ROLLING.INIT_PLAN(future_primary => 'STANDBY_DB_UNIQUE_NAME');
+```
+*Output: Il piano viene generato nel dizionario dati.*
+
+### 6.2. Costruzione
+```sql
+EXEC DBMS_ROLLING.BUILD_PLAN;
+```
+*Il Physical Standby viene convertito silenziosamente in un Logical Standby e il processo SQL Apply inizia a convertire i redo log in statement DML.*
+
+### 6.3. Upgrade della Logical Standby a 26ai
+Si ferma l'istanza Standby. Si monta il software 26ai. Si apre il database in UPGRADE mode ed esegue `dbupgrade`.
+Le applicazioni *continuano* a scrivere sulla Primary 19c. Lo Standby logico si accoda bufferizzando.
+
+### 6.4. Switchover (Il momento della verità)
+Quando il business autorizza 30 secondi di micro-downtime:
+Sulla Primary 19c:
+```sql
+EXEC DBMS_ROLLING.SWITCHOVER;
+```
+Le connessioni TAF (Transparent Application Failover) o Application Continuity vengono dirottate sulla ex-Standby (ormai 26ai). Le applicazioni riprendono senza accorgersi della nuova versione RDBMS sottostante.
+
+### 6.5. Ricostruzione Vecchia Primary
+L'ultimo step è sincronizzare la vecchia Primary 19c convertendola in una Physical Standby 26ai.
+```sql
+EXEC DBMS_ROLLING.FINISH_PLAN;
+```
+*La procedura elimina l'architettura Logical e ristabilisce il Physical Data Guard pulito.*
+
+---
+
+## 7. Fase 5: Post-Upgrade Checklist & Timezone Patching
+
+Una volta che il DB è aperto su 26ai, si deve finalizzare l'asset.
+
+### 7.1. Innalzamento Compatibilità
+Durante il testing post-upgrade, il parametro `compatible` resta ancorato a 19.0.0. Questo permette ancora il downgrade.
+Una volta approvato l'ambiente (Sign-Off), innalzarlo per sbloccare le feature 26ai.
+```sql
+ALTER SYSTEM SET COMPATIBLE='26.0.0' SCOPE=SPFILE;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+```
+**ATTENZIONE:** Il downgrade ora è matematicamente impossibile.
+
+### 7.2. Upgrade del File Timezone (DBMS_DST)
+Le nuove release Oracle aggiornano le tavole DST globali (fusi orari, ora legale).
+```sql
+-- Identificare la versione corrente
+SELECT version FROM v$timezone_file;
+
+-- Applicare la nuova (es. V44 o superiore)
+EXEC DBMS_DST.BEGIN_UPGRADE(44);
+-- Riavviare il DB due volte (come richiesto dallo script) e poi:
+EXEC DBMS_DST.END_UPGRADE(44);
+```
+
+### 7.3. Rimozione GRP
+Per evitare che la FRA si riempia e blocchi il DB:
+```sql
+DROP RESTORE POINT FALLBACK_TO_19C;
 ```
 
 ---
 
-## 4. Architetture Zero-Downtime (Rolling su Data Guard)
-Se un fermo di 1-2 ore è inaccettabile (SLA stringenti), non si esegue l'upgrade diretto in-place. Si utilizza **Transient Logical Standby (DBMS_ROLLING)**.
-In breve:
-1. Si converte temporaneamente il Data Guard Physical Standby in un Logical Standby.
-2. Si fa l'upgrade dell'istanza Logical (ex-Standby) a 26ai *mentre la Primary 19c è ancora attiva e serve i clienti*.
-3. Si esegue uno switchover fulmineo.
-4. Quella che era la Primary 19c viene ricostruita direttamente agganciandosi alla nuova Primary 26ai.
+## 8. Fase 6: Validazione Applicativa e Troubleshooting Avanzato
 
----
+### 8.1. Check Componenti Core
+Verificare che non ci siano componenti RDBMS rimasti in stato `INVALID` o `OPTION OFF`.
+```sql
+SELECT comp_name, version, status FROM dba_registry ORDER BY comp_name;
+```
+*Output Atteso:* Tutti i componenti (Oracle Database Catalog, Oracle XML Database, ecc.) devono mostrare stato `VALID` e versione `26.0.0.0.0`.
 
-## 5. Attività Post-Upgrade Obbligatorie
-Se l'AutoUpgrade conclude in "Completed", non cantare vittoria, segui questa checklist:
+### 8.2. Validazione AI Vector Search
+Per dimostrare al management l'avvenuto passaggio, esegui un test di creazione di una colonna vettoriale (Feature iconica di 26ai):
+```sql
+CREATE TABLE ai_demo_docs (
+    doc_id NUMBER PRIMARY KEY,
+    doc_content CLOB,
+    doc_embedding VECTOR(1536, FLOAT32)
+);
+INSERT INTO ai_demo_docs (doc_id, doc_content) VALUES (1, 'Test 26ai completato con successo');
+COMMIT;
+```
 
-1. **Check Compatibilità**:
-   Di default l'AutoUpgrade lascia `COMPATIBLE=19.0.0`. Questo permette il downgrade. Se i test applicativi vanno bene e decidi di rimanere su 26ai, alza il parametro:
-   ```sql
-   ALTER SYSTEM SET compatible='26.0.0' SCOPE=SPFILE;
-   -- Riavvia istanza
-   ```
-   *(Attenzione: Da questo istante, il comando Flashback per il downgrade è permanentemente disattivato).*
+### 8.3. Troubleshooting: ORA-04023
+Se alcune view rimangono in stato `INVALID` persistente e `utlrp.sql` non le risolve:
+```sql
+ALTER VIEW <nome_vista> COMPILE;
+-- Se fallisce per object dependency, fare rebuild delle statistiche fisse
+EXEC DBMS_STATS.GATHER_FIXED_OBJECTS_STATS;
+```
 
-2. **Aggiornamento Timezone (DBMS_DST)**:
-   Ogni major release ha file di fuso orario aggiornati.
-   Esegui gli script `$ORACLE_HOME/rdbms/admin/utltz_upg_check.sql` e `utltz_upg_apply.sql`.
-
-3. **Upgrade Catalogo RMAN**:
-   Se usi un catalogo di ripristino esterno, collegati al catalogo RMAN 26ai e aggiornalo:
-   ```bash
-   rman target / catalog rman/pass@RCAT
-   RMAN> UPGRADE CATALOG;
-   RMAN> UPGRADE CATALOG; -- Va ripetuto due volte per sicurezza per bug noti.
-   ```
-
-4. **Drop Restore Point**:
-   Una volta ottenuto il *Sign-Off* dall'applicativo e dal business, il GRP consuma pesantemente la FRA bloccando gli archivelog. Droppalo per evitare di intasare lo storage e fermare il DB:
-   ```sql
-   DROP RESTORE POINT PRE_UPG_26AI;
-   ```
-
----
-
-## 6. Perché ai Devs piacerà 26ai? (Cosa Abilitare)
-Dopo l'upgrade, potrai abilitare per gli sviluppatori:
-- **AI Vector Search**: Crea colonne di tipo `VECTOR` nelle tabelle esistenti per far loro eseguire similarity search con Embeddings presi da un LLM, fusi con SQL relazionale.
-- **SQL Firewall**: Addestra il database a intercettare SQL injection analizzando un periodo di log e creando una whitelist autorizzata (`DBMS_SQL_FIREWALL`).
-- **Lock-Free Reservations**: Converti le classiche colonne di giacenza (es. `saldo_conto`) per evitare il lock di riga (`FOR UPDATE`) sui micro-aggiornamenti concomitanti.
+### 8.4. ORA-28040: No matching authentication protocol
+I client antichissimi (Oracle Client 10g/11g) non riescono a connettersi a 26ai di default.
+Modificare il `sqlnet.ora` lato RDBMS Server:
+```text
+SQLNET.ALLOWED_LOGON_VERSION_SERVER=11
+SQLNET.ALLOWED_LOGON_VERSION_CLIENT=11
+```
+Riavviare il listener.
