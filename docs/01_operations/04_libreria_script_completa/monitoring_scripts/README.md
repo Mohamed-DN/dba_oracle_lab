@@ -4,9 +4,9 @@
 > Questi sono gli script che un DBA Enterprise usa **ogni giorno** per diagnosticare problemi.
 
 > ℹ️ Nota riordino: alcuni script storici sono stati riclassificati fuori da Monitoring:
-> - ASM → `../asm_storage/community_scripts/`
-> - Backup RMAN → `../backup_recovery/community_scripts/`
-> - SQL tuning/SPM → `../performance_tuning/community_scripts/tuning/`
+> - ASM → `../asm_storage/`
+> - Backup RMAN → `../backup_recovery/`
+> - SQL tuning/SPM → `../performance_tuning/tuning/`
 > - Capacity storage (MAXSIZE/BIGFILE) → `../utilities/storage/`
 
 ---

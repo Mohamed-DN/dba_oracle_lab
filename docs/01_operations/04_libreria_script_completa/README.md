@@ -98,13 +98,13 @@ libreria_oracle/
 
 | Problema | Dove Cercare | Script Chiave |
 |---|---|---|
-| "L'app è bloccata!" | `monitoring_scripts/community_jkstill/sessions_locks/` | `blocking_sessions.sql`, `lock_tree.sql` |
-| "Il database è lento!" | `performance_tuning/community_scripts/` | Top SQL, wait events, ASH |
+| "L'app è bloccata!" | `monitoring_scripts/sessions_locks/` | `blocking_sessions.sql`, `lock_tree.sql` |
+| "Il database è lento!" | `performance_tuning/` | Top SQL, wait events, ASH |
 | "Tablespace pieno!" | `utilities/storage/` | `showdf.sql`, `showfree.sql`, `showtbs.sql` |
 | "UNDO pieno!" | `utilities/storage/` | `undo_stats.sql`, `undo_retention_available.sql` |
-| "Chi è connesso?" | `monitoring_scripts/community_jkstill/users_logged/` | Login audit, sessioni attive |
+| "Chi è connesso?" | `monitoring_scripts/users_logged/` | Login audit, sessioni attive |
 | "Job fallito" | `utilities/scheduler/` | `dba_jobs_running.sql`, `show_jobs.sql` |
-| "MView non refresha" | `monitoring_scripts/community_jkstill/mviews/` | MView log, refresh status |
+| "MView non refresha" | `monitoring_scripts/mviews/` | MView log, refresh status |
 | "Serve un nuovo utente" | `user_management/` | Template con profili e grant |
 | "Data Guard in GAP" | `dataguard/` | Verifica GAP, MRP status |
 | "Serve compressione" | `compression/` | DBMS_REDEFINITION online |
@@ -118,7 +118,7 @@ libreria_oracle/
 sqlplus / as sysdba
 
 # 2. Esegui lo script che ti serve
-@libreria_oracle/monitoring_scripts/community_jkstill/sessions_locks/blocking_sessions.sql
+@libreria_oracle/monitoring_scripts/sessions_locks/blocking_sessions.sql
 
 # 3. Oppure copia-incolla i blocchi SQL che ti servono
 ```

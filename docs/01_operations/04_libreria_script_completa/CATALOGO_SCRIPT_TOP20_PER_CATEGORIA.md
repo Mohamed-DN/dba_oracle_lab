@@ -43,20 +43,20 @@ Raggruppamento operativo:
 
 | # | Script | Uso principale |
 |---|---|---|
-| 1 | [asm_diskgroups.sql](./asm_storage/community_scripts/asm_diskgroups.sql) | stato e spazio diskgroup |
-| 2 | [asm_disks.sql](./asm_storage/community_scripts/asm_disks.sql) | inventario dischi ASM |
-| 3 | [asm_diskgroup_attributes.sql](./asm_storage/community_scripts/asm_diskgroup_attributes.sql) | attributi DG (`au_size`, compatibilita) |
-| 4 | [asm_diskgroup_templates.sql](./asm_storage/community_scripts/asm_diskgroup_templates.sql) | template ridondanza/striping |
-| 5 | [asm_disk_stats.sql](./asm_storage/community_scripts/asm_disk_stats.sql) | metriche I/O per disco |
-| 6 | [asm-diskgroup-stat.sql](./asm_storage/community_scripts/asm-diskgroup-stat.sql) | KPI sintetici diskgroup |
-| 7 | [asm_disk_errors.sql](./asm_storage/community_scripts/asm_disk_errors.sql) | errori disco e stato |
-| 8 | [asm_extent_distribution.sql](./asm_storage/community_scripts/asm_extent_distribution.sql) | distribuzione extent |
-| 9 | [asm_extent_multi_au.sql](./asm_storage/community_scripts/asm_extent_multi_au.sql) | analisi extent multi-AU |
-| 10 | [asm_failgroup_members.sql](./asm_storage/community_scripts/asm_failgroup_members.sql) | mapping failgroup |
-| 11 | [asm_files.sql](./asm_storage/community_scripts/asm_files.sql) | elenco file ASM |
-| 12 | [asm_files_path.sql](./asm_storage/community_scripts/asm_files_path.sql) | path/logical file map |
-| 13 | [asm_partners.sql](./asm_storage/community_scripts/asm_partners.sql) | partner/failure alignment |
-| 14 | [asm_copyblock.sql](./asm_storage/community_scripts/asm_copyblock.sql) | utility blocchi ASM |
+| 1 | [asm_diskgroups.sql](./asm_storage/asm_diskgroups.sql) | stato e spazio diskgroup |
+| 2 | [asm_disks.sql](./asm_storage/asm_disks.sql) | inventario dischi ASM |
+| 3 | [asm_diskgroup_attributes.sql](./asm_storage/asm_diskgroup_attributes.sql) | attributi DG (`au_size`, compatibilita) |
+| 4 | [asm_diskgroup_templates.sql](./asm_storage/asm_diskgroup_templates.sql) | template ridondanza/striping |
+| 5 | [asm_disk_stats.sql](./asm_storage/asm_disk_stats.sql) | metriche I/O per disco |
+| 6 | [asm-diskgroup-stat.sql](./asm_storage/asm-diskgroup-stat.sql) | KPI sintetici diskgroup |
+| 7 | [asm_disk_errors.sql](./asm_storage/asm_disk_errors.sql) | errori disco e stato |
+| 8 | [asm_extent_distribution.sql](./asm_storage/asm_extent_distribution.sql) | distribuzione extent |
+| 9 | [asm_extent_multi_au.sql](./asm_storage/asm_extent_multi_au.sql) | analisi extent multi-AU |
+| 10 | [asm_failgroup_members.sql](./asm_storage/asm_failgroup_members.sql) | mapping failgroup |
+| 11 | [asm_files.sql](./asm_storage/asm_files.sql) | elenco file ASM |
+| 12 | [asm_files_path.sql](./asm_storage/asm_files_path.sql) | path/logical file map |
+| 13 | [asm_partners.sql](./asm_storage/asm_partners.sql) | partner/failure alignment |
+| 14 | [asm_copyblock.sql](./asm_storage/asm_copyblock.sql) | utility blocchi ASM |
 
 ## dataguard (runbook)
 
@@ -98,7 +98,7 @@ Raggruppamento operativo:
 | 17 | [AshTopProcedure.sql](./monitoring_scripts/AshTopProcedure.sql) | top PL/SQL in ASH |
 | 18 | [SQL Plan Change.sql](./monitoring_scripts/SQL Plan Change.sql) | cambi plan hash |
 | 19 | [SQL Stats.sql](./monitoring_scripts/SQL Stats.sql) | statistiche SQL |
-| 20 | [View_UnstablePlan.sql](./performance_tuning/community_scripts/tuning/View_UnstablePlan.sql) | rileva piani instabili |
+| 20 | [View_UnstablePlan.sql](./performance_tuning/tuning/View_UnstablePlan.sql) | rileva piani instabili |
 
 Nota: la cartella include anche i pack `community_gwenshap` e `community_jkstill` con molte utility specialistiche.
 
@@ -135,14 +135,14 @@ Raggruppamento operativo:
 |---|---|---|
 | 1 | [Flashback_restore_point.sql](./backup_recovery/Flashback_restore_point.sql) | gestione restore point |
 | 2 | [FLASHBACK_RESTORPOINT.sql](./backup_recovery/FLASHBACK_RESTORPOINT.sql) | variante restore point |
-| 3 | [fra_config.sql](./backup_recovery/community_scripts/fra_config.sql) | stato/config FRA |
-| 4 | [incarnations.sql](./backup_recovery/community_scripts/incarnations.sql) | elenco incarnazioni DB |
-| 5 | [rman-bkup-status.sql](./backup_recovery/community_scripts/rman-bkup-status.sql) | stato backup RMAN |
-| 6 | [rman-bkup-details.sql](./backup_recovery/community_scripts/rman-bkup-details.sql) | dettaglio job RMAN |
-| 7 | [rman-recovery-scn.sql](./backup_recovery/community_scripts/rman-recovery-scn.sql) | SCN recovery point |
-| 8 | [rman-recovery-min-scn.sql](./backup_recovery/community_scripts/rman-recovery-min-scn.sql) | minimo SCN recuperabile |
-| 9 | [unrecoverable-files.sql](./backup_recovery/community_scripts/unrecoverable-files.sql) | file non recoverable |
-| 10 | [restore-sqlplus-settings.sql](./backup_recovery/community_scripts/restore-sqlplus-settings.sql) | reset ambiente SQL*Plus |
+| 3 | [fra_config.sql](./backup_recovery/fra_config.sql) | stato/config FRA |
+| 4 | [incarnations.sql](./backup_recovery/incarnations.sql) | elenco incarnazioni DB |
+| 5 | [rman-bkup-status.sql](./backup_recovery/rman-bkup-status.sql) | stato backup RMAN |
+| 6 | [rman-bkup-details.sql](./backup_recovery/rman-bkup-details.sql) | dettaglio job RMAN |
+| 7 | [rman-recovery-scn.sql](./backup_recovery/rman-recovery-scn.sql) | SCN recovery point |
+| 8 | [rman-recovery-min-scn.sql](./backup_recovery/rman-recovery-min-scn.sql) | minimo SCN recuperabile |
+| 9 | [unrecoverable-files.sql](./backup_recovery/unrecoverable-files.sql) | file non recoverable |
+| 10 | [restore-sqlplus-settings.sql](./backup_recovery/restore-sqlplus-settings.sql) | reset ambiente SQL*Plus |
 
 ## performance_tuning (Top 20/20 su 220)
 
@@ -153,26 +153,26 @@ Raggruppamento operativo:
 
 | # | Script | Uso principale |
 |---|---|---|
-| 1 | [aas.sql](./performance_tuning/community_scripts/ash_awr/aas.sql) | Average Active Sessions |
-| 2 | [aas-ash-calc.sql](./performance_tuning/community_scripts/ash_awr/aas-ash-calc.sql) | AAS da ASH |
-| 3 | [aas-awr-calc.sql](./performance_tuning/community_scripts/ash_awr/aas-awr-calc.sql) | AAS da AWR |
-| 4 | [ash-current-waits.sql](./performance_tuning/community_scripts/ash_awr/ash-current-waits.sql) | wait attuali |
-| 5 | [ash-current-waits-by-sql-event.sql](./performance_tuning/community_scripts/ash_awr/ash-current-waits-by-sql-event.sql) | wait per SQL/evento |
-| 6 | [ash_top_sql.sql](./performance_tuning/community_scripts/ash_awr/ash_top_sql.sql) | top SQL ASH |
-| 7 | [ash_top_session.sql](./performance_tuning/community_scripts/ash_awr/ash_top_session.sql) | top sessioni ASH |
-| 8 | [ash_top_procedure.sql](./performance_tuning/community_scripts/ash_awr/ash_top_procedure.sql) | top procedure |
-| 9 | [awr-top-events.sql](./performance_tuning/community_scripts/ash_awr/awr-top-events.sql) | top eventi AWR |
-| 10 | [awr-top-10-daily.sql](./performance_tuning/community_scripts/ash_awr/awr-top-10-daily.sql) | trend giornaliero AWR |
-| 11 | [top10-sql-awr.sql](./performance_tuning/community_scripts/ash_awr/top10-sql-awr.sql) | top SQL AWR |
-| 12 | [top10-sql-ash.sql](./performance_tuning/community_scripts/ash_awr/top10-sql-ash.sql) | top SQL ASH |
-| 13 | [pga_advice.sql](./performance_tuning/community_scripts/memory/pga_advice.sql) | sizing PGA advisor |
-| 14 | [pga_workarea_active.sql](./performance_tuning/community_scripts/memory/pga_workarea_active.sql) | workarea attive |
-| 15 | [shared_pool_advice.sql](./performance_tuning/community_scripts/memory/shared_pool_advice.sql) | sizing shared pool |
-| 16 | [shared-pool-top-sql.sql](./performance_tuning/community_scripts/memory/shared-pool-top-sql.sql) | top SQL in shared pool |
-| 17 | [showsga.sql](./performance_tuning/community_scripts/memory/showsga.sql) | riepilogo SGA |
-| 18 | [find-expensive-sql.sql](./performance_tuning/community_scripts/tuning/find-expensive-sql.sql) | SQL costose |
-| 19 | [dbms-sqltune-sqlid.sql](./performance_tuning/community_scripts/tuning/dbms-sqltune-sqlid.sql) | SQL Tuning Advisor |
-| 20 | [sql-exe-times-awr.sql](./performance_tuning/community_scripts/tuning/sql-exe-times-awr.sql) | execution time da AWR |
+| 1 | [aas.sql](./performance_tuning/ash_awr/aas.sql) | Average Active Sessions |
+| 2 | [aas-ash-calc.sql](./performance_tuning/ash_awr/aas-ash-calc.sql) | AAS da ASH |
+| 3 | [aas-awr-calc.sql](./performance_tuning/ash_awr/aas-awr-calc.sql) | AAS da AWR |
+| 4 | [ash-current-waits.sql](./performance_tuning/ash_awr/ash-current-waits.sql) | wait attuali |
+| 5 | [ash-current-waits-by-sql-event.sql](./performance_tuning/ash_awr/ash-current-waits-by-sql-event.sql) | wait per SQL/evento |
+| 6 | [ash_top_sql.sql](./performance_tuning/ash_awr/ash_top_sql.sql) | top SQL ASH |
+| 7 | [ash_top_session.sql](./performance_tuning/ash_awr/ash_top_session.sql) | top sessioni ASH |
+| 8 | [ash_top_procedure.sql](./performance_tuning/ash_awr/ash_top_procedure.sql) | top procedure |
+| 9 | [awr-top-events.sql](./performance_tuning/ash_awr/awr-top-events.sql) | top eventi AWR |
+| 10 | [awr-top-10-daily.sql](./performance_tuning/ash_awr/awr-top-10-daily.sql) | trend giornaliero AWR |
+| 11 | [top10-sql-awr.sql](./performance_tuning/ash_awr/top10-sql-awr.sql) | top SQL AWR |
+| 12 | [top10-sql-ash.sql](./performance_tuning/ash_awr/top10-sql-ash.sql) | top SQL ASH |
+| 13 | [pga_advice.sql](./performance_tuning/memory/pga_advice.sql) | sizing PGA advisor |
+| 14 | [pga_workarea_active.sql](./performance_tuning/memory/pga_workarea_active.sql) | workarea attive |
+| 15 | [shared_pool_advice.sql](./performance_tuning/memory/shared_pool_advice.sql) | sizing shared pool |
+| 16 | [shared-pool-top-sql.sql](./performance_tuning/memory/shared-pool-top-sql.sql) | top SQL in shared pool |
+| 17 | [showsga.sql](./performance_tuning/memory/showsga.sql) | riepilogo SGA |
+| 18 | [find-expensive-sql.sql](./performance_tuning/tuning/find-expensive-sql.sql) | SQL costose |
+| 19 | [dbms-sqltune-sqlid.sql](./performance_tuning/tuning/dbms-sqltune-sqlid.sql) | SQL Tuning Advisor |
+| 20 | [sql-exe-times-awr.sql](./performance_tuning/tuning/sql-exe-times-awr.sql) | execution time da AWR |
 
 ## tde_security (Top 8/20)
 
@@ -183,14 +183,14 @@ Raggruppamento operativo:
 
 | # | Script | Uso principale |
 |---|---|---|
-| 1 | [audit-actions.sql](./tde_security/community_scripts/audit-actions.sql) | mapping azioni audit |
-| 2 | [dba_audit_session.sql](./tde_security/community_scripts/dba_audit_session.sql) | session audit |
-| 3 | [dba_audit_session_recent.sql](./tde_security/community_scripts/dba_audit_session_recent.sql) | sessioni recenti |
-| 4 | [dba_audit_trail.sql](./tde_security/community_scripts/dba_audit_trail.sql) | audit trail completo |
-| 5 | [dba_audit_trail_persons.sql](./tde_security/community_scripts/dba_audit_trail_persons.sql) | audit trail per utente |
-| 6 | [dba_table_audit_flags.sql](./tde_security/community_scripts/dba_table_audit_flags.sql) | flag audit per tabella |
-| 7 | [show_session_audit.sql](./tde_security/community_scripts/show_session_audit.sql) | report session audit |
-| 8 | [ua-audit-log-cleanup-job.sql](./tde_security/community_scripts/ua-audit-log-cleanup-job.sql) | job cleanup unified audit |
+| 1 | [audit-actions.sql](./tde_security/audit-actions.sql) | mapping azioni audit |
+| 2 | [dba_audit_session.sql](./tde_security/dba_audit_session.sql) | session audit |
+| 3 | [dba_audit_session_recent.sql](./tde_security/dba_audit_session_recent.sql) | sessioni recenti |
+| 4 | [dba_audit_trail.sql](./tde_security/dba_audit_trail.sql) | audit trail completo |
+| 5 | [dba_audit_trail_persons.sql](./tde_security/dba_audit_trail_persons.sql) | audit trail per utente |
+| 6 | [dba_table_audit_flags.sql](./tde_security/dba_table_audit_flags.sql) | flag audit per tabella |
+| 7 | [show_session_audit.sql](./tde_security/show_session_audit.sql) | report session audit |
+| 8 | [ua-audit-log-cleanup-job.sql](./tde_security/ua-audit-log-cleanup-job.sql) | job cleanup unified audit |
 
 ## compression (Top 1/20)
 
@@ -246,18 +246,18 @@ Raggruppamento operativo:
 | 1 | [TEMP_and_UNDO_monitor.sql](./utilities/TEMP_and_UNDO_monitor.sql) | monitor TEMP/UNDO |
 | 2 | [Job monitoring TEMP e UNDO TABLESPACE.sql](./utilities/Job%20monitoring%20TEMP%20e%20UNDO%20TABLESPACE.sql) | job monitor tablespace |
 | 3 | [Install_pkg_Dba_Utility_20220713_v1_9_PROD.sql](./utilities/Install_pkg_Dba_Utility_20220713_v1_9_PROD.sql) | install utility package |
-| 4 | [get-alert-logs.sh](./utilities/community_scripts/get-alert-logs.sh) | raccolta alert log |
-| 5 | [get-ohomes.sh](./utilities/community_scripts/get-ohomes.sh) | inventory Oracle Homes |
-| 6 | [get-crsctl.sh](./utilities/community_scripts/get-crsctl.sh) | diagnosi Clusterware |
-| 7 | [get-lgwr-trace.sh](./utilities/community_scripts/get-lgwr-trace.sh) | estrazione trace LGWR |
-| 8 | [rman-chk-syntax.sh](./utilities/community_scripts/rman-chk-syntax.sh) | check sintassi RMAN |
-| 9 | [asm-disk-chk.sh](./utilities/community_scripts/asm-disk-chk.sh) | check dischi ASM lato host |
-| 10 | [memsz.sh](./utilities/community_scripts/memsz.sh) | riepilogo memoria processo |
-| 11 | [memsz-all.sh](./utilities/community_scripts/memsz-all.sh) | memoria all-process |
-| 12 | [oracle-connect-rate.sh](./utilities/community_scripts/oracle-connect-rate.sh) | test connect rate |
-| 13 | [procmem.pl](./utilities/community_scripts/procmem.pl) | memoria processo (perl) |
-| 14 | [sga-smallpage-detector.pl](./utilities/community_scripts/sga-smallpage-detector.pl) | verifica page allocation SGA |
-| 15 | [show-sga-page-allocation.sh](./utilities/community_scripts/show-sga-page-allocation.sh) | SGA page map |
+| 4 | [get-alert-logs.sh](./utilities/get-alert-logs.sh) | raccolta alert log |
+| 5 | [get-ohomes.sh](./utilities/get-ohomes.sh) | inventory Oracle Homes |
+| 6 | [get-crsctl.sh](./utilities/get-crsctl.sh) | diagnosi Clusterware |
+| 7 | [get-lgwr-trace.sh](./utilities/get-lgwr-trace.sh) | estrazione trace LGWR |
+| 8 | [rman-chk-syntax.sh](./utilities/rman-chk-syntax.sh) | check sintassi RMAN |
+| 9 | [asm-disk-chk.sh](./utilities/asm-disk-chk.sh) | check dischi ASM lato host |
+| 10 | [memsz.sh](./utilities/memsz.sh) | riepilogo memoria processo |
+| 11 | [memsz-all.sh](./utilities/memsz-all.sh) | memoria all-process |
+| 12 | [oracle-connect-rate.sh](./utilities/oracle-connect-rate.sh) | test connect rate |
+| 13 | [procmem.pl](./utilities/procmem.pl) | memoria processo (perl) |
+| 14 | [sga-smallpage-detector.pl](./utilities/sga-smallpage-detector.pl) | verifica page allocation SGA |
+| 15 | [show-sga-page-allocation.sh](./utilities/show-sga-page-allocation.sh) | SGA page map |
 | 16 | [show_jobs.sql](./utilities/scheduler/show_jobs.sql) | job scheduler rapidi |
 | 17 | [dba_jobs_running.sql](./utilities/scheduler/dba_jobs_running.sql) | job in esecuzione |
 | 18 | [dba_sched_jobs.sql](./utilities/scheduler/dba_sched_jobs.sql) | catalogo scheduler jobs |

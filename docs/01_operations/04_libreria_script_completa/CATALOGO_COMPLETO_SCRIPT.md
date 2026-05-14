@@ -30,31 +30,31 @@ Catalogo generato automaticamente leggendo tutti i file script della libreria e 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
 | [`asm_limits_ausize.sql`](./asm_storage/asm_limits_ausize.sql) | `-` | BASSO | OK | Analisi Limiti Fisici ASM basati su AU_SIZE, Compatibilità e Ridondanza |
-| [`asm-diskgroup-stat.sql`](./asm_storage/community_scripts/asm-diskgroup-stat.sql) | `community_scripts` | BASSO | OK | asm-diskgroup-stat.sql |
-| [`Asm_Alias.sql`](./asm_storage/community_scripts/Asm_Alias.sql) | `community_scripts` | BASSO | OK | | FILE : asm_alias.sql | |
-| [`Asm_Check.sql`](./asm_storage/community_scripts/Asm_Check.sql) | `community_scripts` | BASSO | OK | Find largest amount of space allocated to a cell |
-| [`Asm_Clients.sql`](./asm_storage/community_scripts/Asm_Clients.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`asm_copyblock.sql`](./asm_storage/community_scripts/asm_copyblock.sql) | `community_scripts` | BASSO | OK | asm_copyblock.sql |
-| [`asm_disk_errors.sql`](./asm_storage/community_scripts/asm_disk_errors.sql) | `community_scripts` | BASSO | OK | asm_disk_errors.sql |
-| [`asm_disk_stats.sql`](./asm_storage/community_scripts/asm_disk_stats.sql) | `community_scripts` | BASSO | OK | asm_disk_stats.sql |
-| [`asm_diskgroup_attributes.sql`](./asm_storage/community_scripts/asm_diskgroup_attributes.sql) | `community_scripts` | BASSO | OK | asm_diskgroup_attributes.sql |
-| [`asm_diskgroup_templates.sql`](./asm_storage/community_scripts/asm_diskgroup_templates.sql) | `community_scripts` | BASSO | OK | asm_diskgroup_templates.sql |
-| [`Asm_DiskGroupPerformance.sql`](./asm_storage/community_scripts/Asm_DiskGroupPerformance.sql) | `community_scripts` | BASSO | OK | Controllo operativo backup/recovery RMAN e stato protezione dati. |
-| [`Asm_Diskgroups.sql`](./asm_storage/community_scripts/Asm_Diskgroups.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`asm_diskgroups.sql`](./asm_storage/community_scripts/asm_diskgroups.sql) | `community_scripts` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
-| [`Asm_Disks.sql`](./asm_storage/community_scripts/Asm_Disks.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`asm_disks.sql`](./asm_storage/community_scripts/asm_disks.sql) | `community_scripts` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
-| [`Asm_Disks_Perf.sql`](./asm_storage/community_scripts/Asm_Disks_Perf.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`Asm_drop_files.sql`](./asm_storage/community_scripts/Asm_drop_files.sql) | `community_scripts` | ALTO | OK | | DATABASE : Oracle | |
-| [`asm_extent_distribution.sql`](./asm_storage/community_scripts/asm_extent_distribution.sql) | `community_scripts` | BASSO | OK | asm_extent_distribution.sql |
-| [`asm_extent_multi_au.sql`](./asm_storage/community_scripts/asm_extent_multi_au.sql) | `community_scripts` | BASSO | OK | asm_extent_multi_au |
-| [`asm_failgroup_members.sql`](./asm_storage/community_scripts/asm_failgroup_members.sql) | `community_scripts` | BASSO | OK | asm_failgroup_members.sql |
-| [`Asm_Files.sql`](./asm_storage/community_scripts/Asm_Files.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`asm_files.sql`](./asm_storage/community_scripts/asm_files.sql) | `community_scripts` | BASSO | OK | asm_files.sql |
-| [`asm_files_path.sql`](./asm_storage/community_scripts/asm_files_path.sql) | `community_scripts` | MEDIO | OK | asm_files_path.sql |
-| [`asm_partners.sql`](./asm_storage/community_scripts/asm_partners.sql) | `community_scripts` | BASSO | OK | asm-partners.sql |
-| [`Asm_Templates.sql`](./asm_storage/community_scripts/Asm_Templates.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
-| [`Asmdisk.sql`](./asm_storage/community_scripts/Asmdisk.sql) | `community_scripts` | BASSO | OK | Mostra i dischi ASM |
+| [`asm-diskgroup-stat.sql`](./asm_storage/asm-diskgroup-stat.sql) | `community_scripts` | BASSO | OK | asm-diskgroup-stat.sql |
+| [`Asm_Alias.sql`](./asm_storage/Asm_Alias.sql) | `community_scripts` | BASSO | OK | | FILE : asm_alias.sql | |
+| [`Asm_Check.sql`](./asm_storage/Asm_Check.sql) | `community_scripts` | BASSO | OK | Find largest amount of space allocated to a cell |
+| [`Asm_Clients.sql`](./asm_storage/Asm_Clients.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`asm_copyblock.sql`](./asm_storage/asm_copyblock.sql) | `community_scripts` | BASSO | OK | asm_copyblock.sql |
+| [`asm_disk_errors.sql`](./asm_storage/asm_disk_errors.sql) | `community_scripts` | BASSO | OK | asm_disk_errors.sql |
+| [`asm_disk_stats.sql`](./asm_storage/asm_disk_stats.sql) | `community_scripts` | BASSO | OK | asm_disk_stats.sql |
+| [`asm_diskgroup_attributes.sql`](./asm_storage/asm_diskgroup_attributes.sql) | `community_scripts` | BASSO | OK | asm_diskgroup_attributes.sql |
+| [`asm_diskgroup_templates.sql`](./asm_storage/asm_diskgroup_templates.sql) | `community_scripts` | BASSO | OK | asm_diskgroup_templates.sql |
+| [`Asm_DiskGroupPerformance.sql`](./asm_storage/Asm_DiskGroupPerformance.sql) | `community_scripts` | BASSO | OK | Controllo operativo backup/recovery RMAN e stato protezione dati. |
+| [`Asm_Diskgroups.sql`](./asm_storage/Asm_Diskgroups.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`asm_diskgroups.sql`](./asm_storage/asm_diskgroups.sql) | `community_scripts` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
+| [`Asm_Disks.sql`](./asm_storage/Asm_Disks.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`asm_disks.sql`](./asm_storage/asm_disks.sql) | `community_scripts` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
+| [`Asm_Disks_Perf.sql`](./asm_storage/Asm_Disks_Perf.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`Asm_drop_files.sql`](./asm_storage/Asm_drop_files.sql) | `community_scripts` | ALTO | OK | | DATABASE : Oracle | |
+| [`asm_extent_distribution.sql`](./asm_storage/asm_extent_distribution.sql) | `community_scripts` | BASSO | OK | asm_extent_distribution.sql |
+| [`asm_extent_multi_au.sql`](./asm_storage/asm_extent_multi_au.sql) | `community_scripts` | BASSO | OK | asm_extent_multi_au |
+| [`asm_failgroup_members.sql`](./asm_storage/asm_failgroup_members.sql) | `community_scripts` | BASSO | OK | asm_failgroup_members.sql |
+| [`Asm_Files.sql`](./asm_storage/Asm_Files.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`asm_files.sql`](./asm_storage/asm_files.sql) | `community_scripts` | BASSO | OK | asm_files.sql |
+| [`asm_files_path.sql`](./asm_storage/asm_files_path.sql) | `community_scripts` | MEDIO | OK | asm_files_path.sql |
+| [`asm_partners.sql`](./asm_storage/asm_partners.sql) | `community_scripts` | BASSO | OK | asm-partners.sql |
+| [`Asm_Templates.sql`](./asm_storage/Asm_Templates.sql) | `community_scripts` | BASSO | OK | | DATABASE : Oracle | |
+| [`Asmdisk.sql`](./asm_storage/Asmdisk.sql) | `community_scripts` | BASSO | OK | Mostra i dischi ASM |
 
 ### `dataguard` — Data Guard (0 script)
 
@@ -72,539 +72,539 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`AshTopSession.sql`](./monitoring_scripts/AshTopSession.sql) | `-` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
 | [`AshTopSql.sql`](./monitoring_scripts/AshTopSql.sql) | `-` | BASSO | OK | and ash.sample_time > sysdate - minutes /( 60*24) |
 | [`Check_Lock.sql`](./monitoring_scripts/Check_Lock.sql) | `-` | MEDIO | OK | Diagnosi lock/sessioni bloccanti e catene di attesa. |
-| [`advisor_profile_recs.sql`](./monitoring_scripts/community_gwenshap/advisor_profile_recs.sql) | `community_gwenshap` | BASSO | OK | Retrieve SQL tuning advisor findings. You can only run the most recent run if you like, but it will only contain new recommendations. This s |
-| [`ASH2.sql`](./monitoring_scripts/community_gwenshap/ASH2.sql) | `community_gwenshap` | BASSO | OK | how much history do we have |
-| [`check_and_kill.sql`](./monitoring_scripts/community_gwenshap/check_and_kill.sql) | `community_gwenshap` | ALTO | OK | Check what the sessions in our instance are waiting for |
-| [`col_high_low_val.sql`](./monitoring_scripts/community_gwenshap/col_high_low_val.sql) | `community_gwenshap` | BASSO | OK | Martin Widlake mdw 21/03/2003 |
-| [`DataGuard.txt`](./monitoring_scripts/community_gwenshap/DataGuard.txt) | `community_gwenshap` | ALTO | OK | Find which logs were applied in the last day |
-| [`double_tablespace.sql`](./monitoring_scripts/community_gwenshap/double_tablespace.sql) | `community_gwenshap` | ALTO | OK | Script written for a case where data was loaded rapidly and without prior notice |
-| [`explain_plan.sql`](./monitoring_scripts/community_gwenshap/explain_plan.sql) | `community_gwenshap` | BASSO | OK | dbms_xplan works in 9i and up |
-| [`external_table_load_example.sql`](./monitoring_scripts/community_gwenshap/external_table_load_example.sql) | `community_gwenshap` | ALTO | OK | select * from db.bm_tmp where rownum<=5 |
-| [`find_sql.sql`](./monitoring_scripts/community_gwenshap/find_sql.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: find sql. |
-| [`fsx.sql`](./monitoring_scripts/community_gwenshap/fsx.sql) | `community_gwenshap` | BASSO | OK | File name: fsx.sql |
-| [`index_efficiency.sql`](./monitoring_scripts/community_gwenshap/index_efficiency.sql) | `community_gwenshap` | BASSO | OK | t1 sample block (100) |
-| [`job_scheduling.sql`](./monitoring_scripts/community_gwenshap/job_scheduling.sql) | `community_gwenshap` | ALTO | OK | Decent reference for new scheduler |
-| [`locks.sql`](./monitoring_scripts/community_gwenshap/locks.sql) | `community_gwenshap` | BASSO | OK | Find all blocked sessions and who is blocking them |
-| [`login.sql`](./monitoring_scripts/community_gwenshap/login.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: login. |
-| [`my_sqlmon.sql`](./monitoring_scripts/community_gwenshap/my_sqlmon.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: my sqlmon. |
-| [`PGA_watch.sql`](./monitoring_scripts/community_gwenshap/PGA_watch.sql) | `community_gwenshap` | BASSO | OK | order by inst_id,server |
-| [`sql_monitor_offload.sql`](./monitoring_scripts/community_gwenshap/sql_monitor_offload.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: sql monitor offload. |
-| [`SSD.sql`](./monitoring_scripts/community_gwenshap/SSD.sql) | `community_gwenshap` | BASSO | OK | Find segments with most read operations, and hopefully relatively few writes |
-| [`tablespace.sql`](./monitoring_scripts/community_gwenshap/tablespace.sql) | `community_gwenshap` | ALTO | OK | Tablespaces, ordered by percentage of space used |
-| [`tfsclock.sql`](./monitoring_scripts/community_gwenshap/tfsclock.sql) | `community_gwenshap` | ALTO | OK | Diagnosi lock/sessioni bloccanti e catene di attesa. |
-| [`top-sql.sql`](./monitoring_scripts/community_gwenshap/top-sql.sql) | `community_gwenshap` | BASSO | OK | by Jeremy Schneider, Pythian |
-| [`top_excel.sql`](./monitoring_scripts/community_gwenshap/top_excel.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: top excel. |
-| [`top_queries.sql`](./monitoring_scripts/community_gwenshap/top_queries.sql) | `community_gwenshap` | BASSO | OK | ,executions_delta |
-| [`undo_space.sql`](./monitoring_scripts/community_gwenshap/undo_space.sql) | `community_gwenshap` | BASSO | OK | undo generated in last day |
-| [`date_math.sql`](./monitoring_scripts/community_jkstill/dates/date_math.sql) | `community_jkstill/dates` | ALTO | OK | date_math.sql |
-| [`date_math_2.sql`](./monitoring_scripts/community_jkstill/dates/date_math_2.sql) | `community_jkstill/dates` | ALTO | OK | date_math_2.sql |
-| [`date_math_3.sql`](./monitoring_scripts/community_jkstill/dates/date_math_3.sql) | `community_jkstill/dates` | MEDIO | OK | date_math_3.sql |
-| [`date_math_4.sql`](./monitoring_scripts/community_jkstill/dates/date_math_4.sql) | `community_jkstill/dates` | ALTO | OK | date_math_4.sql |
-| [`date_math_epoch.sql`](./monitoring_scripts/community_jkstill/dates/date_math_epoch.sql) | `community_jkstill/dates` | BASSO | OK | date_math_epoch.sql |
-| [`datemath-pkg.sql`](./monitoring_scripts/community_jkstill/dates/datemath-pkg.sql) | `community_jkstill/dates` | MEDIO | OK | works with systimestamp, which is of type timestamp with time zone |
-| [`datemath-test.sql`](./monitoring_scripts/community_jkstill/dates/datemath-test.sql) | `community_jkstill/dates` | MEDIO | OK | datemath-test.sql |
-| [`timestamp-day-boundaries.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-day-boundaries.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-day-boundaries.sql |
-| [`timestamp-diff-inline-function.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-diff-inline-function.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds-inline-function.sql |
-| [`timestamp-diff-seconds-2.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-diff-seconds-2.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds-2.sql |
-| [`timestamp-diff-seconds.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-diff-seconds.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds.sql |
-| [`timestamp-trunc.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-trunc.sql) | `community_jkstill/dates` | ALTO | OK | timestamp-trunc.sql |
-| [`timestamp-types.sql`](./monitoring_scripts/community_jkstill/dates/timestamp-types.sql) | `community_jkstill/dates` | ALTO | OK | timestamp-types.sql |
-| [`timestamp_to_millisecond.sql`](./monitoring_scripts/community_jkstill/dates/timestamp_to_millisecond.sql) | `community_jkstill/dates` | BASSO | OK | Script operativo Oracle per: timestamp to millisecond. |
-| [`timezone-abbrev.sql`](./monitoring_scripts/community_jkstill/dates/timezone-abbrev.sql) | `community_jkstill/dates` | BASSO | OK | timezone-names.sql |
-| [`timezone-names.sql`](./monitoring_scripts/community_jkstill/dates/timezone-names.sql) | `community_jkstill/dates` | BASSO | OK | timezone-names.sql |
-| [`drcp_connection_monitor.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_connection_monitor.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_connection_monitor.sql |
-| [`drcp_connection_status.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_connection_status.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp connection status. |
-| [`drcp_pool_cc_stats.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_pool_cc_stats.sql) | `community_jkstill/drcp` | BASSO | OK | , wait_time -- reserved for future use |
-| [`drcp_pool_ratio.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_pool_ratio.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp pool ratio. |
-| [`drcp_pool_stats.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_pool_stats.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_pool_stats.sql |
-| [`drcp_set_connections_per_broker.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_set_connections_per_broker.sql) | `community_jkstill/drcp` | BASSO | OK | minimum allowed is 3 |
-| [`drcp_set_num_brokers.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_set_num_brokers.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp set num brokers. |
-| [`drcp_show_config.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_show_config.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_show_config.sql |
-| [`drcp_start.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_start.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp start. |
-| [`drcp_stop.sql`](./monitoring_scripts/community_jkstill/drcp/drcp_stop.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp stop. |
-| [`event-names.sql`](./monitoring_scripts/community_jkstill/events/event-names.sql) | `community_jkstill/events` | BASSO | OK | event-names.sql |
-| [`10046.sql`](./monitoring_scripts/community_jkstill/general/10046.sql) | `community_jkstill/general` | MEDIO | OK | level 4 is bind values |
-| [`10046_off.sql`](./monitoring_scripts/community_jkstill/general/10046_off.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: 10046 off. |
-| [`all-ini-trans.sql`](./monitoring_scripts/community_jkstill/general/all-ini-trans.sql) | `community_jkstill/general` | BASSO | OK | all-init-trans.sql |
-| [`apex-version.sql`](./monitoring_scripts/community_jkstill/general/apex-version.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: apex version. |
-| [`ascii.sql`](./monitoring_scripts/community_jkstill/general/ascii.sql) | `community_jkstill/general` | BASSO | OK | generate a simple ascii table |
-| [`average_active_sessions.sql`](./monitoring_scripts/community_jkstill/general/average_active_sessions.sql) | `community_jkstill/general` | BASSO | OK | average_active_sessions_2.sql |
-| [`bad-date.sql`](./monitoring_scripts/community_jkstill/general/bad-date.sql) | `community_jkstill/general` | MEDIO | OK | bad-date.sql |
-| [`bct_bufsz.sql`](./monitoring_scripts/community_jkstill/general/bct_bufsz.sql) | `community_jkstill/general` | BASSO | OK | get size of buffers currently allocated for BCT change tracking |
-| [`between-trunc-demo.sql`](./monitoring_scripts/community_jkstill/general/between-trunc-demo.sql) | `community_jkstill/general` | MEDIO | OK | between-trunc-demo.sql |
-| [`bitwalk.sql`](./monitoring_scripts/community_jkstill/general/bitwalk.sql) | `community_jkstill/general` | BASSO | OK | Jared Still 2021 |
-| [`block_decode.sql`](./monitoring_scripts/community_jkstill/general/block_decode.sql) | `community_jkstill/general` | BASSO | OK | block_decode.sql |
-| [`blocker-tree.sql`](./monitoring_scripts/community_jkstill/general/blocker-tree.sql) | `community_jkstill/general` | BASSO | OK | blocker-tree.sql |
-| [`blog-prompt.sql`](./monitoring_scripts/community_jkstill/general/blog-prompt.sql) | `community_jkstill/general` | BASSO | OK | simplified prompt for copy and paste to blog and articles |
-| [`bootstrap_objects.sql`](./monitoring_scripts/community_jkstill/general/bootstrap_objects.sql) | `community_jkstill/general` | MEDIO | OK | bootstrap_objects.sql |
-| [`build-record.sql`](./monitoring_scripts/community_jkstill/general/build-record.sql) | `community_jkstill/general` | MEDIO | OK | build-record.sql |
-| [`bulk-collect-1.sql`](./monitoring_scripts/community_jkstill/general/bulk-collect-1.sql) | `community_jkstill/general` | MEDIO | OK | bulk-collect-1.sql |
-| [`cf-size.sql`](./monitoring_scripts/community_jkstill/general/cf-size.sql) | `community_jkstill/general` | BASSO | OK | cf-size.sql - Display the size of the control file in MB |
-| [`character-sets.sql`](./monitoring_scripts/community_jkstill/general/character-sets.sql) | `community_jkstill/general` | BASSO | OK | character-sets.sql |
-| [`check_events.sql`](./monitoring_scripts/community_jkstill/general/check_events.sql) | `community_jkstill/general` | MEDIO | OK | check_events.sql |
-| [`chk4incremental.sql`](./monitoring_scripts/community_jkstill/general/chk4incremental.sql) | `community_jkstill/general` | BASSO | OK | chk4incremental.sql |
-| [`clear_for_spool.sql`](./monitoring_scripts/community_jkstill/general/clear_for_spool.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: clear for spool. |
-| [`clears.sql`](./monitoring_scripts/community_jkstill/general/clears.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: clears. |
-| [`cluster-factor.sql`](./monitoring_scripts/community_jkstill/general/cluster-factor.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: cluster factor. |
-| [`code-inventory.sql`](./monitoring_scripts/community_jkstill/general/code-inventory.sql) | `community_jkstill/general` | MEDIO | OK | code-inventory.sql |
-| [`colcomm.sql`](./monitoring_scripts/community_jkstill/general/colcomm.sql) | `community_jkstill/general` | BASSO | OK | find common columns between a set of tables |
-| [`colors.sql`](./monitoring_scripts/community_jkstill/general/colors.sql) | `community_jkstill/general` | BASSO | OK | _C_RESET can be simply =[m |
-| [`columns.sql`](./monitoring_scripts/community_jkstill/general/columns.sql) | `community_jkstill/general` | BASSO | OK | show paramater/spparameter settings |
-| [`cores.sql`](./monitoring_scripts/community_jkstill/general/cores.sql) | `community_jkstill/general` | BASSO | OK | report the number of cores |
-| [`csv-split-2.sql`](./monitoring_scripts/community_jkstill/general/csv-split-2.sql) | `community_jkstill/general` | BASSO | OK | csv-split-2.sql |
-| [`csv-split-bind.sql`](./monitoring_scripts/community_jkstill/general/csv-split-bind.sql) | `community_jkstill/general` | BASSO | OK | csv-split-bind.sql |
-| [`csv-split.sql`](./monitoring_scripts/community_jkstill/general/csv-split.sql) | `community_jkstill/general` | BASSO | OK | csv-split.sql |
-| [`cursor-check.sql`](./monitoring_scripts/community_jkstill/general/cursor-check.sql) | `community_jkstill/general` | BASSO | OK | from gv$session ses, gv$sesstat ss, gv$statname sn, gv$parameter p |
-| [`cursor-counts.sql`](./monitoring_scripts/community_jkstill/general/cursor-counts.sql) | `community_jkstill/general` | BASSO | OK | cursor-counts.sql |
-| [`data-growth-db-predict-regr.sql`](./monitoring_scripts/community_jkstill/general/data-growth-db-predict-regr.sql) | `community_jkstill/general` | BASSO | OK | data-growth-db-predict-regr.sql |
-| [`data-growth-db.sql`](./monitoring_scripts/community_jkstill/general/data-growth-db.sql) | `community_jkstill/general` | BASSO | OK | date is text and stored in this format: 'MM/DD/YYYY HH24:MI:SS' |
-| [`data-growth-tbs-predict-regr.sql`](./monitoring_scripts/community_jkstill/general/data-growth-tbs-predict-regr.sql) | `community_jkstill/general` | BASSO | OK | data-growth-tbs-predict-regr.sql |
-| [`data-growth-tbs.sql`](./monitoring_scripts/community_jkstill/general/data-growth-tbs.sql) | `community_jkstill/general` | BASSO | OK | date is text and stored in this format: 'MM/DD/YYYY HH24:MI:SS' |
-| [`database_properties.sql`](./monitoring_scripts/community_jkstill/general/database_properties.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: database properties. |
-| [`db_cache_advice.sql`](./monitoring_scripts/community_jkstill/general/db_cache_advice.sql) | `community_jkstill/general` | BASSO | OK | db_cache_advice.sql |
-| [`db_corrupt.sql`](./monitoring_scripts/community_jkstill/general/db_corrupt.sql) | `community_jkstill/general` | BASSO | OK | db_corrupt.sql |
-| [`dba-registry-history.sql`](./monitoring_scripts/community_jkstill/general/dba-registry-history.sql) | `community_jkstill/general` | BASSO | OK | dba-registry-history.sql |
-| [`dba-registry.sql`](./monitoring_scripts/community_jkstill/general/dba-registry.sql) | `community_jkstill/general` | BASSO | OK | dba-registry.sql |
-| [`dbms_application.sql`](./monitoring_scripts/community_jkstill/general/dbms_application.sql) | `community_jkstill/general` | BASSO | OK | v$session.client_info |
-| [`dbms_log.sql`](./monitoring_scripts/community_jkstill/general/dbms_log.sql) | `community_jkstill/general` | MEDIO | OK | dbms_log.sql |
-| [`dbms_output-abstracted.sql`](./monitoring_scripts/community_jkstill/general/dbms_output-abstracted.sql) | `community_jkstill/general` | MEDIO | OK | dbms_output-abstracted.sql |
-| [`dbms_output-allow-blank-lines.sql`](./monitoring_scripts/community_jkstill/general/dbms_output-allow-blank-lines.sql) | `community_jkstill/general` | BASSO | OK | default is word_wrapped |
-| [`dbms_system_undoc_calls.sql`](./monitoring_scripts/community_jkstill/general/dbms_system_undoc_calls.sql) | `community_jkstill/general` | MEDIO | OK | dbms_system_undoc_calls.sql |
-| [`default_tablespace.sql`](./monitoring_scripts/community_jkstill/general/default_tablespace.sql) | `community_jkstill/general` | BASSO | OK | Monitoraggio capacità tablespace/TEMP/UNDO e prevenzione saturazione. |
-| [`defaults-demo.sql`](./monitoring_scripts/community_jkstill/general/defaults-demo.sql) | `community_jkstill/general` | BASSO | OK | defaults-demo.sql |
-| [`defaults.sql`](./monitoring_scripts/community_jkstill/general/defaults.sql) | `community_jkstill/general` | BASSO | OK | defaults.sql |
-| [`dice-roll.sql`](./monitoring_scripts/community_jkstill/general/dice-roll.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: dice roll. |
-| [`dirs.sql`](./monitoring_scripts/community_jkstill/general/dirs.sql) | `community_jkstill/general` | BASSO | OK | Jared Still - 2022 |
-| [`dml-log-errors-test.sql`](./monitoring_scripts/community_jkstill/general/dml-log-errors-test.sql) | `community_jkstill/general` | ALTO | OK | dml-log-errors-test.sql |
-| [`dp-filter-types.sql`](./monitoring_scripts/community_jkstill/general/dp-filter-types.sql) | `community_jkstill/general` | BASSO | OK | dp-filter-types.sh |
-| [`dual_data_gen-low-mem.sql`](./monitoring_scripts/community_jkstill/general/dual_data_gen-low-mem.sql) | `community_jkstill/general` | BASSO | OK | dual_date_gen-low-mem.sql |
-| [`dual_data_gen.sql`](./monitoring_scripts/community_jkstill/general/dual_data_gen.sql) | `community_jkstill/general` | BASSO | OK | dual_data_gen.sql |
-| [`dump.sql`](./monitoring_scripts/community_jkstill/general/dump.sql) | `community_jkstill/general` | BASSO | OK | dump.sql - jared still |
-| [`dumptrace_off.sql`](./monitoring_scripts/community_jkstill/general/dumptrace_off.sql) | `community_jkstill/general` | BASSO | OK | dumptrace_off.sql |
-| [`dumptrace_on.sql`](./monitoring_scripts/community_jkstill/general/dumptrace_on.sql) | `community_jkstill/general` | BASSO | OK | dumptrace.sql |
-| [`dumptracem_off.sql`](./monitoring_scripts/community_jkstill/general/dumptracem_off.sql) | `community_jkstill/general` | ALTO | OK | dumptracem_off.sql |
-| [`dumptracem_on.sql`](./monitoring_scripts/community_jkstill/general/dumptracem_on.sql) | `community_jkstill/general` | ALTO | OK | dumptracem_on.sql |
-| [`dup-user-profile.sql`](./monitoring_scripts/community_jkstill/general/dup-user-profile.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: dup user profile. |
-| [`dup_role.sql`](./monitoring_scripts/community_jkstill/general/dup_role.sql) | `community_jkstill/general` | MEDIO | OK | duplicate a role |
-| [`dup_role_users.sql`](./monitoring_scripts/community_jkstill/general/dup_role_users.sql) | `community_jkstill/general` | MEDIO | OK | dup_role_users.sql |
-| [`dup_user.sql`](./monitoring_scripts/community_jkstill/general/dup_user.sql) | `community_jkstill/general` | ALTO | OK | dup_user.sql |
-| [`dynamic_plan_table.sql`](./monitoring_scripts/community_jkstill/general/dynamic_plan_table.sql) | `community_jkstill/general` | MEDIO | OK | dynamic_plan_table.sql |
-| [`e2ts-hires.sql`](./monitoring_scripts/community_jkstill/general/e2ts-hires.sql) | `community_jkstill/general` | BASSO | OK | e2ts-hires.sql |
-| [`e2ts.sql`](./monitoring_scripts/community_jkstill/general/e2ts.sql) | `community_jkstill/general` | BASSO | OK | convert a lowres (msec) epoch value to a timestamp |
-| [`enqueue-bitand.sql`](./monitoring_scripts/community_jkstill/general/enqueue-bitand.sql) | `community_jkstill/general` | BASSO | OK | enqueue-bitand.sql |
-| [`explain_plan_columns.sql`](./monitoring_scripts/community_jkstill/general/explain_plan_columns.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: explain plan columns. |
-| [`find-index-sql.sql`](./monitoring_scripts/community_jkstill/general/find-index-sql.sql) | `community_jkstill/general` | BASSO | OK | find-index-sql.sql |
-| [`findcol.sql`](./monitoring_scripts/community_jkstill/general/findcol.sql) | `community_jkstill/general` | BASSO | OK | findcol.sql - jared still |
-| [`findobj.sql`](./monitoring_scripts/community_jkstill/general/findobj.sql) | `community_jkstill/general` | BASSO | OK | 08/07/2000 - jks - join on v$fixed_table |
-| [`fk-circular-ref.sql`](./monitoring_scripts/community_jkstill/general/fk-circular-ref.sql) | `community_jkstill/general` | BASSO | OK | fk-circular-ref.sql |
-| [`fk_hierarchy.sql`](./monitoring_scripts/community_jkstill/general/fk_hierarchy.sql) | `community_jkstill/general` | BASSO | OK | fk_hierarchy.sql |
-| [`fktree-rcte.sql`](./monitoring_scripts/community_jkstill/general/fktree-rcte.sql) | `community_jkstill/general` | MEDIO | OK | fktree-rcte.sql |
-| [`fktree.sql`](./monitoring_scripts/community_jkstill/general/fktree.sql) | `community_jkstill/general` | BASSO | OK | prototype SQL |
-| [`full_sql_text.sql`](./monitoring_scripts/community_jkstill/general/full_sql_text.sql) | `community_jkstill/general` | MEDIO | OK | full_sql_text.sql |
-| [`gen-post.sql`](./monitoring_scripts/community_jkstill/general/gen-post.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: gen post. |
-| [`gen-pre.sql`](./monitoring_scripts/community_jkstill/general/gen-pre.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: gen pre. |
-| [`gen_bind_vars.sql`](./monitoring_scripts/community_jkstill/general/gen_bind_vars.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars.sql |
-| [`gen_bind_vars_awr-loop.sql`](./monitoring_scripts/community_jkstill/general/gen_bind_vars_awr-loop.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars_awr-loop.sql |
-| [`gen_bind_vars_awr.sql`](./monitoring_scripts/community_jkstill/general/gen_bind_vars_awr.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars_awr.sql |
-| [`gen_data_with_recursion.sql`](./monitoring_scripts/community_jkstill/general/gen_data_with_recursion.sql) | `community_jkstill/general` | BASSO | OK | gen_data_with_recursion.sql |
-| [`gen_fk_from-11.1.sql`](./monitoring_scripts/community_jkstill/general/gen_fk_from-11.1.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_from-11.1.sql |
-| [`gen_fk_from-11.2.sql`](./monitoring_scripts/community_jkstill/general/gen_fk_from-11.2.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_from-11.2.sql |
-| [`gen_fk_to-11.1.sql`](./monitoring_scripts/community_jkstill/general/gen_fk_to-11.1.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_to-11.1.sql |
-| [`gen_fk_to-11.2.sql`](./monitoring_scripts/community_jkstill/general/gen_fk_to-11.2.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_to-11.2.sql |
-| [`gen_list_data_with_dual.sql`](./monitoring_scripts/community_jkstill/general/gen_list_data_with_dual.sql) | `community_jkstill/general` | BASSO | OK | gen_list_data_without_dual.sql |
-| [`gen_list_data_without_dual.sql`](./monitoring_scripts/community_jkstill/general/gen_list_data_without_dual.sql) | `community_jkstill/general` | BASSO | OK | gen_list_data_without_dual.sql |
-| [`generate-sql.sql`](./monitoring_scripts/community_jkstill/general/generate-sql.sql) | `community_jkstill/general` | BASSO | OK | generate-sql.sql |
-| [`get-alert-log-location.sql`](./monitoring_scripts/community_jkstill/general/get-alert-log-location.sql) | `community_jkstill/general` | BASSO | OK | get-alert-log-location.sql |
-| [`get-code-error-context.sql`](./monitoring_scripts/community_jkstill/general/get-code-error-context.sql) | `community_jkstill/general` | BASSO | OK | get-code-error-context.sql |
-| [`get-curr-ospid.sql`](./monitoring_scripts/community_jkstill/general/get-curr-ospid.sql) | `community_jkstill/general` | BASSO | OK | get-curr-ospid.sql |
-| [`get-missing-tablenames.sql`](./monitoring_scripts/community_jkstill/general/get-missing-tablenames.sql) | `community_jkstill/general` | BASSO | OK | get-missing-tablenames.sql |
-| [`get-schema-name.sql`](./monitoring_scripts/community_jkstill/general/get-schema-name.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: get schema name. |
-| [`get-schema-size.sql`](./monitoring_scripts/community_jkstill/general/get-schema-size.sql) | `community_jkstill/general` | BASSO | OK | get-schema-size.sql |
-| [`get-sql-for-table.sql`](./monitoring_scripts/community_jkstill/general/get-sql-for-table.sql) | `community_jkstill/general` | BASSO | OK | get-sql-for-table.sql |
-| [`get-table-name.sql`](./monitoring_scripts/community_jkstill/general/get-table-name.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: get table name. |
-| [`get_awr_bind_values.sql`](./monitoring_scripts/community_jkstill/general/get_awr_bind_values.sql) | `community_jkstill/general` | BASSO | OK | get_awr_bind_values.sql |
-| [`get_bind_values.sql`](./monitoring_scripts/community_jkstill/general/get_bind_values.sql) | `community_jkstill/general` | BASSO | OK | get_bind_values.sql |
-| [`get_date_range.sql`](./monitoring_scripts/community_jkstill/general/get_date_range.sql) | `community_jkstill/general` | BASSO | OK | get_date_range.sql |
-| [`get_prefs.sql`](./monitoring_scripts/community_jkstill/general/get_prefs.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: get prefs. |
-| [`get_sched_tz.sql`](./monitoring_scripts/community_jkstill/general/get_sched_tz.sql) | `community_jkstill/general` | MEDIO | OK | Diagnostica e controllo job Oracle Scheduler. |
-| [`get_table_lock.sql`](./monitoring_scripts/community_jkstill/general/get_table_lock.sql) | `community_jkstill/general` | BASSO | OK | get_table_lock.sql |
-| [`getallparm-12c.sql`](./monitoring_scripts/community_jkstill/general/getallparm-12c.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getallparm 12c. |
-| [`getallparm.sql`](./monitoring_scripts/community_jkstill/general/getallparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getallparm. |
-| [`getaud.sql`](./monitoring_scripts/community_jkstill/general/getaud.sql) | `community_jkstill/general` | ALTO | OK | SCRIPT: Generate AUDIT and NOAUDIT Statements for Current Audit Settings [ID 287436.1] |
-| [`gethostname.sql`](./monitoring_scripts/community_jkstill/general/gethostname.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
-| [`getinstance.sql`](./monitoring_scripts/community_jkstill/general/getinstance.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
-| [`getinstanceowner.sql`](./monitoring_scripts/community_jkstill/general/getinstanceowner.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
-| [`getparm.sql`](./monitoring_scripts/community_jkstill/general/getparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getparm. |
-| [`getpid.sql`](./monitoring_scripts/community_jkstill/general/getpid.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
-| [`getsid.sql`](./monitoring_scripts/community_jkstill/general/getsid.sql) | `community_jkstill/general` | BASSO | OK | get sid for current session |
-| [`getsql.sql`](./monitoring_scripts/community_jkstill/general/getsql.sql) | `community_jkstill/general` | BASSO | OK | which ever is an empty string indicates the mode used |
-| [`gettracefile.sql`](./monitoring_scripts/community_jkstill/general/gettracefile.sql) | `community_jkstill/general` | BASSO | OK | copy the current sessions tracefile from the server |
-| [`gettrcname.sql`](./monitoring_scripts/community_jkstill/general/gettrcname.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
-| [`global-prefs.sql`](./monitoring_scripts/community_jkstill/general/global-prefs.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: global prefs. |
-| [`hash-function.sql`](./monitoring_scripts/community_jkstill/general/hash-function.sql) | `community_jkstill/general` | MEDIO | OK | error code here if desired |
-| [`histo_dist.sql`](./monitoring_scripts/community_jkstill/general/histo_dist.sql) | `community_jkstill/general` | BASSO | OK | histo_dist.sql |
-| [`histo_hist.sql`](./monitoring_scripts/community_jkstill/general/histo_hist.sql) | `community_jkstill/general` | BASSO | OK | histo_hist.sql |
-| [`histo_hist_dist.sql`](./monitoring_scripts/community_jkstill/general/histo_hist_dist.sql) | `community_jkstill/general` | BASSO | OK | histo_hist_dist.sql |
-| [`histo_types.sql`](./monitoring_scripts/community_jkstill/general/histo_types.sql) | `community_jkstill/general` | BASSO | OK | , abs(num_distinct - num_buckets) diff |
-| [`host-cpu-metric-names.sql`](./monitoring_scripts/community_jkstill/general/host-cpu-metric-names.sql) | `community_jkstill/general` | MEDIO | OK | host-cpu-metric-names.sql |
-| [`host-cpu.sql`](./monitoring_scripts/community_jkstill/general/host-cpu.sql) | `community_jkstill/general` | MEDIO | OK | host-cpu.sql |
-| [`hwm-df.sql`](./monitoring_scripts/community_jkstill/general/hwm-df.sql) | `community_jkstill/general` | BASSO | OK | based on script from Connor McDonald |
-| [`idle-events.sql`](./monitoring_scripts/community_jkstill/general/idle-events.sql) | `community_jkstill/general` | BASSO | OK | idle-events.sql |
-| [`index-col-use-ratios.sql`](./monitoring_scripts/community_jkstill/general/index-col-use-ratios.sql) | `community_jkstill/general` | BASSO | OK | index-col-use-ratios.sql |
-| [`index-correlate.sql`](./monitoring_scripts/community_jkstill/general/index-correlate.sql) | `community_jkstill/general` | BASSO | OK | index-correlate.sql |
-| [`index-usage-awr.sql`](./monitoring_scripts/community_jkstill/general/index-usage-awr.sql) | `community_jkstill/general` | BASSO | OK | index-usage-awr.sql |
-| [`index_by_table_demo.sql`](./monitoring_scripts/community_jkstill/general/index_by_table_demo.sql) | `community_jkstill/general` | BASSO | OK | since I can never seem to remember this simple syntax |
-| [`iot_segments.sql`](./monitoring_scripts/community_jkstill/general/iot_segments.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: iot segments. |
-| [`kglh-growth-awr.sql`](./monitoring_scripts/community_jkstill/general/kglh-growth-awr.sql) | `community_jkstill/general` | BASSO | OK | kglh-growth-awr.sql |
-| [`kglh-growth.sql`](./monitoring_scripts/community_jkstill/general/kglh-growth.sql) | `community_jkstill/general` | BASSO | OK | kglh-growth.sql |
-| [`latency_eventmetric.sql`](./monitoring_scripts/community_jkstill/general/latency_eventmetric.sql) | `community_jkstill/general` | BASSO | OK | wait event latency last minute |
-| [`latency_system_event.sql`](./monitoring_scripts/community_jkstill/general/latency_system_event.sql) | `community_jkstill/general` | BASSO | OK | wait event latency averaged over each hour |
-| [`latency_waitclassmetric.sql`](./monitoring_scripts/community_jkstill/general/latency_waitclassmetric.sql) | `community_jkstill/general` | BASSO | OK | wait event latency last minute |
-| [`legacy-exclude.sql`](./monitoring_scripts/community_jkstill/general/legacy-exclude.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: legacy exclude. |
-| [`liveplan-9i-hash.sql`](./monitoring_scripts/community_jkstill/general/liveplan-9i-hash.sql) | `community_jkstill/general` | BASSO | OK | liveplan-9i-hash.sql |
-| [`liveplan-9i.sql`](./monitoring_scripts/community_jkstill/general/liveplan-9i.sql) | `community_jkstill/general` | BASSO | OK | liveplan-9i.sql |
-| [`liveplan-hash.sql`](./monitoring_scripts/community_jkstill/general/liveplan-hash.sql) | `community_jkstill/general` | BASSO | OK | liveplan-hash.sql |
-| [`liveplan-sqlid.sql`](./monitoring_scripts/community_jkstill/general/liveplan-sqlid.sql) | `community_jkstill/general` | BASSO | OK | liveplan-sqlid.sql |
-| [`loghist-csv.sql`](./monitoring_scripts/community_jkstill/general/loghist-csv.sql) | `community_jkstill/general` | BASSO | OK | loghist-csv.sql |
-| [`loghistory_8.sql`](./monitoring_scripts/community_jkstill/general/loghistory_8.sql) | `community_jkstill/general` | MEDIO | OK | loghistory_8.sql |
-| [`logsetup.sql`](./monitoring_scripts/community_jkstill/general/logsetup.sql) | `community_jkstill/general` | BASSO | OK | logsetup.sql |
-| [`mem-leak-detect.sql`](./monitoring_scripts/community_jkstill/general/mem-leak-detect.sql) | `community_jkstill/general` | BASSO | OK | mem-leak-detect.sql |
-| [`mem-subpool-mgt.sql`](./monitoring_scripts/community_jkstill/general/mem-subpool-mgt.sql) | `community_jkstill/general` | ALTO | OK | mem-subpool-mgt.sql |
-| [`my-events.sql`](./monitoring_scripts/community_jkstill/general/my-events.sql) | `community_jkstill/general` | BASSO | OK | and lower(event) like '%net%' |
-| [`my-redo.sql`](./monitoring_scripts/community_jkstill/general/my-redo.sql) | `community_jkstill/general` | BASSO | OK | Jared Still 2023 |
-| [`na-std-timezones.sql`](./monitoring_scripts/community_jkstill/general/na-std-timezones.sql) | `community_jkstill/general` | BASSO | OK | na-std-timezones.sql |
-| [`numeric-timezone-abbrev.sql`](./monitoring_scripts/community_jkstill/general/numeric-timezone-abbrev.sql) | `community_jkstill/general` | BASSO | OK | numeric-timezone-abbreviations.sql |
-| [`object-times.sql`](./monitoring_scripts/community_jkstill/general/object-times.sql) | `community_jkstill/general` | BASSO | OK | object-times.sql |
-| [`object-types.sql`](./monitoring_scripts/community_jkstill/general/object-types.sql) | `community_jkstill/general` | BASSO | OK | object-types.sql |
-| [`opcodes.sql`](./monitoring_scripts/community_jkstill/general/opcodes.sql) | `community_jkstill/general` | MEDIO | OK | do NOT add blank lines |
-| [`opthist.sql`](./monitoring_scripts/community_jkstill/general/opthist.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: opthist. |
-| [`oracle-data-types.sql`](./monitoring_scripts/community_jkstill/general/oracle-data-types.sql) | `community_jkstill/general` | BASSO | OK | oracle-data-types.sql |
-| [`oracle-exclude-demo.sql`](./monitoring_scripts/community_jkstill/general/oracle-exclude-demo.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-demo.sql |
-| [`oracle-exclude-inline.sql`](./monitoring_scripts/community_jkstill/general/oracle-exclude-inline.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-inline.sql |
-| [`oracle-exclude-schema.sql`](./monitoring_scripts/community_jkstill/general/oracle-exclude-schema.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-schema.sql |
-| [`oracle-naming-inconsistencies.sql`](./monitoring_scripts/community_jkstill/general/oracle-naming-inconsistencies.sql) | `community_jkstill/general` | BASSO | OK | oracle-naming-inconsistencies.sql |
-| [`oradebug_doc.sql`](./monitoring_scripts/community_jkstill/general/oradebug_doc.sql) | `community_jkstill/general` | BASSO | OK | oradebug_doc.sql |
-| [`orapwdhash.sql`](./monitoring_scripts/community_jkstill/general/orapwdhash.sql) | `community_jkstill/general` | BASSO | OK | orapwdhash.sql |
-| [`os-load.sql`](./monitoring_scripts/community_jkstill/general/os-load.sql) | `community_jkstill/general` | BASSO | OK | System load for the previous hour as reported by Oracle |
-| [`oversion_major.sql`](./monitoring_scripts/community_jkstill/general/oversion_major.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: oversion major. |
-| [`oversion_minor.sql`](./monitoring_scripts/community_jkstill/general/oversion_minor.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: oversion minor. |
-| [`parameter-compare.sql`](./monitoring_scripts/community_jkstill/general/parameter-compare.sql) | `community_jkstill/general` | MEDIO | OK | parameter-compare.sql |
-| [`parm-hist-diff.sql`](./monitoring_scripts/community_jkstill/general/parm-hist-diff.sql) | `community_jkstill/general` | BASSO | OK | and s.con_dbid = p.con_dbid |
-| [`parms-diff.sql`](./monitoring_scripts/community_jkstill/general/parms-diff.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: parms diff. |
-| [`parms-version-diff.sql`](./monitoring_scripts/community_jkstill/general/parms-version-diff.sql) | `community_jkstill/general` | BASSO | OK | parms-version-diff.sql |
-| [`parms_dump_12c_csv.sql`](./monitoring_scripts/community_jkstill/general/parms_dump_12c_csv.sql) | `community_jkstill/general` | BASSO | OK | parms_dump_12c_csv.sql |
-| [`parms_dump_csv.sql`](./monitoring_scripts/community_jkstill/general/parms_dump_csv.sql) | `community_jkstill/general` | BASSO | OK | parms_dump_csv.sql |
-| [`pg.sql`](./monitoring_scripts/community_jkstill/general/pg.sql) | `community_jkstill/general` | BASSO | OK | setup pagesize and linesize |
-| [`pivot.sql`](./monitoring_scripts/community_jkstill/general/pivot.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: pivot. |
-| [`pq-ash-all.sql`](./monitoring_scripts/community_jkstill/general/pq-ash-all.sql) | `community_jkstill/general` | BASSO | OK | pq-ash-all.sql |
-| [`pq-ash-sqlid.sql`](./monitoring_scripts/community_jkstill/general/pq-ash-sqlid.sql) | `community_jkstill/general` | BASSO | OK | pq-ash-sqlid.sql |
-| [`pq-awr-all.sql`](./monitoring_scripts/community_jkstill/general/pq-awr-all.sql) | `community_jkstill/general` | BASSO | OK | pq-awr-all.sql |
-| [`pq-awr-sqlid.sql`](./monitoring_scripts/community_jkstill/general/pq-awr-sqlid.sql) | `community_jkstill/general` | BASSO | OK | pq-awr-sqlid.sql |
-| [`print_table_2.sql`](./monitoring_scripts/community_jkstill/general/print_table_2.sql) | `community_jkstill/general` | MEDIO | OK | print_table_2.sql |
-| [`privileged-accounts.sql`](./monitoring_scripts/community_jkstill/general/privileged-accounts.sql) | `community_jkstill/general` | BASSO | OK | privileged-accounts.sql |
-| [`privmaps.sql`](./monitoring_scripts/community_jkstill/general/privmaps.sql) | `community_jkstill/general` | BASSO | OK | privmaps.sql |
-| [`purge_cursors.sql`](./monitoring_scripts/community_jkstill/general/purge_cursors.sql) | `community_jkstill/general` | BASSO | OK | purge_cursors.sql |
-| [`q_quote.sql`](./monitoring_scripts/community_jkstill/general/q_quote.sql) | `community_jkstill/general` | BASSO | OK | example of the q quoting mechanism for string literals |
-| [`raise_error.sql`](./monitoring_scripts/community_jkstill/general/raise_error.sql) | `community_jkstill/general` | BASSO | OK | raise_error.sql |
-| [`rbs_shrink.sql`](./monitoring_scripts/community_jkstill/general/rbs_shrink.sql) | `community_jkstill/general` | MEDIO | OK | rbs_shrink.sql |
-| [`redo-log-mirrors.sql`](./monitoring_scripts/community_jkstill/general/redo-log-mirrors.sql) | `community_jkstill/general` | BASSO | OK | redo-log-mirrors.sql |
-| [`redo-per-hour.sql`](./monitoring_scripts/community_jkstill/general/redo-per-hour.sql) | `community_jkstill/general` | BASSO | OK | redo-per-hour.sql |
-| [`remove-sqlplus-settings.sql`](./monitoring_scripts/community_jkstill/general/remove-sqlplus-settings.sql) | `community_jkstill/general` | BASSO | OK | bind var is :v_sqltempfile |
-| [`reserved-words.sql`](./monitoring_scripts/community_jkstill/general/reserved-words.sql) | `community_jkstill/general` | BASSO | OK | where keyword like '%YOUR_WORD_HERE%' |
-| [`resmgr-columns.sql`](./monitoring_scripts/community_jkstill/general/resmgr-columns.sql) | `community_jkstill/general` | BASSO | OK | resmgr-columns.sql |
-| [`resmgr-consumer-groups.sql`](./monitoring_scripts/community_jkstill/general/resmgr-consumer-groups.sql) | `community_jkstill/general` | BASSO | OK | resmgr-consumer-groups.sql |
-| [`resmgr-group-privs.sql`](./monitoring_scripts/community_jkstill/general/resmgr-group-privs.sql) | `community_jkstill/general` | BASSO | OK | resmgr-group-privs.sql |
-| [`resmgr-plan-directives.sql`](./monitoring_scripts/community_jkstill/general/resmgr-plan-directives.sql) | `community_jkstill/general` | BASSO | OK | resmgr-plan-directives.sql |
-| [`resmgr-setup.sql`](./monitoring_scripts/community_jkstill/general/resmgr-setup.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: resmgr setup. |
-| [`resmgr-user-consumer-groups.sql`](./monitoring_scripts/community_jkstill/general/resmgr-user-consumer-groups.sql) | `community_jkstill/general` | BASSO | OK | resmgr-user-consumer-groups.sql |
-| [`resmgr-waits.sql`](./monitoring_scripts/community_jkstill/general/resmgr-waits.sql) | `community_jkstill/general` | BASSO | OK | resmgr-waits.sql |
-| [`resmgr-who.sql`](./monitoring_scripts/community_jkstill/general/resmgr-who.sql) | `community_jkstill/general` | BASSO | OK | resmgr-who.sql |
-| [`restricted_session_disable.sql`](./monitoring_scripts/community_jkstill/general/restricted_session_disable.sql) | `community_jkstill/general` | ALTO | OK | Script operativo Oracle per: restricted session disable. |
-| [`restricted_session_enable.sql`](./monitoring_scripts/community_jkstill/general/restricted_session_enable.sql) | `community_jkstill/general` | ALTO | OK | Script operativo Oracle per: restricted session enable. |
-| [`reverse_role_lookup.sql`](./monitoring_scripts/community_jkstill/general/reverse_role_lookup.sql) | `community_jkstill/general` | BASSO | OK | reverse_role_lookup.sql |
-| [`run-advice-scripts.sql`](./monitoring_scripts/community_jkstill/general/run-advice-scripts.sql) | `community_jkstill/general` | BASSO | OK | run all advice scripts |
-| [`sampled_size.sql`](./monitoring_scripts/community_jkstill/general/sampled_size.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sampled size. |
-| [`sampled_size_details.sql`](./monitoring_scripts/community_jkstill/general/sampled_size_details.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sampled size details. |
-| [`save-sqlplus-settings.sql`](./monitoring_scripts/community_jkstill/general/save-sqlplus-settings.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: save sqlplus settings. |
-| [`schedcols.sql`](./monitoring_scripts/community_jkstill/general/schedcols.sql) | `community_jkstill/general` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
-| [`scott.sql`](./monitoring_scripts/community_jkstill/general/scott.sql) | `community_jkstill/general` | ALTO | OK | Copyright (c) Oracle Corporation 1988, 2000. All Rights Reserved |
-| [`sess-event-summary.sql`](./monitoring_scripts/community_jkstill/general/sess-event-summary.sql) | `community_jkstill/general` | BASSO | OK | sess-event-summary.sql |
-| [`sess_longops.sql`](./monitoring_scripts/community_jkstill/general/sess_longops.sql) | `community_jkstill/general` | BASSO | OK | sess_longops.sql |
-| [`sessevent.sql`](./monitoring_scripts/community_jkstill/general/sessevent.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sessevent. |
-| [`sessevent2.sql`](./monitoring_scripts/community_jkstill/general/sessevent2.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sessevent2. |
-| [`session-cursor-metrics.sql`](./monitoring_scripts/community_jkstill/general/session-cursor-metrics.sql) | `community_jkstill/general` | BASSO | OK | session-cursor-metrics.sql |
-| [`session-parm-diff.sql`](./monitoring_scripts/community_jkstill/general/session-parm-diff.sql) | `community_jkstill/general` | BASSO | OK | session-parm-diff.sql |
-| [`session_fix.sql`](./monitoring_scripts/community_jkstill/general/session_fix.sql) | `community_jkstill/general` | BASSO | OK | File Name : http://www.oracle-base.com/dba/11g/session_fix.sql |
-| [`set-default-profile-unlimited.sql`](./monitoring_scripts/community_jkstill/general/set-default-profile-unlimited.sql) | `community_jkstill/general` | MEDIO | OK | set-default-profile-unlimited.sql |
-| [`set-tracefile-id-external.sql`](./monitoring_scripts/community_jkstill/general/set-tracefile-id-external.sql) | `community_jkstill/general` | BASSO | OK | set-tracefile-id-external.sql |
-| [`set_date_format.sql`](./monitoring_scripts/community_jkstill/general/set_date_format.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: set date format. |
-| [`set_dbid.sql`](./monitoring_scripts/community_jkstill/general/set_dbid.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: set dbid. |
-| [`set_events.sql`](./monitoring_scripts/community_jkstill/general/set_events.sql) | `community_jkstill/general` | ALTO | OK | see http://blog.tanelpoder.com/2009/03/03/the-full-power-of-oracles-diagnostic-events-part-1-syntax-for-ksd-debug-event-handling |
-| [`set_sess_tz.sql`](./monitoring_scripts/community_jkstill/general/set_sess_tz.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: set sess tz. |
-| [`set_table_prefs.sql`](./monitoring_scripts/community_jkstill/general/set_table_prefs.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: set table prefs. |
-| [`setc.sql`](./monitoring_scripts/community_jkstill/general/setc.sql) | `community_jkstill/general` | MEDIO | OK | set container |
-| [`setup.sql`](./monitoring_scripts/community_jkstill/general/setup.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: setup. |
-| [`show-fk.sql`](./monitoring_scripts/community_jkstill/general/show-fk.sql) | `community_jkstill/general` | BASSO | OK | show-fk.sql - report foreign key constraints |
-| [`show-pk-with-idx.sql`](./monitoring_scripts/community_jkstill/general/show-pk-with-idx.sql) | `community_jkstill/general` | BASSO | OK | showpk.sql - show primary key constraints |
-| [`show-pk.sql`](./monitoring_scripts/community_jkstill/general/show-pk.sql) | `community_jkstill/general` | BASSO | OK | show-pk.sql - show primary key constraints |
-| [`show-uk.sql`](./monitoring_scripts/community_jkstill/general/show-uk.sql) | `community_jkstill/general` | BASSO | OK | show-uk.sql - show unique key constraints |
-| [`show-x-dollar-tables.sql`](./monitoring_scripts/community_jkstill/general/show-x-dollar-tables.sql) | `community_jkstill/general` | BASSO | OK | show-x-dollar-tables.sql |
-| [`show_active_log_dest.sql`](./monitoring_scripts/community_jkstill/general/show_active_log_dest.sql) | `community_jkstill/general` | BASSO | OK | show_active_log_test.sql |
-| [`show_check_cons.sql`](./monitoring_scripts/community_jkstill/general/show_check_cons.sql) | `community_jkstill/general` | BASSO | OK | show_check_cons.sql |
-| [`show_data_types.sql`](./monitoring_scripts/community_jkstill/general/show_data_types.sql) | `community_jkstill/general` | BASSO | OK | show_data_type.sql |
-| [`show_event_messages.sql`](./monitoring_scripts/community_jkstill/general/show_event_messages.sql) | `community_jkstill/general` | BASSO | OK | show server event messages |
-| [`show_logon_triggers.sql`](./monitoring_scripts/community_jkstill/general/show_logon_triggers.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: show logon triggers. |
-| [`show_supp_logs.sql`](./monitoring_scripts/community_jkstill/general/show_supp_logs.sql) | `community_jkstill/general` | BASSO | OK | contents of gg_env.sql |
-| [`showallparm.sql`](./monitoring_scripts/community_jkstill/general/showallparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showallparm. |
-| [`showallparm12c-drvr.sql`](./monitoring_scripts/community_jkstill/general/showallparm12c-drvr.sql) | `community_jkstill/general` | BASSO | OK | show all available init.ora parameters |
-| [`showallparm73drvr.sql`](./monitoring_scripts/community_jkstill/general/showallparm73drvr.sql) | `community_jkstill/general` | BASSO | OK | show all available init.ora parameters |
-| [`showcol.sql`](./monitoring_scripts/community_jkstill/general/showcol.sql) | `community_jkstill/general` | BASSO | OK | show column details and comments for a table |
-| [`showdb.sql`](./monitoring_scripts/community_jkstill/general/showdb.sql) | `community_jkstill/general` | ALTO | OK | select * from v$database |
-| [`showdblink.sql`](./monitoring_scripts/community_jkstill/general/showdblink.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: showdblink. |
-| [`showdis.sql`](./monitoring_scripts/community_jkstill/general/showdis.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showdis. |
-| [`showdiscon.sql`](./monitoring_scripts/community_jkstill/general/showdiscon.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showdiscon. |
-| [`showdistrg.sql`](./monitoring_scripts/community_jkstill/general/showdistrg.sql) | `community_jkstill/general` | BASSO | OK | showdistrg.sql |
-| [`showindex.sql`](./monitoring_scripts/community_jkstill/general/showindex.sql) | `community_jkstill/general` | BASSO | OK | showindex.sql |
-| [`showinv.sql`](./monitoring_scripts/community_jkstill/general/showinv.sql) | `community_jkstill/general` | BASSO | OK | jkstill - 11/30/2006 |
-| [`showkey.sql`](./monitoring_scripts/community_jkstill/general/showkey.sql) | `community_jkstill/general` | BASSO | OK | find primary and unique keys, |
-| [`showlog.sql`](./monitoring_scripts/community_jkstill/general/showlog.sql) | `community_jkstill/general` | BASSO | OK | and l.inst_id = f.inst_id |
-| [`showmem.sql`](./monitoring_scripts/community_jkstill/general/showmem.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showmem. |
-| [`shownls.sql`](./monitoring_scripts/community_jkstill/general/shownls.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: shownls. |
-| [`showparm.sql`](./monitoring_scripts/community_jkstill/general/showparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showparm. |
-| [`showparmchanges.sql`](./monitoring_scripts/community_jkstill/general/showparmchanges.sql) | `community_jkstill/general` | BASSO | OK | showparmchanges.sql |
-| [`showparmdrvr.sql`](./monitoring_scripts/community_jkstill/general/showparmdrvr.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showparmdrvr. |
-| [`showpin.sql`](./monitoring_scripts/community_jkstill/general/showpin.sql) | `community_jkstill/general` | BASSO | OK | show objects that are pinned in the shared pool |
-| [`showpipes.sql`](./monitoring_scripts/community_jkstill/general/showpipes.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showpipes. |
-| [`showplan-all.sql`](./monitoring_scripts/community_jkstill/general/showplan-all.sql) | `community_jkstill/general` | BASSO | OK | showplan_all.sql |
-| [`showplan-awr.sql`](./monitoring_scripts/community_jkstill/general/showplan-awr.sql) | `community_jkstill/general` | BASSO | OK | showplan_awr.sql |
-| [`showplan-last.sql`](./monitoring_scripts/community_jkstill/general/showplan-last.sql) | `community_jkstill/general` | BASSO | OK | showplan_last.sql |
-| [`showplan72.sql`](./monitoring_scripts/community_jkstill/general/showplan72.sql) | `community_jkstill/general` | BASSO | OK | showplan72.sql |
-| [`showplan73.sql`](./monitoring_scripts/community_jkstill/general/showplan73.sql) | `community_jkstill/general` | BASSO | OK | showplan73.sql |
-| [`showplan9i.sql`](./monitoring_scripts/community_jkstill/general/showplan9i.sql) | `community_jkstill/general` | BASSO | OK | showplan9i.sql |
-| [`showpriv.sql`](./monitoring_scripts/community_jkstill/general/showpriv.sql) | `community_jkstill/general` | BASSO | OK | showpriv.sql |
-| [`showprofile.sql`](./monitoring_scripts/community_jkstill/general/showprofile.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showprofile. |
-| [`showrbs.sql`](./monitoring_scripts/community_jkstill/general/showrbs.sql) | `community_jkstill/general` | BASSO | OK | spool rbs.lis |
-| [`showrbslock.sql`](./monitoring_scripts/community_jkstill/general/showrbslock.sql) | `community_jkstill/general` | BASSO | OK | from Tim Sawmiller |
-| [`showrole.sql`](./monitoring_scripts/community_jkstill/general/showrole.sql) | `community_jkstill/general` | BASSO | OK | showrole.sql |
-| [`showroles.sql`](./monitoring_scripts/community_jkstill/general/showroles.sql) | `community_jkstill/general` | BASSO | OK | showpriv.sql |
-| [`showsrc.sql`](./monitoring_scripts/community_jkstill/general/showsrc.sql) | `community_jkstill/general` | BASSO | OK | ed src-&uowner..txt |
-| [`showtab.sql`](./monitoring_scripts/community_jkstill/general/showtab.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showtab. |
-| [`showview.sql`](./monitoring_scripts/community_jkstill/general/showview.sql) | `community_jkstill/general` | BASSO | OK | select view_name, view_definition |
-| [`snap_ids.sql`](./monitoring_scripts/community_jkstill/general/snap_ids.sql) | `community_jkstill/general` | BASSO | OK | Set up the binds for dbid and instance_number |
-| [`snapNmin.sql`](./monitoring_scripts/community_jkstill/general/snapNmin.sql) | `community_jkstill/general` | BASSO | OK | take a two minute snapshot at level 7 |
-| [`sp_current.sql`](./monitoring_scripts/community_jkstill/general/sp_current.sql) | `community_jkstill/general` | BASSO | OK | sp_current.sql |
-| [`sp_get_date_range.sql`](./monitoring_scripts/community_jkstill/general/sp_get_date_range.sql) | `community_jkstill/general` | BASSO | OK | sp_get_date_range.sql |
-| [`sp_getsql.sql`](./monitoring_scripts/community_jkstill/general/sp_getsql.sql) | `community_jkstill/general` | BASSO | OK | sp_getsql.sql |
-| [`sp_lvl_0.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_0.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 0 |
-| [`sp_lvl_5.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_5.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 0 |
-| [`sp_lvl_6.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_6.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 6 |
-| [`sp_lvl_7.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_7.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 6 |
-| [`sp_lvl_current.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_current.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp lvl current. |
-| [`sp_lvl_sql.sql`](./monitoring_scripts/community_jkstill/general/sp_lvl_sql.sql) | `community_jkstill/general` | BASSO | OK | change statspack SQL collection levels |
-| [`sp_plan.sql`](./monitoring_scripts/community_jkstill/general/sp_plan.sql) | `community_jkstill/general` | BASSO | OK | display historic execution plans |
-| [`sp_plan_hash.sql`](./monitoring_scripts/community_jkstill/general/sp_plan_hash.sql) | `community_jkstill/general` | BASSO | OK | sp_plan_hash.sql |
-| [`sp_plan_table.sql`](./monitoring_scripts/community_jkstill/general/sp_plan_table.sql) | `community_jkstill/general` | MEDIO | OK | sp_plan_table.sql |
-| [`sp_recent.sql`](./monitoring_scripts/community_jkstill/general/sp_recent.sql) | `community_jkstill/general` | BASSO | OK | sp_recent.sql |
-| [`sp_snap.sql`](./monitoring_scripts/community_jkstill/general/sp_snap.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp snap. |
-| [`sp_snap_6.sql`](./monitoring_scripts/community_jkstill/general/sp_snap_6.sql) | `community_jkstill/general` | BASSO | OK | sp_snap_6.sql |
-| [`sp_snap_id.sql`](./monitoring_scripts/community_jkstill/general/sp_snap_id.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp snap id. |
-| [`spacemap.sql`](./monitoring_scripts/community_jkstill/general/spacemap.sql) | `community_jkstill/general` | ALTO | OK | spacemap.sql |
-| [`spacemap_rpt.sql`](./monitoring_scripts/community_jkstill/general/spacemap_rpt.sql) | `community_jkstill/general` | BASSO | OK | spacemap_rpt.sql |
-| [`spacemap_sum.sql`](./monitoring_scripts/community_jkstill/general/spacemap_sum.sql) | `community_jkstill/general` | ALTO | OK | spacemap_sum.sql |
-| [`spacemap_sum_rpt.sql`](./monitoring_scripts/community_jkstill/general/spacemap_sum_rpt.sql) | `community_jkstill/general` | BASSO | OK | spacemap_sum_rpt.sql |
-| [`spool-example-2.sql`](./monitoring_scripts/community_jkstill/general/spool-example-2.sql) | `community_jkstill/general` | BASSO | OK | template for spooling a logfile with timestamp |
-| [`spool_example.sql`](./monitoring_scripts/community_jkstill/general/spool_example.sql) | `community_jkstill/general` | MEDIO | OK | trimspool for older versions - <= 9i I think |
-| [`spreport.sql`](./monitoring_scripts/community_jkstill/general/spreport.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: spreport. |
-| [`sql-command-types.sql`](./monitoring_scripts/community_jkstill/general/sql-command-types.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sql command types. |
-| [`sql-patch-report.sql`](./monitoring_scripts/community_jkstill/general/sql-patch-report.sql) | `community_jkstill/general` | BASSO | OK | sql-patch-report.sql |
-| [`sql-read-write-size-sql.sql`](./monitoring_scripts/community_jkstill/general/sql-read-write-size-sql.sql) | `community_jkstill/general` | BASSO | OK | sql-read-write-size-sql.sql |
-| [`sql-read-write-size.sql`](./monitoring_scripts/community_jkstill/general/sql-read-write-size.sql) | `community_jkstill/general` | BASSO | OK | sql-read-write-size.sql |
-| [`sql-version-counts.sql`](./monitoring_scripts/community_jkstill/general/sql-version-counts.sql) | `community_jkstill/general` | BASSO | OK | sql-version-counts |
-| [`sql_current_plan.sql`](./monitoring_scripts/community_jkstill/general/sql_current_plan.sql) | `community_jkstill/general` | BASSO | OK | sql_current_plan.sql |
-| [`sql_spawned_reasons.sql`](./monitoring_scripts/community_jkstill/general/sql_spawned_reasons.sql) | `community_jkstill/general` | BASSO | OK | sql_spawned_reasons.sql |
-| [`sql_trick_1.sql`](./monitoring_scripts/community_jkstill/general/sql_trick_1.sql) | `community_jkstill/general` | BASSO | OK | sql_trick_1.sql |
-| [`sqlid-trace.sql`](./monitoring_scripts/community_jkstill/general/sqlid-trace.sql) | `community_jkstill/general` | ALTO | OK | trace a particular sqlid regardless of session |
-| [`sqlplus_return_code.sql`](./monitoring_scripts/community_jkstill/general/sqlplus_return_code.sql) | `community_jkstill/general` | ALTO | OK | run some PL/SQL |
-| [`sqlplus_return_code_2.sql`](./monitoring_scripts/community_jkstill/general/sqlplus_return_code_2.sql) | `community_jkstill/general` | MEDIO | OK | sqlplus_return_code_2.sql |
-| [`supp-col-info.sql`](./monitoring_scripts/community_jkstill/general/supp-col-info.sql) | `community_jkstill/general` | BASSO | OK | supp-col-info.sql |
-| [`supp-db-info.sql`](./monitoring_scripts/community_jkstill/general/supp-db-info.sql) | `community_jkstill/general` | BASSO | OK | supp-db-info.sql |
-| [`supp-tab-info.sql`](./monitoring_scripts/community_jkstill/general/supp-tab-info.sql) | `community_jkstill/general` | BASSO | OK | supp-tab-info.sql |
-| [`sys-context-all.sql`](./monitoring_scripts/community_jkstill/general/sys-context-all.sql) | `community_jkstill/general` | BASSO | OK | sys-context-all.sql |
-| [`sys_context.sql`](./monitoring_scripts/community_jkstill/general/sys_context.sql) | `community_jkstill/general` | BASSO | OK | sys_context.sql |
-| [`sysaux_free.sql`](./monitoring_scripts/community_jkstill/general/sysaux_free.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sysaux free. |
-| [`sysevent-top-10.sql`](./monitoring_scripts/community_jkstill/general/sysevent-top-10.sql) | `community_jkstill/general` | BASSO | OK | sysevent-top-10.sql |
-| [`sysevent_begin.sql`](./monitoring_scripts/community_jkstill/general/sysevent_begin.sql) | `community_jkstill/general` | ALTO | OK | time_waited/100 time_waited, |
-| [`sysevent_end.sql`](./monitoring_scripts/community_jkstill/general/sysevent_end.sql) | `community_jkstill/general` | ALTO | OK | time_waited/100 time_waited, |
-| [`sysevent_rpt.sql`](./monitoring_scripts/community_jkstill/general/sysevent_rpt.sql) | `community_jkstill/general` | BASSO | OK | set the start_time |
-| [`system_fix.sql`](./monitoring_scripts/community_jkstill/general/system_fix.sql) | `community_jkstill/general` | BASSO | OK | File Name : http://www.oracle-base.com/dba/11g/system_fix.sql |
-| [`system_fix_all.sql`](./monitoring_scripts/community_jkstill/general/system_fix_all.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: system fix all. |
-| [`tabcols.sql`](./monitoring_scripts/community_jkstill/general/tabcols.sql) | `community_jkstill/general` | BASSO | OK | show columns in alpha order for owner and table |
-| [`tabidx.sql`](./monitoring_scripts/community_jkstill/general/tabidx.sql) | `community_jkstill/general` | BASSO | OK | show indexes per table |
-| [`table-annotations.sql`](./monitoring_scripts/community_jkstill/general/table-annotations.sql) | `community_jkstill/general` | BASSO | OK | table-annotations.sql |
-| [`table_ddl.sql`](./monitoring_scripts/community_jkstill/general/table_ddl.sql) | `community_jkstill/general` | BASSO | OK | table_ddl.sql |
-| [`table_list.sql`](./monitoring_scripts/community_jkstill/general/table_list.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: table list. |
-| [`test_calendar_string-examples.sql`](./monitoring_scripts/community_jkstill/general/test_calendar_string-examples.sql) | `community_jkstill/general` | BASSO | OK | between 07:00 and 23:59 repeat every 15 minutes on the 15 minute mark |
-| [`test_calendar_string.sql`](./monitoring_scripts/community_jkstill/general/test_calendar_string.sql) | `community_jkstill/general` | MEDIO | OK | File Name : https://oracle-base.com/dba/10g/test_calendar_string.sql |
-| [`title.sql`](./monitoring_scripts/community_jkstill/general/title.sql) | `community_jkstill/general` | BASSO | OK | title.sql - copied from title80.sql |
-| [`title132.sql`](./monitoring_scripts/community_jkstill/general/title132.sql) | `community_jkstill/general` | BASSO | OK | DATABASE||' Database' DATABASE, |
-| [`title80.sql`](./monitoring_scripts/community_jkstill/general/title80.sql) | `community_jkstill/general` | BASSO | OK | DATABASE||' Database' DATABASE, |
-| [`tracefile-dump.sql`](./monitoring_scripts/community_jkstill/general/tracefile-dump.sql) | `community_jkstill/general` | BASSO | OK | tracefile-dump.sql |
-| [`tracefile.sql`](./monitoring_scripts/community_jkstill/general/tracefile.sql) | `community_jkstill/general` | BASSO | OK | tracefile.sql |
-| [`troff.sql`](./monitoring_scripts/community_jkstill/general/troff.sql) | `community_jkstill/general` | BASSO | OK | turn off tracing for all current sessions of a user |
-| [`tron.sql`](./monitoring_scripts/community_jkstill/general/tron.sql) | `community_jkstill/general` | BASSO | OK | turn on tracing for all current sessions of a user |
-| [`ts2e-hires.sql`](./monitoring_scripts/community_jkstill/general/ts2e-hires.sql) | `community_jkstill/general` | BASSO | OK | ts2e-hires.sql |
-| [`ts2e.sql`](./monitoring_scripts/community_jkstill/general/ts2e.sql) | `community_jkstill/general` | BASSO | OK | convert a timestamp to highres (usec) epoch value |
-| [`ttitle.sql`](./monitoring_scripts/community_jkstill/general/ttitle.sql) | `community_jkstill/general` | BASSO | OK | set the current time |
-| [`tz_set.sql`](./monitoring_scripts/community_jkstill/general/tz_set.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: tz set. |
-| [`ua-actions.sql`](./monitoring_scripts/community_jkstill/general/ua-actions.sql) | `community_jkstill/general` | BASSO | OK | ua-actions.sql |
-| [`ua-policies.sql`](./monitoring_scripts/community_jkstill/general/ua-policies.sql) | `community_jkstill/general` | BASSO | OK | where policy_name = 'ORA_ACCOUNT_MGMT' |
-| [`ua-sessions.sql`](./monitoring_scripts/community_jkstill/general/ua-sessions.sql) | `community_jkstill/general` | MEDIO | OK | ua-session.sql |
-| [`uifk.sql`](./monitoring_scripts/community_jkstill/general/uifk.sql) | `community_jkstill/general` | BASSO | OK | format data from user_uifk |
-| [`uifk_gen.sql`](./monitoring_scripts/community_jkstill/general/uifk_gen.sql) | `community_jkstill/general` | MEDIO | OK | gen_uifk.sql |
-| [`uifk_v.sql`](./monitoring_scripts/community_jkstill/general/uifk_v.sql) | `community_jkstill/general` | MEDIO | OK | adapted from a script by Tom Kyte that is used to |
-| [`undo-active-12c.sql`](./monitoring_scripts/community_jkstill/general/undo-active-12c.sql) | `community_jkstill/general` | BASSO | OK | undo-active-12c.sql |
-| [`undo-active.sql`](./monitoring_scripts/community_jkstill/general/undo-active.sql) | `community_jkstill/general` | BASSO | OK | undo-active.sql |
-| [`undo-mon-fast.sql`](./monitoring_scripts/community_jkstill/general/undo-mon-fast.sql) | `community_jkstill/general` | BASSO | OK | undo-mon-fast.sql |
-| [`undo-mon-trans.sql`](./monitoring_scripts/community_jkstill/general/undo-mon-trans.sql) | `community_jkstill/general` | BASSO | OK | undo-mon-trans.sql |
-| [`uptime.sql`](./monitoring_scripts/community_jkstill/general/uptime.sql) | `community_jkstill/general` | BASSO | OK | uptime.sql - show db uptime |
-| [`user-modifiable-all-parms.sql`](./monitoring_scripts/community_jkstill/general/user-modifiable-all-parms.sql) | `community_jkstill/general` | BASSO | OK | a.KSPPITY TYPE |
-| [`user-modifiable-parms.sql`](./monitoring_scripts/community_jkstill/general/user-modifiable-parms.sql) | `community_jkstill/general` | BASSO | OK | user-modifiable-parms.sql |
-| [`user_ddl.sql`](./monitoring_scripts/community_jkstill/general/user_ddl.sql) | `community_jkstill/general` | BASSO | OK | user_ddl.sql |
-| [`user_exit.sql`](./monitoring_scripts/community_jkstill/general/user_exit.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: user exit. |
-| [`utl_file-test.sql`](./monitoring_scripts/community_jkstill/general/utl_file-test.sql) | `community_jkstill/general` | MEDIO | OK | utl_file-test.sql |
-| [`wait_chains.sql`](./monitoring_scripts/community_jkstill/general/wait_chains.sql) | `community_jkstill/general` | BASSO | OK | Oracle Support Note |
-| [`wc-legend.sql`](./monitoring_scripts/community_jkstill/general/wc-legend.sql) | `community_jkstill/general` | BASSO | OK | the alternative list with punctuation looks more interesting |
-| [`xb.sql`](./monitoring_scripts/community_jkstill/general/xb.sql) | `community_jkstill/general` | MEDIO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
-| [`xbi.sql`](./monitoring_scripts/community_jkstill/general/xbi.sql) | `community_jkstill/general` | MEDIO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
-| [`xdesc-all.sql`](./monitoring_scripts/community_jkstill/general/xdesc-all.sql) | `community_jkstill/general` | BASSO | OK | 30 char for colname |
-| [`xdesc.sql`](./monitoring_scripts/community_jkstill/general/xdesc.sql) | `community_jkstill/general` | BASSO | OK | DBMS_SQL ref, including the record types |
-| [`xdllr-abstract-list.sql`](./monitoring_scripts/community_jkstill/general/xdllr-abstract-list.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: xdllr abstract list. |
-| [`xdllr-comments.sql`](./monitoring_scripts/community_jkstill/general/xdllr-comments.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: xdllr comments. |
-| [`xdllr-info.sql`](./monitoring_scripts/community_jkstill/general/xdllr-info.sql) | `community_jkstill/general` | BASSO | OK | scan must be off as there may be a number of ampersand characters in the comments |
-| [`xdllr-tablist.sql`](./monitoring_scripts/community_jkstill/general/xdllr-tablist.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: xdllr tablist. |
-| [`archived_log_dest.sql`](./monitoring_scripts/community_jkstill/instance_db/archived_log_dest.sql) | `community_jkstill/instance_db` | BASSO | OK | Script operativo Oracle per: archived log dest. |
-| [`archived_log_hist_matrix.sql`](./monitoring_scripts/community_jkstill/instance_db/archived_log_hist_matrix.sql) | `community_jkstill/instance_db` | BASSO | OK | archived_log_hist_matrix.sql |
-| [`archived_log_sums.sql`](./monitoring_scripts/community_jkstill/instance_db/archived_log_sums.sql) | `community_jkstill/instance_db` | BASSO | OK | archived_log_sums.sql |
-| [`feature-usage.sql`](./monitoring_scripts/community_jkstill/instance_db/feature-usage.sql) | `community_jkstill/instance_db` | BASSO | OK | where detected_usages != 0 |
-| [`incarnations.sql`](./monitoring_scripts/community_jkstill/instance_db/incarnations.sql) | `community_jkstill/instance_db` | BASSO | OK | incarnations.sql |
-| [`nls_date_format.sql`](./monitoring_scripts/community_jkstill/instance_db/nls_date_format.sql) | `community_jkstill/instance_db` | MEDIO | OK | nls_date_format.sql |
-| [`nls_time_format.sql`](./monitoring_scripts/community_jkstill/instance_db/nls_time_format.sql) | `community_jkstill/instance_db` | MEDIO | OK | Script operativo Oracle per: nls time format. |
-| [`options.sql`](./monitoring_scripts/community_jkstill/instance_db/options.sql) | `community_jkstill/instance_db` | BASSO | OK | Script operativo Oracle per: options. |
-| [`showobjprivs.sql`](./monitoring_scripts/community_jkstill/instance_db/showobjprivs.sql) | `community_jkstill/instance_db` | BASSO | OK | grantor.name grantor, |
-| [`showsga.sql`](./monitoring_scripts/community_jkstill/instance_db/showsga.sql) | `community_jkstill/instance_db` | BASSO | OK | col name format |
-| [`avg_disk_times.sql`](./monitoring_scripts/community_jkstill/io_redo/avg_disk_times.sql) | `community_jkstill/io_redo` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
-| [`io_begin.sql`](./monitoring_scripts/community_jkstill/io_redo/io_begin.sql) | `community_jkstill/io_redo` | ALTO | OK | must truncate GTT before dropping |
-| [`io_end.sql`](./monitoring_scripts/community_jkstill/io_redo/io_end.sql) | `community_jkstill/io_redo` | ALTO | OK | must truncate GTT before dropping |
-| [`io_order.sql`](./monitoring_scripts/community_jkstill/io_redo/io_order.sql) | `community_jkstill/io_redo` | BASSO | OK | io_order.sql |
-| [`io_stat.sql`](./monitoring_scripts/community_jkstill/io_redo/io_stat.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
-| [`io_stat2.sql`](./monitoring_scripts/community_jkstill/io_redo/io_stat2.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
-| [`io_stat3.sql`](./monitoring_scripts/community_jkstill/io_redo/io_stat3.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
-| [`io_tbs.sql`](./monitoring_scripts/community_jkstill/io_redo/io_tbs.sql) | `community_jkstill/io_redo` | BASSO | OK | spool io_tbs.txt |
-| [`ioweight.sql`](./monitoring_scripts/community_jkstill/io_redo/ioweight.sql) | `community_jkstill/io_redo` | BASSO | OK | spool err.txt |
-| [`lfsdiag.sql`](./monitoring_scripts/community_jkstill/io_redo/lfsdiag.sql) | `community_jkstill/io_redo` | MEDIO | OK | NAME: LFSDIAG.SQL |
-| [`redo-per-second.sql`](./monitoring_scripts/community_jkstill/io_redo/redo-per-second.sql) | `community_jkstill/io_redo` | BASSO | OK | redo-per-second.sql |
-| [`redo-rate.sql`](./monitoring_scripts/community_jkstill/io_redo/redo-rate.sql) | `community_jkstill/io_redo` | BASSO | OK | redo-rate.sql |
-| [`showtrans.sql`](./monitoring_scripts/community_jkstill/io_redo/showtrans.sql) | `community_jkstill/io_redo` | BASSO | OK | spool showtrans.txt |
-| [`trans_per_hour.sql`](./monitoring_scripts/community_jkstill/io_redo/trans_per_hour.sql) | `community_jkstill/io_redo` | ALTO | OK | trans_per_hour.sql |
-| [`who5.sql`](./monitoring_scripts/community_jkstill/io_redo/who5.sql) | `community_jkstill/io_redo` | BASSO | OK | taken from OraMag Code Depot ( and slightly modified ) |
-| [`metric-names.sql`](./monitoring_scripts/community_jkstill/metrics/metric-names.sql) | `community_jkstill/metrics` | BASSO | OK | metric-names.sql |
-| [`metrics-available-ash.sql`](./monitoring_scripts/community_jkstill/metrics/metrics-available-ash.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available-ash.sql |
-| [`metrics-available-awr.sql`](./monitoring_scripts/community_jkstill/metrics/metrics-available-awr.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available-awr.sql |
-| [`metrics-available.sql`](./monitoring_scripts/community_jkstill/metrics/metrics-available.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available.sql |
-| [`metrics-not-saved-in-awr.sql`](./monitoring_scripts/community_jkstill/metrics/metrics-not-saved-in-awr.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-not-saved-in-awr.sql |
-| [`sysmetric-cpu-seconds-summary.sql`](./monitoring_scripts/community_jkstill/metrics/sysmetric-cpu-seconds-summary.sql) | `community_jkstill/metrics` | BASSO | OK | sysmetric-cpu-seconds-summary.sql |
-| [`ash-snapshot-define-begin-end.sql`](./monitoring_scripts/community_jkstill/mviews/ash-snapshot-define-begin-end.sql) | `community_jkstill/mviews` | BASSO | OK | ash-snapshot-define-begin-end.sql |
-| [`awr_create_snapshot.sql`](./monitoring_scripts/community_jkstill/mviews/awr_create_snapshot.sql) | `community_jkstill/mviews` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
-| [`awr_get_snapshots.sql`](./monitoring_scripts/community_jkstill/mviews/awr_get_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | awr_get_snapshots.sql |
-| [`deregister_snapshots.sql`](./monitoring_scripts/community_jkstill/mviews/deregister_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | deregister_snapshots.sql |
-| [`show_mview_status.sql`](./monitoring_scripts/community_jkstill/mviews/show_mview_status.sql) | `community_jkstill/mviews` | BASSO | OK | Script operativo Oracle per: show mview status. |
-| [`showregistered_snapshots.sql`](./monitoring_scripts/community_jkstill/mviews/showregistered_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | show all registered snapshots at master site |
-| [`showsnapshot_logs.sql`](./monitoring_scripts/community_jkstill/mviews/showsnapshot_logs.sql) | `community_jkstill/mviews` | BASSO | OK | ,log_trigger |
-| [`showsnapshot_sites.sql`](./monitoring_scripts/community_jkstill/mviews/showsnapshot_sites.sql) | `community_jkstill/mviews` | BASSO | OK | showsnapshot_sites.sql |
-| [`showsnapshots.sql`](./monitoring_scripts/community_jkstill/mviews/showsnapshots.sql) | `community_jkstill/mviews` | BASSO | OK | , decode(r.rname, null, '-NO REFRESH-',rname, decode(s.refresh_mode,'COMMIT','NA'), 'UNKNOWN') |
-| [`cursor-invalidation-reasons.sql`](./monitoring_scripts/community_jkstill/plsql/cursor-invalidation-reasons.sql) | `community_jkstill/plsql` | BASSO | OK | cursor-invalidation-reasons.sql |
-| [`invalid.sql`](./monitoring_scripts/community_jkstill/plsql/invalid.sql) | `community_jkstill/plsql` | BASSO | OK | jkstill - 11/30/2006 |
-| [`plsql-error.sql`](./monitoring_scripts/community_jkstill/plsql/plsql-error.sql) | `community_jkstill/plsql` | BASSO | OK | plsql-error.sql |
-| [`plsql-init.sql`](./monitoring_scripts/community_jkstill/plsql/plsql-init.sql) | `community_jkstill/plsql` | MEDIO | OK | setup plscope |
-| [`plsql-return-bool-from-sql.sql`](./monitoring_scripts/community_jkstill/plsql/plsql-return-bool-from-sql.sql) | `community_jkstill/plsql` | BASSO | OK | plsql-return-bool-from-sql.sql |
-| [`plsql_called_objects.sql`](./monitoring_scripts/community_jkstill/plsql/plsql_called_objects.sql) | `community_jkstill/plsql` | BASSO | OK | plsql_called_objects.sql |
-| [`recompile.sql`](./monitoring_scripts/community_jkstill/plsql/recompile.sql) | `community_jkstill/plsql` | MEDIO | OK | recompile.sql |
-| [`col-diff.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/col-diff.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | col-diff.sql |
-| [`dba_audit_session.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_audit_session.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | and rownum < 100 |
-| [`dba_audit_session_recent.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_audit_session_recent.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_audit_session_recent.sql |
-| [`dba_audit_trail.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_audit_trail.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_audit_trail.sql |
-| [`dba_audit_trail_persons.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_audit_trail_persons.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_audit_trail_persons.sql |
-| [`dba_dependencies.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_dependencies.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | obj-dependencies.sql |
-| [`dba_deps_selective.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_deps_selective.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | anchor member |
-| [`dba_feature_usage.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_feature_usage.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_feature_usage.sql |
-| [`dba_hist_sys_time_model.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_hist_sys_time_model.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Script operativo Oracle per: dba hist sys time model. |
-| [`dba_jobs.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_jobs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
-| [`dba_jobs_running.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_jobs_running.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
-| [`dba_kgllock.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_kgllock.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_kgllock.sql |
-| [`dba_recyclebin_purge_gen.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_recyclebin_purge_gen.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_recyclebin_purge_gen.sql |
-| [`dba_sched_jobs.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_sched_jobs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_scheduler_jobs.sql |
-| [`dba_sched_jobs_hist.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_sched_jobs_hist.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | jkstill@gmail.com |
-| [`dba_table_audit_flags.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/dba_table_audit_flags.sql) | `community_jkstill/rdbms_utilities` | ALTO | OK | dba_table_audit_flags.sql |
-| [`gen-tbs-ddl.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/gen-tbs-ddl.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | gen-tbs-ddl.sql |
-| [`obj-privs.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/obj-privs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Jared Still 2022 |
-| [`tab-info.sql`](./monitoring_scripts/community_jkstill/rdbms_utilities/tab-info.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | tab-info.sql |
-| [`autotask_resources.sql`](./monitoring_scripts/community_jkstill/resource_manager/autotask_resources.sql) | `community_jkstill/resource_manager` | BASSO | OK | Script operativo Oracle per: autotask resources. |
-| [`awr-resource-limit.sql`](./monitoring_scripts/community_jkstill/resource_manager/awr-resource-limit.sql) | `community_jkstill/resource_manager` | BASSO | OK | awr-resource-limit.sql |
-| [`disable-autotasks-resource-mgr.sql`](./monitoring_scripts/community_jkstill/resource_manager/disable-autotasks-resource-mgr.sql) | `community_jkstill/resource_manager` | ALTO | OK | Oracle sometimes enforces Resource Manager for background processes |
-| [`disable_resource_manager.sql`](./monitoring_scripts/community_jkstill/resource_manager/disable_resource_manager.sql) | `community_jkstill/resource_manager` | ALTO | OK | disable the resource manager |
-| [`resmgr-resource-plans.sql`](./monitoring_scripts/community_jkstill/resource_manager/resmgr-resource-plans.sql) | `community_jkstill/resource_manager` | BASSO | OK | resmgr-resource-plans.sql |
-| [`sp_resource_limit.sql`](./monitoring_scripts/community_jkstill/resource_manager/sp_resource_limit.sql) | `community_jkstill/resource_manager` | MEDIO | OK | sp_resource_limit.sql |
-| [`active_status.sql`](./monitoring_scripts/community_jkstill/sessions_locks/active_status.sql) | `community_jkstill/sessions_locks` | BASSO | OK | active_status.sql |
-| [`cf-waits.sql`](./monitoring_scripts/community_jkstill/sessions_locks/cf-waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | cf-waits.sql - Control File Waits |
-| [`concurrency-waits-sqlid.sql`](./monitoring_scripts/community_jkstill/sessions_locks/concurrency-waits-sqlid.sql) | `community_jkstill/sessions_locks` | BASSO | OK | concurrency-waits-sqlid.sql |
-| [`cpu-killer.sql`](./monitoring_scripts/community_jkstill/sessions_locks/cpu-killer.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: cpu killer. |
-| [`cpu-stalled-ratio.sql`](./monitoring_scripts/community_jkstill/sessions_locks/cpu-stalled-ratio.sql) | `community_jkstill/sessions_locks` | BASSO | OK | cpu-stalled-ratio.sql |
-| [`dba_kgllock.sql`](./monitoring_scripts/community_jkstill/sessions_locks/dba_kgllock.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | dba_kgllock.sql |
-| [`extproc-sessions.sql`](./monitoring_scripts/community_jkstill/sessions_locks/extproc-sessions.sql) | `community_jkstill/sessions_locks` | BASSO | OK | extproc-sessions.sql |
-| [`getstat.sql`](./monitoring_scripts/community_jkstill/sessions_locks/getstat.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: getstat. |
-| [`getstats.sql`](./monitoring_scripts/community_jkstill/sessions_locks/getstats.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: getstats. |
-| [`getstatu2.sql`](./monitoring_scripts/community_jkstill/sessions_locks/getstatu2.sql) | `community_jkstill/sessions_locks` | BASSO | OK | break on username |
-| [`itl_waits.sql`](./monitoring_scripts/community_jkstill/sessions_locks/itl_waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: itl waits. |
-| [`itl_waits_hist.sql`](./monitoring_scripts/community_jkstill/sessions_locks/itl_waits_hist.sql) | `community_jkstill/sessions_locks` | BASSO | OK | , d.instance_number |
-| [`latch_statsa.sql`](./monitoring_scripts/community_jkstill/sessions_locks/latch_statsa.sql) | `community_jkstill/sessions_locks` | ALTO | OK | Script operativo Oracle per: latch statsa. |
-| [`latch_statss.sql`](./monitoring_scripts/community_jkstill/sessions_locks/latch_statss.sql) | `community_jkstill/sessions_locks` | ALTO | OK | Script operativo Oracle per: latch statss. |
-| [`libcachepin_waits.sql`](./monitoring_scripts/community_jkstill/sessions_locks/libcachepin_waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | libcachepin_waits.sql |
-| [`mystat.sql`](./monitoring_scripts/community_jkstill/sessions_locks/mystat.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: mystat. |
-| [`segment-space-statistics-hist.sql`](./monitoring_scripts/community_jkstill/sessions_locks/segment-space-statistics-hist.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | segment-space-statistics-hist.sql |
-| [`segment-space-statistics.sql`](./monitoring_scripts/community_jkstill/sessions_locks/segment-space-statistics.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | segment-space-statistics.sql |
-| [`segment-statistics.sql`](./monitoring_scripts/community_jkstill/sessions_locks/segment-statistics.sql) | `community_jkstill/sessions_locks` | BASSO | OK | may be interesting results |
-| [`sesswait.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswait.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: sesswait. |
-| [`sesswaitp.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitp.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitp.sql |
-| [`sesswaitu.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitu.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
-| [`sesswaitu10g.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitu10g.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
-| [`sesswaitu72.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitu72.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
-| [`sesswaitu73.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitu73.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
-| [`sesswaitu_112.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitu_112.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
-| [`sesswaitug.sql`](./monitoring_scripts/community_jkstill/sessions_locks/sesswaitug.sql) | `community_jkstill/sessions_locks` | BASSO | OK | case wait_time |
-| [`showlatch.sql`](./monitoring_scripts/community_jkstill/sessions_locks/showlatch.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: showlatch. |
-| [`showlock.sql`](./monitoring_scripts/community_jkstill/sessions_locks/showlock.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | showlock.sql - show all user locks |
-| [`showlock2.sql`](./monitoring_scripts/community_jkstill/sessions_locks/showlock2.sql) | `community_jkstill/sessions_locks` | BASSO | OK | showlock2.sql |
-| [`snapper.sql`](./monitoring_scripts/community_jkstill/sessions_locks/snapper.sql) | `community_jkstill/sessions_locks` | BASSO | OK | File name: snapper.sql (Oracle Session Snapper v4) |
-| [`asm_diskgroup_templates.sql`](./monitoring_scripts/community_jkstill/temp_sorts/asm_diskgroup_templates.sql) | `community_jkstill/temp_sorts` | BASSO | OK | asm_diskgroup_templates.sql |
-| [`my-pga-temp.sql`](./monitoring_scripts/community_jkstill/temp_sorts/my-pga-temp.sql) | `community_jkstill/temp_sorts` | BASSO | OK | my-pga-temp.sql |
-| [`showsort.sql`](./monitoring_scripts/community_jkstill/temp_sorts/showsort.sql) | `community_jkstill/temp_sorts` | BASSO | OK | showsort.sql |
-| [`showtemp.sql`](./monitoring_scripts/community_jkstill/temp_sorts/showtemp.sql) | `community_jkstill/temp_sorts` | BASSO | OK | , tu.session_addr |
-| [`showuser.sql`](./monitoring_scripts/community_jkstill/users_logged/showuser.sql) | `community_jkstill/users_logged` | MEDIO | OK | &use_12c_feature , oracle_maintained |
-| [`who.sql`](./monitoring_scripts/community_jkstill/users_logged/who.sql) | `community_jkstill/users_logged` | BASSO | OK | Script operativo Oracle per: who. |
-| [`who2.sql`](./monitoring_scripts/community_jkstill/users_logged/who2.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who2g.sql`](./monitoring_scripts/community_jkstill/users_logged/who2g.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who2s.sql`](./monitoring_scripts/community_jkstill/users_logged/who2s.sql) | `community_jkstill/users_logged` | BASSO | OK | less detail than who2.sql |
-| [`who5.sql`](./monitoring_scripts/community_jkstill/users_logged/who5.sql) | `community_jkstill/users_logged` | BASSO | OK | taken from OraMag Code Depot ( and slightly modified ) |
-| [`who6.sql`](./monitoring_scripts/community_jkstill/users_logged/who6.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who7.sql`](./monitoring_scripts/community_jkstill/users_logged/who7.sql) | `community_jkstill/users_logged` | BASSO | OK | who with avg transaction size |
-| [`who8.sql`](./monitoring_scripts/community_jkstill/users_logged/who8.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who9.sql`](./monitoring_scripts/community_jkstill/users_logged/who9.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who_dba_jobs.sql`](./monitoring_scripts/community_jkstill/users_logged/who_dba_jobs.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`who_dblink.sql`](./monitoring_scripts/community_jkstill/users_logged/who_dblink.sql) | `community_jkstill/users_logged` | BASSO | OK | who_dblink.sql |
-| [`who_protocol.sql`](./monitoring_scripts/community_jkstill/users_logged/who_protocol.sql) | `community_jkstill/users_logged` | BASSO | OK | who_protocol.sql |
-| [`whocp.sql`](./monitoring_scripts/community_jkstill/users_logged/whocp.sql) | `community_jkstill/users_logged` | BASSO | OK | who with DRCP (database resident connection pool) info |
-| [`whog.sql`](./monitoring_scripts/community_jkstill/users_logged/whog.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
-| [`whotmp8i.sql`](./monitoring_scripts/community_jkstill/users_logged/whotmp8i.sql) | `community_jkstill/users_logged` | BASSO | OK | whotmp8i.sql |
+| [`advisor_profile_recs.sql`](./monitoring_scripts/advisor_profile_recs.sql) | `community_gwenshap` | BASSO | OK | Retrieve SQL tuning advisor findings. You can only run the most recent run if you like, but it will only contain new recommendations. This s |
+| [`ASH2.sql`](./monitoring_scripts/ASH2.sql) | `community_gwenshap` | BASSO | OK | how much history do we have |
+| [`check_and_kill.sql`](./monitoring_scripts/check_and_kill.sql) | `community_gwenshap` | ALTO | OK | Check what the sessions in our instance are waiting for |
+| [`col_high_low_val.sql`](./monitoring_scripts/col_high_low_val.sql) | `community_gwenshap` | BASSO | OK | Martin Widlake mdw 21/03/2003 |
+| [`DataGuard.txt`](./monitoring_scripts/DataGuard.txt) | `community_gwenshap` | ALTO | OK | Find which logs were applied in the last day |
+| [`double_tablespace.sql`](./monitoring_scripts/double_tablespace.sql) | `community_gwenshap` | ALTO | OK | Script written for a case where data was loaded rapidly and without prior notice |
+| [`explain_plan.sql`](./monitoring_scripts/explain_plan.sql) | `community_gwenshap` | BASSO | OK | dbms_xplan works in 9i and up |
+| [`external_table_load_example.sql`](./monitoring_scripts/external_table_load_example.sql) | `community_gwenshap` | ALTO | OK | select * from db.bm_tmp where rownum<=5 |
+| [`find_sql.sql`](./monitoring_scripts/find_sql.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: find sql. |
+| [`fsx.sql`](./monitoring_scripts/fsx.sql) | `community_gwenshap` | BASSO | OK | File name: fsx.sql |
+| [`index_efficiency.sql`](./monitoring_scripts/index_efficiency.sql) | `community_gwenshap` | BASSO | OK | t1 sample block (100) |
+| [`job_scheduling.sql`](./monitoring_scripts/job_scheduling.sql) | `community_gwenshap` | ALTO | OK | Decent reference for new scheduler |
+| [`locks.sql`](./monitoring_scripts/locks.sql) | `community_gwenshap` | BASSO | OK | Find all blocked sessions and who is blocking them |
+| [`login.sql`](./monitoring_scripts/login.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: login. |
+| [`my_sqlmon.sql`](./monitoring_scripts/my_sqlmon.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: my sqlmon. |
+| [`PGA_watch.sql`](./monitoring_scripts/PGA_watch.sql) | `community_gwenshap` | BASSO | OK | order by inst_id,server |
+| [`sql_monitor_offload.sql`](./monitoring_scripts/sql_monitor_offload.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: sql monitor offload. |
+| [`SSD.sql`](./monitoring_scripts/SSD.sql) | `community_gwenshap` | BASSO | OK | Find segments with most read operations, and hopefully relatively few writes |
+| [`tablespace.sql`](./monitoring_scripts/tablespace.sql) | `community_gwenshap` | ALTO | OK | Tablespaces, ordered by percentage of space used |
+| [`tfsclock.sql`](./monitoring_scripts/tfsclock.sql) | `community_gwenshap` | ALTO | OK | Diagnosi lock/sessioni bloccanti e catene di attesa. |
+| [`top-sql.sql`](./monitoring_scripts/top-sql.sql) | `community_gwenshap` | BASSO | OK | by Jeremy Schneider, Pythian |
+| [`top_excel.sql`](./monitoring_scripts/top_excel.sql) | `community_gwenshap` | BASSO | OK | Script operativo Oracle per: top excel. |
+| [`top_queries.sql`](./monitoring_scripts/top_queries.sql) | `community_gwenshap` | BASSO | OK | ,executions_delta |
+| [`undo_space.sql`](./monitoring_scripts/undo_space.sql) | `community_gwenshap` | BASSO | OK | undo generated in last day |
+| [`date_math.sql`](./monitoring_scripts/dates/date_math.sql) | `community_jkstill/dates` | ALTO | OK | date_math.sql |
+| [`date_math_2.sql`](./monitoring_scripts/dates/date_math_2.sql) | `community_jkstill/dates` | ALTO | OK | date_math_2.sql |
+| [`date_math_3.sql`](./monitoring_scripts/dates/date_math_3.sql) | `community_jkstill/dates` | MEDIO | OK | date_math_3.sql |
+| [`date_math_4.sql`](./monitoring_scripts/dates/date_math_4.sql) | `community_jkstill/dates` | ALTO | OK | date_math_4.sql |
+| [`date_math_epoch.sql`](./monitoring_scripts/dates/date_math_epoch.sql) | `community_jkstill/dates` | BASSO | OK | date_math_epoch.sql |
+| [`datemath-pkg.sql`](./monitoring_scripts/dates/datemath-pkg.sql) | `community_jkstill/dates` | MEDIO | OK | works with systimestamp, which is of type timestamp with time zone |
+| [`datemath-test.sql`](./monitoring_scripts/dates/datemath-test.sql) | `community_jkstill/dates` | MEDIO | OK | datemath-test.sql |
+| [`timestamp-day-boundaries.sql`](./monitoring_scripts/dates/timestamp-day-boundaries.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-day-boundaries.sql |
+| [`timestamp-diff-inline-function.sql`](./monitoring_scripts/dates/timestamp-diff-inline-function.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds-inline-function.sql |
+| [`timestamp-diff-seconds-2.sql`](./monitoring_scripts/dates/timestamp-diff-seconds-2.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds-2.sql |
+| [`timestamp-diff-seconds.sql`](./monitoring_scripts/dates/timestamp-diff-seconds.sql) | `community_jkstill/dates` | BASSO | OK | timestamp-diff-seconds.sql |
+| [`timestamp-trunc.sql`](./monitoring_scripts/dates/timestamp-trunc.sql) | `community_jkstill/dates` | ALTO | OK | timestamp-trunc.sql |
+| [`timestamp-types.sql`](./monitoring_scripts/dates/timestamp-types.sql) | `community_jkstill/dates` | ALTO | OK | timestamp-types.sql |
+| [`timestamp_to_millisecond.sql`](./monitoring_scripts/dates/timestamp_to_millisecond.sql) | `community_jkstill/dates` | BASSO | OK | Script operativo Oracle per: timestamp to millisecond. |
+| [`timezone-abbrev.sql`](./monitoring_scripts/dates/timezone-abbrev.sql) | `community_jkstill/dates` | BASSO | OK | timezone-names.sql |
+| [`timezone-names.sql`](./monitoring_scripts/dates/timezone-names.sql) | `community_jkstill/dates` | BASSO | OK | timezone-names.sql |
+| [`drcp_connection_monitor.sql`](./monitoring_scripts/drcp/drcp_connection_monitor.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_connection_monitor.sql |
+| [`drcp_connection_status.sql`](./monitoring_scripts/drcp/drcp_connection_status.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp connection status. |
+| [`drcp_pool_cc_stats.sql`](./monitoring_scripts/drcp/drcp_pool_cc_stats.sql) | `community_jkstill/drcp` | BASSO | OK | , wait_time -- reserved for future use |
+| [`drcp_pool_ratio.sql`](./monitoring_scripts/drcp/drcp_pool_ratio.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp pool ratio. |
+| [`drcp_pool_stats.sql`](./monitoring_scripts/drcp/drcp_pool_stats.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_pool_stats.sql |
+| [`drcp_set_connections_per_broker.sql`](./monitoring_scripts/drcp/drcp_set_connections_per_broker.sql) | `community_jkstill/drcp` | BASSO | OK | minimum allowed is 3 |
+| [`drcp_set_num_brokers.sql`](./monitoring_scripts/drcp/drcp_set_num_brokers.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp set num brokers. |
+| [`drcp_show_config.sql`](./monitoring_scripts/drcp/drcp_show_config.sql) | `community_jkstill/drcp` | BASSO | OK | drcp_show_config.sql |
+| [`drcp_start.sql`](./monitoring_scripts/drcp/drcp_start.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp start. |
+| [`drcp_stop.sql`](./monitoring_scripts/drcp/drcp_stop.sql) | `community_jkstill/drcp` | BASSO | OK | Script operativo Oracle per: drcp stop. |
+| [`event-names.sql`](./monitoring_scripts/events/event-names.sql) | `community_jkstill/events` | BASSO | OK | event-names.sql |
+| [`10046.sql`](./monitoring_scripts/general/10046.sql) | `community_jkstill/general` | MEDIO | OK | level 4 is bind values |
+| [`10046_off.sql`](./monitoring_scripts/general/10046_off.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: 10046 off. |
+| [`all-ini-trans.sql`](./monitoring_scripts/general/all-ini-trans.sql) | `community_jkstill/general` | BASSO | OK | all-init-trans.sql |
+| [`apex-version.sql`](./monitoring_scripts/general/apex-version.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: apex version. |
+| [`ascii.sql`](./monitoring_scripts/general/ascii.sql) | `community_jkstill/general` | BASSO | OK | generate a simple ascii table |
+| [`average_active_sessions.sql`](./monitoring_scripts/general/average_active_sessions.sql) | `community_jkstill/general` | BASSO | OK | average_active_sessions_2.sql |
+| [`bad-date.sql`](./monitoring_scripts/general/bad-date.sql) | `community_jkstill/general` | MEDIO | OK | bad-date.sql |
+| [`bct_bufsz.sql`](./monitoring_scripts/general/bct_bufsz.sql) | `community_jkstill/general` | BASSO | OK | get size of buffers currently allocated for BCT change tracking |
+| [`between-trunc-demo.sql`](./monitoring_scripts/general/between-trunc-demo.sql) | `community_jkstill/general` | MEDIO | OK | between-trunc-demo.sql |
+| [`bitwalk.sql`](./monitoring_scripts/general/bitwalk.sql) | `community_jkstill/general` | BASSO | OK | Jared Still 2021 |
+| [`block_decode.sql`](./monitoring_scripts/general/block_decode.sql) | `community_jkstill/general` | BASSO | OK | block_decode.sql |
+| [`blocker-tree.sql`](./monitoring_scripts/general/blocker-tree.sql) | `community_jkstill/general` | BASSO | OK | blocker-tree.sql |
+| [`blog-prompt.sql`](./monitoring_scripts/general/blog-prompt.sql) | `community_jkstill/general` | BASSO | OK | simplified prompt for copy and paste to blog and articles |
+| [`bootstrap_objects.sql`](./monitoring_scripts/general/bootstrap_objects.sql) | `community_jkstill/general` | MEDIO | OK | bootstrap_objects.sql |
+| [`build-record.sql`](./monitoring_scripts/general/build-record.sql) | `community_jkstill/general` | MEDIO | OK | build-record.sql |
+| [`bulk-collect-1.sql`](./monitoring_scripts/general/bulk-collect-1.sql) | `community_jkstill/general` | MEDIO | OK | bulk-collect-1.sql |
+| [`cf-size.sql`](./monitoring_scripts/general/cf-size.sql) | `community_jkstill/general` | BASSO | OK | cf-size.sql - Display the size of the control file in MB |
+| [`character-sets.sql`](./monitoring_scripts/general/character-sets.sql) | `community_jkstill/general` | BASSO | OK | character-sets.sql |
+| [`check_events.sql`](./monitoring_scripts/general/check_events.sql) | `community_jkstill/general` | MEDIO | OK | check_events.sql |
+| [`chk4incremental.sql`](./monitoring_scripts/general/chk4incremental.sql) | `community_jkstill/general` | BASSO | OK | chk4incremental.sql |
+| [`clear_for_spool.sql`](./monitoring_scripts/general/clear_for_spool.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: clear for spool. |
+| [`clears.sql`](./monitoring_scripts/general/clears.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: clears. |
+| [`cluster-factor.sql`](./monitoring_scripts/general/cluster-factor.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: cluster factor. |
+| [`code-inventory.sql`](./monitoring_scripts/general/code-inventory.sql) | `community_jkstill/general` | MEDIO | OK | code-inventory.sql |
+| [`colcomm.sql`](./monitoring_scripts/general/colcomm.sql) | `community_jkstill/general` | BASSO | OK | find common columns between a set of tables |
+| [`colors.sql`](./monitoring_scripts/general/colors.sql) | `community_jkstill/general` | BASSO | OK | _C_RESET can be simply =[m |
+| [`columns.sql`](./monitoring_scripts/general/columns.sql) | `community_jkstill/general` | BASSO | OK | show paramater/spparameter settings |
+| [`cores.sql`](./monitoring_scripts/general/cores.sql) | `community_jkstill/general` | BASSO | OK | report the number of cores |
+| [`csv-split-2.sql`](./monitoring_scripts/general/csv-split-2.sql) | `community_jkstill/general` | BASSO | OK | csv-split-2.sql |
+| [`csv-split-bind.sql`](./monitoring_scripts/general/csv-split-bind.sql) | `community_jkstill/general` | BASSO | OK | csv-split-bind.sql |
+| [`csv-split.sql`](./monitoring_scripts/general/csv-split.sql) | `community_jkstill/general` | BASSO | OK | csv-split.sql |
+| [`cursor-check.sql`](./monitoring_scripts/general/cursor-check.sql) | `community_jkstill/general` | BASSO | OK | from gv$session ses, gv$sesstat ss, gv$statname sn, gv$parameter p |
+| [`cursor-counts.sql`](./monitoring_scripts/general/cursor-counts.sql) | `community_jkstill/general` | BASSO | OK | cursor-counts.sql |
+| [`data-growth-db-predict-regr.sql`](./monitoring_scripts/general/data-growth-db-predict-regr.sql) | `community_jkstill/general` | BASSO | OK | data-growth-db-predict-regr.sql |
+| [`data-growth-db.sql`](./monitoring_scripts/general/data-growth-db.sql) | `community_jkstill/general` | BASSO | OK | date is text and stored in this format: 'MM/DD/YYYY HH24:MI:SS' |
+| [`data-growth-tbs-predict-regr.sql`](./monitoring_scripts/general/data-growth-tbs-predict-regr.sql) | `community_jkstill/general` | BASSO | OK | data-growth-tbs-predict-regr.sql |
+| [`data-growth-tbs.sql`](./monitoring_scripts/general/data-growth-tbs.sql) | `community_jkstill/general` | BASSO | OK | date is text and stored in this format: 'MM/DD/YYYY HH24:MI:SS' |
+| [`database_properties.sql`](./monitoring_scripts/general/database_properties.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: database properties. |
+| [`db_cache_advice.sql`](./monitoring_scripts/general/db_cache_advice.sql) | `community_jkstill/general` | BASSO | OK | db_cache_advice.sql |
+| [`db_corrupt.sql`](./monitoring_scripts/general/db_corrupt.sql) | `community_jkstill/general` | BASSO | OK | db_corrupt.sql |
+| [`dba-registry-history.sql`](./monitoring_scripts/general/dba-registry-history.sql) | `community_jkstill/general` | BASSO | OK | dba-registry-history.sql |
+| [`dba-registry.sql`](./monitoring_scripts/general/dba-registry.sql) | `community_jkstill/general` | BASSO | OK | dba-registry.sql |
+| [`dbms_application.sql`](./monitoring_scripts/general/dbms_application.sql) | `community_jkstill/general` | BASSO | OK | v$session.client_info |
+| [`dbms_log.sql`](./monitoring_scripts/general/dbms_log.sql) | `community_jkstill/general` | MEDIO | OK | dbms_log.sql |
+| [`dbms_output-abstracted.sql`](./monitoring_scripts/general/dbms_output-abstracted.sql) | `community_jkstill/general` | MEDIO | OK | dbms_output-abstracted.sql |
+| [`dbms_output-allow-blank-lines.sql`](./monitoring_scripts/general/dbms_output-allow-blank-lines.sql) | `community_jkstill/general` | BASSO | OK | default is word_wrapped |
+| [`dbms_system_undoc_calls.sql`](./monitoring_scripts/general/dbms_system_undoc_calls.sql) | `community_jkstill/general` | MEDIO | OK | dbms_system_undoc_calls.sql |
+| [`default_tablespace.sql`](./monitoring_scripts/general/default_tablespace.sql) | `community_jkstill/general` | BASSO | OK | Monitoraggio capacità tablespace/TEMP/UNDO e prevenzione saturazione. |
+| [`defaults-demo.sql`](./monitoring_scripts/general/defaults-demo.sql) | `community_jkstill/general` | BASSO | OK | defaults-demo.sql |
+| [`defaults.sql`](./monitoring_scripts/general/defaults.sql) | `community_jkstill/general` | BASSO | OK | defaults.sql |
+| [`dice-roll.sql`](./monitoring_scripts/general/dice-roll.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: dice roll. |
+| [`dirs.sql`](./monitoring_scripts/general/dirs.sql) | `community_jkstill/general` | BASSO | OK | Jared Still - 2022 |
+| [`dml-log-errors-test.sql`](./monitoring_scripts/general/dml-log-errors-test.sql) | `community_jkstill/general` | ALTO | OK | dml-log-errors-test.sql |
+| [`dp-filter-types.sql`](./monitoring_scripts/general/dp-filter-types.sql) | `community_jkstill/general` | BASSO | OK | dp-filter-types.sh |
+| [`dual_data_gen-low-mem.sql`](./monitoring_scripts/general/dual_data_gen-low-mem.sql) | `community_jkstill/general` | BASSO | OK | dual_date_gen-low-mem.sql |
+| [`dual_data_gen.sql`](./monitoring_scripts/general/dual_data_gen.sql) | `community_jkstill/general` | BASSO | OK | dual_data_gen.sql |
+| [`dump.sql`](./monitoring_scripts/general/dump.sql) | `community_jkstill/general` | BASSO | OK | dump.sql - jared still |
+| [`dumptrace_off.sql`](./monitoring_scripts/general/dumptrace_off.sql) | `community_jkstill/general` | BASSO | OK | dumptrace_off.sql |
+| [`dumptrace_on.sql`](./monitoring_scripts/general/dumptrace_on.sql) | `community_jkstill/general` | BASSO | OK | dumptrace.sql |
+| [`dumptracem_off.sql`](./monitoring_scripts/general/dumptracem_off.sql) | `community_jkstill/general` | ALTO | OK | dumptracem_off.sql |
+| [`dumptracem_on.sql`](./monitoring_scripts/general/dumptracem_on.sql) | `community_jkstill/general` | ALTO | OK | dumptracem_on.sql |
+| [`dup-user-profile.sql`](./monitoring_scripts/general/dup-user-profile.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: dup user profile. |
+| [`dup_role.sql`](./monitoring_scripts/general/dup_role.sql) | `community_jkstill/general` | MEDIO | OK | duplicate a role |
+| [`dup_role_users.sql`](./monitoring_scripts/general/dup_role_users.sql) | `community_jkstill/general` | MEDIO | OK | dup_role_users.sql |
+| [`dup_user.sql`](./monitoring_scripts/general/dup_user.sql) | `community_jkstill/general` | ALTO | OK | dup_user.sql |
+| [`dynamic_plan_table.sql`](./monitoring_scripts/general/dynamic_plan_table.sql) | `community_jkstill/general` | MEDIO | OK | dynamic_plan_table.sql |
+| [`e2ts-hires.sql`](./monitoring_scripts/general/e2ts-hires.sql) | `community_jkstill/general` | BASSO | OK | e2ts-hires.sql |
+| [`e2ts.sql`](./monitoring_scripts/general/e2ts.sql) | `community_jkstill/general` | BASSO | OK | convert a lowres (msec) epoch value to a timestamp |
+| [`enqueue-bitand.sql`](./monitoring_scripts/general/enqueue-bitand.sql) | `community_jkstill/general` | BASSO | OK | enqueue-bitand.sql |
+| [`explain_plan_columns.sql`](./monitoring_scripts/general/explain_plan_columns.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: explain plan columns. |
+| [`find-index-sql.sql`](./monitoring_scripts/general/find-index-sql.sql) | `community_jkstill/general` | BASSO | OK | find-index-sql.sql |
+| [`findcol.sql`](./monitoring_scripts/general/findcol.sql) | `community_jkstill/general` | BASSO | OK | findcol.sql - jared still |
+| [`findobj.sql`](./monitoring_scripts/general/findobj.sql) | `community_jkstill/general` | BASSO | OK | 08/07/2000 - jks - join on v$fixed_table |
+| [`fk-circular-ref.sql`](./monitoring_scripts/general/fk-circular-ref.sql) | `community_jkstill/general` | BASSO | OK | fk-circular-ref.sql |
+| [`fk_hierarchy.sql`](./monitoring_scripts/general/fk_hierarchy.sql) | `community_jkstill/general` | BASSO | OK | fk_hierarchy.sql |
+| [`fktree-rcte.sql`](./monitoring_scripts/general/fktree-rcte.sql) | `community_jkstill/general` | MEDIO | OK | fktree-rcte.sql |
+| [`fktree.sql`](./monitoring_scripts/general/fktree.sql) | `community_jkstill/general` | BASSO | OK | prototype SQL |
+| [`full_sql_text.sql`](./monitoring_scripts/general/full_sql_text.sql) | `community_jkstill/general` | MEDIO | OK | full_sql_text.sql |
+| [`gen-post.sql`](./monitoring_scripts/general/gen-post.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: gen post. |
+| [`gen-pre.sql`](./monitoring_scripts/general/gen-pre.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: gen pre. |
+| [`gen_bind_vars.sql`](./monitoring_scripts/general/gen_bind_vars.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars.sql |
+| [`gen_bind_vars_awr-loop.sql`](./monitoring_scripts/general/gen_bind_vars_awr-loop.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars_awr-loop.sql |
+| [`gen_bind_vars_awr.sql`](./monitoring_scripts/general/gen_bind_vars_awr.sql) | `community_jkstill/general` | MEDIO | OK | gen_bind_vars_awr.sql |
+| [`gen_data_with_recursion.sql`](./monitoring_scripts/general/gen_data_with_recursion.sql) | `community_jkstill/general` | BASSO | OK | gen_data_with_recursion.sql |
+| [`gen_fk_from-11.1.sql`](./monitoring_scripts/general/gen_fk_from-11.1.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_from-11.1.sql |
+| [`gen_fk_from-11.2.sql`](./monitoring_scripts/general/gen_fk_from-11.2.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_from-11.2.sql |
+| [`gen_fk_to-11.1.sql`](./monitoring_scripts/general/gen_fk_to-11.1.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_to-11.1.sql |
+| [`gen_fk_to-11.2.sql`](./monitoring_scripts/general/gen_fk_to-11.2.sql) | `community_jkstill/general` | MEDIO | OK | gen_fk_to-11.2.sql |
+| [`gen_list_data_with_dual.sql`](./monitoring_scripts/general/gen_list_data_with_dual.sql) | `community_jkstill/general` | BASSO | OK | gen_list_data_without_dual.sql |
+| [`gen_list_data_without_dual.sql`](./monitoring_scripts/general/gen_list_data_without_dual.sql) | `community_jkstill/general` | BASSO | OK | gen_list_data_without_dual.sql |
+| [`generate-sql.sql`](./monitoring_scripts/general/generate-sql.sql) | `community_jkstill/general` | BASSO | OK | generate-sql.sql |
+| [`get-alert-log-location.sql`](./monitoring_scripts/general/get-alert-log-location.sql) | `community_jkstill/general` | BASSO | OK | get-alert-log-location.sql |
+| [`get-code-error-context.sql`](./monitoring_scripts/general/get-code-error-context.sql) | `community_jkstill/general` | BASSO | OK | get-code-error-context.sql |
+| [`get-curr-ospid.sql`](./monitoring_scripts/general/get-curr-ospid.sql) | `community_jkstill/general` | BASSO | OK | get-curr-ospid.sql |
+| [`get-missing-tablenames.sql`](./monitoring_scripts/general/get-missing-tablenames.sql) | `community_jkstill/general` | BASSO | OK | get-missing-tablenames.sql |
+| [`get-schema-name.sql`](./monitoring_scripts/general/get-schema-name.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: get schema name. |
+| [`get-schema-size.sql`](./monitoring_scripts/general/get-schema-size.sql) | `community_jkstill/general` | BASSO | OK | get-schema-size.sql |
+| [`get-sql-for-table.sql`](./monitoring_scripts/general/get-sql-for-table.sql) | `community_jkstill/general` | BASSO | OK | get-sql-for-table.sql |
+| [`get-table-name.sql`](./monitoring_scripts/general/get-table-name.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: get table name. |
+| [`get_awr_bind_values.sql`](./monitoring_scripts/general/get_awr_bind_values.sql) | `community_jkstill/general` | BASSO | OK | get_awr_bind_values.sql |
+| [`get_bind_values.sql`](./monitoring_scripts/general/get_bind_values.sql) | `community_jkstill/general` | BASSO | OK | get_bind_values.sql |
+| [`get_date_range.sql`](./monitoring_scripts/general/get_date_range.sql) | `community_jkstill/general` | BASSO | OK | get_date_range.sql |
+| [`get_prefs.sql`](./monitoring_scripts/general/get_prefs.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: get prefs. |
+| [`get_sched_tz.sql`](./monitoring_scripts/general/get_sched_tz.sql) | `community_jkstill/general` | MEDIO | OK | Diagnostica e controllo job Oracle Scheduler. |
+| [`get_table_lock.sql`](./monitoring_scripts/general/get_table_lock.sql) | `community_jkstill/general` | BASSO | OK | get_table_lock.sql |
+| [`getallparm-12c.sql`](./monitoring_scripts/general/getallparm-12c.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getallparm 12c. |
+| [`getallparm.sql`](./monitoring_scripts/general/getallparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getallparm. |
+| [`getaud.sql`](./monitoring_scripts/general/getaud.sql) | `community_jkstill/general` | ALTO | OK | SCRIPT: Generate AUDIT and NOAUDIT Statements for Current Audit Settings [ID 287436.1] |
+| [`gethostname.sql`](./monitoring_scripts/general/gethostname.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
+| [`getinstance.sql`](./monitoring_scripts/general/getinstance.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
+| [`getinstanceowner.sql`](./monitoring_scripts/general/getinstanceowner.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
+| [`getparm.sql`](./monitoring_scripts/general/getparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: getparm. |
+| [`getpid.sql`](./monitoring_scripts/general/getpid.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
+| [`getsid.sql`](./monitoring_scripts/general/getsid.sql) | `community_jkstill/general` | BASSO | OK | get sid for current session |
+| [`getsql.sql`](./monitoring_scripts/general/getsql.sql) | `community_jkstill/general` | BASSO | OK | which ever is an empty string indicates the mode used |
+| [`gettracefile.sql`](./monitoring_scripts/general/gettracefile.sql) | `community_jkstill/general` | BASSO | OK | copy the current sessions tracefile from the server |
+| [`gettrcname.sql`](./monitoring_scripts/general/gettrcname.sql) | `community_jkstill/general` | BASSO | OK | set term and feed off then back on when calling |
+| [`global-prefs.sql`](./monitoring_scripts/general/global-prefs.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: global prefs. |
+| [`hash-function.sql`](./monitoring_scripts/general/hash-function.sql) | `community_jkstill/general` | MEDIO | OK | error code here if desired |
+| [`histo_dist.sql`](./monitoring_scripts/general/histo_dist.sql) | `community_jkstill/general` | BASSO | OK | histo_dist.sql |
+| [`histo_hist.sql`](./monitoring_scripts/general/histo_hist.sql) | `community_jkstill/general` | BASSO | OK | histo_hist.sql |
+| [`histo_hist_dist.sql`](./monitoring_scripts/general/histo_hist_dist.sql) | `community_jkstill/general` | BASSO | OK | histo_hist_dist.sql |
+| [`histo_types.sql`](./monitoring_scripts/general/histo_types.sql) | `community_jkstill/general` | BASSO | OK | , abs(num_distinct - num_buckets) diff |
+| [`host-cpu-metric-names.sql`](./monitoring_scripts/general/host-cpu-metric-names.sql) | `community_jkstill/general` | MEDIO | OK | host-cpu-metric-names.sql |
+| [`host-cpu.sql`](./monitoring_scripts/general/host-cpu.sql) | `community_jkstill/general` | MEDIO | OK | host-cpu.sql |
+| [`hwm-df.sql`](./monitoring_scripts/general/hwm-df.sql) | `community_jkstill/general` | BASSO | OK | based on script from Connor McDonald |
+| [`idle-events.sql`](./monitoring_scripts/general/idle-events.sql) | `community_jkstill/general` | BASSO | OK | idle-events.sql |
+| [`index-col-use-ratios.sql`](./monitoring_scripts/general/index-col-use-ratios.sql) | `community_jkstill/general` | BASSO | OK | index-col-use-ratios.sql |
+| [`index-correlate.sql`](./monitoring_scripts/general/index-correlate.sql) | `community_jkstill/general` | BASSO | OK | index-correlate.sql |
+| [`index-usage-awr.sql`](./monitoring_scripts/general/index-usage-awr.sql) | `community_jkstill/general` | BASSO | OK | index-usage-awr.sql |
+| [`index_by_table_demo.sql`](./monitoring_scripts/general/index_by_table_demo.sql) | `community_jkstill/general` | BASSO | OK | since I can never seem to remember this simple syntax |
+| [`iot_segments.sql`](./monitoring_scripts/general/iot_segments.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: iot segments. |
+| [`kglh-growth-awr.sql`](./monitoring_scripts/general/kglh-growth-awr.sql) | `community_jkstill/general` | BASSO | OK | kglh-growth-awr.sql |
+| [`kglh-growth.sql`](./monitoring_scripts/general/kglh-growth.sql) | `community_jkstill/general` | BASSO | OK | kglh-growth.sql |
+| [`latency_eventmetric.sql`](./monitoring_scripts/general/latency_eventmetric.sql) | `community_jkstill/general` | BASSO | OK | wait event latency last minute |
+| [`latency_system_event.sql`](./monitoring_scripts/general/latency_system_event.sql) | `community_jkstill/general` | BASSO | OK | wait event latency averaged over each hour |
+| [`latency_waitclassmetric.sql`](./monitoring_scripts/general/latency_waitclassmetric.sql) | `community_jkstill/general` | BASSO | OK | wait event latency last minute |
+| [`legacy-exclude.sql`](./monitoring_scripts/general/legacy-exclude.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: legacy exclude. |
+| [`liveplan-9i-hash.sql`](./monitoring_scripts/general/liveplan-9i-hash.sql) | `community_jkstill/general` | BASSO | OK | liveplan-9i-hash.sql |
+| [`liveplan-9i.sql`](./monitoring_scripts/general/liveplan-9i.sql) | `community_jkstill/general` | BASSO | OK | liveplan-9i.sql |
+| [`liveplan-hash.sql`](./monitoring_scripts/general/liveplan-hash.sql) | `community_jkstill/general` | BASSO | OK | liveplan-hash.sql |
+| [`liveplan-sqlid.sql`](./monitoring_scripts/general/liveplan-sqlid.sql) | `community_jkstill/general` | BASSO | OK | liveplan-sqlid.sql |
+| [`loghist-csv.sql`](./monitoring_scripts/general/loghist-csv.sql) | `community_jkstill/general` | BASSO | OK | loghist-csv.sql |
+| [`loghistory_8.sql`](./monitoring_scripts/general/loghistory_8.sql) | `community_jkstill/general` | MEDIO | OK | loghistory_8.sql |
+| [`logsetup.sql`](./monitoring_scripts/general/logsetup.sql) | `community_jkstill/general` | BASSO | OK | logsetup.sql |
+| [`mem-leak-detect.sql`](./monitoring_scripts/general/mem-leak-detect.sql) | `community_jkstill/general` | BASSO | OK | mem-leak-detect.sql |
+| [`mem-subpool-mgt.sql`](./monitoring_scripts/general/mem-subpool-mgt.sql) | `community_jkstill/general` | ALTO | OK | mem-subpool-mgt.sql |
+| [`my-events.sql`](./monitoring_scripts/general/my-events.sql) | `community_jkstill/general` | BASSO | OK | and lower(event) like '%net%' |
+| [`my-redo.sql`](./monitoring_scripts/general/my-redo.sql) | `community_jkstill/general` | BASSO | OK | Jared Still 2023 |
+| [`na-std-timezones.sql`](./monitoring_scripts/general/na-std-timezones.sql) | `community_jkstill/general` | BASSO | OK | na-std-timezones.sql |
+| [`numeric-timezone-abbrev.sql`](./monitoring_scripts/general/numeric-timezone-abbrev.sql) | `community_jkstill/general` | BASSO | OK | numeric-timezone-abbreviations.sql |
+| [`object-times.sql`](./monitoring_scripts/general/object-times.sql) | `community_jkstill/general` | BASSO | OK | object-times.sql |
+| [`object-types.sql`](./monitoring_scripts/general/object-types.sql) | `community_jkstill/general` | BASSO | OK | object-types.sql |
+| [`opcodes.sql`](./monitoring_scripts/general/opcodes.sql) | `community_jkstill/general` | MEDIO | OK | do NOT add blank lines |
+| [`opthist.sql`](./monitoring_scripts/general/opthist.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: opthist. |
+| [`oracle-data-types.sql`](./monitoring_scripts/general/oracle-data-types.sql) | `community_jkstill/general` | BASSO | OK | oracle-data-types.sql |
+| [`oracle-exclude-demo.sql`](./monitoring_scripts/general/oracle-exclude-demo.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-demo.sql |
+| [`oracle-exclude-inline.sql`](./monitoring_scripts/general/oracle-exclude-inline.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-inline.sql |
+| [`oracle-exclude-schema.sql`](./monitoring_scripts/general/oracle-exclude-schema.sql) | `community_jkstill/general` | BASSO | OK | oracle-exclude-schema.sql |
+| [`oracle-naming-inconsistencies.sql`](./monitoring_scripts/general/oracle-naming-inconsistencies.sql) | `community_jkstill/general` | BASSO | OK | oracle-naming-inconsistencies.sql |
+| [`oradebug_doc.sql`](./monitoring_scripts/general/oradebug_doc.sql) | `community_jkstill/general` | BASSO | OK | oradebug_doc.sql |
+| [`orapwdhash.sql`](./monitoring_scripts/general/orapwdhash.sql) | `community_jkstill/general` | BASSO | OK | orapwdhash.sql |
+| [`os-load.sql`](./monitoring_scripts/general/os-load.sql) | `community_jkstill/general` | BASSO | OK | System load for the previous hour as reported by Oracle |
+| [`oversion_major.sql`](./monitoring_scripts/general/oversion_major.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: oversion major. |
+| [`oversion_minor.sql`](./monitoring_scripts/general/oversion_minor.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: oversion minor. |
+| [`parameter-compare.sql`](./monitoring_scripts/general/parameter-compare.sql) | `community_jkstill/general` | MEDIO | OK | parameter-compare.sql |
+| [`parm-hist-diff.sql`](./monitoring_scripts/general/parm-hist-diff.sql) | `community_jkstill/general` | BASSO | OK | and s.con_dbid = p.con_dbid |
+| [`parms-diff.sql`](./monitoring_scripts/general/parms-diff.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: parms diff. |
+| [`parms-version-diff.sql`](./monitoring_scripts/general/parms-version-diff.sql) | `community_jkstill/general` | BASSO | OK | parms-version-diff.sql |
+| [`parms_dump_12c_csv.sql`](./monitoring_scripts/general/parms_dump_12c_csv.sql) | `community_jkstill/general` | BASSO | OK | parms_dump_12c_csv.sql |
+| [`parms_dump_csv.sql`](./monitoring_scripts/general/parms_dump_csv.sql) | `community_jkstill/general` | BASSO | OK | parms_dump_csv.sql |
+| [`pg.sql`](./monitoring_scripts/general/pg.sql) | `community_jkstill/general` | BASSO | OK | setup pagesize and linesize |
+| [`pivot.sql`](./monitoring_scripts/general/pivot.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: pivot. |
+| [`pq-ash-all.sql`](./monitoring_scripts/general/pq-ash-all.sql) | `community_jkstill/general` | BASSO | OK | pq-ash-all.sql |
+| [`pq-ash-sqlid.sql`](./monitoring_scripts/general/pq-ash-sqlid.sql) | `community_jkstill/general` | BASSO | OK | pq-ash-sqlid.sql |
+| [`pq-awr-all.sql`](./monitoring_scripts/general/pq-awr-all.sql) | `community_jkstill/general` | BASSO | OK | pq-awr-all.sql |
+| [`pq-awr-sqlid.sql`](./monitoring_scripts/general/pq-awr-sqlid.sql) | `community_jkstill/general` | BASSO | OK | pq-awr-sqlid.sql |
+| [`print_table_2.sql`](./monitoring_scripts/general/print_table_2.sql) | `community_jkstill/general` | MEDIO | OK | print_table_2.sql |
+| [`privileged-accounts.sql`](./monitoring_scripts/general/privileged-accounts.sql) | `community_jkstill/general` | BASSO | OK | privileged-accounts.sql |
+| [`privmaps.sql`](./monitoring_scripts/general/privmaps.sql) | `community_jkstill/general` | BASSO | OK | privmaps.sql |
+| [`purge_cursors.sql`](./monitoring_scripts/general/purge_cursors.sql) | `community_jkstill/general` | BASSO | OK | purge_cursors.sql |
+| [`q_quote.sql`](./monitoring_scripts/general/q_quote.sql) | `community_jkstill/general` | BASSO | OK | example of the q quoting mechanism for string literals |
+| [`raise_error.sql`](./monitoring_scripts/general/raise_error.sql) | `community_jkstill/general` | BASSO | OK | raise_error.sql |
+| [`rbs_shrink.sql`](./monitoring_scripts/general/rbs_shrink.sql) | `community_jkstill/general` | MEDIO | OK | rbs_shrink.sql |
+| [`redo-log-mirrors.sql`](./monitoring_scripts/general/redo-log-mirrors.sql) | `community_jkstill/general` | BASSO | OK | redo-log-mirrors.sql |
+| [`redo-per-hour.sql`](./monitoring_scripts/general/redo-per-hour.sql) | `community_jkstill/general` | BASSO | OK | redo-per-hour.sql |
+| [`remove-sqlplus-settings.sql`](./monitoring_scripts/general/remove-sqlplus-settings.sql) | `community_jkstill/general` | BASSO | OK | bind var is :v_sqltempfile |
+| [`reserved-words.sql`](./monitoring_scripts/general/reserved-words.sql) | `community_jkstill/general` | BASSO | OK | where keyword like '%YOUR_WORD_HERE%' |
+| [`resmgr-columns.sql`](./monitoring_scripts/general/resmgr-columns.sql) | `community_jkstill/general` | BASSO | OK | resmgr-columns.sql |
+| [`resmgr-consumer-groups.sql`](./monitoring_scripts/general/resmgr-consumer-groups.sql) | `community_jkstill/general` | BASSO | OK | resmgr-consumer-groups.sql |
+| [`resmgr-group-privs.sql`](./monitoring_scripts/general/resmgr-group-privs.sql) | `community_jkstill/general` | BASSO | OK | resmgr-group-privs.sql |
+| [`resmgr-plan-directives.sql`](./monitoring_scripts/general/resmgr-plan-directives.sql) | `community_jkstill/general` | BASSO | OK | resmgr-plan-directives.sql |
+| [`resmgr-setup.sql`](./monitoring_scripts/general/resmgr-setup.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: resmgr setup. |
+| [`resmgr-user-consumer-groups.sql`](./monitoring_scripts/general/resmgr-user-consumer-groups.sql) | `community_jkstill/general` | BASSO | OK | resmgr-user-consumer-groups.sql |
+| [`resmgr-waits.sql`](./monitoring_scripts/general/resmgr-waits.sql) | `community_jkstill/general` | BASSO | OK | resmgr-waits.sql |
+| [`resmgr-who.sql`](./monitoring_scripts/general/resmgr-who.sql) | `community_jkstill/general` | BASSO | OK | resmgr-who.sql |
+| [`restricted_session_disable.sql`](./monitoring_scripts/general/restricted_session_disable.sql) | `community_jkstill/general` | ALTO | OK | Script operativo Oracle per: restricted session disable. |
+| [`restricted_session_enable.sql`](./monitoring_scripts/general/restricted_session_enable.sql) | `community_jkstill/general` | ALTO | OK | Script operativo Oracle per: restricted session enable. |
+| [`reverse_role_lookup.sql`](./monitoring_scripts/general/reverse_role_lookup.sql) | `community_jkstill/general` | BASSO | OK | reverse_role_lookup.sql |
+| [`run-advice-scripts.sql`](./monitoring_scripts/general/run-advice-scripts.sql) | `community_jkstill/general` | BASSO | OK | run all advice scripts |
+| [`sampled_size.sql`](./monitoring_scripts/general/sampled_size.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sampled size. |
+| [`sampled_size_details.sql`](./monitoring_scripts/general/sampled_size_details.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sampled size details. |
+| [`save-sqlplus-settings.sql`](./monitoring_scripts/general/save-sqlplus-settings.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: save sqlplus settings. |
+| [`schedcols.sql`](./monitoring_scripts/general/schedcols.sql) | `community_jkstill/general` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
+| [`scott.sql`](./monitoring_scripts/general/scott.sql) | `community_jkstill/general` | ALTO | OK | Copyright (c) Oracle Corporation 1988, 2000. All Rights Reserved |
+| [`sess-event-summary.sql`](./monitoring_scripts/general/sess-event-summary.sql) | `community_jkstill/general` | BASSO | OK | sess-event-summary.sql |
+| [`sess_longops.sql`](./monitoring_scripts/general/sess_longops.sql) | `community_jkstill/general` | BASSO | OK | sess_longops.sql |
+| [`sessevent.sql`](./monitoring_scripts/general/sessevent.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sessevent. |
+| [`sessevent2.sql`](./monitoring_scripts/general/sessevent2.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sessevent2. |
+| [`session-cursor-metrics.sql`](./monitoring_scripts/general/session-cursor-metrics.sql) | `community_jkstill/general` | BASSO | OK | session-cursor-metrics.sql |
+| [`session-parm-diff.sql`](./monitoring_scripts/general/session-parm-diff.sql) | `community_jkstill/general` | BASSO | OK | session-parm-diff.sql |
+| [`session_fix.sql`](./monitoring_scripts/general/session_fix.sql) | `community_jkstill/general` | BASSO | OK | File Name : http://www.oracle-base.com/dba/11g/session_fix.sql |
+| [`set-default-profile-unlimited.sql`](./monitoring_scripts/general/set-default-profile-unlimited.sql) | `community_jkstill/general` | MEDIO | OK | set-default-profile-unlimited.sql |
+| [`set-tracefile-id-external.sql`](./monitoring_scripts/general/set-tracefile-id-external.sql) | `community_jkstill/general` | BASSO | OK | set-tracefile-id-external.sql |
+| [`set_date_format.sql`](./monitoring_scripts/general/set_date_format.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: set date format. |
+| [`set_dbid.sql`](./monitoring_scripts/general/set_dbid.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: set dbid. |
+| [`set_events.sql`](./monitoring_scripts/general/set_events.sql) | `community_jkstill/general` | ALTO | OK | see http://blog.tanelpoder.com/2009/03/03/the-full-power-of-oracles-diagnostic-events-part-1-syntax-for-ksd-debug-event-handling |
+| [`set_sess_tz.sql`](./monitoring_scripts/general/set_sess_tz.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: set sess tz. |
+| [`set_table_prefs.sql`](./monitoring_scripts/general/set_table_prefs.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: set table prefs. |
+| [`setc.sql`](./monitoring_scripts/general/setc.sql) | `community_jkstill/general` | MEDIO | OK | set container |
+| [`setup.sql`](./monitoring_scripts/general/setup.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: setup. |
+| [`show-fk.sql`](./monitoring_scripts/general/show-fk.sql) | `community_jkstill/general` | BASSO | OK | show-fk.sql - report foreign key constraints |
+| [`show-pk-with-idx.sql`](./monitoring_scripts/general/show-pk-with-idx.sql) | `community_jkstill/general` | BASSO | OK | showpk.sql - show primary key constraints |
+| [`show-pk.sql`](./monitoring_scripts/general/show-pk.sql) | `community_jkstill/general` | BASSO | OK | show-pk.sql - show primary key constraints |
+| [`show-uk.sql`](./monitoring_scripts/general/show-uk.sql) | `community_jkstill/general` | BASSO | OK | show-uk.sql - show unique key constraints |
+| [`show-x-dollar-tables.sql`](./monitoring_scripts/general/show-x-dollar-tables.sql) | `community_jkstill/general` | BASSO | OK | show-x-dollar-tables.sql |
+| [`show_active_log_dest.sql`](./monitoring_scripts/general/show_active_log_dest.sql) | `community_jkstill/general` | BASSO | OK | show_active_log_test.sql |
+| [`show_check_cons.sql`](./monitoring_scripts/general/show_check_cons.sql) | `community_jkstill/general` | BASSO | OK | show_check_cons.sql |
+| [`show_data_types.sql`](./monitoring_scripts/general/show_data_types.sql) | `community_jkstill/general` | BASSO | OK | show_data_type.sql |
+| [`show_event_messages.sql`](./monitoring_scripts/general/show_event_messages.sql) | `community_jkstill/general` | BASSO | OK | show server event messages |
+| [`show_logon_triggers.sql`](./monitoring_scripts/general/show_logon_triggers.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: show logon triggers. |
+| [`show_supp_logs.sql`](./monitoring_scripts/general/show_supp_logs.sql) | `community_jkstill/general` | BASSO | OK | contents of gg_env.sql |
+| [`showallparm.sql`](./monitoring_scripts/general/showallparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showallparm. |
+| [`showallparm12c-drvr.sql`](./monitoring_scripts/general/showallparm12c-drvr.sql) | `community_jkstill/general` | BASSO | OK | show all available init.ora parameters |
+| [`showallparm73drvr.sql`](./monitoring_scripts/general/showallparm73drvr.sql) | `community_jkstill/general` | BASSO | OK | show all available init.ora parameters |
+| [`showcol.sql`](./monitoring_scripts/general/showcol.sql) | `community_jkstill/general` | BASSO | OK | show column details and comments for a table |
+| [`showdb.sql`](./monitoring_scripts/general/showdb.sql) | `community_jkstill/general` | ALTO | OK | select * from v$database |
+| [`showdblink.sql`](./monitoring_scripts/general/showdblink.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: showdblink. |
+| [`showdis.sql`](./monitoring_scripts/general/showdis.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showdis. |
+| [`showdiscon.sql`](./monitoring_scripts/general/showdiscon.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showdiscon. |
+| [`showdistrg.sql`](./monitoring_scripts/general/showdistrg.sql) | `community_jkstill/general` | BASSO | OK | showdistrg.sql |
+| [`showindex.sql`](./monitoring_scripts/general/showindex.sql) | `community_jkstill/general` | BASSO | OK | showindex.sql |
+| [`showinv.sql`](./monitoring_scripts/general/showinv.sql) | `community_jkstill/general` | BASSO | OK | jkstill - 11/30/2006 |
+| [`showkey.sql`](./monitoring_scripts/general/showkey.sql) | `community_jkstill/general` | BASSO | OK | find primary and unique keys, |
+| [`showlog.sql`](./monitoring_scripts/general/showlog.sql) | `community_jkstill/general` | BASSO | OK | and l.inst_id = f.inst_id |
+| [`showmem.sql`](./monitoring_scripts/general/showmem.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showmem. |
+| [`shownls.sql`](./monitoring_scripts/general/shownls.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: shownls. |
+| [`showparm.sql`](./monitoring_scripts/general/showparm.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showparm. |
+| [`showparmchanges.sql`](./monitoring_scripts/general/showparmchanges.sql) | `community_jkstill/general` | BASSO | OK | showparmchanges.sql |
+| [`showparmdrvr.sql`](./monitoring_scripts/general/showparmdrvr.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showparmdrvr. |
+| [`showpin.sql`](./monitoring_scripts/general/showpin.sql) | `community_jkstill/general` | BASSO | OK | show objects that are pinned in the shared pool |
+| [`showpipes.sql`](./monitoring_scripts/general/showpipes.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showpipes. |
+| [`showplan-all.sql`](./monitoring_scripts/general/showplan-all.sql) | `community_jkstill/general` | BASSO | OK | showplan_all.sql |
+| [`showplan-awr.sql`](./monitoring_scripts/general/showplan-awr.sql) | `community_jkstill/general` | BASSO | OK | showplan_awr.sql |
+| [`showplan-last.sql`](./monitoring_scripts/general/showplan-last.sql) | `community_jkstill/general` | BASSO | OK | showplan_last.sql |
+| [`showplan72.sql`](./monitoring_scripts/general/showplan72.sql) | `community_jkstill/general` | BASSO | OK | showplan72.sql |
+| [`showplan73.sql`](./monitoring_scripts/general/showplan73.sql) | `community_jkstill/general` | BASSO | OK | showplan73.sql |
+| [`showplan9i.sql`](./monitoring_scripts/general/showplan9i.sql) | `community_jkstill/general` | BASSO | OK | showplan9i.sql |
+| [`showpriv.sql`](./monitoring_scripts/general/showpriv.sql) | `community_jkstill/general` | BASSO | OK | showpriv.sql |
+| [`showprofile.sql`](./monitoring_scripts/general/showprofile.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showprofile. |
+| [`showrbs.sql`](./monitoring_scripts/general/showrbs.sql) | `community_jkstill/general` | BASSO | OK | spool rbs.lis |
+| [`showrbslock.sql`](./monitoring_scripts/general/showrbslock.sql) | `community_jkstill/general` | BASSO | OK | from Tim Sawmiller |
+| [`showrole.sql`](./monitoring_scripts/general/showrole.sql) | `community_jkstill/general` | BASSO | OK | showrole.sql |
+| [`showroles.sql`](./monitoring_scripts/general/showroles.sql) | `community_jkstill/general` | BASSO | OK | showpriv.sql |
+| [`showsrc.sql`](./monitoring_scripts/general/showsrc.sql) | `community_jkstill/general` | BASSO | OK | ed src-&uowner..txt |
+| [`showtab.sql`](./monitoring_scripts/general/showtab.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: showtab. |
+| [`showview.sql`](./monitoring_scripts/general/showview.sql) | `community_jkstill/general` | BASSO | OK | select view_name, view_definition |
+| [`snap_ids.sql`](./monitoring_scripts/general/snap_ids.sql) | `community_jkstill/general` | BASSO | OK | Set up the binds for dbid and instance_number |
+| [`snapNmin.sql`](./monitoring_scripts/general/snapNmin.sql) | `community_jkstill/general` | BASSO | OK | take a two minute snapshot at level 7 |
+| [`sp_current.sql`](./monitoring_scripts/general/sp_current.sql) | `community_jkstill/general` | BASSO | OK | sp_current.sql |
+| [`sp_get_date_range.sql`](./monitoring_scripts/general/sp_get_date_range.sql) | `community_jkstill/general` | BASSO | OK | sp_get_date_range.sql |
+| [`sp_getsql.sql`](./monitoring_scripts/general/sp_getsql.sql) | `community_jkstill/general` | BASSO | OK | sp_getsql.sql |
+| [`sp_lvl_0.sql`](./monitoring_scripts/general/sp_lvl_0.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 0 |
+| [`sp_lvl_5.sql`](./monitoring_scripts/general/sp_lvl_5.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 0 |
+| [`sp_lvl_6.sql`](./monitoring_scripts/general/sp_lvl_6.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 6 |
+| [`sp_lvl_7.sql`](./monitoring_scripts/general/sp_lvl_7.sql) | `community_jkstill/general` | BASSO | OK | change statspack to level 6 |
+| [`sp_lvl_current.sql`](./monitoring_scripts/general/sp_lvl_current.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp lvl current. |
+| [`sp_lvl_sql.sql`](./monitoring_scripts/general/sp_lvl_sql.sql) | `community_jkstill/general` | BASSO | OK | change statspack SQL collection levels |
+| [`sp_plan.sql`](./monitoring_scripts/general/sp_plan.sql) | `community_jkstill/general` | BASSO | OK | display historic execution plans |
+| [`sp_plan_hash.sql`](./monitoring_scripts/general/sp_plan_hash.sql) | `community_jkstill/general` | BASSO | OK | sp_plan_hash.sql |
+| [`sp_plan_table.sql`](./monitoring_scripts/general/sp_plan_table.sql) | `community_jkstill/general` | MEDIO | OK | sp_plan_table.sql |
+| [`sp_recent.sql`](./monitoring_scripts/general/sp_recent.sql) | `community_jkstill/general` | BASSO | OK | sp_recent.sql |
+| [`sp_snap.sql`](./monitoring_scripts/general/sp_snap.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp snap. |
+| [`sp_snap_6.sql`](./monitoring_scripts/general/sp_snap_6.sql) | `community_jkstill/general` | BASSO | OK | sp_snap_6.sql |
+| [`sp_snap_id.sql`](./monitoring_scripts/general/sp_snap_id.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sp snap id. |
+| [`spacemap.sql`](./monitoring_scripts/general/spacemap.sql) | `community_jkstill/general` | ALTO | OK | spacemap.sql |
+| [`spacemap_rpt.sql`](./monitoring_scripts/general/spacemap_rpt.sql) | `community_jkstill/general` | BASSO | OK | spacemap_rpt.sql |
+| [`spacemap_sum.sql`](./monitoring_scripts/general/spacemap_sum.sql) | `community_jkstill/general` | ALTO | OK | spacemap_sum.sql |
+| [`spacemap_sum_rpt.sql`](./monitoring_scripts/general/spacemap_sum_rpt.sql) | `community_jkstill/general` | BASSO | OK | spacemap_sum_rpt.sql |
+| [`spool-example-2.sql`](./monitoring_scripts/general/spool-example-2.sql) | `community_jkstill/general` | BASSO | OK | template for spooling a logfile with timestamp |
+| [`spool_example.sql`](./monitoring_scripts/general/spool_example.sql) | `community_jkstill/general` | MEDIO | OK | trimspool for older versions - <= 9i I think |
+| [`spreport.sql`](./monitoring_scripts/general/spreport.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: spreport. |
+| [`sql-command-types.sql`](./monitoring_scripts/general/sql-command-types.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sql command types. |
+| [`sql-patch-report.sql`](./monitoring_scripts/general/sql-patch-report.sql) | `community_jkstill/general` | BASSO | OK | sql-patch-report.sql |
+| [`sql-read-write-size-sql.sql`](./monitoring_scripts/general/sql-read-write-size-sql.sql) | `community_jkstill/general` | BASSO | OK | sql-read-write-size-sql.sql |
+| [`sql-read-write-size.sql`](./monitoring_scripts/general/sql-read-write-size.sql) | `community_jkstill/general` | BASSO | OK | sql-read-write-size.sql |
+| [`sql-version-counts.sql`](./monitoring_scripts/general/sql-version-counts.sql) | `community_jkstill/general` | BASSO | OK | sql-version-counts |
+| [`sql_current_plan.sql`](./monitoring_scripts/general/sql_current_plan.sql) | `community_jkstill/general` | BASSO | OK | sql_current_plan.sql |
+| [`sql_spawned_reasons.sql`](./monitoring_scripts/general/sql_spawned_reasons.sql) | `community_jkstill/general` | BASSO | OK | sql_spawned_reasons.sql |
+| [`sql_trick_1.sql`](./monitoring_scripts/general/sql_trick_1.sql) | `community_jkstill/general` | BASSO | OK | sql_trick_1.sql |
+| [`sqlid-trace.sql`](./monitoring_scripts/general/sqlid-trace.sql) | `community_jkstill/general` | ALTO | OK | trace a particular sqlid regardless of session |
+| [`sqlplus_return_code.sql`](./monitoring_scripts/general/sqlplus_return_code.sql) | `community_jkstill/general` | ALTO | OK | run some PL/SQL |
+| [`sqlplus_return_code_2.sql`](./monitoring_scripts/general/sqlplus_return_code_2.sql) | `community_jkstill/general` | MEDIO | OK | sqlplus_return_code_2.sql |
+| [`supp-col-info.sql`](./monitoring_scripts/general/supp-col-info.sql) | `community_jkstill/general` | BASSO | OK | supp-col-info.sql |
+| [`supp-db-info.sql`](./monitoring_scripts/general/supp-db-info.sql) | `community_jkstill/general` | BASSO | OK | supp-db-info.sql |
+| [`supp-tab-info.sql`](./monitoring_scripts/general/supp-tab-info.sql) | `community_jkstill/general` | BASSO | OK | supp-tab-info.sql |
+| [`sys-context-all.sql`](./monitoring_scripts/general/sys-context-all.sql) | `community_jkstill/general` | BASSO | OK | sys-context-all.sql |
+| [`sys_context.sql`](./monitoring_scripts/general/sys_context.sql) | `community_jkstill/general` | BASSO | OK | sys_context.sql |
+| [`sysaux_free.sql`](./monitoring_scripts/general/sysaux_free.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: sysaux free. |
+| [`sysevent-top-10.sql`](./monitoring_scripts/general/sysevent-top-10.sql) | `community_jkstill/general` | BASSO | OK | sysevent-top-10.sql |
+| [`sysevent_begin.sql`](./monitoring_scripts/general/sysevent_begin.sql) | `community_jkstill/general` | ALTO | OK | time_waited/100 time_waited, |
+| [`sysevent_end.sql`](./monitoring_scripts/general/sysevent_end.sql) | `community_jkstill/general` | ALTO | OK | time_waited/100 time_waited, |
+| [`sysevent_rpt.sql`](./monitoring_scripts/general/sysevent_rpt.sql) | `community_jkstill/general` | BASSO | OK | set the start_time |
+| [`system_fix.sql`](./monitoring_scripts/general/system_fix.sql) | `community_jkstill/general` | BASSO | OK | File Name : http://www.oracle-base.com/dba/11g/system_fix.sql |
+| [`system_fix_all.sql`](./monitoring_scripts/general/system_fix_all.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: system fix all. |
+| [`tabcols.sql`](./monitoring_scripts/general/tabcols.sql) | `community_jkstill/general` | BASSO | OK | show columns in alpha order for owner and table |
+| [`tabidx.sql`](./monitoring_scripts/general/tabidx.sql) | `community_jkstill/general` | BASSO | OK | show indexes per table |
+| [`table-annotations.sql`](./monitoring_scripts/general/table-annotations.sql) | `community_jkstill/general` | BASSO | OK | table-annotations.sql |
+| [`table_ddl.sql`](./monitoring_scripts/general/table_ddl.sql) | `community_jkstill/general` | BASSO | OK | table_ddl.sql |
+| [`table_list.sql`](./monitoring_scripts/general/table_list.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: table list. |
+| [`test_calendar_string-examples.sql`](./monitoring_scripts/general/test_calendar_string-examples.sql) | `community_jkstill/general` | BASSO | OK | between 07:00 and 23:59 repeat every 15 minutes on the 15 minute mark |
+| [`test_calendar_string.sql`](./monitoring_scripts/general/test_calendar_string.sql) | `community_jkstill/general` | MEDIO | OK | File Name : https://oracle-base.com/dba/10g/test_calendar_string.sql |
+| [`title.sql`](./monitoring_scripts/general/title.sql) | `community_jkstill/general` | BASSO | OK | title.sql - copied from title80.sql |
+| [`title132.sql`](./monitoring_scripts/general/title132.sql) | `community_jkstill/general` | BASSO | OK | DATABASE||' Database' DATABASE, |
+| [`title80.sql`](./monitoring_scripts/general/title80.sql) | `community_jkstill/general` | BASSO | OK | DATABASE||' Database' DATABASE, |
+| [`tracefile-dump.sql`](./monitoring_scripts/general/tracefile-dump.sql) | `community_jkstill/general` | BASSO | OK | tracefile-dump.sql |
+| [`tracefile.sql`](./monitoring_scripts/general/tracefile.sql) | `community_jkstill/general` | BASSO | OK | tracefile.sql |
+| [`troff.sql`](./monitoring_scripts/general/troff.sql) | `community_jkstill/general` | BASSO | OK | turn off tracing for all current sessions of a user |
+| [`tron.sql`](./monitoring_scripts/general/tron.sql) | `community_jkstill/general` | BASSO | OK | turn on tracing for all current sessions of a user |
+| [`ts2e-hires.sql`](./monitoring_scripts/general/ts2e-hires.sql) | `community_jkstill/general` | BASSO | OK | ts2e-hires.sql |
+| [`ts2e.sql`](./monitoring_scripts/general/ts2e.sql) | `community_jkstill/general` | BASSO | OK | convert a timestamp to highres (usec) epoch value |
+| [`ttitle.sql`](./monitoring_scripts/general/ttitle.sql) | `community_jkstill/general` | BASSO | OK | set the current time |
+| [`tz_set.sql`](./monitoring_scripts/general/tz_set.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: tz set. |
+| [`ua-actions.sql`](./monitoring_scripts/general/ua-actions.sql) | `community_jkstill/general` | BASSO | OK | ua-actions.sql |
+| [`ua-policies.sql`](./monitoring_scripts/general/ua-policies.sql) | `community_jkstill/general` | BASSO | OK | where policy_name = 'ORA_ACCOUNT_MGMT' |
+| [`ua-sessions.sql`](./monitoring_scripts/general/ua-sessions.sql) | `community_jkstill/general` | MEDIO | OK | ua-session.sql |
+| [`uifk.sql`](./monitoring_scripts/general/uifk.sql) | `community_jkstill/general` | BASSO | OK | format data from user_uifk |
+| [`uifk_gen.sql`](./monitoring_scripts/general/uifk_gen.sql) | `community_jkstill/general` | MEDIO | OK | gen_uifk.sql |
+| [`uifk_v.sql`](./monitoring_scripts/general/uifk_v.sql) | `community_jkstill/general` | MEDIO | OK | adapted from a script by Tom Kyte that is used to |
+| [`undo-active-12c.sql`](./monitoring_scripts/general/undo-active-12c.sql) | `community_jkstill/general` | BASSO | OK | undo-active-12c.sql |
+| [`undo-active.sql`](./monitoring_scripts/general/undo-active.sql) | `community_jkstill/general` | BASSO | OK | undo-active.sql |
+| [`undo-mon-fast.sql`](./monitoring_scripts/general/undo-mon-fast.sql) | `community_jkstill/general` | BASSO | OK | undo-mon-fast.sql |
+| [`undo-mon-trans.sql`](./monitoring_scripts/general/undo-mon-trans.sql) | `community_jkstill/general` | BASSO | OK | undo-mon-trans.sql |
+| [`uptime.sql`](./monitoring_scripts/general/uptime.sql) | `community_jkstill/general` | BASSO | OK | uptime.sql - show db uptime |
+| [`user-modifiable-all-parms.sql`](./monitoring_scripts/general/user-modifiable-all-parms.sql) | `community_jkstill/general` | BASSO | OK | a.KSPPITY TYPE |
+| [`user-modifiable-parms.sql`](./monitoring_scripts/general/user-modifiable-parms.sql) | `community_jkstill/general` | BASSO | OK | user-modifiable-parms.sql |
+| [`user_ddl.sql`](./monitoring_scripts/general/user_ddl.sql) | `community_jkstill/general` | BASSO | OK | user_ddl.sql |
+| [`user_exit.sql`](./monitoring_scripts/general/user_exit.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: user exit. |
+| [`utl_file-test.sql`](./monitoring_scripts/general/utl_file-test.sql) | `community_jkstill/general` | MEDIO | OK | utl_file-test.sql |
+| [`wait_chains.sql`](./monitoring_scripts/general/wait_chains.sql) | `community_jkstill/general` | BASSO | OK | Oracle Support Note |
+| [`wc-legend.sql`](./monitoring_scripts/general/wc-legend.sql) | `community_jkstill/general` | BASSO | OK | the alternative list with punctuation looks more interesting |
+| [`xb.sql`](./monitoring_scripts/general/xb.sql) | `community_jkstill/general` | MEDIO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
+| [`xbi.sql`](./monitoring_scripts/general/xbi.sql) | `community_jkstill/general` | MEDIO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
+| [`xdesc-all.sql`](./monitoring_scripts/general/xdesc-all.sql) | `community_jkstill/general` | BASSO | OK | 30 char for colname |
+| [`xdesc.sql`](./monitoring_scripts/general/xdesc.sql) | `community_jkstill/general` | BASSO | OK | DBMS_SQL ref, including the record types |
+| [`xdllr-abstract-list.sql`](./monitoring_scripts/general/xdllr-abstract-list.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: xdllr abstract list. |
+| [`xdllr-comments.sql`](./monitoring_scripts/general/xdllr-comments.sql) | `community_jkstill/general` | MEDIO | OK | Script operativo Oracle per: xdllr comments. |
+| [`xdllr-info.sql`](./monitoring_scripts/general/xdllr-info.sql) | `community_jkstill/general` | BASSO | OK | scan must be off as there may be a number of ampersand characters in the comments |
+| [`xdllr-tablist.sql`](./monitoring_scripts/general/xdllr-tablist.sql) | `community_jkstill/general` | BASSO | OK | Script operativo Oracle per: xdllr tablist. |
+| [`archived_log_dest.sql`](./monitoring_scripts/instance_db/archived_log_dest.sql) | `community_jkstill/instance_db` | BASSO | OK | Script operativo Oracle per: archived log dest. |
+| [`archived_log_hist_matrix.sql`](./monitoring_scripts/instance_db/archived_log_hist_matrix.sql) | `community_jkstill/instance_db` | BASSO | OK | archived_log_hist_matrix.sql |
+| [`archived_log_sums.sql`](./monitoring_scripts/instance_db/archived_log_sums.sql) | `community_jkstill/instance_db` | BASSO | OK | archived_log_sums.sql |
+| [`feature-usage.sql`](./monitoring_scripts/instance_db/feature-usage.sql) | `community_jkstill/instance_db` | BASSO | OK | where detected_usages != 0 |
+| [`incarnations.sql`](./monitoring_scripts/instance_db/incarnations.sql) | `community_jkstill/instance_db` | BASSO | OK | incarnations.sql |
+| [`nls_date_format.sql`](./monitoring_scripts/instance_db/nls_date_format.sql) | `community_jkstill/instance_db` | MEDIO | OK | nls_date_format.sql |
+| [`nls_time_format.sql`](./monitoring_scripts/instance_db/nls_time_format.sql) | `community_jkstill/instance_db` | MEDIO | OK | Script operativo Oracle per: nls time format. |
+| [`options.sql`](./monitoring_scripts/instance_db/options.sql) | `community_jkstill/instance_db` | BASSO | OK | Script operativo Oracle per: options. |
+| [`showobjprivs.sql`](./monitoring_scripts/instance_db/showobjprivs.sql) | `community_jkstill/instance_db` | BASSO | OK | grantor.name grantor, |
+| [`showsga.sql`](./monitoring_scripts/instance_db/showsga.sql) | `community_jkstill/instance_db` | BASSO | OK | col name format |
+| [`avg_disk_times.sql`](./monitoring_scripts/io_redo/avg_disk_times.sql) | `community_jkstill/io_redo` | BASSO | OK | Verifica storage ASM: stato dischi, performance e configurazione. |
+| [`io_begin.sql`](./monitoring_scripts/io_redo/io_begin.sql) | `community_jkstill/io_redo` | ALTO | OK | must truncate GTT before dropping |
+| [`io_end.sql`](./monitoring_scripts/io_redo/io_end.sql) | `community_jkstill/io_redo` | ALTO | OK | must truncate GTT before dropping |
+| [`io_order.sql`](./monitoring_scripts/io_redo/io_order.sql) | `community_jkstill/io_redo` | BASSO | OK | io_order.sql |
+| [`io_stat.sql`](./monitoring_scripts/io_redo/io_stat.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
+| [`io_stat2.sql`](./monitoring_scripts/io_redo/io_stat2.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
+| [`io_stat3.sql`](./monitoring_scripts/io_redo/io_stat3.sql) | `community_jkstill/io_redo` | BASSO | OK | first run 'io_begin.sql' |
+| [`io_tbs.sql`](./monitoring_scripts/io_redo/io_tbs.sql) | `community_jkstill/io_redo` | BASSO | OK | spool io_tbs.txt |
+| [`ioweight.sql`](./monitoring_scripts/io_redo/ioweight.sql) | `community_jkstill/io_redo` | BASSO | OK | spool err.txt |
+| [`lfsdiag.sql`](./monitoring_scripts/io_redo/lfsdiag.sql) | `community_jkstill/io_redo` | MEDIO | OK | NAME: LFSDIAG.SQL |
+| [`redo-per-second.sql`](./monitoring_scripts/io_redo/redo-per-second.sql) | `community_jkstill/io_redo` | BASSO | OK | redo-per-second.sql |
+| [`redo-rate.sql`](./monitoring_scripts/io_redo/redo-rate.sql) | `community_jkstill/io_redo` | BASSO | OK | redo-rate.sql |
+| [`showtrans.sql`](./monitoring_scripts/io_redo/showtrans.sql) | `community_jkstill/io_redo` | BASSO | OK | spool showtrans.txt |
+| [`trans_per_hour.sql`](./monitoring_scripts/io_redo/trans_per_hour.sql) | `community_jkstill/io_redo` | ALTO | OK | trans_per_hour.sql |
+| [`who5.sql`](./monitoring_scripts/io_redo/who5.sql) | `community_jkstill/io_redo` | BASSO | OK | taken from OraMag Code Depot ( and slightly modified ) |
+| [`metric-names.sql`](./monitoring_scripts/metrics/metric-names.sql) | `community_jkstill/metrics` | BASSO | OK | metric-names.sql |
+| [`metrics-available-ash.sql`](./monitoring_scripts/metrics/metrics-available-ash.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available-ash.sql |
+| [`metrics-available-awr.sql`](./monitoring_scripts/metrics/metrics-available-awr.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available-awr.sql |
+| [`metrics-available.sql`](./monitoring_scripts/metrics/metrics-available.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-available.sql |
+| [`metrics-not-saved-in-awr.sql`](./monitoring_scripts/metrics/metrics-not-saved-in-awr.sql) | `community_jkstill/metrics` | BASSO | OK | metrics-not-saved-in-awr.sql |
+| [`sysmetric-cpu-seconds-summary.sql`](./monitoring_scripts/metrics/sysmetric-cpu-seconds-summary.sql) | `community_jkstill/metrics` | BASSO | OK | sysmetric-cpu-seconds-summary.sql |
+| [`ash-snapshot-define-begin-end.sql`](./monitoring_scripts/mviews/ash-snapshot-define-begin-end.sql) | `community_jkstill/mviews` | BASSO | OK | ash-snapshot-define-begin-end.sql |
+| [`awr_create_snapshot.sql`](./monitoring_scripts/mviews/awr_create_snapshot.sql) | `community_jkstill/mviews` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
+| [`awr_get_snapshots.sql`](./monitoring_scripts/mviews/awr_get_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | awr_get_snapshots.sql |
+| [`deregister_snapshots.sql`](./monitoring_scripts/mviews/deregister_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | deregister_snapshots.sql |
+| [`show_mview_status.sql`](./monitoring_scripts/mviews/show_mview_status.sql) | `community_jkstill/mviews` | BASSO | OK | Script operativo Oracle per: show mview status. |
+| [`showregistered_snapshots.sql`](./monitoring_scripts/mviews/showregistered_snapshots.sql) | `community_jkstill/mviews` | BASSO | OK | show all registered snapshots at master site |
+| [`showsnapshot_logs.sql`](./monitoring_scripts/mviews/showsnapshot_logs.sql) | `community_jkstill/mviews` | BASSO | OK | ,log_trigger |
+| [`showsnapshot_sites.sql`](./monitoring_scripts/mviews/showsnapshot_sites.sql) | `community_jkstill/mviews` | BASSO | OK | showsnapshot_sites.sql |
+| [`showsnapshots.sql`](./monitoring_scripts/mviews/showsnapshots.sql) | `community_jkstill/mviews` | BASSO | OK | , decode(r.rname, null, '-NO REFRESH-',rname, decode(s.refresh_mode,'COMMIT','NA'), 'UNKNOWN') |
+| [`cursor-invalidation-reasons.sql`](./monitoring_scripts/plsql/cursor-invalidation-reasons.sql) | `community_jkstill/plsql` | BASSO | OK | cursor-invalidation-reasons.sql |
+| [`invalid.sql`](./monitoring_scripts/plsql/invalid.sql) | `community_jkstill/plsql` | BASSO | OK | jkstill - 11/30/2006 |
+| [`plsql-error.sql`](./monitoring_scripts/plsql/plsql-error.sql) | `community_jkstill/plsql` | BASSO | OK | plsql-error.sql |
+| [`plsql-init.sql`](./monitoring_scripts/plsql/plsql-init.sql) | `community_jkstill/plsql` | MEDIO | OK | setup plscope |
+| [`plsql-return-bool-from-sql.sql`](./monitoring_scripts/plsql/plsql-return-bool-from-sql.sql) | `community_jkstill/plsql` | BASSO | OK | plsql-return-bool-from-sql.sql |
+| [`plsql_called_objects.sql`](./monitoring_scripts/plsql/plsql_called_objects.sql) | `community_jkstill/plsql` | BASSO | OK | plsql_called_objects.sql |
+| [`recompile.sql`](./monitoring_scripts/plsql/recompile.sql) | `community_jkstill/plsql` | MEDIO | OK | recompile.sql |
+| [`col-diff.sql`](./monitoring_scripts/rdbms_utilities/col-diff.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | col-diff.sql |
+| [`dba_audit_session.sql`](./monitoring_scripts/rdbms_utilities/dba_audit_session.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | and rownum < 100 |
+| [`dba_audit_session_recent.sql`](./monitoring_scripts/rdbms_utilities/dba_audit_session_recent.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_audit_session_recent.sql |
+| [`dba_audit_trail.sql`](./monitoring_scripts/rdbms_utilities/dba_audit_trail.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_audit_trail.sql |
+| [`dba_audit_trail_persons.sql`](./monitoring_scripts/rdbms_utilities/dba_audit_trail_persons.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_audit_trail_persons.sql |
+| [`dba_dependencies.sql`](./monitoring_scripts/rdbms_utilities/dba_dependencies.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | obj-dependencies.sql |
+| [`dba_deps_selective.sql`](./monitoring_scripts/rdbms_utilities/dba_deps_selective.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | anchor member |
+| [`dba_feature_usage.sql`](./monitoring_scripts/rdbms_utilities/dba_feature_usage.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_feature_usage.sql |
+| [`dba_hist_sys_time_model.sql`](./monitoring_scripts/rdbms_utilities/dba_hist_sys_time_model.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Script operativo Oracle per: dba hist sys time model. |
+| [`dba_jobs.sql`](./monitoring_scripts/rdbms_utilities/dba_jobs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
+| [`dba_jobs_running.sql`](./monitoring_scripts/rdbms_utilities/dba_jobs_running.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
+| [`dba_kgllock.sql`](./monitoring_scripts/rdbms_utilities/dba_kgllock.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | dba_kgllock.sql |
+| [`dba_recyclebin_purge_gen.sql`](./monitoring_scripts/rdbms_utilities/dba_recyclebin_purge_gen.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_recyclebin_purge_gen.sql |
+| [`dba_sched_jobs.sql`](./monitoring_scripts/rdbms_utilities/dba_sched_jobs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | dba_scheduler_jobs.sql |
+| [`dba_sched_jobs_hist.sql`](./monitoring_scripts/rdbms_utilities/dba_sched_jobs_hist.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | jkstill@gmail.com |
+| [`dba_table_audit_flags.sql`](./monitoring_scripts/rdbms_utilities/dba_table_audit_flags.sql) | `community_jkstill/rdbms_utilities` | ALTO | OK | dba_table_audit_flags.sql |
+| [`gen-tbs-ddl.sql`](./monitoring_scripts/rdbms_utilities/gen-tbs-ddl.sql) | `community_jkstill/rdbms_utilities` | MEDIO | OK | gen-tbs-ddl.sql |
+| [`obj-privs.sql`](./monitoring_scripts/rdbms_utilities/obj-privs.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | Jared Still 2022 |
+| [`tab-info.sql`](./monitoring_scripts/rdbms_utilities/tab-info.sql) | `community_jkstill/rdbms_utilities` | BASSO | OK | tab-info.sql |
+| [`autotask_resources.sql`](./monitoring_scripts/resource_manager/autotask_resources.sql) | `community_jkstill/resource_manager` | BASSO | OK | Script operativo Oracle per: autotask resources. |
+| [`awr-resource-limit.sql`](./monitoring_scripts/resource_manager/awr-resource-limit.sql) | `community_jkstill/resource_manager` | BASSO | OK | awr-resource-limit.sql |
+| [`disable-autotasks-resource-mgr.sql`](./monitoring_scripts/resource_manager/disable-autotasks-resource-mgr.sql) | `community_jkstill/resource_manager` | ALTO | OK | Oracle sometimes enforces Resource Manager for background processes |
+| [`disable_resource_manager.sql`](./monitoring_scripts/resource_manager/disable_resource_manager.sql) | `community_jkstill/resource_manager` | ALTO | OK | disable the resource manager |
+| [`resmgr-resource-plans.sql`](./monitoring_scripts/resource_manager/resmgr-resource-plans.sql) | `community_jkstill/resource_manager` | BASSO | OK | resmgr-resource-plans.sql |
+| [`sp_resource_limit.sql`](./monitoring_scripts/resource_manager/sp_resource_limit.sql) | `community_jkstill/resource_manager` | MEDIO | OK | sp_resource_limit.sql |
+| [`active_status.sql`](./monitoring_scripts/sessions_locks/active_status.sql) | `community_jkstill/sessions_locks` | BASSO | OK | active_status.sql |
+| [`cf-waits.sql`](./monitoring_scripts/sessions_locks/cf-waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | cf-waits.sql - Control File Waits |
+| [`concurrency-waits-sqlid.sql`](./monitoring_scripts/sessions_locks/concurrency-waits-sqlid.sql) | `community_jkstill/sessions_locks` | BASSO | OK | concurrency-waits-sqlid.sql |
+| [`cpu-killer.sql`](./monitoring_scripts/sessions_locks/cpu-killer.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: cpu killer. |
+| [`cpu-stalled-ratio.sql`](./monitoring_scripts/sessions_locks/cpu-stalled-ratio.sql) | `community_jkstill/sessions_locks` | BASSO | OK | cpu-stalled-ratio.sql |
+| [`dba_kgllock.sql`](./monitoring_scripts/sessions_locks/dba_kgllock.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | dba_kgllock.sql |
+| [`extproc-sessions.sql`](./monitoring_scripts/sessions_locks/extproc-sessions.sql) | `community_jkstill/sessions_locks` | BASSO | OK | extproc-sessions.sql |
+| [`getstat.sql`](./monitoring_scripts/sessions_locks/getstat.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: getstat. |
+| [`getstats.sql`](./monitoring_scripts/sessions_locks/getstats.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: getstats. |
+| [`getstatu2.sql`](./monitoring_scripts/sessions_locks/getstatu2.sql) | `community_jkstill/sessions_locks` | BASSO | OK | break on username |
+| [`itl_waits.sql`](./monitoring_scripts/sessions_locks/itl_waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: itl waits. |
+| [`itl_waits_hist.sql`](./monitoring_scripts/sessions_locks/itl_waits_hist.sql) | `community_jkstill/sessions_locks` | BASSO | OK | , d.instance_number |
+| [`latch_statsa.sql`](./monitoring_scripts/sessions_locks/latch_statsa.sql) | `community_jkstill/sessions_locks` | ALTO | OK | Script operativo Oracle per: latch statsa. |
+| [`latch_statss.sql`](./monitoring_scripts/sessions_locks/latch_statss.sql) | `community_jkstill/sessions_locks` | ALTO | OK | Script operativo Oracle per: latch statss. |
+| [`libcachepin_waits.sql`](./monitoring_scripts/sessions_locks/libcachepin_waits.sql) | `community_jkstill/sessions_locks` | BASSO | OK | libcachepin_waits.sql |
+| [`mystat.sql`](./monitoring_scripts/sessions_locks/mystat.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: mystat. |
+| [`segment-space-statistics-hist.sql`](./monitoring_scripts/sessions_locks/segment-space-statistics-hist.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | segment-space-statistics-hist.sql |
+| [`segment-space-statistics.sql`](./monitoring_scripts/sessions_locks/segment-space-statistics.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | segment-space-statistics.sql |
+| [`segment-statistics.sql`](./monitoring_scripts/sessions_locks/segment-statistics.sql) | `community_jkstill/sessions_locks` | BASSO | OK | may be interesting results |
+| [`sesswait.sql`](./monitoring_scripts/sessions_locks/sesswait.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: sesswait. |
+| [`sesswaitp.sql`](./monitoring_scripts/sessions_locks/sesswaitp.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitp.sql |
+| [`sesswaitu.sql`](./monitoring_scripts/sessions_locks/sesswaitu.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
+| [`sesswaitu10g.sql`](./monitoring_scripts/sessions_locks/sesswaitu10g.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
+| [`sesswaitu72.sql`](./monitoring_scripts/sessions_locks/sesswaitu72.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
+| [`sesswaitu73.sql`](./monitoring_scripts/sessions_locks/sesswaitu73.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
+| [`sesswaitu_112.sql`](./monitoring_scripts/sessions_locks/sesswaitu_112.sql) | `community_jkstill/sessions_locks` | BASSO | OK | sesswaitu.sql |
+| [`sesswaitug.sql`](./monitoring_scripts/sessions_locks/sesswaitug.sql) | `community_jkstill/sessions_locks` | BASSO | OK | case wait_time |
+| [`showlatch.sql`](./monitoring_scripts/sessions_locks/showlatch.sql) | `community_jkstill/sessions_locks` | BASSO | OK | Script operativo Oracle per: showlatch. |
+| [`showlock.sql`](./monitoring_scripts/sessions_locks/showlock.sql) | `community_jkstill/sessions_locks` | MEDIO | OK | showlock.sql - show all user locks |
+| [`showlock2.sql`](./monitoring_scripts/sessions_locks/showlock2.sql) | `community_jkstill/sessions_locks` | BASSO | OK | showlock2.sql |
+| [`snapper.sql`](./monitoring_scripts/sessions_locks/snapper.sql) | `community_jkstill/sessions_locks` | BASSO | OK | File name: snapper.sql (Oracle Session Snapper v4) |
+| [`asm_diskgroup_templates.sql`](./monitoring_scripts/temp_sorts/asm_diskgroup_templates.sql) | `community_jkstill/temp_sorts` | BASSO | OK | asm_diskgroup_templates.sql |
+| [`my-pga-temp.sql`](./monitoring_scripts/temp_sorts/my-pga-temp.sql) | `community_jkstill/temp_sorts` | BASSO | OK | my-pga-temp.sql |
+| [`showsort.sql`](./monitoring_scripts/temp_sorts/showsort.sql) | `community_jkstill/temp_sorts` | BASSO | OK | showsort.sql |
+| [`showtemp.sql`](./monitoring_scripts/temp_sorts/showtemp.sql) | `community_jkstill/temp_sorts` | BASSO | OK | , tu.session_addr |
+| [`showuser.sql`](./monitoring_scripts/users_logged/showuser.sql) | `community_jkstill/users_logged` | MEDIO | OK | &use_12c_feature , oracle_maintained |
+| [`who.sql`](./monitoring_scripts/users_logged/who.sql) | `community_jkstill/users_logged` | BASSO | OK | Script operativo Oracle per: who. |
+| [`who2.sql`](./monitoring_scripts/users_logged/who2.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who2g.sql`](./monitoring_scripts/users_logged/who2g.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who2s.sql`](./monitoring_scripts/users_logged/who2s.sql) | `community_jkstill/users_logged` | BASSO | OK | less detail than who2.sql |
+| [`who5.sql`](./monitoring_scripts/users_logged/who5.sql) | `community_jkstill/users_logged` | BASSO | OK | taken from OraMag Code Depot ( and slightly modified ) |
+| [`who6.sql`](./monitoring_scripts/users_logged/who6.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who7.sql`](./monitoring_scripts/users_logged/who7.sql) | `community_jkstill/users_logged` | BASSO | OK | who with avg transaction size |
+| [`who8.sql`](./monitoring_scripts/users_logged/who8.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who9.sql`](./monitoring_scripts/users_logged/who9.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who_dba_jobs.sql`](./monitoring_scripts/users_logged/who_dba_jobs.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`who_dblink.sql`](./monitoring_scripts/users_logged/who_dblink.sql) | `community_jkstill/users_logged` | BASSO | OK | who_dblink.sql |
+| [`who_protocol.sql`](./monitoring_scripts/users_logged/who_protocol.sql) | `community_jkstill/users_logged` | BASSO | OK | who_protocol.sql |
+| [`whocp.sql`](./monitoring_scripts/users_logged/whocp.sql) | `community_jkstill/users_logged` | BASSO | OK | who with DRCP (database resident connection pool) info |
+| [`whog.sql`](./monitoring_scripts/users_logged/whog.sql) | `community_jkstill/users_logged` | BASSO | OK | jkstill@gmail.com |
+| [`whotmp8i.sql`](./monitoring_scripts/users_logged/whotmp8i.sql) | `community_jkstill/users_logged` | BASSO | OK | whotmp8i.sql |
 | [`Event_statistics.sql`](./monitoring_scripts/Event_statistics.sql) | `-` | MEDIO | OK | EVENT HISTOGRAMS |
 | [`IO_stat_nel_tempo.sql`](./monitoring_scripts/IO_stat_nel_tempo.sql) | `-` | BASSO | OK | via SQL (per day) |
 | [`IO_WaitTimeDetails.sql`](./monitoring_scripts/IO_WaitTimeDetails.sql) | `-` | BASSO | OK | wait_time_detail_10g.sql |
@@ -646,16 +646,16 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [`BACKUP CHECKS.sql`](./backup_recovery/community_scripts/BACKUP%20CHECKS.sql) | `community_scripts` | MEDIO | OK | NB: Le query sono applicabili solo per target database dalla 10g in poi |
-| [`fra_config.sql`](./backup_recovery/community_scripts/fra_config.sql) | `community_scripts` | BASSO | OK | fra_config.sql |
-| [`incarnations.sql`](./backup_recovery/community_scripts/incarnations.sql) | `community_scripts` | BASSO | OK | incarnations.sql |
-| [`MONITOR__RMAN_BACKUP.sql`](./backup_recovery/community_scripts/MONITOR__RMAN_BACKUP.sql) | `community_scripts` | BASSO | OK | Backup completati |
-| [`restore-sqlplus-settings.sql`](./backup_recovery/community_scripts/restore-sqlplus-settings.sql) | `community_scripts` | BASSO | OK | bind var is :v_sqltempfile |
-| [`rman-bkup-details.sql`](./backup_recovery/community_scripts/rman-bkup-details.sql) | `community_scripts` | BASSO | OK | rman-bkup-details.sql |
-| [`rman-bkup-status.sql`](./backup_recovery/community_scripts/rman-bkup-status.sql) | `community_scripts` | BASSO | OK | rman-bkup-status.sql |
-| [`rman-recovery-min-scn.sql`](./backup_recovery/community_scripts/rman-recovery-min-scn.sql) | `community_scripts` | BASSO | OK | rman-recovery-scn.sql |
-| [`rman-recovery-scn.sql`](./backup_recovery/community_scripts/rman-recovery-scn.sql) | `community_scripts` | BASSO | OK | rman-recovery-scn.sql |
-| [`unrecoverable-files.sql`](./backup_recovery/community_scripts/unrecoverable-files.sql) | `community_scripts` | MEDIO | OK | unrecoverable.sql |
+| [`BACKUP CHECKS.sql`](./backup_recovery/BACKUP%20CHECKS.sql) | `community_scripts` | MEDIO | OK | NB: Le query sono applicabili solo per target database dalla 10g in poi |
+| [`fra_config.sql`](./backup_recovery/fra_config.sql) | `community_scripts` | BASSO | OK | fra_config.sql |
+| [`incarnations.sql`](./backup_recovery/incarnations.sql) | `community_scripts` | BASSO | OK | incarnations.sql |
+| [`MONITOR__RMAN_BACKUP.sql`](./backup_recovery/MONITOR__RMAN_BACKUP.sql) | `community_scripts` | BASSO | OK | Backup completati |
+| [`restore-sqlplus-settings.sql`](./backup_recovery/restore-sqlplus-settings.sql) | `community_scripts` | BASSO | OK | bind var is :v_sqltempfile |
+| [`rman-bkup-details.sql`](./backup_recovery/rman-bkup-details.sql) | `community_scripts` | BASSO | OK | rman-bkup-details.sql |
+| [`rman-bkup-status.sql`](./backup_recovery/rman-bkup-status.sql) | `community_scripts` | BASSO | OK | rman-bkup-status.sql |
+| [`rman-recovery-min-scn.sql`](./backup_recovery/rman-recovery-min-scn.sql) | `community_scripts` | BASSO | OK | rman-recovery-scn.sql |
+| [`rman-recovery-scn.sql`](./backup_recovery/rman-recovery-scn.sql) | `community_scripts` | BASSO | OK | rman-recovery-scn.sql |
+| [`unrecoverable-files.sql`](./backup_recovery/unrecoverable-files.sql) | `community_scripts` | MEDIO | OK | unrecoverable.sql |
 | [`Flashback_restore_point.sql`](./backup_recovery/Flashback_restore_point.sql) | `-` | ALTO | OK | ATTIVAZIONE RESTORE POINT |
 | [`FLASHBACK_RESTORPOINT.sql`](./backup_recovery/FLASHBACK_RESTORPOINT.sql) | `-` | MEDIO | OK | In Caso il rilascio fallisce come eseguire il flashback |
 
@@ -663,249 +663,249 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [`aas-ash-calc.sql`](./performance_tuning/community_scripts/ash_awr/aas-ash-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-ash-calc.sql |
-| [`aas-awr-calc.sql`](./performance_tuning/community_scripts/ash_awr/aas-awr-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-calc.sql |
-| [`aas-awr-pdb-calc.sql`](./performance_tuning/community_scripts/ash_awr/aas-awr-pdb-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-awr-pdb-calc.sql |
-| [`aas-std.sql`](./performance_tuning/community_scripts/ash_awr/aas-std.sql) | `community_scripts/ash_awr` | BASSO | OK | gather AAS metrics from AWR |
-| [`aas.sql`](./performance_tuning/community_scripts/ash_awr/aas.sql) | `community_scripts/ash_awr` | BASSO | OK | Jared Still jkstill@gmail.com |
-| [`aas_hist_metrics.sql`](./performance_tuning/community_scripts/ash_awr/aas_hist_metrics.sql) | `community_scripts/ash_awr` | BASSO | OK | aas_hist_metrics.sql |
-| [`aas_history.sql`](./performance_tuning/community_scripts/ash_awr/aas_history.sql) | `community_scripts/ash_awr` | BASSO | OK | change value below to '--' for regular report, '' for CSV |
-| [`ash-all-events-5-pct.sql`](./performance_tuning/community_scripts/ash_awr/ash-all-events-5-pct.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-all-events-5-pct.sql |
-| [`ash-blocker-waits.sql`](./performance_tuning/community_scripts/ash_awr/ash-blocker-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-blocker-waits.sql |
-| [`ash-current-waits-by-sql-event.sql`](./performance_tuning/community_scripts/ash_awr/ash-current-waits-by-sql-event.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits-by-sql-event.sql |
-| [`ash-current-waits-by-sql.sql`](./performance_tuning/community_scripts/ash_awr/ash-current-waits-by-sql.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits-by-sql.sql |
-| [`ash-current-waits.sql`](./performance_tuning/community_scripts/ash_awr/ash-current-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits.sql |
-| [`ash-enq-obj.sql`](./performance_tuning/community_scripts/ash_awr/ash-enq-obj.sql) | `community_scripts/ash_awr` | ALTO | OK | ash-enq-obj.sql |
-| [`ash-events.sql`](./performance_tuning/community_scripts/ash_awr/ash-events.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-events.sql |
-| [`ash-itl-waits.sql`](./performance_tuning/community_scripts/ash_awr/ash-itl-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-itl-waits.sql |
-| [`ash-sessions.sql`](./performance_tuning/community_scripts/ash_awr/ash-sessions.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-sessions.sql |
-| [`ash-snapshot-define-begin-end.sql`](./performance_tuning/community_scripts/ash_awr/ash-snapshot-define-begin-end.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-snapshot-define-begin-end.sql |
-| [`ash-sql-ops.sql`](./performance_tuning/community_scripts/ash_awr/ash-sql-ops.sql) | `community_scripts/ash_awr` | MEDIO | OK | ash-sql-ops.sql |
-| [`ash-sqlid-event-window.sql`](./performance_tuning/community_scripts/ash_awr/ash-sqlid-event-window.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-sqlid-event-window.sql |
-| [`ash-top-events.sql`](./performance_tuning/community_scripts/ash_awr/ash-top-events.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-top-events.sql |
-| [`ash-waits-user.sql`](./performance_tuning/community_scripts/ash_awr/ash-waits-user.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-waits-user.sql |
-| [`ash_bbw.sql`](./performance_tuning/community_scripts/ash_awr/ash_bbw.sql) | `community_scripts/ash_awr` | BASSO | OK | and w.class# > 18 |
-| [`ash_blockers.sql`](./performance_tuning/community_scripts/ash_awr/ash_blockers.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
-| [`ash_blockers_10g.sql`](./performance_tuning/community_scripts/ash_awr/ash_blockers_10g.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
-| [`ash_blocking.sql`](./performance_tuning/community_scripts/ash_awr/ash_blocking.sql) | `community_scripts/ash_awr` | BASSO | OK | ash_blocking.sql |
-| [`ash_cpu_hist.sql`](./performance_tuning/community_scripts/ash_awr/ash_cpu_hist.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-cpu-hist.sql |
-| [`ash_enq.sql`](./performance_tuning/community_scripts/ash_awr/ash_enq.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
-| [`ash_graph.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_graph_histash_by_dbid.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph_histash_by_dbid.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_graph_histash_by_dbid_program.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph_histash_by_dbid_program.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_graph_histash_by_dbid_sqlid.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph_histash_by_dbid_sqlid.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_graph_waits.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph_waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_graph_waits_histash.sql`](./performance_tuning/community_scripts/ash_awr/ash_graph_waits_histash.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
-| [`ash_io_sizes.sql`](./performance_tuning/community_scripts/ash_awr/ash_io_sizes.sql) | `community_scripts/ash_awr` | BASSO | OK | from v$active_session_history |
-| [`ash_log_sync.sql`](./performance_tuning/community_scripts/ash_awr/ash_log_sync.sql) | `community_scripts/ash_awr` | BASSO | OK | , time_waited / power(10,6) time_waited |
-| [`ash_sql_elapsed.sql`](./performance_tuning/community_scripts/ash_awr/ash_sql_elapsed.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
-| [`ash_sql_elapsed_hist.sql`](./performance_tuning/community_scripts/ash_awr/ash_sql_elapsed_hist.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
-| [`ash_sql_elapsed_hist_longestid.sql`](./performance_tuning/community_scripts/ash_awr/ash_sql_elapsed_hist_longestid.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
-| [`ash_top_procedure.sql`](./performance_tuning/community_scripts/ash_awr/ash_top_procedure.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
-| [`ash_top_session.sql`](./performance_tuning/community_scripts/ash_awr/ash_top_session.sql) | `community_scripts/ash_awr` | BASSO | OK | outer join to v$session because the session might be disconnected |
-| [`ash_top_sql.sql`](./performance_tuning/community_scripts/ash_awr/ash_top_sql.sql) | `community_scripts/ash_awr` | BASSO | OK | ash_top_sql.sql |
-| [`ash_top_sql_w_top_obj.sql`](./performance_tuning/community_scripts/ash_awr/ash_top_sql_w_top_obj.sql) | `community_scripts/ash_awr` | BASSO | OK | from master,audit_actions aud , dba_objects o |
-| [`ashdump-summary.sql`](./performance_tuning/community_scripts/ash_awr/ashdump-summary.sql) | `community_scripts/ash_awr` | BASSO | OK | ashdump-summary.sql |
-| [`ashdump.sql`](./performance_tuning/community_scripts/ash_awr/ashdump.sql) | `community_scripts/ash_awr` | BASSO | OK | jkstill@gmail.com |
-| [`ashtop.sql`](./performance_tuning/community_scripts/ash_awr/ashtop.sql) | `community_scripts/ash_awr` | BASSO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
-| [`awr-blocker-waits.sql`](./performance_tuning/community_scripts/ash_awr/awr-blocker-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-blocker-waits.sql |
-| [`awr-cpu-stats.sql`](./performance_tuning/community_scripts/ash_awr/awr-cpu-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-cpu-stats.sql |
-| [`awr-enq-hot-blocks.sql`](./performance_tuning/community_scripts/ash_awr/awr-enq-hot-blocks.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-enq-hot-blocks.sql |
-| [`awr-enq-obj.sql`](./performance_tuning/community_scripts/ash_awr/awr-enq-obj.sql) | `community_scripts/ash_awr` | ALTO | OK | awr-enq-obj.sql |
-| [`awr-event-histogram.sql`](./performance_tuning/community_scripts/ash_awr/awr-event-histogram.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-event-histogram.sql |
-| [`awr-export.sql`](./performance_tuning/community_scripts/ash_awr/awr-export.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-export.sql |
-| [`awr-get-retention.sql`](./performance_tuning/community_scripts/ash_awr/awr-get-retention.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-get-retention.sql |
-| [`awr-hist-model-top10.sql`](./performance_tuning/community_scripts/ash_awr/awr-hist-model-top10.sql) | `community_scripts/ash_awr` | BASSO | OK | hist-model-top10.sql |
-| [`awr-itl-wait-details.sql`](./performance_tuning/community_scripts/ash_awr/awr-itl-wait-details.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-itl-waits.sql |
-| [`awr-itl-waits.sql`](./performance_tuning/community_scripts/ash_awr/awr-itl-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-itl-waits.sql |
-| [`awr-resource-limit.sql`](./performance_tuning/community_scripts/ash_awr/awr-resource-limit.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-resource-limit.sql |
-| [`awr-set-retention.sql`](./performance_tuning/community_scripts/ash_awr/awr-set-retention.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-set-retention.sql |
-| [`awr-top-10-daily.sql`](./performance_tuning/community_scripts/ash_awr/awr-top-10-daily.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-10-daily.sql |
-| [`awr-top-5-events.sql`](./performance_tuning/community_scripts/ash_awr/awr-top-5-events.sql) | `community_scripts/ash_awr` | MEDIO | OK | awr-top-5-events.sql |
-| [`awr-top-events.sql`](./performance_tuning/community_scripts/ash_awr/awr-top-events.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-events.sql |
-| [`awr-top-sqlid-events.sql`](./performance_tuning/community_scripts/ash_awr/awr-top-sqlid-events.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-sqlid-events.sql |
-| [`awr-trans-counts.sql`](./performance_tuning/community_scripts/ash_awr/awr-trans-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-trans-counts.sql |
-| [`awr_blockers.sql`](./performance_tuning/community_scripts/ash_awr/awr_blockers.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
-| [`awr_bracket_baseline.sql`](./performance_tuning/community_scripts/ash_awr/awr_bracket_baseline.sql) | `community_scripts/ash_awr` | MEDIO | OK | create awr baseline that brackets a time |
-| [`awr_bracket_snaps.sql`](./performance_tuning/community_scripts/ash_awr/awr_bracket_snaps.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_bracket_snaps.sql |
-| [`awr_create_snapshot.sql`](./performance_tuning/community_scripts/ash_awr/awr_create_snapshot.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
-| [`awr_defined.sql`](./performance_tuning/community_scripts/ash_awr/awr_defined.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_defined.sql |
-| [`awr_display_baselines.sql`](./performance_tuning/community_scripts/ash_awr/awr_display_baselines.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_display_baselines.sql |
-| [`awr_drop_baseline.sql`](./performance_tuning/community_scripts/ash_awr/awr_drop_baseline.sql) | `community_scripts/ash_awr` | ALTO | OK | awr_drop_baseline.sql |
-| [`awr_file_io_times.sql`](./performance_tuning/community_scripts/ash_awr/awr_file_io_times.sql) | `community_scripts/ash_awr` | BASSO | OK | and tbs.con_id = f.con_id |
-| [`awr_get_snapshots.sql`](./performance_tuning/community_scripts/ash_awr/awr_get_snapshots.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_get_snapshots.sql |
-| [`awr_itl_waits_10g.sql`](./performance_tuning/community_scripts/ash_awr/awr_itl_waits_10g.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_itl_waits_10g.sql.sql |
-| [`awr_RAC_defined.sql`](./performance_tuning/community_scripts/ash_awr/awr_RAC_defined.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_RAC_defined.sql |
-| [`awr_settings.sql`](./performance_tuning/community_scripts/ash_awr/awr_settings.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
-| [`concurrency-waits-sqlid-ash.sql`](./performance_tuning/community_scripts/ash_awr/concurrency-waits-sqlid-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | concurrency-waits-sqlid-ash.sql |
-| [`concurrency-waits-sqlid.sql`](./performance_tuning/community_scripts/ash_awr/concurrency-waits-sqlid.sql) | `community_scripts/ash_awr` | BASSO | OK | concurrency-waits-sqlid.sql |
-| [`cpu-busy.sql`](./performance_tuning/community_scripts/ash_awr/cpu-busy.sql) | `community_scripts/ash_awr` | BASSO | OK | cpu-busy.sql - what is keeping CPU busy? |
-| [`dba_hist_sys_time_model.sql`](./performance_tuning/community_scripts/ash_awr/dba_hist_sys_time_model.sql) | `community_scripts/ash_awr` | BASSO | OK | Script operativo Oracle per: dba hist sys time model. |
-| [`dbw-hist.sql`](./performance_tuning/community_scripts/ash_awr/dbw-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | dbw-hist.sql |
-| [`flash-hist-stats.sql`](./performance_tuning/community_scripts/ash_awr/flash-hist-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
-| [`get-binds.sql`](./performance_tuning/community_scripts/ash_awr/get-binds.sql) | `community_scripts/ash_awr` | BASSO | OK | get_bind_values.sql |
-| [`getsql-awr.sql`](./performance_tuning/community_scripts/ash_awr/getsql-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
-| [`osstat-cpu-10g.sql`](./performance_tuning/community_scripts/ash_awr/osstat-cpu-10g.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu-10g.sql |
-| [`osstat-cpu-rpt.sql`](./performance_tuning/community_scripts/ash_awr/osstat-cpu-rpt.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu-rpt.sql |
-| [`osstat-cpu.sql`](./performance_tuning/community_scripts/ash_awr/osstat-cpu.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu.sql |
-| [`plan-counts-force.sql`](./performance_tuning/community_scripts/ash_awr/plan-counts-force.sql) | `community_scripts/ash_awr` | BASSO | OK | plan-counts-force.sql |
-| [`plan-stats.sql`](./performance_tuning/community_scripts/ash_awr/plan-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | plan-stats.sql |
-| [`resize-ops-metric-awr.sql`](./performance_tuning/community_scripts/ash_awr/resize-ops-metric-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | resize-ops-metric.sql |
-| [`resize-ops-metric.sql`](./performance_tuning/community_scripts/ash_awr/resize-ops-metric.sql) | `community_scripts/ash_awr` | BASSO | OK | resize-ops-metric.sql |
-| [`rowlock-hist.sql`](./performance_tuning/community_scripts/ash_awr/rowlock-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-hist.sql |
-| [`rowlock-mode-decode.sql`](./performance_tuning/community_scripts/ash_awr/rowlock-mode-decode.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-events.sql |
-| [`rowlock-sqlid-counts.sql`](./performance_tuning/community_scripts/ash_awr/rowlock-sqlid-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-sqlid-counts.sql |
-| [`rowlock-sqlid-hist.sql`](./performance_tuning/community_scripts/ash_awr/rowlock-sqlid-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-sqlid-hist.sql |
-| [`session-history.sql`](./performance_tuning/community_scripts/ash_awr/session-history.sql) | `community_scripts/ash_awr` | BASSO | OK | session-history.sql |
-| [`sql-cache-mem-user.sql`](./performance_tuning/community_scripts/ash_awr/sql-cache-mem-user.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-workarea-memory-user.sql |
-| [`sql-cache-mem.sql`](./performance_tuning/community_scripts/ash_awr/sql-cache-mem.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-workarea-memory.sql |
-| [`sql-cache-projections.sql`](./performance_tuning/community_scripts/ash_awr/sql-cache-projections.sql) | `community_scripts/ash_awr` | BASSO | OK | based on max memory |
-| [`sql-count-ash.sql`](./performance_tuning/community_scripts/ash_awr/sql-count-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
-| [`sql-counts-fms.sql`](./performance_tuning/community_scripts/ash_awr/sql-counts-fms.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-counts-fms.sql |
-| [`sql-counts.sql`](./performance_tuning/community_scripts/ash_awr/sql-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-counts.sql |
-| [`sql-plans.sql`](./performance_tuning/community_scripts/ash_awr/sql-plans.sql) | `community_scripts/ash_awr` | BASSO | OK | sa.sql - sql activity |
-| [`sysmetric-cpu-seconds-hist.sql`](./performance_tuning/community_scripts/ash_awr/sysmetric-cpu-seconds-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-cpu-seconds-hist.sql |
-| [`sysmetric-cpu-seconds-summary.sql`](./performance_tuning/community_scripts/ash_awr/sysmetric-cpu-seconds-summary.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-cpu-seconds-summary.sql |
-| [`sysmetric-hist-matrix.sql`](./performance_tuning/community_scripts/ash_awr/sysmetric-hist-matrix.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-hist-matrix.sql |
-| [`sysmetric-history.sql`](./performance_tuning/community_scripts/ash_awr/sysmetric-history.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-history.sql |
-| [`top10-sql-ash.sql`](./performance_tuning/community_scripts/ash_awr/top10-sql-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | top10-sql-ash.sql |
-| [`top10-sql-awr.sql`](./performance_tuning/community_scripts/ash_awr/top10-sql-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | top10-sql-awr.sql |
-| [`wsqlmon.sql`](./performance_tuning/community_scripts/ash_awr/wsqlmon.sql) | `community_scripts/ash_awr` | BASSO | OK | File name: wsqlmon.sql (based on asqlmon.sql v1.1) |
-| [`my-pga-temp.sql`](./performance_tuning/community_scripts/memory/my-pga-temp.sql) | `community_scripts/memory` | BASSO | OK | my-pga-temp.sql |
-| [`ora-4031-info-shared-pool.sql`](./performance_tuning/community_scripts/memory/ora-4031-info-shared-pool.sql) | `community_scripts/memory` | MEDIO | OK | CONNECT / AS SYSDBA |
-| [`pga_advice.sql`](./performance_tuning/community_scripts/memory/pga_advice.sql) | `community_scripts/memory` | BASSO | OK | pga_advice.sql |
-| [`pga_advice_hist.sql`](./performance_tuning/community_scripts/memory/pga_advice_hist.sql) | `community_scripts/memory` | BASSO | OK | pga_advice_hist.sql |
-| [`pga_advice_selective.sql`](./performance_tuning/community_scripts/memory/pga_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | pga_advice_selective.sql |
-| [`pga_history_sum.sql`](./performance_tuning/community_scripts/memory/pga_history_sum.sql) | `community_scripts/memory` | BASSO | OK | pga_history_sum.sql |
-| [`pga_history_week.sql`](./performance_tuning/community_scripts/memory/pga_history_week.sql) | `community_scripts/memory` | BASSO | OK | pga_history_week.sql |
-| [`pga_workarea_active.sql`](./performance_tuning/community_scripts/memory/pga_workarea_active.sql) | `community_scripts/memory` | BASSO | OK | from performance tuning manual chapter 14 |
-| [`pga_workarea_hist.sql`](./performance_tuning/community_scripts/memory/pga_workarea_hist.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pga workarea hist. |
-| [`pgacols.sql`](./performance_tuning/community_scripts/memory/pgacols.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgacols. |
-| [`pgastat.sql`](./performance_tuning/community_scripts/memory/pgastat.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgastat. |
-| [`pgastat_hist.sql`](./performance_tuning/community_scripts/memory/pgastat_hist.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgastat hist. |
-| [`process-memory.sql`](./performance_tuning/community_scripts/memory/process-memory.sql) | `community_scripts/memory` | MEDIO | OK | process-memory.sql |
-| [`sga_advice_selective.sql`](./performance_tuning/community_scripts/memory/sga_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | gv$sga_target_advice |
-| [`shared-pool-top-sql.sql`](./performance_tuning/community_scripts/memory/shared-pool-top-sql.sql) | `community_scripts/memory` | BASSO | OK | , s.sql_fulltext |
-| [`shared-pool-top-users.sql`](./performance_tuning/community_scripts/memory/shared-pool-top-users.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: shared pool top users. |
-| [`shared_pool_advice.sql`](./performance_tuning/community_scripts/memory/shared_pool_advice.sql) | `community_scripts/memory` | BASSO | OK | shared_pool_advice.sql |
-| [`shared_pool_advice_selective.sql`](./performance_tuning/community_scripts/memory/shared_pool_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | sp_advice_selective.sql |
-| [`showsga.sql`](./performance_tuning/community_scripts/memory/showsga.sql) | `community_scripts/memory` | BASSO | OK | col name format |
-| [`get-sql-exe-times.sh`](./performance_tuning/community_scripts/sql_performance/get-sql-exe-times.sh) | `community_scripts/sql_performance` | BASSO | OK | !/usr/bin/env bash |
-| [`sql-buffer-ratios-awr.sql`](./performance_tuning/community_scripts/sql_performance/sql-buffer-ratios-awr.sql) | `community_scripts/sql_performance` | BASSO | OK | sql-buffer-ratios-awr.sql |
-| [`sql-buffer-ratios.sql`](./performance_tuning/community_scripts/sql_performance/sql-buffer-ratios.sql) | `community_scripts/sql_performance` | BASSO | OK | where buffer_gets > 0 |
-| [`sql-exe-times-awr-rpt.pl`](./performance_tuning/community_scripts/sql_performance/sql-exe-times-awr-rpt.pl) | `community_scripts/sql_performance` | BASSO | OK | !/opt/oracle/product/23c/dbhomeFree//perl/bin/perl |
-| [`sqlid-elapsed.sql`](./performance_tuning/community_scripts/sql_performance/sqlid-elapsed.sql) | `community_scripts/sql_performance` | BASSO | OK | sqlid-elapsed.sql |
-| [`active_status.sql`](./performance_tuning/community_scripts/stats_optimizer/active_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | active_status.sql |
-| [`asm-diskgroup-stat.sql`](./performance_tuning/community_scripts/stats_optimizer/asm-diskgroup-stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | asm-diskgroup-stat.sql |
-| [`asm_disk_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/asm_disk_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | asm_disk_stats.sql |
-| [`autotask_auto_stats_disable.sql`](./performance_tuning/community_scripts/stats_optimizer/autotask_auto_stats_disable.sql) | `community_scripts/stats_optimizer` | BASSO | OK | disable automatics tasks |
-| [`autotask_auto_stats_enable.sql`](./performance_tuning/community_scripts/stats_optimizer/autotask_auto_stats_enable.sql) | `community_scripts/stats_optimizer` | BASSO | OK | enable automatics stats |
-| [`awr-cpu-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/awr-cpu-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | awr-cpu-stats.sql |
-| [`awr-event-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/awr-event-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | awr-event-histogram.sql |
-| [`bct_status.sql`](./performance_tuning/community_scripts/stats_optimizer/bct_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: bct status. |
-| [`cpu-bucket-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/cpu-bucket-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | this section may be an approximation |
-| [`cpu-minute-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/cpu-minute-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | this section may be an approximation |
-| [`crc-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/crc-stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | crc-stats.sql |
-| [`dbms_stats_get_prefs.sql`](./performance_tuning/community_scripts/stats_optimizer/dbms_stats_get_prefs.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dbms_stats_get_prefs.sql |
-| [`dbms_stats_report.sql`](./performance_tuning/community_scripts/stats_optimizer/dbms_stats_report.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dbms_stats_report.sql |
-| [`drcp_connection_status.sql`](./performance_tuning/community_scripts/stats_optimizer/drcp_connection_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: drcp connection status. |
-| [`drcp_pool_cc_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/drcp_pool_cc_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | , wait_time -- reserved for future use |
-| [`drcp_pool_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/drcp_pool_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | drcp_pool_stats.sql |
-| [`dup-system-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/dup-system-stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dup-system-stats.sql |
-| [`flash-hist-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/flash-hist-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
-| [`gather_system_stats_iteratively.sql`](./performance_tuning/community_scripts/stats_optimizer/gather_system_stats_iteratively.sql) | `community_scripts/stats_optimizer` | BASSO | OK | gather_system_stats_iteratively.sh |
-| [`gather_table_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/gather_table_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: gather table stats. |
-| [`get_stats_job.sql`](./performance_tuning/community_scripts/stats_optimizer/get_stats_job.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
-| [`get_stats_task.sql`](./performance_tuning/community_scripts/stats_optimizer/get_stats_task.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: get stats task. |
-| [`get_system_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/get_system_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | see sys.aux_stats$ |
-| [`getobj_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/getobj_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | subpartitions |
-| [`getstat.sql`](./performance_tuning/community_scripts/stats_optimizer/getstat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: getstat. |
-| [`getstats.sql`](./performance_tuning/community_scripts/stats_optimizer/getstats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: getstats. |
-| [`getstatu2.sql`](./performance_tuning/community_scripts/stats_optimizer/getstatu2.sql) | `community_scripts/stats_optimizer` | BASSO | OK | break on username |
-| [`histogram_values.sql`](./performance_tuning/community_scripts/stats_optimizer/histogram_values.sql) | `community_scripts/stats_optimizer` | BASSO | OK | thanks to Jonathan Lewis for the base query |
-| [`idle-sessions-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/idle-sessions-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | idle-sessions-histogram.sql |
-| [`io_stat.sql`](./performance_tuning/community_scripts/stats_optimizer/io_stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
-| [`io_stat2.sql`](./performance_tuning/community_scripts/stats_optimizer/io_stat2.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
-| [`io_stat3.sql`](./performance_tuning/community_scripts/stats_optimizer/io_stat3.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
-| [`latch_statsa.sql`](./performance_tuning/community_scripts/stats_optimizer/latch_statsa.sql) | `community_scripts/stats_optimizer` | ALTO | OK | Script operativo Oracle per: latch statsa. |
-| [`latch_statss.sql`](./performance_tuning/community_scripts/stats_optimizer/latch_statss.sql) | `community_scripts/stats_optimizer` | ALTO | OK | Script operativo Oracle per: latch statss. |
-| [`locked_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/locked_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | locked_stats.sql |
-| [`log-switch-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/log-switch-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | log-switch-histogram.sql |
-| [`log_histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/log_histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: log histogram. |
-| [`mystat.sql`](./performance_tuning/community_scripts/stats_optimizer/mystat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: mystat. |
-| [`os-stats-avgs.sql`](./performance_tuning/community_scripts/stats_optimizer/os-stats-avgs.sql) | `community_scripts/stats_optimizer` | BASSO | OK | os-stats-avg.sql |
-| [`osstat-cpu-10g.sql`](./performance_tuning/community_scripts/stats_optimizer/osstat-cpu-10g.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu-10g.sql |
-| [`osstat-cpu-rpt.sql`](./performance_tuning/community_scripts/stats_optimizer/osstat-cpu-rpt.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu-rpt.sql |
-| [`osstat-cpu.sql`](./performance_tuning/community_scripts/stats_optimizer/osstat-cpu.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu.sql |
-| [`partstats.sql`](./performance_tuning/community_scripts/stats_optimizer/partstats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | partstats.sql |
-| [`partstats_sum.sql`](./performance_tuning/community_scripts/stats_optimizer/partstats_sum.sql) | `community_scripts/stats_optimizer` | BASSO | OK | partstats_sum.sql |
-| [`pgastat.sql`](./performance_tuning/community_scripts/stats_optimizer/pgastat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: pgastat. |
-| [`pgastat_hist.sql`](./performance_tuning/community_scripts/stats_optimizer/pgastat_hist.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: pgastat hist. |
-| [`plan-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/plan-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | plan-stats.sql |
-| [`rbs_no_optimal.sql`](./performance_tuning/community_scripts/stats_optimizer/rbs_no_optimal.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | rbs_optimal.sql |
-| [`rbs_optimal.sql`](./performance_tuning/community_scripts/stats_optimizer/rbs_optimal.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | rbs_optimal.sql |
-| [`rman-bkup-status.sql`](./performance_tuning/community_scripts/stats_optimizer/rman-bkup-status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | rman-bkup-status.sql |
-| [`segment-space-statistics-hist.sql`](./performance_tuning/community_scripts/stats_optimizer/segment-space-statistics-hist.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | segment-space-statistics-hist.sql |
-| [`segment-space-statistics.sql`](./performance_tuning/community_scripts/stats_optimizer/segment-space-statistics.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | segment-space-statistics.sql |
-| [`segment-statistics.sql`](./performance_tuning/community_scripts/stats_optimizer/segment-statistics.sql) | `community_scripts/stats_optimizer` | BASSO | OK | may be interesting results |
-| [`sess-optimizer-env.sql`](./performance_tuning/community_scripts/stats_optimizer/sess-optimizer-env.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sess-optimizer-env.sql |
-| [`set_avg_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/set_avg_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | get avg rows for parts |
-| [`show_mview_status.sql`](./performance_tuning/community_scripts/stats_optimizer/show_mview_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: show mview status. |
-| [`show_os_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/show_os_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | show_os_stats.sql |
-| [`show_os_stats_hist.sql`](./performance_tuning/community_scripts/stats_optimizer/show_os_stats_hist.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: show os stats hist. |
-| [`sp_io_stat_drive.sql`](./performance_tuning/community_scripts/stats_optimizer/sp_io_stat_drive.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sp_io_stat_drive.sql |
-| [`sp_io_stat_sys.sql`](./performance_tuning/community_scripts/stats_optimizer/sp_io_stat_sys.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sp_io_stat_sys.sql |
-| [`sql-exe-times-ash-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/sql-exe-times-ash-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sql-exe-times-ash.sql |
-| [`sql-exe-times-awr-histogram.sql`](./performance_tuning/community_scripts/stats_optimizer/sql-exe-times-awr-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sql-exe-times-awr.sql |
-| [`stale-stats.sql`](./performance_tuning/community_scripts/stats_optimizer/stale-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stale-stats.sql |
-| [`stat-classes.sql`](./performance_tuning/community_scripts/stats_optimizer/stat-classes.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stat-classes |
-| [`stat-names.sql`](./performance_tuning/community_scripts/stats_optimizer/stat-names.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stat-names.sql |
-| [`stat.sql`](./performance_tuning/community_scripts/stats_optimizer/stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Timur Akhmadeev - akhmadeev@.com |
-| [`stats-sqlid.sql`](./performance_tuning/community_scripts/stats_optimizer/stats-sqlid.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stats-sqlid.sql |
-| [`stats_config.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_config.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: stats config. |
-| [`stats_mod.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_mod.sql) | `community_scripts/stats_optimizer` | BASSO | OK | jkstill@gmail.com |
-| [`stats_prefs.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_prefs.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: stats prefs. |
-| [`stats_trace.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_trace.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: stats trace. |
-| [`stats_trace_test.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_trace_test.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | stats_trace_test.sql |
-| [`stats_wait.sql`](./performance_tuning/community_scripts/stats_optimizer/stats_wait.sql) | `community_scripts/stats_optimizer` | BASSO | OK | if state is 'WAITING' then wait_time is time in current wait |
-| [`undo_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/undo_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | undo_stats.sql |
-| [`unlock_stats.sql`](./performance_tuning/community_scripts/stats_optimizer/unlock_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Diagnosi lock/sessioni bloccanti e catene di attesa. |
-| [`xmldb-status.sql`](./performance_tuning/community_scripts/stats_optimizer/xmldb-status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | xmldb-status.sql |
-| [`sp_top_sql_io.sql`](./performance_tuning/community_scripts/statspack/sp_top_sql_io.sql) | `community_scripts/statspack` | BASSO | OK | sp_top_sql_io.sql |
-| [`dbms-sqltune-sqlid.sql`](./performance_tuning/community_scripts/tuning/dbms-sqltune-sqlid.sql) | `community_scripts/tuning` | ALTO | OK | dbms-sqltune-sqlid.sql |
-| [`find-expensive-sql.sql`](./performance_tuning/community_scripts/tuning/find-expensive-sql.sql) | `community_scripts/tuning` | BASSO | OK | find-expensive-sql.sql |
-| [`get-expensive-sqlid-sts.sql`](./performance_tuning/community_scripts/tuning/get-expensive-sqlid-sts.sql) | `community_scripts/tuning` | MEDIO | OK | get-expensive-sqlid-sts.sql |
-| [`PerfTuningAnalisys.sql`](./performance_tuning/community_scripts/tuning/PerfTuningAnalisys.sql) | `community_scripts/tuning` | MEDIO | OK | vedere in generale quale servizio bombarda di piu' e capire perche non viene utilizzato un ConnPOol o perche si ritrova a aprire e chiudere  |
-| [`profile_from_awr.sql`](./performance_tuning/community_scripts/tuning/profile_from_awr.sql) | `community_scripts/tuning` | BASSO | OK | File name: create_sql_profile_awr.sql |
-| [`SPM.sql`](./performance_tuning/community_scripts/tuning/SPM.sql) | `community_scripts/tuning` | ALTO | OK | Per fissare un piano in SPM bisogna prima verificare se il piano corretto è ancora presente nella GV$SQL, o se ad esempio è presente sull'al |
-| [`SPM_from_AWR_old_fashioned.sql`](./performance_tuning/community_scripts/tuning/SPM_from_AWR_old_fashioned.sql) | `community_scripts/tuning` | BASSO | OK | HOW TO LOAD SQL PLANS INTO SPM FROM AWR (Doc ID 789888.1) |
-| [`SQL Area 1x.sql`](./performance_tuning/community_scripts/tuning/SQL%20Area%201x.sql) | `community_scripts/tuning` | MEDIO | OK | and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABELLA') |
-| [`SQL Bind.sql`](./performance_tuning/community_scripts/tuning/SQL%20Bind.sql) | `community_scripts/tuning` | BASSO | OK | Matching Signatures |
-| [`SQL Plan Change.sql`](./performance_tuning/community_scripts/tuning/SQL%20Plan%20Change.sql) | `community_scripts/tuning` | BASSO | OK | File name: unstable_plans.sql |
-| [`SQL Stats.sql`](./performance_tuning/community_scripts/tuning/SQL%20Stats.sql) | `community_scripts/tuning` | BASSO | OK | HISTORICAL SQL STATISTICS |
-| [`sql-exe-events-ash.sql`](./performance_tuning/community_scripts/tuning/sql-exe-events-ash.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-events-ash.sql |
-| [`sql-exe-events-awr.sql`](./performance_tuning/community_scripts/tuning/sql-exe-events-awr.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-events-awr.sql |
-| [`sql-exe-times-ash-rpt.sql`](./performance_tuning/community_scripts/tuning/sql-exe-times-ash-rpt.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-ash-rpt.sql |
-| [`sql-exe-times-ash.sql`](./performance_tuning/community_scripts/tuning/sql-exe-times-ash.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-ash.sql |
-| [`sql-exe-times-awr-histogram.sql`](./performance_tuning/community_scripts/tuning/sql-exe-times-awr-histogram.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr.sql |
-| [`sql-exe-times-awr-rpt.sql`](./performance_tuning/community_scripts/tuning/sql-exe-times-awr-rpt.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr-rpt.sql |
-| [`sql-exe-times-awr.sql`](./performance_tuning/community_scripts/tuning/sql-exe-times-awr.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr.sql |
-| [`SQL_Profile_Other_SqlID.sql`](./performance_tuning/community_scripts/tuning/SQL_Profile_Other_SqlID.sql) | `community_scripts/tuning` | BASSO | OK | Supporto SQL tuning: piano esecuzione, SPM e stabilità optimizer. |
-| [`View_UnstablePlan.sql`](./performance_tuning/community_scripts/tuning/View_UnstablePlan.sql) | `community_scripts/tuning` | MEDIO | OK | (buffer_gets_delta/decode(nvl(buffer_gets_delta,0),0,1,executions_delta)) avg_lio |
+| [`aas-ash-calc.sql`](./performance_tuning/ash_awr/aas-ash-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-ash-calc.sql |
+| [`aas-awr-calc.sql`](./performance_tuning/ash_awr/aas-awr-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-calc.sql |
+| [`aas-awr-pdb-calc.sql`](./performance_tuning/ash_awr/aas-awr-pdb-calc.sql) | `community_scripts/ash_awr` | BASSO | OK | aas-awr-pdb-calc.sql |
+| [`aas-std.sql`](./performance_tuning/ash_awr/aas-std.sql) | `community_scripts/ash_awr` | BASSO | OK | gather AAS metrics from AWR |
+| [`aas.sql`](./performance_tuning/ash_awr/aas.sql) | `community_scripts/ash_awr` | BASSO | OK | Jared Still jkstill@gmail.com |
+| [`aas_hist_metrics.sql`](./performance_tuning/ash_awr/aas_hist_metrics.sql) | `community_scripts/ash_awr` | BASSO | OK | aas_hist_metrics.sql |
+| [`aas_history.sql`](./performance_tuning/ash_awr/aas_history.sql) | `community_scripts/ash_awr` | BASSO | OK | change value below to '--' for regular report, '' for CSV |
+| [`ash-all-events-5-pct.sql`](./performance_tuning/ash_awr/ash-all-events-5-pct.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-all-events-5-pct.sql |
+| [`ash-blocker-waits.sql`](./performance_tuning/ash_awr/ash-blocker-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-blocker-waits.sql |
+| [`ash-current-waits-by-sql-event.sql`](./performance_tuning/ash_awr/ash-current-waits-by-sql-event.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits-by-sql-event.sql |
+| [`ash-current-waits-by-sql.sql`](./performance_tuning/ash_awr/ash-current-waits-by-sql.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits-by-sql.sql |
+| [`ash-current-waits.sql`](./performance_tuning/ash_awr/ash-current-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-current-waits.sql |
+| [`ash-enq-obj.sql`](./performance_tuning/ash_awr/ash-enq-obj.sql) | `community_scripts/ash_awr` | ALTO | OK | ash-enq-obj.sql |
+| [`ash-events.sql`](./performance_tuning/ash_awr/ash-events.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-events.sql |
+| [`ash-itl-waits.sql`](./performance_tuning/ash_awr/ash-itl-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-itl-waits.sql |
+| [`ash-sessions.sql`](./performance_tuning/ash_awr/ash-sessions.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-sessions.sql |
+| [`ash-snapshot-define-begin-end.sql`](./performance_tuning/ash_awr/ash-snapshot-define-begin-end.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-snapshot-define-begin-end.sql |
+| [`ash-sql-ops.sql`](./performance_tuning/ash_awr/ash-sql-ops.sql) | `community_scripts/ash_awr` | MEDIO | OK | ash-sql-ops.sql |
+| [`ash-sqlid-event-window.sql`](./performance_tuning/ash_awr/ash-sqlid-event-window.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-sqlid-event-window.sql |
+| [`ash-top-events.sql`](./performance_tuning/ash_awr/ash-top-events.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-top-events.sql |
+| [`ash-waits-user.sql`](./performance_tuning/ash_awr/ash-waits-user.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-waits-user.sql |
+| [`ash_bbw.sql`](./performance_tuning/ash_awr/ash_bbw.sql) | `community_scripts/ash_awr` | BASSO | OK | and w.class# > 18 |
+| [`ash_blockers.sql`](./performance_tuning/ash_awr/ash_blockers.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
+| [`ash_blockers_10g.sql`](./performance_tuning/ash_awr/ash_blockers_10g.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
+| [`ash_blocking.sql`](./performance_tuning/ash_awr/ash_blocking.sql) | `community_scripts/ash_awr` | BASSO | OK | ash_blocking.sql |
+| [`ash_cpu_hist.sql`](./performance_tuning/ash_awr/ash_cpu_hist.sql) | `community_scripts/ash_awr` | BASSO | OK | ash-cpu-hist.sql |
+| [`ash_enq.sql`](./performance_tuning/ash_awr/ash_enq.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
+| [`ash_graph.sql`](./performance_tuning/ash_awr/ash_graph.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_graph_histash_by_dbid.sql`](./performance_tuning/ash_awr/ash_graph_histash_by_dbid.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_graph_histash_by_dbid_program.sql`](./performance_tuning/ash_awr/ash_graph_histash_by_dbid_program.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_graph_histash_by_dbid_sqlid.sql`](./performance_tuning/ash_awr/ash_graph_histash_by_dbid_sqlid.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_graph_waits.sql`](./performance_tuning/ash_awr/ash_graph_waits.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_graph_waits_histash.sql`](./performance_tuning/ash_awr/ash_graph_waits_histash.sql) | `community_scripts/ash_awr` | BASSO | OK | ashmasters - https://github.com/khailey/ashmasters |
+| [`ash_io_sizes.sql`](./performance_tuning/ash_awr/ash_io_sizes.sql) | `community_scripts/ash_awr` | BASSO | OK | from v$active_session_history |
+| [`ash_log_sync.sql`](./performance_tuning/ash_awr/ash_log_sync.sql) | `community_scripts/ash_awr` | BASSO | OK | , time_waited / power(10,6) time_waited |
+| [`ash_sql_elapsed.sql`](./performance_tuning/ash_awr/ash_sql_elapsed.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
+| [`ash_sql_elapsed_hist.sql`](./performance_tuning/ash_awr/ash_sql_elapsed_hist.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
+| [`ash_sql_elapsed_hist_longestid.sql`](./performance_tuning/ash_awr/ash_sql_elapsed_hist_longestid.sql) | `community_scripts/ash_awr` | BASSO | OK | ash masters - Kyle Hailey |
+| [`ash_top_procedure.sql`](./performance_tuning/ash_awr/ash_top_procedure.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
+| [`ash_top_session.sql`](./performance_tuning/ash_awr/ash_top_session.sql) | `community_scripts/ash_awr` | BASSO | OK | outer join to v$session because the session might be disconnected |
+| [`ash_top_sql.sql`](./performance_tuning/ash_awr/ash_top_sql.sql) | `community_scripts/ash_awr` | BASSO | OK | ash_top_sql.sql |
+| [`ash_top_sql_w_top_obj.sql`](./performance_tuning/ash_awr/ash_top_sql_w_top_obj.sql) | `community_scripts/ash_awr` | BASSO | OK | from master,audit_actions aud , dba_objects o |
+| [`ashdump-summary.sql`](./performance_tuning/ash_awr/ashdump-summary.sql) | `community_scripts/ash_awr` | BASSO | OK | ashdump-summary.sql |
+| [`ashdump.sql`](./performance_tuning/ash_awr/ashdump.sql) | `community_scripts/ash_awr` | BASSO | OK | jkstill@gmail.com |
+| [`ashtop.sql`](./performance_tuning/ash_awr/ashtop.sql) | `community_scripts/ash_awr` | BASSO | OK | Copyright 2018 Tanel Poder. All rights reserved. More info at http://tanelpoder.com |
+| [`awr-blocker-waits.sql`](./performance_tuning/ash_awr/awr-blocker-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-blocker-waits.sql |
+| [`awr-cpu-stats.sql`](./performance_tuning/ash_awr/awr-cpu-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-cpu-stats.sql |
+| [`awr-enq-hot-blocks.sql`](./performance_tuning/ash_awr/awr-enq-hot-blocks.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-enq-hot-blocks.sql |
+| [`awr-enq-obj.sql`](./performance_tuning/ash_awr/awr-enq-obj.sql) | `community_scripts/ash_awr` | ALTO | OK | awr-enq-obj.sql |
+| [`awr-event-histogram.sql`](./performance_tuning/ash_awr/awr-event-histogram.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-event-histogram.sql |
+| [`awr-export.sql`](./performance_tuning/ash_awr/awr-export.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-export.sql |
+| [`awr-get-retention.sql`](./performance_tuning/ash_awr/awr-get-retention.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-get-retention.sql |
+| [`awr-hist-model-top10.sql`](./performance_tuning/ash_awr/awr-hist-model-top10.sql) | `community_scripts/ash_awr` | BASSO | OK | hist-model-top10.sql |
+| [`awr-itl-wait-details.sql`](./performance_tuning/ash_awr/awr-itl-wait-details.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-itl-waits.sql |
+| [`awr-itl-waits.sql`](./performance_tuning/ash_awr/awr-itl-waits.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-itl-waits.sql |
+| [`awr-resource-limit.sql`](./performance_tuning/ash_awr/awr-resource-limit.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-resource-limit.sql |
+| [`awr-set-retention.sql`](./performance_tuning/ash_awr/awr-set-retention.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-set-retention.sql |
+| [`awr-top-10-daily.sql`](./performance_tuning/ash_awr/awr-top-10-daily.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-10-daily.sql |
+| [`awr-top-5-events.sql`](./performance_tuning/ash_awr/awr-top-5-events.sql) | `community_scripts/ash_awr` | MEDIO | OK | awr-top-5-events.sql |
+| [`awr-top-events.sql`](./performance_tuning/ash_awr/awr-top-events.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-events.sql |
+| [`awr-top-sqlid-events.sql`](./performance_tuning/ash_awr/awr-top-sqlid-events.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-sqlid-events.sql |
+| [`awr-trans-counts.sql`](./performance_tuning/ash_awr/awr-trans-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-trans-counts.sql |
+| [`awr_blockers.sql`](./performance_tuning/ash_awr/awr_blockers.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_blockers.sql |
+| [`awr_bracket_baseline.sql`](./performance_tuning/ash_awr/awr_bracket_baseline.sql) | `community_scripts/ash_awr` | MEDIO | OK | create awr baseline that brackets a time |
+| [`awr_bracket_snaps.sql`](./performance_tuning/ash_awr/awr_bracket_snaps.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_bracket_snaps.sql |
+| [`awr_create_snapshot.sql`](./performance_tuning/ash_awr/awr_create_snapshot.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
+| [`awr_defined.sql`](./performance_tuning/ash_awr/awr_defined.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_defined.sql |
+| [`awr_display_baselines.sql`](./performance_tuning/ash_awr/awr_display_baselines.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_display_baselines.sql |
+| [`awr_drop_baseline.sql`](./performance_tuning/ash_awr/awr_drop_baseline.sql) | `community_scripts/ash_awr` | ALTO | OK | awr_drop_baseline.sql |
+| [`awr_file_io_times.sql`](./performance_tuning/ash_awr/awr_file_io_times.sql) | `community_scripts/ash_awr` | BASSO | OK | and tbs.con_id = f.con_id |
+| [`awr_get_snapshots.sql`](./performance_tuning/ash_awr/awr_get_snapshots.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_get_snapshots.sql |
+| [`awr_itl_waits_10g.sql`](./performance_tuning/ash_awr/awr_itl_waits_10g.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_itl_waits_10g.sql.sql |
+| [`awr_RAC_defined.sql`](./performance_tuning/ash_awr/awr_RAC_defined.sql) | `community_scripts/ash_awr` | BASSO | OK | awr_RAC_defined.sql |
+| [`awr_settings.sql`](./performance_tuning/ash_awr/awr_settings.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
+| [`concurrency-waits-sqlid-ash.sql`](./performance_tuning/ash_awr/concurrency-waits-sqlid-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | concurrency-waits-sqlid-ash.sql |
+| [`concurrency-waits-sqlid.sql`](./performance_tuning/ash_awr/concurrency-waits-sqlid.sql) | `community_scripts/ash_awr` | BASSO | OK | concurrency-waits-sqlid.sql |
+| [`cpu-busy.sql`](./performance_tuning/ash_awr/cpu-busy.sql) | `community_scripts/ash_awr` | BASSO | OK | cpu-busy.sql - what is keeping CPU busy? |
+| [`dba_hist_sys_time_model.sql`](./performance_tuning/ash_awr/dba_hist_sys_time_model.sql) | `community_scripts/ash_awr` | BASSO | OK | Script operativo Oracle per: dba hist sys time model. |
+| [`dbw-hist.sql`](./performance_tuning/ash_awr/dbw-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | dbw-hist.sql |
+| [`flash-hist-stats.sql`](./performance_tuning/ash_awr/flash-hist-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
+| [`get-binds.sql`](./performance_tuning/ash_awr/get-binds.sql) | `community_scripts/ash_awr` | BASSO | OK | get_bind_values.sql |
+| [`getsql-awr.sql`](./performance_tuning/ash_awr/getsql-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi AWR per trend prestazionali e identificazione root cause. |
+| [`osstat-cpu-10g.sql`](./performance_tuning/ash_awr/osstat-cpu-10g.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu-10g.sql |
+| [`osstat-cpu-rpt.sql`](./performance_tuning/ash_awr/osstat-cpu-rpt.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu-rpt.sql |
+| [`osstat-cpu.sql`](./performance_tuning/ash_awr/osstat-cpu.sql) | `community_scripts/ash_awr` | BASSO | OK | osstat-cpu.sql |
+| [`plan-counts-force.sql`](./performance_tuning/ash_awr/plan-counts-force.sql) | `community_scripts/ash_awr` | BASSO | OK | plan-counts-force.sql |
+| [`plan-stats.sql`](./performance_tuning/ash_awr/plan-stats.sql) | `community_scripts/ash_awr` | BASSO | OK | plan-stats.sql |
+| [`resize-ops-metric-awr.sql`](./performance_tuning/ash_awr/resize-ops-metric-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | resize-ops-metric.sql |
+| [`resize-ops-metric.sql`](./performance_tuning/ash_awr/resize-ops-metric.sql) | `community_scripts/ash_awr` | BASSO | OK | resize-ops-metric.sql |
+| [`rowlock-hist.sql`](./performance_tuning/ash_awr/rowlock-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-hist.sql |
+| [`rowlock-mode-decode.sql`](./performance_tuning/ash_awr/rowlock-mode-decode.sql) | `community_scripts/ash_awr` | BASSO | OK | awr-top-events.sql |
+| [`rowlock-sqlid-counts.sql`](./performance_tuning/ash_awr/rowlock-sqlid-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-sqlid-counts.sql |
+| [`rowlock-sqlid-hist.sql`](./performance_tuning/ash_awr/rowlock-sqlid-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | rowlock-sqlid-hist.sql |
+| [`session-history.sql`](./performance_tuning/ash_awr/session-history.sql) | `community_scripts/ash_awr` | BASSO | OK | session-history.sql |
+| [`sql-cache-mem-user.sql`](./performance_tuning/ash_awr/sql-cache-mem-user.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-workarea-memory-user.sql |
+| [`sql-cache-mem.sql`](./performance_tuning/ash_awr/sql-cache-mem.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-workarea-memory.sql |
+| [`sql-cache-projections.sql`](./performance_tuning/ash_awr/sql-cache-projections.sql) | `community_scripts/ash_awr` | BASSO | OK | based on max memory |
+| [`sql-count-ash.sql`](./performance_tuning/ash_awr/sql-count-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
+| [`sql-counts-fms.sql`](./performance_tuning/ash_awr/sql-counts-fms.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-counts-fms.sql |
+| [`sql-counts.sql`](./performance_tuning/ash_awr/sql-counts.sql) | `community_scripts/ash_awr` | BASSO | OK | sql-counts.sql |
+| [`sql-plans.sql`](./performance_tuning/ash_awr/sql-plans.sql) | `community_scripts/ash_awr` | BASSO | OK | sa.sql - sql activity |
+| [`sysmetric-cpu-seconds-hist.sql`](./performance_tuning/ash_awr/sysmetric-cpu-seconds-hist.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-cpu-seconds-hist.sql |
+| [`sysmetric-cpu-seconds-summary.sql`](./performance_tuning/ash_awr/sysmetric-cpu-seconds-summary.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-cpu-seconds-summary.sql |
+| [`sysmetric-hist-matrix.sql`](./performance_tuning/ash_awr/sysmetric-hist-matrix.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-hist-matrix.sql |
+| [`sysmetric-history.sql`](./performance_tuning/ash_awr/sysmetric-history.sql) | `community_scripts/ash_awr` | BASSO | OK | sysmetric-history.sql |
+| [`top10-sql-ash.sql`](./performance_tuning/ash_awr/top10-sql-ash.sql) | `community_scripts/ash_awr` | BASSO | OK | top10-sql-ash.sql |
+| [`top10-sql-awr.sql`](./performance_tuning/ash_awr/top10-sql-awr.sql) | `community_scripts/ash_awr` | BASSO | OK | top10-sql-awr.sql |
+| [`wsqlmon.sql`](./performance_tuning/ash_awr/wsqlmon.sql) | `community_scripts/ash_awr` | BASSO | OK | File name: wsqlmon.sql (based on asqlmon.sql v1.1) |
+| [`my-pga-temp.sql`](./performance_tuning/memory/my-pga-temp.sql) | `community_scripts/memory` | BASSO | OK | my-pga-temp.sql |
+| [`ora-4031-info-shared-pool.sql`](./performance_tuning/memory/ora-4031-info-shared-pool.sql) | `community_scripts/memory` | MEDIO | OK | CONNECT / AS SYSDBA |
+| [`pga_advice.sql`](./performance_tuning/memory/pga_advice.sql) | `community_scripts/memory` | BASSO | OK | pga_advice.sql |
+| [`pga_advice_hist.sql`](./performance_tuning/memory/pga_advice_hist.sql) | `community_scripts/memory` | BASSO | OK | pga_advice_hist.sql |
+| [`pga_advice_selective.sql`](./performance_tuning/memory/pga_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | pga_advice_selective.sql |
+| [`pga_history_sum.sql`](./performance_tuning/memory/pga_history_sum.sql) | `community_scripts/memory` | BASSO | OK | pga_history_sum.sql |
+| [`pga_history_week.sql`](./performance_tuning/memory/pga_history_week.sql) | `community_scripts/memory` | BASSO | OK | pga_history_week.sql |
+| [`pga_workarea_active.sql`](./performance_tuning/memory/pga_workarea_active.sql) | `community_scripts/memory` | BASSO | OK | from performance tuning manual chapter 14 |
+| [`pga_workarea_hist.sql`](./performance_tuning/memory/pga_workarea_hist.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pga workarea hist. |
+| [`pgacols.sql`](./performance_tuning/memory/pgacols.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgacols. |
+| [`pgastat.sql`](./performance_tuning/memory/pgastat.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgastat. |
+| [`pgastat_hist.sql`](./performance_tuning/memory/pgastat_hist.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: pgastat hist. |
+| [`process-memory.sql`](./performance_tuning/memory/process-memory.sql) | `community_scripts/memory` | MEDIO | OK | process-memory.sql |
+| [`sga_advice_selective.sql`](./performance_tuning/memory/sga_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | gv$sga_target_advice |
+| [`shared-pool-top-sql.sql`](./performance_tuning/memory/shared-pool-top-sql.sql) | `community_scripts/memory` | BASSO | OK | , s.sql_fulltext |
+| [`shared-pool-top-users.sql`](./performance_tuning/memory/shared-pool-top-users.sql) | `community_scripts/memory` | BASSO | OK | Script operativo Oracle per: shared pool top users. |
+| [`shared_pool_advice.sql`](./performance_tuning/memory/shared_pool_advice.sql) | `community_scripts/memory` | BASSO | OK | shared_pool_advice.sql |
+| [`shared_pool_advice_selective.sql`](./performance_tuning/memory/shared_pool_advice_selective.sql) | `community_scripts/memory` | BASSO | OK | sp_advice_selective.sql |
+| [`showsga.sql`](./performance_tuning/memory/showsga.sql) | `community_scripts/memory` | BASSO | OK | col name format |
+| [`get-sql-exe-times.sh`](./performance_tuning/sql_performance/get-sql-exe-times.sh) | `community_scripts/sql_performance` | BASSO | OK | !/usr/bin/env bash |
+| [`sql-buffer-ratios-awr.sql`](./performance_tuning/sql_performance/sql-buffer-ratios-awr.sql) | `community_scripts/sql_performance` | BASSO | OK | sql-buffer-ratios-awr.sql |
+| [`sql-buffer-ratios.sql`](./performance_tuning/sql_performance/sql-buffer-ratios.sql) | `community_scripts/sql_performance` | BASSO | OK | where buffer_gets > 0 |
+| [`sql-exe-times-awr-rpt.pl`](./performance_tuning/sql_performance/sql-exe-times-awr-rpt.pl) | `community_scripts/sql_performance` | BASSO | OK | !/opt/oracle/product/23c/dbhomeFree//perl/bin/perl |
+| [`sqlid-elapsed.sql`](./performance_tuning/sql_performance/sqlid-elapsed.sql) | `community_scripts/sql_performance` | BASSO | OK | sqlid-elapsed.sql |
+| [`active_status.sql`](./performance_tuning/stats_optimizer/active_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | active_status.sql |
+| [`asm-diskgroup-stat.sql`](./performance_tuning/stats_optimizer/asm-diskgroup-stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | asm-diskgroup-stat.sql |
+| [`asm_disk_stats.sql`](./performance_tuning/stats_optimizer/asm_disk_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | asm_disk_stats.sql |
+| [`autotask_auto_stats_disable.sql`](./performance_tuning/stats_optimizer/autotask_auto_stats_disable.sql) | `community_scripts/stats_optimizer` | BASSO | OK | disable automatics tasks |
+| [`autotask_auto_stats_enable.sql`](./performance_tuning/stats_optimizer/autotask_auto_stats_enable.sql) | `community_scripts/stats_optimizer` | BASSO | OK | enable automatics stats |
+| [`awr-cpu-stats.sql`](./performance_tuning/stats_optimizer/awr-cpu-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | awr-cpu-stats.sql |
+| [`awr-event-histogram.sql`](./performance_tuning/stats_optimizer/awr-event-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | awr-event-histogram.sql |
+| [`bct_status.sql`](./performance_tuning/stats_optimizer/bct_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: bct status. |
+| [`cpu-bucket-histogram.sql`](./performance_tuning/stats_optimizer/cpu-bucket-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | this section may be an approximation |
+| [`cpu-minute-histogram.sql`](./performance_tuning/stats_optimizer/cpu-minute-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | this section may be an approximation |
+| [`crc-stats.sql`](./performance_tuning/stats_optimizer/crc-stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | crc-stats.sql |
+| [`dbms_stats_get_prefs.sql`](./performance_tuning/stats_optimizer/dbms_stats_get_prefs.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dbms_stats_get_prefs.sql |
+| [`dbms_stats_report.sql`](./performance_tuning/stats_optimizer/dbms_stats_report.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dbms_stats_report.sql |
+| [`drcp_connection_status.sql`](./performance_tuning/stats_optimizer/drcp_connection_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: drcp connection status. |
+| [`drcp_pool_cc_stats.sql`](./performance_tuning/stats_optimizer/drcp_pool_cc_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | , wait_time -- reserved for future use |
+| [`drcp_pool_stats.sql`](./performance_tuning/stats_optimizer/drcp_pool_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | drcp_pool_stats.sql |
+| [`dup-system-stats.sql`](./performance_tuning/stats_optimizer/dup-system-stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | dup-system-stats.sql |
+| [`flash-hist-stats.sql`](./performance_tuning/stats_optimizer/flash-hist-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Analisi Active Session History (ASH) per colli di bottiglia e top consumer. |
+| [`gather_system_stats_iteratively.sql`](./performance_tuning/stats_optimizer/gather_system_stats_iteratively.sql) | `community_scripts/stats_optimizer` | BASSO | OK | gather_system_stats_iteratively.sh |
+| [`gather_table_stats.sql`](./performance_tuning/stats_optimizer/gather_table_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: gather table stats. |
+| [`get_stats_job.sql`](./performance_tuning/stats_optimizer/get_stats_job.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
+| [`get_stats_task.sql`](./performance_tuning/stats_optimizer/get_stats_task.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: get stats task. |
+| [`get_system_stats.sql`](./performance_tuning/stats_optimizer/get_system_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | see sys.aux_stats$ |
+| [`getobj_stats.sql`](./performance_tuning/stats_optimizer/getobj_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | subpartitions |
+| [`getstat.sql`](./performance_tuning/stats_optimizer/getstat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: getstat. |
+| [`getstats.sql`](./performance_tuning/stats_optimizer/getstats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: getstats. |
+| [`getstatu2.sql`](./performance_tuning/stats_optimizer/getstatu2.sql) | `community_scripts/stats_optimizer` | BASSO | OK | break on username |
+| [`histogram_values.sql`](./performance_tuning/stats_optimizer/histogram_values.sql) | `community_scripts/stats_optimizer` | BASSO | OK | thanks to Jonathan Lewis for the base query |
+| [`idle-sessions-histogram.sql`](./performance_tuning/stats_optimizer/idle-sessions-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | idle-sessions-histogram.sql |
+| [`io_stat.sql`](./performance_tuning/stats_optimizer/io_stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
+| [`io_stat2.sql`](./performance_tuning/stats_optimizer/io_stat2.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
+| [`io_stat3.sql`](./performance_tuning/stats_optimizer/io_stat3.sql) | `community_scripts/stats_optimizer` | BASSO | OK | first run 'io_begin.sql' |
+| [`latch_statsa.sql`](./performance_tuning/stats_optimizer/latch_statsa.sql) | `community_scripts/stats_optimizer` | ALTO | OK | Script operativo Oracle per: latch statsa. |
+| [`latch_statss.sql`](./performance_tuning/stats_optimizer/latch_statss.sql) | `community_scripts/stats_optimizer` | ALTO | OK | Script operativo Oracle per: latch statss. |
+| [`locked_stats.sql`](./performance_tuning/stats_optimizer/locked_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | locked_stats.sql |
+| [`log-switch-histogram.sql`](./performance_tuning/stats_optimizer/log-switch-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | log-switch-histogram.sql |
+| [`log_histogram.sql`](./performance_tuning/stats_optimizer/log_histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: log histogram. |
+| [`mystat.sql`](./performance_tuning/stats_optimizer/mystat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: mystat. |
+| [`os-stats-avgs.sql`](./performance_tuning/stats_optimizer/os-stats-avgs.sql) | `community_scripts/stats_optimizer` | BASSO | OK | os-stats-avg.sql |
+| [`osstat-cpu-10g.sql`](./performance_tuning/stats_optimizer/osstat-cpu-10g.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu-10g.sql |
+| [`osstat-cpu-rpt.sql`](./performance_tuning/stats_optimizer/osstat-cpu-rpt.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu-rpt.sql |
+| [`osstat-cpu.sql`](./performance_tuning/stats_optimizer/osstat-cpu.sql) | `community_scripts/stats_optimizer` | BASSO | OK | osstat-cpu.sql |
+| [`partstats.sql`](./performance_tuning/stats_optimizer/partstats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | partstats.sql |
+| [`partstats_sum.sql`](./performance_tuning/stats_optimizer/partstats_sum.sql) | `community_scripts/stats_optimizer` | BASSO | OK | partstats_sum.sql |
+| [`pgastat.sql`](./performance_tuning/stats_optimizer/pgastat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: pgastat. |
+| [`pgastat_hist.sql`](./performance_tuning/stats_optimizer/pgastat_hist.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: pgastat hist. |
+| [`plan-stats.sql`](./performance_tuning/stats_optimizer/plan-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | plan-stats.sql |
+| [`rbs_no_optimal.sql`](./performance_tuning/stats_optimizer/rbs_no_optimal.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | rbs_optimal.sql |
+| [`rbs_optimal.sql`](./performance_tuning/stats_optimizer/rbs_optimal.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | rbs_optimal.sql |
+| [`rman-bkup-status.sql`](./performance_tuning/stats_optimizer/rman-bkup-status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | rman-bkup-status.sql |
+| [`segment-space-statistics-hist.sql`](./performance_tuning/stats_optimizer/segment-space-statistics-hist.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | segment-space-statistics-hist.sql |
+| [`segment-space-statistics.sql`](./performance_tuning/stats_optimizer/segment-space-statistics.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | segment-space-statistics.sql |
+| [`segment-statistics.sql`](./performance_tuning/stats_optimizer/segment-statistics.sql) | `community_scripts/stats_optimizer` | BASSO | OK | may be interesting results |
+| [`sess-optimizer-env.sql`](./performance_tuning/stats_optimizer/sess-optimizer-env.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sess-optimizer-env.sql |
+| [`set_avg_stats.sql`](./performance_tuning/stats_optimizer/set_avg_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | get avg rows for parts |
+| [`show_mview_status.sql`](./performance_tuning/stats_optimizer/show_mview_status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: show mview status. |
+| [`show_os_stats.sql`](./performance_tuning/stats_optimizer/show_os_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | show_os_stats.sql |
+| [`show_os_stats_hist.sql`](./performance_tuning/stats_optimizer/show_os_stats_hist.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: show os stats hist. |
+| [`sp_io_stat_drive.sql`](./performance_tuning/stats_optimizer/sp_io_stat_drive.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sp_io_stat_drive.sql |
+| [`sp_io_stat_sys.sql`](./performance_tuning/stats_optimizer/sp_io_stat_sys.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sp_io_stat_sys.sql |
+| [`sql-exe-times-ash-histogram.sql`](./performance_tuning/stats_optimizer/sql-exe-times-ash-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sql-exe-times-ash.sql |
+| [`sql-exe-times-awr-histogram.sql`](./performance_tuning/stats_optimizer/sql-exe-times-awr-histogram.sql) | `community_scripts/stats_optimizer` | BASSO | OK | sql-exe-times-awr.sql |
+| [`stale-stats.sql`](./performance_tuning/stats_optimizer/stale-stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stale-stats.sql |
+| [`stat-classes.sql`](./performance_tuning/stats_optimizer/stat-classes.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stat-classes |
+| [`stat-names.sql`](./performance_tuning/stats_optimizer/stat-names.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stat-names.sql |
+| [`stat.sql`](./performance_tuning/stats_optimizer/stat.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Timur Akhmadeev - akhmadeev@.com |
+| [`stats-sqlid.sql`](./performance_tuning/stats_optimizer/stats-sqlid.sql) | `community_scripts/stats_optimizer` | BASSO | OK | stats-sqlid.sql |
+| [`stats_config.sql`](./performance_tuning/stats_optimizer/stats_config.sql) | `community_scripts/stats_optimizer` | BASSO | OK | Script operativo Oracle per: stats config. |
+| [`stats_mod.sql`](./performance_tuning/stats_optimizer/stats_mod.sql) | `community_scripts/stats_optimizer` | BASSO | OK | jkstill@gmail.com |
+| [`stats_prefs.sql`](./performance_tuning/stats_optimizer/stats_prefs.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: stats prefs. |
+| [`stats_trace.sql`](./performance_tuning/stats_optimizer/stats_trace.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Script operativo Oracle per: stats trace. |
+| [`stats_trace_test.sql`](./performance_tuning/stats_optimizer/stats_trace_test.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | stats_trace_test.sql |
+| [`stats_wait.sql`](./performance_tuning/stats_optimizer/stats_wait.sql) | `community_scripts/stats_optimizer` | BASSO | OK | if state is 'WAITING' then wait_time is time in current wait |
+| [`undo_stats.sql`](./performance_tuning/stats_optimizer/undo_stats.sql) | `community_scripts/stats_optimizer` | BASSO | OK | undo_stats.sql |
+| [`unlock_stats.sql`](./performance_tuning/stats_optimizer/unlock_stats.sql) | `community_scripts/stats_optimizer` | MEDIO | OK | Diagnosi lock/sessioni bloccanti e catene di attesa. |
+| [`xmldb-status.sql`](./performance_tuning/stats_optimizer/xmldb-status.sql) | `community_scripts/stats_optimizer` | BASSO | OK | xmldb-status.sql |
+| [`sp_top_sql_io.sql`](./performance_tuning/statspack/sp_top_sql_io.sql) | `community_scripts/statspack` | BASSO | OK | sp_top_sql_io.sql |
+| [`dbms-sqltune-sqlid.sql`](./performance_tuning/tuning/dbms-sqltune-sqlid.sql) | `community_scripts/tuning` | ALTO | OK | dbms-sqltune-sqlid.sql |
+| [`find-expensive-sql.sql`](./performance_tuning/tuning/find-expensive-sql.sql) | `community_scripts/tuning` | BASSO | OK | find-expensive-sql.sql |
+| [`get-expensive-sqlid-sts.sql`](./performance_tuning/tuning/get-expensive-sqlid-sts.sql) | `community_scripts/tuning` | MEDIO | OK | get-expensive-sqlid-sts.sql |
+| [`PerfTuningAnalisys.sql`](./performance_tuning/tuning/PerfTuningAnalisys.sql) | `community_scripts/tuning` | MEDIO | OK | vedere in generale quale servizio bombarda di piu' e capire perche non viene utilizzato un ConnPOol o perche si ritrova a aprire e chiudere  |
+| [`profile_from_awr.sql`](./performance_tuning/tuning/profile_from_awr.sql) | `community_scripts/tuning` | BASSO | OK | File name: create_sql_profile_awr.sql |
+| [`SPM.sql`](./performance_tuning/tuning/SPM.sql) | `community_scripts/tuning` | ALTO | OK | Per fissare un piano in SPM bisogna prima verificare se il piano corretto è ancora presente nella GV$SQL, o se ad esempio è presente sull'al |
+| [`SPM_from_AWR_old_fashioned.sql`](./performance_tuning/tuning/SPM_from_AWR_old_fashioned.sql) | `community_scripts/tuning` | BASSO | OK | HOW TO LOAD SQL PLANS INTO SPM FROM AWR (Doc ID 789888.1) |
+| [`SQL Area 1x.sql`](./performance_tuning/tuning/SQL%20Area%201x.sql) | `community_scripts/tuning` | MEDIO | OK | and s.sql_id in (select sp.sql_id from v$sql_plan sp where sp.object_name='TABELLA') |
+| [`SQL Bind.sql`](./performance_tuning/tuning/SQL%20Bind.sql) | `community_scripts/tuning` | BASSO | OK | Matching Signatures |
+| [`SQL Plan Change.sql`](./performance_tuning/tuning/SQL%20Plan%20Change.sql) | `community_scripts/tuning` | BASSO | OK | File name: unstable_plans.sql |
+| [`SQL Stats.sql`](./performance_tuning/tuning/SQL%20Stats.sql) | `community_scripts/tuning` | BASSO | OK | HISTORICAL SQL STATISTICS |
+| [`sql-exe-events-ash.sql`](./performance_tuning/tuning/sql-exe-events-ash.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-events-ash.sql |
+| [`sql-exe-events-awr.sql`](./performance_tuning/tuning/sql-exe-events-awr.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-events-awr.sql |
+| [`sql-exe-times-ash-rpt.sql`](./performance_tuning/tuning/sql-exe-times-ash-rpt.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-ash-rpt.sql |
+| [`sql-exe-times-ash.sql`](./performance_tuning/tuning/sql-exe-times-ash.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-ash.sql |
+| [`sql-exe-times-awr-histogram.sql`](./performance_tuning/tuning/sql-exe-times-awr-histogram.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr.sql |
+| [`sql-exe-times-awr-rpt.sql`](./performance_tuning/tuning/sql-exe-times-awr-rpt.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr-rpt.sql |
+| [`sql-exe-times-awr.sql`](./performance_tuning/tuning/sql-exe-times-awr.sql) | `community_scripts/tuning` | BASSO | OK | sql-exe-times-awr.sql |
+| [`SQL_Profile_Other_SqlID.sql`](./performance_tuning/tuning/SQL_Profile_Other_SqlID.sql) | `community_scripts/tuning` | BASSO | OK | Supporto SQL tuning: piano esecuzione, SPM e stabilità optimizer. |
+| [`View_UnstablePlan.sql`](./performance_tuning/tuning/View_UnstablePlan.sql) | `community_scripts/tuning` | MEDIO | OK | (buffer_gets_delta/decode(nvl(buffer_gets_delta,0),0,1,executions_delta)) avg_lio |
 | [`controllo_statistiche.txt`](./performance_tuning/controllo_statistiche.txt) | `-` | MEDIO | OK | Interpretazione |
 
 ### `tde_security` — TDE & Security (8 script)
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [`audit-actions.sql`](./tde_security/community_scripts/audit-actions.sql) | `community_scripts` | BASSO | OK | , aud.ses_actions |
-| [`dba_audit_session.sql`](./tde_security/community_scripts/dba_audit_session.sql) | `community_scripts` | BASSO | OK | and rownum < 100 |
-| [`dba_audit_session_recent.sql`](./tde_security/community_scripts/dba_audit_session_recent.sql) | `community_scripts` | BASSO | OK | dba_audit_session_recent.sql |
-| [`dba_audit_trail.sql`](./tde_security/community_scripts/dba_audit_trail.sql) | `community_scripts` | MEDIO | OK | dba_audit_trail.sql |
-| [`dba_audit_trail_persons.sql`](./tde_security/community_scripts/dba_audit_trail_persons.sql) | `community_scripts` | MEDIO | OK | dba_audit_trail_persons.sql |
-| [`dba_table_audit_flags.sql`](./tde_security/community_scripts/dba_table_audit_flags.sql) | `community_scripts` | ALTO | OK | dba_table_audit_flags.sql |
-| [`show_session_audit.sql`](./tde_security/community_scripts/show_session_audit.sql) | `community_scripts` | BASSO | OK | Controllo sicurezza Oracle (audit/TDE/compliance operativa). |
-| [`ua-audit-log-cleanup-job.sql`](./tde_security/community_scripts/ua-audit-log-cleanup-job.sql) | `community_scripts` | MEDIO | OK | ua-audit-log-cleanup-job.sql |
+| [`audit-actions.sql`](./tde_security/audit-actions.sql) | `community_scripts` | BASSO | OK | , aud.ses_actions |
+| [`dba_audit_session.sql`](./tde_security/dba_audit_session.sql) | `community_scripts` | BASSO | OK | and rownum < 100 |
+| [`dba_audit_session_recent.sql`](./tde_security/dba_audit_session_recent.sql) | `community_scripts` | BASSO | OK | dba_audit_session_recent.sql |
+| [`dba_audit_trail.sql`](./tde_security/dba_audit_trail.sql) | `community_scripts` | MEDIO | OK | dba_audit_trail.sql |
+| [`dba_audit_trail_persons.sql`](./tde_security/dba_audit_trail_persons.sql) | `community_scripts` | MEDIO | OK | dba_audit_trail_persons.sql |
+| [`dba_table_audit_flags.sql`](./tde_security/dba_table_audit_flags.sql) | `community_scripts` | ALTO | OK | dba_table_audit_flags.sql |
+| [`show_session_audit.sql`](./tde_security/show_session_audit.sql) | `community_scripts` | BASSO | OK | Controllo sicurezza Oracle (audit/TDE/compliance operativa). |
+| [`ua-audit-log-cleanup-job.sql`](./tde_security/ua-audit-log-cleanup-job.sql) | `community_scripts` | MEDIO | OK | ua-audit-log-cleanup-job.sql |
 
 ### `compression` — Compression (1 script)
 
@@ -946,28 +946,28 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [`all-parms.sh`](./utilities/community_scripts/all-parms.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`asm-disk-chk.pl`](./utilities/community_scripts/asm-disk-chk.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`asm-disk-chk.sh`](./utilities/community_scripts/asm-disk-chk.sh) | `community_scripts` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
-| [`all-parms.sh`](./utilities/community_scripts/bin/all-parms.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`asm-disk-chk.pl`](./utilities/community_scripts/bin/asm-disk-chk.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`asm-disk-chk.sh`](./utilities/community_scripts/bin/asm-disk-chk.sh) | `community_scripts/bin` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
-| [`functions.sh`](./utilities/community_scripts/bin/functions.sh) | `community_scripts/bin` | ALTO | OK | use to get RAC instances from db name |
-| [`get-alert-logs.sh`](./utilities/community_scripts/bin/get-alert-logs.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-bind-info.pl`](./utilities/community_scripts/bin/get-bind-info.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`get-crsctl.sh`](./utilities/community_scripts/bin/get-crsctl.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-lgwr-trace.sh`](./utilities/community_scripts/bin/get-lgwr-trace.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-ohomes.sh`](./utilities/community_scripts/bin/get-ohomes.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz-all.sh`](./utilities/community_scripts/bin/memsz-all.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz.sh`](./utilities/community_scripts/bin/memsz.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`oracle-connect-rate.sh`](./utilities/community_scripts/bin/oracle-connect-rate.sh) | `community_scripts/bin` | BASSO | OK | get connection rate from oracle listener log |
-| [`procmem.pl`](./utilities/community_scripts/bin/procmem.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`rman-chk-syntax.sh`](./utilities/community_scripts/bin/rman-chk-syntax.sh) | `community_scripts/bin` | BASSO | OK | Determine if STDIN is from pipe or terminal |
-| [`sga-smallpage-detector.pl`](./utilities/community_scripts/bin/sga-smallpage-detector.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`show-sga-page-allocation.sh`](./utilities/community_scripts/bin/show-sga-page-allocation.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`sql-driver.sh`](./utilities/community_scripts/bin/sql-driver.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`sqlnet-io-rates.pl`](./utilities/community_scripts/bin/sqlnet-io-rates.pl) | `community_scripts/bin` | MEDIO | OK | !/usr/bin/env perl |
-| [`sqlnet-io.sql`](./utilities/community_scripts/bin/sqlnet-io.sql) | `community_scripts/bin` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
+| [`all-parms.sh`](./utilities/all-parms.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`asm-disk-chk.pl`](./utilities/asm-disk-chk.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| [`asm-disk-chk.sh`](./utilities/asm-disk-chk.sh) | `community_scripts` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
+| [`all-parms.sh`](./utilities/bin/all-parms.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`asm-disk-chk.pl`](./utilities/bin/asm-disk-chk.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| [`asm-disk-chk.sh`](./utilities/bin/asm-disk-chk.sh) | `community_scripts/bin` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
+| [`functions.sh`](./utilities/bin/functions.sh) | `community_scripts/bin` | ALTO | OK | use to get RAC instances from db name |
+| [`get-alert-logs.sh`](./utilities/bin/get-alert-logs.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`get-bind-info.pl`](./utilities/bin/get-bind-info.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| [`get-crsctl.sh`](./utilities/bin/get-crsctl.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`get-lgwr-trace.sh`](./utilities/bin/get-lgwr-trace.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`get-ohomes.sh`](./utilities/bin/get-ohomes.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`memsz-all.sh`](./utilities/bin/memsz-all.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`memsz.sh`](./utilities/bin/memsz.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`oracle-connect-rate.sh`](./utilities/bin/oracle-connect-rate.sh) | `community_scripts/bin` | BASSO | OK | get connection rate from oracle listener log |
+| [`procmem.pl`](./utilities/bin/procmem.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| [`rman-chk-syntax.sh`](./utilities/bin/rman-chk-syntax.sh) | `community_scripts/bin` | BASSO | OK | Determine if STDIN is from pipe or terminal |
+| [`sga-smallpage-detector.pl`](./utilities/bin/sga-smallpage-detector.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| [`show-sga-page-allocation.sh`](./utilities/bin/show-sga-page-allocation.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`sql-driver.sh`](./utilities/bin/sql-driver.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| [`sqlnet-io-rates.pl`](./utilities/bin/sqlnet-io-rates.pl) | `community_scripts/bin` | MEDIO | OK | !/usr/bin/env perl |
+| [`sqlnet-io.sql`](./utilities/bin/sqlnet-io.sql) | `community_scripts/bin` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
 | [`aas-awr-pdb-calc.sql`](./utilities/cdb_pdb/aas-awr-pdb-calc.sql) | `community_scripts/cdb_pdb` | BASSO | OK | aas-awr-pdb-calc.sql |
 | [`cdb-containers-query.sql`](./utilities/cdb_pdb/cdb-containers-query.sql) | `community_scripts/cdb_pdb` | BASSO | OK | cdb-containers-query.sql |
 | [`cdb_sched_jobs.sql`](./utilities/cdb_pdb/cdb_sched_jobs.sql) | `community_scripts/cdb_pdb` | BASSO | OK | dba_scheduler_jobs.sql |
@@ -977,17 +977,17 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`resmgr-waits-pdb.sql`](./utilities/cdb_pdb/resmgr-waits-pdb.sql) | `community_scripts/cdb_pdb` | BASSO | OK | resmgr-waits-pdb.sql |
 | [`show-pdbs.sql`](./utilities/cdb_pdb/show-pdbs.sql) | `community_scripts/cdb_pdb` | BASSO | OK | Gestione multitenant Oracle (CDB/PDB) e verifiche operative. |
 | [`show_container.sql`](./utilities/cdb_pdb/show_container.sql) | `community_scripts/cdb_pdb` | BASSO | OK | show_container.sql |
-| [`functions.sh`](./utilities/community_scripts/functions.sh) | `community_scripts` | ALTO | OK | use to get RAC instances from db name |
-| [`get-alert-logs.sh`](./utilities/community_scripts/get-alert-logs.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-bind-info.pl`](./utilities/community_scripts/get-bind-info.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`get-crsctl.sh`](./utilities/community_scripts/get-crsctl.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-lgwr-trace.sh`](./utilities/community_scripts/get-lgwr-trace.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-ohomes.sh`](./utilities/community_scripts/get-ohomes.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz-all.sh`](./utilities/community_scripts/memsz-all.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz.sh`](./utilities/community_scripts/memsz.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`oracle-connect-rate.sh`](./utilities/community_scripts/oracle-connect-rate.sh) | `community_scripts` | BASSO | OK | get connection rate from oracle listener log |
-| [`procmem.pl`](./utilities/community_scripts/procmem.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`rman-chk-syntax.sh`](./utilities/community_scripts/rman-chk-syntax.sh) | `community_scripts` | BASSO | OK | Determine if STDIN is from pipe or terminal |
+| [`functions.sh`](./utilities/functions.sh) | `community_scripts` | ALTO | OK | use to get RAC instances from db name |
+| [`get-alert-logs.sh`](./utilities/get-alert-logs.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`get-bind-info.pl`](./utilities/get-bind-info.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| [`get-crsctl.sh`](./utilities/get-crsctl.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`get-lgwr-trace.sh`](./utilities/get-lgwr-trace.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`get-ohomes.sh`](./utilities/get-ohomes.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`memsz-all.sh`](./utilities/memsz-all.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`memsz.sh`](./utilities/memsz.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`oracle-connect-rate.sh`](./utilities/oracle-connect-rate.sh) | `community_scripts` | BASSO | OK | get connection rate from oracle listener log |
+| [`procmem.pl`](./utilities/procmem.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| [`rman-chk-syntax.sh`](./utilities/rman-chk-syntax.sh) | `community_scripts` | BASSO | OK | Determine if STDIN is from pipe or terminal |
 | [`all_jobs.sql`](./utilities/scheduler/all_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
 | [`all_sched_jobs.sql`](./utilities/scheduler/all_sched_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | all_scheduler_jobs.sql |
 | [`ash-sqlid-event-window.sql`](./utilities/scheduler/ash-sqlid-event-window.sql) | `community_scripts/scheduler` | BASSO | OK | ash-sqlid-event-window.sql |
@@ -1021,11 +1021,11 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`sp_job_submit.sql`](./utilities/scheduler/sp_job_submit.sql) | `community_scripts/scheduler` | BASSO | OK | job_submit.sql |
 | [`ua-audit-log-cleanup-job.sql`](./utilities/scheduler/ua-audit-log-cleanup-job.sql) | `community_scripts/scheduler` | MEDIO | OK | ua-audit-log-cleanup-job.sql |
 | [`who_dba_jobs.sql`](./utilities/scheduler/who_dba_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | jkstill@gmail.com |
-| [`sga-smallpage-detector.pl`](./utilities/community_scripts/sga-smallpage-detector.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`show-sga-page-allocation.sh`](./utilities/community_scripts/show-sga-page-allocation.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`sql-driver.sh`](./utilities/community_scripts/sql-driver.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`sqlnet-io-rates.pl`](./utilities/community_scripts/sqlnet-io-rates.pl) | `community_scripts` | MEDIO | OK | !/usr/bin/env perl |
-| [`sqlnet-io.sql`](./utilities/community_scripts/sqlnet-io.sql) | `community_scripts` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
+| [`sga-smallpage-detector.pl`](./utilities/sga-smallpage-detector.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| [`show-sga-page-allocation.sh`](./utilities/show-sga-page-allocation.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`sql-driver.sh`](./utilities/sql-driver.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| [`sqlnet-io-rates.pl`](./utilities/sqlnet-io-rates.pl) | `community_scripts` | MEDIO | OK | !/usr/bin/env perl |
+| [`sqlnet-io.sql`](./utilities/sqlnet-io.sql) | `community_scripts` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
 | [`block-summary.sql`](./utilities/storage/block-summary.sql) | `community_scripts/storage` | BASSO | OK | block-summary.sql |
 | [`dbms_space_asa_rpt.sql`](./utilities/storage/dbms_space_asa_rpt.sql) | `community_scripts/storage` | BASSO | OK | dbms_space_asa_rpt.sql |
 | [`dfshrink-gen-9i.sql`](./utilities/storage/dfshrink-gen-9i.sql) | `community_scripts/storage` | ALTO | OK | dfshrink-gen-9i.sql |

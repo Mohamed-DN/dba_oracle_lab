@@ -7,10 +7,10 @@ Evidenza riferimento: `reliability/evidence/script_certification_2026Q2.md`
 | 1 | `monitoring_scripts/ViewSession.sql` | Monitoring | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-01 |
 | 2 | `monitoring_scripts/View_Blocking.sql` | Monitoring | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-02 |
 | 3 | `monitoring_scripts/locks_details.sql` | Monitoring | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-03 |
-| 4 | `backup_recovery/community_scripts/rman-bkup-status.sql` | Backup | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-04 |
-| 5 | `backup_recovery/community_scripts/BACKUP CHECKS.sql` | Backup | 19c/21c/23ai/26c | MEDIO | Q2-2026-SC-05 |
-| 6 | `performance_tuning/community_scripts/ash_awr/ash_top_sql.sql` | Performance | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-06 |
-| 7 | `performance_tuning/community_scripts/tuning/SPM.sql` | Performance | 19c/21c/23ai/26c | MEDIO | Q2-2026-SC-07 |
+| 4 | `backup_recovery/rman-bkup-status.sql` | Backup | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-04 |
+| 5 | `backup_recovery/BACKUP CHECKS.sql` | Backup | 19c/21c/23ai/26c | MEDIO | Q2-2026-SC-05 |
+| 6 | `performance_tuning/ash_awr/ash_top_sql.sql` | Performance | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-06 |
+| 7 | `performance_tuning/tuning/SPM.sql` | Performance | 19c/21c/23ai/26c | MEDIO | Q2-2026-SC-07 |
 | 8 | `utilities/storage/showspace.sql` | Utilities | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-08 |
 | 9 | `utilities/scheduler/show_jobs.sql` | Utilities | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-09 |
-| 10 | `asm_storage/community_scripts/asm_disk_stats.sql` | ASM | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-10 |
+| 10 | `asm_storage/asm_disk_stats.sql` | ASM | 19c/21c/23ai/26c | BASSO | Q2-2026-SC-10 |

@@ -13,7 +13,7 @@
 
 ### 📸 Riferimenti Visivi
 
-![Architettura Data Guard RAC Primary → RAC Standby](./images/dataguard_architecture.png)
+![Architettura Data Guard RAC Primary → RAC Standby](../../../images/dataguard_architecture.png)
 
 ### Cosa Succede in Questa Fase
 
