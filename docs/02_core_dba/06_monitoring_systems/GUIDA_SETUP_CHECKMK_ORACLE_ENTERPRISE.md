@@ -1371,3 +1371,46 @@ Se hai un Database RAC steso su due Data Center (es. Primary a Milano, Standby a
 3. Collega il Remote Site al Central Site via Livestatus TCP (porta 6557 criptata con TLS).
 4. Assegna gli host di Roma al server di polling di Roma.
 *Vantaggio:* Se cade la VPN tra Milano e Roma, il server di Roma continua a monitorare il DB Standby e trattiene gli alert. Quando la VPN torna su, invia lo storico al server centrale senza alcun "buco" nei grafici.
+
+
+---
+
+## 14. 🎨 Integrazione CheckMK + Grafana (Dashboarding Avanzato)
+
+Se hai l'esigenza di creare dashboard visivamente più accattivanti e correlare le metriche Oracle estratte da CheckMK con dati provenienti da altre fonti, puoi **integrare nativamente CheckMK con Grafana** utilizzando il plugin ufficiale.
+
+L'integrazione è bidirezionale a livello di interrogazione (Grafana usa le REST API di CheckMK per estrarre storici, grafici e stati).
+
+### Fase 1: Preparazione Utente CheckMK (Automation User)
+Per ragioni di sicurezza, Grafana **NON** deve usare l'account `cmkadmin`.
+1. Accedi a CheckMK e vai in `Setup` -> `Users`.
+2. Crea un nuovo utente chiamato `grafana_api`.
+3. Invece di una password normale, genera un **Automation Secret** per questo utente.
+4. **Ruolo:** Clona il ruolo `Guest` e aggiungi il permesso speciale `"User management" (allow read access to user information)` necessario per l'API. Assegna questo ruolo all'utente.
+
+### Fase 2: Installazione Plugin su Grafana
+Sul tuo server Grafana, esegui l'installazione del plugin ufficale CheckMK Cloud Datasource da riga di comando:
+
+```bash
+grafana-cli plugins install checkmk-cloud-datasource
+systemctl restart grafana-server
+```
+
+*(Se usi Grafana UI, vai su `Connections` -> `Add new connection` -> Cerca "Checkmk" e clicca Install).*
+
+### Fase 3: Configurazione del Data Source
+1. Accedi all'interfaccia web di Grafana come admin.
+2. Vai su **Data Sources** -> **Add Data Source** -> Cerca e seleziona **Checkmk**.
+3. Compila i campi:
+   * **URL:** L'URL completo del tuo sito CheckMK (es. `https://192.168.1.100/mysite/`)
+   * **Authentication:** Seleziona "Basic Auth" e inserisci `grafana_api` come utente e l'**Automation Secret** come password.
+   * **Edition:** Scegli l'edizione di CheckMK che stai usando (Raw, Enterprise, o Cloud).
+4. Clicca su **Save & Test**. Se vedi il bollino verde, i due sistemi comunicano.
+
+### Fase 4: Creazione Dashboard Oracle
+Ora puoi creare Dashboard in Grafana!
+Quando aggiungi un nuovo "Panel", scegli **Checkmk** come data source. Avrai un'interfaccia a tendina (Query Builder) per selezionare:
+* **Site:** Il sito CheckMK.
+* **Host:** Il server Oracle (es. `rac1.localdomain`).
+* **Service:** La metrica estratta dall'Agent (es. `ORA PRODDB Tablespace USERS`, `CPU load`, o il custom check scritto prima).
+* **Aggregation:** Grafana traccerà i trend in base ai parametri di retention storicizzati nativamente in CheckMK.
