@@ -151,6 +151,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Security Hardening](./docs/02_core_dba/01_administration_and_security/GUIDA_SECURITY_HARDENING.md) | TDE, Auditing, Encryption, Password Profiles |
 | [TDE in Profondità](./docs/02_core_dba/01_administration_and_security/GUIDA_TDE_IN_PROFONDITA.md) | Keystore, master key, colonna/tablespace encryption, backup e operatività RAC/DG |
 | [**Identità Oracle e Servizi**](./docs/02_core_dba/01_administration_and_security/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | **MEGA-GUIDA**: DB_NAME vs SID vs SERVICE_NAME, Listener, Role-Based Services, Switchover |
+| [LDAP / EUS / CMU](./docs/02_core_dba/01_administration_and_security/GUIDA_SETUP_LDAP_ENTERPRISE.md) | Integrazione Active Directory, EUSM, Wallet Orapki, Kerberos SSO, Proxy Auth |
+| [Password Rollout](./docs/02_core_dba/01_administration_and_security/GUIDA_PASSWORD_ROLLOUT_ENTERPRISE.md) | Rotazione Password Zero-Downtime, Integrazione PAM, Verify Functions |
 
 ---
 
