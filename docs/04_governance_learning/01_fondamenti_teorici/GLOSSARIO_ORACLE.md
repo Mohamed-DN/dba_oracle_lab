@@ -120,13 +120,31 @@
 | **RPO** | Recovery Point Objective — massimo dato perdibile ("quanti dati perdo?") |
 | **RTO** | Recovery Time Objective — tempo massimo di ripristino ("quanto sto fermo?") |
 
-## Sicurezza
+## Sicurezza & Governance
 
 | Termine | Definizione |
 |---------|------------|
 | **TDE** | Transparent Data Encryption — encryption dei datafile a riposo |
 | **NNE** | Native Network Encryption — encryption delle connessioni di rete |
 | **Wallet** | Keystore Oracle per chiavi di encryption e certificati |
+| **RBAC** | Role-Based Access Control — gestione accessi basata su ruoli |
+| **KEDB** | Known Error Database — database degli errori noti e soluzioni |
+
+## SRE & DevOps (Database Engineering)
+
+| Termine | Definizione |
+|---------|------------|
+| **SLI** | Service Level Indicator — metrica specifica (es. latenza SQL) |
+| **SLO** | Service Level Objective — obiettivo della metrica (es. 99% < 100ms) |
+| **SLA** | Service Level Agreement — contratto legale basato sugli SLO |
+| **Error Budget** | Margine di inaffidabilità concesso prima di fermare i rilasci |
+| **Toil** | Lavoro manuale, ripetitivo e non creativo (da automatizzare) |
+| **GitOps** | Gestione della configurazione database tramite Git |
+| **IaC** | Infrastructure as Code (es. Terraform, Ansible) |
+| **CI/CD** | Continuous Integration / Continuous Deployment |
+| **Idempotenza** | Proprietà di uno script di dare lo stesso risultato anche se eseguito più volte |
+| **MOP** | Method of Procedure — guida passo-passo per un intervento tecnico |
+| **Observability** | Capacità di capire lo stato interno del sistema dai log/metriche |
 
 ## Strumenti
 

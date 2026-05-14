@@ -1,32 +1,35 @@
-# Changelog
+# Changelog — Oracle DBA Enterprise Lab
 
-All notable changes to this project will be documented in this file.
+Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
-The format is based on Keep a Changelog,
-and this project follows Semantic Versioning.
-
-## [Unreleased]
-
+## [2.0.0] - 2026-05-14
 ### Added
-- PR Go/No-Go gate workflow and mandatory PR checklist template for merge readiness.
-- Critical scenario regression workflow with periodic and PR-triggered RAC/DG controls validation.
-- Governance docs: public KPI scoreboard, go/no-go merge policy, didactic excellence standard, and community roadmap.
-- GitHub issue templates for structured bug reports and feature requests.
-- Reliability KPI baseline extended with public governance KPIs (CI success rate, MTTR, runbook coverage, docs/link health).
-- Real E2E CI workflow scaffold for reduced Oracle lab verification.
-- Security gate workflow with secret scanning, SAST, IaC scan, and policy-as-code checks.
-- Periodic DR drill workflow and evidence artifact publication.
-- CIS-like machine-readable hardening profile and compliance scorecard example.
-- Release governance checks with SemVer and changelog validation.
-- Enterprise governance docs: compatibility policy, 10-minute quickstart, troubleshooting decision tree, reliability framework.
-- MAA scorecard single source of truth (`docs/04_governance_learning/02_enterprise_standards/MAA_SCORECARD_SOURCE_OF_TRUTH.yml`).
-- Governance docs for compatibility matrix and production profile.
-- Reliability KPI baseline document (`reliability/kpi/README.md`).
-- New role-based Ansible baseline (`automation/roles/maa_guardrails`) and playbook `maa_guardrails.yml`.
-- PR E2E asset validation now uploads mandatory evidence artifact.
-- README root enhanced: added live CI/CD, Security Gates, and Release Governance badges (branch=master); added Level-1 Quick Navigation index and architecture/lab-phases collapsible sections.
+- **Governance Framework**: Introdotta la directory `docs/04_governance_learning/02_enterprise_standards/` con MAA Scorecard, SRE Framework e GitOps Policy.
+- **26ai Readiness**: Creata la guida massiva `GUIDA_UPGRADE_19C_TO_26AI.md` e la guida alla containerizzazione Podman/Docker per Oracle 26ai.
+- **Advanced Monitoring**: Espansa la guida CheckMK con monitoraggio AI Vector Search, automazione Ansible e integrazione Grafana.
+- **GoldenGate MA**: Nuova guida all'architettura a Microservizi (MA) su OCI e on-prem.
+- **Incident Management**: Creato il `TROUBLESHOOTING_DECISION_TREE.md` come KEDB professionale.
+- **Security Baseline**: Definito il `PRODUCTION_PROFILE.md` per l'hardening dei database di produzione.
 
-## [0.1.0] - 2026-04-19
+### Changed
+- **Repository Restructure**: Riorganizzazione completa in 4 aree (Operations, Core DBA, Infra Lab, Governance) per allineamento agli standard ITIL.
+- **Link Integrity**: Ripristinati e validati oltre 200 collegamenti ipertestuali tra le guide.
+- **Ansible Standard**: Ridenominazione dei playbook per eliminare prefissi numerici e adottare nomi descrittivi enterprise.
+- **Terraform Evolution**: Aggiornato il README di infrastruttura IaC con focus su GitOps e OCI Vault.
 
+### Removed
+- **Redundancy**: Eliminati vecchi file di guida duplicati e script di generazione temporanei.
+
+## [1.5.0] - 2026-04-27
 ### Added
-- Initial project governance baseline for release/versioning and operational reliability.
+- Oracle Enterprise Manager 24ai installation guide.
+- Fast-Start Failover (FSFO) with Observer implementation.
+
+## [1.0.0] - 2026-02-17
+### Added
+- Base RAC + Data Guard laboratory with Vagrant.
+- RMAN basic backup strategies.
+- OPatch mandatory update policy.
+
+---
+**Formato basato su [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).**
