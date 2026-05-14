@@ -747,7 +747,227 @@ GRANT SYSDBA TO dba_emergency;
 
 ---
 
-## 13. Riferimenti Completi
+
+
+---
+
+## PARTE VI — NAMING CENTRALIZZATO, KERBEROS, PROXY AUTH
+
+---
+
+## 14. LDAP Directory Naming (Centralizzare tnsnames.ora)
+
+Invece di gestire tnsnames.ora su ogni client, puoi centralizzare tutto in LDAP.
+
+### 14.1 Concetto
+
+```
+PRIMA (senza LDAP naming):
+  Client 1: tnsnames.ora locale
+  Client 2: tnsnames.ora locale  <-- copie da mantenere sincronizzate
+  Client N: tnsnames.ora locale
+
+DOPO (con LDAP naming):
+  Client 1: ldap.ora -> LDAP Server (contiene tutti i TNS entries)
+  Client 2: ldap.ora -> LDAP Server
+  Client N: ldap.ora -> LDAP Server  <-- un unico punto di gestione
+```
+
+### 14.2 Configurazione sul Server LDAP
+
+```bash
+# 1. Con NetCA (grafico)
+netca
+# Seleziona: Directory Usage Configuration
+# Inserisci: host LDAP, porta, naming context
+# NetCA crea ldap.ora e registra il contesto Oracle nella directory
+
+# 2. Esportare le entries tnsnames.ora esistenti nel LDAP
+# Usa Oracle Net Manager per importare tnsnames.ora nella directory
+netmgr
+# Directory -> Oracle Net Services -> ... -> Import tnsnames.ora
+```
+
+### 14.3 Aggiungere un TNS Entry nella Directory LDAP
+
+```ldif
+# File: add_tns_prod.ldif
+dn: cn=PROD,cn=OracleContext,dc=company,dc=com
+objectClass: top
+objectClass: orclNetService
+cn: PROD
+orclNetDescString: (DESCRIPTION=
+  (ADDRESS=(PROTOCOL=TCP)(HOST=dbserver01)(PORT=1521))
+  (CONNECT_DATA=(SERVICE_NAME=PROD.company.com)))
+```
+
+```bash
+ldapadd -h oid.company.com -p 389 \
+  -D "cn=orcladmin" -w pwd -f add_tns_prod.ldif
+```
+
+### 14.4 Configurazione sui Client
+
+```
+# ldap.ora sui client
+DIRECTORY_SERVERS = (oid.company.com:389:636)
+DEFAULT_ADMIN_CONTEXT = "dc=company,dc=com"
+DIRECTORY_SERVER_TYPE = OID
+
+# sqlnet.ora sui client
+NAMES.DIRECTORY_PATH = (LDAP, TNSNAMES, EZCONNECT)
+# LDAP viene cercato PRIMA di tnsnames.ora locale
+```
+
+```bash
+# Test
+tnsping PROD
+# Se funziona, il TNS entry e stato risolto via LDAP
+```
+
+---
+
+## 15. Kerberos Authentication (SSO)
+
+### 15.1 Concetto
+
+Con Kerberos, gli utenti NON inseriscono la password Oracle.
+Si autenticano con il ticket Kerberos (da Active Directory) e Oracle lo valida.
+
+### 15.2 Prerequisiti
+
+1. Active Directory con Kerberos attivo (standard in AD)
+2. Oracle Database 19c con Advanced Security Option
+3. `kinit` funzionante sui client
+4. SPN (Service Principal Name) registrato per Oracle
+
+### 15.3 Configurazione
+
+```bash
+# 1. Registra SPN per Oracle in AD
+setspn -A oracle/dbserver01.company.com@COMPANY.COM svc_oracle_ad
+
+# 2. Crea keytab per Oracle
+ktpass /out oracle.keytab /mapuser svc_oracle_ad \
+  /princ oracle/dbserver01.company.com@COMPANY.COM \
+  /crypto All /ptype KRB5_NT_PRINCIPAL /pass ServicePwd
+# Copia oracle.keytab sul server Oracle
+```
+
+```
+# sqlnet.ora sul server Oracle
+SQLNET.AUTHENTICATION_SERVICES = (kerberos5)
+SQLNET.AUTHENTICATION_KERBEROS5_SERVICE = oracle
+SQLNET.KERBEROS5_CONF = /etc/krb5.conf
+SQLNET.KERBEROS5_KEYTAB = /u01/app/oracle/admin/PROD/wallet/oracle.keytab
+SQLNET.KERBEROS5_CC_NAME = /tmp/krb5cc_%{uid}
+```
+
+```sql
+-- Crea utente Oracle per Kerberos auth
+CREATE USER "MARIO.ROSSI@COMPANY.COM" IDENTIFIED EXTERNALLY;
+GRANT CREATE SESSION TO "MARIO.ROSSI@COMPANY.COM";
+```
+
+```bash
+# Test dal client
+kinit mario.rossi@COMPANY.COM  # inserisci password AD
+sqlplus /@PROD  # connessione senza password!
+```
+
+---
+
+## 16. Proxy Authentication
+
+Consente a un'applicazione di connettersi con un utente "proxy" e assumere l'identita di un enterprise user.
+
+```sql
+-- Abilita proxy per uno schema
+ALTER USER app_schema GRANT CONNECT THROUGH enterprise_proxy_user;
+
+-- Connessione proxy
+-- sqlplus enterprise_proxy_user[end_user]/proxy_pwd@PROD
+-- La sessione opera come end_user ma si connette come proxy
+```
+
+---
+
+## 17. Multitenant (CDB/PDB) con LDAP
+
+### 17.1 Shared Schema in PDB
+
+```sql
+-- Nel CDB root
+ALTER SESSION SET CONTAINER = CDB$ROOT;
+CREATE USER c##eus_schema IDENTIFIED GLOBALLY CONTAINER=ALL;
+GRANT CREATE SESSION TO c##eus_schema CONTAINER=ALL;
+
+-- Nella PDB specifica
+ALTER SESSION SET CONTAINER = PDB_PROD;
+CREATE USER pdb_eus_schema IDENTIFIED GLOBALLY;
+GRANT CREATE SESSION TO pdb_eus_schema;
+```
+
+### 17.2 CMU per PDB Specifiche
+
+```sql
+-- Per limitare CMU a PDB specifiche
+ALTER PLUGGABLE DATABASE PDB_PROD CLOSE;
+ALTER PLUGGABLE DATABASE PDB_PROD OPEN READ WRITE;
+-- Ogni PDB puo avere la propria configurazione CMU
+```
+
+---
+
+## 18. Monitoring e Alerting per LDAP
+
+### 18.1 Query per Monitorare Login LDAP
+
+```sql
+-- Sessioni attive autenticate via LDAP
+SELECT s.sid, s.serial#, s.username, s.program, s.machine,
+       s.logon_time, s.status,
+       SYS_CONTEXT('USERENV','AUTHENTICATION_METHOD') AS auth_method,
+       SYS_CONTEXT('USERENV','ENTERPRISE_IDENTITY') AS dn
+FROM v$session s
+WHERE s.type != 'BACKGROUND'
+  AND s.authentication_type IN ('GLOBAL','EXTERNAL');
+
+-- Login falliti nelle ultime 24h
+SELECT event_timestamp, dbusername, os_username, 
+       userhost, authentication_type, return_code,
+       client_program_name
+FROM unified_audit_trail
+WHERE action_name = 'LOGON'
+  AND return_code != 0
+  AND authentication_type IN ('DIRECTORY','GLOBAL')
+  AND event_timestamp > SYSTIMESTAMP - INTERVAL '24' HOUR
+ORDER BY event_timestamp DESC;
+
+-- Conteggio login per metodo di autenticazione
+SELECT authentication_type, COUNT(*) AS sessions
+FROM v$session
+WHERE type != 'BACKGROUND'
+GROUP BY authentication_type
+ORDER BY sessions DESC;
+```
+
+### 18.2 Alert su ORA-28030 (LDAP non raggiungibile)
+
+```bash
+# In CheckMK: custom check che monitora l'alert log per ORA-28030
+# /etc/check_mk/oracle_custom/ldap_health.sql
+SELECT
+  CASE WHEN COUNT(*) > 0 THEN 2 ELSE 0 END AS state,
+  'ORA-28030 occurrences in last hour: ' || COUNT(*) AS detail
+FROM v$diag_alert_ext
+WHERE message_text LIKE '%ORA-28030%'
+  AND originating_timestamp > SYSTIMESTAMP - INTERVAL '1' HOUR;
+```
+
+---
+
+## 19. Riferimenti Completi
 
 - Oracle Enterprise User Security Administrator's Guide 19c
   https://docs.oracle.com/en/database/oracle/oracle-database/19/dbimi/
@@ -758,13 +978,19 @@ GRANT SYSDBA TO dba_emergency;
 - Oracle Net Services Reference (ldap.ora, sqlnet.ora, dsi.ora)
   https://docs.oracle.com/en/database/oracle/oracle-database/19/netrf/
 - Oracle Password Filter for AD (opwdintg)
-  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/integrating_mads_with_oracle_database.html#GUID-4B5B4B52-1E10-4F86-A622-0CC1B96E3F37
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/integrating_mads_with_oracle_database.html
+- Oracle Kerberos Authentication
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/configuring-kerberos-authentication.html
+- Oracle Directory Naming Configuration
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/netag/configuring-naming-methods.html
+- Oracle Proxy Authentication
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/configuring-privilege-and-role-authorization.html
 - MOS: How to Configure EUS Step by Step (Doc ID 1085065.1)
 - MOS: CMU with Active Directory Step by Step (Doc ID 2462012.1)
 - MOS: EUS Troubleshooting Checklist (Doc ID 1309734.1)
 - MOS: ORA-28030 Troubleshooting (Doc ID 457111.1)
-- MOS: ORA-28043 Troubleshooting (Doc ID 2307823.1)
-- MOS: Password Filter opwdintg (Doc ID 2462012.1)
+- MOS: Kerberos Authentication for Oracle DB (Doc ID 340178.1)
+- MOS: LDAP Directory Naming (Doc ID 169abordo.1)
 
 ---
 
