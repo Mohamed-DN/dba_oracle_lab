@@ -163,14 +163,14 @@ ORDER BY utente, proprietario, oggetto, ruolo_intermedio;
 
 ```
 SQL> @audit_obj
-Enter value for username: IBK_EXCHANGE_SV
+Enter value for username: MIMMO_EXCHANGE_SV
 Nome oggetto (vuoto = tutti):
 ... premieresti Invio ...
 -- restituisce tutte le righe come:
 UTENTE           RUOLO_INTERMEDIO PERMESSO PROPRIETARIO OGGETTO
 ---------------- ---------------- -------- ------------ ----------------
-IBK_EXCHANGE_SV                    SELECT  IBK          DB_CRUSCO_DISPO
-IBK_EXCHANGE_SV  IBK_RO           SELECT  IBK          DB_CRUSCO_INFO
+MIMMO_EXCHANGE_SV                    SELECT  MIMO          DB_CRUSCO_DISPO
+MIMMO_EXCHANGE_SV  MIMMO_RO           SELECT  MIMMO          DB_CRUSCO_INFO
 ```
 
 ### 4.4 – Tutto in un colpo solo (ruoli, system, oggetti)
