@@ -96,8 +96,8 @@ Raggruppamento operativo:
 | 15 | [AshTopSql.sql](./monitoring_scripts/AshTopSql.sql) | top SQL in ASH |
 | 16 | [AshTopSession.sql](./monitoring_scripts/AshTopSession.sql) | top sessioni in ASH |
 | 17 | [AshTopProcedure.sql](./monitoring_scripts/AshTopProcedure.sql) | top PL/SQL in ASH |
-| 18 | [SQL Plan Change.sql](./monitoring_scripts/SQL Plan Change.sql) | cambi plan hash |
-| 19 | [SQL Stats.sql](./monitoring_scripts/SQL Stats.sql) | statistiche SQL |
+| 18 | (performance_tuning/tuning/SQL Plan Change.sql) | cambi plan hash |
+| 19 | (performance_tuning/tuning/SQL Stats.sql) | statistiche SQL |
 | 20 | [View_UnstablePlan.sql](./performance_tuning/tuning/View_UnstablePlan.sql) | rileva piani instabili |
 
 Nota: la cartella include anche i pack `community_gwenshap` e `community_jkstill` con molte utility specialistiche.
@@ -246,18 +246,18 @@ Raggruppamento operativo:
 | 1 | [TEMP_and_UNDO_monitor.sql](./utilities/TEMP_and_UNDO_monitor.sql) | monitor TEMP/UNDO |
 | 2 | [Job monitoring TEMP e UNDO TABLESPACE.sql](./utilities/Job%20monitoring%20TEMP%20e%20UNDO%20TABLESPACE.sql) | job monitor tablespace |
 | 3 | [Install_pkg_Dba_Utility_20220713_v1_9_PROD.sql](./utilities/Install_pkg_Dba_Utility_20220713_v1_9_PROD.sql) | install utility package |
-| 4 | [get-alert-logs.sh](./utilities/get-alert-logs.sh) | raccolta alert log |
-| 5 | [get-ohomes.sh](./utilities/get-ohomes.sh) | inventory Oracle Homes |
-| 6 | [get-crsctl.sh](./utilities/get-crsctl.sh) | diagnosi Clusterware |
-| 7 | [get-lgwr-trace.sh](./utilities/get-lgwr-trace.sh) | estrazione trace LGWR |
-| 8 | [rman-chk-syntax.sh](./utilities/rman-chk-syntax.sh) | check sintassi RMAN |
-| 9 | [asm-disk-chk.sh](./utilities/asm-disk-chk.sh) | check dischi ASM lato host |
-| 10 | [memsz.sh](./utilities/memsz.sh) | riepilogo memoria processo |
-| 11 | [memsz-all.sh](./utilities/memsz-all.sh) | memoria all-process |
-| 12 | [oracle-connect-rate.sh](./utilities/oracle-connect-rate.sh) | test connect rate |
-| 13 | [procmem.pl](./utilities/procmem.pl) | memoria processo (perl) |
-| 14 | [sga-smallpage-detector.pl](./utilities/sga-smallpage-detector.pl) | verifica page allocation SGA |
-| 15 | [show-sga-page-allocation.sh](./utilities/show-sga-page-allocation.sh) | SGA page map |
+| 4 | (utilities/community_scripts/get-alert-logs.sh) | raccolta alert log |
+| 5 | (utilities/community_scripts/get-ohomes.sh) | inventory Oracle Homes |
+| 6 | (utilities/community_scripts/get-crsctl.sh) | diagnosi Clusterware |
+| 7 | (utilities/community_scripts/get-lgwr-trace.sh) | estrazione trace LGWR |
+| 8 | (utilities/community_scripts/rman-chk-syntax.sh) | check sintassi RMAN |
+| 9 | (utilities/community_scripts/asm-disk-chk.sh) | check dischi ASM lato host |
+| 10 | (utilities/community_scripts/memsz.sh) | riepilogo memoria processo |
+| 11 | (utilities/community_scripts/memsz-all.sh) | memoria all-process |
+| 12 | (utilities/community_scripts/oracle-connect-rate.sh) | test connect rate |
+| 13 | (utilities/community_scripts/procmem.pl) | memoria processo (perl) |
+| 14 | (utilities/community_scripts/sga-smallpage-detector.pl) | verifica page allocation SGA |
+| 15 | (utilities/community_scripts/show-sga-page-allocation.sh) | SGA page map |
 | 16 | [show_jobs.sql](./utilities/scheduler/show_jobs.sql) | job scheduler rapidi |
 | 17 | [dba_jobs_running.sql](./utilities/scheduler/dba_jobs_running.sql) | job in esecuzione |
 | 18 | [dba_sched_jobs.sql](./utilities/scheduler/dba_sched_jobs.sql) | catalogo scheduler jobs |

@@ -44,9 +44,9 @@ Usare questa guida come ripasso tecnico strutturato per colloqui, supporto opera
    - [Runbook operativi](../../01_operations/02_runbooks_incidenti/README.md)
    - [Script SQL pronti](../../01_operations/03_scripts_pronti/README.md)
 3. Per comandi veloci usa cheat sheet:
-   - [RMAN](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_RMAN.md)
-   - [DGMGRL](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_DGMGRL.md)
-   - [GoldenGate](../../01_operations/02_runbooks_incidenti/CHEAT_SHEET_GOLDENGATE.md)
+   - (../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN.md)
+   - (../../01_operations/01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
+   - (../../01_operations/01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
 
 ---
 
@@ -711,7 +711,7 @@ graph TD
 ---
 
 ## 📅 PIANO DI STUDIO CONSIGLIATO (8 SETTIMANE)
-➔ [Consulta il PIANO_LABORATORIO.md](file:///c:/DBA/oracle_rac_project/docs/04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md)
+➔ (../01_fondamenti_teorici/PIANO_LABORATORIO.md)
 
 ---
 <p align="center">

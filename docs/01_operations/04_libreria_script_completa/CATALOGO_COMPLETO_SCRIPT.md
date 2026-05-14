@@ -946,28 +946,28 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 
 | Script | Sottocartella | Rischio | Stato cartella | Spiegazione |
 |---|---|---|---|---|
-| [`all-parms.sh`](./utilities/all-parms.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`asm-disk-chk.pl`](./utilities/asm-disk-chk.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`asm-disk-chk.sh`](./utilities/asm-disk-chk.sh) | `community_scripts` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
-| [`all-parms.sh`](./utilities/bin/all-parms.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`asm-disk-chk.pl`](./utilities/bin/asm-disk-chk.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`asm-disk-chk.sh`](./utilities/bin/asm-disk-chk.sh) | `community_scripts/bin` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
-| [`functions.sh`](./utilities/bin/functions.sh) | `community_scripts/bin` | ALTO | OK | use to get RAC instances from db name |
-| [`get-alert-logs.sh`](./utilities/bin/get-alert-logs.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-bind-info.pl`](./utilities/bin/get-bind-info.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`get-crsctl.sh`](./utilities/bin/get-crsctl.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-lgwr-trace.sh`](./utilities/bin/get-lgwr-trace.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`get-ohomes.sh`](./utilities/bin/get-ohomes.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz-all.sh`](./utilities/bin/memsz-all.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz.sh`](./utilities/bin/memsz.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`oracle-connect-rate.sh`](./utilities/bin/oracle-connect-rate.sh) | `community_scripts/bin` | BASSO | OK | get connection rate from oracle listener log |
-| [`procmem.pl`](./utilities/bin/procmem.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`rman-chk-syntax.sh`](./utilities/bin/rman-chk-syntax.sh) | `community_scripts/bin` | BASSO | OK | Determine if STDIN is from pipe or terminal |
-| [`sga-smallpage-detector.pl`](./utilities/bin/sga-smallpage-detector.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
-| [`show-sga-page-allocation.sh`](./utilities/bin/show-sga-page-allocation.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`sql-driver.sh`](./utilities/bin/sql-driver.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
-| [`sqlnet-io-rates.pl`](./utilities/bin/sqlnet-io-rates.pl) | `community_scripts/bin` | MEDIO | OK | !/usr/bin/env perl |
-| [`sqlnet-io.sql`](./utilities/bin/sqlnet-io.sql) | `community_scripts/bin` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
+| (utilities/community_scripts/all-parms.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/asm-disk-chk.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/asm-disk-chk.sh) | `community_scripts` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
+| (utilities/community_scripts/all-parms.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/asm-disk-chk.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/asm-disk-chk.sh) | `community_scripts/bin` | BASSO | OK | on a virtual box server using iSCSI for RAC storage |
+| (utilities/community_scripts/functions.sh) | `community_scripts/bin` | ALTO | OK | use to get RAC instances from db name |
+| (utilities/community_scripts/get-alert-logs.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-bind-info.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/get-crsctl.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-lgwr-trace.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-ohomes.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/memsz-all.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/memsz.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/oracle-connect-rate.sh) | `community_scripts/bin` | BASSO | OK | get connection rate from oracle listener log |
+| (utilities/community_scripts/procmem.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/rman-chk-syntax.sh) | `community_scripts/bin` | BASSO | OK | Determine if STDIN is from pipe or terminal |
+| (utilities/community_scripts/sga-smallpage-detector.pl) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/show-sga-page-allocation.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/sql-driver.sh) | `community_scripts/bin` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/sqlnet-io-rates.pl) | `community_scripts/bin` | MEDIO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/sqlnet-io.sql) | `community_scripts/bin` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
 | [`aas-awr-pdb-calc.sql`](./utilities/cdb_pdb/aas-awr-pdb-calc.sql) | `community_scripts/cdb_pdb` | BASSO | OK | aas-awr-pdb-calc.sql |
 | [`cdb-containers-query.sql`](./utilities/cdb_pdb/cdb-containers-query.sql) | `community_scripts/cdb_pdb` | BASSO | OK | cdb-containers-query.sql |
 | [`cdb_sched_jobs.sql`](./utilities/cdb_pdb/cdb_sched_jobs.sql) | `community_scripts/cdb_pdb` | BASSO | OK | dba_scheduler_jobs.sql |
@@ -977,17 +977,17 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`resmgr-waits-pdb.sql`](./utilities/cdb_pdb/resmgr-waits-pdb.sql) | `community_scripts/cdb_pdb` | BASSO | OK | resmgr-waits-pdb.sql |
 | [`show-pdbs.sql`](./utilities/cdb_pdb/show-pdbs.sql) | `community_scripts/cdb_pdb` | BASSO | OK | Gestione multitenant Oracle (CDB/PDB) e verifiche operative. |
 | [`show_container.sql`](./utilities/cdb_pdb/show_container.sql) | `community_scripts/cdb_pdb` | BASSO | OK | show_container.sql |
-| [`functions.sh`](./utilities/functions.sh) | `community_scripts` | ALTO | OK | use to get RAC instances from db name |
-| [`get-alert-logs.sh`](./utilities/get-alert-logs.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-bind-info.pl`](./utilities/get-bind-info.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`get-crsctl.sh`](./utilities/get-crsctl.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-lgwr-trace.sh`](./utilities/get-lgwr-trace.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`get-ohomes.sh`](./utilities/get-ohomes.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz-all.sh`](./utilities/memsz-all.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`memsz.sh`](./utilities/memsz.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`oracle-connect-rate.sh`](./utilities/oracle-connect-rate.sh) | `community_scripts` | BASSO | OK | get connection rate from oracle listener log |
-| [`procmem.pl`](./utilities/procmem.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`rman-chk-syntax.sh`](./utilities/rman-chk-syntax.sh) | `community_scripts` | BASSO | OK | Determine if STDIN is from pipe or terminal |
+| (utilities/community_scripts/functions.sh) | `community_scripts` | ALTO | OK | use to get RAC instances from db name |
+| (utilities/community_scripts/get-alert-logs.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-bind-info.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/get-crsctl.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-lgwr-trace.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/get-ohomes.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/memsz-all.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/memsz.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/oracle-connect-rate.sh) | `community_scripts` | BASSO | OK | get connection rate from oracle listener log |
+| (utilities/community_scripts/procmem.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/rman-chk-syntax.sh) | `community_scripts` | BASSO | OK | Determine if STDIN is from pipe or terminal |
 | [`all_jobs.sql`](./utilities/scheduler/all_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | Diagnostica e controllo job Oracle Scheduler. |
 | [`all_sched_jobs.sql`](./utilities/scheduler/all_sched_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | all_scheduler_jobs.sql |
 | [`ash-sqlid-event-window.sql`](./utilities/scheduler/ash-sqlid-event-window.sql) | `community_scripts/scheduler` | BASSO | OK | ash-sqlid-event-window.sql |
@@ -1021,11 +1021,11 @@ _Nessuno script operativo in questa categoria (solo documentazione)._
 | [`sp_job_submit.sql`](./utilities/scheduler/sp_job_submit.sql) | `community_scripts/scheduler` | BASSO | OK | job_submit.sql |
 | [`ua-audit-log-cleanup-job.sql`](./utilities/scheduler/ua-audit-log-cleanup-job.sql) | `community_scripts/scheduler` | MEDIO | OK | ua-audit-log-cleanup-job.sql |
 | [`who_dba_jobs.sql`](./utilities/scheduler/who_dba_jobs.sql) | `community_scripts/scheduler` | BASSO | OK | jkstill@gmail.com |
-| [`sga-smallpage-detector.pl`](./utilities/sga-smallpage-detector.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
-| [`show-sga-page-allocation.sh`](./utilities/show-sga-page-allocation.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`sql-driver.sh`](./utilities/sql-driver.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
-| [`sqlnet-io-rates.pl`](./utilities/sqlnet-io-rates.pl) | `community_scripts` | MEDIO | OK | !/usr/bin/env perl |
-| [`sqlnet-io.sql`](./utilities/sqlnet-io.sql) | `community_scripts` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
+| (utilities/community_scripts/sga-smallpage-detector.pl) | `community_scripts` | BASSO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/show-sga-page-allocation.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/sql-driver.sh) | `community_scripts` | BASSO | OK | !/usr/bin/env bash |
+| (utilities/community_scripts/sqlnet-io-rates.pl) | `community_scripts` | MEDIO | OK | !/usr/bin/env perl |
+| (utilities/community_scripts/sqlnet-io.sql) | `community_scripts` | BASSO | OK | and sess.sid = 34 --and sess.serial# = 18799 |
 | [`block-summary.sql`](./utilities/storage/block-summary.sql) | `community_scripts/storage` | BASSO | OK | block-summary.sql |
 | [`dbms_space_asa_rpt.sql`](./utilities/storage/dbms_space_asa_rpt.sql) | `community_scripts/storage` | BASSO | OK | dbms_space_asa_rpt.sql |
 | [`dfshrink-gen-9i.sql`](./utilities/storage/dfshrink-gen-9i.sql) | `community_scripts/storage` | ALTO | OK | dfshrink-gen-9i.sql |
