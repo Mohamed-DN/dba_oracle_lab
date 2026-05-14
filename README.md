@@ -191,10 +191,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [
-📊 Monitoring Enterprise
-[GUIDA SETUP CHECKMK ORACLE ENTERPRISE](docs/02_core_dba/06_monitoring_systems/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md) — Guida completa all'installazione, configurazione UI, Agent Bakery, regole Oracle, Business Intelligence e Distributed Monitoring.
-Monitoring Opensource](./docs/02_core_dba/06_monitoring_systems/GUIDA_MONITORING_OPENSOURCE.md) | **Checkmk vs Zabbix vs Prometheus+Grafana** — guida installazione completa |
+| [Monitoring Enterprise](./docs/02_core_dba/06_monitoring_systems/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md) | Guida completa all'installazione, UI, Agent, regole Oracle, BI, Distributed Monitoring e Grafana. |
+| [Monitoring Opensource](./docs/02_core_dba/06_monitoring_systems/GUIDA_MONITORING_OPENSOURCE.md) | **Checkmk vs Zabbix vs Prometheus+Grafana** — guida installazione completa |
 | [Enterprise Manager 24ai](./docs/02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md) | OEM Cloud Control 24ai: OMS, Agent, discovery |
 
 ---
