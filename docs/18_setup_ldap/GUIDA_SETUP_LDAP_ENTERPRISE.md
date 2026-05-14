@@ -385,15 +385,386 @@ SHOW PARAMETER ldap_directory_access;
 
 ---
 
-## 6. Riferimenti
+
+
+---
+
+## PARTE V — DETTAGLI AVANZATI E PROCEDURE COMPLETE
+
+---
+
+## 7. Comandi EUSM Completi (Enterprise User Security Manager)
+
+### 7.1 Prerequisiti EUSM
+
+```bash
+# EUSM richiede un wallet con le credenziali LDAP
+# Crea il wallet prima di usare eusm
+
+# 1. Crea il wallet
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet -create <<EOF
+wallet_password
+wallet_password
+EOF
+
+# 2. Aggiungi le credenziali
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
+  -createEntry oracle.security.client.username "cn=orcladmin"
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
+  -createEntry oracle.security.client.password "ldap_admin_pwd"
+
+# 3. Verifica
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet -listEntries
+```
+
+### 7.2 Comandi EUSM per Gestione Dominio
+
+```bash
+# Crea un dominio
+eusm createDomain domain_name=OracleDefaultDomain \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Lista domini
+eusm listDomains \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Aggiungi database al dominio
+eusm addDatabase domain_name=OracleDefaultDomain \
+  database_name=PROD \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Lista database nel dominio
+eusm listDatabases domain_name=OracleDefaultDomain \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+```
+
+### 7.3 Comandi EUSM per Mapping Utenti
+
+```bash
+# Mapping diretto: utente LDAP -> schema DB
+eusm createMapping domain_name=OracleDefaultDomain \
+  map_type=ENTRY \
+  map_dn="cn=mario.rossi,ou=People,dc=company,dc=com" \
+  schema=APP_SCHEMA \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Mapping per subtree: tutto il subtree -> schema
+eusm createMapping domain_name=OracleDefaultDomain \
+  map_type=SUBTREE \
+  map_dn="ou=Developers,ou=Groups,dc=company,dc=com" \
+  schema=DEV_SHARED_SCHEMA \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Lista mapping
+eusm listMappings domain_name=OracleDefaultDomain \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Rimuovi mapping
+eusm removeMapping domain_name=OracleDefaultDomain \
+  map_type=ENTRY \
+  map_dn="cn=mario.rossi,ou=People,dc=company,dc=com" \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+```
+
+### 7.4 Global Roles
+
+```bash
+# Crea un Enterprise Role (global role nel directory)
+eusm createRole enterprise_role=GLOBAL_DBA_ROLE \
+  domain_name=OracleDefaultDomain \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Assegna global role a un database role
+eusm addGlobalRole enterprise_role=GLOBAL_DBA_ROLE \
+  domain_name=OracleDefaultDomain \
+  database_name=PROD \
+  global_role=DBA \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+
+# Grant enterprise role a un utente LDAP
+eusm grantRole enterprise_role=GLOBAL_DBA_ROLE \
+  domain_name=OracleDefaultDomain \
+  user_dn="cn=mario.rossi,ou=People,dc=company,dc=com" \
+  realm_dn="dc=company,dc=com" \
+  ldap_host=oid.company.com ldap_port=389 \
+  ldap_user_dn="cn=orcladmin" ldap_user_password="pwd"
+```
+
+---
+
+## 8. CMU: Password Filter e Schema Extension per Active Directory
+
+### 8.1 Installare il Password Filter Oracle su AD Domain Controller
+
+Il Password Filter e OBBLIGATORIO se vuoi usare l'autenticazione con password.
+Senza di esso, solo Kerberos authentication funziona.
+
+```powershell
+# SUL DOMAIN CONTROLLER AD (Windows Server)
+
+# 1. Copia opwdintg.exe dal media Oracle Database
+# Si trova in: $ORACLE_HOME/bin/opwdintg.exe (sulla macchina Oracle)
+# Copialo sul Domain Controller
+
+# 2. Esegui come Amministratore
+opwdintg.exe
+
+# Menu:
+# 1. Install Oracle Password Filter
+# 2. Extend AD Schema for Oracle CMU
+# 3. Exit
+
+# Scegli 1: Installa il Password Filter
+# Scegli 2: Estendi lo schema AD (aggiunge attributi Oracle)
+
+# 3. RIAVVIA il Domain Controller (obbligatorio!)
+# Il Password Filter si attiva solo dopo il reboot.
+```
+
+### 8.2 Verificare l'installazione del Password Filter
+
+```powershell
+# Verifica che il filter sia registrato nel registry
+Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "Notification Packages"
+# Deve contenere: "opwdintg"
+
+# Verifica i gruppi Oracle creati in AD
+Get-ADGroup -Filter 'Name -like "ORA_VFR*"'
+# Deve mostrare: ORA_VFR_11G, ORA_VFR_12C, ORA_VFR_MD5
+```
+
+### 8.3 Aggiungere Utenti AD ai Gruppi Oracle Verifier
+
+```powershell
+# L'utente DEVE essere nel gruppo verifier corretto
+# Per Oracle 19c, usa ORA_VFR_12C
+Add-ADGroupMember -Identity "ORA_VFR_12C" -Members "mario.rossi"
+
+# Dopo aver aggiunto al gruppo, l'utente DEVE cambiare password
+# per generare il password verifier Oracle
+Set-ADAccountPassword -Identity "mario.rossi" -Reset -NewPassword (ConvertTo-SecureString "NewP@ss2026!" -AsPlainText -Force)
+```
+
+### 8.4 Configurare il Wallet per CMU con orapki
+
+```bash
+# 1. Esporta il certificato CA di Active Directory
+# Sul Domain Controller: certutil -ca.cert ad_ca.cer
+# Copia ad_ca.cer sul server Oracle
+
+# 2. Crea il wallet Oracle
+orapki wallet create -wallet /u01/app/oracle/admin/PROD/wallet \
+  -pwd WalletPassword -auto_login
+
+# 3. Importa il certificato CA di AD
+orapki wallet add -wallet /u01/app/oracle/admin/PROD/wallet \
+  -trusted_cert -cert /tmp/ad_ca.cer -pwd WalletPassword
+
+# 4. Aggiungi le credenziali del service account AD
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
+  -createEntry ORACLE.SECURITY.DN \
+  "CN=svc_oracle_cmu,OU=ServiceAccounts,DC=company,DC=com"
+
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
+  -createEntry ORACLE.SECURITY.PASSWORD "ServiceAccountPwd"
+
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
+  -createEntry ORACLE.SECURITY.USERNAME "svc_oracle_cmu@company.com"
+
+# 5. Verifica contenuto wallet
+mkstore -wrl /u01/app/oracle/admin/PROD/wallet -listEntries
+orapki wallet display -wallet /u01/app/oracle/admin/PROD/wallet
+```
+
+### 8.5 Parametri Database per CMU
+
+```sql
+-- Abilita CMU con autenticazione password
+ALTER SYSTEM SET LDAP_DIRECTORY_ACCESS = 'PASSWORD' SCOPE=BOTH;
+
+-- Per consentire SYSDBA via AD (opzionale, valuta rischi)
+ALTER SYSTEM SET LDAP_DIRECTORY_SYSAUTH = 'YES' SCOPE=SPFILE;
+
+-- Rimuovi prefisso OS (necessario per CMU)
+ALTER SYSTEM SET OS_AUTHENT_PREFIX = '' SCOPE=SPFILE;
+
+-- Verifica
+SHOW PARAMETER ldap_directory_access;
+SHOW PARAMETER ldap_directory_sysauth;
+SHOW PARAMETER os_authent_prefix;
+```
+
+---
+
+## 9. Test e Validazione LDAP/CMU
+
+### 9.1 Test Connettivita LDAP
+
+```bash
+# Test con ldapsearch (pacchetto openldap-clients)
+# Per OID
+ldapsearch -h oid.company.com -p 389 \
+  -D "cn=orcladmin" -w "pwd" \
+  -b "dc=company,dc=com" "(uid=mario.rossi)"
+
+# Per AD
+ldapsearch -h ad.company.com -p 389 \
+  -D "svc_oracle_cmu@company.com" -w "pwd" \
+  -b "dc=company,dc=com" "(sAMAccountName=mario.rossi)"
+
+# Test SSL
+ldapsearch -h ad.company.com -p 636 -ZZ \
+  -D "svc_oracle_cmu@company.com" -w "pwd" \
+  -b "dc=company,dc=com" "(sAMAccountName=mario.rossi)"
+
+# Test con telnet (verifica porta aperta)
+telnet oid.company.com 389
+telnet ad.company.com 636
+```
+
+### 9.2 Test Autenticazione DB
+
+```bash
+# Connessione con utente LDAP/AD
+sqlplus mario.rossi/ldap_password@PROD
+
+# Una volta connesso, verifica identita
+SELECT USER FROM dual;
+SELECT SYS_CONTEXT('USERENV','ENTERPRISE_IDENTITY') AS enterprise_dn FROM dual;
+SELECT SYS_CONTEXT('USERENV','AUTHENTICATED_IDENTITY') AS auth_id FROM dual;
+SELECT SYS_CONTEXT('USERENV','AUTHENTICATION_METHOD') AS auth_method FROM dual;
+SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') AS schema FROM dual;
+SELECT SYS_CONTEXT('USERENV','SESSION_USER') AS session_user FROM dual;
+SELECT SYS_CONTEXT('USERENV','PROXY_USER') AS proxy FROM dual;
+```
+
+### 9.3 Debug con Trace Avanzato
+
+```sql
+-- Abilita trace dettagliato per connessioni LDAP
+ALTER SYSTEM SET events '28033 trace name context forever, level 9' SCOPE=MEMORY;
+
+-- Tenta la connessione LDAP problematica
+-- ...
+
+-- Disabilita trace
+ALTER SYSTEM SET events '28033 trace name context off' SCOPE=MEMORY;
+
+-- Trova il trace file
+SELECT value FROM v$diag_info WHERE name = 'Diag Trace';
+-- grep -i "ldap\|kzld\|eus\|cmu\|bind\|search" $DIAG_TRACE/*.trc | tail -50
+```
+
+---
+
+## 10. Troubleshooting Completo LDAP/EUS/CMU
+
+| # | Errore | Causa Dettagliata | Diagnostica | Risoluzione |
+|---|---|---|---|---|
+| 1 | ORA-28030 | DB non raggiunge LDAP server | `telnet host port`, check firewall | Fix rete, verifica dsi.ora/ldap.ora |
+| 2 | ORA-28043 | Password wallet-to-LDAP non valida | `mkstore -listEntries` | Rigenera wallet con DBCA o mkstore |
+| 3 | ORA-28273 | Nessun mapping per l'utente | `eusm listMappings` | Crea mapping con eusm o CREATE USER GLOBALLY |
+| 4 | ORA-28274 | Nessun mapping per enterprise role | `eusm listRoles` | Crea enterprise role mapping |
+| 5 | ORA-01017 | Password AD errata o account locked | Check in AD (Account status) | Unlock, reset password in AD |
+| 6 | ORA-01045 | Utente non ha CREATE SESSION | `SELECT * FROM dba_sys_privs` | GRANT CREATE SESSION |
+| 7 | ORA-28040 | Auth protocol mismatch | Check SQLNET.ALLOWED_LOGON_VERSION | Allinea versioni client/server |
+| 8 | ORA-12154 | TNS alias non trovato | `tnsping`, check NAMES.DIRECTORY_PATH | Fix tnsnames.ora o ldap.ora |
+| 9 | SSL handshake fail | Certificato CA non nel wallet | `orapki wallet display` | Importa CA cert |
+| 10 | Timeout LDAP | Firewall, LDAP server sovraccarico | `ldapsearch` con timeout | Check firewall rules, LDAP health |
+| 11 | Password verifier missing | Utente non nel gruppo ORA_VFR | Check AD group membership | Aggiungi a ORA_VFR_12C, reset pwd |
+| 12 | dsi.ora not found | Path errato o TNS_ADMIN sbagliato | `echo $TNS_ADMIN`, check path | Sposta in $ORACLE_HOME/network/admin |
+| 13 | wallet not found | WALLET_LOCATION errato in sqlnet.ora | Check sqlnet.ora | Fix path, verifica cwallet.sso esista |
+| 14 | ORA-28300 | Schema globale non esiste | `SELECT username FROM dba_users` | Crea shared schema |
+
+---
+
+## 11. Audit e Compliance
+
+```sql
+-- Audit tutti i login via LDAP
+AUDIT CREATE SESSION BY ACCESS;
+
+-- Audit login falliti (critico per security)
+AUDIT CREATE SESSION WHENEVER NOT SUCCESSFUL;
+
+-- Query: login LDAP falliti nelle ultime 24h
+SELECT username, os_username, userhost, terminal,
+       TO_CHAR(timestamp,'DD-MON HH24:MI:SS') AS ts,
+       action_name, returncode
+FROM dba_audit_trail
+WHERE action_name = 'LOGON'
+  AND returncode != 0
+  AND timestamp > SYSDATE - 1
+ORDER BY timestamp DESC;
+
+-- Unified Audit (19c+)
+SELECT event_timestamp, dbusername, os_username, 
+       authentication_type, client_program_name,
+       return_code, unified_audit_policies
+FROM unified_audit_trail
+WHERE action_name = 'LOGON'
+  AND return_code != 0
+  AND event_timestamp > SYSTIMESTAMP - INTERVAL '24' HOUR
+ORDER BY event_timestamp DESC;
+```
+
+---
+
+## 12. Schema di Fallback (Emergenza)
+
+```sql
+-- SEMPRE mantenere almeno 1 utente DBA locale per emergenza
+-- In caso di LDAP down, questo utente permette l'accesso
+
+CREATE USER dba_emergency IDENTIFIED BY "EmergP@ss!" 
+  PROFILE DEFAULT ACCOUNT UNLOCK;
+GRANT DBA TO dba_emergency;
+GRANT SYSDBA TO dba_emergency;
+
+-- Documentare le credenziali in un vault sicuro (es. CyberArk, HashiCorp Vault)
+-- NON nella documentazione in chiaro!
+```
+
+---
+
+## 13. Riferimenti Completi
 
 - Oracle Enterprise User Security Administrator's Guide 19c
   https://docs.oracle.com/en/database/oracle/oracle-database/19/dbimi/
-- Oracle CMU Documentation 19c
+- Oracle CMU with Active Directory 19c
   https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/integrating_mads_with_oracle_database.html
-- MOS: How to Configure EUS (Doc ID 1085065.1)
-- MOS: CMU with Active Directory (Doc ID 2462012.1)
-- MOS: EUS Troubleshooting (Doc ID 1309734.1)
+- Oracle EUSM Command Reference
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbimi/enterprise-user-security-manager-eusm-command-reference.html
+- Oracle Net Services Reference (ldap.ora, sqlnet.ora, dsi.ora)
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/netrf/
+- Oracle Password Filter for AD (opwdintg)
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/integrating_mads_with_oracle_database.html#GUID-4B5B4B52-1E10-4F86-A622-0CC1B96E3F37
+- MOS: How to Configure EUS Step by Step (Doc ID 1085065.1)
+- MOS: CMU with Active Directory Step by Step (Doc ID 2462012.1)
+- MOS: EUS Troubleshooting Checklist (Doc ID 1309734.1)
+- MOS: ORA-28030 Troubleshooting (Doc ID 457111.1)
+- MOS: ORA-28043 Troubleshooting (Doc ID 2307823.1)
+- MOS: Password Filter opwdintg (Doc ID 2462012.1)
 
 ---
 
