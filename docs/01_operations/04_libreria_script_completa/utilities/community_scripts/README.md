@@ -1,6 +1,6 @@
+# 📂 Community Scripts Utilities
 
-
-# oracle-connect-rate.sh
+## oracle-connect-rate.sh
 
 Determine the connection rate from the Oracle alert log
 
@@ -86,7 +86,7 @@ If not specified, all connections are searched.
 16-OCT-2017 09:00:00,18575
 ```
 
-# get-bind-info.pl
+## get-bind-info.pl
 
 The get-bind-info.pl script can pull bind information from a 10046 trace file.
 
@@ -178,7 +178,7 @@ Execution Statistics
 ```
 
 
-# rman-chk-syntax.sh
+## rman-chk-syntax.sh
 
 Use this script to check the syntax of RMAN commands or scripts
 
@@ -234,7 +234,7 @@ RMAN>
 Recovery Manager complete.
 ```
 
-# get-alert-logs.sh
+## get-alert-logs.sh
 
 Retrieve the most recent 20k lines of the alert log from all instances.
 
@@ -272,7 +272,7 @@ Alert log filename not set - is the instance up?
 The script will fail on ohome and cdb1, as those do not represent instances, but are there for convenience.
 
 
-# get-lgwr-trace.sh
+## get-lgwr-trace.sh
 
 Retrieve the LGWR trace files per instance.
 
@@ -310,7 +310,7 @@ potential sid: cdb1
 Tracefile not set - is the instance up?
 ```
 
-# memory sizes
+## memory sizes
 
 Getting size of the bytes of memory actually allocated to a process is always tricky.
 
@@ -501,7 +501,7 @@ sample output
 
 ```
 
-# network
+## network
 
 ## sqlnet-io-rates.pl
 
