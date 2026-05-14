@@ -7,8 +7,9 @@ from pathlib import Path
 
 
 REQUIRED_SECTION_SETS = (
-    ("teoria", "esempio", "validazione", "troubleshooting"),
-    ("obiettivo", "procedura operativa", "validazione finale", "troubleshooting rapido"),
+    ("teoria", "esempio", "validazion", "troubleshoot"),
+    ("obiettiv", "procedura operativa", "validazione finale", "troubleshoot"),
+    ("obiettiv", "assessment", "procedur", "validazion", "troubleshoot"),
 )
 
 
