@@ -5,7 +5,12 @@
 
 ---
 
-## 0. Verifiche preliminari (prima di creare/modificare)
+## 1. Obiettivi e Assessment
+
+Questo runbook fornisce le procedure standard per la creazione, manutenzione e audit delle utenze nel database Oracle. L'obiettivo è garantire il principio del minimo privilegio e la conformità alle policy di sicurezza aziendali.
+
+### 1.1 Verifiche preliminari
+Prima di ogni intervento, è necessario verificare lo stato attuale dell'utenza o del profilo:
 
 ```sql
 -- Controlla se l'utente esiste già
@@ -22,7 +27,9 @@ WHERE profile = UPPER('&profile_name')
 
 ---
 
-## 1. Creare un Utente Applicativo
+## 2. Procedura Operativa
+
+### 2.1 Creare un Utente Applicativo
 
 ```sql
 -- 1. Connettiti al PDB corretto (se in architettura Multitenant)
@@ -48,7 +55,7 @@ GRANT CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE TO &username;
 -- GRANT app_readonly TO &username;
 ```
 
-## 2. Reset Password e Sblocco
+### 2.2 Reset Password e Sblocco
 
 ```sql
 -- Cambia password utente
@@ -63,7 +70,7 @@ FROM dba_users
 WHERE username = UPPER('&username');
 ```
 
-## 3. Revocare Accessi
+### 2.3 Revocare Accessi
 
 ```sql
 -- Revoca ruolo
@@ -79,9 +86,76 @@ ALTER USER &username ACCOUNT LOCK;
 -- DROP USER &username CASCADE;
 ```
 
+### 2.4 Operazioni Avanzate: DDL, Quote e Clonazione
+
+#### 2.4.1 Estrazione DDL Utente, Ruoli e Privilegi
+Utilizza `DBMS_METADATA` per estrarre la definizione completa di un utente esistente. In caso di errore `ORA-31608` (oggetto non trovato), significa che l'utente non possiede quel tipo specifico di grant.
+
+```sql
+SET LONG 2000000000
+SET PAGESIZE 0
+
+-- Estrazione DDL Utente
+SELECT DBMS_METADATA.GET_DDL('USER', UPPER('&username')) FROM DUAL;
+
+-- Estrazione Ruoli assegnati
+SELECT DBMS_METADATA.GET_GRANTED_DDL('ROLE_GRANT', UPPER('&username')) FROM DUAL;
+
+-- Estrazione Privilegi di Sistema
+SELECT DBMS_METADATA.GET_GRANTED_DDL('SYSTEM_GRANT', UPPER('&username')) FROM DUAL;
+
+-- Estrazione Privilegi sugli Oggetti
+SELECT DBMS_METADATA.GET_GRANTED_DDL('OBJECT_GRANT', UPPER('&username')) FROM DUAL;
+
+-- Estrazione Quote Tablespace
+SELECT DBMS_METADATA.GET_GRANTED_DDL('TABLESPACE_QUOTA', UPPER('&username')) FROM DUAL;
+```
+
+#### 2.4.2 Duplicazione (Clonazione) dei Privilegi tra Utenti
+Genera automaticamente i comandi `GRANT` per duplicare i privilegi da un utente sorgente a un utente target.
+
+```sql
+-- 1. Clona i ruoli
+SELECT 'GRANT ' || granted_role || ' TO &target_user;'
+FROM dba_role_privs WHERE grantee = UPPER('&source_user');
+
+-- 2. Clona i privilegi di sistema
+SELECT 'GRANT ' || privilege || ' TO &target_user;'
+FROM dba_sys_privs WHERE grantee = UPPER('&source_user');
+
+-- 3. Clona i privilegi sugli oggetti
+SELECT 'GRANT ' || privilege || ' ON ' || owner || '.' || table_name || ' TO &target_user;'
+FROM dba_tab_privs WHERE grantee = UPPER('&source_user');
+```
+
+#### 2.4.3 Assegnazione e Gestione Quote Tablespace
+Assegna o modifica la quota spazio per un utente.
+
+```sql
+-- Visualizza le quote attuali dell'utente
+SELECT tablespace_name, 
+       ROUND(bytes/1024/1024, 2) AS quota_usata_mb, 
+       DECODE(max_bytes, -1, 'UNLIMITED', ROUND(max_bytes/1024/1024, 2)) AS quota_max_mb
+FROM dba_ts_quotas 
+WHERE username = UPPER('&username');
+
+-- Assegna una quota specifica (es. 500M) sul tablespace di default
+ALTER USER &username QUOTA 500M ON &tablespace_name;
+
+-- Rimuovi limiti di quota sul tablespace di default (uso illimitato)
+ALTER USER &username QUOTA UNLIMITED ON &tablespace_name;
+
+-- Revoca completamente la quota su un tablespace
+ALTER USER &username QUOTA 0 ON &tablespace_name;
+```
+
 ---
 
-## 4. 🔍 Audit Completo (sola lettura, nessuna modifica)
+## 3. Validazione Finale e Audit
+
+*In questa sezione vengono riportate le procedure per convalidare le modifiche effettuate e verificare i privilegi concessi.*
+
+### 3.1 Audit Completo (sola lettura)
 
 *Tutti i controlli sono in **sola lettura**. Puoi esaminare i privilegi effettivi di un utente passo‑passo o con una query unica.*
 
@@ -230,9 +304,9 @@ WHERE rtp.table_name LIKE UPPER('&obj_filter')
 ORDER BY utente, proprietario, oggetto, ruolo_intermedio;
 ```
 
----
+## 4. Troubleshooting e Sicurezza
 
-## 5. Sicurezza e Utenti Problematici
+### 4.1 Gestione Utenti Problematici
 
 ```sql
 -- 1. Utenti con privilegi di sistema pericolosi (ANY privileges o DBA)
@@ -261,7 +335,7 @@ WHERE oracle_maintained = 'N'
 ORDER BY last_login NULLS FIRST;
 ```
 
-## 6. Gestione Profili Password
+### 4.2 Gestione Profili Password
 
 ```sql
 -- Visualizza le regole del profilo assegnato a un utente
@@ -293,9 +367,7 @@ CREATE PROFILE user_profile LIMIT
 ALTER USER &username PROFILE &profile_name;
 ```
 
----
-
-## ✅ Check di Conferma
+### 3.2 Check di Conferma Operativa
 
 | Controllo | Atteso | Azione in caso di Failure |
 | --- | --- | --- |
