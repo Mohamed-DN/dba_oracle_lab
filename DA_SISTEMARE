@@ -1,1 +1,6 @@
-
+--Per individuare il nome del Pluggable Database (PDB) associato al tuo SERVICE_NAME
+SELECT pdb AS pluggable_database,
+       name AS service_name,
+       network_name
+FROM   cdb_services
+WHERE  UPPER(name) LIKE '%&SERVICE_NAME%';
