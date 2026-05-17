@@ -404,3 +404,15 @@ Lab:
 - Componenti MA: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-components-oracle-goldengate-microservices-architecture.html
 - Access points MA: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-access-points-oracle-goldengate-microservices.html
 - REST API 19c: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oggra/QuickStart.html
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.

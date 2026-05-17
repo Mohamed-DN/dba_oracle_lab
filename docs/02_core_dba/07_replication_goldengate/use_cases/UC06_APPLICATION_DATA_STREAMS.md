@@ -46,7 +46,7 @@ GoldenGate permette di pubblicare eventi derivati da commit reali del database, 
 ## 3. Disegno eventi
 
 | Tema | Decisione |
-|---|---|
+| --- | --- |
 | Topic | per tabella, dominio o aggregate business |
 | Payload | before/after image, operation type, timestamp, transaction id |
 | Ordering | per key/partition, non globale se non necessario |
@@ -75,7 +75,7 @@ Il punto chiave e' disegnare il payload come contratto applicativo, non semplice
 ## 5. Pattern outbox vs CDC
 
 | Pattern | Pro | Contro |
-|---|---|---|
+| --- | --- | --- |
 | Outbox applicativa | evento business esplicito | richiede modifica applicazione |
 | GoldenGate CDC | nessuna modifica app legacy iniziale | evento tecnico da trasformare in evento business |
 

@@ -372,3 +372,15 @@ CUTOVER:
   □ App riconfigurata per Target
   □ App riavviata e funzionante
 ```
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.

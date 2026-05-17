@@ -435,3 +435,15 @@ Prima di una modifica GoldenGate in banca:
 - Add Target-Initiated Distribution Path 19c: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/distribute-add-target-initiated-distribution-paths.html
 - Secure Data in Transit 26ai: https://docs.oracle.com/en/database/goldengate/core/26/coredoc/secure-data-transit.html
 - GoldenGate Connectivity and Certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.

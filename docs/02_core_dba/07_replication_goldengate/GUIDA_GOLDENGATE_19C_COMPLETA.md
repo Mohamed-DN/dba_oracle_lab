@@ -551,3 +551,15 @@ Prima di avviare GoldenGate:
 - Oracle GoldenGate 19c - Microservices Components: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-components-oracle-goldengate-microservices-architecture.html
 - Oracle GoldenGate - Log Retention: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oracle-db/determining-how-much-data-retain.html
 - Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
