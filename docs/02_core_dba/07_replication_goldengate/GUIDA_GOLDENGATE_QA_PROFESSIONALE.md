@@ -164,7 +164,7 @@ Non cancelli a caso. Verifichi checkpoint Extract, archivelog richiesti, backup 
 
 ### 33. Come dimensioni archive retention?
 
-Redo per ora *ore outage tollerate* safety factor, piu RMAN/Data Guard/flashback. Misurare da `v$archived_log`.
+Redo per ora × ore di outage tollerate × safety factor, piu RMAN/Data Guard/flashback. Misurare da `v$archived_log`.
 
 ### 34. Cosa significa archive log missing per Extract?
 
