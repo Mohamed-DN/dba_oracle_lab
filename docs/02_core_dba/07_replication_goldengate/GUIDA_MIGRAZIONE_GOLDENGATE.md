@@ -43,14 +43,14 @@
 ## Scenari di Migrazione Comuni
 
 | Da | A | GoldenGate? |
-|---|---|---|
-| Oracle 11g → Oracle 19c | ✅ Versioni diverse | |
-| Oracle on-prem → Oracle Cloud (OCI) | ✅ Cross-platform | |
-| Oracle FS → Oracle ASM | ✅ Storage diverso | |
-| Singolo nodo → RAC | ✅ Architettura diversa | |
-| Oracle Linux → AIX/Solaris | ✅ Cross-OS | |
-| Datacenter A → Datacenter B | ✅ Cross-datacenter | |
-| Oracle → PostgreSQL | ⚠️ Possibile ma complesso (GG for Big Data) | |
+| --- | --- | --- |
+| Oracle 11g → Oracle 19c | ✅ Versioni diverse |  |
+| Oracle on-prem → Oracle Cloud (OCI) | ✅ Cross-platform |  |
+| Oracle FS → Oracle ASM | ✅ Storage diverso |  |
+| Singolo nodo → RAC | ✅ Architettura diversa |  |
+| Oracle Linux → AIX/Solaris | ✅ Cross-OS |  |
+| Datacenter A → Datacenter B | ✅ Cross-datacenter |  |
+| Oracle → PostgreSQL | ⚠️ Possibile ma complesso (GG for Big Data) |  |
 
 ---
 
@@ -372,3 +372,15 @@ CUTOVER:
   □ App riconfigurata per Target
   □ App riavviata e funzionante
 ```
+
+## Obiettivo
+Fornire una procedura di migrazione con Oracle GoldenGate che minimizzi downtime e rischio operativo in cutover.
+
+## Procedura operativa
+Applicare in ordine pre-check, initial load, avvio processi OGG, sincronizzazione continua, cutover e rollback plan.
+
+## Validazione finale
+Validare lag prossimo a zero, integrità dati tra ambienti, assenza errori nei report e stabilità post-cutover.
+
+## Troubleshooting rapido
+In caso di lag/abend, verificare report OGG, archive/FRA, checkpoint e permessi DB, poi rieseguire i test di allineamento.

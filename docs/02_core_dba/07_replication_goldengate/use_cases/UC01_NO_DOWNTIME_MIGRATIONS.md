@@ -42,7 +42,7 @@ CDC ---------------------------------------------------------------> Delta conti
 ## 3. Fasi operative
 
 | Fase | Attivita | Output atteso |
-|---|---|---|
+| --- | --- | --- |
 | Assessment | oggetti, PK, datatype, LOB, volume redo, downtime ammesso | matrice compatibilita |
 | Target build | install DB, patch, charset, tablespace, utenti | target pronto |
 | Prerequisiti GG | logging, supplemental logging, GGADMIN, credential store | capture sicuro |

@@ -31,7 +31,7 @@
 ## Prerequisiti
 
 | Requisito | Oracle (Source) | PostgreSQL (Target) |
-|---|---|---|
+| --- | --- | --- |
 | **Versione** | 19c (nostro lab) | 16.x |
 | **Archivelog** | Gia attivo (Fase 2) | N/A |
 | **Supplemental Logging** | Da abilitare | N/A |
@@ -435,7 +435,7 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 ### Checklist di Validazione
 
 | # | Check | Comando |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Conteggio righe uguale | COUNT(*) su ogni tabella |
 | 2 | Checksum dati | Confronto hash su colonne chiave |
 | 3 | Constraint attivi | `\d+ tablename` in psql |
@@ -449,7 +449,7 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 ## Data Type Mapping (Oracle → PostgreSQL)
 
 | Oracle | PostgreSQL | Note |
-|---|---|---|
+| --- | --- | --- |
 | `NUMBER(p)` | `INTEGER` / `BIGINT` | p<=9 → INT, p<=18 → BIGINT |
 | `NUMBER(p,s)` | `NUMERIC(p,s)` | Mapping diretto |
 | `NUMBER` | `NUMERIC` | Senza precisione |
@@ -470,7 +470,7 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 ## Troubleshooting Comuni
 
 | Problema | Soluzione |
-|---|---|
+| --- | --- |
 | Extract non parte | Verifica supplemental logging: `SELECT SUPPLEMENTAL_LOG_DATA_MIN FROM v$database` |
 | ODBC connection refused | Verifica `pg_hba.conf` e `listen_addresses` |
 | Data type mismatch | Usa `COLMAP` nel Replicat per mapping esplicito |
@@ -481,3 +481,15 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 
 > → **Precedente**: [GUIDA_ESAME_REVIEW.md](../../04_governance_learning/03_esami_e_carriera/GUIDA_ESAME_REVIEW.md) — Ripasso Esami Oracle
 > → **Piano Studio**: [PIANO_LABORATORIO.md](../../04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md) — Vedi Settimana 6
+
+## Obiettivo
+Definire un percorso operativo per migrare dati Oracle verso PostgreSQL con downtime minimo e controlli di coerenza.
+
+## Procedura operativa
+Seguire la sequenza prerequisiti Oracle/PostgreSQL, setup ODBC, configurazione Extract/Pump/Replicat e cutover controllato.
+
+## Validazione finale
+Confermare COUNT e checksum tra source/target, lag stabile, assenza di abend e piena funzionalità applicativa su PostgreSQL.
+
+## Troubleshooting rapido
+Se la replica non converge, controllare log OGG, mapping COLMAP, connettività ODBC/pg_hba e checkpoint di ripartenza.

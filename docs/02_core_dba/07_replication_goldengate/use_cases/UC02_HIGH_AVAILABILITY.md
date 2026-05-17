@@ -44,7 +44,7 @@ Se vuoi proteggere tutto il database Oracle con massimo allineamento fisico, Dat
 ## 3. Rischi active-active
 
 | Rischio | Spiegazione | Mitigazione |
-|---|---|---|
+| --- | --- | --- |
 | Update/update conflict | stessa riga modificata su due siti | CDR, ownership dati, routing applicativo |
 | Insert collision | stessa PK generata su entrambi i siti | sequence range, GUID, identity disegnata bene |
 | Delete/update conflict | un sito cancella, l'altro aggiorna | regole CDR e design funzionale |
@@ -147,7 +147,7 @@ Per HA logica non basta configurare due Replicat. Devi definire il modello di sc
 Prima di proporre active-active in banca, prepara una matrice conflitti:
 
 | Conflitto | Decisione richiesta |
-|---|---|
+| --- | --- |
 | insert stessa PK | range sequence, GUID o ownership sito |
 | update stessa riga | last writer wins, timestamp, regola funzionale |
 | delete/update | delete vince o update viene scartato |

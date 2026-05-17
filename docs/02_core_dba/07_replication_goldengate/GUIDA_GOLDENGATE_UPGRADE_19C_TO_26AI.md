@@ -356,3 +356,15 @@ STATS REPLICAT rep_tgt, TOTAL
 - Oracle GoldenGate 26ai Docs: https://docs.oracle.com/en/database/goldengate/core/26/index.html
 - Oracle GoldenGate 26ai Release Notes: https://docs.oracle.com/en/database/goldengate/core/26/release-notes/new-features.html
 - Oracle GoldenGate Certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Definire un percorso sicuro di upgrade da GoldenGate 19c a 26ai con rollback e controlli operativi completi.
+
+## Procedura operativa
+Eseguire in sequenza pre-check certificazioni, backup, stop controllato, upgrade deployment/home e restart progressivo dei processi.
+
+## Validazione finale
+Verificare salute servizi/processi, lag, apply end-to-end e assenza errori nei report dopo test funzionali post-upgrade.
+
+## Troubleshooting rapido
+Se l'upgrade fallisce, usare il rollback plan con restore di home/deployment/checkpoint e ripartenza dal baseline 19c.

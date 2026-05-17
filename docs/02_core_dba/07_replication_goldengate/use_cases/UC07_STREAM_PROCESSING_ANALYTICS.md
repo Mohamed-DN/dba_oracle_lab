@@ -40,7 +40,7 @@ Stream processing: windows, joins, filters, enrichment
 ## 2. Differenza tra ingest e stream processing
 
 | Tema | Analytical ingest | Stream processing |
-|---|---|---|
+| --- | --- | --- |
 | Focus | portare dati al target | calcolare mentre i dati passano |
 | Output | tabelle/lakehouse | eventi arricchiti, alert, metriche |
 | Latenza | secondi/minuti | secondi/sub-secondi secondo piattaforma |

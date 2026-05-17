@@ -191,3 +191,15 @@ Regola: se Extract e' fermo, non cancellare archivelog necessari senza sapere il
 - ENABLE_GOLDENGATE_REPLICATION: https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/ENABLE_GOLDENGATE_REPLICATION.html
 - DBMS_GOLDENGATE_AUTH: https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_GOLDENGATE_AUTH.html
 - Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)
+
+## Obiettivo
+Definire prerequisiti database e scelte architetturali minime per una implementazione GoldenGate stabile in Oracle 19c.
+
+## Procedura operativa
+Applicare checklist su logging, parametri DB, utenze/privilegi, rete, storage trail e baseline di monitoraggio.
+
+## Validazione finale
+Confermare che tutti i prerequisiti tecnici risultino verificati e che l'ambiente sia pronto alla fase di configurazione OGG.
+
+## Troubleshooting rapido
+Se un prerequisito fallisce, correggere parametro/permesso mancante, ritestare con query di verifica e rieseguire la checklist.

@@ -435,3 +435,15 @@ Prima di una modifica GoldenGate in banca:
 - Add Target-Initiated Distribution Path 19c: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/distribute-add-target-initiated-distribution-paths.html
 - Secure Data in Transit 26ai: https://docs.oracle.com/en/database/goldengate/core/26/coredoc/secure-data-transit.html
 - GoldenGate Connectivity and Certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Definire l’adozione GoldenGate in contesti bancari critici rispettando requisiti di sicurezza, continuità e governance.
+
+## Procedura operativa
+Applicare segmentazione rete, hardening host, controllo accessi, change process e runbook di escalation per ambienti regolati.
+
+## Validazione finale
+Validare audit trail, segregazione ruoli, SLA di lag/availability e conformità ai controlli operativi richiesti.
+
+## Troubleshooting rapido
+In caso di incidente, seguire flusso war-room: evidenze log, impatto transazionale, rollback controllato ed escalation compliance.

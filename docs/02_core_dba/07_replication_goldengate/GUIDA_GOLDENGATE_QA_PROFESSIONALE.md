@@ -164,7 +164,7 @@ Non cancelli a caso. Verifichi checkpoint Extract, archivelog richiesti, backup 
 
 ### 33. Come dimensioni archive retention?
 
-Redo per ora * ore outage tollerate * safety factor, piu RMAN/Data Guard/flashback. Misurare da `v$archived_log`.
+Redo per ora × ore di outage tollerate × safety factor, piu RMAN/Data Guard/flashback. Misurare da `v$archived_log`.
 
 ### 34. Cosa significa archive log missing per Extract?
 
@@ -300,3 +300,15 @@ Quando mancano log necessari, target divergente non riparabile, start SCN errato
 ### 60. Qual e' la risposta piu importante da dare su GoldenGate?
 
 GoldenGate non e' solo "start extract/start replicat". E' una pipeline transazionale: source logging, capture, trail retention, routing, apply, checkpoint, monitoring e recovery devono essere progettati insieme.
+
+## Obiettivo
+Chiarire i temi chiave da presidiare in colloquio tecnico su GoldenGate (architettura, operatività, troubleshooting).
+
+## Procedura operativa
+Usare la guida in modalità sessione Q&A: ripasso per blocchi, risposta strutturata e verifica degli argomenti critici.
+
+## Validazione finale
+Verificare di saper spiegare end-to-end capture/apply, scenari di errore frequenti e procedure di recovery operative.
+
+## Troubleshooting rapido
+Se emergono lacune, tornare alle domande con incertezza, collegarle ai runbook OGG e ripetere il ripasso mirato.

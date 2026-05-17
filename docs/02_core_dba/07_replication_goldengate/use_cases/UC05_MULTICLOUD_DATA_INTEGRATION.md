@@ -26,7 +26,7 @@ Private network / VPN / FastConnect / IPSec / approved public endpoint
 ## 2. Pattern di rete
 
 | Pattern | Quando usarlo | Nota |
-|---|---|---|
+| --- | --- | --- |
 | Source-initiated | source puo' aprire verso target | semplice ma spesso bloccato in banca |
 | Target-initiated | target apre verso source/Distribution | utile quando inbound verso target non e' permesso |
 | Hub GoldenGate | tante source/target e zone diverse | centralizza controllo ma diventa componente critico |
