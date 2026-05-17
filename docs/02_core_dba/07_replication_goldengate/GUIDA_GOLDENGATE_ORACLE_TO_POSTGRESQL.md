@@ -353,13 +353,13 @@ Testare anche:
 - Oracle certifications: https://www.oracle.com/integration/goldengate/certifications/
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Definire un percorso Oracle-to-PostgreSQL con GoldenGate, includendo mapping tipi dati e prerequisiti eterogenei.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Seguire setup sorgente Oracle, connessione target PostgreSQL, configurazione processi OGG e tuning della replica cross-platform.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Validare connettività ODBC/JDBC, coerenza colonne convertite, lag stabile e corretto apply sul target PostgreSQL.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+In caso di mismatch o stop apply, controllare mapping datatype, parametri connection string e report error dei processi OGG.

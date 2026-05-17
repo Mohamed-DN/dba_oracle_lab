@@ -553,13 +553,13 @@ Prima di avviare GoldenGate:
 - Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Fornire una guida end-to-end su GoldenGate 19c: architettura, installazione, configurazione, esercizio operativo e recovery.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Seguire i blocchi della guida (prerequisiti, setup, configurazione processi, monitoraggio e gestione incident) come percorso completo.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Confermare readiness operativa completa: processi stabili, replication lag sotto soglia e procedure di fallback testate.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+In caso di malfunzionamenti, usare la sezione di diagnostica per isolare layer coinvolto (DB, rete, trail, processi OGG).

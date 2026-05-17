@@ -376,13 +376,13 @@ Se la riga compare, la tua **Microservices Architecture** è perfettamente confi
 **← [FASE 6: Enterprise Manager](../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 8: Test e Verifica End-to-End](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md)**
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Raggiungere gli obiettivi della Fase 7 del lab implementando GoldenGate in modo guidato e verificabile.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Completare attività di fase in sequenza: preparazione ambiente, configurazione processi, test replica e verifica checkpoint.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Confermare i risultati didattici della fase: replica funzionante, comprensione dei componenti e troubleshooting di base superato.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+Se la fase non va a buon fine, ripartire dai prerequisiti del lab, controllare log OGG e ripetere i test previsti dalla checklist.
