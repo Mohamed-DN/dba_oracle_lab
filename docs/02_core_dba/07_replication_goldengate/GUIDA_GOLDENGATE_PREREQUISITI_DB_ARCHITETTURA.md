@@ -193,13 +193,13 @@ Regola: se Extract e' fermo, non cancellare archivelog necessari senza sapere il
 - Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Definire prerequisiti database e scelte architetturali minime per una implementazione GoldenGate stabile in Oracle 19c.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Applicare checklist su logging, parametri DB, utenze/privilegi, rete, storage trail e baseline di monitoraggio.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Confermare che tutti i prerequisiti tecnici risultino verificati e che l'ambiente sia pronto alla fase di configurazione OGG.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+Se un prerequisito fallisce, correggere parametro/permesso mancante, ritestare con query di verifica e rieseguire la checklist.

@@ -302,13 +302,13 @@ Quando mancano log necessari, target divergente non riparabile, start SCN errato
 GoldenGate non e' solo "start extract/start replicat". E' una pipeline transazionale: source logging, capture, trail retention, routing, apply, checkpoint, monitoring e recovery devono essere progettati insieme.
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Chiarire i temi chiave da presidiare in colloquio tecnico su GoldenGate (architettura, operatività, troubleshooting).
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Usare la guida in modalità sessione Q&A: ripasso per blocchi, risposta strutturata e verifica degli argomenti critici.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Verificare di saper spiegare end-to-end capture/apply, scenari di errore frequenti e procedure di recovery operative.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+Se emergono lacune, tornare alle domande con incertezza, collegarle ai runbook OGG e ripetere il ripasso mirato.
