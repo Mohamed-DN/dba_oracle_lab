@@ -173,15 +173,17 @@ Attenzione a:
 
 Dalle comunicazioni Oracle recenti, i casi ricorrenti sono questi.
 
-| Use case | Spiegazione DBA |
-| --- | --- |
-| No Downtime Migrations | Migrazione o upgrade con initial load + CDC + cutover breve |
-| High Availability | Replica logica per resilienza applicativa o active-active controllato |
-| Analytical Data Ingest | Alimentare warehouse/lakehouse quasi real-time |
-| AI Ready Data | Rendere dati operativi disponibili a pipeline AI/vector/RAG |
-| Multicloud Data Integration | Sincronizzare dati tra on-prem, OCI, AWS, Azure, Google Cloud |
-| Application Data Streams | Pubblicare eventi dati verso applicazioni/event-driven systems |
-| Stream Processing and Analytics | Mandare change events verso Kafka, stream analytics, lakehouse |
+| Use case | Spiegazione DBA | Guida operativa |
+| --- | --- | --- |
+| No Downtime Migrations | Migrazione o upgrade con initial load + CDC + cutover breve | [UC01 - No Downtime Migrations](./use_cases/UC01_NO_DOWNTIME_MIGRATIONS.md) |
+| High Availability | Replica logica per resilienza applicativa o active-active controllato | [UC02 - High Availability](./use_cases/UC02_HIGH_AVAILABILITY.md) |
+| Analytical Data Ingest | Alimentare warehouse/lakehouse quasi real-time | [UC03 - Analytical Data Ingest](./use_cases/UC03_ANALYTICAL_DATA_INGEST.md) |
+| AI Ready Data | Rendere dati operativi disponibili a pipeline AI/vector/RAG | [UC04 - AI Ready Data](./use_cases/UC04_AI_READY_DATA.md) |
+| Multicloud Data Integration | Sincronizzare dati tra on-prem, OCI, AWS, Azure, Google Cloud | [UC05 - Multicloud Data Integration](./use_cases/UC05_MULTICLOUD_DATA_INTEGRATION.md) |
+| Application Data Streams | Pubblicare eventi dati verso applicazioni/event-driven systems | [UC06 - Application Data Streams](./use_cases/UC06_APPLICATION_DATA_STREAMS.md) |
+| Stream Processing and Analytics | Mandare change events verso Kafka, stream analytics, lakehouse | [UC07 - Stream Processing and Analytics](./use_cases/UC07_STREAM_PROCESSING_ANALYTICS.md) |
+
+Indice completo della cartella use case: [use_cases/README.md](./use_cases/README.md).
 
 ---
 
@@ -239,6 +241,18 @@ Per non confonderti:
 - poi Oracle->PostgreSQL;
 - poi topologie avanzate;
 - poi 23ai/26ai AI/data fabric.
+
+Mappa pratica:
+
+| Se vuoi provare | Apri |
+| --- | --- |
+| Migrazione Oracle -> Oracle | [UC01](./use_cases/UC01_NO_DOWNTIME_MIGRATIONS.md) + [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) |
+| HA logica o active-active | [UC02](./use_cases/UC02_HIGH_AVAILABILITY.md) |
+| Dati verso analytics/lakehouse | [UC03](./use_cases/UC03_ANALYTICAL_DATA_INGEST.md) |
+| AI/RAG/vector data refresh | [UC04](./use_cases/UC04_AI_READY_DATA.md) |
+| On-prem/OCI/AWS/Azure/GCP | [UC05](./use_cases/UC05_MULTICLOUD_DATA_INTEGRATION.md) |
+| Eventi applicativi | [UC06](./use_cases/UC06_APPLICATION_DATA_STREAMS.md) |
+| Kafka/stream analytics | [UC07](./use_cases/UC07_STREAM_PROCESSING_ANALYTICS.md) |
 
 ---
 
