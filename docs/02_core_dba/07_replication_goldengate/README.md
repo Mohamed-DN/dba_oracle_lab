@@ -1,15 +1,40 @@
-# 🔄 Replica & Migrazione — Indice Area
+# Replica & Migrazione - GoldenGate 19c / 26ai
+
+> Area dedicata a Oracle GoldenGate. Il percorso principale e' **GoldenGate 19c**, perche' e' la versione piu comune negli ambienti enterprise esistenti. Le guide 26ai servono per capire evoluzione, novita e upgrade.
+
+## Percorso consigliato
+
+| Ordine | Guida | Cosa impari |
+| --- | --- | --- |
+| 1 | [Prerequisiti DB e Architettura](./GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md) | Logging, supplemental logging, GGADMIN, FRA, trail, gate pre-configurazione |
+| 2 | [GoldenGate 19c Completa](./GUIDA_GOLDENGATE_19C_COMPLETA.md) | Concetti enterprise: Extract, Replicat, trail, checkpoint, RAC/DG, troubleshooting |
+| 3 | [Microservices Architecture 19c](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md) | Service Manager, Admin Server, Distribution Server, Receiver Server, Admin Client, REST |
+| 4 | [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md) | Manager, GGSCI, Extract, Pump, Collector, Replicat, parameter file |
+| 5 | [Oracle -> PostgreSQL](./GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md) | Replica eterogenea, datatype mapping, initial load, cutover |
+| 6 | [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md) | Comandi rapidi GGSCI, Admin Client, SQL, troubleshooting |
+| 7 | [Q&A Tecnico Professionale](./GUIDA_GOLDENGATE_QA_PROFESSIONALE.md) | Domande/risposte su architettura, errori, scenari e upgrade |
+| 8 | [Novita GoldenGate 26ai](./GUIDA_GOLDENGATE_26AI_NOVITA.md) | Cosa cambia in 26ai e quando valutarlo |
+| 9 | [Upgrade 19c -> 26ai](./GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md) | Upgrade Microservices, percorso Classic, backup, rollback, validazioni |
+
+## Guide pratiche del lab
 
 | Guida | Cosa impari |
 | --- | --- |
-| [Fase 7: GoldenGate](./GUIDA_FASE7_GOLDENGATE.md) | Replica logica nel lab |
-| [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration |
-| [Oracle → PostgreSQL](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Pattern di migrazione eterogenea |
+| [Fase 7: GoldenGate](./GUIDA_FASE7_GOLDENGATE.md) | Lab pratico con Microservices Architecture |
+| [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration Oracle -> Oracle |
+| [Oracle -> PostgreSQL legacy](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Pattern esistente di migrazione eterogenea |
 
 ## Template utili
 
 - [Testlog GoldenGate Template](./TESTLOG_GOLDENGATE_TEMPLATE.md)
 
+## Fonti principali
+
+- Oracle GoldenGate 19c Microservices: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-components-oracle-goldengate-microservices-architecture.html
+- Oracle GoldenGate Classic/GGSCI: https://docs.oracle.com/en/middleware/goldengate/core/18.1/reference/oracle-goldengate-ggsci-commands.html
+- Oracle GoldenGate 26ai: https://docs.oracle.com/en/database/goldengate/core/26/index.html
+- Oracle GoldenGate Certifications: https://www.oracle.com/integration/goldengate/certifications/
+
 ---
 
-Indice totale documentazione: [../README.md](../README.md)
+Indice area core DBA: [../README.md](../README.md)

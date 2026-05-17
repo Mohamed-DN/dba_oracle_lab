@@ -69,16 +69,20 @@ SELECT SUPPLEMENTAL_LOG_DATA_MIN, SUPPLEMENTAL_LOG_DATA_ALL FROM v$database;
 ### 1.2 Crea Utente GoldenGate Oracle
 
 ```sql
--- Utente dedicato per GoldenGate
-CREATE USER ggadmin IDENTIFIED BY "GGadmin123!"
-  DEFAULT TABLESPACE users TEMPORARY TABLESPACE temp;
+-- Utente dedicato per GoldenGate. In produzione evitare GRANT DBA.
+CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>"
+  DEFAULT TABLESPACE users TEMPORARY TABLESPACE temp
+  QUOTA UNLIMITED ON users;
 
-GRANT DBA TO ggadmin;
-GRANT SELECT ANY DICTIONARY TO ggadmin;
-GRANT FLASHBACK ANY TABLE TO ggadmin;
-GRANT SELECT ANY TABLE TO ggadmin;
-GRANT EXECUTE ON DBMS_FLASHBACK TO ggadmin;
-```
+GRANT CREATE SESSION TO ggadmin;
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'GGADMIN',
+    privilege_type          => '*',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE);
+END;
+/```
 
 ---
 
@@ -124,7 +128,7 @@ systemctl restart postgresql-16
 sudo -u postgres psql
 
 -- Crea utente GoldenGate
-CREATE USER ggadmin WITH PASSWORD 'GGadmin123!' REPLICATION;
+CREATE USER ggadmin WITH PASSWORD '<PASSWORD_SICURA>' REPLICATION;
 ALTER USER ggadmin WITH SUPERUSER;
 
 -- Crea database target
@@ -149,13 +153,13 @@ perl Makefile.PL && make && make install
 cat > /etc/ora2pg/ora2pg.conf <<'EOF'
 ORACLE_DSN    dbi:Oracle:host=192.168.56.101;sid=RACDB;port=1521
 ORACLE_USER   ggadmin
-ORACLE_PWD    GGadmin123!
+ORACLE_PWD    <PASSWORD_SICURA>
 SCHEMA        HR
 TYPE          TABLE
 OUTPUT        /tmp/pg_schema.sql
 PG_DSN        dbi:Pg:dbname=app_db;host=localhost;port=5432
 PG_USER       ggadmin
-PG_PWD        GGadmin123!
+PG_PWD        <PASSWORD_SICURA>
 EOF
 
 # Genera DDL PostgreSQL
@@ -231,7 +235,7 @@ Servername = localhost
 Port = 5432
 Database = app_db
 Username = ggadmin
-Password = GGadmin123!
+Password = <PASSWORD_SICURA>
 EOF
 
 export ODBCINI=$OGG_HOME/odbc.ini
@@ -266,11 +270,11 @@ PURGEOLDEXTRACTS ./dirdat/*, USECHECKPOINTS, MINKEEPDAYS 3
 ```bash
 # Configura Extract
 ./ggsci
-> DBLOGIN USERID ggadmin, PASSWORD GGadmin123!
+> DBLOGIN USERID ggadmin, PASSWORD <PASSWORD_SICURA>
 
 > EDIT PARAM EXT_PG
 EXTRACT EXT_PG
-USERID ggadmin, PASSWORD GGadmin123!
+USERID ggadmin, PASSWORD <PASSWORD_SICURA>
 EXTTRAIL ./dirdat/pg
 TABLE hr.employees;
 TABLE hr.departments;
@@ -303,7 +307,7 @@ cd $OGG_HOME && ./ggsci
 
 > EDIT PARAM REP_PG
 REPLICAT REP_PG
-TARGETDB PG_APP, USERID ggadmin, PASSWORD GGadmin123!
+TARGETDB PG_APP, USERID ggadmin, PASSWORD <PASSWORD_SICURA>
 DISCARDFILE ./dirrpt/rep_pg.dsc, PURGE
 MAP hr.employees, TARGET hr.employees;
 MAP hr.departments, TARGET hr.departments;
@@ -320,7 +324,7 @@ MAP hr.jobs, TARGET hr.jobs;
 
 ```bash
 # Su Oracle — esporta i dati
-expdp ggadmin/GGadmin123! SCHEMAS=hr DIRECTORY=dp_dir \
+expdp ggadmin/<PASSWORD_SICURA> SCHEMAS=hr DIRECTORY=dp_dir \
   DUMPFILE=hr_initial.dmp LOGFILE=hr_initial.log
 
 # Converti e carica su PostgreSQL con ora2pg
@@ -370,7 +374,7 @@ psql -U ggadmin -d app_db -f /tmp/data.sql
 
 # Conta righe su entrambi i lati
 # Oracle
-sqlplus ggadmin/GGadmin123!
+sqlplus ggadmin/<PASSWORD_SICURA>
 SELECT COUNT(*) FROM hr.employees;
 
 # PostgreSQL
