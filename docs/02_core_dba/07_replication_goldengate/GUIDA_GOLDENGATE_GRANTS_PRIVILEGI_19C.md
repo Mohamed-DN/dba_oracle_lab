@@ -433,13 +433,13 @@ Se `DBLOGIN` fallisce:
 - GoldenGate 19c - Operating System Privileges: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/operating-system-privileges_19c.html
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Definire privilegi minimi e grant corretti per utenze GoldenGate di capture/apply in Oracle 19c.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Applicare grant con DBMS_GOLDENGATE_AUTH, verificare ruoli su source/target e allineare policy di sicurezza DBA.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Confermare che le utenze GG possano avviare processi senza ORA-01031 e che le query di verifica privilegi siano coerenti.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+In caso di errori autorizzativi, ricontrollare grant mancanti, common user CDB/PDB e privilegi dizionario richiesti.

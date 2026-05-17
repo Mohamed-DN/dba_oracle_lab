@@ -406,13 +406,13 @@ Lab:
 - REST API 19c: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oggra/QuickStart.html
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Descrivere l’adozione dell’architettura Microservices 19c con focus su Service Manager e servizi Admin/Distribution/Receiver.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Configurare deployment Microservices, utenti e wallet, endpoint REST, distribuzione trail e gestione processi via console/API.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Verificare stato servizi, reachability endpoint, health deployment e corretto flusso dati tra Distribution e Receiver.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+Se un servizio risulta degraded, controllare log Service Manager, porte API, certificati e binding dei deployment.

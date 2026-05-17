@@ -414,13 +414,13 @@ Non sceglierlo come default per nuove architetture se puoi usare Microservices.
 - Process interfaces: https://docs.oracle.com/en/middleware/goldengate/core/18.1/admin/getting-started-oracle-goldengate-process-interfaces.html
 
 ## Obiettivo
-Definire lo scopo operativo della procedura e il risultato atteso.
+Descrivere l’implementazione Classic Architecture 19c basata su GGSCI e processi Manager/Extract/Pump/Replicat.
 
 ## Procedura operativa
-Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+Configurare processi da linea comando GGSCI, trail locali/remoti, parametri e lifecycle start/stop dei componenti classici.
 
 ## Validazione finale
-Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+Validare stato RUNNING dei processi, trail aggiornati, lag contenuto e assenza errori nei report classici.
 
 ## Troubleshooting rapido
-In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
+In caso di abend, analizzare report GGSCI, percorso trail, checkpoint e conflitti parametrici tra Extract/Pump/Replicat.
