@@ -1,4 +1,4 @@
-﻿# UC07 - GoldenGate per Stream Processing and Analytics
+# UC07 - GoldenGate per Stream Processing and Analytics
 
 > Obiettivo: usare GoldenGate come sorgente CDC affidabile per stream processing, real-time dashboard, anomaly detection e pipeline analytics continue.
 
@@ -99,3 +99,46 @@ No. GoldenGate cattura cambiamenti transazionali dal database e li consegna. Kaf
 **Dove metto aggregazioni e finestre temporali?**
 
 In una piattaforma di stream processing, non in Extract/Replicat se la logica e' complessa.
+
+---
+
+## Percorso operativo da zero
+
+Prima di implementare questo use case in laboratorio o in UAT:
+
+1. Leggi [Prerequisiti DB e Architettura](../GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md).
+2. Applica [Grant e Privilegi 19c](../GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+3. Configura [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+4. Valida rete e sicurezza con [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
+5. Usa [Cheat Sheet GoldenGate 19c](../CHEAT_SHEET_GOLDENGATE_19C.md) per i comandi rapidi.
+
+Grant minimi da non saltare:
+
+```text
+Oracle source: CREATE SESSION + DBMS_GOLDENGATE_AUTH privilege_type CAPTURE o *
+Oracle target: DBMS_GOLDENGATE_AUTH privilege_type APPLY o * + grant DML sulle tabelle target
+PostgreSQL target: CONNECT + USAGE schema + SELECT/INSERT/UPDATE/DELETE sulle tabelle
+PostgreSQL source: CONNECT + WITH REPLICATION + eventuale admin temporaneo per TRANDATA
+```
+
+Criterio di avanzamento:
+
+```text
+[ ] DBLOGIN funziona con USERIDALIAS.
+[ ] Supplemental logging e' attivo sugli oggetti replicati.
+[ ] Extract/Replicat partono senza ORA-01031.
+[ ] Lag e checkpoint sono monitorati.
+[ ] Esiste rollback o re-sync plan.
+[ ] I dati sensibili sono autorizzati e protetti.
+```
+## Approfondimento specifico UC07
+
+Per stream analytics, definisci prima la semantica temporale:
+
+- event time: quando la transazione e' stata committata;
+- processing time: quando la piattaforma stream la elabora;
+- window: intervallo di aggregazione;
+- late event: evento arrivato in ritardo;
+- replay: rielaborazione da offset/checkpoint.
+
+GoldenGate fornisce eventi ordinati secondo transazioni e trail/checkpoint; la piattaforma stream deve gestire windowing, join, deduplica e late events.

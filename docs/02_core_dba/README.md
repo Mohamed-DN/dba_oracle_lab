@@ -8,4 +8,4 @@ Questa directory contiene le guide **"monumentali" e "Enterprise"**, studiate pe
 - **`04_high_availability_and_rac/`**: Architetture RAC e Data Guard, incluse guide sui Failover distruttivi e MAA best practices.
 - **`05_patching_and_upgrades/`**: Procedure Rolling Upgrade e applicazione di Release Updates (RU).
 - **`06_monitoring_systems/`**: Configurazione di CheckMK (Enterprise, Distributed, BI), Zabbix, e Grafana per l'osservabilità.
-- **`07_replication_goldengate/`**: Guide Oracle GoldenGate 19c/26ai: ambienti critici/bancari, collegamento source/target, Microservices, Classic/GGSCI, replica Oracle->Oracle, Oracle->PostgreSQL, topologie/use case, troubleshooting e upgrade 19c->26ai.
+- **`07_replication_goldengate/`**: Guide Oracle GoldenGate 19c/26ai: prerequisiti, grant/privilegi least privilege, ambienti critici/bancari, collegamento source/target, Microservices, Classic/GGSCI, replica Oracle->Oracle, Oracle->PostgreSQL, topologie/use case, troubleshooting e upgrade 19c->26ai.

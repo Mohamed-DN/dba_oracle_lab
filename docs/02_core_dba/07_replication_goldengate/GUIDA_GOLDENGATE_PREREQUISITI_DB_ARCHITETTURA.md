@@ -87,6 +87,11 @@ Common user CDB:
 ```sql
 CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
 GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
+GRANT CREATE VIEW TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER SYSTEM TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER USER TO c##ggadmin CONTAINER=ALL;
+ALTER USER c##ggadmin QUOTA UNLIMITED ON USERS CONTAINER=ALL;
+ALTER USER c##ggadmin SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
 
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
@@ -105,12 +110,31 @@ Local PDB:
 ALTER SESSION SET CONTAINER = PDB1;
 CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
 GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
 
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
 END;
 /
 ```
+
+Importante: questi grant preparano l'utente GoldenGate, ma **Replicat deve anche poter applicare DML** sulle tabelle target. In produzione preferire grant oggetto per oggetto:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO ggadmin;
+```
+
+Per migrazioni estese si possono usare privilegi `ANY`, ma solo con approvazione security e piano di revoca:
+
+```sql
+GRANT SELECT ANY TABLE TO ggadmin;
+GRANT INSERT ANY TABLE TO ggadmin;
+GRANT UPDATE ANY TABLE TO ggadmin;
+GRANT DELETE ANY TABLE TO ggadmin;
+```
+
+Dettaglio completo: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ---
 
@@ -166,3 +190,4 @@ Regola: se Extract e' fermo, non cancellare archivelog necessari senza sapere il
 - Preparing Database for GoldenGate: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oracle-db/preparing-database-oracle-goldengate.html
 - ENABLE_GOLDENGATE_REPLICATION: https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/ENABLE_GOLDENGATE_REPLICATION.html
 - DBMS_GOLDENGATE_AUTH: https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_GOLDENGATE_AUTH.html
+- Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)

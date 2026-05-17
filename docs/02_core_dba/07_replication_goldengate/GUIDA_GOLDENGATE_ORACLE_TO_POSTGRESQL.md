@@ -93,11 +93,29 @@ Esempio concettuale PostgreSQL:
 
 ```sql
 CREATE USER ggadmin WITH PASSWORD '<PASSWORD_SICURA>';
+GRANT CONNECT ON DATABASE appdb TO ggadmin;
+\c appdb
 CREATE SCHEMA app AUTHORIZATION ggadmin;
 GRANT USAGE ON SCHEMA app TO ggadmin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO ggadmin;
 ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ggadmin;
 ```
+
+Se PostgreSQL e' source, non target, servono anche privilegi di replication slot:
+
+```sql
+ALTER USER ggadmin WITH REPLICATION;
+```
+
+Per abilitare `ADD TRANDATA` su PostgreSQL puo' servire un utente `SUPERUSER` o admin managed-cloud. In produzione concederlo solo temporaneamente e revocarlo subito dopo:
+
+```sql
+ALTER USER ggadmin WITH SUPERUSER;
+-- configurazione TRANDATA
+ALTER USER ggadmin WITH NOSUPERUSER;
+```
+
+Per Oracle source usa i grant completi descritti in [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ---
 

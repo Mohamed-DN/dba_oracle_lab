@@ -128,11 +128,15 @@ Aggiungere PK/unique key se possibile. In alternativa definire `KEYCOLS`, ma dev
 
 ### 26. Perche' non usare `DBA` a GGADMIN?
 
-Perche' viola least privilege. In produzione si usano privilegi specifici tramite `DBMS_GOLDENGATE_AUTH` e grant mirati.
+Perche' viola least privilege. `GRANT DBA` spesso fa funzionare il lab perche' concede tutto, ma non e' una risposta accettabile in produzione critica. In produzione si usano privilegi specifici tramite `DBMS_GOLDENGATE_AUTH`, grant DML mirati sul target e credential store. Vedi [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ### 27. A cosa serve `DBMS_GOLDENGATE_AUTH`?
 
 Concede i privilegi necessari per amministrare capture/apply GoldenGate e registra l'utente nelle viste di privilegi GoldenGate.
+
+### 27b. Se senza `DBA` ricevo `ORA-01031`, cosa controllo?
+
+Controllo container (`CDB$ROOT` vs PDB), `container=>'ALL'`, `CREATE SESSION`, quota tablespace, grant DML sul target, privilegi DDL se sto replicando DDL, e se `DBLOGIN` usa davvero l'alias dell'utente corretto. Non risolvo concedendo `DBA` permanente.
 
 ### 28. Common user o local user in CDB?
 

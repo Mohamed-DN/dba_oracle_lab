@@ -209,6 +209,8 @@ Se `pump_rac` fallisce:
 
 ## 7. Integrated Replicat Classic
 
+Prima di creare Replicat, assicurati che l'utente target abbia sia i privilegi GoldenGate (`DBMS_GOLDENGATE_AUTH` con `APPLY` o `*`) sia i grant DML sulle tabelle target. Dettaglio completo: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+
 Checkpoint table:
 
 ```text

@@ -108,7 +108,33 @@ END;
 -- Su TARGET (nuovo DB)
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
 -- Crea stesso utente ggadmin con privilegi GoldenGate equivalenti
+CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>"
+    DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
+GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'GGADMIN',
+    privilege_type          => 'APPLY',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE);
+END;
+/
+
+-- Grant DML necessari a Replicat sulle tabelle target.
+-- Preferire object-level grants in produzione.
+GRANT SELECT, INSERT, UPDATE, DELETE ON HR.EMPLOYEES TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON FINANCE.ORDERS TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON INVENTORY.ITEMS TO ggadmin;
+
+-- Se devi migrare molti oggetti, genera i grant e falli approvare:
+SELECT 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || owner || '.' || table_name || ' TO GGADMIN;'
+FROM   dba_tables
+WHERE  owner IN ('HR','FINANCE','INVENTORY')
+ORDER  BY owner, table_name;
 ```
+
+Grant dettagliati e alternative per CDB/PDB: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ### Step 1: Initial Load con Data Pump
 

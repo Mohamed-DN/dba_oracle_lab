@@ -75,6 +75,7 @@ CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>"
   QUOTA UNLIMITED ON users;
 
 GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
     grantee                 => 'GGADMIN',
@@ -82,7 +83,10 @@ BEGIN
     grant_select_privileges => TRUE,
     do_grants               => TRUE);
 END;
-/```
+/
+```
+
+Dettaglio grant Oracle 19c/CDB/PDB: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ---
 
@@ -128,8 +132,13 @@ systemctl restart postgresql-16
 sudo -u postgres psql
 
 -- Crea utente GoldenGate
-CREATE USER ggadmin WITH PASSWORD '<PASSWORD_SICURA>' REPLICATION;
+CREATE USER ggadmin WITH PASSWORD '<PASSWORD_SICURA>';
+ALTER USER ggadmin WITH REPLICATION;
+
+-- SUPERUSER solo temporaneo se necessario per configurare TRANDATA.
+-- Revocarlo appena completata la preparazione.
 ALTER USER ggadmin WITH SUPERUSER;
+ALTER USER ggadmin WITH NOSUPERUSER;
 
 -- Crea database target
 CREATE DATABASE app_db OWNER ggadmin;
@@ -137,7 +146,9 @@ CREATE DATABASE app_db OWNER ggadmin;
 
 -- Crea schema target
 CREATE SCHEMA hr;
-GRANT ALL ON SCHEMA hr TO ggadmin;
+GRANT USAGE ON SCHEMA hr TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hr TO ggadmin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA hr GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ggadmin;
 ```
 
 ### 2.4 Converti Schema con ora2pg

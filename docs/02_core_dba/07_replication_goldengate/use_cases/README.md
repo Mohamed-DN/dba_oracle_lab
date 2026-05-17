@@ -1,4 +1,4 @@
-﻿# GoldenGate - Indice Use Case Operativi
+# GoldenGate - Indice Use Case Operativi
 
 > Questa cartella trasforma i use case del GoldenGate Knowledge Hub in guide operative leggibili da un DBA enterprise. Ogni use case contiene architettura, prerequisiti, rete, sicurezza, procedura, controlli e domande tecniche.
 
@@ -60,3 +60,23 @@ In produzione critica, ogni use case deve avere almeno:
 - test di riconciliazione dati;
 - runbook incident;
 - evidenza di change management.
+
+---
+
+## Standard minimo di completezza
+
+Ogni guida use case deve rispondere a queste domande:
+
+- Qual e' il problema business/tecnico?
+- Qual e' la topologia GoldenGate corretta?
+- Quali DB/source/target sono coinvolti?
+- Quali grant servono su source e target?
+- Quali porte/reti/certificati servono?
+- Come si fa initial load o bootstrap?
+- Come si abilita CDC?
+- Come si misura il lag?
+- Come si validano i dati?
+- Come si fa rollback o re-sync?
+- Quali rischi sono specifici per ambienti bancari?
+
+Se una guida non entra nel dettaglio, deve puntare esplicitamente alla guida specialistica corretta.

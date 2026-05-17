@@ -220,6 +220,7 @@ Preferire:
 
 ```sql
 GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
     grantee                 => 'GGADMIN',
@@ -229,6 +230,16 @@ BEGIN
 END;
 /
 ```
+
+Poi aggiungere solo i grant operativi necessari:
+
+```sql
+-- Target Replicat, object-level
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO ggadmin;
+```
+
+Guida completa sui privilegi: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 Separazione consigliata:
 

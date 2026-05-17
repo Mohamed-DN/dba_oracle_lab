@@ -88,6 +88,12 @@ CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
 -- Nota: In architetture CDB/PDB si usa un utente comune c## per l'Extract.
 
 GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
+GRANT CREATE VIEW TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER SYSTEM TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER USER TO c##ggadmin CONTAINER=ALL;
+ALTER USER c##ggadmin QUOTA UNLIMITED ON USERS CONTAINER=ALL;
+ALTER USER c##ggadmin SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
+
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
     grantee                 => 'C##GGADMIN',
@@ -98,6 +104,25 @@ BEGIN
 END;
 /
 ```
+
+Sul target, Replicat deve avere anche i grant DML sugli oggetti applicativi. Per il lab puoi usare grant sullo schema replicato; in produzione bancaria preferisci grant oggetto per oggetto o un ruolo approvato.
+
+```sql
+-- Esempio target Oracle
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO c##ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO c##ggadmin;
+```
+
+Se usi schema intero e devi generare i grant:
+
+```sql
+SELECT 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || owner || '.' || table_name || ' TO C##GGADMIN;'
+FROM   dba_tables
+WHERE  owner = 'APP'
+ORDER  BY table_name;
+```
+
+Runbook completo: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ---
 
