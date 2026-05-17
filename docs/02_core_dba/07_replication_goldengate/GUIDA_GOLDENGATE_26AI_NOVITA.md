@@ -152,3 +152,15 @@ Rimani su 19c se:
 - What is new 26ai: https://docs.oracle.com/en/database/goldengate/core/26/coredoc/why-upgrade-ogg.html
 - Release Notes 26ai: https://docs.oracle.com/en/database/goldengate/core/26/release-notes/new-features.html
 - Certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Fornire una sintesi operativa delle novita GoldenGate 26ai rispetto a 19c per decisioni di adozione e upgrade.
+
+## Procedura operativa
+Valutare differenze funzionali, certificazioni source/target e impatto architetturale (Classic vs Microservices) prima del rollout.
+
+## Validazione finale
+Confermare che la versione scelta sia supportata per stack, use case e modello operativo previsti dall'ambiente target.
+
+## Troubleshooting rapido
+Se l'adozione 26ai risulta bloccata, ricontrollare matrice certificazioni, feature preview/GA e prerequisiti infrastrutturali.

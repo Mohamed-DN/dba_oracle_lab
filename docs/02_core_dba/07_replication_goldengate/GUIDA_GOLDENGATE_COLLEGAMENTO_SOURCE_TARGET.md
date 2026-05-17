@@ -367,3 +367,15 @@ Regola produzione: aprire solo direzioni e porte necessarie, preferire TLS, docu
 - GoldenGate Microservices components: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-components-oracle-goldengate-microservices-architecture.html
 - GoldenGate access points: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-access-points-oracle-goldengate-microservices.html
 - GoldenGate Classic/GGSCI commands: https://docs.oracle.com/en/middleware/goldengate/core/18.1/reference/oracle-goldengate-ggsci-commands.html
+
+## Obiettivo
+Definire il corretto modello di collegamento source/target in GoldenGate per evitare errori di architettura e rete.
+
+## Procedura operativa
+Verificare connessioni DB source/target, trasporto trail e porte firewall per il pattern scelto (Microservices o Classic).
+
+## Validazione finale
+Confermare che Extract, Path/Pump e Replicat risultino attivi e che un test DML source sia applicato correttamente sul target.
+
+## Troubleshooting rapido
+In caso di blocchi, controllare TNS/ODBC, reachability porte, stato Receiver/Manager e log processi GoldenGate coinvolti.
