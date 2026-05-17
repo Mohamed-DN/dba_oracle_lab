@@ -1,6 +1,6 @@
 # GoldenGate 19c - Collegamento Source e Target
 
-> Punto fondamentale: in GoldenGate **non e' il database source che si collega direttamente al database target** per replicare. Sono i processi GoldenGate che si collegano ai rispettivi database e si parlano tra loro via trail file e rete.
+> Punto fondamentale: in GoldenGate **non e' il database source che si collega direttamente al database target** per replicare. Sono i processi GoldenGate che si collegano ai rispettivi database e si parlano tra loro via trail file e rete. Per ambienti bancari o regolati leggi anche [GoldenGate in Ambienti Critici Bancari](./GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
 
 ---
 

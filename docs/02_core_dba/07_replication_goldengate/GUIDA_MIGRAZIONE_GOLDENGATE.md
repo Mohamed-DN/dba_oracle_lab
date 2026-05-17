@@ -67,7 +67,7 @@ Per il tuo lab, lo scenario piu realistico non e un generico `source -> target`,
 Documenti da leggere prima del cutover:
 
 1. [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md)
-2. [GUIDA_GOLDENGATE_OCI_ARM.md](../../03_infra_lab/03_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md)
+2. [GUIDA_CLOUD_GOLDENGATE.md](../../03_infra_lab/03_cloud_oci/GUIDA_CLOUD_GOLDENGATE.md)
 3. [GUIDA_RETE_LAB_OCI_GOLDENGATE.md](../../03_infra_lab/03_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md)
 
 Regola importante:

@@ -108,7 +108,7 @@ GoldenGate non replica tramite una connessione diretta database-to-database. Il 
 - Pump o Distribution Server che invia trail al target host;
 - Replicat che si collega al target DB tramite TNS, ODBC/libpq o connettore supportato.
 
-Per la configurazione completa leggi: [Collegamento Source e Target](./GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+Per la configurazione completa leggi: [Collegamento Source e Target](./GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md). Per banche o ambienti regolati, aggiungi anche i controlli di [GoldenGate in Ambienti Critici Bancari](./GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
 
 ---
 ## 3. Classic vs Microservices in GoldenGate 19c
