@@ -1,9 +1,15 @@
-# FASE 7: Oracle GoldenGate — Microservices Architecture (MA)
+# FASE 7: Oracle GoldenGate - Microservices Architecture (MA)
 
-> Questa fase configura Oracle GoldenGate **Microservices Architecture (MA)** per replicare dati in tempo reale dal RAC Primary verso un database Oracle target. La Classic Architecture (basata su `ggsci`) è considerata obsoleta per le nuove implementazioni. OGG MA utilizza API REST, un'interfaccia web moderna e processi distribuiti per offrire una vera architettura cloud-native.
+> Questa fase configura Oracle GoldenGate **19c Microservices Architecture (MA)** per replicare dati in tempo reale dal RAC Primary verso un database Oracle target. Classic Architecture (`ggsci`) non e' il percorso principale del lab, ma resta fondamentale da conoscere per ambienti legacy e troubleshooting.
+
+> Prima di eseguire questa fase leggi il percorso GoldenGate completo:
+> - [Prerequisiti DB e Architettura](./GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md)
+> - [GoldenGate 19c Completa](./GUIDA_GOLDENGATE_19C_COMPLETA.md)
+> - [Microservices Architecture 19c](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md)
+> - [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md)
+> - [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md)
 
 ---
-
 ## 7.0 Teoria Profonda: L'Architettura a Microservizi
 
 Prima di configurare, è essenziale comprendere come i componenti interagiscono nella MA rispetto alla Classic Architecture.
@@ -62,9 +68,10 @@ ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH SID='*';
 -- 2. Attiva FORCE LOGGING (Garantisce che nessuna transazione DML sia NOLOGGING)
 ALTER DATABASE FORCE LOGGING;
 
--- 3. Attiva Supplemental Logging (Solo sul Source rac1 è obbligatorio, ma best practice anche sul target se bidirezionale)
+-- 3. Attiva il supplemental logging minimo.
+-- NON usare ALL COLUMNS a livello database come default: genera molto redo.
+-- Per gli oggetti replicati userai ADD SCHEMATRANDATA / ADD TRANDATA da GoldenGate.
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
-ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 -- Verifica
 SELECT force_logging, supplemental_log_data_min FROM v$database;
@@ -76,11 +83,19 @@ SELECT force_logging, supplemental_log_data_min FROM v$database;
 -- Su rac1 (Source) e dbtarget (Target) come sysdba
 sqlplus / as sysdba
 
-CREATE USER c##ggadmin IDENTIFIED BY <password> CONTAINER=ALL;
+CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
 -- Nota: In architetture CDB/PDB si usa un utente comune c## per l'Extract.
 
-GRANT CREATE SESSION, ALTER SESSION, RESOURCE, DBA TO c##ggadmin CONTAINER=ALL;
-EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('C##GGADMIN', container=>'ALL');
+GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'C##GGADMIN',
+    privilege_type          => '*',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE,
+    container               => 'ALL');
+END;
+/
 ```
 
 ---
@@ -89,7 +104,7 @@ EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('C##GGADMIN', container=>'ALL');
 
 ### 7.2.1 Download e Struttura Directory
 
-Scarica **Oracle GoldenGate 21c (Microservices Architecture)** dal portale eDelivery Oracle.
+Scarica **Oracle GoldenGate 19c (Microservices Architecture)** dal portale eDelivery Oracle. La 26ai e' trattata nelle guide dedicate come evoluzione/upgrade, non come baseline del lab.
 
 ```bash
 # Come utente oracle su rac1 e dbtarget
@@ -100,7 +115,7 @@ mkdir -p /u01/app/oracle/gg_deploy
 
 # 2. Decomprimi il software
 cd /u01/app/oracle/product/ogg_ma
-unzip /tmp/V1035048-01.zip # Esempio del nome file OGG 21c MA
+unzip /tmp/V*.zip # Esempio: ZIP GoldenGate 19c MA scaricato da eDelivery
 ```
 
 ### 7.2.2 Installazione Silenziosa del Software Base (Su rac1 e dbtarget)

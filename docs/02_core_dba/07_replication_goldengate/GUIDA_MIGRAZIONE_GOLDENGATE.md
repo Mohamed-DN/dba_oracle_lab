@@ -84,18 +84,30 @@ Regola importante:
 ```sql
 -- Su SOURCE (vecchio DB)
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
-ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 ALTER DATABASE FORCE LOGGING;
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 
--- Crea utente GG su Source
-CREATE USER ggadmin IDENTIFIED BY <password>
+-- Crea utente GG su Source con privilegi GoldenGate, non ruolo DBA
+CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>"
     DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
-GRANT DBA TO ggadmin;
-EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
+GRANT CREATE SESSION TO ggadmin;
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'GGADMIN',
+    privilege_type          => '*',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE);
+END;
+/
+
+-- Dopo DBLOGIN GoldenGate, abilita logging sugli schemi replicati:
+-- ADD SCHEMATRANDATA HR
+-- ADD SCHEMATRANDATA FINANCE
+-- ADD SCHEMATRANDATA INVENTORY
 
 -- Su TARGET (nuovo DB)
 ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
--- Crea stesso utente ggadmin con stessi privilegi
+-- Crea stesso utente ggadmin con privilegi GoldenGate equivalenti
 ```
 
 ### Step 1: Initial Load con Data Pump

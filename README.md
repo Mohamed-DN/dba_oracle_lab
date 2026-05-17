@@ -183,9 +183,16 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [Migrazione GoldenGate](./docs/02_core_dba/07_replication_goldengate/GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration |
-| [Oracle → PostgreSQL](./docs/02_core_dba/07_replication_goldengate/GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Migrazione con GG, ora2pg, ODBC |
-
+| [GoldenGate 19c Completa](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) | Manuale enterprise: architettura, prerequisiti, security, RAC/DG, troubleshooting |
+| [Prerequisiti DB GoldenGate](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md) | Logging, supplemental logging, GGADMIN, FRA, trail retention |
+| [Microservices Architecture 19c](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md) | Service Manager, Admin Server, Distribution/Receiver, REST, Admin Client |
+| [Classic Architecture 19c](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md) | GGSCI, Manager, Extract, Pump, Collector, Replicat |
+| [Oracle → PostgreSQL](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md) | Replica eterogenea, datatype mapping, initial load e cutover |
+| [Cheat Sheet GoldenGate 19c](./docs/02_core_dba/07_replication_goldengate/CHEAT_SHEET_GOLDENGATE_19C.md) | Comandi GGSCI, Admin Client, SQL e troubleshooting |
+| [Q&A Tecnico GoldenGate](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_QA_PROFESSIONALE.md) | Domande/risposte professionali su GoldenGate |
+| [Novità GoldenGate 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_26AI_NOVITA.md) | Evoluzione 26ai, AI service, nuove compatibilità, Microservices-first |
+| [Upgrade GoldenGate 19c → 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md) | Upgrade MA, percorso Classic, backup, rollback e validazioni |
+| [Migrazione GoldenGate](./docs/02_core_dba/07_replication_goldengate/GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration Oracle → Oracle |
 ---
 
 ### 📊 Monitoring
@@ -204,7 +211,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 | Guida | Cosa Impari |
 |---|---|
-| [GoldenGate verso OCI](./docs/03_infra_lab/03_cloud_oci/GUIDA_GOLDENGATE_OCI_ARM.md) | Target su OCI, Free vs Enterprise |
+| [GoldenGate verso OCI](./docs/03_infra_lab/03_cloud_oci/GUIDA_CLOUD_GOLDENGATE.md) | Target su OCI, Free vs Enterprise |
 | [Rete Lab ↔ OCI](./docs/03_infra_lab/03_cloud_oci/GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | VPN, SSH tunnel, NSG |
 
 ---
@@ -342,7 +349,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | Oracle Linux | 7.9 | [Oracle Linux ISOs](https://yum.oracle.com/oracle-linux-isos.html) |
 | Grid Infrastructure | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle Database | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
-| Oracle GoldenGate | 19c / 21c | [eDelivery](https://edelivery.oracle.com) |
+| Oracle GoldenGate | 19c core lab / 26ai upgrade awareness | [eDelivery](https://edelivery.oracle.com) |
 | Enterprise Manager | 13.5 | [eDelivery](https://edelivery.oracle.com) |
 | VirtualBox | 7.x | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |
 
