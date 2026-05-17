@@ -15,7 +15,7 @@
 | 7 | [Oracle -> PostgreSQL](./GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md) | Replica eterogenea, datatype mapping, initial load, cutover |
 | 8 | [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md) | Comandi rapidi GGSCI, Admin Client, SQL, troubleshooting |
 | 9 | [Q&A Tecnico Professionale](./GUIDA_GOLDENGATE_QA_PROFESSIONALE.md) | Domande/risposte su architettura, errori, scenari e upgrade |
-| 10 | [Use Case, Topologie e Knowledge Hub](./GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Data fabric, topologie, top 7 use case, AI-ready data, percorsi Oracle |
+| 10 | [Use Case, Topologie e Knowledge Hub](./GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Data fabric, topologie, top 7 use case con guide operative dedicate |
 | 11 | [Novita GoldenGate 26ai](./GUIDA_GOLDENGATE_26AI_NOVITA.md) | Cosa cambia in 26ai e quando valutarlo |
 | 12 | [Upgrade 19c -> 26ai](./GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md) | Upgrade Microservices, percorso Classic, backup, rollback, validazioni |
 
@@ -26,6 +26,7 @@
 | [Fase 7: GoldenGate](./GUIDA_FASE7_GOLDENGATE.md) | Lab pratico con Microservices Architecture |
 | [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) | Zero-downtime migration Oracle -> Oracle |
 | [Oracle -> PostgreSQL legacy](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md) | Pattern esistente di migrazione eterogenea |
+| [Use Case operativi](./use_cases/README.md) | Runbook dedicati per migrazioni, HA, analytics, AI-ready data, multicloud, application streams e stream analytics |
 
 ## Template utili
 

@@ -220,7 +220,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | 9 | [Oracle -> PostgreSQL](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md) | Replica eterogenea, datatype mapping, initial load e cutover |
 | 10 | [Cheat Sheet GoldenGate 19c](./docs/02_core_dba/07_replication_goldengate/CHEAT_SHEET_GOLDENGATE_19C.md) | Comandi GGSCI, Admin Client, SQL e troubleshooting |
 | 11 | [Q&A Tecnico GoldenGate](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_QA_PROFESSIONALE.md) | Domande/risposte professionali su GoldenGate |
-| 12 | [Use Case e Knowledge Hub](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Topologie, top 7 use case, data fabric, AI-ready data e percorsi Oracle |
+| 12 | [Use Case e Knowledge Hub](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Topologie, top 7 use case con link alle guide operative dedicate |
 | 13 | [Novità GoldenGate 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_26AI_NOVITA.md) | Evoluzione 26ai, AI service, nuove compatibilità, Microservices-first |
 | 14 | [Upgrade GoldenGate 19c -> 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md) | Upgrade MA, percorso Classic, backup, rollback e validazioni |
 
