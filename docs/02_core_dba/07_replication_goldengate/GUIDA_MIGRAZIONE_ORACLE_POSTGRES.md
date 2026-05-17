@@ -481,3 +481,15 @@ SELECT table_name, num_rows FROM dba_tables WHERE owner = 'HR';
 
 > → **Precedente**: [GUIDA_ESAME_REVIEW.md](../../04_governance_learning/03_esami_e_carriera/GUIDA_ESAME_REVIEW.md) — Ripasso Esami Oracle
 > → **Piano Studio**: [PIANO_LABORATORIO.md](../../04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md) — Vedi Settimana 6
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.

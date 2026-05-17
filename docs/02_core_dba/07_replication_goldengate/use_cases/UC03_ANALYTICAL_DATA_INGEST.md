@@ -46,7 +46,7 @@ GoldenGate serve quando:
 ## 3. Decisioni architetturali
 
 | Decisione | Opzioni | Nota |
-|---|---|---|
+| --- | --- | --- |
 | Target | warehouse, lakehouse, Kafka, object storage | dipende da consumo dati |
 | Formato | JSON, Avro, delimited, Parquet tramite pipeline | Avro/JSON frequenti per event stream |
 | Latenza | secondi, minuti, micro-batch | Snowflake stage/merge e' micro-batch; streaming e' piu real-time |

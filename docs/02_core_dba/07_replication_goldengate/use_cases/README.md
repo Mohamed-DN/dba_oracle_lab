@@ -20,7 +20,7 @@ Motivo: in ambienti bancari non basta sapere configurare Extract e Replicat. Dev
 ## Mappa use case
 
 | # | Use case | Guida | Pattern principale |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | No Downtime Migrations | [UC01_NO_DOWNTIME_MIGRATIONS.md](./UC01_NO_DOWNTIME_MIGRATIONS.md) | Initial load + CDC + cutover |
 | 2 | High Availability | [UC02_HIGH_AVAILABILITY.md](./UC02_HIGH_AVAILABILITY.md) | Live standby logico / active-active controllato |
 | 3 | Analytical Data Ingest | [UC03_ANALYTICAL_DATA_INGEST.md](./UC03_ANALYTICAL_DATA_INGEST.md) | CDC verso warehouse/lakehouse |
@@ -34,7 +34,7 @@ Motivo: in ambienti bancari non basta sapere configurare Extract e Replicat. Dev
 ## Come scegliere il use case giusto
 
 | Se il requisito e' | Parti da |
-|---|---|
+| --- | --- |
 | Migrare Oracle senza fermo lungo | UC01 |
 | Avere un secondo sito scrivibile o quasi pronto | UC02 |
 | Alimentare DWH/lakehouse quasi real-time | UC03 |

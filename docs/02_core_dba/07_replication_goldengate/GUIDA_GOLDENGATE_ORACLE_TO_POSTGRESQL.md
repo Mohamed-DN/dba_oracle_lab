@@ -351,3 +351,15 @@ Testare anche:
 - Microservices 19c: [GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md)
 - Migrazione esistente nel repo: [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 - Oracle certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Definire lo scopo operativo della procedura e il risultato atteso.
+
+## Procedura operativa
+Eseguire i passaggi descritti nella guida in ordine, verificando prerequisiti e output a ogni step.
+
+## Validazione finale
+Confermare che replica, integrità dati e stato processi siano allineati ai criteri attesi.
+
+## Troubleshooting rapido
+In caso di errore, verificare log Extract/Replicat, connettività, permessi e checkpoint, quindi rieseguire la validazione.
