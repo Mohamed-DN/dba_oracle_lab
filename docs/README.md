@@ -31,7 +31,7 @@ Le guide tecniche monumentali ("Enterprise Grade"). Procedure end-to-end, best p
 | [`02_core_dba/04_high_availability_and_rac`](./02_core_dba/04_high_availability_and_rac/) | Real Application Clusters (RAC), ASM, Data Guard, FSFO (Observer), Servizi. |
 | [`02_core_dba/05_patching_and_upgrades`](./02_core_dba/05_patching_and_upgrades/) | OPatch, RU (Release Updates), OJVM, procedure Out-of-Place. |
 | [`02_core_dba/06_monitoring_systems`](./02_core_dba/06_monitoring_systems/) | Oracle Enterprise Manager (OEM), CheckMK Agent, Alerting, Dashboard. |
-| [`02_core_dba/07_replication_goldengate`](./02_core_dba/07_replication_goldengate/) | GoldenGate 19c completo: Microservices, Classic/GGSCI, Oracle->PostgreSQL, 26ai e upgrade. |
+| [`02_core_dba/07_replication_goldengate`](./02_core_dba/07_replication_goldengate/) | GoldenGate 19c completo: collegamento source/target, Microservices, Classic/GGSCI, Oracle->PostgreSQL, topologie, Knowledge Hub, 26ai e upgrade. |
 
 ### 🏗️ 3. INFRA LAB & SETUP (Infrastruttura di Base)
 Guide per l'installazione e la creazione dell'infrastruttura di laboratorio o produzione.

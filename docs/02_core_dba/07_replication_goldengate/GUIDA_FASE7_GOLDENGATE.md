@@ -5,6 +5,7 @@
 > Prima di eseguire questa fase leggi il percorso GoldenGate completo:
 > - [Prerequisiti DB e Architettura](./GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md)
 > - [GoldenGate 19c Completa](./GUIDA_GOLDENGATE_19C_COMPLETA.md)
+> - [Collegamento Source e Target](./GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md)
 > - [Microservices Architecture 19c](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md)
 > - [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md)
 > - [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md)

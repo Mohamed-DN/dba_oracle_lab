@@ -100,6 +100,17 @@ Integrated Replicat e Parallel Replicat migliorano il throughput, ma il DBA deve
 
 ---
 
+## 2.4 Collegamento tra source e target
+
+GoldenGate non replica tramite una connessione diretta database-to-database. Il collegamento reale e' formato da:
+
+- Extract che si collega al source DB tramite TNS/credential store;
+- Pump o Distribution Server che invia trail al target host;
+- Replicat che si collega al target DB tramite TNS, ODBC/libpq o connettore supportato.
+
+Per la configurazione completa leggi: [Collegamento Source e Target](./GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+
+---
 ## 3. Classic vs Microservices in GoldenGate 19c
 
 | Area | Classic Architecture | Microservices Architecture |
@@ -366,6 +377,13 @@ ORDER  BY percent_space_used DESC;
 
 ---
 
+## 6.6 Knowledge Hub e topologie enterprise
+
+Oltre al lab base, GoldenGate copre topologie unidirectional, bidirectional, peer-to-peer, broadcast, consolidation e distribution/cascading. Oracle raccoglie percorsi di studio, workshop e LiveLabs nel GoldenGate Knowledge Hub.
+
+Per la vista completa: [Use Case, Topologie e Knowledge Hub](./GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md).
+
+---
 ## 7. Scenari principali
 
 ### 7.1 Oracle -> Oracle one-way
