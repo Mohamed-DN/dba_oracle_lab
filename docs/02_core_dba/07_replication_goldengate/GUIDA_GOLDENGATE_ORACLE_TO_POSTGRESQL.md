@@ -351,3 +351,15 @@ Testare anche:
 - Microservices 19c: [GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md)
 - Migrazione esistente nel repo: [GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md](./GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md)
 - Oracle certifications: https://www.oracle.com/integration/goldengate/certifications/
+
+## Obiettivo
+Definire un percorso Oracle-to-PostgreSQL con GoldenGate, includendo mapping tipi dati e prerequisiti eterogenei.
+
+## Procedura operativa
+Seguire setup sorgente Oracle, connessione target PostgreSQL, configurazione processi OGG e tuning della replica cross-platform.
+
+## Validazione finale
+Validare connettività ODBC/JDBC, coerenza colonne convertite, lag stabile e corretto apply sul target PostgreSQL.
+
+## Troubleshooting rapido
+In caso di mismatch o stop apply, controllare mapping datatype, parametri connection string e report error dei processi OGG.

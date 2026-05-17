@@ -50,7 +50,7 @@ Non serve se il requisito e' solo esportare un dataset statico una volta.
 ## 3. Requisiti bancari
 
 | Tema | Regola |
-|---|---|
+| --- | --- |
 | PII | classificare, minimizzare, mascherare o tokenizzare |
 | Dati sensibili | vietato inviare fuori perimetro senza approvazione |
 | Prompt/RAG | non indicizzare campi non autorizzati |

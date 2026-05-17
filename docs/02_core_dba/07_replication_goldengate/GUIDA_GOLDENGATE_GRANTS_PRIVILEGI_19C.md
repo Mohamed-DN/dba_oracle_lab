@@ -25,7 +25,7 @@ In produzione usare sempre:
 ## 2. Matrice decisionale rapida
 
 | Scenario | Utente | Privilegi principali |
-|---|---|---|
+| --- | --- | --- |
 | Oracle 19c CDB source, capture da piu PDB | `C##GGADMIN` in `CDB$ROOT` | `CREATE SESSION`, quota, `DBMS_GOLDENGATE_AUTH(..., 'CAPTURE', container=>'ALL')` |
 | Oracle 19c CDB target, apply su piu PDB | `C##GGADMIN` o utenti locali per PDB | `DBMS_GOLDENGATE_AUTH(..., 'APPLY')` + DML sugli oggetti target |
 | Oracle 19c singolo PDB | `GGADMIN` locale nel PDB | `CREATE SESSION`, quota, `DBMS_GOLDENGATE_AUTH(..., container=>'CURRENT')` |
@@ -260,7 +260,7 @@ Non applicare questi grant senza approvazione: sono privilegi potenti.
 Usare solo se il requisito li richiede.
 
 | Caso | Azione |
-|---|---|
+| --- | --- |
 | Virtual Private Database | valutare `EXEMPT_ACCESS_POLICY` tramite privilegi opzionali |
 | Data Redaction | valutare `EXEMPT_REDACTION_POLICY` |
 | Database Vault | servono ruoli/realm specifici come `DV_GOLDENGATE_ADMIN`, secondo policy security |
@@ -396,7 +396,7 @@ Se `DBLOGIN` fallisce:
 ## 13. ORA-01031 troubleshooting
 
 | Punto | Controllo |
-|---|---|
+| --- | --- |
 | Container sbagliato | `SHOW CON_NAME` prima dei grant |
 | Common user mancante | usare `C##` in CDB root se serve capture CDB |
 | `container=>'ALL'` mancante | rieseguire da root per common user |
@@ -431,3 +431,15 @@ Se `DBLOGIN` fallisce:
 - GoldenGate 19c - DBLOGIN: https://docs.oracle.com/en/middleware/goldengate/core/19.1/gclir/dblogin.html
 - GoldenGate for PostgreSQL - Preparing Database: https://docs.oracle.com/en/middleware/goldengate/core/21.3/gghdb/preparing-database-oracle-goldengate-postgresql.html
 - GoldenGate 19c - Operating System Privileges: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/operating-system-privileges_19c.html
+
+## Obiettivo
+Definire privilegi minimi e grant corretti per utenze GoldenGate di capture/apply in Oracle 19c.
+
+## Procedura operativa
+Applicare grant con DBMS_GOLDENGATE_AUTH, verificare ruoli su source/target e allineare policy di sicurezza DBA.
+
+## Validazione finale
+Confermare che le utenze GG possano avviare processi senza ORA-01031 e che le query di verifica privilegi siano coerenti.
+
+## Troubleshooting rapido
+In caso di errori autorizzativi, ricontrollare grant mancanti, common user CDB/PDB e privilegi dizionario richiesti.
