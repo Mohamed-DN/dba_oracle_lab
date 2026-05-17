@@ -251,7 +251,11 @@ In CDB Oracle 19c puoi usare:
 -- Connesso a CDB$ROOT come SYSDBA
 CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
 GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
+GRANT CREATE VIEW TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER SYSTEM TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER USER TO c##ggadmin CONTAINER=ALL;
 ALTER USER c##ggadmin QUOTA UNLIMITED ON USERS CONTAINER=ALL;
+ALTER USER c##ggadmin SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
 
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
@@ -274,6 +278,7 @@ CREATE USER ggadmin IDENTIFIED BY "<PASSWORD_SICURA>"
   QUOTA UNLIMITED ON USERS;
 
 GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
 
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
@@ -307,6 +312,28 @@ Verifica:
 ```sql
 SELECT * FROM dba_goldengate_privileges WHERE username IN ('GGADMIN','C##GGADMIN');
 ```
+
+### 5.5 Grant target per Replicat
+
+`DBMS_GOLDENGATE_AUTH` prepara l'utente GoldenGate, ma Replicat deve anche poter applicare DML sulle tabelle target.
+
+Approccio consigliato:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO ggadmin;
+```
+
+Approccio temporaneo per migrazione ampia, da approvare e revocare:
+
+```sql
+GRANT SELECT ANY TABLE TO ggadmin;
+GRANT INSERT ANY TABLE TO ggadmin;
+GRANT UPDATE ANY TABLE TO ggadmin;
+GRANT DELETE ANY TABLE TO ggadmin;
+```
+
+Runbook completo dei privilegi: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ---
 
@@ -523,3 +550,4 @@ Prima di avviare GoldenGate:
 - Oracle Database 19c - DBMS_GOLDENGATE_AUTH: https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_GOLDENGATE_AUTH.html
 - Oracle GoldenGate 19c - Microservices Components: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-components-oracle-goldengate-microservices-architecture.html
 - Oracle GoldenGate - Log Retention: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oracle-db/determining-how-much-data-retain.html
+- Grant e privilegi GoldenGate 19c nel lab: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)

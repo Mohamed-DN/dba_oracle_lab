@@ -1,4 +1,4 @@
-﻿# UC01 - GoldenGate per No Downtime Migrations
+# UC01 - GoldenGate per No Downtime Migrations
 
 > Obiettivo: migrare o aggiornare un database con downtime applicativo ridotto al minimo, usando initial load + CDC + cutover controllato.
 
@@ -118,3 +118,48 @@ Perdere allineamento tra SCN initial load e inizio capture oppure non gestire og
 **GoldenGate sostituisce Data Guard?**
 
 No. GoldenGate fa replica logica e migrazione; Data Guard fa DR fisico Oracle. In ambienti enterprise spesso convivono.
+
+---
+
+## Percorso operativo da zero
+
+Prima di implementare questo use case in laboratorio o in UAT:
+
+1. Leggi [Prerequisiti DB e Architettura](../GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md).
+2. Applica [Grant e Privilegi 19c](../GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+3. Configura [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+4. Valida rete e sicurezza con [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
+5. Usa [Cheat Sheet GoldenGate 19c](../CHEAT_SHEET_GOLDENGATE_19C.md) per i comandi rapidi.
+
+Grant minimi da non saltare:
+
+```text
+Oracle source: CREATE SESSION + DBMS_GOLDENGATE_AUTH privilege_type CAPTURE o *
+Oracle target: DBMS_GOLDENGATE_AUTH privilege_type APPLY o * + grant DML sulle tabelle target
+PostgreSQL target: CONNECT + USAGE schema + SELECT/INSERT/UPDATE/DELETE sulle tabelle
+PostgreSQL source: CONNECT + WITH REPLICATION + eventuale admin temporaneo per TRANDATA
+```
+
+Criterio di avanzamento:
+
+```text
+[ ] DBLOGIN funziona con USERIDALIAS.
+[ ] Supplemental logging e' attivo sugli oggetti replicati.
+[ ] Extract/Replicat partono senza ORA-01031.
+[ ] Lag e checkpoint sono monitorati.
+[ ] Esiste rollback o re-sync plan.
+[ ] I dati sensibili sono autorizzati e protetti.
+```
+## Approfondimento specifico UC01
+
+Per una migrazione zero-downtime completa, documenta sempre:
+
+- SCN o timestamp di consistenza dell'initial load;
+- punto di partenza Extract coerente con l'export/import;
+- lista tabelle escluse o gestite manualmente;
+- grants target per Replicat prima del primo start;
+- strategia sequence/identity dopo cutover;
+- finestra in cui il source resta disponibile per rollback;
+- criterio ufficiale di successo: lag zero, conteggi coerenti, app connessa al target.
+
+Errore tipico: partire con Extract dopo l'initial load senza allineare SCN. Il risultato puo' essere perdita o duplicazione logica.

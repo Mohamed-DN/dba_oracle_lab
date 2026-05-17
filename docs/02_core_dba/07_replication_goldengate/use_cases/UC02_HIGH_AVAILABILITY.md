@@ -1,4 +1,4 @@
-﻿# UC02 - GoldenGate per High Availability
+# UC02 - GoldenGate per High Availability
 
 > Obiettivo: usare GoldenGate per resilienza logica, live standby applicativo o active-active controllato. Non confonderlo con Data Guard fisico.
 
@@ -104,3 +104,53 @@ Data Guard replica fisicamente redo Oracle e protegge tutto il database. GoldenG
 **Cosa guardi in produzione?**
 
 Lag, abend, checkpoint, trail retention, archive retention, errori discard, conflitti CDR, stato rete e validazione dati.
+
+---
+
+## Percorso operativo da zero
+
+Prima di implementare questo use case in laboratorio o in UAT:
+
+1. Leggi [Prerequisiti DB e Architettura](../GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md).
+2. Applica [Grant e Privilegi 19c](../GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+3. Configura [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+4. Valida rete e sicurezza con [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
+5. Usa [Cheat Sheet GoldenGate 19c](../CHEAT_SHEET_GOLDENGATE_19C.md) per i comandi rapidi.
+
+Grant minimi da non saltare:
+
+```text
+Oracle source: CREATE SESSION + DBMS_GOLDENGATE_AUTH privilege_type CAPTURE o *
+Oracle target: DBMS_GOLDENGATE_AUTH privilege_type APPLY o * + grant DML sulle tabelle target
+PostgreSQL target: CONNECT + USAGE schema + SELECT/INSERT/UPDATE/DELETE sulle tabelle
+PostgreSQL source: CONNECT + WITH REPLICATION + eventuale admin temporaneo per TRANDATA
+```
+
+Criterio di avanzamento:
+
+```text
+[ ] DBLOGIN funziona con USERIDALIAS.
+[ ] Supplemental logging e' attivo sugli oggetti replicati.
+[ ] Extract/Replicat partono senza ORA-01031.
+[ ] Lag e checkpoint sono monitorati.
+[ ] Esiste rollback o re-sync plan.
+[ ] I dati sensibili sono autorizzati e protetti.
+```
+## Approfondimento specifico UC02
+
+Per HA logica non basta configurare due Replicat. Devi definire il modello di scrittura:
+
+- active-passive: solo un sito scrive, l'altro riceve;
+- active-active partizionato: ogni sito possiede un sottoinsieme di dati;
+- active-active completo: richiede CDR, test conflitti e disegno applicativo.
+
+Prima di proporre active-active in banca, prepara una matrice conflitti:
+
+| Conflitto | Decisione richiesta |
+|---|---|
+| insert stessa PK | range sequence, GUID o ownership sito |
+| update stessa riga | last writer wins, timestamp, regola funzionale |
+| delete/update | delete vince o update viene scartato |
+| DDL non allineato | freeze DDL o deploy coordinato |
+
+Senza questa matrice, active-active e' un rischio dati, non una soluzione HA.

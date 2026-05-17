@@ -267,6 +267,8 @@ In UI verifica:
 
 ## 10. Integrated Replicat
 
+Prima di creare Replicat, verifica che l'utente target abbia i privilegi `APPLY` tramite `DBMS_GOLDENGATE_AUTH` e i grant DML sulle tabelle target. Dettaglio completo: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+
 ### 10.1 Checkpoint table
 
 ```text

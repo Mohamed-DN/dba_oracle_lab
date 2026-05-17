@@ -1,4 +1,4 @@
-﻿# UC05 - GoldenGate per Multicloud Data Integration
+# UC05 - GoldenGate per Multicloud Data Integration
 
 > Obiettivo: sincronizzare dati tra on-premises, OCI, AWS, Azure, Google Cloud o SaaS/data platform, rispettando rete segregata e policy enterprise.
 
@@ -87,3 +87,54 @@ Si, se la certificazione source/target e la rete sono progettate correttamente. 
 **Quando uso target-initiated path?**
 
 Quando il target puo' iniziare la connessione ma il source o una DMZ non puo' aprire connessioni inbound verso il target.
+
+---
+
+## Percorso operativo da zero
+
+Prima di implementare questo use case in laboratorio o in UAT:
+
+1. Leggi [Prerequisiti DB e Architettura](../GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md).
+2. Applica [Grant e Privilegi 19c](../GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+3. Configura [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
+4. Valida rete e sicurezza con [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
+5. Usa [Cheat Sheet GoldenGate 19c](../CHEAT_SHEET_GOLDENGATE_19C.md) per i comandi rapidi.
+
+Grant minimi da non saltare:
+
+```text
+Oracle source: CREATE SESSION + DBMS_GOLDENGATE_AUTH privilege_type CAPTURE o *
+Oracle target: DBMS_GOLDENGATE_AUTH privilege_type APPLY o * + grant DML sulle tabelle target
+PostgreSQL target: CONNECT + USAGE schema + SELECT/INSERT/UPDATE/DELETE sulle tabelle
+PostgreSQL source: CONNECT + WITH REPLICATION + eventuale admin temporaneo per TRANDATA
+```
+
+Criterio di avanzamento:
+
+```text
+[ ] DBLOGIN funziona con USERIDALIAS.
+[ ] Supplemental logging e' attivo sugli oggetti replicati.
+[ ] Extract/Replicat partono senza ORA-01031.
+[ ] Lag e checkpoint sono monitorati.
+[ ] Esiste rollback o re-sync plan.
+[ ] I dati sensibili sono autorizzati e protetti.
+```
+## Approfondimento specifico UC05
+
+In multicloud, il problema principale e' quasi sempre la rete:
+
+```text
+DNS -> routing -> firewall -> TLS -> proxy -> throughput -> osservabilita
+```
+
+Prima della configurazione GoldenGate chiedi sempre:
+
+- chi apre la connessione, source o target;
+- se serve target-initiated distribution path;
+- se si usa VPN/FastConnect/ExpressRoute/Interconnect;
+- dove sono terminati TLS e certificati;
+- chi rinnova i certificati;
+- se i dati possono uscire dalla regione o dal paese;
+- cosa succede se il link cloud cade per 4/8/24 ore.
+
+Il sizing trail deve coprire il peggiore outage di rete approvato.

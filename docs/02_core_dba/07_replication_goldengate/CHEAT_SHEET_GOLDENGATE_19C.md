@@ -292,7 +292,78 @@ SELECT * FROM dba_goldengate_privileges;
 
 ---
 
-## 12. Diagnostica errori comuni
+## 12. Grant e privilegi rapidi
+
+Guida completa: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md](./GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
+
+Oracle CDB common user:
+
+```sql
+CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
+GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
+GRANT CREATE VIEW TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER SYSTEM TO c##ggadmin CONTAINER=ALL;
+GRANT ALTER USER TO c##ggadmin CONTAINER=ALL;
+ALTER USER c##ggadmin QUOTA UNLIMITED ON USERS CONTAINER=ALL;
+ALTER USER c##ggadmin SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
+
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'C##GGADMIN',
+    privilege_type          => '*',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE,
+    container               => 'ALL');
+END;
+/
+```
+
+Oracle target DML per Replicat:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO ggadmin;
+```
+
+Genera grant per schema:
+
+```sql
+SELECT 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || owner || '.' || table_name || ' TO GGADMIN;'
+FROM   dba_tables
+WHERE  owner = 'APP'
+ORDER  BY table_name;
+```
+
+PostgreSQL target:
+
+```sql
+CREATE USER ggadmin WITH PASSWORD '<PASSWORD_SICURA>';
+GRANT CONNECT ON DATABASE appdb TO ggadmin;
+GRANT USAGE ON SCHEMA app TO ggadmin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO ggadmin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ggadmin;
+```
+
+PostgreSQL source:
+
+```sql
+ALTER USER ggadmin WITH REPLICATION;
+-- Se richiesto solo per configurazione TRANDATA:
+ALTER USER ggadmin WITH SUPERUSER;
+ALTER USER ggadmin WITH NOSUPERUSER;
+```
+
+Verifica Oracle:
+
+```sql
+SELECT username, privilege_type
+FROM   dba_goldengate_privileges
+WHERE  username IN ('GGADMIN','C##GGADMIN');
+```
+
+---
+
+## 13. Diagnostica errori comuni
 
 ```text
 INFO ALL
@@ -314,7 +385,7 @@ df -h
 
 ---
 
-## 13. Errori tipici
+## 14. Errori tipici
 
 | Errore | Azione rapida |
 | --- | --- |
@@ -328,7 +399,7 @@ df -h
 
 ---
 
-## 14. Runbook stop/start sicuro
+## 15. Runbook stop/start sicuro
 
 Stop:
 
@@ -352,7 +423,7 @@ LAG REPLICAT rep_tgt
 
 ---
 
-## 15. Cutover migrazione
+## 16. Cutover migrazione
 
 ```text
 1. stop applicazione source
@@ -367,8 +438,9 @@ LAG REPLICAT rep_tgt
 
 ---
 
-## 16. Fonti ufficiali
+## 17. Fonti ufficiali
 
 - GGSCI Commands: https://docs.oracle.com/en/middleware/goldengate/core/18.1/reference/oracle-goldengate-ggsci-commands.html
 - Microservices Access Points: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-access-points-oracle-goldengate-microservices.html
 - REST API: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oggra/QuickStart.html
+- DBMS_GOLDENGATE_AUTH: https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_GOLDENGATE_AUTH.html
