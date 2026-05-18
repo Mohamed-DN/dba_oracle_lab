@@ -4,7 +4,7 @@
 
 | Guida | Cosa impari |
 | --- | --- |
-| [GoldenGate verso OCI](./GUIDA_GOLDENGATE_OCI_ARM.md) | Target OCI ARM, scenari free vs enterprise |
+| [GoldenGate verso OCI](./GUIDA_CLOUD_GOLDENGATE.md) | Target OCI, scenari free vs enterprise, replica e integrazione cloud |
 | [Rete Lab ↔ OCI](./GUIDA_RETE_LAB_OCI_GOLDENGATE.md) | VPN, SSH tunnel, NSG |
 | [Cloud GoldenGate](./GUIDA_CLOUD_GOLDENGATE.md) | Panorama integrazione cloud |
 

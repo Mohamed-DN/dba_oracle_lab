@@ -657,17 +657,28 @@ CREATE USER ggadmin IDENTIFIED BY <password>
     TEMPORARY TABLESPACE TEMP
     QUOTA UNLIMITED ON USERS;
 
-GRANT DBA TO ggadmin;
-GRANT SELECT ANY DICTIONARY TO ggadmin;
 GRANT CREATE SESSION TO ggadmin;
+GRANT CREATE VIEW TO ggadmin;
 GRANT ALTER SESSION TO ggadmin;
-GRANT RESOURCE TO ggadmin;
 
-EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('GGADMIN');
+BEGIN
+  DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
+    grantee                 => 'GGADMIN',
+    privilege_type          => '*',
+    grant_select_privileges => TRUE,
+    do_grants               => TRUE);
+END;
+/
+
+-- Grant DML sulle tabelle target: preferire object-level grants in produzione.
+-- Esempio:
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON HR.EMPLOYEES TO ggadmin;
 
 -- Crea lo schema target (se non esiste)
 -- Importalo con Data Pump dallo standby (vedi 8.2)
 ```
+
+> In ambienti critici non usare `GRANT DBA` per `GGADMIN`: per i dettagli usa la guida [Grant e Privilegi GoldenGate 19c](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md).
 
 ### 8.2 Initial Load con Data Pump
 
