@@ -36,3 +36,17 @@ GROUP BY
     mese
 ORDER BY 
     mese;
+
+--dimensione database
+
+SELECT 
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM dba_data_files), 2) AS "Datafiles (GB)",
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM dba_temp_files), 2) AS "Tempfiles (GB)",
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM v$log), 2) AS "Redo Logs (GB)",
+    ROUND(
+        (SELECT SUM(bytes)/1024/1024/1024 FROM dba_data_files) +
+        (SELECT SUM(bytes)/1024/1024/1024 FROM dba_temp_files) +
+        (SELECT SUM(bytes)/1024/1024/1024 FROM v$log)
+    , 2) AS "Total_Allocated_GB"
+FROM dual;
+
