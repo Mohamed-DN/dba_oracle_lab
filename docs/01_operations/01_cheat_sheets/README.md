@@ -13,6 +13,7 @@
 | **RMAN Essenziale** | I 10 comandi RMAN che usi ogni giorno | [CHEAT_SHEET_RMAN_ESSENZIALE.md](CHEAT_SHEET_RMAN_ESSENZIALE.md) |
 | **Data Guard / DGMGRL** | Switchover, failover, reinstate, show configuration | [CHEAT_SHEET_DGMGRL.md](CHEAT_SHEET_DGMGRL.md) |
 | **GoldenGate** | Start/stop replicat, stats, lag, troubleshooting | [CHEAT_SHEET_GOLDENGATE.md](CHEAT_SHEET_GOLDENGATE.md) |
+| **SQL Assessment DBA** | PDB/service lookup, dimensione DB, trend crescita, redo rate | [CHEAT_SHEET_SQL_ASSESSMENT.md](CHEAT_SHEET_SQL_ASSESSMENT.md) |
 
 ---
 

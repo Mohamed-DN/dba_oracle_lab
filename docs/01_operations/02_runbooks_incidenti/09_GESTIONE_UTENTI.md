@@ -303,4 +303,3 @@ ALTER USER &username PROFILE &profile_name;
 | **Privilegi** | Solo quelli strettamente necessari | Utilizzare le query di audit per revoche puntuali |
 | **Profilo** | Profilo non di `DEFAULT` per app/utenti | Assegnare `app_profile` o `user_profile` appropriato |
 | **Connettività** | Login testato con successo | Verificare `CREATE SESSION` e configurazione TNS/Listener |
-```

@@ -1,3 +1,7 @@
+-- ATTENZIONE: script storico/prototipo con privilegi amministrativi ampi.
+-- Non eseguire in produzione senza review Security/DBA e principio least privilege.
+-- Valutare grant nominali e object-level al posto di ruoli generici come DBA.
+
 -- default tablespace for DBA_OP:
 
 CREATE BIGFILE TABLESPACE DBA_OP_DATA DATAFILE SIZE 1024M AUTOEXTEND ON NEXT 128M MAXSIZE 32G LOGGING;
