@@ -290,6 +290,26 @@ Privilegi:
 SELECT * FROM dba_goldengate_privileges;
 ```
 
+Service/PDB lookup:
+
+```sql
+SELECT pdb AS pluggable_database,
+       name AS service_name,
+       network_name
+FROM   cdb_services
+WHERE  UPPER(name) LIKE UPPER('%&SERVICE_NAME%');
+```
+
+Dimensione database:
+
+```sql
+SELECT
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM dba_data_files), 2) AS datafiles_gb,
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM dba_temp_files), 2) AS tempfiles_gb,
+    ROUND((SELECT SUM(bytes)/1024/1024/1024 FROM v$log), 2) AS redo_logs_gb
+FROM dual;
+```
+
 ---
 
 ## 12. Grant e privilegi rapidi
@@ -363,7 +383,81 @@ WHERE  username IN ('GGADMIN','C##GGADMIN');
 
 ---
 
-## 13. Diagnostica errori comuni
+## 13. Heartbeat e lag end-to-end
+
+```text
+DBLOGIN USERIDALIAS ggsrc DOMAIN OracleGoldenGate
+ADD HEARTBEATTABLE
+INFO HEARTBEATTABLE
+```
+
+Lag e stato:
+
+```text
+LAG EXTRACT ext_rac
+LAG REPLICAT rep_tgt
+SEND EXTRACT ext_rac, STATUS
+SEND REPLICAT rep_tgt, STATUS
+STATS EXTRACT ext_rac, TOTAL
+STATS REPLICAT rep_tgt, TOTAL
+```
+
+---
+
+## 14. REST API Microservices
+
+Status:
+
+```bash
+curl -k -u oggadmin:<PASSWORD_DEPLOYMENT> https://rac1:9012/services/v2/status
+```
+
+Esecuzione comando via REST:
+
+```bash
+curl -k -u oggadmin:<PASSWORD_DEPLOYMENT> \
+  -H "Content-Type: application/json" \
+  -X POST https://rac1:9012/services/v2/commands/execute \
+  -d '{"name":"info","processName":"ext_rac","processType":"extract"}'
+```
+
+---
+
+## 15. Active-active / CDR skeleton
+
+Solo dopo design conflitti approvato. Validare sintassi e regole in UAT.
+
+```text
+MAP APP.CUSTOMERS, TARGET APP.CUSTOMERS,
+  COMPARECOLS (ON UPDATE ALL, ON DELETE ALL),
+  RESOLVECONFLICT (UPDATEROWEXISTS, (DEFAULT, OVERWRITE)),
+  RESOLVECONFLICT (INSERTROWEXISTS, (DEFAULT, DISCARD));
+```
+
+---
+
+## 16. Big Data / Kafka skeleton
+
+```text
+REPLICAT rkafka
+TARGETDB LIBFILE libggjava.so SET property=dirprm/kafka.props
+REPORTCOUNT EVERY 5 MINUTES, RATE
+MAP APP.*, TARGET APP.*;
+```
+
+`kafka.props` concettuale:
+
+```text
+gg.handlerlist=kafkahandler
+gg.handler.kafkahandler.type=kafka
+gg.handler.kafkahandler.KafkaProducerConfigFile=custom_kafka_producer.properties
+gg.handler.kafkahandler.topicMappingTemplate=${fullyQualifiedTableName}
+gg.handler.kafkahandler.format=json
+```
+
+---
+
+## 17. Diagnostica errori comuni
 
 ```text
 INFO ALL
@@ -385,7 +479,7 @@ df -h
 
 ---
 
-## 14. Errori tipici
+## 18. Errori tipici
 
 | Errore | Azione rapida |
 | --- | --- |
@@ -399,7 +493,7 @@ df -h
 
 ---
 
-## 15. Runbook stop/start sicuro
+## 19. Runbook stop/start sicuro
 
 Stop:
 
@@ -423,7 +517,7 @@ LAG REPLICAT rep_tgt
 
 ---
 
-## 16. Cutover migrazione
+## 20. Cutover migrazione
 
 ```text
 1. stop applicazione source
@@ -438,9 +532,12 @@ LAG REPLICAT rep_tgt
 
 ---
 
-## 17. Fonti ufficiali
+## 21. Fonti ufficiali
 
 - GGSCI Commands: https://docs.oracle.com/en/middleware/goldengate/core/18.1/reference/oracle-goldengate-ggsci-commands.html
 - Microservices Access Points: https://docs.oracle.com/en/middleware/goldengate/core/19.1/coredoc/overview-access-points-oracle-goldengate-microservices.html
 - REST API: https://docs.oracle.com/en/middleware/goldengate/core/19.1/oggra/QuickStart.html
 - DBMS_GOLDENGATE_AUTH: https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_GOLDENGATE_AUTH.html
+- Monitoring/Heartbeat: https://docs.oracle.com/en/middleware/goldengate/core/19.1/admin/monitoring-oracle-goldengate-processing.html
+- Active-active/CDR: https://docs.oracle.com/en/middleware/goldengate/core/19.1/admin/configuring-oracle-goldengate-active-active-high-availability.html
+- GoldenGate for Big Data 19.1: https://docs.oracle.com/en/middleware/goldengate/big-data/19.1/index.html

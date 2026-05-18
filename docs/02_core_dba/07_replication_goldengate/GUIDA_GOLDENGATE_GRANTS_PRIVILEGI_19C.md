@@ -1,4 +1,4 @@
-﻿# GoldenGate 19c - Grant e Privilegi Production-Grade
+# GoldenGate 19c - Grant e Privilegi Production-Grade
 
 > Obiettivo: preparare gli utenti Oracle GoldenGate per Oracle 19c, CDB/PDB, target Oracle, PostgreSQL e ambienti critici senza usare `GRANT DBA` come scorciatoia. In laboratorio `DBA` puo' far sembrare tutto piu semplice, ma in produzione bancaria e' un anti-pattern.
 
@@ -350,7 +350,7 @@ USERIDALIAS ggsrc DOMAIN OracleGoldenGate
 Non usare:
 
 ```text
-USERID ggadmin, PASSWORD password_in_chiaro
+USERID ggadmin, PASSWORD <NON_INSERIRE_PASSWORD_NEL_FILE>
 ```
 
 ---

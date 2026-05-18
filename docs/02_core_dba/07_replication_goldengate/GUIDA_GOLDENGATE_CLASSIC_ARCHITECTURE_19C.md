@@ -121,7 +121,7 @@ USERIDALIAS ggsrc DOMAIN OracleGoldenGate
 Non usare:
 
 ```text
-USERID ggadmin, PASSWORD password_in_chiaro
+USERID ggadmin, PASSWORD <NON_INSERIRE_PASSWORD_NEL_FILE>
 ```
 
 ---
@@ -414,7 +414,7 @@ Non sceglierlo come default per nuove architetture se puoi usare Microservices.
 - Process interfaces: https://docs.oracle.com/en/middleware/goldengate/core/18.1/admin/getting-started-oracle-goldengate-process-interfaces.html
 
 ## Obiettivo
-Descrivere l’implementazione Classic Architecture 19c basata su GGSCI e processi Manager/Extract/Pump/Replicat.
+Descrivere lâ€™implementazione Classic Architecture 19c basata su GGSCI e processi Manager/Extract/Pump/Replicat.
 
 ## Procedura operativa
 Configurare processi da linea comando GGSCI, trail locali/remoti, parametri e lifecycle start/stop dei componenti classici.
