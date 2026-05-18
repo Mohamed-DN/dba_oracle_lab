@@ -4,3 +4,35 @@ SELECT pdb AS pluggable_database,
        network_name
 FROM   cdb_services
 WHERE  UPPER(name) LIKE '%&SERVICE_NAME%';
+
+
+--Growth Trend
+WITH snap_sizes AS (
+    SELECT 
+        s.snap_id,
+        TO_CHAR(s.begin_interval_time, 'YYYY-MM') AS mese,
+        SUM(h.tablespace_size * t.block_size) AS allocato_bytes,
+        SUM(h.tablespace_usedsize * t.block_size) AS usato_bytes
+    FROM 
+        dba_hist_tbspc_space_usage h
+    JOIN 
+        dba_hist_snapshot s ON h.snap_id = s.snap_id
+    JOIN 
+        v$tablespace vt ON h.tablespace_id = vt.ts#
+    JOIN 
+        dba_tablespaces t ON vt.name = t.tablespace_name
+    WHERE 
+        s.begin_interval_time >= ADD_MONTHS(SYSDATE, -12)
+    GROUP BY 
+        s.snap_id, TO_CHAR(s.begin_interval_time, 'YYYY-MM') )
+SELECT 
+    mese AS "Mese",
+    ROUND(MAX(allocato_bytes) / 1024/1024/1024, 2) AS "Max Allocato (GB)",
+    ROUND(MAX(usato_bytes) / 1024/1024/1024, 2) AS "Max Usato (GB)",
+    ROUND(MAX(usato_bytes) / 1024/1024/1024 - LAG(ROUND(MAX(usato_bytes) / 1024/1024/1024, 2)) OVER (ORDER BY mese), 2) AS "Delta Usato vs Mese Prec (GB)"
+FROM 
+    snap_sizes
+GROUP BY 
+    mese
+ORDER BY 
+    mese;
