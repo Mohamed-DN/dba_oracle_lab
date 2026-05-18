@@ -9,9 +9,11 @@
 Prima di aprire un use case specifico, leggere sempre:
 
 1. [Prerequisiti DB e Architettura](../GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md)
-2. [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md)
-3. [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md)
-4. [GoldenGate 19c Completa](../GUIDA_GOLDENGATE_19C_COMPLETA.md)
+2. [Grant e Privilegi 19c](../GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md)
+3. [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md)
+4. [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md)
+5. [GoldenGate 19c Completa](../GUIDA_GOLDENGATE_19C_COMPLETA.md)
+6. [Runbook End-to-End 19c](../GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md)
 
 Motivo: in ambienti bancari non basta sapere configurare Extract e Replicat. Devi anche sapere giustificare firewall, TLS, credenziali, retention archive, monitoring, audit e rollback.
 

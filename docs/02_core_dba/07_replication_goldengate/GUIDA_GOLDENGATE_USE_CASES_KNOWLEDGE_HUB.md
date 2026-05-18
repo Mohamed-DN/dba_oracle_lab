@@ -185,6 +185,8 @@ Dalle comunicazioni Oracle recenti, i casi ricorrenti sono questi.
 
 Indice completo della cartella use case: [use_cases/README.md](./use_cases/README.md).
 
+Procedura operativa comune per implementare ogni use case: [GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md).
+
 ---
 
 ## 5. GoldenGate e real-time AI
@@ -246,13 +248,13 @@ Mappa pratica:
 
 | Se vuoi provare | Apri |
 | --- | --- |
-| Migrazione Oracle -> Oracle | [UC01](./use_cases/UC01_NO_DOWNTIME_MIGRATIONS.md) + [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) |
-| HA logica o active-active | [UC02](./use_cases/UC02_HIGH_AVAILABILITY.md) |
-| Dati verso analytics/lakehouse | [UC03](./use_cases/UC03_ANALYTICAL_DATA_INGEST.md) |
-| AI/RAG/vector data refresh | [UC04](./use_cases/UC04_AI_READY_DATA.md) |
-| On-prem/OCI/AWS/Azure/GCP | [UC05](./use_cases/UC05_MULTICLOUD_DATA_INTEGRATION.md) |
-| Eventi applicativi | [UC06](./use_cases/UC06_APPLICATION_DATA_STREAMS.md) |
-| Kafka/stream analytics | [UC07](./use_cases/UC07_STREAM_PROCESSING_ANALYTICS.md) |
+| Migrazione Oracle -> Oracle | [UC01](./use_cases/UC01_NO_DOWNTIME_MIGRATIONS.md) + [Migrazione GoldenGate](./GUIDA_MIGRAZIONE_GOLDENGATE.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| HA logica o active-active | [UC02](./use_cases/UC02_HIGH_AVAILABILITY.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| Dati verso analytics/lakehouse | [UC03](./use_cases/UC03_ANALYTICAL_DATA_INGEST.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| AI/RAG/vector data refresh | [UC04](./use_cases/UC04_AI_READY_DATA.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| On-prem/OCI/AWS/Azure/GCP | [UC05](./use_cases/UC05_MULTICLOUD_DATA_INTEGRATION.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| Eventi applicativi | [UC06](./use_cases/UC06_APPLICATION_DATA_STREAMS.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
+| Kafka/stream analytics | [UC07](./use_cases/UC07_STREAM_PROCESSING_ANALYTICS.md) + [Runbook](./GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md) |
 
 ---
 
