@@ -68,9 +68,25 @@ ALTER DATABASE DATAFILE '&file_name'
 ### 3B. Aggiungi Datafile (soluzione più comune)
 
 ```sql
--- Per ASM (lab RAC)
+
+--in caso di tbs small file
+DECLARE
+  n_volte NUMBER := MODIFICARE_CON_IL_NUMERO_CHE_SERVE; 
+BEGIN
+  FOR i IN 1..n_volte LOOP
+    -- Ho aggiunto la parola chiave DATAFILE subito dopo ADD
+    EXECUTE IMMEDIATE 'ALTER TABLESPACE TS_CORE ADD DATAFILE SIZE 128M AUTOEXTEND ON NEXT 128M MAXSIZE UNLIMITED';
+  END LOOP;
+  
+  DBMS_OUTPUT.PUT_LINE('Fatto! Eseguiti ' || n_volte || ' inserimenti.');
+END;
+/
+
+-- Per ASM (lab RAC) -- o big file 
 ALTER TABLESPACE &TABLESPACE_NAME
     ADD DATAFILE '+DATA' SIZE 1G AUTOEXTEND ON NEXT 100M MAXSIZE 32G;
+--si consiglia di non indicare il datafile cosi che se la replica ha un datafile con nome diverso non vada in errore il comando da usare è
+ALTER TABLESPACE &TABLESPACE_NAME ADD DATAFILE SIZE 128M AUTOEXTEND ON NEXT 128M MAXSIZE 32G;
 
 -- Per filesystem
 ALTER TABLESPACE &TABLESPACE_NAME
