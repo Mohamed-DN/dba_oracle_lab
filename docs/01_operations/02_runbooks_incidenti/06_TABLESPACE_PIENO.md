@@ -85,7 +85,8 @@ END;
 -- Per ASM (lab RAC) -- o big file 
 ALTER TABLESPACE &TABLESPACE_NAME
     ADD DATAFILE '+DATA' SIZE 1G AUTOEXTEND ON NEXT 100M MAXSIZE 32G;
---si consiglia di non indicare il datafile cosi che se la replica ha un datafile con nome diverso non vada in errore il comando da usare è
+/*si consiglia di non indicare il datafile cosi che se la replica ha un datafile
+ con nome diverso non vada in errore usare il comando in basso : */
 ALTER TABLESPACE &TABLESPACE_NAME ADD DATAFILE SIZE 128M AUTOEXTEND ON NEXT 128M MAXSIZE 32G;
 
 -- Per filesystem
