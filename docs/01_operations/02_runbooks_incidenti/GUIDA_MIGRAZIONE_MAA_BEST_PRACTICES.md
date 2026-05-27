@@ -1,5 +1,34 @@
 # Guida alla Migrazione: MAA Best Practices
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Allineare il lab a pratiche MAA prima di produzione.
+- Rivedere RMAN, Data Guard, Enterprise Manager e GoldenGate.
+- Ridurre SPOF e configurazioni solo-lab.
+- Preparare rollback e validazione per ogni migrazione.
+- Separare cosa e accettabile in home lab da cosa serve in banca.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [1. Migrazione RMAN: Bilanciamento del Carico RAC (Fase 5)](#1-migrazione-rman-bilanciamento-del-carico-rac-fase-5)
+  - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
+  - [Come applicare la Best Practice](#come-applicare-la-best-practice)
+  - [2. Tuning Memoria Enterprise Manager (Fase 6)](#2-tuning-memoria-enterprise-manager-fase-6)
+  - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
+  - [Come applicare la Best Practice (Memory Clamping)](#come-applicare-la-best-practice-memory-clamping)
+  - [3. Aggiunta del Fast-Start Failover (Observer) (Fase 4)](#3-aggiunta-del-fast-start-failover-observer-fase-4)
+  - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
+  - [Come applicare la Best Practice](#come-applicare-la-best-practice)
+  - [4. Migrazione a GoldenGate Microservices Architecture (MA) (Fase 7)](#4-migrazione-a-goldengate-microservices-architecture-ma-fase-7)
+  - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
+  - [Differenze strutturali: Classic vs MA](#differenze-strutturali-classic-vs-ma)
+  - [Come migrare (Passo-Passo)](#come-migrare-passo-passo)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 ## Obiettivi
 
 Allineare l'infrastruttura Oracle esistente ai nuovi standard **Oracle Maximum Availability Architecture (MAA)**, migliorando il bilanciamento del carico, la stabilità della memoria, l'automazione del failover e la modernizzazione dell'architettura di replica.

@@ -1,5 +1,33 @@
 # 05 — Query Lenta — Diagnosi Rapida
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Utente segnala query lenta con SQL_ID noto.
+- Query lenta solo oggi: sospetta regressione piano/statistiche.
+- Query consuma CPU/I/O/TEMP in modo anomalo.
+- Serve confronto piano attuale vs storico AWR.
+- Serve fix sicuro: statistiche, baseline, profilo o tuning advisor.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Identifica la Query (hai il SQL_ID?)](#step-1-identifica-la-query-hai-il-sql_id)
+  - [Se hai il SQL_ID:](#se-hai-il-sql_id)
+  - [Se NON hai il SQL_ID (devi trovarlo):](#se-non-hai-il-sql_id-devi-trovarlo)
+  - [Step 2: Piano di Esecuzione Attuale](#step-2-piano-di-esecuzione-attuale)
+  - [Step 3: Le Statistiche Sono Aggiornate?](#step-3-le-statistiche-sono-aggiornate)
+  - [Step 4: Il Piano è Cambiato? (Regressione)](#step-4-il-piano-è-cambiato-regressione)
+  - [Step 5: Dove il Tempo Viene Speso?](#step-5-dove-il-tempo-viene-speso)
+  - [Step 6: SQL Tuning Advisor (automatico)](#step-6-sql-tuning-advisor-automatico)
+  - [Step 7: Fix Rapidi](#step-7-fix-rapidi)
+  - [Se mancano statistiche:](#se-mancano-statistiche)
+  - [Se il piano è regredito (forza il piano vecchio):](#se-il-piano-è-regredito-forza-il-piano-vecchio)
+  - [Se manca un indice (consigliato da Tuning Advisor):](#se-manca-un-indice-consigliato-da-tuning-advisor)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 10-30 minuti | 📅 Frequenza: Su ticket | 👤 Chi: DBA
 > **Scenario tipico**: "Questa query ci mette 10 minuti, prima ci metteva 2 secondi!"
 

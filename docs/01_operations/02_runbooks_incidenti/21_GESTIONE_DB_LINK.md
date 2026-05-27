@@ -1,3 +1,35 @@
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- DB link da disabilitare dopo clone preprod.
+- `ORA-12154`, `ORA-12514`, `ORA-02085`.
+- Credenziali e network encryption da verificare.
+- Transazione distribuita in-doubt o lock 2PC.
+- Query remota lenta da analizzare con `DRIVING_SITE`.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [1. Architettura e Tipologia dei DB Link](#1-architettura-e-tipologia-dei-db-link)
+- [2. Fase Critica Post-Clone: Drop Immediato](#2-fase-critica-post-clone-drop-immediato)
+  - [2.1 Generazione script Drop di Sicurezza](#21-generazione-script-drop-di-sicurezza)
+- [3. Sicurezza delle Credenziali nei DB Link](#3-sicurezza-delle-credenziali-nei-db-link)
+  - [3.1 Il problema di SYS.LINK$](#31-il-problema-di-syslink)
+  - [3.2 Network Encryption per DB Link](#32-network-encryption-per-db-link)
+- [4. Troubleshooting Avanzato della Rete (ORA-12154, ORA-12514)](#4-troubleshooting-avanzato-della-rete-ora-12154-ora-12514)
+- [5. Gestione Transazioni Distribuite e In-Doubt (2PC)](#5-gestione-transazioni-distribuite-e-in-doubt-2pc)
+  - [5.1 Identificazione di Lock Distribuiti](#51-identificazione-di-lock-distribuiti)
+  - [5.2 Risoluzione Forzata di un 2PC In-Doubt](#52-risoluzione-forzata-di-un-2pc-in-doubt)
+- [6. Tuning delle Performance su DB Link](#6-tuning-delle-performance-su-db-link)
+  - [6.1 DRIVING_SITE Hint](#61-driving_site-hint)
+  - [6.2 Evitare CLOB/BLOB su DB Link](#62-evitare-clobblob-su-db-link)
+  - [6.3 Ottimizzazione Fetch Size](#63-ottimizzazione-fetch-size)
+- [7. Hardening Enterprise dei DB Link](#7-hardening-enterprise-dei-db-link)
+  - [7.1 Regole di sicurezza](#71-regole-di-sicurezza)
+  - [7.2 Inventory completo](#72-inventory-completo)
+  - [7.3 Test sicuro del link](#73-test-sicuro-del-link)
+  - [7.4 Pattern per ricreare link in PREPROD](#74-pattern-per-ricreare-link-in-preprod)
+  - [7.5 Privilegi per transazioni in-doubt](#75-privilegi-per-transazioni-in-doubt)
+- [8. Manuali e riferimenti](#8-manuali-e-riferimenti)
+<!-- RUNBOOK_NAV_END -->
 ﻿# Runbook Enterprise: Gestione Avanzata dei Database Link (DB_LINK)
 
 I Database Link (DB_LINK) sono il ponte nervoso che permette a database distinti di comunicare. Tuttavia, se gestiti erroneamente (in particolar modo durante refresh di ambienti, cloni, o migrazioni), diventano la **falla di sicurezza piÃ¹ pericolosa** di un'infrastruttura. Un DB Link copiato da un DB di Produzione verso uno di Test manterrÃ  i riferimenti di connessione al database target di Produzione. Un'operazione di `DELETE` o `UPDATE` lanciata in test si propagherÃ  silente al database di Produzione, causando una severa corruzione logica.

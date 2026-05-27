@@ -1,5 +1,31 @@
 # 07 — CPU Alta
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- CPU host sopra soglia e bisogna capire se e Oracle.
+- Una o poche sessioni consumano CPU continuamente.
+- Hard parse elevato o library cache contention.
+- Parallel query fuori controllo.
+- Serve mitigazione rapida senza riavviare il database.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: È Oracle o è qualcos'altro?](#step-1-è-oracle-o-è-qualcosaltro)
+  - [Step 2: Average Active Sessions (il "battito cardiaco")](#step-2-average-active-sessions-il-battito-cardiaco)
+  - [Step 3: Chi Sta Consumando CPU?](#step-3-chi-sta-consumando-cpu)
+  - [Step 4: Analisi ASH (chi stava usando CPU?)](#step-4-analisi-ash-chi-stava-usando-cpu)
+  - [Step 5: Hard Parse Eccessivo?](#step-5-hard-parse-eccessivo)
+  - [Step 6: Parallelismo Fuori Controllo?](#step-6-parallelismo-fuori-controllo)
+  - [Step 7: Azioni di Mitigazione](#step-7-azioni-di-mitigazione)
+  - [Kill query runaway (se una singola query mangia tutto):](#kill-query-runaway-se-una-singola-query-mangia-tutto)
+  - [Limita risorse con Resource Manager:](#limita-risorse-con-resource-manager)
+  - [SQL Quarantine (19c — blocca SQL "killer"):](#sql-quarantine-19c-blocca-sql-killer)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 10-30 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: Alert "CPU al 95%!" oppure "il database è lentissimo"
 

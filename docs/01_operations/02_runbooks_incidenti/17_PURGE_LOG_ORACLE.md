@@ -1,5 +1,25 @@
 # 17 — Purge Log Oracle (ADR, Audit, Archivelog)
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Filesystem diag/trace/audit pieno.
+- FRA piena per archivelog o backup obsoleti.
+- ADR alert/trace cresciuti dopo incidente.
+- Unified audit trail troppo grande.
+- Serve purge sicuro senza cancellare evidenze recenti.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Identifica quale log sta crescendo](#step-1-identifica-quale-log-sta-crescendo)
+  - [Step 2: Purge log diagnostici ADR (alert/trace/incidents)](#step-2-purge-log-diagnostici-adr-alerttraceincidents)
+  - [Step 3: Purge archivelog in sicurezza (RMAN)](#step-3-purge-archivelog-in-sicurezza-rman)
+  - [Step 4: Purge Unified Audit Trail (se cresce troppo)](#step-4-purge-unified-audit-trail-se-cresce-troppo)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting / Guardrail importanti](#troubleshooting-guardrail-importanti)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 15-30 minuti | 📅 Frequenza: Settimanale o su saturazione spazio | 👤 Chi: DBA
 > **Scenario tipico**: filesystem diagnostici pieni, FRA in crescita, trail audit troppo grande.
 

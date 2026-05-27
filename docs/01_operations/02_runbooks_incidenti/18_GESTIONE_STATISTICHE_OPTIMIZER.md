@@ -1,5 +1,24 @@
 # 18 — Gestione Statistiche Optimizer (DBMS_STATS)
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Query regredita dopo statistiche stale o mancanti.
+- Tabella grande con modifiche massive.
+- Istogrammi/extended stats da valutare.
+- Import Data Pump con statistiche non affidabili.
+- Serve gather mirato senza impattare produzione.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Verifica stato statistiche](#step-1-verifica-stato-statistiche)
+  - [Step 2: Raccogli statistiche stale (raccomandato)](#step-2-raccogli-statistiche-stale-raccomandato)
+  - [Step 3: Tabella critica (intervento puntuale)](#step-3-tabella-critica-intervento-puntuale)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 20-40 minuti | 📅 Frequenza: Settimanale o post-massive load | 👤 Chi: DBA
 > **Scenario tipico**: regressione piani SQL, cardinalità errate, query improvvisamente lente.
 

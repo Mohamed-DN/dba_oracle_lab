@@ -1,5 +1,22 @@
 # 14 — Chaos Engineering: Network Partition su Data Guard
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Drill di resilienza rete Data Guard in laboratorio.
+- Simulare latenza, jitter o packet loss.
+- Verificare comportamento transport/apply lag.
+- Testare alerting e runbook di recovery gap.
+- Rimuovere sempre le regole chaos a fine test.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Esempio di Simulazione](#esempio-di-simulazione)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 ## Obiettivi
 
 Simulare scenari di instabilità di rete (latenza e perdita pacchetti) tra i nodi Primary e Standby per testare la resilienza della configurazione Data Guard e la capacità di riallineamento automatico.

@@ -1,5 +1,32 @@
 # 15 — Checkmk Agent TLS + SMART/RAID Troubleshooting
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Host non visibile o agent Checkmk non risponde.
+- TLS registration fallita.
+- Update agent non funzionante.
+- Mancano metriche SMART/RAID.
+- Discovery e activate changes non mostrano nuovi servizi.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+  - [Prerequisiti](#prerequisiti)
+- [Procedura Operativa](#procedura-operativa)
+  - [1) Connettività e risoluzione nome](#1-connettività-e-risoluzione-nome)
+  - [2) Installazione agent package](#2-installazione-agent-package)
+  - [3) Verifica certificato endpoint](#3-verifica-certificato-endpoint)
+  - [4) Registrazione TLS controller](#4-registrazione-tls-controller)
+  - [5) Registrazione update agent](#5-registrazione-update-agent)
+  - [6) Discovery e activate changes (UI)](#6-discovery-e-activate-changes-ui)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting Rapido](#troubleshooting-rapido)
+  - [Errore registrazione TLS](#errore-registrazione-tls)
+  - [Update agent non funziona](#update-agent-non-funziona)
+  - [Nessuna metrica SMART/RAID](#nessuna-metrica-smartraid)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 ## Obiettivi
 
 Eseguire onboarding e troubleshooting standard di un host Linux su Checkmk con:

@@ -1,5 +1,29 @@
 # 06 — Tablespace Pieno
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Tablespace permanente sopra 85/90/95%.
+- `ORA-01653` o `ORA-01654` su tabella/indice.
+- TEMP piena con `ORA-01652`.
+- UNDO piena o retention insufficiente.
+- Autoextend non configurato o datafile vicino al limite fisico.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Verifica la Situazione](#step-1-verifica-la-situazione)
+  - [Step 2: Chi Sta Consumando Spazio?](#step-2-chi-sta-consumando-spazio)
+  - [Step 3: Risolvere — Ordine di Priorità](#step-3-risolvere-ordine-di-priorità)
+  - [3A. Abilita Autoextend (se non attivo)](#3a-abilita-autoextend-se-non-attivo)
+  - [3B. Aggiungi Datafile (soluzione più comune)](#3b-aggiungi-datafile-soluzione-più-comune)
+  - [3C. Recupera Spazio (se c'è spazio reclaimabile)](#3c-recupera-spazio-se-cè-spazio-reclaimabile)
+  - [Step 4: TEMP Tablespace Pieno](#step-4-temp-tablespace-pieno)
+  - [Step 5: UNDO Tablespace Pieno](#step-5-undo-tablespace-pieno)
+- [Troubleshooting](#troubleshooting)
+- [Validazione Finale](#validazione-finale)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: Alert "Tablespace USERS al 95%!" oppure ORA-01653/ORA-01654
 

@@ -1,5 +1,35 @@
 # Runbook Enterprise: Tutti i Casi RMAN e Data Guard per Recovery, DR e Incidenti
 
+<!-- RUNBOOK_NAV_START -->
+## Indice operativo rapido
+
+### Casi piu frequenti da aprire prima
+- [Database crash con istanza non avviabile](#rman-001---database-crash-con-istanza-non-avviabile)
+- [Instance crash ma storage integro](#rman-002---instance-crash-ma-storage-integro)
+- [Tabella cancellata con DROP TABLE](#rman-018---tabella-cancellata-con-drop-table)
+- [DELETE senza WHERE o update massivo errato](#rman-020---delete-senza-where-o-update-massivo-errato)
+- [Corruzione blocco ORA-01578](#rman-015---corruzione-blocco-ora-01578)
+- [Recovery di singola tabella con RMAN RECOVER TABLE](#rman-028---recovery-di-singola-tabella-con-rman-recover-table)
+- [Duplicate active database per clone preprod](#rman-030---duplicate-active-database-per-clone-preprod)
+- [Primary database down totale](#dg-004---primary-database-down-totale)
+- [Failover manuale a standby](#dg-005---failover-manuale-a-standby)
+- [Switchover pianificato](#dg-006---switchover-pianificato)
+- [Archive gap su physical standby](#dg-022---archive-gap-su-physical-standby)
+- [Standby apply lag crescente](#dg-026---standby-apply-lag-crescente)
+- [MRP0 non parte](#dg-032---mrp0-non-parte)
+- [Roll-forward standby con incremental from SCN](#dg-036---roll-forward-standby-con-incremental-from-scn)
+
+### Macro-aree
+- [Spiegazione didattica](#spiegazione-didattica-come-raccontare-rman-e-data-guard)
+- [Matrice decisionale rapida](#matrice-decisionale-rapida)
+- [Pre-check universale](#pre-check-universale-prima-di-qualsiasi-recovery)
+- [Parte 1 - Scenari RMAN, Flashback e Backup/Recovery](#parte-1---scenari-rman-flashback-e-backuprecovery)
+- [Parte 2 - Scenari Data Guard, Broker, Standby e Disaster Recovery](#parte-2---scenari-data-guard-broker-standby-e-disaster-recovery)
+
+### Come spiegare il documento
+Parti sempre dal danno reale: indisponibilita, perdita dati logica, corruzione fisica, gap Data Guard o richiesta di clone. Poi dichiara RTO/RPO, verifica backup e archivelog, scegli tra RMAN, Flashback, Data Guard o rebuild, e chiudi con evidenze di validazione.
+<!-- RUNBOOK_NAV_END -->
+
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
 
 

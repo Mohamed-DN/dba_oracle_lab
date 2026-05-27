@@ -1,5 +1,28 @@
 # 12 — Capacity Planning e Limiti Fisici (Hard Limits)
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- ASM diskgroup o tablespace in crescita costante.
+- Bigfile tablespace vicino a limite massimo.
+- Datafile autoextend vicino a `MAXSIZE`.
+- Previsione spazio per quarter-end, batch o migrazione.
+- Verifica limiti fisici prima di aggiungere volumi.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+- [🗂️ Gli script di riferimento (Top Tier)](#gli-script-di-riferimento-top-tier)
+  - [Step 1: Controllo Limiti Teorici ASM vs Allocation Unit (AU_SIZE)](#step-1-controllo-limiti-teorici-asm-vs-allocation-unit-au_size)
+  - [Cosa analizzare nell'output:](#cosa-analizzare-nelloutput)
+  - [Step 2: MAXSIZE rispetto allo Spazio Reale Allocato](#step-2-maxsize-rispetto-allo-spazio-reale-allocato)
+  - [Come interpretarlo:](#come-interpretarlo)
+  - [Step 3: Gestione proattiva dei BIGFILE Tablespace](#step-3-gestione-proattiva-dei-bigfile-tablespace)
+  - [Esempio output (da copiare e lanciare):](#esempio-output-da-copiare-e-lanciare)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 10-15 minuti | 📅 Frequenza: Mensile / Su allarme spazio | 👤 Chi: DBA
 > **Scenario**: Il database cresce molto. Dobbiamo sapere non solo quanto spazio abbiamo, ma **qual è il limite architetturale invalicabile** (es. limite di dimensionamento ASM basato sulla block size).
 

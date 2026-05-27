@@ -1,5 +1,28 @@
 # 16 — Resize TEMP (Tempfile) in Sicurezza
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- `ORA-01652` durante sort/hash join/index create.
+- TEMP sopra soglia durante batch o import.
+- Serve aggiungere tempfile senza impattare utenti.
+- Serve ridurre TEMP dopo picco anomalo.
+- Identificare sessioni che consumano TEMP.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Diagnosi rapida (chi usa TEMP)](#step-1-diagnosi-rapida-chi-usa-temp)
+  - [Step 2: Verifica configurazione tempfile](#step-2-verifica-configurazione-tempfile)
+  - [Step 3: Azioni consigliate (ordine)](#step-3-azioni-consigliate-ordine)
+  - [3A) Abilita autoextend (se disabilitato)](#3a-abilita-autoextend-se-disabilitato)
+  - [3B) Aggiungi un nuovo tempfile (fix più sicuro)](#3b-aggiungi-un-nuovo-tempfile-fix-più-sicuro)
+  - [3C) Resize di un tempfile esistente](#3c-resize-di-un-tempfile-esistente)
+  - [Step 4: Riduzione TEMP (quando serve davvero)](#step-4-riduzione-temp-quando-serve-davvero)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting / Piano di Rientro](#troubleshooting-piano-di-rientro)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 10-20 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: `ORA-01652`, sort su disco, TEMP al 95-100%.
 
