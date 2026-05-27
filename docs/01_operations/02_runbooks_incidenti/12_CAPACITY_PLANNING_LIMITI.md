@@ -23,6 +23,15 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [01_tablespace_datafile.sql](../03_scripts_pronti/01_tablespace_datafile.sql) - diagnosi tablespace pieni, datafile, autoextend, maxsize, bigfile/smallfile.
+- [05_asm_storage.sql](../03_scripts_pronti/05_asm_storage.sql) - diskgroup, dischi ASM, AU size, capacity e limiti fisici.
+- [10_oggetti_schema.sql](../03_scripts_pronti/10_oggetti_schema.sql) - invalidi, segmenti grandi, indici, recyclebin, oggetti schema.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 10-15 minuti | 📅 Frequenza: Mensile / Su allarme spazio | 👤 Chi: DBA
 > **Scenario**: Il database cresce molto. Dobbiamo sapere non solo quanto spazio abbiamo, ma **qual è il limite architetturale invalicabile** (es. limite di dimensionamento ASM basato sulla block size).
 

@@ -3,6 +3,21 @@
 -- Scenario: "Il database è lento!" — diagnosi rapida in 2 minuti
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/05_QUERY_LENTA.md
+--   - ../02_runbooks_incidenti/07_CPU_ALTA.md
+--   - ../02_runbooks_incidenti/11_REVIEW_AWR.md
+--   - ../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md
+-- Uso rapido:
+--   sqlplus / as sysdba @07_performance_quick.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. TOP 10 SQL — Per tempo di esecuzione totale
 PROMPT ====================================================================

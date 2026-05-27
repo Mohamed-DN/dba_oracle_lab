@@ -24,6 +24,13 @@
 - [Validazione Finale](#validazione-finale)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 30-60 minuti | 📅 Frequenza: Ogni venerdì | 👤 Chi: DBA
 > **Obiettivo**: Identificare trend, regressioni e aree di miglioramento prima che diventino incidenti.
 

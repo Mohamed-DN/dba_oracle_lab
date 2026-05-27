@@ -3,6 +3,20 @@
 -- Scenario: Morning check, pre-switchover, troubleshooting lag
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/03_CHECK_DATAGUARD.md
+--   - ../02_runbooks_incidenti/14_CHAOS_NETWORK_PARTITION_DATAGUARD.md
+--   - ../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
+-- Uso rapido:
+--   sqlplus / as sysdba @09_dataguard_status.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. RUOLO DATABASE (Primary o Standby?)
 PROMPT ====================================================================

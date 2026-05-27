@@ -25,6 +25,13 @@
 - [Validazione Finale](#validazione-finale)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 5 minuti | 📅 Frequenza: Ogni mattina + su incidente | 👤 Chi: DBA on-call
 
 ---

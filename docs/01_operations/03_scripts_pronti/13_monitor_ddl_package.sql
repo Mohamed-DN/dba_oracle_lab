@@ -3,6 +3,19 @@
 -- Scenario: audit operativo su CREATE/ALTER/DROP oggetti
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/09_GESTIONE_UTENTI.md
+--   - ../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md
+-- Uso rapido:
+--   sqlplus / as sysdba @13_monitor_ddl_package.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. TABELLA LOG
 PROMPT ====================================================================

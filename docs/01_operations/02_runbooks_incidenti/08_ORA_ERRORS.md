@@ -33,6 +33,17 @@
 - [Troubleshooting: Regola d'Oro per Qualsiasi ORA-](#troubleshooting-regola-doro-per-qualsiasi-ora)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [01_tablespace_datafile.sql](../03_scripts_pronti/01_tablespace_datafile.sql) - diagnosi tablespace pieni, datafile, autoextend, maxsize, bigfile/smallfile.
+- [02_undo_temp.sql](../03_scripts_pronti/02_undo_temp.sql) - diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+- [06_sessioni_lock.sql](../03_scripts_pronti/06_sessioni_lock.sql) - sessioni attive, blocker/waiter, DDL lock, kill command generator.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: variabile | 📅 Frequenza: Su errore | 👤 Chi: DBA on-call
 > **Riferimento**: Dizionario errori Oracle: https://docs.oracle.com/en/error-help/db/
 

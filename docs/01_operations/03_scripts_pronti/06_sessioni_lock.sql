@@ -3,6 +3,20 @@
 -- Scenario: "L'applicazione è bloccata!", deadlock, enqueue wait
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/04_LOCK_SESSIONI_BLOCCATE.md
+--   - ../02_runbooks_incidenti/07_CPU_ALTA.md
+--   - ../02_runbooks_incidenti/08_ORA_ERRORS.md
+-- Uso rapido:
+--   sqlplus / as sysdba @06_sessioni_lock.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. SESSIONI ATTIVE (overview)
 PROMPT ====================================================================

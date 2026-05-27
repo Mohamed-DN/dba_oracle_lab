@@ -3,6 +3,20 @@
 -- Scenario: Morning check backup, pre-upgrade validation
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/02_VERIFICA_BACKUP.md
+--   - ../02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
+--   - ../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
+-- Uso rapido:
+--   sqlplus / as sysdba @08_rman_backup_status.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. ULTIMO BACKUP — Riepilogo per tipo
 PROMPT ====================================================================

@@ -3,6 +3,21 @@
 -- Scenario: Capacity planning, post-upgrade, pulizia schema
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/09_GESTIONE_UTENTI.md
+--   - ../02_runbooks_incidenti/13_REFRESH_SCHEMA_TEST.md
+--   - ../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md
+--   - ../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md
+-- Uso rapido:
+--   sqlplus / as sysdba @10_oggetti_schema.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. OGGETTI INVALIDI — Ricompilare dopo patching/upgrade
 PROMPT ====================================================================

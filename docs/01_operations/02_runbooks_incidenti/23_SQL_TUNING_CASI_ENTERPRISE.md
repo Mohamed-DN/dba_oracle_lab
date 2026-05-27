@@ -32,6 +32,16 @@
 Non iniziare mai dal fix. Prima identifica sintomo, SQL_ID, baseline storica, piano attuale, piano precedente, cardinalita stimate vs reali e wait prevalente. Solo dopo scegli se intervenire su statistiche, indice, riscrittura SQL, SPM, SQL Profile o parametri di sessione controllati.
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+- [14_optimizer_stats.sql](../03_scripts_pronti/14_optimizer_stats.sql) - stale stats, gather database/table mirato.
+- [10_oggetti_schema.sql](../03_scripts_pronti/10_oggetti_schema.sql) - invalidi, segmenti grandi, indici, recyclebin, oggetti schema.
+- [02_undo_temp.sql](../03_scripts_pronti/02_undo_temp.sql) - diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO.
+<!-- READY_SCRIPTS_END -->
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre diagnostica SQL, optimizer, statistiche, piani di esecuzione, AWR/ASH, SQL Monitor, indici, join, partizionamento, parallelismo, wait events, RAC, Exadata, SQL Plan Management e tuning sicuro in produzione.
 
 ---

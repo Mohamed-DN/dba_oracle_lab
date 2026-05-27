@@ -40,6 +40,16 @@
 - [10. Addendum Enterprise: Decisioni che vanno approvate prima del refresh](#10-addendum-enterprise-decisioni-che-vanno-approvate-prima-del-refresh)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [04_datapump_operativo.sql](../03_scripts_pronti/04_datapump_operativo.sql) - precheck, monitoraggio e template expdp/impdp senza password in chiaro.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+- [02_undo_temp.sql](../03_scripts_pronti/02_undo_temp.sql) - diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO.
+- [14_optimizer_stats.sql](../03_scripts_pronti/14_optimizer_stats.sql) - stale stats, gather database/table mirato.
+<!-- READY_SCRIPTS_END -->
 Questo documento rappresenta la procedura definitiva e completa per la migrazione, il refresh e l'allineamento dei dati tra un ambiente di Produzione (PROD) e un ambiente di Pre-Produzione/Test (PREPROD). Trattandosi di ambienti mission-critical o ad alto volume, vengono adottate tecniche avanzate di parallelismo, data masking, tuning dell'I/O, e sicurezza enterprise.
 
 ---

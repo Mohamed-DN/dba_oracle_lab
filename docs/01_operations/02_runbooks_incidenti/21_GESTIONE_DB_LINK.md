@@ -1,3 +1,5 @@
+﻿# Runbook Enterprise: Gestione Avanzata dei Database Link (DB_LINK)
+
 <!-- RUNBOOK_NAV_START -->
 ## Casi piu frequenti da aprire prima
 - DB link da disabilitare dopo clone preprod.
@@ -30,9 +32,18 @@
   - [7.5 Privilegi per transazioni in-doubt](#75-privilegi-per-transazioni-in-doubt)
 - [8. Manuali e riferimenti](#8-manuali-e-riferimenti)
 <!-- RUNBOOK_NAV_END -->
-﻿# Runbook Enterprise: Gestione Avanzata dei Database Link (DB_LINK)
 
-I Database Link (DB_LINK) sono il ponte nervoso che permette a database distinti di comunicare. Tuttavia, se gestiti erroneamente (in particolar modo durante refresh di ambienti, cloni, o migrazioni), diventano la **falla di sicurezza piÃ¹ pericolosa** di un'infrastruttura. Un DB Link copiato da un DB di Produzione verso uno di Test manterrÃ  i riferimenti di connessione al database target di Produzione. Un'operazione di `DELETE` o `UPDATE` lanciata in test si propagherÃ  silente al database di Produzione, causando una severa corruzione logica.
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+- [10_oggetti_schema.sql](../03_scripts_pronti/10_oggetti_schema.sql) - invalidi, segmenti grandi, indici, recyclebin, oggetti schema.
+<!-- READY_SCRIPTS_END -->
+# Runbook Enterprise: Gestione Avanzata dei Database Link (DB_LINK)
+
+I Database Link (DB_LINK) sono il ponte nervoso che permette a database distinti di comunicare. Tuttavia, se gestiti erroneamente (in particolar modo durante refresh di ambienti, cloni, o migrazioni), diventano la **falla di sicurezza piu' pericolosa** di un'infrastruttura. Un DB Link copiato da un DB di Produzione verso uno di Test manterra' i riferimenti di connessione al database target di Produzione. Un'operazione di `DELETE` o `UPDATE` lanciata in test si propaghera' silente al database di Produzione, causando una severa corruzione logica.
 
 Questo runbook approfondisce la messa in sicurezza post-refresh, le tecniche crittografiche, il troubleshooting di rete avanzato e la risoluzione di deadlocks distribuiti.
 
@@ -41,7 +52,7 @@ Questo runbook approfondisce la messa in sicurezza post-refresh, le tecniche cri
 ## 1. Architettura e Tipologia dei DB Link
 Per gestire correttamente i link, devi sapere quale tipo stai manipolando. L'architettura prevede:
 
-1. **Private DB Link**: Creato e visibile solo a uno specifico owner (es. `SCHEMA_A`). L'amministratore SYS non puÃ² visualizzarne la password o testarlo con una query `SELECT ... FROM dual@link`, a meno che non si impersoni l'utente.
+1. **Private DB Link**: Creato e visibile solo a uno specifico owner (es. `SCHEMA_A`). L'amministratore SYS non puo' visualizzarne la password o testarlo con una query `SELECT ... FROM dual@link`, a meno che non si impersoni l'utente.
 2. **Public DB Link**: Creato e visibile da tutti gli utenti nel database. Altissimo rischio di sicurezza se l'account remoto ha privilegi eccessivi.
 3. **Global DB Link**: Integrati con directory di rete (es. OID). Poco usati in architetture cloud-native moderne.
 4. **Current User DB Link**: Link speciale (`CONNECT TO CURRENT_USER`) che utilizza le credenziali dell'utente che invoca la sessione, senza memorizzare password (richiede Enterprise User Security, Kerberos, o architetture trust).
@@ -56,10 +67,10 @@ ORDER BY owner, db_link;
 ---
 
 ## 2. Fase Critica Post-Clone: Drop Immediato
-Subito dopo l'esecuzione di un *RMAN Duplicate* da Prod a Preprod, o dopo l'import massivo via *Data Pump*, il primo script assoluto da eseguire **prima che gli applicativi si connettano** Ã¨ la sanificazione.
+Subito dopo l'esecuzione di un *RMAN Duplicate* da Prod a Preprod, o dopo l'import massivo via *Data Pump*, il primo script assoluto da eseguire **prima che gli applicativi si connettano** e' la sanificazione.
 
 ### 2.1 Generazione script Drop di Sicurezza
-PoichÃ© non si possono droppare agevolmente i link privati, forniamo un PL/SQL di sistema che forza il clean-up:
+Poiche' non si possono droppare agevolmente i link privati, forniamo un PL/SQL di sistema che forza il clean-up:
 
 ```sql
 SET SERVEROUTPUT ON
@@ -90,7 +101,7 @@ BEGIN
 END;
 /
 ```
-**Regola D'oro:** Un DB Link droppato Ã¨ un DB Link sicuro. Salva preventivamente i metadati o rigenerali dai repository aziendali sicuri (Vault).
+**Regola D'oro:** Un DB Link droppato e' un DB Link sicuro. Salva preventivamente i metadati o rigenerali dai repository aziendali sicuri (Vault).
 
 ---
 
@@ -99,7 +110,7 @@ END;
 ### 3.1 Il problema di SYS.LINK$
 Le password dei DB Link in Oracle (fino a 11gR2) potevano essere in parte decriptate o ottenute tramite l'export della tabella base `SYS.LINK$`. A partire dalla 12c, le password sono hasheate e offuscate usando SHA-512 e salting, legate al DBID, rendendo impossibile trasportarle "a crudo" tra database con un RMAN diverso (salvo mantenere lo stesso DBID).
 
-Se un DBA ha necessitÃ  di aggiornare le password per un cambio schedulato, deve ricostruire il DB Link:
+Se un DBA ha necessita' di aggiornare le password per un cambio schedulato, deve ricostruire il DB Link:
 ```sql
 ALTER DATABASE LINK my_link CONNECT TO usr IDENTIFIED BY "<PASSWORD_DA_VAULT>";
 ```
@@ -113,13 +124,13 @@ SQLNET.ENCRYPTION_TYPES_SERVER = (AES256)
 SQLNET.CRYPTO_CHECKSUM_SERVER = REQUIRED
 SQLNET.CRYPTO_CHECKSUM_TYPES_SERVER = (SHA256)
 ```
-Questo garantisce che i pacchetti `SELECT` distribuiti, cosÃ¬ come lo scambio di credenziali durante l'apertura della sessione remota via DB Link, siano cifrati AES-256 e non intercettabili.
+Questo garantisce che i pacchetti `SELECT` distribuiti, cosi' come lo scambio di credenziali durante l'apertura della sessione remota via DB Link, siano cifrati AES-256 e non intercettabili.
 
 ---
 
 ## 4. Troubleshooting Avanzato della Rete (ORA-12154, ORA-12514)
 
-L'errore piÃ¹ comune creando un DB Link in test verso un altro sistema di test:
+L'errore piu' comune creando un DB Link in test verso un altro sistema di test:
 `ORA-12154: TNS:could not resolve the connect identifier specified`
 
 1. **Il DB_LINK usa un nome TNS?**
@@ -140,7 +151,7 @@ L'errore piÃ¹ comune creando un DB Link in test verso un altro sistema di test
 
 3. **GLOBAL_NAMES = TRUE**
    Se si riceve `ORA-02085: database link DB_LNK.DOMAIN connects to PROD.DOMAIN`:
-   Il parametro di sistema `global_names` Ã¨ impostato a TRUE, imponendo che il nome del DB link corrisponda ESATTAMENTE al *global_name* del database remoto (`SELECT * FROM global_name;` nel target).
+   Il parametro di sistema `global_names` e' impostato a TRUE, imponendo che il nome del DB link corrisponda ESATTAMENTE al *global_name* del database remoto (`SELECT * FROM global_name;` nel target).
    *Fix:* Rinominare il dblink oppure (solitamente preferibile in Test) disabilitare la restrizione:
    ```sql
    ALTER SYSTEM SET global_names=FALSE SCOPE=BOTH;
@@ -150,7 +161,7 @@ L'errore piÃ¹ comune creando un DB Link in test verso un altro sistema di test
 
 ## 5. Gestione Transazioni Distribuite e In-Doubt (2PC)
 
-Le query distribuite di modifica (`UPDATE table@dblink`) usano il **Two-Phase Commit (2PC)**. Se durante il commit il link di rete va giÃ¹, la transazione rimane "in-doubt", mantenendo lock di riga (o peggio, di tabella) in entrambi i database all'infinito!
+Le query distribuite di modifica (`UPDATE table@dblink`) usano il **Two-Phase Commit (2PC)**. Se durante il commit il link di rete va giu', la transazione rimane "in-doubt", mantenendo lock di riga (o peggio, di tabella) in entrambi i database all'infinito!
 
 ### 5.1 Identificazione di Lock Distribuiti
 Sul database in cui l'applicativo ha generato l'operazione (Local):
@@ -169,7 +180,7 @@ ROLLBACK FORCE 'global_tran_id';
 ```
 
 **Passaggio 2: Pulizia del Dizionario**
-Se Oracle non riesce a ripulire la view (spesso accade se il remote DB Ã¨ irraggiungibile definitivamente):
+Se Oracle non riesce a ripulire la view (spesso accade se il remote DB e' irraggiungibile definitivamente):
 ```sql
 EXECUTE DBMS_TRANSACTION.PURGE_LOST_DB_ENTRY('global_tran_id');
 ```
@@ -185,10 +196,10 @@ COMMIT;
 ---
 
 ## 6. Tuning delle Performance su DB Link
-Le query eseguite via database link sono famose per avere performance tremende. Questo perchÃ© l'Optimizer ha difficoltÃ  a comprendere indici e cardinalitÃ  remote.
+Le query eseguite via database link sono famose per avere performance tremende. Questo perche' l'Optimizer ha difficolta' a comprendere indici e cardinalita' remote.
 
 ### 6.1 DRIVING_SITE Hint
-Costringe Oracle a spostare il pezzo di join leggero sul server remoto, processando lÃ¬ la logica e riportando solo i risultati finali.
+Costringe Oracle a spostare il pezzo di join leggero sul server remoto, processando li' la logica e riportando solo i risultati finali.
 ```sql
 SELECT /*+ DRIVING_SITE(r) */ l.customer_id, r.order_tot
 FROM local_customers l
@@ -201,7 +212,7 @@ Oracle per ragioni di LOB-locator su protocollo SQLNet non riesce ad accedere di
 **Workaround:** Utilizzare `GLOBAL TEMPORARY TABLE` per importare via array (DBMS_SQL / CTAS limitata) i dati fisicamente in locale e poi trattare il CLOB.
 
 ### 6.3 Ottimizzazione Fetch Size
-I dati trasmessi via rete generano pacchetti. Maggiore Ã¨ il SDU (Session Data Unit) e il Fetch Array Size, minori saranno i round-trip (RTT) di rete.
+I dati trasmessi via rete generano pacchetti. Maggiore e' il SDU (Session Data Unit) e il Fetch Array Size, minori saranno i round-trip (RTT) di rete.
 A livello applicativo (JDBC/ODBC) e di strumento (SQL*Plus `SET ARRAYSIZE 5000`), aumentare la fetch per saturare la banda senza picchi continui.
 
 ---

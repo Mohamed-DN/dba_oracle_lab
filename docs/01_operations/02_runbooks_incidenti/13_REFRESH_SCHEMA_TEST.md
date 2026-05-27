@@ -22,6 +22,15 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [04_datapump_operativo.sql](../03_scripts_pronti/04_datapump_operativo.sql) - precheck, monitoraggio e template expdp/impdp senza password in chiaro.
+- [10_oggetti_schema.sql](../03_scripts_pronti/10_oggetti_schema.sql) - invalidi, segmenti grandi, indici, recyclebin, oggetti schema.
+- [14_optimizer_stats.sql](../03_scripts_pronti/14_optimizer_stats.sql) - stale stats, gather database/table mirato.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: Variabile (dipende dalla size) | 📅 Frequenza: Su richiesta Dev | 👤 Chi: DBA
 > **Scenario**: Il team di sviluppo ti chiede "Potresti copiare lo schema PROD_APP in TEST_APP sull'ambiente di sviluppo per riprodurre un bug?"
 

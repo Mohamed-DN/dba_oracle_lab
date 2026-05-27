@@ -4,6 +4,19 @@
 -- ⚠️ Data Pump genera REDO → ARCHIVELOG → riempie FRA → DB SUSPEND!
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md
+--   - ../02_runbooks_incidenti/13_REFRESH_SCHEMA_TEST.md
+-- Uso rapido:
+--   sqlplus / as sysdba @04_datapump_operativo.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. PRE-CHECK PRIMA DI UN DATA PUMP
 PROMPT ====================================================================
@@ -112,7 +125,7 @@ PROMPT  5. COMANDI EXPORT (expdp) — Template Produzione
 PROMPT ====================================================================
 
 -- ---- EXPORT SCHEMA (il più comune) ----
--- expdp system/password \
+-- expdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=schema_export_%U.dmp \
 --   LOGFILE=schema_export.log \
@@ -122,7 +135,7 @@ PROMPT ====================================================================
 --   COMPRESSION=ALL
 
 -- ---- EXPORT TABELLA SINGOLA ----
--- expdp system/password \
+-- expdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=tabella_export.dmp \
 --   LOGFILE=tabella_export.log \
@@ -130,7 +143,7 @@ PROMPT ====================================================================
 
 -- ---- EXPORT FULL DATABASE ----
 -- ⚠️ Solo con spazio disco sufficiente!
--- expdp system/password \
+-- expdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=full_%U.dmp \
 --   LOGFILE=full_export.log \
@@ -145,7 +158,7 @@ PROMPT  6. COMANDI IMPORT (impdp) — Template Produzione
 PROMPT ====================================================================
 
 -- ---- IMPORT SCHEMA ----
--- impdp system/password \
+-- impdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=schema_export_%U.dmp \
 --   LOGFILE=schema_import.log \
@@ -155,7 +168,7 @@ PROMPT ====================================================================
 --   TABLE_EXISTS_ACTION=REPLACE
 
 -- ---- IMPORT CON TRANSFORM (no storage clause) ----
--- impdp system/password \
+-- impdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=schema_export.dmp \
 --   LOGFILE=import.log \
@@ -164,7 +177,7 @@ PROMPT ====================================================================
 --   TABLE_EXISTS_ACTION=REPLACE
 
 -- ---- IMPORT IN PARALLELO (accelera ma genera più redo!) ----
--- impdp system/password \
+-- impdp "/ as sysdba" \
 --   DIRECTORY=DPUMP_DIR \
 --   DUMPFILE=schema_export_%U.dmp \
 --   LOGFILE=import_parallel.log \
