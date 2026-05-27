@@ -43,6 +43,7 @@
 | 07 | [CPU Alta](./07_CPU_ALTA.md) | Alert: CPU > 90% |
 | 08 | [ORA-Errors Comuni](./08_ORA_ERRORS.md) | Qualsiasi errore ORA- |
 | 19 | [Diagnosi Backup RMAN Falliti + Restore Senza Backup](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | Backup falliti o assenza di backup RMAN |
+| 22 | [Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | Crash DB, drop tabella, PITR, corruzioni, standby gap, switchover/failover |
 
 ### Manutenzione Pianificata
 | # | Procedura | Quando |
