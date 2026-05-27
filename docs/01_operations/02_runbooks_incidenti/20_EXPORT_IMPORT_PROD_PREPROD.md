@@ -113,11 +113,11 @@ EXCLUDE=INDEX:"LIKE '%_TMP_IDX%'"
 
 ### 3.2 Avvio dell'Export in Background (Nohup)
 ```bash
-nohup expdp system/password@PROD parfile=export.par > expdp_out.log 2>&1 &
+nohup expdp system/<PASSWORD>@PROD parfile=export.par > expdp_out.log 2>&1 &
 ```
 ### 3.3 Monitoraggio in Real-Time (Interactive e SQL)
 Per monitorare lo stato di `expdp`:
-1. **Interactive mode:** `expdp system/password attach=EXP_PROD_REFRESH` (Digita `status` per vedere il progresso. Digita `continue_client` per uscire dall'interactive).
+1. **Interactive mode:** `expdp system/<PASSWORD> attach=EXP_PROD_REFRESH` (Digita `status` per vedere il progresso. Digita `continue_client` per uscire dall'interactive).
 2. **SQL Monitoring (Session Longops):**
 ```sql
 SELECT opname, target_desc, sofar, totalwork, trunc(sofar/totalwork*100,2) as pct_complete, time_remaining
@@ -143,9 +143,9 @@ Questo trasferirà 4 file alla volta.
 Su file enormi, la rete può introdurre corruzioni silenziose. Prima di importare:
 ```bash
 # Su PROD:
-md5sum exp_prod_*.dmp > checksums.md5
+sha256sum exp_prod_*.dmp > checksums.sha256
 # Copiare checksums.md5 su PREPROD e verificare:
-md5sum -c checksums.md5
+sha256sum -c checksums.sha256
 ```
 
 ---
@@ -178,7 +178,7 @@ TABLE_EXISTS_ACTION=REPLACE
 TRANSFORM=DISABLE_ARCHIVE_LOGGING:Y
 ```
 **Spiegazione parametri Enterprise:**
-- `TRANSFORM=DISABLE_ARCHIVE_LOGGING:Y`: Parametro **FENOMENALE** introdotto in 12c. Forza la creazione di tabelle e indici in NOLOGGING *durante l'import*, annullando la generazione di undo/redo. Terminato l'import, gli oggetti tornano alla loro modalità originaria. Riduce i tempi del 60%.
+- `TRANSFORM=DISABLE_ARCHIVE_LOGGING:Y`: Parametro **FENOMENALE** introdotto in 12c. Forza la creazione di tabelle e indici in NOLOGGING *durante l'import*, riducendo il redo per le operazioni eleggibili. Non elimina tutto il redo/undo: metadata, dizionario, vincoli e alcune operazioni continueranno a generare redo. Inoltre FORCE LOGGING a livello database/tablespace puo' neutralizzare il beneficio. In ambienti con Data Guard o requisiti PITR, concordare prima la strategia.
 - `REMAP_TABLESPACE=TS_PROD:TS_PREPROD`: (Opzionale) Usare se i nomi delle tablespace cambiano tra i due ambienti.
 
 ### 5.3 Data Masking (REMAP_DATA)
@@ -192,7 +192,7 @@ Il package `PKG_MASKING` deve essere creato nel database prima di avviare l'impo
 
 ### 5.4 Esecuzione dell'Import
 ```bash
-nohup impdp system/password@PREPROD parfile=import.par > impdp_out.log 2>&1 &
+nohup impdp system/<PASSWORD>@PREPROD parfile=import.par > impdp_out.log 2>&1 &
 ```
 
 ---
@@ -284,8 +284,113 @@ SELECT count(*) FROM SCHEMA_A.ORDERS;
 Dopo ogni refresh di ambiente (da un DB all'altro), devi immediatamente agire sulle vulnerabilità introdotte dalla clonazione dei dati.
 Le priorità assolute sono:
 1. **Gestione dei DB_LINK:** I DB link appena importati stanno ancora puntando alla Produzione! Seguire ciecamente la procedura nel runbook [21_GESTIONE_DB_LINK.md](./21_GESTIONE_DB_LINK.md).
-2. **Password Utenti App:** Spesso i DB di Preprod devono avere password diverse (oppure note ai developer). I file di DataPump mantengono gli hash delle password di produzione. Eseguire uno script standard per resettarle: `ALTER USER my_app_usr IDENTIFIED BY password_preprod;`.
+2. **Password Utenti App:** Spesso i DB di Preprod devono avere password diverse (oppure note ai developer). I file di DataPump mantengono gli hash delle password di produzione. Eseguire uno script standard per resettarle: `ALTER USER my_app_usr IDENTIFIED BY <PASSWORD_PREPROD>;`.
 3. **Schedulatori Job:** Controllare `DBA_SCHEDULER_JOBS`. I job (es. invio fatture, email, interfacce batch) appena importati potrebbero essere attivi. Disabilitare immediatamente quelli non desiderati in Preprod!
 ```sql
 EXEC DBMS_SCHEDULER.DISABLE('SCHEMA_A.NOME_JOB');
+```
+
+---
+
+## 10. Addendum Enterprise: Decisioni che vanno approvate prima del refresh
+
+In ambienti bancari il refresh PROD -> PREPROD non e' solo un'attivita tecnica. Deve avere un change con owner applicativo, DBA, security e privacy.
+
+| Decisione | Perche' conta | Evidenza richiesta |
+|---|---|---|
+| Uso di `COMPRESSION=ALL` | puo' richiedere licenza Advanced Compression | conferma licensing |
+| Uso di `TRANSFORM=DISABLE_ARCHIVE_LOGGING` | riduce redo ma impatta recovery/Data Guard | approvazione DBA/DR |
+| Dati PII in PREPROD | rischio GDPR/compliance | masking approvato |
+| DB link importati | rischio puntamenti verso PROD | bonifica tramite runbook DB link |
+| Scheduler job importati | rischio batch reali/email/pagamenti | disable script post-import |
+| Export consistente | evita dati incoerenti tra tabelle | `FLASHBACK_TIME` o `FLASHBACK_SCN` |
+| Performance import | evita saturazione storage/FRA | capacity plan |
+
+---
+
+## 11. Pre-check SQL completo prima dell'export
+
+```sql
+SELECT name, log_mode, force_logging, open_mode FROM v$database;
+SELECT name, ROUND(space_limit/1024/1024/1024,2) limit_gb,
+       ROUND(space_used/1024/1024/1024,2) used_gb,
+       ROUND(space_used*100/space_limit,2) pct_used
+FROM   v$recovery_file_dest;
+
+SELECT directory_name, directory_path FROM dba_directories ORDER BY directory_name;
+
+SELECT owner, object_type, count(*) cnt
+FROM   dba_objects
+WHERE  owner IN ('SCHEMA_A','SCHEMA_B')
+AND    status <> 'VALID'
+GROUP  BY owner, object_type
+ORDER  BY owner, object_type;
+
+SELECT owner, segment_name, segment_type, ROUND(bytes/1024/1024/1024,2) gb
+FROM   dba_segments
+WHERE  owner IN ('SCHEMA_A','SCHEMA_B')
+AND    segment_type LIKE 'TABLE%'
+ORDER  BY bytes DESC
+FETCH FIRST 30 ROWS ONLY;
+```
+
+---
+
+## 12. Modalita Data Pump da conoscere
+
+| Modalita | Quando usarla | Nota |
+|---|---|---|
+| Schema mode | refresh applicativo standard | `SCHEMAS=...` |
+| Table mode | refresh mirato | `TABLES=...` |
+| Full mode | clone logico ampio | attenzione a ruoli, profili, system grants |
+| Network link | import diretto senza dump file | richiede DB link sicuro e rete stabile |
+| Transportable tablespace | grandi volumi, downtime pianificato | ottimo per terabyte, ma piu vincolante |
+
+Esempio `NETWORK_LINK` solo in reti controllate:
+
+```ini
+NETWORK_LINK=PROD_TO_PREPROD_SAFE_LINK
+SCHEMAS=SCHEMA_A,SCHEMA_B
+EXCLUDE=STATISTICS
+LOGTIME=ALL
+METRICS=Y
+```
+
+Non usare `NETWORK_LINK` se il DB link punta a produzione senza controllo di ACL/firewall/change.
+
+---
+
+## 13. Manuali e comandi di riferimento
+
+Oracle:
+
+- Oracle Data Pump Export 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/oracle-data-pump-export-utility.html
+- Oracle Data Pump Import 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/datapump-import-utility.html
+- Oracle Data Pump Best Practices White Paper: https://www.oracle.com/a/tech/docs/oracle-database-utilities-data-pump-bp-2019.pdf
+- Oracle Database Utilities Guide 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/
+
+Comandi/man utili su Linux:
+
+```bash
+expdp HELP=YES
+impdp HELP=YES
+man nohup
+man rsync
+man sha256sum
+man find
+man xargs
+```
+
+Checklist finale:
+
+```text
+[ ] Export log senza ORA- critici.
+[ ] Checksum dump verificato su PREPROD.
+[ ] Import log analizzato con grep ORA-.
+[ ] Oggetti invalidi ricompilati o giustificati.
+[ ] DB link bonificati.
+[ ] Scheduler job non autorizzati disabilitati.
+[ ] Password app ruotate per PREPROD.
+[ ] Statistiche optimizer raccolte.
+[ ] Data masking verificato su campione PII.
 ```

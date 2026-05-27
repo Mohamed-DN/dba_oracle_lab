@@ -22,12 +22,12 @@
 - [17 Purge Log Oracle](./17_PURGE_LOG_ORACLE.md)
 - [18 Gestione Statistiche Optimizer](./18_GESTIONE_STATISTICHE_OPTIMIZER.md)
 - [19 Diagnosi RMAN e DR](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
-- [20 Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md)
-- [21 Gestione DB Link](./21_GESTIONE_DB_LINK.md)
+- [20 Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md) - Data Pump enterprise, masking, checksum, FRA, manuali Oracle.
+- [21 Gestione DB Link](./21_GESTIONE_DB_LINK.md) - sicurezza DB link, SQLNet encryption, 2PC, hardening post-refresh.
 - [Guida Migrazione MAA](./GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md)
 
 ## Cheat Sheets
-- [RMAN Full Cheatsheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md)
+- [RMAN Full Cheatsheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
 
 ## Catalogo Script Enterprise (Top 20)
 - [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
