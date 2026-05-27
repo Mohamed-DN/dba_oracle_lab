@@ -1,4 +1,4 @@
-# Runbook Enterprise: Tutti i Casi RMAN e Data Guard per Recovery, DR e Incidenti
+﻿# Runbook Enterprise: Tutti i Casi RMAN e Data Guard per Recovery, DR e Incidenti
 
 <!-- RUNBOOK_NAV_START -->
 ## Indice operativo rapido
@@ -23,6 +23,7 @@
 - [Spiegazione didattica](#spiegazione-didattica-come-raccontare-rman-e-data-guard)
 - [Matrice decisionale rapida](#matrice-decisionale-rapida)
 - [Pre-check universale](#pre-check-universale-prima-di-qualsiasi-recovery)
+- [Blocco comune per tutti gli scenari](#blocco-comune-per-tutti-gli-scenari-rmandata-guard)
 - [Parte 1 - Scenari RMAN, Flashback e Backup/Recovery](#parte-1---scenari-rman-flashback-e-backuprecovery)
 - [Parte 2 - Scenari Data Guard, Broker, Standby e Disaster Recovery](#parte-2---scenari-data-guard-broker-standby-e-disaster-recovery)
 
@@ -31,7 +32,6 @@ Parti sempre dal danno reale: indisponibilita, perdita dati logica, corruzione f
 <!-- RUNBOOK_NAV_END -->
 
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
-
 
 ---
 
@@ -142,8 +142,6 @@ Prevenzione: cosa cambia per evitare ricorrenza.
 
 ---
 
----
-
 ## Come usare questo documento
 
 - Se il database e' caduto o non apre: parti dalle sezioni RMAN fisiche.
@@ -246,31 +244,69 @@ man date
 ```
 
 ---
+
+## Blocco comune per tutti gli scenari RMAN/Data Guard
+
+Questa sezione sostituisce i blocchi ripetuti dentro ogni caso. Nei singoli scenari restano la decisione rapida e i comandi specifici; prerequisiti, validazione, rischi ed escalation valgono sempre salvo nota contraria.
+
+### Quando usare questi scenari
+- Evento reale o errore operativo che impatta disponibilita, consistenza, recovery o protezione del database.
+- Possibile coinvolgimento di storage, rete, redo, archivelog, backup, standby, RAC o CDB/PDB.
+- Necessita di decidere rapidamente tra RMAN, Flashback, Data Guard, rebuild standby o failover.
+
+### Decisione rapida comune
+- Problema fisico su file, blocchi, control file o SPFILE: parti da RMAN/restore mirato, non da full restore se puoi evitarlo.
+- Errore logico come drop, truncate o update sbagliato: valuta prima Flashback; poi RMAN `RECOVER TABLE`, TSPITR o PITR su clone.
+- Primary perso o sito indisponibile: usa Data Guard failover solo dopo aver dichiarato RPO/RTO e verificato lag.
+- Primary sano ma standby rotto: non fare failover; ripara standby, gap o rebuild.
+- Operazione pianificata: preferisci switchover o restore testato, mai improvvisare in produzione.
+### Prerequisiti universali
+- Backup disponibili e leggibili, archivelog necessari e retention non compromessa.
+- Wallet/TDE disponibile se il database o i backup sono cifrati.
+- Stato control file, SPFILE/PFILE, recovery catalog e incarnation verificati.
+- Spazio sufficiente in FRA, filesystem, ASM e destinazione ausiliaria.
+- Alert log, RMAN log e output DGMGRL salvati prima del fix.
+
+### Validazione tecnica universale
+```sql
+SELECT name, open_mode, database_role, protection_mode FROM v$database;
+SELECT instance_name, host_name, status FROM gv$instance;
+SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
+SELECT * FROM v$database_block_corruption;
+```
+
+Per Data Guard:
+
+```sql
+SELECT name, value, unit FROM v$dataguard_stats;
+SELECT process, status, thread#, sequence# FROM v$managed_standby;
+SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id IN (1,2,3);
+```
+
+### Criterio PASS universale
+- Database, PDB o standby nello stato atteso: `OPEN`, `MOUNT`, `READ ONLY WITH APPLY` o ruolo corretto.
+- Nessun errore critico nuovo in alert log/ADRCI.
+- Recovery evidence allegata: comandi, timestamp, SCN/time, log RMAN/DGMGRL.
+- Smoke test applicativo o query funzionale completata.
+- Backup post-recovery pianificato o eseguito quando richiesto.
+
+### Rischi enterprise comuni
+- Non cancellare archivelog finche non sai se servono a RMAN, standby, GoldenGate o audit.
+- Non fare `OPEN RESETLOGS` senza sapere impatto su incarnation, standby e backup strategy.
+- In RAC verifica sempre tutte le istanze e i servizi, non solo il nodo dove stai lavorando.
+- In CDB/PDB chiarisci se il recovery e di CDB intero, PDB, tablespace o singola tabella.
+- Se il problema e logico e gia replicato, Data Guard da solo non risolve: valuta Flashback/RMAN/clone.
+
+### Escalation universale
+- Mancano archivelog o backup: war room DBA/storage/backup immediata.
+- Corruzione dizionario, `ORA-00600`, `ORA-07445`, lost write: preparare SR Oracle con IPS package.
+- Failover o perdita dati potenziale: decisione formale con owner applicativo e management.
+- Wallet/TDE mancante: coinvolgere security/key management prima di tentativi distruttivi.
+
 # Parte 1 - Scenari RMAN, Flashback e Backup/Recovery
 
 ## RMAN-001 - Database crash con istanza non avviabile
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -280,63 +316,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-002 - Instance crash ma storage integro
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -346,63 +328,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-003 - Perdita SPFILE o PFILE
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -413,63 +341,9 @@ RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
 RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-004 - Perdita control file singolo multiplexed
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -480,63 +354,9 @@ RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
 RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-005 - Perdita di tutti i control file
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -547,63 +367,9 @@ RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
 RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-006 - Perdita datafile SYSTEM
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -612,63 +378,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-007 - Perdita datafile SYSAUX
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -677,63 +389,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-008 - Perdita datafile USERS non critico
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -742,63 +400,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-009 - Perdita datafile UNDO
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -807,63 +411,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-010 - Perdita datafile in tablespace applicativa
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -872,63 +422,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-011 - Perdita tempfile TEMP
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -938,63 +434,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-012 - Perdita membro redo log multiplexed
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1004,63 +446,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-013 - Perdita gruppo redo log inattivo
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1070,63 +458,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-014 - Perdita current redo log
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1136,63 +470,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-015 - Corruzione blocco ORA-01578
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1201,63 +481,9 @@ RMAN> LIST FAILURE;
 RMAN> RECOVER CORRUPTION LIST;
 RMAN> RECOVER DATAFILE <file#> BLOCK <block#>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-016 - Corruzione blocchi rilevata da RMAN VALIDATE
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1267,61 +493,7 @@ RMAN> RECOVER CORRUPTION LIST;
 RMAN> RECOVER DATAFILE <file#> BLOCK <block#>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-017 - Corruzione dizionario o SYSTEM tablespace
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -1331,63 +503,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-018 - Tabella cancellata con DROP TABLE
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -1396,63 +514,9 @@ SQL> FLASHBACK TABLE APP.TAB TO BEFORE DROP;
 rman target /
 RMAN> RECOVER TABLE APP.TAB UNTIL TIME "SYSDATE-1/24" AUXILIARY DESTINATION '/u02/aux';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-019 - Tabella svuotata con TRUNCATE
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -1462,63 +526,9 @@ SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-020 - DELETE senza WHERE o update massivo errato
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -1529,61 +539,7 @@ rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-021 - DROP USER CASCADE accidentale
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -1595,61 +551,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-022 - DROP TABLESPACE accidentale
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -1660,61 +562,7 @@ rman target /
 RMAN> RECOVER TABLE APP.TAB UNTIL TIME "SYSDATE-1/24" AUXILIARY DESTINATION '/u02/aux';
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-023 - DROP PDB accidentale
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -1727,63 +575,9 @@ RMAN> RUN {
   ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
 }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-024 - PDB corrotto ma CDB sano
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1795,63 +589,9 @@ RMAN> RUN {
   ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
 }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-025 - PDB point-in-time recovery
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1863,63 +603,9 @@ RMAN> RUN {
   ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
 }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-026 - CDB point-in-time recovery
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1929,63 +615,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-027 - TSPITR per tablespace applicativa
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -1994,63 +626,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-028 - Recovery di singola tabella con RMAN RECOVER TABLE
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2060,63 +638,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-029 - Restore su nuovo host per test restore evidence
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
@@ -2126,63 +650,9 @@ RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
   SET DB_UNIQUE_NAME='<target_unique_name>'
   NOFILENAMECHECK;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-030 - Duplicate active database per clone preprod
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
@@ -2192,63 +662,9 @@ RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
   SET DB_UNIQUE_NAME='<target_unique_name>'
   NOFILENAMECHECK;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-031 - Duplicate da backup senza connessione source
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
@@ -2258,63 +674,9 @@ RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
   SET DB_UNIQUE_NAME='<target_unique_name>'
   NOFILENAMECHECK;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-032 - Migrazione storage filesystem verso ASM
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2324,61 +686,7 @@ RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-033 - Migrazione host con stesso DB_NAME
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -2390,61 +698,7 @@ RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
   NOFILENAMECHECK;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-034 - Ripristino con backup controlfile
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -2455,63 +709,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-035 - Recovery oltre RESETLOGS precedente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2521,63 +721,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-036 - Ripristino da incarnation precedente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2587,63 +733,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-037 - Archivelog mancanti durante recovery
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -2655,63 +747,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-038 - FRA piena con database bloccato
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -2723,63 +761,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-039 - Backup piece mancante o expired
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2789,63 +773,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-040 - Catalogo RMAN non disponibile
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2855,63 +785,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-041 - Recovery catalog corrotto o perso
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2921,63 +797,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-042 - Control file record keep time insufficiente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -2988,63 +810,9 @@ RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
 RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-043 - Backup encrypted con wallet non aperto
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3054,63 +822,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-044 - Backup encrypted password-based
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3120,63 +834,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-045 - TDE wallet perso o non sincronizzato
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3186,63 +846,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-046 - NOARCHIVELOG database crash
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -3254,63 +860,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-047 - Backup cold consistente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3320,63 +872,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-048 - Backup incremental level 0 e level 1
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3386,63 +884,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-049 - Incremental merge image copy
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3452,63 +896,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-050 - Block Change Tracking corrotto
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3518,63 +908,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-051 - Backup su NFS lento o instabile
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3584,63 +920,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-052 - Backup su SBT/tape fallito
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3650,63 +932,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-053 - Canali RMAN insufficienti
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3716,63 +944,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-054 - Bigfile tablespace molto grande
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3781,63 +955,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-055 - Section size per datafile enorme
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3846,63 +966,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-056 - FILESPERSET e MAXPIECESIZE tuning
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3912,63 +978,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-057 - Compressione RMAN e licensing
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -3978,63 +990,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-058 - Archivelog deletion policy con Data Guard
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -4046,63 +1004,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-059 - Backup validate per audit
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4111,63 +1015,9 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
 RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-060 - Restore validate per audit
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4177,61 +1027,7 @@ RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
 RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-061 - Restore archivelog validate
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -4244,63 +1040,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-062 - Recover database until time
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4310,63 +1052,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-063 - Recover database until SCN
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4376,63 +1064,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-064 - Recover database until sequence
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4442,63 +1076,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-065 - Restore singolo tablespace
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4507,63 +1087,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-066 - Restore singolo datafile online
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4572,63 +1098,9 @@ RMAN> RESTORE DATAFILE <file#>;
 RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-067 - Restore controlfile da autobackup
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4639,63 +1111,9 @@ RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
 RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-068 - Restore SPFILE da autobackup
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4707,61 +1125,7 @@ RMAN> ALTER DATABASE MOUNT;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-069 - Lost write detection e recovery
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -4772,63 +1136,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-070 - NOLOGGING operation da recuperare
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4838,63 +1148,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-071 - Schema refresh con Data Pump non sufficiente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4904,63 +1160,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-072 - Ripristino oggetti invalidi post recovery
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -4970,63 +1172,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-073 - Resync catalog dopo restore
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -5036,63 +1184,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-074 - Crosscheck dopo cancellazione manuale file
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -5103,61 +1197,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-075 - Delete obsolete e retention window
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5169,61 +1209,7 @@ rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-076 - Report need backup
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5235,61 +1221,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-077 - Backup database plus archivelog
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5303,61 +1235,7 @@ RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-078 - Backup PDB singolo
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5370,63 +1248,9 @@ RMAN> RUN {
   ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
 }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-079 - Restore PDB singolo
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -5438,63 +1262,9 @@ RMAN> RUN {
   ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
 }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-080 - Clone PDB da backup
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -5507,61 +1277,7 @@ RMAN> RUN {
 }
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-081 - Ripristino standby tramite RMAN incremental
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5572,63 +1288,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-082 - Recovery dopo errore umano con Flashback Database
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -5638,63 +1300,9 @@ SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-083 - Flashback Table per tabella modificata
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -5704,63 +1312,9 @@ SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-084 - Flashback Drop da recycle bin
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -5770,63 +1324,9 @@ SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-085 - Flashback Query per estrazione dati puntuale
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -5837,61 +1337,7 @@ rman target /
 RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-086 - PITR con tabella senza recycle bin
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5903,61 +1349,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-087 - PITR con vincoli cross-tablespace
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -5968,61 +1360,7 @@ RMAN> RECOVER DATAFILE <file#>;
 RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-088 - Restore su ambiente isolato per forensics
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -6033,63 +1371,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-089 - Validazione checksum backup offsite
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6099,63 +1383,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-090 - Restore da backup copiati manualmente
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6165,63 +1395,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-091 - Catalog start with per backup non catalogati
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6231,63 +1407,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-092 - RMAN in RAC con backup locale non condiviso
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6297,63 +1419,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-093 - RMAN in RAC con canali su istanze diverse
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6363,63 +1431,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-094 - Ripristino dopo patch fallita
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6429,63 +1443,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-095 - Rollback applicativo con guaranteed restore point
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6495,63 +1455,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-096 - DR test annuale con misurazione RTO/RPO
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 rman target /
@@ -6561,63 +1467,9 @@ RMAN> RESTORE DATABASE PREVIEW SUMMARY;
 RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-097 - Emergenza ORA-19809 FRA limit exceeded
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -6629,63 +1481,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-098 - Emergenza ORA-01113 file needs media recovery
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -6697,63 +1495,9 @@ RMAN> CROSSCHECK ARCHIVELOG ALL;
 RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## RMAN-099 - Emergenza RMAN-06059 archivelog expected not found
 
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -6766,61 +1510,7 @@ RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
 RMAN> DELETE NOPROMPT OBSOLETE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## RMAN-100 - Emergenza ORA-19504 failed to create file
-
-Dominio: RMAN
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: RMAN / Flashback / SQL*Plus
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il problema e fisico, preferire restore/recover mirato prima del full restore.
-- Se il problema e logico, valutare prima Flashback; poi RMAN RECOVER TABLE, TSPITR o PITR su clone.
-- Non fare RESETLOGS o PITR senza approvazione e restore point/evidence se la produzione e coinvolta.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -6832,63 +1522,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
-### Validazione tecnica
-```sql
-SELECT name, open_mode, log_mode FROM v$database;
-SELECT file#, error, change#, time FROM v$recover_file ORDER BY file#;
-SELECT * FROM v$database_block_corruption;
-SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Backup and Recovery User's Guide 19c, Backup and Recovery Reference 19c, Flashback/TSPITR chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
-# Parte 2 - Scenari Data Guard, Broker, Standby e Disaster Recovery
-
 ## DG-001 - Creazione physical standby da active duplicate
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -6900,63 +1534,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-002 - Creazione physical standby da backup
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -6967,63 +1547,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-003 - Configurazione Data Guard Broker
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -7032,63 +1558,9 @@ DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
 DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-004 - Primary database down totale
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@STANDBY
@@ -7097,63 +1569,9 @@ DGMGRL> FAILOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-005 - Failover manuale a standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@STANDBY
@@ -7162,63 +1580,9 @@ DGMGRL> FAILOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-006 - Switchover pianificato
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -7227,63 +1591,9 @@ DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
 DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-007 - Reinstate failed primary con flashback
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7294,63 +1604,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-008 - Recreate failed primary senza flashback
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7361,63 +1617,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-009 - Fast-Start Failover con observer
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@STANDBY
@@ -7426,63 +1628,9 @@ DGMGRL> FAILOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-010 - Observer down o isolato
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7493,63 +1641,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-011 - Maximum Performance baseline
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7560,63 +1654,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-012 - Maximum Availability con SYNC AFFIRM
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7627,63 +1667,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-013 - Maximum Protection e rischio stall primary
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7694,63 +1680,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-014 - Cambio protection mode
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7761,63 +1693,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-015 - Redo transport destination error
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7827,63 +1705,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-016 - ORA-12514 listener non conosce service
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7894,63 +1718,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-017 - ORA-12154 TNS resolution
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -7961,63 +1731,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-018 - Password file mismatch primary standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8028,63 +1744,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-019 - DB_UNIQUE_NAME errato
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8095,63 +1757,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-020 - LOG_ARCHIVE_CONFIG errata
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8160,63 +1768,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-021 - FAL_SERVER o FAL_CLIENT errati
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8225,63 +1779,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-022 - Archive gap su physical standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8290,63 +1790,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-023 - V$ARCHIVE_GAP non vuoto
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8355,63 +1801,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-024 - Archivelog mancante sul primary
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8420,63 +1812,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-025 - Manual gap resolution
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8485,63 +1823,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-026 - Standby apply lag crescente
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8551,63 +1835,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-027 - Transport lag crescente
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8617,63 +1847,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-028 - Redo apply tuning
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8683,63 +1859,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-029 - Standby redo logs mancanti
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8750,63 +1872,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-030 - Standby redo logs dimensione errata
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8817,63 +1885,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-031 - RFS non riceve redo
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8884,63 +1898,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-032 - MRP0 non parte
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -8951,63 +1911,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-033 - MRP0 WAIT_FOR_GAP
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9016,63 +1922,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-034 - Apply bloccato da NOLOGGING operation
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9082,63 +1934,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-035 - Standby unrecoverable datafile
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 -- On standby
@@ -9152,63 +1950,9 @@ RMAN> BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE FORMAT '/tmp/for_standb
 RMAN> CATALOG START WITH '/tmp/';
 RMAN> RECOVER DATABASE NOREDO;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-036 - Roll-forward standby con incremental from SCN
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 -- On standby
@@ -9223,61 +1967,7 @@ RMAN> CATALOG START WITH '/tmp/';
 RMAN> RECOVER DATABASE NOREDO;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-037 - Standby datafile missing
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -9289,63 +1979,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-038 - Standby controlfile da ricreare
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9356,63 +1992,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-039 - Standby database corruption
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9423,63 +2005,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-040 - Primary lost write rilevato da standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9490,63 +2018,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-041 - Standby snapshot per test applicativi
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -9554,63 +2028,9 @@ DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO SNAPSHOT STANDBY;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-042 - Convert snapshot standby back to physical
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -9618,63 +2038,9 @@ DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO SNAPSHOT STANDBY;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-043 - Active Data Guard read only with apply
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9684,63 +2050,9 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-044 - Query reporting su standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9751,63 +2063,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-045 - Standby services per read-only workload
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9818,63 +2076,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-046 - Role-based services con srvctl
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9885,63 +2089,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-047 - RAC primary e RAC standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -9952,63 +2102,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-048 - Switchover con RAC
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -10017,63 +2113,9 @@ DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
 DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-049 - Failover con RAC
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@STANDBY
@@ -10082,63 +2124,9 @@ DGMGRL> FAILOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-050 - Broker warning ORA-168xx
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -10147,63 +2135,9 @@ DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
 DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-051 - DGMGRL status non SUCCESS
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -10212,63 +2146,9 @@ DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
 DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-052 - Validate database broker
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -10277,63 +2157,9 @@ DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
 DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-053 - Static listener per broker
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -10342,63 +2168,9 @@ DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
 DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-054 - Redo routes e cascaded standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10409,63 +2181,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-055 - Cascading standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10476,63 +2194,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-056 - Far Sync instance
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10543,63 +2207,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-057 - Zero data loss planning
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10610,63 +2220,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-058 - Network partition e split brain prevention
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10677,63 +2233,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-059 - Primary isolato ma ancora aperto
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10744,63 +2246,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-060 - Standby FRA piena
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -10812,61 +2260,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-061 - Primary FRA piena per standby lag
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -10878,61 +2272,7 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-062 - RMAN archivelog deletion policy in Data Guard
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -10943,61 +2283,7 @@ SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-063 - Backup su standby
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -11009,63 +2295,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-064 - Restore primary usando backup standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11076,63 +2308,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-065 - Offload backup to standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11143,63 +2321,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-066 - TDE wallet su primary e standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11210,63 +2334,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-067 - PDB creation replicated to standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11277,63 +2347,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-068 - PDB open mode dopo switchover
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 dgmgrl sys/<PASSWORD>@PRIMARY
@@ -11342,63 +2358,9 @@ DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
 DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-069 - Data Guard con CDB/PDB
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11409,63 +2371,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-070 - Data Guard rolling upgrade
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11476,63 +2384,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-071 - DBMS_ROLLING overview
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11543,63 +2397,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-072 - Patch GI/DB con standby disponibile
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11610,63 +2410,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-073 - Application connection string dopo role transition
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -11678,61 +2424,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-074 - Service relocation dopo switchover
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -11743,61 +2435,7 @@ DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-075 - Standby rebuild completo
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -11810,61 +2448,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-076 - Broker configuration file perso
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -11875,61 +2459,7 @@ DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-077 - Config drift tra init parameters
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -11942,61 +2472,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-078 - Archive destination mandatory bloccante
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12006,63 +2482,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-079 - Alternate archive destination
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12072,61 +2494,7 @@ SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-080 - Standby in recovery ma lag zero
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12138,61 +2506,7 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-081 - Data Guard health check giornaliero
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12204,63 +2518,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-082 - Data Guard disaster recovery drill
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12272,61 +2532,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-083 - Data Guard failback dopo failover
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12337,61 +2543,7 @@ DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-084 - Switchover status NOT ALLOWED
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12402,61 +2554,7 @@ DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-085 - Flashback standby dopo errore operativo
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12468,63 +2566,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-086 - Logical corruption replicata allo standby
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12535,63 +2579,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-087 - Errore umano: tabella cancellata con Data Guard attivo
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12602,63 +2592,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-088 - Standby non protegge da DROP TABLE replicato
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12669,63 +2605,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-089 - Quando usare RMAN invece di Data Guard
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12737,61 +2619,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-090 - Quando usare Flashback invece di failover
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12802,61 +2630,7 @@ DGMGRL> SHOW CONFIGURATION;
 DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-091 - Quando usare Snapshot Standby invece di clone
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12866,61 +2640,7 @@ DGMGRL> SHOW CONFIGURATION;
 DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-092 - Quando usare GoldenGate invece di Data Guard
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -12932,63 +2652,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-093 - Data Guard in cloud/on-prem hybrid
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -12999,63 +2665,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-094 - Latency alta tra regioni
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -13066,63 +2678,9 @@ SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
 
 ## DG-095 - SYNC vs ASYNC decisione bancaria
 
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
-
 ### Comandi base
 ```bash
 sqlplus / as sysdba
@@ -13134,61 +2692,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-096 - FSFO falso positivo da rete instabile
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13199,61 +2703,7 @@ SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-097 - Data Guard broker disabilitato temporaneamente
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13264,61 +2714,7 @@ DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
 DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-098 - Redo transport compression e encryption
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13330,61 +2726,7 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-099 - Data Guard dopo resetlogs
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13397,61 +2739,7 @@ dgmgrl sys/<PASSWORD>@PRIMARY
 DGMGRL> SHOW CONFIGURATION;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-100 - Gap dopo manutenzione lunga
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13462,61 +2750,7 @@ SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
 SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
 ```
 
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
 ## DG-101 - Apply parallelism e performance
-
-Dominio: DATA_GUARD
-Severita tipica: SEV1/SEV2 se produzione impattata; SEV3 se test controllato.
-Tool primario: Data Guard Broker / SQL*Plus / RMAN
-
-### Quando succede
-- Evento reale o errore operativo che impatta disponibilita, consistenza o protezione del database.
-- Possibile coinvolgimento di storage, rete, redo, archivelog, FRA, standby, utente applicativo o change fallito.
-- In banca considerare subito impatto su RPO/RTO, audit, customer impact e data integrity.
-
-### Decisione rapida
-- Se il primary e sano, evitare failover: preferire switchover o riparazione standby.
-- Se il primary e perso, failover controllato con Broker e validazione servizi.
-- Ricordare che Data Guard replica anche errori logici: DROP TABLE e DELETE errati arrivano allo standby.
-
-### Prerequisiti da verificare
-- Backup disponibili, archivelog necessari, wallet/TDE disponibile se usato.
-- Stato del control file, recovery catalog e retention policy.
-- Spazio in FRA, filesystem backup, ASM, auxiliary destination.
-- Stato applicativo: sessioni attive, job batch, servizi RAC, listener e connessioni client.
-- Approvazione change/incident commander se si tratta di produzione.
 
 ### Comandi base
 ```bash
@@ -13527,67 +2761,3 @@ SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
 
 DGMGRL> SHOW DATABASE <db_unique_name>;
 ```
-
-### Validazione tecnica
-```sql
-SELECT database_role, open_mode, switchover_status FROM v$database;
-SELECT name, value, unit FROM v$dataguard_stats;
-SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-```
-
-### Criterio PASS
-- Database o standby nello stato atteso.
-- Nessun errore critico in alert log/ADR.
-- Backup/recovery evidence allegata al ticket.
-- Query applicativa di smoke test eseguita.
-- RPO/RTO misurati e comunicati.
-
-### Rischi e note enterprise
-- Evitare comandi distruttivi senza copia dell evidenza corrente.
-- Non cancellare archivelog finche non sai se servono a RMAN, standby o GoldenGate.
-- In RAC verificare se il problema e locale a un nodo o comune a tutto il cluster.
-- Con TDE verificare wallet/keystore prima del restore.
-- Con CDB/PDB verificare container corrente e servizi applicativi.
-
-### Escalation
-- Se mancano archivelog o backup, aprire immediatamente war room DBA/storage/backup.
-- Se ci sono errori ORA-00600/ORA-07445/corruzioni dizionario, preparare SR Oracle.
-- Se coinvolge dati cliente o PII, coinvolgere security/compliance secondo policy.
-
-### Riferimenti
-- Oracle Data Guard Concepts and Administration 19c, Broker guide, troubleshooting and redo transport chapters.
-- Collegare sempre alert log, RMAN log, DGMGRL output e query di validazione al ticket.
-
----
-
-# Appendice finale - Checklist unica incident RMAN + Data Guard
-
-```text
-[ ] Identificato tipo incidente: fisico, logico, rete, storage, standby, utente.
-[ ] Congelati change non necessari.
-[ ] Salvato alert log e trace principali.
-[ ] Salvato output RMAN LIST BACKUP SUMMARY.
-[ ] Salvato SHOW CONFIGURATION Data Guard se presente.
-[ ] Verificato se Data Guard replica l'errore logico.
-[ ] Verificato se Flashback e' disponibile e retention sufficiente.
-[ ] Verificato se serve restore su clone prima di agire in produzione.
-[ ] Definito RPO/RTO realistico.
-[ ] Comunicata decisione a incident commander.
-[ ] Eseguito comando recovery con log completo.
-[ ] Validato database, servizi, applicazione e standby.
-[ ] Allegata evidence al ticket.
-[ ] Pianificata root cause e prevenzione.
-```
-
-## Fonti ufficiali principali
-
-- Oracle Backup and Recovery User's Guide 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/
-- Oracle Backup and Recovery Reference 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/rcmrf/
-- RMAN Flashback and DBPITR: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-performing-flashback-dbpitr.html
-- RMAN TSPITR: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/performing-rman-tspitr.html
-- Oracle Data Guard Concepts and Administration 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/
-- Data Guard Broker switchover/failover: https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/using-data-guard-broker-to-manage-switchovers-failovers.html
-- Data Guard troubleshooting: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/troubleshooting-oracle-data-guard.html
-- Redo transport services: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-redo-transport-services.html
-- Redo apply troubleshooting and tuning: https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/redo-apply-troubleshooting-and-tuning.html
