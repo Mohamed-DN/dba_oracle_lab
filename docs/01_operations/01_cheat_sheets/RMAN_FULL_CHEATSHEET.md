@@ -1,165 +1,174 @@
-# RMAN (Recovery Manager) - Full Cheatsheet e Calcoli
+# Enterprise RMAN (Recovery Manager) - Cheat Sheet & Architettura
 
-Questa guida copre tutti gli scenari principali di RMAN, dalle configurazioni di base al calcolo delle retention, fino agli script di backup e restore complessi.
+Questo documento rappresenta la guida di riferimento definitiva per l'architettura di backup e ripristino Oracle (RMAN) in ambienti Enterprise, Multi-tenant (CDB/PDB), e Cloud-Hybrid. Contiene scenari di disastro estremi, recovery a livello di blocco, tuning dei canali I/O e logica di retention profonda.
 
-## 1. Configurazione Iniziale e Retention Policy
+---
 
-### Mostrare e Modificare i Parametri
-```bash
-rman target /
-RMAN> SHOW ALL;
-```
+## 1. Architettura Enterprise RMAN
 
-### Calcolo e Impostazione della Retention Policy
-La retention policy determina per quanto tempo i backup devono essere conservati.
+Un ambiente RMAN robusto non si basa solo sul Controlfile locale, ma utilizza un'infrastruttura separata.
 
-**Opzione A: Recovery Window (Consigliata per ambienti Produttivi)**
-Garantisce di poter fare un Point-in-Time Recovery (PITR) fino a N giorni nel passato.
+### 1.1 Recovery Catalog
+Il Recovery Catalog è un database separato che memorizza i metadati di RMAN di multipli database (Target). Consente di bypassare il limite di tempo (definito da `CONTROL_FILE_RECORD_KEEP_TIME`, di default 7 giorni) per il mantenimento dello storico dei backup.
+
+**Creazione del Catalog (su database separato):**
 ```sql
-RMAN> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
-```
-*Calcolo spazio richiesto (Recovery Window):*
-`Spazio = (Dimensione DB + Dimensione Archivelog Giornalieri * Giorni) + 1 Backup Full extra`
-*Per una finestra di 7 giorni, servono i backup che coprono gli ultimi 7 giorni, PIÙ il backup full antecedente a quei 7 giorni.*
+-- Sul DB del Catalog:
+CREATE TABLESPACE rman_cat_ts DATAFILE '+DATA' SIZE 2G AUTOEXTEND ON;
+CREATE USER rcvcat_owner IDENTIFIED BY "secure_pwd" DEFAULT TABLESPACE rman_cat_ts QUOTA UNLIMITED ON rman_cat_ts;
+GRANT RECOVERY_CATALOG_OWNER TO rcvcat_owner;
 
-**Opzione B: Redundancy (Consigliata per ambienti di Test/Sviluppo)**
-Conserva esattamente N copie dei backup di ogni datafile.
+-- Da shell (registrazione del target):
+rman target sys/pwd@PROD catalog rcvcat_owner/secure_pwd@CATALOG_DB
+RMAN> CREATE CATALOG;
+RMAN> REGISTER DATABASE;
+```
+
+### 1.2 Architettura Multitenant (CDB/PDB)
+In 19c+, i Pluggable Database (PDB) cambiano la logica di restore.
+- Puoi eseguire un backup a livello intero di CDB (protegge tutti i PDB).
+- Puoi eseguire backup e restore isolati a livello di PDB (molto utile in SaaS/Cloud).
+
+---
+
+## 2. Tuning Scientifico dell'I/O e dei Canali
+
+I colli di bottiglia nei backup RMAN sono causati dal limite del disco di destinazione o da un'errata configurazione dei canali.
+
+### 2.1 File per Set e Max Piece Size
+Se stai backuppando su un filesystem Cloud o NFS che ha limiti di file size (es. 2TB max), usa `MAXPIECESIZE`.
 ```sql
-RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK MAXPIECESIZE 100G;
 ```
-*Calcolo spazio richiesto (Redundancy 2):*
-`Spazio = Dimensione DB * 2 + Archivelog generati tra i backup`
 
-### Altri Parametri Essenziali
+Per evitare colli di bottiglia in lettura, si usa `FILESPERSET` per aggregare piccoli datafile.
 ```sql
--- Autodelete degli Archivelog già backuppati (utile in FRA)
-RMAN> CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;
-
--- Abilitare il Backup Controlfile automatico
-RMAN> CONFIGURE CONTROLFILE AUTOBACKUP ON;
-
--- Abilitare la compressione di default
-RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO COMPRESSED BACKUPSET;
+BACKUP AS COMPRESSED BACKUPSET DATABASE FILESPERSET 4;
 ```
 
-## 2. Block Change Tracking (Ottimizzazione Incrementali)
-Essenziale per velocizzare i backup incrementali. Invece di scansionare tutto il database, RMAN legge questo file.
+### 2.2 Section Size (Bigfile Tablespaces)
+In ambienti Enterprise con Bigfile (Datafile unici da 10-32 TB), il parallelismo standard non funziona (1 canale = 1 datafile). Usa `SECTION SIZE` per dividere il file in chunk processati in parallelo.
 ```sql
--- Da SQL*Plus:
-ALTER DATABASE ENABLE BLOCK CHANGE TRACKING USING FILE '/u01/app/oracle/oradata/DBNAME/bct01.trc';
-
--- Controllo:
-SELECT status, filename FROM v$block_change_tracking;
-```
-
-## 3. Comandi di Backup
-
-### Backup FULL Database (Level 0) + Archivelog
-```bash
 RUN {
   ALLOCATE CHANNEL c1 DEVICE TYPE DISK;
   ALLOCATE CHANNEL c2 DEVICE TYPE DISK;
   ALLOCATE CHANNEL c3 DEVICE TYPE DISK;
   ALLOCATE CHANNEL c4 DEVICE TYPE DISK;
-  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 DATABASE FORMAT '/backup/db_%U.bkp';
-  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES FORMAT '/backup/arc_%U.bkp';
-  DELETE NOPROMPT OBSOLETE;
+  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 DATABASE SECTION SIZE 32G;
 }
 ```
+*Tutti e 4 i canali attaccheranno lo stesso datafile contemporaneamente leggendo blocchi da 32G.*
 
-### Backup Incrementale (Level 1)
-Prende solo i blocchi modificati dall'ultimo Level 0 (se differenziale) o Level 1 (se cumulativo).
-```bash
--- Differenziale (default)
-BACKUP INCREMENTAL LEVEL 1 DATABASE;
-
--- Cumulativo (prende tutto dall'ultimo Level 0)
-BACKUP INCREMENTAL LEVEL 1 CUMULATIVE DATABASE;
-```
-
-### Backup Singoli
+### 2.3 Compressione Enterprise (Advanced Compression Option)
+La compressione `BASIC` (gratuita) usa molta CPU ma è lenta. Con la licenza ACO, puoi usare gli algoritmi ottimizzati.
 ```sql
--- Backup di una specifica tablespace
-BACKUP TABLESPACE users;
-
--- Backup di un datafile
-BACKUP DATAFILE 4;
-
--- Backup del Controlfile
-BACKUP CURRENT CONTROLFILE;
+-- LOW: LZO (Veloce, leggero su CPU, poca compressione)
+-- MEDIUM: ZLIB (Ottimo bilanciamento)
+-- HIGH: BZIP2 (Lentissimo, pesantissimo su CPU, massima compressione)
+RMAN> CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
+RMAN> CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO COMPRESSED BACKUPSET;
 ```
 
-## 4. Manutenzione (Crosscheck e Delete)
-Allineare il repository di RMAN (o controlfile) con i file fisici presenti su disco/nastro.
+---
 
+## 3. Sicurezza: Transparent Data Encryption (TDE) nei Backup
+
+Se i tuoi datafile non sono criptati (TDE Tablespace), chiunque rubi il file `.bkp` di RMAN può fare restore su un proprio server. 
+**Per criptare i backup RMAN (Dual-Mode, Password + Wallet):**
 ```sql
--- Verifica dell'esistenza fisica dei file
-CROSSCHECK BACKUP;
-CROSSCHECK ARCHIVELOG ALL;
-
--- Cancellare i riferimenti a file spariti fisicamente (EXPIRED)
-DELETE NOPROMPT EXPIRED BACKUP;
-DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-
--- Cancellare i file che superano la Retention Policy (OBSOLETE)
-DELETE NOPROMPT OBSOLETE;
-
--- Forzare la cancellazione di archivelog vecchi (es. emergenza spazio FRA)
-DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';
+RMAN> SET ENCRYPTION ON IDENTIFIED BY "super_secret_key" ONLY;
+RMAN> BACKUP DATABASE;
 ```
+*Durante il restore bisognerà fornire `SET DECRYPTION IDENTIFIED BY "super_secret_key"`;*
 
-## 5. Esempi di RESTORE e RECOVER
+---
 
-### Scenario A: Ripristino Completo con Controlfile integro
-```bash
-RMAN> STARTUP MOUNT;
-RMAN> RESTORE DATABASE;
-RMAN> RECOVER DATABASE;
-RMAN> ALTER DATABASE OPEN;
+## 4. Troubleshooting e Gestione FRA al 100%
+
+Quando la `db_recovery_file_dest` (FRA) si riempie, il database va in "hang" (blocca tutte le transazioni finché non si fa spazio).
+
+**Risoluzione d'Emergenza (Database Hung):**
+1. (Se hai spazio su disco) Aumentare al volo la FRA:
+```sql
+ALTER SYSTEM SET db_recovery_file_dest_size=2000G SCOPE=MEMORY;
 ```
-
-### Scenario B: Ripristino da Perdita di Controlfile e SPFILE
+2. (Se NON hai spazio su disco) Eliminare forzatamente archivelog vecchi ignorando la policy:
 ```bash
-RMAN> STARTUP NOMOUNT;
-RMAN> SET DBID 123456789; -- Obbligatorio se si usa autobackup senza repository
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> STARTUP FORCE NOMOUNT;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RESTORE DATABASE;
-RMAN> RECOVER DATABASE;
-RMAN> ALTER DATABASE OPEN RESETLOGS;
+rman target /
+RMAN> CROSSCHECK ARCHIVELOG ALL;
+RMAN> DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';
 ```
+3. Capire cosa occupa la FRA:
+```sql
+SELECT file_type, percent_space_used, percent_space_reclaimable FROM v$recovery_area_usage;
+```
+*I file `reclaimable` verranno sovrascritti in automatico da Oracle, non causano l'hang.*
 
-### Scenario C: Point-in-Time Recovery (PITR)
-Riportare il DB a ieri alle ore 14:00.
+---
+
+## 5. Scenari di Recovery Estremi (BMR e TSPITR)
+
+### 5.1 Block Media Recovery (BMR)
+Un errore `ORA-01578: ORACLE data block corrupted (file # 4, block # 10322)` indica una corruzione hardware/storage parziale.
+*Non è necessario fare un restore completo da Terabytes per 1 blocco rotto.*
 ```bash
+rman target /
+RMAN> RECOVER CORRUPTION LIST;  -- Legge da V$DATABASE_BLOCK_CORRUPTION
+-- OPPURE manualmente:
+RMAN> RECOVER DATAFILE 4 BLOCK 10322;
+```
+*RMAN accederà al backup, estrarrà solo QUEL blocco e lo riscriverà a caldo, senza downtime applicativo!*
+
+### 5.2 Point In Time Recovery del singolo PDB (CDB Architecture)
+Se qualcuno ha lanciato una `DROP TABLE` nel PDB "HR_PROD", non devi abbassare tutto il server.
+```bash
+rman target /
 RMAN> RUN {
+  ALTER PLUGGABLE DATABASE hr_prod CLOSE;
   SET UNTIL TIME "TO_DATE('2026-05-26 14:00:00', 'YYYY-MM-DD HH24:MI:SS')";
-  RESTORE DATABASE;
-  RECOVER DATABASE;
+  RESTORE PLUGGABLE DATABASE hr_prod;
+  RECOVER PLUGGABLE DATABASE hr_prod;
+  ALTER PLUGGABLE DATABASE hr_prod OPEN RESETLOGS;
 }
-RMAN> ALTER DATABASE OPEN RESETLOGS;
 ```
 
-### Scenario D: Restore di una singola Tablespace
-La tablespace deve essere offline. Il resto del DB può rimanere aperto.
+### 5.3 Tablespace Point In Time Recovery (TSPITR)
+Riporta *solo* una tablespace indietro nel tempo, usando un'istanza ausiliaria nascosta.
 ```bash
-RMAN> SQL "ALTER TABLESPACE users OFFLINE IMMEDIATE";
-RMAN> RESTORE TABLESPACE users;
-RMAN> RECOVER TABLESPACE users;
-RMAN> SQL "ALTER TABLESPACE users ONLINE";
+rman target /
+RMAN> RECOVER TABLESPACE users UNTIL TIME "SYSDATE-1" 
+      AUXILIARY DESTINATION '/u01/app/oracle/oradata/aux_dest';
 ```
 
-## 6. Calcolo del Parallelismo (Allocazione Canali)
-Il parallelismo ideale dipende da:
-1. **CPU Cores:** Non allocare più canali dei core disponibili.
-2. **Dischi:** Se il target di backup è un singolo disco lento (es. 1 HDD USB), aumentare i canali causerà I/O contention (degradando le performance). Se il target è uno storage NAS ad alte performance o NVMe, più canali satureranno la banda.
-3. **Datafiles:** Il numero di canali non dovrebbe superare il numero di datafiles del database da backuppare (poiché un singolo datafile non viene splitato su più canali a meno che non si usi "SECTION SIZE").
+### 5.4 Active Database Duplication (Clone Rete)
+Creare un ambiente di preproduzione partendo dalla produzione, *senza* passare per i file di dump, clonando i blocchi in diretta via rete.
+```bash
+rman target sys/pwd_prod@PROD auxiliary sys/pwd_preprod@PREPROD
+RMAN> DUPLICATE TARGET DATABASE TO PREPROD FROM ACTIVE DATABASE
+      SPFILE
+      PARAMETER_VALUE_CONVERT ('PROD', 'PREPROD')
+      SET DB_NAME='PREPROD'
+      SET DB_FILE_NAME_CONVERT='+DATA_PROD','+DATA_PREPROD'
+      NOFILENAMECHECK;
+```
 
-**Uso di SECTION SIZE (Per Bigfile Tablespaces):**
-Se hai un datafile da 1 TB e 4 canali, normalmente 1 canale farebbe il backup di quel file in 10 ore, mentre 3 canali sarebbero fermi.
+---
+
+## 6. Retention Policy e Archivelog Deletion Policy
+
+In un ambiente Enterprise, c'è un legame stretto tra RMAN e Data Guard. Non eliminare *mai* un archivelog se non è stato ancora applicato in Standby (Data Guard).
+
+**Configurazione Perfetta per un DB Primary in Data Guard:**
 ```sql
-BACKUP AS BACKUPSET DATABASE SECTION SIZE 10G;
--- Ora il file da 1TB viene diviso in "chunk" da 10GB, e tutti e 4 i canali lavoreranno in parallelo sullo stesso file.
+-- Conserva 15 giorni per Point In Time
+RMAN> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 15 DAYS;
+
+-- Elimina gli archivelog SOLO se sono stati backuppati su nastro/disco e GIA' applicati sulla Standby
+RMAN> CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+```
+
+**Verifica dei backup obsoleti (reportistica):**
+```sql
+RMAN> REPORT OBSOLETE;
+RMAN> REPORT NEED BACKUP;  -- Quali file non soddisfano la retention?
 ```
