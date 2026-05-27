@@ -44,6 +44,7 @@
 | 08 | [ORA-Errors Comuni](./08_ORA_ERRORS.md) | Qualsiasi errore ORA- |
 | 19 | [Diagnosi Backup RMAN Falliti + Restore Senza Backup](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | Backup falliti o assenza di backup RMAN |
 | 22 | [Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | Crash DB, drop tabella, PITR, corruzioni, standby gap, switchover/failover |
+| 23 | [Casi SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) | SQL lento, AWR/ASH, optimizer, piani, indici, SPM, SQL Monitor |
 
 ### Manutenzione Pianificata
 | # | Procedura | Quando |
