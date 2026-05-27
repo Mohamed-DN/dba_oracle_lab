@@ -1,5 +1,36 @@
 # Runbook Enterprise: SQL Tuning Oracle 19c - Casi, Diagnostica e Spiegazioni
 
+<!-- RUNBOOK_NAV_START -->
+## Indice operativo rapido
+
+### Casi piu frequenti da aprire prima
+- [Top SQL da AWR con elapsed time alto](#sql-001---top-sql-da-awr-con-elapsed-time-alto)
+- [Top SQL da AWR con CPU time alto](#sql-002---top-sql-da-awr-con-cpu-time-alto)
+- [Top SQL da ASH durante picco applicativo](#sql-005---top-sql-da-ash-durante-picco-applicativo)
+- [SQL_ID noto con piano cambiato](#sql-006---sql_id-noto-con-piano-cambiato)
+- [Regressione dopo raccolta statistiche](#sql-008---regressione-dopo-raccolta-statistiche)
+- [Query lenta solo in produzione](#sql-011---query-lenta-solo-in-produzione)
+- [Bind peeking e adaptive cursor sharing](#sql-013---bind-peeking-e-adaptive-cursor-sharing)
+- [Statistiche stale su tabella grande](#sql-015---statistiche-stale-su-tabella-grande)
+- [Full table scan inatteso](#sql-021---full-table-scan-inatteso)
+- [Partition pruning non avviene](#sql-033---partition-pruning-non-avviene)
+- [Hash join consuma troppa PGA/TEMP](#sql-039---hash-join-consuma-troppa-pgatemp)
+- [SQL Plan Management baseline](#sql-073---sql-plan-management-baseline)
+- [Tuning in emergenza SEV1](#sql-154---tuning-in-emergenza-sev1)
+- [Quando aprire SR Oracle](#sql-159---quando-aprire-sr-oracle)
+
+### Macro-aree
+- [Spiegazione didattica](#spiegazione-didattica-cosa-significa-fare-sql-tuning)
+- [Concetti fondamentali](#concetti-fondamentali-da-saper-spiegare)
+- [Matrice decisionale rapida](#matrice-decisionale-rapida)
+- [Workflow standard production-grade](#workflow-standard-production-grade)
+- [Regole bancarie per tuning in produzione](#regole-bancarie-per-tuning-in-produzione)
+- [Parte 1 - Scenari SQL Tuning Enterprise](#parte-1---scenari-sql-tuning-enterprise)
+
+### Come spiegare il documento
+Non iniziare mai dal fix. Prima identifica sintomo, SQL_ID, baseline storica, piano attuale, piano precedente, cardinalita stimate vs reali e wait prevalente. Solo dopo scegli se intervenire su statistiche, indice, riscrittura SQL, SPM, SQL Profile o parametri di sessione controllati.
+<!-- RUNBOOK_NAV_END -->
+
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre diagnostica SQL, optimizer, statistiche, piani di esecuzione, AWR/ASH, SQL Monitor, indici, join, partizionamento, parallelismo, wait events, RAC, Exadata, SQL Plan Management e tuning sicuro in produzione.
 
 ---

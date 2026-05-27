@@ -1,5 +1,27 @@
 # 13 — Refresh Ambiente di Test (Data Pump)
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Refresh schema DEV/TEST da produzione.
+- Export/import con remap schema o remap tablespace.
+- Pulizia schema target prima dell'import.
+- Controllo errori import e oggetti invalidi.
+- Raccolta statistiche e masking post-refresh.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Prerequisiti](#prerequisiti)
+  - [Step 1: Export da Produzione](#step-1-export-da-produzione)
+  - [Step 2: Trasferimento File (Solo se gli host sono diversi)](#step-2-trasferimento-file-solo-se-gli-host-sono-diversi)
+  - [Step 3: Preparazione Database di Test (Svuotamento)](#step-3-preparazione-database-di-test-svuotamento)
+  - [Step 4: Import nell'Ambiente di Test (Remapping)](#step-4-import-nellambiente-di-test-remapping)
+  - [Step 5: Check Post-Refresh](#step-5-check-post-refresh)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: Variabile (dipende dalla size) | 📅 Frequenza: Su richiesta Dev | 👤 Chi: DBA
 > **Scenario**: Il team di sviluppo ti chiede "Potresti copiare lo schema PROD_APP in TEST_APP sull'ambiente di sviluppo per riprodurre un bug?"
 

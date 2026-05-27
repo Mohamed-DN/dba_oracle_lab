@@ -1,5 +1,34 @@
 # 10 — Start/Stop Database RAC
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Stop/start pianificato del database RAC.
+- Rolling restart di una singola istanza.
+- Stop servizi applicativi prima del database.
+- Stop cluster per manutenzione OS/nodo.
+- Verifica CRS, listener e servizi dopo riavvio.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [PREREQUISITI](#prerequisiti)
+  - [STOP — Ordine Corretto](#stop-ordine-corretto)
+  - [1. Ferma i Servizi Applicativi](#1-ferma-i-servizi-applicativi)
+  - [2. Ferma il Database RAC](#2-ferma-il-database-rac)
+  - [3. Verifica Stop](#3-verifica-stop)
+  - [4. Ferma anche lo Standby (se necessario)](#4-ferma-anche-lo-standby-se-necessario)
+  - [5. Per Manutenzione OS — Ferma il Cluster](#5-per-manutenzione-os-ferma-il-cluster)
+  - [START — Ordine Corretto](#start-ordine-corretto)
+  - [1. Avvia il Cluster (se fermato)](#1-avvia-il-cluster-se-fermato)
+  - [2. Avvia il Database RAC](#2-avvia-il-database-rac)
+  - [3. Avvia i Servizi](#3-avvia-i-servizi)
+  - [4. Avvia lo Standby](#4-avvia-lo-standby)
+  - [5. Verifica Post-Start Completa](#5-verifica-post-start-completa)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 10-30 minuti | 📅 Frequenza: Manutenzione pianificata | 👤 Chi: DBA
 > **Scenario tipico**: Manutenzione OS, patching, riavvio controllato
 

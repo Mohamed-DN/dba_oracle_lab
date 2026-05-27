@@ -1,5 +1,29 @@
 # 11 — Review AWR Settimanale
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Review settimanale performance e top SQL.
+- Picco CPU/I/O da spiegare a fine settimana.
+- Confronto baseline prima/dopo deploy o patch.
+- ADDM segnala raccomandazioni da valutare.
+- Trend storage e load profile per capacity planning.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Genera AWR Report (HTML)](#step-1-genera-awr-report-html)
+  - [Step 2: Sezioni Chiave del Report AWR](#step-2-sezioni-chiave-del-report-awr)
+  - [2A. Load Profile — Il "cruscotto"](#2a-load-profile-il-cruscotto)
+  - [2B. Top 5 Foreground Wait Events](#2b-top-5-foreground-wait-events)
+  - [2C. Top SQL per Elapsed Time](#2c-top-sql-per-elapsed-time)
+  - [2D. Regressioni di Piano (SQL con cambio di performance)](#2d-regressioni-di-piano-sql-con-cambio-di-performance)
+  - [Step 3: Storage Trend](#step-3-storage-trend)
+  - [Step 4: ADDM — Raccomandazioni Automatiche](#step-4-addm-raccomandazioni-automatiche)
+  - [Step 5: Checklist Review](#step-5-checklist-review)
+- [Validazione Finale](#validazione-finale)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 30-60 minuti | 📅 Frequenza: Ogni venerdì | 👤 Chi: DBA
 > **Obiettivo**: Identificare trend, regressioni e aree di miglioramento prima che diventino incidenti.
 

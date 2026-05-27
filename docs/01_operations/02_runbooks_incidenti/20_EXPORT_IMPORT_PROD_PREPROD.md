@@ -1,5 +1,45 @@
 # Guida Enterprise: Export e Import da Produzione a Pre-Produzione (Data Pump)
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Refresh completo o parziale da PROD a PREPROD.
+- Export/import molto grande da parallelizzare.
+- Serve checksum e trasferimento sicuro dei dump.
+- Import lento per redo/archivelog/statistiche.
+- Mascheramento PII e bonifica DB link post-refresh.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [1. Pianificazione, Pre-Requisiti e Sizing (Capacity Planning)](#1-pianificazione-pre-requisiti-e-sizing-capacity-planning)
+  - [1.1 Sizing dell'Export (PROD)](#11-sizing-dellexport-prod)
+  - [1.2 Sizing dell'Import (PREPROD)](#12-sizing-dellimport-preprod)
+  - [1.3 Controllo UNDO e TEMP](#13-controllo-undo-e-temp)
+- [2. Preparazione degli Oggetti di Sicurezza](#2-preparazione-degli-oggetti-di-sicurezza)
+  - [2.1 Estrazione e Creazione Ruoli (In PROD)](#21-estrazione-e-creazione-ruoli-in-prod)
+  - [2.2 Tablespace in PREPROD](#22-tablespace-in-preprod)
+- [3. Fase 1: Data Pump Export Avanzato (PROD)](#3-fase-1-data-pump-export-avanzato-prod)
+  - [3.1 Utilizzo di un Parameter File (export.par)](#31-utilizzo-di-un-parameter-file-exportpar)
+  - [3.2 Avvio dell'Export in Background (Nohup)](#32-avvio-dellexport-in-background-nohup)
+  - [3.3 Monitoraggio in Real-Time (Interactive e SQL)](#33-monitoraggio-in-real-time-interactive-e-sql)
+- [4. Trasferimento Dati Sicuro e Veloce](#4-trasferimento-dati-sicuro-e-veloce)
+  - [4.1 Utilizzo di Rsync (Multi-threaded)](#41-utilizzo-di-rsync-multi-threaded)
+  - [4.2 Controllo di Integrità (Checksum)](#42-controllo-di-integrità-checksum)
+- [5. Fase 2: Data Pump Import Avanzato (PREPROD)](#5-fase-2-data-pump-import-avanzato-preprod)
+  - [5.1 Drop Pulito degli Schemi Esistenti (se Refresh)](#51-drop-pulito-degli-schemi-esistenti-se-refresh)
+  - [5.2 Parameter File di Import (import.par)](#52-parameter-file-di-import-importpar)
+  - [5.3 Data Masking (REMAP_DATA)](#53-data-masking-remap_data)
+  - [5.4 Esecuzione dell'Import](#54-esecuzione-dellimport)
+- [6. Risoluzione Problemi e Troubleshooting (ORA- Errors)](#6-risoluzione-problemi-e-troubleshooting-ora-errors)
+- [7. Attività Post-Import](#7-attività-post-import)
+  - [7.1 Recompile Invalide e Verifica Oggetti](#71-recompile-invalide-e-verifica-oggetti)
+  - [7.2 Restore delle Grant Orfane](#72-restore-delle-grant-orfane)
+  - [7.3 Ricalcolo delle Statistiche dell'Optimizer](#73-ricalcolo-delle-statistiche-delloptimizer)
+  - [7.4 Controllo Consistenza Metadati e Dati](#74-controllo-consistenza-metadati-e-dati)
+- [8. Considerazioni Architetturali su RAC e Data Guard](#8-considerazioni-architetturali-su-rac-e-data-guard)
+- [9. Next Steps Obbligatori](#9-next-steps-obbligatori)
+- [10. Addendum Enterprise: Decisioni che vanno approvate prima del refresh](#10-addendum-enterprise-decisioni-che-vanno-approvate-prima-del-refresh)
+<!-- RUNBOOK_NAV_END -->
+
 Questo documento rappresenta la procedura definitiva e completa per la migrazione, il refresh e l'allineamento dei dati tra un ambiente di Produzione (PROD) e un ambiente di Pre-Produzione/Test (PREPROD). Trattandosi di ambienti mission-critical o ad alto volume, vengono adottate tecniche avanzate di parallelismo, data masking, tuning dell'I/O, e sicurezza enterprise.
 
 ---

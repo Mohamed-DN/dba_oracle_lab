@@ -1,8 +1,18 @@
 # Indice Centrale: Runbook Operativi + Top 20 Script
 
-## Runbook Operativi
+## Prima scelta in caso di incidente
+
+1. [00 Triage Incidenti Oracle](./00_TRIAGE_INCIDENTI_ORACLE.md) - decision tree alert -> runbook.
+2. [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md) - stato generale.
+3. [08 ORA-Errors Comuni](./08_ORA_ERRORS.md) - errore ORA -> causa -> fix.
+4. [22 RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - recovery, DR, failover, PITR.
+5. [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - SQL tuning avanzato.
+
+## Runbook operativi
+
 - [README Runbook](./README.md)
 - [Troubleshooting Decision Tree](../../04_governance_learning/02_enterprise_standards/TROUBLESHOOTING_DECISION_TREE.md)
+- [00 Triage Incidenti Oracle](./00_TRIAGE_INCIDENTI_ORACLE.md)
 - [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md)
 - [02 Verifica Backup RMAN](./02_VERIFICA_BACKUP.md)
 - [03 Check Data Guard](./03_CHECK_DATAGUARD.md)
@@ -24,21 +34,27 @@
 - [19 Diagnosi RMAN e DR](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
 - [20 Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md) - Data Pump enterprise, masking, checksum, FRA, manuali Oracle.
 - [21 Gestione DB Link](./21_GESTIONE_DB_LINK.md) - sicurezza DB link, SQLNet encryption, 2PC, hardening post-refresh.
-- [22 Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - oltre 100 scenari operativi per crash DB, errori umani, PITR, standby, gap, failover e switchover.
+- [22 Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - scenari operativi per crash DB, errori umani, PITR, standby, gap, failover e switchover.
 - [23 Casi SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - scenari optimizer, AWR/ASH, SQL Monitor, piani, statistiche, indici, SPM e tuning sicuro.
+- [24 Gap Analysis Copertura DBA](./24_GAP_ANALYSIS_COPERTURA_DBA.md) - cosa manca ancora per copertura enterprise.
 - [Guida Migrazione MAA](./GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md)
 
-## Cheat Sheets
-- [RMAN Full Cheatsheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
+## Cheat sheet
 
-## Catalogo Script Enterprise (Top 20)
+- [RMAN Full Cheatsheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
+- [RMAN Essentials](../01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md)
+- [DGMGRL](../01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
+- [GoldenGate](../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
+
+## Catalogo script enterprise
+
 - [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
-- [Libreria completa script](../../01_operations/04_libreria_script_completa/README.md)
-- (../../../README.md)
-- (../../../README.md)
-- (../../../README.md)
+- [Libreria completa script](../04_libreria_script_completa/README.md)
+- [ADRCI + Diagnostica Oracle](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
 
 ## Uso consigliato
-1. Parti dal runbook (diagnosi guidata)
-2. Salta ai Top 20 script per diagnosi rapida
-3. Escala alla libreria completa per analisi avanzata
+
+1. Parti dal triage centrale se il sintomo non e chiaro.
+2. Apri il runbook specifico e usa l'indice rapido in alto.
+3. Per casi complessi passa al documento enterprise esteso.
+4. Alla fine aggiorna il ticket con evidenze, validazione e rischio residuo.

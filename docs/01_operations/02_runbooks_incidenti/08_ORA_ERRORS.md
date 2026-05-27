@@ -1,5 +1,38 @@
 # 08 — ORA-Errors Comuni: Diagnosi e Fix
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- `ORA-12514`, `ORA-12541`, `ORA-12154` lato rete/listener.
+- `ORA-01017`, `ORA-28000` lato login/account.
+- `ORA-01652`, `ORA-01653`, `ORA-19809` lato spazio.
+- `ORA-01555`, `ORA-04031`, `ORA-00600` lato consistenza/memoria/internal.
+- Errore Data Guard ricorrente da mappare a runbook dedicato.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Errori di Connessione](#errori-di-connessione)
+  - [ORA-12514: TNS:listener does not currently know of service requested](#ora-12514-tnslistener-does-not-currently-know-of-service-requested)
+  - [ORA-12541: TNS:no listener](#ora-12541-tnsno-listener)
+  - [ORA-01017: invalid username/password; logon denied](#ora-01017-invalid-usernamepassword-logon-denied)
+  - [ORA-28000: the account is locked](#ora-28000-the-account-is-locked)
+  - [Errori di Spazio](#errori-di-spazio)
+  - [ORA-01653 / ORA-01654: unable to extend table/index](#ora-01653-ora-01654-unable-to-extend-tableindex)
+  - [ORA-01652: unable to extend temp segment](#ora-01652-unable-to-extend-temp-segment)
+  - [ORA-19815 / ORA-19809: FRA piena](#ora-19815-ora-19809-fra-piena)
+  - [Errori di Consistenza](#errori-di-consistenza)
+  - [ORA-01555: snapshot too old](#ora-01555-snapshot-too-old)
+  - [ORA-04031: unable to allocate shared memory](#ora-04031-unable-to-allocate-shared-memory)
+  - [Errori di Instance/Startup](#errori-di-instancestartup)
+  - [ORA-01034: ORACLE not available](#ora-01034-oracle-not-available)
+  - [ORA-00600: internal error code](#ora-00600-internal-error-code)
+  - [Errori Data Guard](#errori-data-guard)
+  - [ORA-16816: incorrect database role](#ora-16816-incorrect-database-role)
+  - [ORA-16047: DGID mismatch](#ora-16047-dgid-mismatch)
+- [Troubleshooting: Regola d'Oro per Qualsiasi ORA-](#troubleshooting-regola-doro-per-qualsiasi-ora)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: variabile | 📅 Frequenza: Su errore | 👤 Chi: DBA on-call
 > **Riferimento**: Dizionario errori Oracle: https://docs.oracle.com/en/error-help/db/
 

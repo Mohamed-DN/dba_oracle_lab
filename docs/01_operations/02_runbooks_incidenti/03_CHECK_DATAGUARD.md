@@ -1,5 +1,30 @@
 # 03 — Check Data Guard
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Apply lag o transport lag sopra soglia.
+- `DEST_ID=2` in `ERROR` sul primary.
+- `MRP0` non attivo o in `WAIT_FOR_GAP`.
+- Broker non `SUCCESS` o database role incoerente.
+- Archive gap manuale da verificare prima di failover/switchover.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Stato Trasporto dal PRIMARY](#step-1-stato-trasporto-dal-primary)
+  - [Step 2: Stato Apply sullo STANDBY](#step-2-stato-apply-sullo-standby)
+  - [Step 3: Gap Archive](#step-3-gap-archive)
+  - [Step 4: Stato Database Standby](#step-4-stato-database-standby)
+  - [Step 5: Data Guard Broker (se attivo)](#step-5-data-guard-broker-se-attivo)
+- [Troubleshooting](#troubleshooting)
+  - [MRP0 non attivo (apply fermo)](#mrp0-non-attivo-apply-fermo)
+  - [Gap di archivelog](#gap-di-archivelog)
+  - [DEST_ID=2 in ERROR](#dest_id2-in-error)
+  - [Lag alto ma nessun errore](#lag-alto-ma-nessun-errore)
+- [Validazione Finale](#validazione-finale)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5 minuti | 📅 Frequenza: Ogni mattina + su incidente | 👤 Chi: DBA on-call
 
 ---

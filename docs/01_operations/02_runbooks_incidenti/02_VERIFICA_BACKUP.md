@@ -1,5 +1,27 @@
 # 02 — Verifica Backup RMAN
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Ultimo backup non completato o notifica RMAN `FAILED`.
+- Necessita prova di restore/validate prima di change critico.
+- FRA o destinazione backup quasi piena.
+- Archivelog mancanti o backup marcati `EXPIRED`.
+- Dubbi su controlfile/SPFILE inclusi nel ciclo backup.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Stato Ultimo Ciclo di Backup](#step-1-stato-ultimo-ciclo-di-backup)
+  - [Step 2: Backup Più Recente per Tipo](#step-2-backup-più-recente-per-tipo)
+  - [Step 3: Verifica Integrità (VALIDATE)](#step-3-verifica-integrità-validate)
+  - [Step 4: Backup Obsoleti e Pulizia](#step-4-backup-obsoleti-e-pulizia)
+  - [Step 5: Controlfile e SPFILE](#step-5-controlfile-e-spfile)
+  - [Step 6: FRA e Spazio Backup](#step-6-fra-e-spazio-backup)
+- [Troubleshooting](#troubleshooting)
+- [Validazione Finale](#validazione-finale)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5 minuti | 📅 Frequenza: Ogni mattina | 👤 Chi: DBA on-call
 
 ---

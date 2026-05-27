@@ -1,5 +1,28 @@
 # 01 — Morning Health Check
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Database o istanza non `OPEN` dopo manutenzione o reboot.
+- Risorsa CRS/servizio RAC in `OFFLINE`, `INTERMEDIATE` o `UNKNOWN`.
+- Alert log con ORA- recenti nelle ultime 24 ore.
+- FRA, ASM o tablespace sopra soglia.
+- Data Guard con transport/apply lag non nullo o job scheduler falliti.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Stato Database e Istanze](#step-1-stato-database-e-istanze)
+  - [Step 2: Cluster e Risorse](#step-2-cluster-e-risorse)
+  - [Step 3: Alert Log — Errori Recenti](#step-3-alert-log-errori-recenti)
+  - [Step 4: Spazio (Tablespace + ASM + FRA)](#step-4-spazio-tablespace-asm-fra)
+  - [Step 5: Backup RMAN — Ultimo Ciclo](#step-5-backup-rman-ultimo-ciclo)
+  - [Step 6: Data Guard — Lag e Stato](#step-6-data-guard-lag-e-stato)
+  - [Step 7: Job Scheduler Falliti](#step-7-job-scheduler-falliti)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5-10 minuti | 📅 Frequenza: Ogni mattina | 👤 Chi: DBA on-call
 
 ---

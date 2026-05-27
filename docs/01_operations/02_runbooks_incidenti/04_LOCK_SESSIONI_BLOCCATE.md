@@ -1,5 +1,29 @@
 # 04 — Lock e Sessioni Bloccate
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Applicazione bloccata per lock row/table.
+- Sessione blocker inattiva ma con transazione aperta.
+- DDL bloccato da sessioni applicative.
+- Necessita kill controllato con evidenza SID/SERIAL/SQL_ID.
+- Lock ricorrenti da documentare per analisi applicativa.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+  - [Step 1: Identifica il Problema (30 secondi)](#step-1-identifica-il-problema-30-secondi)
+  - [Step 2: Chi Blocca Chi? (la query d'oro)](#step-2-chi-blocca-chi-la-query-doro)
+  - [Step 3: Dettaglio del Blocker](#step-3-dettaglio-del-blocker)
+  - [Step 4: Decidere l'Azione](#step-4-decidere-lazione)
+  - [Opzione A: Contatta l'Utente](#opzione-a-contatta-lutente)
+  - [Opzione B: Kill della Sessione](#opzione-b-kill-della-sessione)
+  - [Step 5: Verifica Post-Kill](#step-5-verifica-post-kill)
+- [📝 Template di Documentazione](#template-di-documentazione)
+- [Validazione Finale](#validazione-finale)
+- [Troubleshooting](#troubleshooting)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su incidente | 👤 Chi: DBA on-call
 > **Scenario tipico**: "L'applicazione è bloccata! Gli utenti non riescono a lavorare!"
 

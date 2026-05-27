@@ -1,5 +1,45 @@
 # 19 — Diagnosi Backup RMAN Falliti e Disaster Recovery
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Notifica backup RMAN fallito senza log chiaro.
+- `ORA-19809`, `ORA-00257`, ASM/FRA pieni.
+- Archivelog richiesto da RMAN non trovato.
+- Catalog/controlfile metadata incoerenti.
+- Scenario critico: restore richiesto ma backup assente o non valido.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [Obiettivi](#obiettivi)
+- [Procedura Operativa](#procedura-operativa)
+- [PARTE I — CLASSIFICAZIONE E TRIAGE](#parte-i-classificazione-e-triage)
+- [1. Classificazione Severita e SLA](#1-classificazione-severita-e-sla)
+  - [1.1 Decision Matrix per Escalation](#11-decision-matrix-per-escalation)
+- [2. Triage Iniziale (Primi 5 Minuti)](#2-triage-iniziale-primi-5-minuti)
+  - [2.1 Step 1: Identifica il Fallimento](#21-step-1-identifica-il-fallimento)
+  - [2.2 Step 2: Trova l'Errore Specifico](#22-step-2-trova-lerrore-specifico)
+  - [2.3 Step 3: Check Alert Log](#23-step-3-check-alert-log)
+  - [2.4 Step 4: Check Spazio](#24-step-4-check-spazio)
+  - [2.5 Step 5: Regola Aurea per Error Stack](#25-step-5-regola-aurea-per-error-stack)
+- [PARTE II — ROOT CAUSE ANALYSIS PER CATEGORIA](#parte-ii-root-cause-analysis-per-categoria)
+- [3. CATEGORIA: Errori di Spazio (Storage)](#3-categoria-errori-di-spazio-storage)
+  - [3.1 ORA-19809 / ORA-19804: FRA Limit Exceeded](#31-ora-19809-ora-19804-fra-limit-exceeded)
+  - [3.2 ORA-19815: FRA Warning Threshold](#32-ora-19815-fra-warning-threshold)
+  - [3.3 ORA-00257: Archiver Error / Archiver Stuck](#33-ora-00257-archiver-error-archiver-stuck)
+  - [3.4 ORA-19502: Write Error on File](#34-ora-19502-write-error-on-file)
+  - [3.5 ORA-27072: File I/O Error (OS Level)](#35-ora-27072-file-io-error-os-level)
+  - [3.6 ORA-15041: ASM Diskgroup Full](#36-ora-15041-asm-diskgroup-full)
+- [4. CATEGORIA: Errori di Metadata e Catalogo](#4-categoria-errori-di-metadata-e-catalogo)
+  - [4.1 RMAN-06059: Expected Archived Log Not Found](#41-rman-06059-expected-archived-log-not-found)
+  - [4.2 RMAN-06054: Media Recovery Requires Archived Log](#42-rman-06054-media-recovery-requires-archived-log)
+  - [4.3 RMAN-06169: Catalog Connection Failed](#43-rman-06169-catalog-connection-failed)
+  - [4.4 RMAN-20242: Specification Does Not Match Any Backup](#44-rman-20242-specification-does-not-match-any-backup)
+  - [4.5 RMAN-06004: Recovery Area Error](#45-rman-06004-recovery-area-error)
+- [5. CATEGORIA: Errori di Corruzione](#5-categoria-errori-di-corruzione)
+  - [5.1 ORA-01578 / RMAN-08120: Block Corruption](#51-ora-01578-rman-08120-block-corruption)
+  - [5.2 ORA-19566: Exceeded Limit of Corrupt Blocks](#52-ora-19566-exceeded-limit-of-corrupt-blocks)
+<!-- RUNBOOK_NAV_END -->
+
 ## Obiettivi
 
 Fornire un framework completo per la diagnosi della root cause (RCA) dei fallimenti dei backup RMAN, la risoluzione degli errori e le strategie di Disaster Recovery (DR) anche in assenza di backup validi.

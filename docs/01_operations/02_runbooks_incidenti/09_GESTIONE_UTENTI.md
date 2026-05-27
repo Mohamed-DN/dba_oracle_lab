@@ -1,5 +1,34 @@
 # 09 — Gestione Utenti e Privilegi
 
+<!-- RUNBOOK_NAV_START -->
+## Casi piu frequenti da aprire prima
+- Creazione utente applicativo con quote e privilegi minimi.
+- Reset password o unlock account urgente.
+- Revoca accessi per offboarding o incidente security.
+- Clone privilegi da utente esistente senza concedere `DBA` a caso.
+- Audit ruoli, privilegi diretti e privilegi via ruolo.
+
+## Indice rapido
+- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
+- [1. Obiettivi e Assessment](#1-obiettivi-e-assessment)
+  - [1.1 Verifiche preliminari](#11-verifiche-preliminari)
+- [2. Procedura Operativa](#2-procedura-operativa)
+  - [2.1 Creare un Utente Applicativo](#21-creare-un-utente-applicativo)
+  - [2.2 Reset Password e Sblocco](#22-reset-password-e-sblocco)
+  - [2.3 Revocare Accessi](#23-revocare-accessi)
+  - [2.4 Operazioni Avanzate: DDL, Quote e Clonazione](#24-operazioni-avanzate-ddl-quote-e-clonazione)
+- [3. Validazione Finale e Audit](#3-validazione-finale-e-audit)
+  - [3.1 Audit Completo (sola lettura)](#31-audit-completo-sola-lettura)
+  - [4.1 – Ruoli dell’utente (compresi quelli annidati)](#41-ruoli-dellutente-compresi-quelli-annidati)
+  - [4.2 – Privilegi di sistema (diretti e via ruoli)](#42-privilegi-di-sistema-diretti-e-via-ruoli)
+  - [4.3 – Privilegi su oggetti (tabelle, viste, procedure, …)](#43-privilegi-su-oggetti-tabelle-viste-procedure)
+  - [4.4 – Tutto in un colpo solo (ruoli, system, oggetti)](#44-tutto-in-un-colpo-solo-ruoli-system-oggetti)
+- [4. Troubleshooting e Sicurezza](#4-troubleshooting-e-sicurezza)
+  - [4.1 Gestione Utenti Problematici](#41-gestione-utenti-problematici)
+  - [4.2 Gestione Profili Password](#42-gestione-profili-password)
+  - [3.2 Check di Conferma Operativa](#32-check-di-conferma-operativa)
+<!-- RUNBOOK_NAV_END -->
+
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su richiesta | 👤 Chi: DBA
 > **Scenario tipico**: "Crea un utente per la nuova applicazione", "Resetta la password", "Audit dei privilegi effettivi di un utente"
 
