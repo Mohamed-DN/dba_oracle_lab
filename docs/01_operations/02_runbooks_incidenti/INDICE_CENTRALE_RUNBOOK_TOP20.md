@@ -25,6 +25,7 @@
 - [20 Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md) - Data Pump enterprise, masking, checksum, FRA, manuali Oracle.
 - [21 Gestione DB Link](./21_GESTIONE_DB_LINK.md) - sicurezza DB link, SQLNet encryption, 2PC, hardening post-refresh.
 - [22 Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - oltre 100 scenari operativi per crash DB, errori umani, PITR, standby, gap, failover e switchover.
+- [23 Casi SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - scenari optimizer, AWR/ASH, SQL Monitor, piani, statistiche, indici, SPM e tuning sicuro.
 - [Guida Migrazione MAA](./GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md)
 
 ## Cheat Sheets

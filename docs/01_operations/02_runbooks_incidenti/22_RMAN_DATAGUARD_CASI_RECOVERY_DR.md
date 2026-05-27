@@ -2,6 +2,116 @@
 
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
 
+
+---
+
+## Spiegazione didattica: come raccontare RMAN e Data Guard
+
+Questa sezione serve per spiegare il documento a voce, in riunione tecnica, in audit o durante un colloquio. I comandi sono importanti, ma un DBA senior deve prima spiegare **perche'** sceglie una tecnologia e quali rischi controlla.
+
+### 1. RMAN in una frase
+
+RMAN e' il motore Oracle supportato per backup, restore e recovery fisico del database. Lavora con datafile, control file, SPFILE, archivelog, backupset, image copy, incarnation e metadata di recovery.
+
+```text
+Problema fisico o bisogno PITR -> pensa prima a RMAN / Flashback.
+Problema disponibilita sito primary -> pensa prima a Data Guard.
+Errore logico replicato -> Data Guard non basta, serve Flashback/RMAN/clone.
+```
+
+### 2. Data Guard in una frase
+
+Data Guard mantiene una o piu copie fisiche o logiche del database sincronizzate tramite redo. Serve per alta disponibilita, disaster recovery e offload read/backup, ma non e' una macchina del tempo per errori logici: se fai `DROP TABLE` sul primary, il redo del drop arriva anche allo standby.
+
+### 3. Differenza chiave: physical recovery vs role transition
+
+| Tema | RMAN | Data Guard |
+|---|---|---|
+| Scopo | ripristinare dati/file nel tempo | mantenere un database secondario pronto |
+| Granularita | blocco, datafile, tablespace, PDB, database, tabella | database/ruolo primary-standby |
+| Protegge da storage loss | si, se backup buoni | si, se standby sano |
+| Protegge da errore umano | si, con PITR/Flashback/RECOVER TABLE | no, errore logico viene replicato |
+| Riduce RTO | dipende da restore size | si, con switchover/failover |
+| Richiede test restore | sempre | sempre, con DR drill |
+
+### 4. Come scegliere in 60 secondi
+
+```text
+1. Il database e' down per perdita sito? -> Data Guard failover.
+2. Il database e' down per file perso/corrotto? -> RMAN restore/recover mirato.
+3. Una tabella e' stata cancellata? -> Flashback Drop, poi RMAN RECOVER TABLE/PITR.
+4. Un DELETE/UPDATE errato e' stato committato? -> Flashback Query/Table se undo basta, altrimenti RMAN PITR su clone.
+5. Lo standby e' in gap? -> Data Guard gap resolution o RMAN incremental roll-forward.
+6. Mancano archivelog? -> fermati, verifica backup/copy/offsite prima di cancellare altro.
+```
+
+### 5. Concetti RMAN da saper spiegare
+
+| Concetto | Spiegazione semplice |
+|---|---|
+| Backupset | formato RMAN ottimizzato, contiene blocchi usati, puo' essere compresso/cifrato |
+| Image copy | copia fisica datafile, utile per incremental merge |
+| Archivelog | redo storico necessario per recovery point-in-time |
+| Control file autobackup | ancora di salvezza se perdi control file/SPFILE |
+| Incarnation | storia del database dopo `OPEN RESETLOGS` |
+| Recovery catalog | repository centrale metadata RMAN, utile in enterprise |
+| Validate | prova leggibilita backup/file senza restore reale |
+| Preview | mostra cosa servira' al restore |
+| BMR | block media recovery, ripara blocchi corrotti senza full restore |
+| TSPITR | point-in-time recovery di tablespace con auxiliary instance |
+| PDB PITR | recovery puntuale di un PDB in CDB |
+
+### 6. Concetti Data Guard da saper spiegare
+
+| Concetto | Spiegazione semplice |
+|---|---|
+| Redo transport | invio redo dal primary allo standby |
+| Redo apply | applicazione redo sullo standby fisico |
+| RFS | processo standby che riceve redo |
+| MRP0 | managed recovery process che applica redo |
+| Standby redo log | redo log lato standby per real-time apply |
+| FAL | fetch archive log per recuperare gap |
+| Switchover | cambio ruolo pianificato, senza perdita dati se tutto sano |
+| Failover | promozione emergenziale dello standby |
+| Reinstate | rientro del vecchio primary come standby dopo failover |
+| FSFO | failover automatico con broker/observer |
+| Snapshot standby | standby temporaneamente aperto read-write per test, poi riconvertito |
+
+### 7. Frasi corrette in ambiente bancario
+
+- "Prima di agire salvo evidence: alert log, RMAN log, DGMGRL output, SCN, stato backup e stato standby."
+- "Non cancello archivelog finche non so se servono a recovery, Data Guard o GoldenGate."
+- "Data Guard riduce RTO, RMAN garantisce recuperabilita storica: servono entrambi."
+- "Lo switchover e' manutenzione controllata; il failover e' procedura di emergenza."
+- "Il restore non testato non e' una garanzia, e' solo una speranza."
+
+### 8. Errori da evitare
+
+| Errore | Perche' e' grave |
+|---|---|
+| Fare failover per un errore logico | lo standby contiene lo stesso errore |
+| Aprire RESETLOGS senza decisione formale | cambia incarnation e impatta recovery strategy |
+| Cancellare archivelog per liberare FRA senza check | puoi distruggere la possibilita di recovery |
+| Non testare wallet TDE | backup cifrato inutilizzabile in emergenza |
+| Non misurare RTO/RPO | promesse non dimostrabili in audit |
+| Confondere apply lag con transport lag | diagnosi sbagliata tra rete e apply |
+
+### 9. Mini storytelling tecnico
+
+Quando spieghi un incidente, usa questa struttura:
+
+```text
+Sintomo: cosa e' successo.
+Impatto: chi e' fermo e quale dato e' a rischio.
+Diagnosi: file/processo/redo/standby coinvolto.
+Decisione: RMAN, Flashback, Data Guard o combinazione.
+Esecuzione: comandi con log salvato.
+Validazione: query tecniche e smoke test applicativo.
+Prevenzione: cosa cambia per evitare ricorrenza.
+```
+
+---
+
 ---
 
 ## Come usare questo documento
