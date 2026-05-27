@@ -31,6 +31,15 @@
 Parti sempre dal danno reale: indisponibilita, perdita dati logica, corruzione fisica, gap Data Guard o richiesta di clone. Poi dichiara RTO/RPO, verifica backup e archivelog, scegli tra RMAN, Flashback, Data Guard o rebuild, e chiudi con evidenze di validazione.
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [08_rman_backup_status.sql](../03_scripts_pronti/08_rman_backup_status.sql) - ultimo backup, backup falliti, config RMAN, archivelog non backuppati.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+<!-- READY_SCRIPTS_END -->
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
 
 ---

@@ -23,6 +23,14 @@
 - [Troubleshooting / Piano di Rientro](#troubleshooting-piano-di-rientro)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [02_undo_temp.sql](../03_scripts_pronti/02_undo_temp.sql) - diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO.
+- [11_temp_resize.sql](../03_scripts_pronti/11_temp_resize.sql) - diagnosi TEMP e tempfile per ORA-01652.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 10-20 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: `ORA-01652`, sort su disco, TEMP al 95-100%.
 

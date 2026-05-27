@@ -1,68 +1,59 @@
-# Script Operativi per Scenario
+# Script pronti DBA Oracle 19c
 
-> Raccolta di script SQL **pronti al copia-incolla** organizzati per **scenario operativo**.
-> Ogni file include diagnosi, azione, verifica e note d'uso.
+Raccolta di script SQL pronti per diagnosi rapida. Gli script non sostituiscono i runbook: servono come acceleratore operativo dopo aver scelto lo scenario corretto.
 
-> [!WARNING]
-> Questi script sono ottimi per uso rapido e didattico.
-> Per analisi senior/approfondita usa la libreria completa: [../../01_operations/04_libreria_script_completa](../../01_operations/04_libreria_script_completa).
+## Ordine consigliato
 
----
+1. Parti dal [Triage Incidenti Oracle](../02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md).
+2. Apri il runbook dello scenario.
+3. Usa lo script pronto collegato per raccogliere evidenze.
+4. Se l'incidente e complesso, passa alla [libreria completa script](../04_libreria_script_completa/README.md) o al [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md).
 
-## Percorso consigliato
+## Regole di sicurezza
 
-1. Parti dal runbook: [../../01_operations/02_runbooks_incidenti/README.md](../../01_operations/02_runbooks_incidenti/README.md)
-2. Esegui script rapido per scenario
-3. Se incidente complesso, scala a:
-   - [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
-   - [Libreria completa script](../../01_operations/04_libreria_script_completa/README.md)
-   - [Guida ADRCI diagnostica](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
+- Non eseguire sezioni correttive senza leggere i commenti e verificare ambiente, ruolo database e impatto.
+- Non incollare password nei comandi: usare wallet, OS authentication, prompt interattivo o credenziali gestite.
+- Prima di delete, purge, kill session, resize o change strutturale, allegare evidenza al ticket.
+- In Data Guard/RMAN verificare sempre archivelog, standby apply e backup prima di cancellare file.
 
----
+## Indice script -> runbook
 
-## Indice per Scenario
-
-| # | File | Scenario | Quando lo usi |
+| # | Script | Quando usarlo | Runbook collegati |
 |---|---|---|---|
-| 01 | [Tablespace e Datafile](./01_tablespace_datafile.sql) | Tablespace pieno, maxsize, bigfile, resize, add datafile | Alert ORA-01654, ORA-01653 |
-| 02 | [UNDO e TEMP](./02_undo_temp.sql) | Undo pieno, ORA-30036, temp piena, sort disk | "ORA-01555", query lentissime, temp 100% |
-| 03 | [FRA e Archivelog](./03_fra_archivelog.sql) | FRA piena, archivelog che crescono, pulizia | Alert "DB Suspended", Data Pump che riempie la FRA |
-| 04 | [Data Pump (expdp/impdp)](./04_datapump_operativo.sql) | Monitor export/import, impatto su FRA/TEMP/UNDO | Richiesta Dev, refresh test, migrazione |
-| 05 | [ASM Storage](./05_asm_storage.sql) | Spazio ASM, diskgroup, AU_SIZE, limiti fisici | Capacity planning, add disk |
-| 06 | [Sessioni e Lock](./06_sessioni_lock.sql) | Chi blocca chi, sessioni bloccanti, deadlock | Applicazione bloccata |
-| 07 | [Performance Quick](./07_performance_quick.sql) | Top SQL, wait events, buffer cache hit | Database lento |
-| 08 | [RMAN e Backup Status](./08_rman_backup_status.sql) | Ultimo backup, validate, crosscheck | Morning check, pre-upgrade |
-| 09 | [Data Guard Status](./09_dataguard_status.sql) | Lag, transport, apply, GAP | Morning check, pre-switchover |
-| 10 | [Oggetti e Schema](./10_oggetti_schema.sql) | Invalidi, segment size, tabelle grandi, indici | Pulizia, tuning, capacity |
-| 11 | [TEMP Resize & Capacity](./11_temp_resize.sql) | Diagnosi TEMP, tempfile, autoextend/resize | ORA-01652, temp al 100% |
-| 12 | [Log Purge (FRA + Unified Audit)](./12_log_purge_audit.sql) | Stato FRA, cleanup audit, note RMAN/ADRCI | Spazio log in crescita |
-| 13 | [Monitor DDL (Package + Trigger)](./13_monitor_ddl_package.sql) | Audit DDL centralizzato con retention | Tracking cambi schema |
-| 14 | [Optimizer Stats Operations](./14_optimizer_stats.sql) | Individua stale stats e gather sicuro | Regressioni piani SQL |
+| 01 | [Tablespace e datafile](./01_tablespace_datafile.sql) | diagnosi tablespace pieni, datafile, autoextend, maxsize, bigfile/smallfile | [06_TABLESPACE_PIENO](../02_runbooks_incidenti/06_TABLESPACE_PIENO.md), [12_CAPACITY_PLANNING_LIMITI](../02_runbooks_incidenti/12_CAPACITY_PLANNING_LIMITI.md), [08_ORA_ERRORS](../02_runbooks_incidenti/08_ORA_ERRORS.md) |
+| 02 | [UNDO e TEMP](./02_undo_temp.sql) | diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO | [06_TABLESPACE_PIENO](../02_runbooks_incidenti/06_TABLESPACE_PIENO.md), [16_RESIZE_TEMP](../02_runbooks_incidenti/16_RESIZE_TEMP.md), [23_SQL_TUNING_CASI_ENTERPRISE](../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md) |
+| 03 | [FRA e archivelog](./03_fra_archivelog.sql) | diagnosi FRA piena, archivelog, ORA-19809, ORA-00257 | [17_PURGE_LOG_ORACLE](../02_runbooks_incidenti/17_PURGE_LOG_ORACLE.md), [19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP](../02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md), [22_RMAN_DATAGUARD_CASI_RECOVERY_DR](../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) |
+| 04 | [Data Pump operativo](./04_datapump_operativo.sql) | precheck, monitoraggio e template expdp/impdp senza password in chiaro | [20_EXPORT_IMPORT_PROD_PREPROD](../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md), [13_REFRESH_SCHEMA_TEST](../02_runbooks_incidenti/13_REFRESH_SCHEMA_TEST.md) |
+| 05 | [ASM storage](./05_asm_storage.sql) | diskgroup, dischi ASM, AU size, capacity e limiti fisici | [12_CAPACITY_PLANNING_LIMITI](../02_runbooks_incidenti/12_CAPACITY_PLANNING_LIMITI.md), [24_GAP_ANALYSIS_COPERTURA_DBA](../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md) |
+| 06 | [Sessioni e lock](./06_sessioni_lock.sql) | sessioni attive, blocker/waiter, DDL lock, kill command generator | [04_LOCK_SESSIONI_BLOCCATE](../02_runbooks_incidenti/04_LOCK_SESSIONI_BLOCCATE.md), [07_CPU_ALTA](../02_runbooks_incidenti/07_CPU_ALTA.md), [08_ORA_ERRORS](../02_runbooks_incidenti/08_ORA_ERRORS.md) |
+| 07 | [Performance quick](./07_performance_quick.sql) | top SQL, wait event, ASH real-time, piani SQL | [05_QUERY_LENTA](../02_runbooks_incidenti/05_QUERY_LENTA.md), [07_CPU_ALTA](../02_runbooks_incidenti/07_CPU_ALTA.md), [11_REVIEW_AWR](../02_runbooks_incidenti/11_REVIEW_AWR.md) |
+| 08 | [RMAN backup status](./08_rman_backup_status.sql) | ultimo backup, backup falliti, config RMAN, archivelog non backuppati | [02_VERIFICA_BACKUP](../02_runbooks_incidenti/02_VERIFICA_BACKUP.md), [19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP](../02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md), [22_RMAN_DATAGUARD_CASI_RECOVERY_DR](../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) |
+| 09 | [Data Guard status](./09_dataguard_status.sql) | ruolo DB, transport/apply lag, gap, MRP, switchover readiness | [03_CHECK_DATAGUARD](../02_runbooks_incidenti/03_CHECK_DATAGUARD.md), [14_CHAOS_NETWORK_PARTITION_DATAGUARD](../02_runbooks_incidenti/14_CHAOS_NETWORK_PARTITION_DATAGUARD.md), [22_RMAN_DATAGUARD_CASI_RECOVERY_DR](../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) |
+| 10 | [Oggetti e schema](./10_oggetti_schema.sql) | invalidi, segmenti grandi, indici, recyclebin, oggetti schema | [09_GESTIONE_UTENTI](../02_runbooks_incidenti/09_GESTIONE_UTENTI.md), [13_REFRESH_SCHEMA_TEST](../02_runbooks_incidenti/13_REFRESH_SCHEMA_TEST.md), [20_EXPORT_IMPORT_PROD_PREPROD](../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md) |
+| 11 | [TEMP resize e capacity](./11_temp_resize.sql) | diagnosi TEMP e tempfile per ORA-01652 | [16_RESIZE_TEMP](../02_runbooks_incidenti/16_RESIZE_TEMP.md), [06_TABLESPACE_PIENO](../02_runbooks_incidenti/06_TABLESPACE_PIENO.md) |
+| 12 | [Log purge e audit](./12_log_purge_audit.sql) | FRA, unified audit cleanup, audit recenti | [17_PURGE_LOG_ORACLE](../02_runbooks_incidenti/17_PURGE_LOG_ORACLE.md) |
+| 13 | [Monitor DDL package](./13_monitor_ddl_package.sql) | audit operativo DDL con tabella, package e trigger | [09_GESTIONE_UTENTI](../02_runbooks_incidenti/09_GESTIONE_UTENTI.md), [24_GAP_ANALYSIS_COPERTURA_DBA](../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md) |
+| 14 | [Optimizer stats operations](./14_optimizer_stats.sql) | stale stats, gather database/table mirato | [18_GESTIONE_STATISTICHE_OPTIMIZER](../02_runbooks_incidenti/18_GESTIONE_STATISTICHE_OPTIMIZER.md), [05_QUERY_LENTA](../02_runbooks_incidenti/05_QUERY_LENTA.md), [23_SQL_TUNING_CASI_ENTERPRISE](../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md) |
 
-<details>
-  <summary>📂 Elenco completo file SQL disponibili (click per espandere)</summary>
+## Esecuzione standard
 
-- [01_tablespace_datafile.sql](./01_tablespace_datafile.sql)
-- [02_undo_temp.sql](./02_undo_temp.sql)
-- [03_fra_archivelog.sql](./03_fra_archivelog.sql)
-- [04_datapump_operativo.sql](./04_datapump_operativo.sql)
-- [05_asm_storage.sql](./05_asm_storage.sql)
-- [06_sessioni_lock.sql](./06_sessioni_lock.sql)
-- [07_performance_quick.sql](./07_performance_quick.sql)
-- [08_rman_backup_status.sql](./08_rman_backup_status.sql)
-- [09_dataguard_status.sql](./09_dataguard_status.sql)
-- [10_oggetti_schema.sql](./10_oggetti_schema.sql)
-- [11_temp_resize.sql](./11_temp_resize.sql)
-- [12_log_purge_audit.sql](./12_log_purge_audit.sql)
-- [13_monitor_ddl_package.sql](./13_monitor_ddl_package.sql)
-- [14_optimizer_stats.sql](./14_optimizer_stats.sql)
+```bash
+cd docs/01_operations/03_scripts_pronti
+sqlplus / as sysdba @07_performance_quick.sql
+```
 
-</details>
+Per spool evidence:
 
----
+```sql
+SPOOL evidence_&&_CONNECT_IDENTIFIER._diagnosi.log
+@07_performance_quick.sql
+SPOOL OFF
+```
 
-## Cheat Sheet correlate
+## Escalation
 
-- (../01_cheat_sheets/CHEAT_SHEET_RMAN.md)
-- (../01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
-- (../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
+- Script rapidi: questa cartella.
+- Diagnosi enterprise: [libreria completa script](../04_libreria_script_completa/README.md).
+- ADR e alert log: [Guida ADRCI](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md).
+- Recovery/DR: [RMAN + Data Guard casi enterprise](../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
+- SQL tuning: [SQL Tuning casi enterprise](../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md).

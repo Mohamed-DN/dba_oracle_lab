@@ -3,6 +3,21 @@
 -- Scenario: regressioni SQL, stale stats, tuning post-load
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/18_GESTIONE_STATISTICHE_OPTIMIZER.md
+--   - ../02_runbooks_incidenti/05_QUERY_LENTA.md
+--   - ../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md
+--   - ../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md
+-- Uso rapido:
+--   sqlplus / as sysdba @14_optimizer_stats.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. TABELLE CON STATS STALE
 PROMPT ====================================================================

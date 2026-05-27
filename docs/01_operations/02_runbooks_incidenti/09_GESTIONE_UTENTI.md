@@ -29,6 +29,14 @@
   - [3.2 Check di Conferma Operativa](#32-check-di-conferma-operativa)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [10_oggetti_schema.sql](../03_scripts_pronti/10_oggetti_schema.sql) - invalidi, segmenti grandi, indici, recyclebin, oggetti schema.
+- [13_monitor_ddl_package.sql](../03_scripts_pronti/13_monitor_ddl_package.sql) - audit operativo DDL con tabella, package e trigger.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su richiesta | 👤 Chi: DBA
 > **Scenario tipico**: "Crea un utente per la nuova applicazione", "Resetta la password", "Audit dei privilegi effettivi di un utente"
 

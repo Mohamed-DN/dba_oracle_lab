@@ -5,6 +5,20 @@
 -- ⚠️ SE LA FRA SI RIEMPIE IL DATABASE SI BLOCCA (HANG/SUSPEND)!
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/17_PURGE_LOG_ORACLE.md
+--   - ../02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
+--   - ../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
+-- Uso rapido:
+--   sqlplus / as sysdba @03_fra_archivelog.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. STATO FRA (Flash Recovery Area / Fast Recovery Area)
 PROMPT ====================================================================

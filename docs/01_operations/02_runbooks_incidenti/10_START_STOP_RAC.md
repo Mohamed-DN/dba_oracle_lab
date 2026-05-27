@@ -29,6 +29,13 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 10-30 minuti | 📅 Frequenza: Manutenzione pianificata | 👤 Chi: DBA
 > **Scenario tipico**: Manutenzione OS, patching, riavvio controllato
 

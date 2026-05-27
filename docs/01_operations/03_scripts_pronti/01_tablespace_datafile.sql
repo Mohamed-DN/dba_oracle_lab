@@ -4,6 +4,20 @@
 -- Errori coperti: ORA-01654, ORA-01653, ORA-01658, ORA-01652
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/06_TABLESPACE_PIENO.md
+--   - ../02_runbooks_incidenti/12_CAPACITY_PLANNING_LIMITI.md
+--   - ../02_runbooks_incidenti/08_ORA_ERRORS.md
+-- Uso rapido:
+--   sqlplus / as sysdba @01_tablespace_datafile.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. PANORAMICA TABLESPACE (uso % con MAXSIZE reale)
 PROMPT ====================================================================

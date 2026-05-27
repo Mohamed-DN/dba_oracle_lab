@@ -24,6 +24,13 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [06_sessioni_lock.sql](../03_scripts_pronti/06_sessioni_lock.sql) - sessioni attive, blocker/waiter, DDL lock, kill command generator.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su incidente | 👤 Chi: DBA on-call
 > **Scenario tipico**: "L'applicazione è bloccata! Gli utenti non riescono a lavorare!"
 

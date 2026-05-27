@@ -24,6 +24,15 @@
 - [Validazione Finale](#validazione-finale)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [01_tablespace_datafile.sql](../03_scripts_pronti/01_tablespace_datafile.sql) - diagnosi tablespace pieni, datafile, autoextend, maxsize, bigfile/smallfile.
+- [02_undo_temp.sql](../03_scripts_pronti/02_undo_temp.sql) - diagnosi ORA-01555, ORA-30036, ORA-01652, consumo TEMP/UNDO.
+- [11_temp_resize.sql](../03_scripts_pronti/11_temp_resize.sql) - diagnosi TEMP e tempfile per ORA-01652.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 5-15 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: Alert "Tablespace USERS al 95%!" oppure ORA-01653/ORA-01654
 

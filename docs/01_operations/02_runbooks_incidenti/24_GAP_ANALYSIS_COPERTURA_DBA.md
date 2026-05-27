@@ -1,5 +1,13 @@
 # 24 - Gap Analysis Copertura Runbook DBA Oracle
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [05_asm_storage.sql](../03_scripts_pronti/05_asm_storage.sql) - diskgroup, dischi ASM, AU size, capacity e limiti fisici.
+- [13_monitor_ddl_package.sql](../03_scripts_pronti/13_monitor_ddl_package.sql) - audit operativo DDL con tabella, package e trigger.
+<!-- READY_SCRIPTS_END -->
 ## Casi piu frequenti da aprire prima
 - Se devi capire cosa studiare dopo: parti da [Priorita consigliata](#priorita-consigliata).
 - Se vuoi capire cosa manca per produzione bancaria: vai a [Gap enterprise ancora aperti](#gap-enterprise-ancora-aperti).

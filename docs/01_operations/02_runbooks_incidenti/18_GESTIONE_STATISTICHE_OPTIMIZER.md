@@ -19,6 +19,14 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [14_optimizer_stats.sql](../03_scripts_pronti/14_optimizer_stats.sql) - stale stats, gather database/table mirato.
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 20-40 minuti | 📅 Frequenza: Settimanale o post-massive load | 👤 Chi: DBA
 > **Scenario tipico**: regressione piani SQL, cardinalità errate, query improvvisamente lente.
 

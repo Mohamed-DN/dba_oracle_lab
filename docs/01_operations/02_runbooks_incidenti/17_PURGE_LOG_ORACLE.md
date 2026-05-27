@@ -20,6 +20,14 @@
 - [Troubleshooting / Guardrail importanti](#troubleshooting-guardrail-importanti)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+- [12_log_purge_audit.sql](../03_scripts_pronti/12_log_purge_audit.sql) - FRA, unified audit cleanup, audit recenti.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 15-30 minuti | 📅 Frequenza: Settimanale o su saturazione spazio | 👤 Chi: DBA
 > **Scenario tipico**: filesystem diagnostici pieni, FRA in crescita, trail audit troppo grande.
 

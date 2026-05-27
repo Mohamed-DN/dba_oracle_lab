@@ -17,6 +17,13 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+<!-- READY_SCRIPTS_END -->
 ## Obiettivi
 
 Simulare scenari di instabilità di rete (latenza e perdita pacchetti) tra i nodi Primary e Standby per testare la resilienza della configurazione Data Guard e la capacità di riallineamento automatico.

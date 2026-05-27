@@ -3,6 +3,19 @@
 -- Scenario: Capacity planning, add disk, check limiti reali
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/12_CAPACITY_PLANNING_LIMITI.md
+--   - ../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md
+-- Uso rapido:
+--   sqlplus / as sysdba @05_asm_storage.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. PANORAMICA ASM DISKGROUP
 PROMPT ====================================================================

@@ -1,5 +1,15 @@
 # 00 - Triage Incidenti Oracle: da alert a runbook corretto
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+- [08_rman_backup_status.sql](../03_scripts_pronti/08_rman_backup_status.sql) - ultimo backup, backup falliti, config RMAN, archivelog non backuppati.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+<!-- READY_SCRIPTS_END -->
 ## Casi piu frequenti da aprire prima
 - Applicazione non entra o login fallisce: parti da [08 ORA-Errors Comuni](./08_ORA_ERRORS.md), poi rete/listener o utenti.
 - Database o istanza non disponibili: parti da [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md), poi [10 Start/Stop RAC](./10_START_STOP_RAC.md) e [22 RMAN/Data Guard](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).

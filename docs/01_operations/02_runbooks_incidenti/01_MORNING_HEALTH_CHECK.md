@@ -23,6 +23,17 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+- [08_rman_backup_status.sql](../03_scripts_pronti/08_rman_backup_status.sql) - ultimo backup, backup falliti, config RMAN, archivelog non backuppati.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+- [06_sessioni_lock.sql](../03_scripts_pronti/06_sessioni_lock.sql) - sessioni attive, blocker/waiter, DDL lock, kill command generator.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 5-10 minuti | 📅 Frequenza: Ogni mattina | 👤 Chi: DBA on-call
 
 ---

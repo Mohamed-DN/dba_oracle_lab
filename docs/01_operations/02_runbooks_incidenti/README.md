@@ -6,6 +6,7 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 - Punto di ingresso incidenti: [00 Triage Incidenti Oracle](./00_TRIAGE_INCIDENTI_ORACLE.md)
 - Decision tree generale: [Troubleshooting Decision Tree](../../04_governance_learning/02_enterprise_standards/TROUBLESHOOTING_DECISION_TREE.md)
 - Gap analysis copertura DBA: [24 Gap Analysis Copertura Runbook](./24_GAP_ANALYSIS_COPERTURA_DBA.md)
+- Script pronti per scenario: [03_scripts_pronti](../03_scripts_pronti/README.md)
 
 ## Priorita operativa: cosa aprire prima
 

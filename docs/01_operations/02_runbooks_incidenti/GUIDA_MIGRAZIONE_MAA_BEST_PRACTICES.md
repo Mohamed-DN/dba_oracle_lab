@@ -29,6 +29,15 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [08_rman_backup_status.sql](../03_scripts_pronti/08_rman_backup_status.sql) - ultimo backup, backup falliti, config RMAN, archivelog non backuppati.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+<!-- READY_SCRIPTS_END -->
 ## Obiettivi
 
 Allineare l'infrastruttura Oracle esistente ai nuovi standard **Oracle Maximum Availability Architecture (MAA)**, migliorando il bilanciamento del carico, la stabilità della memoria, l'automazione del failover e la modernizzazione dell'architettura di replica.

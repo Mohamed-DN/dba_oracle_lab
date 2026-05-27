@@ -26,6 +26,14 @@
 - [Troubleshooting](#troubleshooting)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [07_performance_quick.sql](../03_scripts_pronti/07_performance_quick.sql) - top SQL, wait event, ASH real-time, piani SQL.
+- [06_sessioni_lock.sql](../03_scripts_pronti/06_sessioni_lock.sql) - sessioni attive, blocker/waiter, DDL lock, kill command generator.
+<!-- READY_SCRIPTS_END -->
 > ⏱️ Tempo: 10-30 minuti | 📅 Frequenza: Su alert | 👤 Chi: DBA on-call
 > **Scenario tipico**: Alert "CPU al 95%!" oppure "il database è lentissimo"
 

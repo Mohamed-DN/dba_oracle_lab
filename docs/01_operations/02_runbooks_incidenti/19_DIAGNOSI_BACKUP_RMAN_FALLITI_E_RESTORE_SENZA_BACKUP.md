@@ -40,6 +40,15 @@
   - [5.2 ORA-19566: Exceeded Limit of Corrupt Blocks](#52-ora-19566-exceeded-limit-of-corrupt-blocks)
 <!-- RUNBOOK_NAV_END -->
 
+<!-- READY_SCRIPTS_START -->
+## Script pronti collegati
+
+Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
+
+- [08_rman_backup_status.sql](../03_scripts_pronti/08_rman_backup_status.sql) - ultimo backup, backup falliti, config RMAN, archivelog non backuppati.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
+<!-- READY_SCRIPTS_END -->
 ## Obiettivi
 
 Fornire un framework completo per la diagnosi della root cause (RCA) dei fallimenti dei backup RMAN, la risoluzione degli errori e le strategie di Disaster Recovery (DR) anche in assenza di backup validi.

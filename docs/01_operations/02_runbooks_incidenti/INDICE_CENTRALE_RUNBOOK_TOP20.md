@@ -48,6 +48,7 @@
 
 ## Catalogo script enterprise
 
+- [Script pronti per scenario](../03_scripts_pronti/README.md)
 - [Top 100 Script DBA](../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
 - [Libreria completa script](../04_libreria_script_completa/README.md)
 - [ADRCI + Diagnostica Oracle](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)

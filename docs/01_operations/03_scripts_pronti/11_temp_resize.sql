@@ -3,6 +3,19 @@
 -- Scenario: ORA-01652, TEMP piena, sort su disco
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/16_RESIZE_TEMP.md
+--   - ../02_runbooks_incidenti/06_TABLESPACE_PIENO.md
+-- Uso rapido:
+--   sqlplus / as sysdba @11_temp_resize.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. STATO TEMP
 PROMPT ====================================================================

@@ -3,6 +3,20 @@
 -- Scenario: Undo pieno, ORA-01555, ORA-30036, Temp piena, sort disk
 -- ============================================================================
 
+-- Runbook collegati:
+--   - ../02_runbooks_incidenti/06_TABLESPACE_PIENO.md
+--   - ../02_runbooks_incidenti/16_RESIZE_TEMP.md
+--   - ../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md
+-- Uso rapido:
+--   sqlplus / as sysdba @02_undo_temp.sql
+-- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
+SET LINESIZE 220
+SET PAGESIZE 200
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+SET FEEDBACK ON
+
 PROMPT ====================================================================
 PROMPT  1. STATO UNDO TABLESPACE
 PROMPT ====================================================================
