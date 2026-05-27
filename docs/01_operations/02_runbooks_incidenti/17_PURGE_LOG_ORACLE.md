@@ -5,7 +5,13 @@
 
 ---
 
-## Step 1: Identifica quale log sta crescendo
+## Obiettivi
+
+Eseguire la pulizia periodica o straordinaria dei log diagnostici (ADR), dei file di audit e degli archivelog obsoleti per mantenere l'integrità del filesystem e dello spazio in FRA.
+
+## Procedura Operativa
+
+### Step 1: Identifica quale log sta crescendo
 
 ```bash
 # lato OS (esempio Linux)
@@ -26,7 +32,7 @@ FROM v$recovery_file_dest;
 
 ---
 
-## Step 2: Purge log diagnostici ADR (alert/trace/incidents)
+### Step 2: Purge log diagnostici ADR (alert/trace/incidents)
 
 ```bash
 adrci exec="show homes"
@@ -42,7 +48,7 @@ adrci exec="set home diag/rdbms/racdb/RACDB1; purge -age 604800 -type incident"
 
 ---
 
-## Step 3: Purge archivelog in sicurezza (RMAN)
+### Step 3: Purge archivelog in sicurezza (RMAN)
 
 ```rman
 rman target /
@@ -61,7 +67,7 @@ DELETE NOPROMPT OBSOLETE;
 
 ---
 
-## Step 4: Purge Unified Audit Trail (se cresce troppo)
+### Step 4: Purge Unified Audit Trail (se cresce troppo)
 
 ```sql
 BEGIN
@@ -80,7 +86,7 @@ END;
 
 ---
 
-## Step 5: Validazione finale
+## Validazione Finale
 
 ```sql
 SELECT ROUND(space_used/1024/1024/1024,2) AS fra_used_gb,
@@ -99,7 +105,7 @@ du -sh $ORACLE_BASE/diag/rdbms/*/*/trace
 
 ---
 
-## Guardrail importanti
+## Troubleshooting / Guardrail importanti
 
 - Non cancellare archivelog non ancora backuppati/applicati su standby.
 - Evita `rm` diretto dei file Oracle senza passare da RMAN/ADRCI dove richiesto.

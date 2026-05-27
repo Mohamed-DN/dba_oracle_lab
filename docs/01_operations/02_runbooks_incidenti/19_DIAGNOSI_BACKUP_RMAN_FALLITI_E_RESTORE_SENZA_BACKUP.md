@@ -1,13 +1,10 @@
-# Runbook: Diagnosi Root Cause Backup RMAN Falliti e Disaster Recovery
+# 19 — Diagnosi Backup RMAN Falliti e Disaster Recovery
 
-> Runbook operativo completo per identificare la causa radice (RCA) dei fallimenti
-> backup RMAN, risolvere ogni tipo di errore e ripristinare il servizio quando
-> i backup non esistono.
->
-> Include: classificazione severita, triage, decision tree, 30+ codici errore
-> con diagnostica e risoluzione, disaster recovery senza backup, post-mortem.
->
-> **Target audience**: DBA Oracle in ambienti enterprise di produzione.
+## Obiettivi
+
+Fornire un framework completo per la diagnosi della root cause (RCA) dei fallimenti dei backup RMAN, la risoluzione degli errori e le strategie di Disaster Recovery (DR) anche in assenza di backup validi.
+
+## Procedura Operativa
 
 ---
 
@@ -1327,3 +1324,16 @@ RUN {
   BACKUP DATABASE;
 }
 ```
+---
+
+## Validazione Finale
+
+1. Verificare con `LIST BACKUP SUMMARY` che i nuovi backup siano `COMPLETED`.
+2. Eseguire `RESTORE DATABASE VALIDATE` per confermare la leggibilità dei file.
+3. Verificare che l'occupazione della FRA sia tornata sotto la soglia critica.
+
+## Troubleshooting
+
+1. **RMAN si appende**: Verificare eventuali lock a livello di dizionario o problemi di I/O sospesi sul mount point di backup.
+2. **Catalog non sincronizzato**: Se si usa un catalogo esterno, eseguire `RESYNC CATALOG` dopo ogni operazione manuale di fix.
+3. **Errori MML (Tape)**: Consultare sempre il file `sbtio.log` per errori restituiti dal software di backup di terze parti.

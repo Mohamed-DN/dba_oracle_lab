@@ -12,7 +12,13 @@
 > - **Analisi Workload I/O Storico**: `@../../01_operations/04_libreria_script_completa/03_monitoring_scripts/View_IO_Hist.sql`
 > - **Trend di 10 Giorni dei Wait**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/awr-top-10-daily.sql`
 
-## Step 1: Genera AWR Report (HTML)
+## Obiettivi
+
+Analizzare le prestazioni del database a intervalli regolari (settimanali) per identificare trend di carico, colli di bottiglia emergenti e regressioni di piano SQL, prevenendo potenziali incidenti in produzione.
+
+## Procedura Operativa
+
+### Step 1: Genera AWR Report (HTML)
 
 ```sql
 sqlplus / as sysdba
@@ -47,7 +53,7 @@ DEFINE inst_num = 0
 EOF
 ```
 
-## Step 2: Sezioni Chiave del Report AWR
+### Step 2: Sezioni Chiave del Report AWR
 
 ### 2A. Load Profile — Il "cruscotto"
 
@@ -125,7 +131,7 @@ HAVING COUNT(DISTINCT plan_hash_value) > 1
 ORDER BY avg_ms DESC;
 ```
 
-## Step 3: Storage Trend
+### Step 3: Storage Trend
 
 ```sql
 -- Crescita tablespace nell'ultima settimana
@@ -145,7 +151,7 @@ HAVING MAX(ts.tablespace_usedsize) - MIN(ts.tablespace_usedsize) > 0
 ORDER BY growth_mb DESC;
 ```
 
-## Step 4: ADDM — Raccomandazioni Automatiche
+### Step 4: ADDM — Raccomandazioni Automatiche
 
 ```sql
 -- Genera ADDM report tra due snapshot
@@ -168,7 +174,7 @@ SELECT DBMS_ADVISOR.GET_TASK_REPORT(
 ) AS report FROM dual;
 ```
 
-## Step 5: Checklist Review
+### Step 5: Checklist Review
 
 ```
 □ Load Profile stabile rispetto alla settimana precedente?
@@ -184,7 +190,7 @@ SELECT DBMS_ADVISOR.GET_TASK_REPORT(
 
 ---
 
-## ✅ Output della Review
+## Validazione Finale
 
 Compila un breve report settimanale (anche solo 5 righe):
 
@@ -201,4 +207,10 @@ AZIONI PIANIFICATE:
 1. ___________
 
 PROSSIMA REVIEW: ________
+
+## Troubleshooting
+
+1. **AWR Report non generabile**: Verificare che il parametro `statistics_level` sia impostato a `TYPICAL` o `ALL`.
+2. **Mancanza di snapshot**: Se gli snapshot non vengono creati automaticamente, controllare lo stato dello scheduler con `DBMS_WORKLOAD_REPOSITORY.MODIFY_SNAPSHOT_SETTINGS`.
+3. **Dati non presenti in AWR**: Se una query importante non compare nel report, potrebbe essere al di sotto della soglia di cattura. Aumentare il `topnsql` settings.
 ```

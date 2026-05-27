@@ -1,13 +1,13 @@
 # 15 — Checkmk Agent TLS + SMART/RAID Troubleshooting
 
-## Obiettivo
+## Obiettivi
 
 Eseguire onboarding e troubleshooting standard di un host Linux su Checkmk con:
 - registrazione TLS (`cmk-agent-ctl`)
 - update agent (`cmk-update-agent`)
 - validazione SMART su dischi SAS e controlli RAID.
 
-## Prerequisiti
+### Prerequisiti
 
 - Accesso sudo sull'host target.
 - Host già creato nel folder corretto in Checkmk.
@@ -122,7 +122,7 @@ sudo smartctl -a /dev/sda
 - Se i dischi sono dietro controller, abilitare i plugin controller Checkmk (vendor/RAID) oltre a SMART diretto.
 - Allineare naming host/device con seriale, HCTL e slot controller.
 
-## Rollback
+## Troubleshooting
 
 ```bash
 # Deregistrare update agent

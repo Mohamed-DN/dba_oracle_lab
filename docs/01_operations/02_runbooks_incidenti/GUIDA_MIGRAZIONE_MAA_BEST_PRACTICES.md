@@ -1,12 +1,14 @@
-# Guida alla Migrazione: Dalle Vecchie Impostazioni alle MAA Best Practices
+# Guida alla Migrazione: MAA Best Practices
 
-Se hai seguito le prime versioni di questo laboratorio (o hai ereditato un ambiente configurato con approcci precedenti al 2026), potresti trovarti con un'infrastruttura funzionante, ma non allineata alle **Oracle Maximum Availability Architecture (MAA)** best practices.
+## Obiettivi
 
-Questo documento ti guida passo-passo nella migrazione ("retrofitting") del tuo ambiente attuale verso i nuovi standard, spiegando *perché* stiamo cambiando le cose e *come* farlo senza rompere ciò che già funziona.
+Allineare l'infrastruttura Oracle esistente ai nuovi standard **Oracle Maximum Availability Architecture (MAA)**, migliorando il bilanciamento del carico, la stabilità della memoria, l'automazione del failover e la modernizzazione dell'architettura di replica.
+
+## Procedura Operativa
 
 ---
 
-## 1. Migrazione RMAN: Bilanciamento del Carico RAC (Fase 5)
+### 1. Migrazione RMAN: Bilanciamento del Carico RAC (Fase 5)
 
 ### Qual era il problema della vecchia configurazione?
 Negli script precedenti, eseguivamo il backup Full e Incrementale su `racstby1` (Standby Node 1) allocando due o più canali locali:
@@ -42,7 +44,7 @@ Devi modificare gli script di backup (`rman_full_backup.sh` e `rman_incr_backup.
 
 ---
 
-## 2. Tuning Memoria Enterprise Manager (Fase 6)
+### 2. Tuning Memoria Enterprise Manager (Fase 6)
 
 ### Qual era il problema della vecchia configurazione?
 Creavamo il database di repository (EMREP) per l'Enterprise Manager (OEM) assegnandogli 2GB di RAM. Tuttavia, Oracle di default abilita l'**Automatic Memory Management (AMM)**, impostando il parametro `memory_target`.
@@ -87,7 +89,7 @@ STARTUP;
 
 ---
 
-## 3. Aggiunta del Fast-Start Failover (Observer) (Fase 4)
+### 3. Aggiunta del Fast-Start Failover (Observer) (Fase 4)
 
 ### Qual era il problema della vecchia configurazione?
 Avevamo configurato il Data Guard Broker. Se il database primario veniva spento o la macchina crashava, i dati erano al sicuro sul Physical Standby, ma il servizio si interrompeva. Il DBA doveva ricevere una notifica, svegliarsi (magari alle 3 di notte), collegarsi in VPN, aprire `dgmgrl` e digitare `FAILOVER TO RACDB_STBY`. 
@@ -120,7 +122,7 @@ nohup dgmgrl sys/<password>@RACDB "start observer file='/home/oracle/fsfo_observ
 
 ---
 
-## 4. Migrazione a GoldenGate Microservices Architecture (MA) (Fase 7)
+### 4. Migrazione a GoldenGate Microservices Architecture (MA) (Fase 7)
 
 ### Qual era il problema della vecchia configurazione?
 La "Classic Architecture" (basata su `ggsci`) richiedeva di fare login tramite SSH sul server del database per ogni operazione. Mancava di metriche moderne (Prometheus, Grafana), non offriva sicurezza nativa (i file viaggiavano in chiaro sulla rete) e configurare il componente `Data Pump` era controintuitivo.
@@ -167,3 +169,16 @@ Nel frattempo, il tuo Extract MA su GoldenGate cattura tutte le modifiche.
 Quando il Data Pump finisce, avvii il Replicat MA dicendogli: `START REPLICAT rep_tgt, AFTERCSN 1234567`. Il Replicat applicherà solo le differenze accumulate dopo quel preciso momento. Niente dati persi, niente duplicati.
 
 Segui la [Fase 7 aggiornata](../../02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) per i dettagli operativi per implementare questo workflow.
+
+## Validazione Finale
+
+1. Verificare che i canali RMAN siano distribuiti sui nodi del cluster tramite `v$rman_output`.
+2. Confermare che i limiti di memoria SGA/PGA siano rispettati monitorando `v$sga` e `v$pgastat`.
+3. Testare il failover automatico simulando un crash controllato del primario.
+4. Verificare il flusso dei dati in GoldenGate tramite la Web UI dell'Admin Server.
+
+## Troubleshooting
+
+1. **Observer non connette**: Verificare la risoluzione del nome TNS dal server dell'Observer verso Primary e Standby.
+2. **ORA-04036 (PGA limit exceeded)**: Se accade spesso, riconsiderare il valore di `pga_aggregate_limit` in base al numero di sessioni concorrenti previste.
+3. **Distribuzione RMAN sbilanciata**: Assicurarsi che i nodi RAC abbiano la stessa potenza di calcolo e che la rete verso lo storage sia bilanciata.

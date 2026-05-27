@@ -5,7 +5,13 @@
 
 ---
 
-## Step 1: Verifica stato statistiche
+## Obiettivi
+
+Garantire che l'ottimizzatore Oracle disponga di statistiche accurate e aggiornate per la generazione di piani di esecuzione efficienti, minimizzando le regressioni prestazionali.
+
+## Procedura Operativa
+
+### Step 1: Verifica stato statistiche
 
 ```sql
 sqlplus / as sysdba
@@ -22,7 +28,7 @@ FETCH FIRST 50 ROWS ONLY;
 
 ---
 
-## Step 2: Raccogli statistiche stale (raccomandato)
+### Step 2: Raccogli statistiche stale (raccomandato)
 
 ```sql
 BEGIN
@@ -40,7 +46,7 @@ END;
 
 ---
 
-## Step 3: Tabella critica (intervento puntuale)
+### Step 3: Tabella critica (intervento puntuale)
 
 ```sql
 EXEC DBMS_STATS.GATHER_TABLE_STATS(
@@ -55,7 +61,7 @@ EXEC DBMS_STATS.GATHER_TABLE_STATS(
 
 ---
 
-## Step 4: Validazione piani e impatto
+## Validazione Finale
 
 ```sql
 SELECT sql_id, plan_hash_value, executions,
@@ -72,7 +78,7 @@ WHERE owner = '&OWNER' AND table_name = '&TABLE_NAME';
 
 ---
 
-## Troubleshooting rapido
+## Troubleshooting
 
 - **Piano peggiora dopo gather**: valuta SQL Plan Baseline / statistiche storiche.
 - **Statistiche non aggiornate**: verifica permessi e maintenance windows.

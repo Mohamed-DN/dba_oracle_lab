@@ -5,7 +5,13 @@
 
 ---
 
-## ⚠️ Prerequisiti
+## Obiettivi
+
+Eseguire il refresh di uno schema applicativo da un ambiente di Produzione a uno di Test/Sviluppo utilizzando le utility Data Pump (expdp/impdp), garantendo l'integrità dei dati e la corretta mappatura degli utenti.
+
+## Procedura Operativa
+
+### Prerequisiti
 
 1. Avere una directory logica (Oracle Directory) valida sia in Produzione che in Test che punti allo stesso server SFTP/NFS, oppure copiare i file a mano.
 2. Concordare una finestra temporale (lo schema di test non sarà disponibile durante il drop/import).
@@ -13,7 +19,7 @@
 
 ---
 
-## Step 1: Export da Produzione
+### Step 1: Export da Produzione
 
 Connettiti via terminale al server di Produzione (es. `rac1`).
 
@@ -29,7 +35,7 @@ expdp userid=system directory=DATA_PUMP_DIR dumpfile=PROD_APP_exp_%u.dmp logfile
 
 ---
 
-## Step 2: Trasferimento File (Solo se gli host sono diversi)
+### Step 2: Trasferimento File (Solo se gli host sono diversi)
 
 Se Database Prod e Database Test sono su server diversi e non condividono uno storage NFS:
 
@@ -43,7 +49,7 @@ scp PROD_APP_exp_*.dmp oracle@server_test:/u01/app/oracle/admin/RACDB_TEST/dpdum
 
 ---
 
-## Step 3: Preparazione Database di Test (Svuotamento)
+### Step 3: Preparazione Database di Test (Svuotamento)
 
 Connettiti all'ambiente di **TEST/SVILUPPO**.
 **🔴 ATTENZIONE: Assicurati al 100% di essere nel DB di TEST!**
@@ -75,7 +81,7 @@ ALTER SYSTEM DISABLE RESTRICTED SESSION;
 
 ---
 
-## Step 4: Import nell'Ambiente di Test (Remapping)
+### Step 4: Import nell'Ambiente di Test (Remapping)
 
 Poiché lo stiamo importando in uno schema che si chiama `TEST_APP` (diverso dall'originale `PROD_APP`) e magari su un tablespace diverso (`test_data` invece di `prod_data`), dobbiamo mappare in volo:
 
@@ -92,7 +98,7 @@ parallel=4 table_exists_action=REPLACE transform=OID:N:type
 
 ---
 
-## Step 5: Check Post-Refresh
+### Step 5: Check Post-Refresh
 
 ```bash
 # Verifica eventuali errori nel log
@@ -116,7 +122,7 @@ EXEC DBMS_STATS.GATHER_SCHEMA_STATS('TEST_APP');
 
 ---
 
-## ✅ Checklist Finale
+## Validazione Finale
 
 | Azione | Controllo |
 |---|---|
@@ -124,3 +130,9 @@ EXEC DBMS_STATS.GATHER_SCHEMA_STATS('TEST_APP');
 | Viste Invalide | Compilate tutte o gestite dal team DEV? |
 | Password Utente | Comunciata al team DEV (con la scadenza rimossa tramite Profile)? |
 | File DMP Cancellati? | Cancella sempre i `.dmp` e `.log` dopo per non riempire i server. (es: `rm PROD_APP_exp*.dmp`) |
+
+## Troubleshooting
+
+1. **Errore ORA-39002 (Invalid Operation)**: Verificare che la directory Oracle esista fisicamente sul server e che l'utente `oracle` abbia i permessi di lettura/scrittura a livello OS.
+2. **Tabella già esistente in Import**: Se l'import fallisce perché le tabelle esistono già, usare il parametro `table_exists_action=REPLACE` o `TRUNCATE`.
+3. **Link DB non funzionanti**: Gli utenti di Test potrebbero non avere le credenziali per i DB Link importati dalla Prod. Ricrearli manualmente puntando agli ambienti di Test corretti.

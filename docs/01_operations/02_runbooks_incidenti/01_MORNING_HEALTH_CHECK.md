@@ -4,7 +4,7 @@
 
 ---
 
-## Obiettivo
+## Obiettivi
 
 Verifica rapida che l'ambiente Oracle (RAC + Data Guard + Backup) sia sano prima dell'inizio della giornata lavorativa.
 
@@ -18,7 +18,9 @@ Verifica rapida che l'ambiente Oracle (RAC + Data Guard + Backup) sia sano prima
 
 ---
 
-## Step 1: Stato Database e Istanze
+## Procedura Operativa
+
+### Step 1: Stato Database e Istanze
 
 ```sql
 -- Connettiti al PRIMARY
@@ -45,7 +47,7 @@ ORDER BY inst_id;
 -- ⚠️ Se un'istanza è giù, escalare immediatamente
 ```
 
-## Step 2: Cluster e Risorse
+### Step 2: Cluster e Risorse
 
 ```bash
 # 2A. Stato risorse CRS (come grid o oracle)
@@ -62,7 +64,7 @@ srvctl status listener
 srvctl status scan_listener
 ```
 
-## Step 3: Alert Log — Errori Recenti
+### Step 3: Alert Log — Errori Recenti
 
 ```bash
 # 3A. Ultimi errori ORA- (ultime 24h)
@@ -88,7 +90,7 @@ ORDER BY originating_timestamp DESC
 FETCH FIRST 20 ROWS ONLY;
 ```
 
-## Step 4: Spazio (Tablespace + ASM + FRA)
+### Step 4: Spazio (Tablespace + ASM + FRA)
 
 ```sql
 -- 4A. Tablespace critici (> 80%)
@@ -128,7 +130,7 @@ FROM v$recovery_file_dest;
 -- ⚠️ > 85% = esegui RMAN DELETE OBSOLETE o espandi FRA
 ```
 
-## Step 5: Backup RMAN — Ultimo Ciclo
+### Step 5: Backup RMAN — Ultimo Ciclo
 
 ```sql
 -- 5A. Ultimo backup completato
@@ -144,7 +146,7 @@ ORDER BY start_time DESC;
 -- 🔴 Se STATUS = FAILED → vedi procedura 02_VERIFICA_BACKUP
 ```
 
-## Step 6: Data Guard — Lag e Stato
+### Step 6: Data Guard — Lag e Stato
 
 ```sql
 -- 6A. Sul PRIMARY: stato destinazione standby
@@ -169,7 +171,7 @@ dgmgrl / "SHOW CONFIGURATION"
 # ATTESO: SUCCESS - ogni membro deve essere OK
 ```
 
-## Step 7: Job Scheduler Falliti
+### Step 7: Job Scheduler Falliti
 
 ```sql
 SELECT job_name, status, error#,
@@ -186,7 +188,7 @@ ORDER BY actual_start_date DESC;
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso | Azione se KO |
 |---|---|---|
@@ -199,3 +201,10 @@ ORDER BY actual_start_date DESC;
 | Backup | COMPLETED | Procedura 02 |
 | Data Guard | Lag < soglia | Procedura 03 |
 | Job falliti | Nessuno | Investigare job specifico |
+
+## Troubleshooting
+
+In caso di problemi durante il health check:
+1. Consultare l'Alert Log per messaggi ORA- specifici.
+2. Verificare la connettività di rete tra i nodi RAC.
+3. Controllare lo stato dei servizi a livello di sistema operativo (systemctl).

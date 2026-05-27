@@ -5,7 +5,13 @@
 
 ---
 
-## Step 1: Verifica la Situazione
+## Obiettivi
+
+Monitorare, diagnosticare e risolvere situazioni di saturazione degli spazi (Tablespace, Temp, Undo) per prevenire blocchi dell'applicazione.
+
+## Procedura Operativa
+
+### Step 1: Verifica la Situazione
 
 ```sql
 sqlplus / as sysdba
@@ -30,7 +36,7 @@ WHERE tablespace_name = '&TABLESPACE_NAME'
 ORDER BY file_name;
 ```
 
-## Step 2: Chi Sta Consumando Spazio?
+### Step 2: Chi Sta Consumando Spazio?
 
 ```sql
 -- Top 20 segmenti per dimensione nel tablespace
@@ -55,7 +61,7 @@ ORDER BY snap_time DESC
 FETCH FIRST 14 ROWS ONLY;
 ```
 
-## Step 3: Risolvere — Ordine di Priorità
+### Step 3: Risolvere — Ordine di Priorità
 
 ### 3A. Abilita Autoextend (se non attivo)
 
@@ -122,7 +128,7 @@ WHERE df.file_id = e.file_id(+)
 ALTER DATABASE DATAFILE '&file_name' RESIZE &new_size_mb M;
 ```
 
-## Step 4: TEMP Tablespace Pieno
+### Step 4: TEMP Tablespace Pieno
 
 ```sql
 -- Se il problema è il TEMP:
@@ -144,7 +150,7 @@ ORDER BY t.blocks DESC;
 ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA' SIZE 2G AUTOEXTEND ON NEXT 500M;
 ```
 
-## Step 5: UNDO Tablespace Pieno
+### Step 5: UNDO Tablespace Pieno
 
 ```sql
 -- Se il problema è UNDO:
@@ -163,7 +169,7 @@ ALTER TABLESPACE UNDOTBS1 ADD DATAFILE '+DATA' SIZE 2G AUTOEXTEND ON;
 
 ---
 
-## ⚠️ Errori ORA Correlati
+## Troubleshooting
 
 | Errore | Causa | Fix |
 |---|---|---|
@@ -175,7 +181,7 @@ ALTER TABLESPACE UNDOTBS1 ADD DATAFILE '+DATA' SIZE 2G AUTOEXTEND ON;
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|

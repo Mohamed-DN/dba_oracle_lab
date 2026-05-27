@@ -5,7 +5,13 @@
 
 ---
 
-## Errori di Connessione
+## Obiettivi
+
+Fornire una guida rapida alla diagnosi e risoluzione dei codici di errore Oracle (ORA-) più comuni riscontrati durante l'operatività quotidiana.
+
+## Procedura Operativa
+
+### Errori di Connessione
 
 ### ORA-12514: TNS:listener does not currently know of service requested
 
@@ -59,7 +65,7 @@ SELECT resource_name, limit FROM dba_profiles WHERE profile = '&profile';
 
 ---
 
-## Errori di Spazio
+### Errori di Spazio
 
 ### ORA-01653 / ORA-01654: unable to extend table/index
 
@@ -101,7 +107,7 @@ ALTER SYSTEM SET db_recovery_file_dest_size = 50G SCOPE=BOTH;
 
 ---
 
-## Errori di Consistenza
+### Errori di Consistenza
 
 ### ORA-01555: snapshot too old
 
@@ -146,7 +152,7 @@ ALTER SYSTEM SET shared_pool_size = 2G SCOPE=BOTH;
 
 ---
 
-## Errori di Instance/Startup
+### Errori di Instance/Startup
 
 ### ORA-01034: ORACLE not available
 
@@ -185,7 +191,7 @@ SELECT value FROM v$diag_info WHERE name = 'Default Trace File';
 
 ---
 
-## Errori Data Guard
+### Errori Data Guard
 
 ### ORA-16816: incorrect database role
 
@@ -206,7 +212,7 @@ asmcmd cp '+DATA/RACDB/orapwRACDB' '+DATA/RACDB_STBY/orapwRACDB_STBY'
 
 ---
 
-## ⚡ Regola d'Oro per Qualsiasi ORA-
+## Troubleshooting: Regola d'Oro per Qualsiasi ORA-
 
 ```
 1. SEMPRE controlla l'alert log PRIMA di ogni altra cosa
@@ -214,4 +220,10 @@ asmcmd cp '+DATA/RACDB/orapwRACDB' '+DATA/RACDB_STBY/orapwRACDB_STBY'
 3. SALVA evidenze (timestamp, output, trace)
 4. FAI una sola modifica alla volta
 5. VERIFICA l'effetto dopo ogni modifica
+
+## Validazione Finale
+
+1. Verificare che l'errore `ORA-xxxxx` non compaia più nell'Alert Log.
+2. Confermare con l'utente o l'applicazione che l'operazione precedentemente fallita ora vada a buon fine.
+3. Se l'errore persiste, consultare il supporto Oracle (MOS) con i file di trace raccolti.
 ```

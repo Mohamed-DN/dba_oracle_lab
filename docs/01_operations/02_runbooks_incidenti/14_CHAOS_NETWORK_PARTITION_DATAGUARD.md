@@ -1,10 +1,12 @@
-# Runbook Chaos Engineering: Network Partition su Data Guard
+# 14 — Chaos Engineering: Network Partition su Data Guard
 
-## Teoria
+## Obiettivi
 
-Questo test simula latenza/perdita rete tra primary e standby per valutare resilienza Data Guard sotto stress controllato.
+Simulare scenari di instabilità di rete (latenza e perdita pacchetti) tra i nodi Primary e Standby per testare la resilienza della configurazione Data Guard e la capacità di riallineamento automatico.
 
-## Esempio
+## Procedura Operativa
+
+### Esempio di Simulazione
 
 Su nodo primary (test lab):
 
@@ -29,7 +31,7 @@ Ripristino rete:
 sudo tc qdisc del dev eth0 root
 ```
 
-## Validazione
+## Validazione Finale
 
 Pass criteria:
 
