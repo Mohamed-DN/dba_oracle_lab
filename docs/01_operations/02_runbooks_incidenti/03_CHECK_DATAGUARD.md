@@ -4,13 +4,15 @@
 
 ---
 
-## Obiettivo
+## Obiettivi
 
 Verificare che Data Guard funzioni correttamente: redo trasportato, redo applicato, nessun gap.
 
 ---
 
-## Step 1: Stato Trasporto dal PRIMARY
+## Procedura Operativa
+
+### Step 1: Stato Trasporto dal PRIMARY
 
 ```sql
 -- Connettiti al PRIMARY
@@ -37,7 +39,7 @@ GROUP BY thread#
 ORDER BY thread#;
 ```
 
-## Step 2: Stato Apply sullo STANDBY
+### Step 2: Stato Apply sullo STANDBY
 
 ```sql
 -- Connettiti allo STANDBY
@@ -75,7 +77,7 @@ GROUP BY thread#
 ORDER BY thread#;
 ```
 
-## Step 3: Gap Archive
+### Step 3: Gap Archive
 
 ```sql
 -- Sullo STANDBY
@@ -85,7 +87,7 @@ SELECT * FROM v$archive_gap;
 -- 🔴 Se ci sono gap → redo mancante!
 ```
 
-## Step 4: Stato Database Standby
+### Step 4: Stato Database Standby
 
 ```sql
 SELECT name, db_unique_name, open_mode, database_role,
@@ -98,7 +100,7 @@ FROM v$database;
 -- SWITCHOVER_STATUS = NOT ALLOWED o TO PRIMARY (se pronto)
 ```
 
-## Step 5: Data Guard Broker (se attivo)
+### Step 5: Data Guard Broker (se attivo)
 
 ```bash
 dgmgrl /
@@ -116,7 +118,7 @@ DGMGRL> SHOW DATABASE 'RACDB_STBY' 'StatusReport';
 
 ---
 
-## 🔴 Troubleshooting Comune
+## Troubleshooting
 
 ### MRP0 non attivo (apply fermo)
 
@@ -167,7 +169,7 @@ WHERE item = 'Active Apply Rate';
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|

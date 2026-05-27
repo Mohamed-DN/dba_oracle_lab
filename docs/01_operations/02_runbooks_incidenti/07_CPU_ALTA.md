@@ -5,7 +5,13 @@
 
 ---
 
-## Step 1: È Oracle o è qualcos'altro?
+## Obiettivi
+
+Monitorare, diagnosticare e mitigare picchi di carico CPU che possono compromettere la stabilità del database Oracle.
+
+## Procedura Operativa
+
+### Step 1: È Oracle o è qualcos'altro?
 
 ```bash
 # A livello OS: chi sta usando CPU?
@@ -25,7 +31,7 @@ ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | grep -i ora | head -10
 > - **Top SQL CPU da AWR**: `@../../01_operations/04_libreria_script_completa/07_performance_tuning/community_scripts/ash_awr/top10-sql-awr.sql`
 > Esegui questi script invece di assemblare query lunghe.
 
-## Step 2: Average Active Sessions (il "battito cardiaco")
+### Step 2: Average Active Sessions (il "battito cardiaco")
 
 ```sql
 sqlplus / as sysdba
@@ -43,7 +49,7 @@ WHERE metric_name IN (
 AND group_id = 2;
 ```
 
-## Step 3: Chi Sta Consumando CPU?
+### Step 3: Chi Sta Consumando CPU?
 
 ```sql
 -- Top 10 sessioni per CPU adesso
@@ -72,7 +78,7 @@ ORDER BY cpu_time DESC
 FETCH FIRST 10 ROWS ONLY;
 ```
 
-## Step 4: Analisi ASH (chi stava usando CPU?)
+### Step 4: Analisi ASH (chi stava usando CPU?)
 
 ```sql
 -- Top SQL per CPU nell'ultima ora
@@ -100,7 +106,7 @@ ORDER BY samples DESC
 FETCH FIRST 10 ROWS ONLY;
 ```
 
-## Step 5: Hard Parse Eccessivo?
+### Step 5: Hard Parse Eccessivo?
 
 ```sql
 -- Hard parse = CPU sprecata per parse nuove query
@@ -111,7 +117,7 @@ WHERE name IN ('parse count (total)', 'parse count (hard)', 'parse count (failur
 -- Fix: usare bind variables nel codice applicativo
 ```
 
-## Step 6: Parallelismo Fuori Controllo?
+### Step 6: Parallelismo Fuori Controllo?
 
 ```sql
 -- Sessioni parallele attive
@@ -123,7 +129,7 @@ ORDER BY qcsid;
 ALTER SYSTEM SET parallel_max_servers = &new_value SCOPE=BOTH;
 ```
 
-## Step 7: Azioni di Mitigazione
+### Step 7: Azioni di Mitigazione
 
 ### Kill query runaway (se una singola query mangia tutto):
 
@@ -159,7 +165,7 @@ END;
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|
@@ -167,3 +173,9 @@ END;
 | AAS | < numero CPU |
 | Top SQL CPU | Nessuna query runaway |
 | Hard parse ratio | < 30% |
+
+## Troubleshooting
+
+1. **CPU rimane alta dopo kill**: Verificare se ci sono processi paralleli (`PX`) rimasti orfani o se il processo OS è in stato "defunct".
+2. **Log Switch eccessivi**: Se la CPU è alta a causa di LGWR, aumentare la dimensione dei Redo Log File.
+3. **Paging/Swapping**: Se la CPU è usata da processi `kswapd`, il problema è la memoria RAM (SGA/PGA troppo grandi rispetto alla RAM fisica).

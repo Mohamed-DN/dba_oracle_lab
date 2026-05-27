@@ -5,7 +5,13 @@
 
 ---
 
-## Step 1: Diagnosi rapida (chi usa TEMP)
+## Obiettivi
+
+Diagnosticare e risolvere situazioni di saturazione del Tablespace Temporaneo (TEMP) per evitare fallimenti di query che richiedono operazioni di sort o hash join su disco.
+
+## Procedura Operativa
+
+### Step 1: Diagnosi rapida (chi usa TEMP)
 
 ```sql
 sqlplus / as sysdba
@@ -28,7 +34,7 @@ ORDER BY t.blocks DESC;
 
 ---
 
-## Step 2: Verifica configurazione tempfile
+### Step 2: Verifica configurazione tempfile
 
 ```sql
 SELECT file_id, file_name,
@@ -41,7 +47,7 @@ ORDER BY file_id;
 
 ---
 
-## Step 3: Azioni consigliate (ordine)
+### Step 3: Azioni consigliate (ordine)
 
 ### 3A) Abilita autoextend (se disabilitato)
 
@@ -72,7 +78,7 @@ ALTER DATABASE TEMPFILE '&tempfile_name' RESIZE 8G;
 
 ---
 
-## Step 4: Riduzione TEMP (quando serve davvero)
+### Step 4: Riduzione TEMP (quando serve davvero)
 
 ```sql
 -- Strategia raccomandata: crea TEMP2, imposta TEMP2 come default e rimuovi TEMP precedente
@@ -89,7 +95,7 @@ DROP TABLESPACE TEMP2 INCLUDING CONTENTS AND DATAFILES;
 
 ---
 
-## Step 5: Validazione finale
+## Validazione Finale
 
 ```sql
 SELECT tablespace_name,
@@ -111,7 +117,7 @@ FROM dba_temp_files;
 
 ---
 
-## Rollback / piano di rientro
+## Troubleshooting / Piano di Rientro
 
 - Se aggiungi tempfile: puoi rimuoverlo a caldo dopo normalizzazione carico.
 - Se hai usato TEMP2: torna alla configurazione originale e rimuovi TEMP2.

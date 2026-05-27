@@ -5,7 +5,14 @@
 
 ---
 
-## Step 1: Identifica il Problema (30 secondi)
+## Obiettivi
+
+Identificare e risolvere colli di bottiglia causati da sessioni bloccanti (lock) per ripristinare la normale operatività dell'applicazione.
+
+## Procedura Operativa
+
+
+### Step 1: Identifica il Problema (30 secondi)
 
 > [!TIP]
 > **🚀 L'approccio "Top Tier" (Senior DBA)**
@@ -25,7 +32,7 @@ WHERE blocking_session IS NOT NULL;
 -- Se 0 → il problema NON è un lock, vai a procedura 05 o 07
 ```
 
-## Step 2: Chi Blocca Chi? (la query d'oro)
+### Step 2: Chi Blocca Chi? (la query d'oro)
 
 ```sql
 -- Catena completa dei blocchi in RAC
@@ -57,7 +64,7 @@ ORDER BY s1.inst_id, s1.sid;
 > **Leggi così**: La sessione `blk_sid` su istanza `blk_inst` sta BLOCCANDO la sessione `wait_sid`.
 > Se `blk_status = INACTIVE` → l'utente ha fatto una modifica e NON ha fatto COMMIT.
 
-## Step 3: Dettaglio del Blocker
+### Step 3: Dettaglio del Blocker
 
 ```sql
 -- Cosa sta facendo il blocker? (SQL in corso o ultimo eseguito)
@@ -82,7 +89,7 @@ JOIN dba_objects do ON lo.object_id = do.object_id
 WHERE lo.session_id = &blocker_sid;
 ```
 
-## Step 4: Decidere l'Azione
+### Step 4: Decidere l'Azione
 
 ### Opzione A: Contatta l'Utente
 Se conosci l'utente blocante (es. da `program` o `username`):
@@ -117,7 +124,7 @@ WHERE s.sid = &sid AND s.inst_id = &inst_id;
 kill -9 <os_pid>
 ```
 
-## Step 5: Verifica Post-Kill
+### Step 5: Verifica Post-Kill
 
 ```sql
 -- Controlla che il lock sia rilasciato
@@ -146,10 +153,16 @@ DURATA BLOCCO: ___ minuti
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|
 | Sessioni bloccate | 0 |
 | Lock residui | Nessuno |
 | Applicazione | Funzionante |
+
+## Troubleshooting
+
+1. **Deadlock**: Se trovi errori `ORA-00060` nel trace log, il database ha già risolto il problema killando una delle due sessioni. Analizzare il trace per trovare lo script SQL colpevole.
+2. **Library Cache Lock**: Se il blocker è `null` o la query non mostra nulla, potrebbe trattarsi di lock su definizioni di oggetti (DDL). Consultare `v$session_wait`.
+3. **Ghost Sessions**: Se killi una sessione ma il lock rimane, potrebbe essere un problema di processi zombie a livello OS. Verificare con `ps -ef | grep <os_pid>`.

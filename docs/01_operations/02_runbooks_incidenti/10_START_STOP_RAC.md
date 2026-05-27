@@ -5,7 +5,13 @@
 
 ---
 
-## ⚠️ PREREQUISITI
+## Obiettivi
+
+Eseguire l'arresto e l'avvio controllato di un database Oracle RAC, dei relativi servizi e del cluster per attività di manutenzione ordinaria o straordinaria.
+
+## Procedura Operativa
+
+### PREREQUISITI
 
 - Backup RMAN recente verificato
 - Blackout EM attivo (se Enterprise Manager è in uso)
@@ -14,7 +20,7 @@
 
 ---
 
-## STOP — Ordine Corretto
+### STOP — Ordine Corretto
 
 ### 1. Ferma i Servizi Applicativi
 
@@ -69,7 +75,7 @@ crsctl stop cluster -all
 
 ---
 
-## START — Ordine Corretto
+### START — Ordine Corretto
 
 ### 1. Avvia il Cluster (se fermato)
 
@@ -153,7 +159,7 @@ dgmgrl / "SHOW CONFIGURATION"
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Fase | Controllo | Atteso |
 |---|---|---|
@@ -163,3 +169,9 @@ dgmgrl / "SHOW CONFIGURATION"
 | POST-START | Servizi applicativi | Running |
 | POST-START | Data Guard | Lag < soglia |
 | POST-START | Alert log | Nessun ORA- critico |
+
+## Troubleshooting
+
+1. **Il Database non si ferma**: Una sessione applicativa potrebbe essere rimasta appesa. Usare `srvctl stop database -d RACDB -f` (force) per forzare l'arresto.
+2. **Il Cluster (CRS) non parte**: Verificare lo stato dei dischi di voto (Voting Disks) con `crsctl query css votedisk`.
+3. **Servizi non salgono automaticamente**: Verificare la configurazione del servizio con `srvctl config service` e assicurarsi che i nodi preferiti/disponibili siano corretti.

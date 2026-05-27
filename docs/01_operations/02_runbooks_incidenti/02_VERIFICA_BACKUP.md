@@ -4,13 +4,15 @@
 
 ---
 
-## Obiettivo
+## Obiettivi
 
 Verificare che tutti i backup notturni siano andati a buon fine e che la recovery sia possibile.
 
 ---
 
-## Step 1: Stato Ultimo Ciclo di Backup
+## Procedura Operativa
+
+### Step 1: Stato Ultimo Ciclo di Backup
 
 ```sql
 sqlplus / as sysdba
@@ -35,7 +37,7 @@ ORDER BY start_time DESC;
 | `FAILED` | 🔴 Fallito | Investigare subito |
 | `RUNNING` | 🔄 In corso | Monitorare avanzamento |
 
-## Step 2: Backup Più Recente per Tipo
+### Step 2: Backup Più Recente per Tipo
 
 ```sql
 -- Ultimo backup per ogni tipo
@@ -51,7 +53,7 @@ ORDER BY MAX(start_time) DESC;
 -- ⚠️ Se ARCHIVELOG > 1 giorno → problema!
 ```
 
-## Step 3: Verifica Integrità (VALIDATE)
+### Step 3: Verifica Integrità (VALIDATE)
 
 ```bash
 # Connettiti a RMAN
@@ -66,7 +68,7 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
 ```
 
-## Step 4: Backup Obsoleti e Pulizia
+### Step 4: Backup Obsoleti e Pulizia
 
 ```bash
 RMAN> REPORT OBSOLETE;
@@ -80,7 +82,7 @@ RMAN> DELETE EXPIRED BACKUP;
 RMAN> DELETE EXPIRED ARCHIVELOG ALL;
 ```
 
-## Step 5: Controlfile e SPFILE
+### Step 5: Controlfile e SPFILE
 
 ```sql
 -- Verifica che autobackup controlfile sia attivo
@@ -91,7 +93,7 @@ RMAN> SHOW CONTROLFILE AUTOBACKUP;
 -- ATTESO: CONFIGURE CONTROLFILE AUTOBACKUP ON
 ```
 
-## Step 6: FRA e Spazio Backup
+### Step 6: FRA e Spazio Backup
 
 ```sql
 -- Flash Recovery Area usage
@@ -114,7 +116,7 @@ FROM v$recovery_file_dest;
 
 ---
 
-## 🔴 Se il Backup è FAILED
+## Troubleshooting
 
 ```bash
 # 1. Trova il log del backup fallito
@@ -141,7 +143,7 @@ RMAN> BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|

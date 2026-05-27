@@ -5,10 +5,11 @@
 
 ---
 
-## Obiettivo
+## Obiettivi
 
-Assicurarsi che l'infrastruttura (ASM e Tablespace) non si scontri contro gli "Hard Lmits" fisici di Oracle. 
-Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può superare i 32GB, indipendentemente dallo spazio sul disco.
+Assicurarsi che l'infrastruttura (ASM e Tablespace) non si scontri contro gli "Hard Lmits" fisici di Oracle. Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può superare i 32GB, indipendentemente dallo spazio sul disco.
+
+## Procedura Operativa
 
 ## 🗂️ Gli script di riferimento (Top Tier)
 
@@ -20,7 +21,7 @@ Ad esempio, un datafile (SMALLFILE) con database block size a 8k NON può supera
 
 ---
 
-## Step 1: Controllo Limiti Teorici ASM vs Allocation Unit (AU_SIZE)
+### Step 1: Controllo Limiti Teorici ASM vs Allocation Unit (AU_SIZE)
 
 Esegui lo script:
 ```sql
@@ -44,7 +45,7 @@ Esegui lo script:
 
 ---
 
-## Step 2: MAXSIZE rispetto allo Spazio Reale Allocato
+### Step 2: MAXSIZE rispetto allo Spazio Reale Allocato
 
 Esegui lo script:
 ```sql
@@ -63,7 +64,7 @@ Questo report mostra 5 colonne fondamentali in GB.
 
 ---
 
-## Step 3: Gestione proattiva dei BIGFILE Tablespace
+### Step 3: Gestione proattiva dei BIGFILE Tablespace
 
 Quando un BIGFILE arriva alla saturazione, l'unica soluzione è estendere il suo MAXSIZE (poiché usa un singolo enorme datafile). 
 Il generatore fornisce il comando esatto per portare il limite al **170%** del valore attuale (o a un minimo predefinito di ~10GB), escludendo in automatico i tablespace di sistema e UNDO.
@@ -81,10 +82,16 @@ alter tablespace NODO_ONLINE_LOB_2 AUTOEXTEND ON maxsize 18128219194;
 
 ---
 
-## ✅ Best Practices / Check di Conferma
+## Validazione Finale
 
 | Controllo | Verifica / Limit |
 |---|---|
 | SMALLFILE Datafiles | Nessun datafile ha `MAXSIZE > 32G` (se bs=8k). |
 | BIGFILE Tablespace | I tablespace enormi (es. `RE_DATA`, LOBs) usano BIGFILE e non eccedono i limiti AU_SIZE dello Step 1. |
 | Coerenza MAXSIZE / FISICO | La somma dei MAXSIZE di tutti i DB rac non supera lo storage fisico realmente installato nell'Hypervisor/Storage array. Questa si chiama `Thin Provisioning Trap`! |
+
+## Troubleshooting
+
+1. **Errore ORA-01144**: Si verifica quando si tenta di creare un datafile superiore a 4.194.303 blocchi. In questo caso, è obbligatorio usare un Tablespace di tipo BIGFILE o creare più datafile piccoli.
+2. **Diskgroup ASM non supporta file grandi**: Verificare gli attributi `compatible.rdbms` e `compatible.asm` del diskgroup. Devono essere almeno `11.2` per supportare file di grandi dimensioni.
+3. **Thin Provisioning**: Se lo storage fisico è inferiore alla somma dei MAXSIZE, monitorare costantemente lo spazio a livello Hypervisor/SAN per evitare blocchi improvvisi di tutte le istanze (I/O Errors).

@@ -5,7 +5,14 @@
 
 ---
 
-## Step 1: Identifica la Query (hai il SQL_ID?)
+## Obiettivi
+
+Diagnosticare rapidamente le cause di degrado delle prestazioni di una query SQL e applicare le azioni correttive necessarie (statistiche, indici o baseline).
+
+## Procedura Operativa
+
+
+### Step 1: Identifica la Query (hai il SQL_ID?)
 
 > [!TIP]
 > **🚀 L'approccio "Top Tier" (Senior DBA)**
@@ -47,7 +54,7 @@ WHERE UPPER(sql_text) LIKE '%NOME_TABELLA%'
 ORDER BY elapsed_time DESC;
 ```
 
-## Step 2: Piano di Esecuzione Attuale
+### Step 2: Piano di Esecuzione Attuale
 
 ```sql
 -- Piano REALE con statistiche runtime
@@ -68,7 +75,7 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_AWR('&sql_id'));
 | `SORT ORDER BY` con TempSpc | Sort su disco | PGA troppo piccola? |
 | `HASH JOIN` con TempSpc enorme | Join grande su disco | Memoria insufficiente |
 
-## Step 3: Le Statistiche Sono Aggiornate?
+### Step 3: Le Statistiche Sono Aggiornate?
 
 ```sql
 -- Controlla statistiche delle tabelle coinvolte
@@ -89,7 +96,7 @@ EXEC DBMS_STATS.GATHER_TABLE_STATS('&OWNER', '&TABLE_NAME',
      CASCADE => TRUE);
 ```
 
-## Step 4: Il Piano è Cambiato? (Regressione)
+### Step 4: Il Piano è Cambiato? (Regressione)
 
 ```sql
 -- Storico piani da AWR: il piano è cambiato di recente?
@@ -106,7 +113,7 @@ ORDER BY snap_id;
 -- Se plan_hash_value è cambiato → regressione di piano!
 ```
 
-## Step 5: Dove il Tempo Viene Speso?
+### Step 5: Dove il Tempo Viene Speso?
 
 ```sql
 -- Wait events per questa query (da ASH)
@@ -127,7 +134,7 @@ ORDER BY samples DESC;
 | `ON CPU` | La query lavora, nessuna attesa |
 | `gc buffer busy` | Contesa RAC tra nodi |
 
-## Step 6: SQL Tuning Advisor (automatico)
+### Step 6: SQL Tuning Advisor (automatico)
 
 ```sql
 -- Chiedi ad Oracle di analizzare la query
@@ -149,7 +156,7 @@ SET LONG 100000
 SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('TUNE_' || '&sql_id') AS report FROM dual;
 ```
 
-## Step 7: Fix Rapidi
+### Step 7: Fix Rapidi
 
 ### Se mancano statistiche:
 ```sql
@@ -180,7 +187,7 @@ CREATE INDEX owner.idx_name ON owner.table_name(column1, column2)
 
 ---
 
-## ✅ Check di Conferma
+## Validazione Finale
 
 | Controllo | Atteso |
 |---|---|
@@ -188,3 +195,9 @@ CREATE INDEX owner.idx_name ON owner.table_name(column1, column2)
 | Piano di esecuzione | Stabile |
 | Statistiche | Aggiornate |
 | Utente/App | Confermano miglioramento |
+
+## Troubleshooting
+
+1. **Piano non cambia dopo Gathering Stats**: Se la query continua a usare un piano inefficiente, potrebbe esserci un problema di "Data Skew". Creare degli Istogrammi sulle colonne filtrate.
+2. **SQL Tuning Advisor non propone nulla**: Verificare se la query ha predicati non ottimizzabili (es. funzioni su colonne indicizzate).
+3. **Contesa nel RAC**: Se gli eventi dominanti sono `gc buffer busy`, considerare il partizionamento della tabella o il bilanciamento dei nodi.
