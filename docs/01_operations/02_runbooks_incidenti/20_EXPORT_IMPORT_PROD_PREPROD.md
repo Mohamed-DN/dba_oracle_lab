@@ -1,83 +1,229 @@
-# Procedura Export/Import da Database di Produzione a Pre-Produzione
+# Guida Enterprise: Export e Import da Produzione a Pre-Produzione (Data Pump)
 
-Questa procedura descrive i passaggi completi per eseguire un export da un database di Produzione (Prod) e un import in un database di Pre-Produzione (Preprod).
+Questo documento rappresenta la procedura definitiva e completa per la migrazione, il refresh e l'allineamento dei dati tra un ambiente di Produzione (PROD) e un ambiente di Pre-Produzione/Test (PREPROD). Trattandosi di ambienti mission-critical o ad alto volume, vengono adottate tecniche avanzate di parallelismo, data masking, tuning dell'I/O, e sicurezza enterprise.
 
-## 1. Creare tutti i ruoli mancanti in Preprod
-Prima di importare gli schemi, assicurarsi che tutti i ruoli custom necessari esistano nell'ambiente di destinazione.
+---
 
-Generare lo script dei ruoli in **Produzione** utilizzando lo script di sicurezza (vedi in fondo) o eseguire manualmente:
+## 1. Pianificazione, Pre-Requisiti e Sizing (Capacity Planning)
+Prima di lanciare qualsiasi attività su Data Pump, è vitale verificare i limiti hardware e architetturali del database di destinazione e di origine.
+
+### 1.1 Sizing dell'Export (PROD)
+Calcolare accuratamente quanto spazio richiederà l'export. L'uso di `COMPRESSION=ALL` riduce tipicamente le dimensioni del 70-85%, ma dipende dall'entropia dei dati.
 ```sql
-SELECT 'CREATE ROLE ' || role || ';' 
-FROM dba_roles 
-WHERE oracle_maintained = 'N';
+-- Stima della dimensione degli schemi da esportare
+SELECT owner, SUM(bytes)/1024/1024/1024 AS size_gb
+FROM dba_segments
+WHERE owner IN ('SCHEMA_A', 'SCHEMA_B')
+GROUP BY owner;
 ```
-Eseguire l'output in **Pre-Produzione**.
-
-## 2. Creare tutte le Tablespace in Preprod
-Verificare le tablespace necessarie per gli schemi da importare e crearle in Pre-Produzione.
-
-Generare le DDL delle tablespace in **Produzione**:
+Assicurarsi che la directory logica `DATA_PUMP_DIR` (o custom) abbia spazio fisico a sufficienza sul server.
 ```sql
-SELECT dbms_metadata.get_ddl('TABLESPACE', tablespace_name) 
-FROM dba_tablespaces 
+SELECT directory_name, directory_path FROM dba_directories WHERE directory_name = 'DATA_PUMP_DIR';
+```
+
+### 1.2 Sizing dell'Import (PREPROD)
+L'importazione massiva su un database in modalità `ARCHIVELOG` produrrà un volume di redo enorme. 
+**Rischio:** Riempimento della Flash Recovery Area (FRA) e blocco (hang) del database.
+
+**Strategie di mitigazione:**
+1. Mantenere l'import in `ARCHIVELOG` ma aumentare massivamente la FRA temporaneamente:
+   ```sql
+   ALTER SYSTEM SET db_recovery_file_dest_size=1000G SCOPE=BOTH;
+   ```
+2. Aumentare la frequenza dei backup archivelog. Aggiornare temporaneamente il crontab:
+   ```bash
+   # Crontab: Esegui backup archivelog ogni 15 minuti durante l'import
+   */15 * * * * /u01/app/oracle/scripts/rman_backup_archivelog.sh
+   ```
+3. Passare temporaneamente il DB in `NOARCHIVELOG` (SOLO SE ACCETTABILE IN PREPROD). Questo abbatte i tempi di importazione del 40-50%.
+   ```bash
+   srvctl stop database -d PREPROD
+   sqlplus / as sysdba
+   STARTUP MOUNT;
+   ALTER DATABASE NOARCHIVELOG;
+   ALTER DATABASE OPEN;
+   ```
+   *Ricordare di rimettere in ARCHIVELOG e lanciare un FULL backup dopo l'import!*
+
+### 1.3 Controllo UNDO e TEMP
+Data Pump (soprattutto in fase di costruzione indici parallela) usa pesantemente la TEMP.
+```sql
+-- Aumentare temporaneamente la TEMP in Preprod
+ALTER TABLESPACE TEMP ADD TEMPFILE '/u01/app/oracle/oradata/PREPROD/temp02.dbf' SIZE 32G AUTOEXTEND ON NEXT 1G MAXSIZE UNLIMITED;
+```
+
+---
+
+## 2. Preparazione degli Oggetti di Sicurezza
+Prima dell'import, l'ambiente di destinazione deve possedere le stesse strutture logiche (Ruoli, Profile, Tablespace) della produzione.
+
+### 2.1 Estrazione e Creazione Ruoli (In PROD)
+Data Pump esporta i ruoli, ma se si esportano *solo* schemi specifici, i ruoli generali potrebbero non venire trasferiti. È best practice ricrearli manualmente in anticipo.
+```sql
+SET LINESIZE 300 PAGESIZE 0 TRIMSPOOL ON FEEDBACK OFF VERIFY OFF
+SPOOL create_roles_preprod.sql
+PROMPT -- 1. Creazione Ruoli
+SELECT 'CREATE ROLE "' || role || '";' FROM dba_roles WHERE oracle_maintained = 'N';
+PROMPT -- 2. Assegnazione Grant di Sistema
+SELECT 'GRANT ' || privilege || ' TO "' || grantee || '"' || CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END 
+FROM dba_sys_privs WHERE grantee IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N');
+PROMPT -- 3. Privilegi tra ruoli (Annidamento)
+SELECT 'GRANT "' || granted_role || '" TO "' || grantee || '"' || CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END 
+FROM dba_role_privs WHERE grantee IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N');
+SPOOL OFF
+```
+*Eseguire `create_roles_preprod.sql` nel database PREPROD come SYSDBA.*
+
+### 2.2 Tablespace in PREPROD
+Estrarre il DDL da PROD e riadattare i percorsi.
+```sql
+SET LONG 100000
+SELECT dbms_metadata.get_ddl('TABLESPACE', tablespace_name) FROM dba_tablespaces 
 WHERE tablespace_name NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP');
 ```
-Ricordarsi di adattare i percorsi dei datafiles prima di eseguire in Preprod.
+*Se in Preprod si usano percorsi ASM diversi (es. `+DATA_PRE` invece di `+DATA_PROD`), modificare lo script di conseguenza, o affidarsi al parametro `REMAP_TABLESPACE` in fase di import.*
 
-## 3. Export degli Schemi (Produzione)
-Eseguire l'export tramite Oracle Data Pump (`expdp`). In caso di database di grandi dimensioni, utilizzare i parametri `PARALLEL` e `COMPRESSION`.
+---
 
-Esempio di comando per export di più schemi:
-```bash
-expdp system/password@PROD_DB directory=DATA_PUMP_DIR \
-      schemas=SCHEMA1,SCHEMA2 \
-      dumpfile=exp_prod_%U.dmp \
-      logfile=exp_prod.log \
-      parallel=4 \
-      compression=ALL
+## 3. Fase 1: Data Pump Export Avanzato (PROD)
+Utilizziamo tecniche Enterprise per esportare velocemente e senza bloccare il database.
+
+### 3.1 Utilizzo di un Parameter File (export.par)
+Creare il file `/u01/app/oracle/admin/PROD/dpdump/export.par`:
+```ini
+DIRECTORY=DATA_PUMP_DIR
+DUMPFILE=exp_prod_%U.dmp
+LOGFILE=exp_prod_run.log
+SCHEMAS=SCHEMA_A, SCHEMA_B
+PARALLEL=8
+COMPRESSION=ALL
+METRICS=Y
+LOGTIME=ALL
+JOB_NAME=EXP_PROD_REFRESH
+FLASHBACK_TIME=SYSTIMESTAMP
+EXCLUDE=STATISTICS
+EXCLUDE=INDEX:"LIKE '%_TMP_IDX%'"
 ```
+**Spiegazione parametri Enterprise:**
+- `FLASHBACK_TIME`: Fondamentale! Garantisce la consistenza point-in-time a livello di transazione su tabelle multiple. Tutti i dati estratti apparterranno allo stesso esatto SCN temporale, anche se l'export dura ore.
+- `PARALLEL=8`: Divide il carico (se si hanno core disponibili). Usa `%U` nel dumpfile per creare `exp_prod_01.dmp`, `exp_prod_02.dmp` ecc.
+- `COMPRESSION=ALL`: Comprime dati e metadati.
+- `METRICS=Y` & `LOGTIME=ALL`: Traccia tempi esatti e timestamp nel log per debugging prestazionale.
+- `EXCLUDE=STATISTICS`: Da 11g in poi, l'import delle statistiche di tabelle enormi rallenta l'import in maniera drastica. Meglio ricalcolarle post-import.
 
-## 4. Spostare i file di Export
-Spostare i file di dump generati dal server di Produzione al server di Pre-Produzione. Si può usare `scp -3` (attraverso un nodo intermedio) o `rsync`.
-
-**Esempio con rsync:**
+### 3.2 Avvio dell'Export in Background (Nohup)
 ```bash
-rsync -avz --progress /u01/app/oracle/admin/PROD_DB/dpdump/exp_prod_*.dmp oracle@preprod_server:/u01/app/oracle/admin/PREPROD_DB/dpdump/
+nohup expdp system/password@PROD parfile=export.par > expdp_out.log 2>&1 &
 ```
-
-## 5. Import degli Schemi (Pre-Produzione)
-Eseguire l'import utilizzando `impdp`. 
-
-> [!WARNING]  
-> **Nota Archivelog:** In caso la dimensione dell'import sia gigante, gli archivelog si genereranno molto velocemente. Valutare di:
-> - Modificare il crontab dei backup degli archivelog per eseguirlo più frequentemente durante l'import.
-> - Aumentare lo spazio della FRA (Flash Recovery Area).
-> - Se possibile e accettabile, mettere temporaneamente il DB o gli schemi/tabelle in NOLOGGING.
-
-Esempio di comando per l'import:
-```bash
-impdp system/password@PREPROD_DB directory=DATA_PUMP_DIR \
-      dumpfile=exp_prod_%U.dmp \
-      logfile=imp_preprod.log \
-      parallel=4 \
-      table_exists_action=REPLACE
-```
-
-## 6. Controllare gli errori dell'Import
-Al termine dell'import, verificare il file di log (`imp_preprod.log`) per identificare eventuali errori critici.
-```bash
-grep -i "ORA-" imp_preprod.log
-```
-
-## 7. Fare la Recompile degli Oggetti Invalidi
-Effettuare una ricompilazione totale degli oggetti invalidi nel database di Pre-Produzione.
-Eseguire come `SYSDBA`:
+### 3.3 Monitoraggio in Real-Time (Interactive e SQL)
+Per monitorare lo stato di `expdp`:
+1. **Interactive mode:** `expdp system/password attach=EXP_PROD_REFRESH` (Digita `status` per vedere il progresso. Digita `continue_client` per uscire dall'interactive).
+2. **SQL Monitoring (Session Longops):**
 ```sql
+SELECT opname, target_desc, sofar, totalwork, trunc(sofar/totalwork*100,2) as pct_complete, time_remaining
+FROM v$session_longops
+WHERE opname LIKE '%EXP_PROD_REFRESH%';
+```
+
+---
+
+## 4. Trasferimento Dati Sicuro e Veloce
+I file di dump possono raggiungere svariati Terabyte. Il trasferimento deve essere tollerante ai fault di rete e performante.
+
+### 4.1 Utilizzo di Rsync (Multi-threaded)
+Invece di un singolo scp che satura un solo core, se si hanno molti file `%U.dmp` usare tool in parallelo come xargs:
+```bash
+# Sulla macchina PROD
+cd /u01/app/oracle/admin/PROD/dpdump/
+ls exp_prod_*.dmp | xargs -n 1 -P 4 -I {} rsync -avz --progress {} oracle@preprod-server:/u01/app/oracle/admin/PREPROD/dpdump/
+```
+Questo trasferirà 4 file alla volta.
+
+### 4.2 Controllo di Integrità (Checksum)
+Su file enormi, la rete può introdurre corruzioni silenziose. Prima di importare:
+```bash
+# Su PROD:
+md5sum exp_prod_*.dmp > checksums.md5
+# Copiare checksums.md5 su PREPROD e verificare:
+md5sum -c checksums.md5
+```
+
+---
+
+## 5. Fase 2: Data Pump Import Avanzato (PREPROD)
+Prima di importare, dobbiamo gestire gli schemi preesistenti se si tratta di un refresh.
+
+### 5.1 Drop Pulito degli Schemi Esistenti (se Refresh)
+Se gli schemi esistono già in Preprod, l'opzione `TABLE_EXISTS_ACTION=REPLACE` dropa e ricrea le tabelle, ma non cancella viste vecchie, procedure orfane e type. La best practice per un ambiente "pulito" è droppare completamente lo schema.
+```sql
+-- Assicurarsi che nessuna sessione tenga lo schema bloccato
+ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
+DROP USER SCHEMA_A CASCADE;
+DROP USER SCHEMA_B CASCADE;
+```
+*(Nota: Il cascade su schemi con 50k tabelle può impiegare ore. In alternativa usare DBMS_DATAPUMP per svuotarlo).*
+
+### 5.2 Parameter File di Import (import.par)
+Creare `/u01/app/oracle/admin/PREPROD/dpdump/import.par`:
+```ini
+DIRECTORY=DATA_PUMP_DIR
+DUMPFILE=exp_prod_%U.dmp
+LOGFILE=imp_preprod_run.log
+SCHEMAS=SCHEMA_A, SCHEMA_B
+PARALLEL=8
+METRICS=Y
+LOGTIME=ALL
+JOB_NAME=IMP_PREPROD_REFRESH
+TABLE_EXISTS_ACTION=REPLACE
+TRANSFORM=DISABLE_ARCHIVE_LOGGING:Y
+```
+**Spiegazione parametri Enterprise:**
+- `TRANSFORM=DISABLE_ARCHIVE_LOGGING:Y`: Parametro **FENOMENALE** introdotto in 12c. Forza la creazione di tabelle e indici in NOLOGGING *durante l'import*, annullando la generazione di undo/redo. Terminato l'import, gli oggetti tornano alla loro modalità originaria. Riduce i tempi del 60%.
+- `REMAP_TABLESPACE=TS_PROD:TS_PREPROD`: (Opzionale) Usare se i nomi delle tablespace cambiano tra i due ambienti.
+
+### 5.3 Data Masking (REMAP_DATA)
+Se si passano dati sensibili verso Pre-Produzione (ambiente non sicuro), è obbligatorio il GDPR/Masking.
+```ini
+-- Nel file import.par aggiungere:
+REMAP_DATA=SCHEMA_A.CUSTOMERS.SSN:PKG_MASKING.MASK_SSN
+REMAP_DATA=SCHEMA_A.CUSTOMERS.EMAIL:PKG_MASKING.MASK_EMAIL
+```
+Il package `PKG_MASKING` deve essere creato nel database prima di avviare l'import, e la funzione deve restituire il valore anonimizzato.
+
+### 5.4 Esecuzione dell'Import
+```bash
+nohup impdp system/password@PREPROD parfile=import.par > impdp_out.log 2>&1 &
+```
+
+---
+
+## 6. Risoluzione Problemi e Troubleshooting (ORA- Errors)
+
+Durante le ore (o giorni) di import, potresti incorrere in errori critici.
+
+- **ORA-31626 / ORA-31684 (Job already exists)**: Il Job Name specificato è rimasto bloccato o orfano da un'esecuzione precedente.
+  *Fix:* `DROP TABLE system.IMP_PREPROD_REFRESH;`
+- **ORA-01653 (Unable to extend table in tablespace)**: Spazio insufficiente.
+  *Fix:* Aggiungere datafile dinamicamente da SQL*Plus. Il Data Pump si "sospenderà" temporaneamente e, appena aggiunto lo spazio, riprenderà automaticamente o digitando `continue_client`.
+- **ORA-39083 (Object type FAILED to create with error)**: Molto comune su Viste o Procedure invalidi per colpa di dipendenze incrociate, oggetti in sys o DBLINK non esistenti. Questi verranno compilati nel passaggio 7, ma è bene esaminare i log alla ricerca di conflitti.
+
+```bash
+# Analisi rapida degli errori post-import:
+grep "ORA-" imp_preprod_run.log | sort | uniq -c | sort -nr
+```
+
+---
+
+## 7. Attività Post-Import
+
+### 7.1 Recompile Invalide e Verifica Oggetti
+Eseguire la ricompilazione nativa (multi-threaded in 12c+).
+```sql
+-- Eseguito come SYSDBA
 @?/rdbms/admin/utlrp.sql
 ```
 
-## 8. Leggere gli Errori Rimasti (Oggetti ancora Invalidi)
-Dopo la ricompilazione, controllare quali oggetti sono rimasti in stato `INVALID`:
+Verificare gli oggetti rimasti invalidi. Spesso sono viste che puntano a DB_LINK non presenti, o tabelle di altri schemi per cui mancano le GRANT.
 ```sql
 SELECT owner, object_type, object_name, status
 FROM dba_objects
@@ -85,101 +231,61 @@ WHERE status = 'INVALID'
 ORDER BY owner, object_type;
 ```
 
-## 9. Dare le Grant di Sistema e Ruoli Mancanti
-Ripristinare le grant specifiche che potrebbero essersi perse o che non sono state importate completamente.
-In questo esempio, si estraggono i ruoli concessi agli utenti `DWH` e `DBA_OP`:
+### 7.2 Restore delle Grant Orfane
+Ripetere lo script delle grant dei ruoli per utenti specifici se l'import schema-level le ha saltate:
 ```sql
-SELECT 'GRANT "' || granted_role || '" TO "' || grantee || '"' ||
-       CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END AS script_grant
-FROM dba_role_privs
-WHERE grantee IN ('DWH', 'DBA_OP')
-ORDER BY grantee, granted_role;
+SELECT 'GRANT "' || granted_role || '" TO "' || grantee || '";'
+FROM dba_role_privs@DBLINK_PROD
+WHERE grantee IN ('SCHEMA_A', 'SCHEMA_B', 'DWH', 'DBA_OP');
 ```
 
-Ripetere la ricompilazione se l'aggiunta di permessi potrebbe aver risolto le dipendenze:
+### 7.3 Ricalcolo delle Statistiche dell'Optimizer
+Avendo escluso le statistiche (`EXCLUDE=STATISTICS`), l'Optimizer di Oracle crederà che tutte le tabelle importate siano vuote, scatenando Piani di Esecuzione (Execution Plans) disastrosi e lentezza assoluta delle applicazioni in Preprod. 
+
+**Ricalcolo Immediato Parallelo (Massima Priorità):**
 ```sql
-@?/rdbms/admin/utlrp.sql
+EXEC DBMS_STATS.GATHER_SCHEMA_STATS( -
+    ownname          => 'SCHEMA_A', -
+    estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE, -
+    method_opt       => 'FOR ALL COLUMNS SIZE AUTO', -
+    degree           => DBMS_STATS.DEFAULT_DEGREE, -
+    cascade          => TRUE, -
+    options          => 'GATHER AUTO');
 ```
+*L'uso del degree=DEFAULT (e parallel in sessione) o manuale (es. degree=>8) sfrutterà le CPU per terminare in minuti anziché ore.*
 
-## 10. Controllo di Consistenza (Numero Oggetti e Dimensioni)
-Controllare che gli schemi nei due ambienti (Prod e Preprod) abbiano lo stesso numero di oggetti e dimensioni comparabili.
+### 7.4 Controllo Consistenza Metadati e Dati
+Un DBA Enterprise non si fida solo dell'assenza di ORA- nel log. Confrontare matematicamente le strutture.
 
-**Numero di Oggetti per Schema:**
+**Controllo Numero Oggetti:**
 ```sql
-SELECT owner, object_type, count(*) 
+SELECT owner, object_type, count(*) as cnt
 FROM dba_objects 
-WHERE owner IN ('SCHEMA1', 'SCHEMA2') 
-GROUP BY owner, object_type 
-ORDER BY owner, object_type;
+WHERE owner IN ('SCHEMA_A', 'SCHEMA_B')
+GROUP BY owner, object_type ORDER BY owner, object_type;
+-- Confrontare questo output con quello della Produzione
 ```
 
-**Dimensione degli Schemi:**
+**Controllo Record di Tabelle Strategiche:**
+Se in produzione ci sono 40 Milioni di record in `ORDERS`, verificare in Preprod:
 ```sql
-SELECT owner, sum(bytes)/1024/1024/1024 AS size_gb 
-FROM dba_segments 
-WHERE owner IN ('SCHEMA1', 'SCHEMA2') 
-GROUP BY owner;
+SELECT count(*) FROM SCHEMA_A.ORDERS;
 ```
-
-## 11. Controllare i DB_LINK
-I Database Link non sempre vengono importati correttamente, in quanto le password sui DB Link preesistenti non possono essere estratte in chiaro. Inoltre in Pre-Produzione potrebbero puntare erroneamente ai DB di Produzione!
-> **Riferimento:** Consultare la procedura dedicata: `21_GESTIONE_DB_LINK.md` per il reset e la gestione corretta post-clone.
 
 ---
 
-## Allegato: Script Completo Export Sicurezza (export_sicurezza.sql)
-Questo script può essere eseguito in Produzione per generare lo script DDL per ricreare l'intera alberatura dei ruoli, le grant di sistema e di oggetto.
+## 8. Considerazioni Architetturali su RAC e Data Guard
+- **RAC (Real Application Clusters):** Se l'import o l'export avviene in RAC, usare il parametro `CLUSTER=N` nel file `.par`. Data Pump proverà ad avviare worker nodes su tutti i nodi RAC. Se i file `.dmp` si trovano su un filesystem locale (e non condiviso come ACFS o NFS), i worker remoti non troveranno i file e andranno in crash. `CLUSTER=N` forza tutti i worker sul nodo da cui viene lanciato il comando.
+- **Data Guard:** Se il DB di Preprod ha a sua volta una Physical Standby, l'enorme ammontare di Redo generato dall'import potrebbe causare ritardi (Transport Lag / Apply Lag) letali sulla rete. Si consiglia di mettere in pausa l'apply sulla standby (`ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL`), finire l'import in NOLOGGING sulla Primary, eseguire un Incremental Backup dalla Primary e applicarlo (Roll-Forward) sulla Standby per recuperare, oppure ricreare la standby da zero (Duplicate).
 
+---
+
+## 9. Next Steps Obbligatori
+Dopo ogni refresh di ambiente (da un DB all'altro), devi immediatamente agire sulle vulnerabilità introdotte dalla clonazione dei dati.
+Le priorità assolute sono:
+1. **Gestione dei DB_LINK:** I DB link appena importati stanno ancora puntando alla Produzione! Seguire ciecamente la procedura nel runbook [21_GESTIONE_DB_LINK.md](./21_GESTIONE_DB_LINK.md).
+2. **Password Utenti App:** Spesso i DB di Preprod devono avere password diverse (oppure note ai developer). I file di DataPump mantengono gli hash delle password di produzione. Eseguire uno script standard per resettarle: `ALTER USER my_app_usr IDENTIFIED BY password_preprod;`.
+3. **Schedulatori Job:** Controllare `DBA_SCHEDULER_JOBS`. I job (es. invio fatture, email, interfacce batch) appena importati potrebbero essere attivi. Disabilitare immediatamente quelli non desiderati in Preprod!
 ```sql
-SET LINESIZE 300
-SET PAGESIZE 0
-SET TRIMSPOOL ON
-SET FEEDBACK OFF
-SET VERIFY OFF
-
-SPOOL export_sicurezza.sql
-
-PROMPT -- ==============================================================
-PROMPT -- 1. CREAZIONE DEI RUOLI CUSTOM
-PROMPT -- ==============================================================
-SELECT 'CREATE ROLE ' || role || ';' 
-FROM dba_roles 
-WHERE oracle_maintained = 'N';
-
-PROMPT -- ==============================================================
-PROMPT -- 2. GRANT DI SISTEMA ASSEGNATE AI RUOLI CUSTOM
-PROMPT -- ==============================================================
-SELECT 'GRANT ' || privilege || ' TO ' || grantee || 
-       CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END 
-FROM dba_sys_privs 
-WHERE grantee IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N');
-
-PROMPT -- ==============================================================
-PROMPT -- 3. GRANT SUGLI OGGETTI (TABELLE/VISTE/PROC) AI RUOLI CUSTOM
-PROMPT -- ==============================================================
-SELECT 'GRANT ' || privilege || ' ON ' || owner || '."' || table_name || '" TO ' || grantee || 
-       CASE WHEN grantable = 'YES' THEN ' WITH GRANT OPTION;' ELSE ';' END 
-FROM dba_tab_privs 
-WHERE grantee IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N')
-ORDER BY grantee, owner, table_name;
-
-PROMPT -- ==============================================================
-PROMPT -- 4. RUOLI ASSEGNATI AD ALTRI RUOLI CUSTOM (RUOLI ANNIDATI)
-PROMPT -- ==============================================================
-SELECT 'GRANT ' || granted_role || ' TO ' || grantee || 
-       CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END 
-FROM dba_role_privs 
-WHERE grantee IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N')
-  AND granted_role IN (SELECT role FROM dba_roles WHERE oracle_maintained = 'N');
-
-PROMPT -- ==============================================================
-PROMPT -- 5. ASSEGNAZIONE DEI RUOLI AGLI UTENTI CUSTOM
-PROMPT -- ==============================================================
-SELECT 'GRANT ' || granted_role || ' TO ' || grantee || 
-       CASE WHEN admin_option = 'YES' THEN ' WITH ADMIN OPTION;' ELSE ';' END 
-FROM dba_role_privs 
-WHERE grantee IN (SELECT username FROM dba_users WHERE oracle_maintained = 'N');
-
-SPOOL OFF
-SET FEEDBACK ON
+EXEC DBMS_SCHEDULER.DISABLE('SCHEMA_A.NOME_JOB');
 ```
