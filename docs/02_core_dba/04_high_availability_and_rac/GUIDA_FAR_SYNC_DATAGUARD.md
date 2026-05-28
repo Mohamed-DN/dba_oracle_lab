@@ -1,9 +1,9 @@
-# GUIDA COMPLETA: Oracle Data Guard Far Sync — Zero Data Loss a Distanza Geografica Illimitata
+# GUIDA MONUMENTALE: Oracle Data Guard Far Sync — Zero Data Loss a Distanza Geografica Illimitata
 
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Data Guard Far Sync (questa guida)**: [GUIDA_FAR_SYNC_DATAGUARD.md](./GUIDA_FAR_SYNC_DATAGUARD.md) (architettura, setup, SYNC a corto raggio, ASYNC a lungo raggio, Broker & Redo Routes).
-> - **Application Continuity & Failover**: [GUIDA_APPLICATION_CONTINUITY_TAF.md](./GUIDA_APPLICATION_CONTINUITY_TAF.md) (transparent application failover, JDBC, UCP).
+> - **Application Continuity & Failover**: [GUIDA_APPLICATION_CONTINUITY_TAF.md](./GUIDA_APPLICATION_CONTINUITY_TAF.md) (transparent application failover, JDBC, UCP, Transaction Guard).
 > - **Single Node Data Guard**: [GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) (architettura a singolo nodo primario e standby).
 > - **RAC Data Guard**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) (architettura multi-nodo primario e standby).
 
@@ -12,7 +12,7 @@
 ## 1. Cos'è un'istanza Far Sync? Architettura e Benefici
 
 Nelle architetture di Disaster Recovery (DR) geografiche, la distanza fisica introduce inevitabilmente una latenza di rete basata sul Round Trip Time (RTT).
-*   Se usiamo il trasporto **SYNC** (sincrono) verso un sito secondario distante 500 km per evitare perdite di dati (RPO = 0), la latenza della rete rallenta i commit delle applicazioni sul sito primario ad ogni transazione.
+*   Se usiamo il trasporto **SYNC** (sincrono) verso un database secondario distante centinaia di chilometri per evitare perdite di dati (RPO = 0), la latenza della rete rallenta i commit delle applicazioni sul sito primario ad ogni transazione.
 *   Se usiamo il trasporto **ASYNC** (asincrono) per salvaguardare le performance applicative, in caso di disastro sul sito primario rischiamo una perdita di dati (RPO > 0).
 
 **Oracle Data Guard Far Sync** risolve brillantemente questo problema. È un membro speciale della configurazione Data Guard, un'istanza **"leggera"** (priva di datafile) situata a **brevissima distanza dal sito primario** (es. 10-30 km, RTT < 2ms) che funge da buffer ad alta velocità:
