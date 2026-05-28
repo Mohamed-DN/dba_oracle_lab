@@ -7,35 +7,35 @@
 ## Architettura della Migrazione
 
 ```
-╔═══════════════════════════════════════════════════════════════════════╗
-║                    MIGRAZIONE CON GOLDENGATE                          ║
-║                                                                       ║
-║  FASE 1: Initial Load (copia completa dei dati)                      ║
-║  ┌──────────────┐              ┌──────────────┐                      ║
-║  │  SOURCE DB   │  Data Pump   │  TARGET DB   │                      ║
-║  │  (vecchio)   │═══expdp════►│  (nuovo)     │                      ║
-║  │              │   impdp      │              │                      ║
-║  └──────────────┘              └──────────────┘                      ║
-║                                                                       ║
-║  FASE 2: Sincronizzazione continua (CDC — Change Data Capture)       ║
-║  ┌──────────────┐              ┌──────────────┐                      ║
-║  │  SOURCE DB   │   GG Extract │  TARGET DB   │                      ║
-║  │  (vecchio)   │═══════════►│  (nuovo)     │                      ║
-║  │  ancora attivo│   GG Repli- │  sincronizzato│                      ║
-║  │  con utenti!  │   cat       │  in tempo     │                      ║
-║  └──────────────┘              │  reale        │                      ║
-║                                └──────────────┘                      ║
-║                                                                       ║
-║  FASE 3: Cutover (switch del traffico)                               ║
-║  ┌──────────────┐              ┌──────────────┐                      ║
-║  │  SOURCE DB   │  STOP        │  TARGET DB   │                      ║
-║  │  (vecchio)   │  Extract     │  (nuovo)     │                      ║
-║  │  ⛔ FERMA    │              │  ✅ ATTIVO   │                      ║
-║  │  gli utenti  │              │  Gli utenti  │                      ║
-║  │              │              │  si connett. │                      ║
-║  └──────────────┘              │  QUI ora     │                      ║
-║                                └──────────────┘                      ║
-╚═══════════════════════════════════════════════════════════════════════╝
++-----------------------------------------------------------------------+
+|                    MIGRAZIONE CON GOLDENGATE                          |
+|                                                                       |
+|  FASE 1: Initial Load (copia completa dei dati)                      |
+|  +--------------+              +--------------+                      |
+|  |  SOURCE DB   |  Data Pump   |  TARGET DB   |                      |
+|  |  (vecchio)   |---expdp----&gt;|  (nuovo)     |                      |
+|  |              |   impdp      |              |                      |
+|  +--------------+              +--------------+                      |
+|                                                                       |
+|  FASE 2: Sincronizzazione continua (CDC — Change Data Capture)       |
+|  +--------------+              +--------------+                      |
+|  |  SOURCE DB   |   GG Extract |  TARGET DB   |                      |
+|  |  (vecchio)   |-----------&gt;|  (nuovo)     |                      |
+|  |  ancora attivo|   GG Repli- |  sincronizzato|                      |
+|  |  con utenti!  |   cat       |  in tempo     |                      |
+|  +--------------+              |  reale        |                      |
+|                                +--------------+                      |
+|                                                                       |
+|  FASE 3: Cutover (switch del traffico)                               |
+|  +--------------+              +--------------+                      |
+|  |  SOURCE DB   |  STOP        |  TARGET DB   |                      |
+|  |  (vecchio)   |  Extract     |  (nuovo)     |                      |
+|  |  ⛔ FERMA    |              |  ✅ ATTIVO   |                      |
+|  |  gli utenti  |              |  Gli utenti  |                      |
+|  |              |              |  si connett. |                      |
+|  +--------------+              |  QUI ora     |                      |
+|                                +--------------+                      |
++-----------------------------------------------------------------------+
 ```
 
 ---
@@ -278,7 +278,7 @@ GGSCI> LAG REPLICAT rep_migr
 
 ```
 TIMELINE:
-─────────────────────────────────────────────────────────────────────
+---------------------------------------------------------------------
   T-30min: Avvisa gli utenti del downtime (breve)
   T-5min:  Verifica lag = 0
   T-0:     STOP applicazione → nessun nuovo DML su Source
@@ -287,7 +287,7 @@ TIMELINE:
   T+3min:  STOP Extract e Replicat
   T+4min:  Riconfigura la connessione dell'app → TARGET
   T+5min:  Riavvia l'applicazione sul TARGET
-─────────────────────────────────────────────────────────────────────
+---------------------------------------------------------------------
   Downtime totale: ~5 minuti!
 ```
 
@@ -335,8 +335,8 @@ GGSCI> STOP REPLICAT rep_migr
 Per avere un piano di rollback, configura GoldenGate anche al contrario:
 
 ```
-Source ──Extract──► Target    (migrazione)
-Source ◄──Replicat── Target    (fallback)
+Source --Extract--&gt; Target    (migrazione)
+Source &amp;lt;--Replicat-- Target    (fallback)
 ```
 
 Se qualcosa va storto dopo il cutover, puoi riportare il traffico sul Source senza perdere i dati inseriti sul Target.

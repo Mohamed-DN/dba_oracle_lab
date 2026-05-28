@@ -27,35 +27,35 @@ Path base: `$ORACLE_BASE/diag/`
 
 ```
 $ORACLE_BASE/diag/
-│
-├── rdbms/<db_unique_name>/<instance>/     # Database Instance
-│   ├── alert/          # Alert log XML (log.xml) + testo (alert_SID.log)
-│   ├── trace/          # File .trc e .trm (background processes + user sessions)
-│   ├── incident/       # Incident dumps organizzati per incdir_N/
-│   ├── incpkg/         # Incident packages generati con IPS
-│   ├── cdump/          # Core dumps (crash OS-level)
-│   ├── hm/             # Health Monitor reports e findings
-│   ├── metadata/       # Metadata diagnostici interni
-│   ├── sweep/          # Dati purgati in attesa di rimozione
-│   ├── ir/             # Incident reports
-│   └── lck/            # Lock files interni ADR
-│
-├── asm/+asm/<+ASM_instance>/              # ASM Instance
-│   ├── alert/
-│   ├── trace/
-│   └── incident/
-│
-├── tnslsnr/<hostname>/<listener_name>/    # Listener
-│   ├── alert/
-│   └── trace/
-│
-├── crs/<hostname>/crs/                    # Clusterware (Grid Infrastructure)
-│   ├── alert/
-│   └── trace/
-│
-├── clients/<hostname>/user_oracle/        # Client diagnostics
-│
-└── asmtool/<hostname>/asmtool/            # ASM tools
+|
++-- rdbms/<db_unique_name>/<instance>/     # Database Instance
+|   +-- alert/          # Alert log XML (log.xml) + testo (alert_SID.log)
+|   +-- trace/          # File .trc e .trm (background processes + user sessions)
+|   +-- incident/       # Incident dumps organizzati per incdir_N/
+|   +-- incpkg/         # Incident packages generati con IPS
+|   +-- cdump/          # Core dumps (crash OS-level)
+|   +-- hm/             # Health Monitor reports e findings
+|   +-- metadata/       # Metadata diagnostici interni
+|   +-- sweep/          # Dati purgati in attesa di rimozione
+|   +-- ir/             # Incident reports
+|   +-- lck/            # Lock files interni ADR
+|
++-- asm/+asm/<+ASM_instance>/              # ASM Instance
+|   +-- alert/
+|   +-- trace/
+|   +-- incident/
+|
++-- tnslsnr/<hostname>/<listener_name>/    # Listener
+|   +-- alert/
+|   +-- trace/
+|
++-- crs/<hostname>/crs/                    # Clusterware (Grid Infrastructure)
+|   +-- alert/
+|   +-- trace/
+|
++-- clients/<hostname>/user_oracle/        # Client diagnostics
+|
++-- asmtool/<hostname>/asmtool/            # ASM tools
 ```
 
 ### 1.3 Identificare il Diagnostic Dest

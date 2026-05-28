@@ -36,28 +36,28 @@ SOLUZIONI POSSIBILI:
 
 ```
   FLASHBACK DATABASE usa i "Flashback Logs"
-  ═══════════════════════════════════════════
+  -------------------------------------------
 
   Quando Flashback Database è attivo, Oracle salva copie dei blocchi
   PRIMA che vengano modificati in file speciali chiamati "Flashback Logs".
   Questi file risiedono nella Fast Recovery Area (FRA).
 
-  ┌──────────────────────────────────────────────────────────┐
-  │ Datafile (SYSTEM01.DBF, USERS01.DBF, ecc.)               │
-  │                                                           │
-  │  Prima di modificare un blocco:                           │
-  │  ┌────────┐                    ┌──────────────────────┐   │
-  │  │Blocco  │──"copia prima"────►│ Flashback Log        │   │
-  │  │vecchio │                    │ (nella FRA)           │   │
-  │  └───┬────┘                    │ fb_log_1.flb         │   │
-  │      │                         │ fb_log_2.flb         │   │
-  │      ▼                         │ ...                   │   │
-  │  ┌────────┐                    └──────────────────────┘   │
-  │  │Blocco  │                                               │
-  │  │nuovo   │  (la modifica viene scritta nel datafile)      │
-  │  │(DML)   │                                               │
-  │  └────────┘                                               │
-  └──────────────────────────────────────────────────────────┘
+  +----------------------------------------------------------+
+  | Datafile (SYSTEM01.DBF, USERS01.DBF, ecc.)               |
+  |                                                           |
+  |  Prima di modificare un blocco:                           |
+  |  +--------+                    +----------------------+   |
+  |  |Blocco  |--"copia prima"----&gt;| Flashback Log        |   |
+  |  |vecchio |                    | (nella FRA)           |   |
+  |  +---+----+                    | fb_log_1.flb         |   |
+  |      |                         | fb_log_2.flb         |   |
+  |      v                         | ...                   |   |
+  |  +--------+                    +----------------------+   |
+  |  |Blocco  |                                               |
+  |  |nuovo   |  (la modifica viene scritta nel datafile)      |
+  |  |(DML)   |                                               |
+  |  +--------+                                               |
+  +----------------------------------------------------------+
 
   Quando fai FLASHBACK DATABASE TO TIMESTAMP X:
   1. Oracle trova tutti i blocchi modificati DOPO il timestamp X

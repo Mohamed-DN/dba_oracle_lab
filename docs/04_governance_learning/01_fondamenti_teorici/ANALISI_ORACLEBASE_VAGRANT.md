@@ -14,26 +14,26 @@
 ## Confronto Architettura
 
 ```
-╔═══════════════════════════════╦══════════════════════╦═══════════════════════╗
-║ Area                          ║ Nostro Lab           ║ Oracle Base Vagrant   ║
-╠═══════════════════════════════╬══════════════════════╬═══════════════════════╣
-║ DNS                           ║ BIND (su rac1)       ║ dnsmasq (VM dedicata) ║
-║ Dischi ASM                    ║ oracleasm driver     ║ udev rules + scsi_id  ║
-║ Time Sync                     ║ NTP/chrony           ║ chrony (burst+makestep)║
-║ /u01                          ║ Dir su root disk     ║ Disco dedicato XFS    ║
-║ CRS Redundancy                ║ EXTERNAL (1 disco)   ║ NORMAL (3 dischi+FG)  ║
-║ NetworkManager                ║ Non configurato      ║ dns=none (protegge    ║
-║                               ║                      ║ resolv.conf)          ║
-║ Grid Install                  ║ GUI (consigliato)    ║ Silent mode (response ║
-║                               ║                      ║ file documentato)     ║
-║ Database Type                 ║ Non-CDB              ║ CDB + PDB            ║
-║ PDB Auto-start                ║ Non configurato      ║ ALTER PDB SAVE STATE  ║
-║ SSH Setup                     ║ Manuale              ║ sshpass + ssh-keyscan ║
-║ cvuqdisk                      ║ Menzionato           ║ Installato esplicita. ║
-║ ASM compatibility             ║ Non specificato       ║ compatible.asm=19.0   ║
-║ SELinux                       ║ Disabled             ║ Permissive            ║
-║ Disk partitioning             ║ oracleasm            ║ fdisk + udev symlinks ║
-╚═══════════════════════════════╩══════════════════════╩═══════════════════════╝
++-------------------------------+----------------------+-----------------------+
+| Area                          | Nostro Lab           | Oracle Base Vagrant   |
++-------------------------------+----------------------+-----------------------+
+| DNS                           | BIND (su rac1)       | dnsmasq (VM dedicata) |
+| Dischi ASM                    | oracleasm driver     | udev rules + scsi_id  |
+| Time Sync                     | NTP/chrony           | chrony (burst+makestep)|
+| /u01                          | Dir su root disk     | Disco dedicato XFS    |
+| CRS Redundancy                | EXTERNAL (1 disco)   | NORMAL (3 dischi+FG)  |
+| NetworkManager                | Non configurato      | dns=none (protegge    |
+|                               |                      | resolv.conf)          |
+| Grid Install                  | GUI (consigliato)    | Silent mode (response |
+|                               |                      | file documentato)     |
+| Database Type                 | Non-CDB              | CDB + PDB            |
+| PDB Auto-start                | Non configurato      | ALTER PDB SAVE STATE  |
+| SSH Setup                     | Manuale              | sshpass + ssh-keyscan |
+| cvuqdisk                      | Menzionato           | Installato esplicita. |
+| ASM compatibility             | Non specificato       | compatible.asm=19.0   |
+| SELinux                       | Disabled             | Permissive            |
+| Disk partitioning             | oracleasm            | fdisk + udev symlinks |
++-------------------------------+----------------------+-----------------------+
 ```
 
 ---

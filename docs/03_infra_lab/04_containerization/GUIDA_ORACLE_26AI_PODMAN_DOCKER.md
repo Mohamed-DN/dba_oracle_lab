@@ -52,8 +52,8 @@ L'immagine `container-registry.oracle.com/database/free:latest` contiene:
 Il flusso di avvio è:
 ```
 Container Start → runOracle.sh → [Primo avvio?]
-    ├── SÌ → createDB.sh → dbca -silent → listener start → "DATABASE IS READY"
-    └── NO → startDB.sh → sqlplus STARTUP → listener start → "DATABASE IS READY"
+    +-- SÌ → createDB.sh → dbca -silent → listener start → "DATABASE IS READY"
+    +-- NO → startDB.sh → sqlplus STARTUP → listener start → "DATABASE IS READY"
 ```
 
 ---

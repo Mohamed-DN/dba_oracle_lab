@@ -27,11 +27,11 @@ Nelle architetture di Disaster Recovery (DR) geografiche, la distanza fisica int
 
 ```
   SITO A (LOCAL)                   SITO B (PROSSIMO)               SITO C (REMOTE)
- ┌─────────────────┐             ┌─────────────────┐             ┌─────────────────┐
- │                 │ SYNC/AFFIRM │                 │   ASYNC     │                 │
- │   PRIMARY DB    │────────────►│    FAR SYNC     │────────────►│ PHYSICAL STANDBY│
- │   (RACDB)       │             │  (RACDB_FSYNC)  │             │   (RACDB_STBY)  │
- └─────────────────┘             └─────────────────┘             └─────────────────┘
+ +-----------------+             +-----------------+             +-----------------+
+ |                 | SYNC/AFFIRM |                 |   ASYNC     |                 |
+ |   PRIMARY DB    |------------&gt;|    FAR SYNC     |------------&gt;| PHYSICAL STANDBY|
+ |   (RACDB)       |             |  (RACDB_FSYNC)  |             |   (RACDB_STBY)  |
+ +-----------------+             +-----------------+             +-----------------+
                                    - In Mount                      - Applica Redo
                                    - No Datafiles                  - Datafiles attivi
                                    - Solo Controlfile & SRL

@@ -7,36 +7,36 @@
 ## 1. Cos'è MAA?
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║          ORACLE MAA — Livelli di Protezione                      ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  🥉 BRONZE — Alta Disponibilità Locale                          ║
-║  ├── Single Instance con RMAN Backup                             ║
-║  ├── Flashback Database abilitato                                ║
-║  ├── Block Checking e Checksums                                  ║
-║  └── RPO: minuti / RTO: ore                                     ║
-║                                                                  ║
-║  🥈 SILVER — Disaster Recovery                                   ║
-║  ├── Tutto Bronze +                                              ║
-║  ├── Oracle Data Guard (Physical Standby)                        ║
-║  ├── Standby Redo Logs (real-time apply)                         ║
-║  ├── DGMGRL (Data Guard Broker)                                  ║
-║  └── RPO: secondi / RTO: minuti                                 ║
-║                                                                  ║
-║  🥇 GOLD — Zero Data Loss, Minimal Downtime       ← IL NOSTRO!  ║
-║  ├── Tutto Silver +                                              ║
-║  ├── Oracle RAC (multi-nodo)                                     ║
-║  ├── Active Data Guard (standby read-only)                       ║
-║  ├── Fast-Start Failover (FSFO)                                  ║
-║  ├── Application Continuity (FAN)                                ║
-║  └── RPO: 0 (zero data loss) / RTO: secondi                     ║
-║                                                                  ║
-║  💎 PLATINUM — Mission Critical (Exadata + GDS)                  ║
-║  ├── Tutto Gold + Global Data Services                           ║
-║  ├── Multi-site Active-Active                                    ║
-║  └── RPO: 0 / RTO: 0 (always available)                         ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|          ORACLE MAA — Livelli di Protezione                      |
++------------------------------------------------------------------+
+|                                                                  |
+|  🥉 BRONZE — Alta Disponibilità Locale                          |
+|  +-- Single Instance con RMAN Backup                             |
+|  +-- Flashback Database abilitato                                |
+|  +-- Block Checking e Checksums                                  |
+|  +-- RPO: minuti / RTO: ore                                     |
+|                                                                  |
+|  🥈 SILVER — Disaster Recovery                                   |
+|  +-- Tutto Bronze +                                              |
+|  +-- Oracle Data Guard (Physical Standby)                        |
+|  +-- Standby Redo Logs (real-time apply)                         |
+|  +-- DGMGRL (Data Guard Broker)                                  |
+|  +-- RPO: secondi / RTO: minuti                                 |
+|                                                                  |
+|  🥇 GOLD — Zero Data Loss, Minimal Downtime       ← IL NOSTRO!  |
+|  +-- Tutto Silver +                                              |
+|  +-- Oracle RAC (multi-nodo)                                     |
+|  +-- Active Data Guard (standby read-only)                       |
+|  +-- Fast-Start Failover (FSFO)                                  |
+|  +-- Application Continuity (FAN)                                |
+|  +-- RPO: 0 (zero data loss) / RTO: secondi                     |
+|                                                                  |
+|  💎 PLATINUM — Mission Critical (Exadata + GDS)                  |
+|  +-- Tutto Gold + Global Data Services                           |
+|  +-- Multi-site Active-Active                                    |
+|  +-- RPO: 0 / RTO: 0 (always available)                         |
++------------------------------------------------------------------+
 ```
 
 > **Il nostro lab è MAA GOLD**: RAC Primary + RAC Standby + Active Data Guard + GoldenGate. Mancano solo alcuni parametri di fine-tuning.
@@ -91,17 +91,17 @@
 ### 2.5 Riepilogo
 
 ```
-╔══════════════════════════════════════════════════╗
-║  SCORECARD MAA — Il Nostro Lab                    ║
-╠══════════════════════════════════════════════════╣
-║                                                   ║
-║  ✅ Compliant:      16 / 23 (70%)                ║
-║  ⚠️ Da migliorare:   7 / 23 (30%)                ║
-║  ❌ Non presente:     0                           ║
-║                                                   ║
-║  LIVELLO MAA RAGGIUNTO: 🥈 SILVER → 🥇 GOLD     ║
-║  (con i fix sotto, arriviamo a GOLD pieno)       ║
-╚══════════════════════════════════════════════════╝
++--------------------------------------------------+
+|  SCORECARD MAA — Il Nostro Lab                    |
++--------------------------------------------------+
+|                                                   |
+|  ✅ Compliant:      16 / 23 (70%)                |
+|  ⚠️ Da migliorare:   7 / 23 (30%)                |
+|  ❌ Non presente:     0                           |
+|                                                   |
+|  LIVELLO MAA RAGGIUNTO: 🥈 SILVER → 🥇 GOLD     |
+|  (con i fix sotto, arriviamo a GOLD pieno)       |
++--------------------------------------------------+
 ```
 
 ---
@@ -128,26 +128,26 @@ ALTER SYSTEM SET db_lost_write_protect = TYPICAL SCOPE=BOTH SID='*';
 ```
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║  PERCHÉ QUESTI PARAMETRI?                                        ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  DB_BLOCK_CHECKING:                                              ║
-║  Controlla la coerenza interna dei blocchi quando vengono        ║
-║  modificati in memoria. Previene la propagazione di corruzione.  ║
-║  └── MEDIUM: controlla tutti i blocchi tranne quelli INDEX       ║
-║              (gli indici si possono ricostruire)                 ║
-║                                                                  ║
-║  DB_BLOCK_CHECKSUM:                                              ║
-║  Aggiunge un checksum a ogni blocco scritto su disco.            ║
-║  Quando il blocco viene riletto, il checksum viene verificato.   ║
-║  └── Se non corrisponde → ORA-01578 (block corrupt detected)    ║
-║                                                                  ║
-║  DB_LOST_WRITE_PROTECT:                                          ║
-║  Protegge da "lost writes" — quando l'I/O subsystem conferma    ║
-║  una scrittura ma non la esegue realmente. Rarissimo ma          ║
-║  devastante. La standby rileva il mismatch.                      ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|  PERCHÉ QUESTI PARAMETRI?                                        |
++------------------------------------------------------------------+
+|                                                                  |
+|  DB_BLOCK_CHECKING:                                              |
+|  Controlla la coerenza interna dei blocchi quando vengono        |
+|  modificati in memoria. Previene la propagazione di corruzione.  |
+|  +-- MEDIUM: controlla tutti i blocchi tranne quelli INDEX       |
+|              (gli indici si possono ricostruire)                 |
+|                                                                  |
+|  DB_BLOCK_CHECKSUM:                                              |
+|  Aggiunge un checksum a ogni blocco scritto su disco.            |
+|  Quando il blocco viene riletto, il checksum viene verificato.   |
+|  +-- Se non corrisponde → ORA-01578 (block corrupt detected)    |
+|                                                                  |
+|  DB_LOST_WRITE_PROTECT:                                          |
+|  Protegge da "lost writes" — quando l'I/O subsystem conferma    |
+|  una scrittura ma non la esegue realmente. Rarissimo ma          |
+|  devastante. La standby rileva il mismatch.                      |
++------------------------------------------------------------------+
 ```
 
 ### 3.2 Abilitare Flashback Database
@@ -210,26 +210,26 @@ ALTER DATABASE DROP LOGFILE GROUP <old_group_number>;
 ### 3.4 Fast-Start Failover (FSFO)
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║               FSFO — FAILOVER AUTOMATICO                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║   ┌──────────┐      ┌──────────┐      ┌──────────┐              ║
-║   │ PRIMARY  │◄────►│ STANDBY  │◄────►│ OBSERVER │              ║
-║   │ (RACDB)  │      │ (STBY)   │      │ (3° host)│              ║
-║   └──────────┘      └──────────┘      └──────────┘              ║
-║                                                                  ║
-║   Observer monitora continuamente Primary e Standby.             ║
-║   Se il Primary è irraggiungibile per FastStartFailoverThreshold ║
-║   secondi (default 30), l'Observer ordina allo Standby di       ║
-║   diventare Primary AUTOMATICAMENTE.                             ║
-║                                                                  ║
-║   REQUISITI:                                                     ║
-║   ✓ DG Broker configurato                                       ║
-║   ✓ Flashback Database ON su entrambi                            ║
-║   ✓ Standby Redo Logs configurati                               ║
-║   ✓ Un terzo host per l'Observer (può essere dbtarget)           ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|               FSFO — FAILOVER AUTOMATICO                         |
++------------------------------------------------------------------+
+|                                                                  |
+|   +----------+      +----------+      +----------+              |
+|   | PRIMARY  |&amp;lt;----&gt;| STANDBY  |&amp;lt;----&gt;| OBSERVER |              |
+|   | (RACDB)  |      | (STBY)   |      | (3° host)|              |
+|   +----------+      +----------+      +----------+              |
+|                                                                  |
+|   Observer monitora continuamente Primary e Standby.             |
+|   Se il Primary è irraggiungibile per FastStartFailoverThreshold |
+|   secondi (default 30), l'Observer ordina allo Standby di       |
+|   diventare Primary AUTOMATICAMENTE.                             |
+|                                                                  |
+|   REQUISITI:                                                     |
+|   ✓ DG Broker configurato                                       |
+|   ✓ Flashback Database ON su entrambi                            |
+|   ✓ Standby Redo Logs configurati                               |
+|   ✓ Un terzo host per l'Observer (può essere dbtarget)           |
++------------------------------------------------------------------+
 ```
 
 ```bash
@@ -283,9 +283,9 @@ srvctl start ons
 ## 4. Connection String MAA Best Practice
 
 ```
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # CONNECTION STRING OTTIMIZZATA (per applicazioni)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 ORCL_HA =
   (DESCRIPTION =

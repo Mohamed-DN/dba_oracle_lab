@@ -21,53 +21,53 @@
 ### Cosa Costruiamo in Questa Fase
 
 ```
-╔═══════════════════════════════════════════════════════════════════════╗
-║                     IL CLUSTER RAC (rac1 + rac2)                     ║
-║                                                                       ║
-║    ┌──────────────────────────────────────────────────────────┐       ║
-║    │              Oracle Database 19c + RU + OJVM             │       ║
-║    │         ┌──────────────┐  ┌──────────────┐               │       ║
-║    │         │  Istanza     │  │  Istanza     │               │       ║
-║    │         │  RACDB1      │  │  RACDB2      │               │       ║
-║    │         │  (rac1)      │  │  (rac2)      │               │       ║
-║    │         └──────┬───────┘  └──────┬───────┘               │       ║
-║    └────────────────┼─────────────────┼───────────────────────┘       ║
-║    ┌────────────────┼─────────────────┼───────────────────────┐       ║
-║    │         Grid Infrastructure 19c + Release Update         │       ║
-║    │         ┌──────┴───────┐  ┌──────┴───────┐               │       ║
-║    │         │    ASM       │  │    ASM        │               │       ║
-║    │         │  Instance    │  │  Instance     │               │       ║
-║    │         │  (+ASM1)     │  │  (+ASM2)      │               │       ║
-║    │         └──────┬───────┘  └──────┬───────┘               │       ║
-║    │         Clusterware (CRS) ◄═══════════════►              │       ║
-║    │           crsd, cssd, evmd, ohasd                        │       ║
-║    └────────────────┼─────────────────┼───────────────────────┘       ║
-║                     │                 │                               ║
-║    ┌────────────────┴─────────────────┴───────────────────────┐       ║
-║    │                  Dischi ASM Condivisi                     │       ║
-║    │  ┌─────────┐     ┌──────────┐     ┌──────────┐          │       ║
-║    │  │ +CRS    │     │ +DATA    │     │ +FRA     │          │       ║
-║    │  │  5 GB   │     │  20 GB   │     │  15 GB   │          │       ║
-║    │  │ OCR,    │     │ Datafile,│     │ Archive, │          │       ║
-║    │  │ Voting  │     │ Redo,    │     │ Backup,  │          │       ║
-║    │  │ Disk    │     │ Control  │     │ Flashback│          │       ║
-║    │  └─────────┘     └──────────┘     └──────────┘          │       ║
-║    └──────────────────────────────────────────────────────────┘       ║
-╚═══════════════════════════════════════════════════════════════════════╝
++-----------------------------------------------------------------------+
+|                     IL CLUSTER RAC (rac1 + rac2)                     |
+|                                                                       |
+|    +----------------------------------------------------------+       |
+|    |              Oracle Database 19c + RU + OJVM             |       |
+|    |         +--------------+  +--------------+               |       |
+|    |         |  Istanza     |  |  Istanza     |               |       |
+|    |         |  RACDB1      |  |  RACDB2      |               |       |
+|    |         |  (rac1)      |  |  (rac2)      |               |       |
+|    |         +------+-------+  +------+-------+               |       |
+|    +----------------+-----------------+-----------------------+       |
+|    +----------------+-----------------+-----------------------+       |
+|    |         Grid Infrastructure 19c + Release Update         |       |
+|    |         +------+-------+  +------+-------+               |       |
+|    |         |    ASM       |  |    ASM        |               |       |
+|    |         |  Instance    |  |  Instance     |               |       |
+|    |         |  (+ASM1)     |  |  (+ASM2)      |               |       |
+|    |         +------+-------+  +------+-------+               |       |
+|    |         Clusterware (CRS) &amp;lt;---------------&gt;              |       |
+|    |           crsd, cssd, evmd, ohasd                        |       |
+|    +----------------+-----------------+-----------------------+       |
+|                     |                 |                               |
+|    +----------------+-----------------+-----------------------+       |
+|    |                  Dischi ASM Condivisi                     |       |
+|    |  +---------+     +----------+     +----------+          |       |
+|    |  | +CRS    |     | +DATA    |     | +FRA     |          |       |
+|    |  |  5 GB   |     |  20 GB   |     |  15 GB   |          |       |
+|    |  | OCR,    |     | Datafile,|     | Archive, |          |       |
+|    |  | Voting  |     | Redo,    |     | Backup,  |          |       |
+|    |  | Disk    |     | Control  |     | Flashback|          |       |
+|    |  +---------+     +----------+     +----------+          |       |
+|    +----------------------------------------------------------+       |
++-----------------------------------------------------------------------+
 ```
 
 ### Ordine di Installazione in Questa Fase
 
 ```
-Passo 1:  ASM Dischi        ━━━━━━━━━━━━━━━━━━━━━━━▶  oracleasm, partizioni
-Passo 2:  cluvfy             ━━━━━━━━━━━━━━━━━━━━━━━▶  verifica prerequisiti
-Passo 3:  Grid Infrastructure ━━━━━━━━━━━━━━━━━━━━━▶  gridSetup.sh + root.sh
-Passo 4:  DATA + FRA          ━━━━━━━━━━━━━━━━━━━━━▶  asmca / sqlplus
-Passo 5:  Patch Grid (RU)     ━━━━━━━━━━━━━━━━━━━━━▶  opatchauto (come root)
-Passo 6:  DB Software          ━━━━━━━━━━━━━━━━━━━━▶  runInstaller + root.sh
-Passo 7:  Patch DB Home (RU+OJVM)━━━━━━━━━━━━━━━━━▶  opatchauto + opatch
-Passo 8:  DBCA                  ━━━━━━━━━━━━━━━━━━━▶  crea database RACDB
-Passo 9:  datapatch              ━━━━━━━━━━━━━━━━━━▶  applica patch al dictionary
+Passo 1:  ASM Dischi        -----------------------▶  oracleasm, partizioni
+Passo 2:  cluvfy             -----------------------▶  verifica prerequisiti
+Passo 3:  Grid Infrastructure ---------------------▶  gridSetup.sh + root.sh
+Passo 4:  DATA + FRA          ---------------------▶  asmca / sqlplus
+Passo 5:  Patch Grid (RU)     ---------------------▶  opatchauto (come root)
+Passo 6:  DB Software          --------------------▶  runInstaller + root.sh
+Passo 7:  Patch DB Home (RU+OJVM)-----------------▶  opatchauto + opatch
+Passo 8:  DBCA                  -------------------▶  crea database RACDB
+Passo 9:  datapatch              ------------------▶  applica patch al dictionary
 ```
 
 ---
@@ -184,17 +184,17 @@ ls -ld /u01/app/oraInventory
 Quando lanci `cluvfy`, Oracle scansiona **TUTTE** le interfacce di rete del sistema, non solo quelle che userà il RAC. Nella nostra VM, dopo il clone, ci sono **4 interfacce attive**, ma Oracle ne usa solo 2:
 
 ```
-╔══════════════════════════════════════════════════════════════════════════╗
-║                INTERFACCE DI RETE SULLA VM                             ║
-╠═══════════╦══════════════════╦═══════════════════════════╦═════════════╣
-║ Interfac. ║ IP               ║ Ruolo                     ║ Serve a RAC?║
-╠═══════════╬══════════════════╬═══════════════════════════╬═════════════╣
-║ enp0s8    ║ 192.168.56.x     ║ 🌐 Rete PUBBLICA         ║ ✅ SÌ       ║
-║ enp0s9    ║ 192.168.1.x      ║ 🔗 INTERCONNECT privata  ║ ✅ SÌ       ║
-╠═══════════╬══════════════════╬═══════════════════════════╬═════════════╣
-║ enp0s3    ║ 10.0.2.15        ║ NAT VirtualBox (internet) ║ ❌ NO       ║
-║ virbr0    ║ 192.168.122.1    ║ Bridge libvirt (KVM)      ║ ❌ NO       ║
-╚═══════════╩══════════════════╩═══════════════════════════╩═════════════╝
++--------------------------------------------------------------------------+
+|                INTERFACCE DI RETE SULLA VM                             |
++-----------+------------------+---------------------------+-------------+
+| Interfac. | IP               | Ruolo                     | Serve a RAC?|
++-----------+------------------+---------------------------+-------------+
+| enp0s8    | 192.168.56.x     | 🌐 Rete PUBBLICA         | ✅ SÌ       |
+| enp0s9    | 192.168.1.x      | 🔗 INTERCONNECT privata  | ✅ SÌ       |
++-----------+------------------+---------------------------+-------------+
+| enp0s3    | 10.0.2.15        | NAT VirtualBox (internet) | ❌ NO       |
+| virbr0    | 192.168.122.1    | Bridge libvirt (KVM)      | ❌ NO       |
++-----------+------------------+---------------------------+-------------+
 ```
 
 Le due interfacce "inutili" causano 3 errori specifici:

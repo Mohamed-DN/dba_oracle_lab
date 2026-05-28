@@ -373,15 +373,15 @@ Questa è la sezione più importante. Capiamo cosa succede **passo per passo** q
 
 ```
 PRIMA:
-┌────────────────────────┐         ┌──────────────────────────┐
-│ PRIMARY (RACDB)        │         │ STANDBY (RACDB_DG)       │
-│ Role: PRIMARY          │ ──DG──▶ │ Role: PHYSICAL STANDBY   │
-│ Open Mode: READ WRITE  │         │ Open Mode: READ ONLY     │
-│                        │         │   (Active Data Guard)    │
-│ Servizi attivi:        │         │ Servizi attivi:          │
-│  ✅ APP_OLTP (RW)      │         │  ✅ APP_REPORT (RO)      │
-│  ❌ APP_REPORT          │         │  ❌ APP_OLTP              │
-└────────────────────────┘         └──────────────────────────┘
++------------------------+         +--------------------------+
+| PRIMARY (RACDB)        |         | STANDBY (RACDB_DG)       |
+| Role: PRIMARY          | --DG--▶ | Role: PHYSICAL STANDBY   |
+| Open Mode: READ WRITE  |         | Open Mode: READ ONLY     |
+|                        |         |   (Active Data Guard)    |
+| Servizi attivi:        |         | Servizi attivi:          |
+|  ✅ APP_OLTP (RW)      |         |  ✅ APP_REPORT (RO)      |
+|  ❌ APP_REPORT          |         |  ❌ APP_OLTP              |
++------------------------+         +--------------------------+
 ```
 
 ### 6.2 Durante lo Switchover (DGMGRL)
@@ -407,15 +407,15 @@ Ecco la sequenza interna:
 
 ```
 DOPO:
-┌────────────────────────┐         ┌──────────────────────────┐
-│ STANDBY (RACDB)        │         │ PRIMARY (RACDB_DG)       │
-│ Role: PHYSICAL STANDBY │ ◀──DG── │ Role: PRIMARY            │
-│ Open Mode: READ ONLY   │         │ Open Mode: READ WRITE    │
-│                        │         │                          │
-│ Servizi attivi:        │         │ Servizi attivi:          │
-│  ✅ APP_REPORT (RO)    │         │  ✅ APP_OLTP (RW)        │
-│  ❌ APP_OLTP            │         │  ❌ APP_REPORT            │
-└────────────────────────┘         └──────────────────────────────┘
++------------------------+         +--------------------------+
+| STANDBY (RACDB)        |         | PRIMARY (RACDB_DG)       |
+| Role: PHYSICAL STANDBY | ◀--DG-- | Role: PRIMARY            |
+| Open Mode: READ ONLY   |         | Open Mode: READ WRITE    |
+|                        |         |                          |
+| Servizi attivi:        |         | Servizi attivi:          |
+|  ✅ APP_REPORT (RO)    |         |  ✅ APP_OLTP (RW)        |
+|  ❌ APP_OLTP            |         |  ❌ APP_REPORT            |
++------------------------+         +------------------------------+
 ```
 
 > [!TIP]
@@ -622,19 +622,19 @@ e viceversa. L'unico requisito è che usino lo stesso Recovery Catalog.
 Quello che hai visto nei database Nexi è esattamente il pattern MAA Gold:
 
 ```
-┌─────────────────────────────┐
-│ PRIMARY (Read/Write)        │
-│ → Archivelog ogni 30 min    │
-│ → Redo spediti allo Standby │
-└──────────────┬──────────────┘
-               │ Data Guard (LGWR ASYNC/SYNC)
-               ▼
-┌─────────────────────────────┐
-│ STANDBY (Read Only / Mount) │
-│ → Full backup (Level 0)    │
-│ → Incremental (Level 1)    │
-│ → Archivelog backup         │
-└─────────────────────────────┘
++-----------------------------+
+| PRIMARY (Read/Write)        |
+| → Archivelog ogni 30 min    |
+| → Redo spediti allo Standby |
++--------------+--------------+
+               | Data Guard (LGWR ASYNC/SYNC)
+               v
++-----------------------------+
+| STANDBY (Read Only / Mount) |
+| → Full backup (Level 0)    |
+| → Incremental (Level 1)    |
+| → Archivelog backup         |
++-----------------------------+
 ```
 
 Questo schema scarica completamente il workload di backup dal Primary (che può continuare a servire le applicazioni al 100% della velocità) e lo addossa allo Standby (che tanto sta lì ad applicare redo).

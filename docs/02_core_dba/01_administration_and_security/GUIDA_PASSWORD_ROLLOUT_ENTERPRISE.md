@@ -29,10 +29,10 @@
 ```
 Client -> Listener -> Server Process -> Authentication Check
                                           |
-                                          ├── Password Hash in SYS.USER$ (utenti normali)
-                                          ├── Password File (SYSDBA/SYSOPER remoto)
-                                          ├── LDAP/AD (EUS/CMU)
-                                          └── Kerberos (ticket)
+                                          +-- Password Hash in SYS.USER$ (utenti normali)
+                                          +-- Password File (SYSDBA/SYSOPER remoto)
+                                          +-- LDAP/AD (EUS/CMU)
+                                          +-- Kerberos (ticket)
 ```
 
 ---

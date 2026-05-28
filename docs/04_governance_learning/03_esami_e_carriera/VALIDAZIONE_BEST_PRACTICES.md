@@ -16,34 +16,34 @@
 Dopo aver analizzato ogni fase, ecco la raccomandazione:
 
 ```
-╔════════════════════════════════════════════════════════════════════════════╗
-║     DOVE SERVE LA GRAFICA (GUI) vs DOVE BASTA LA LINEA DI COMANDO (CLI)  ║
-╠══════════════════════════════════╦════════╦══════╦════════════════════════╣
-║  Operazione                      ║  GUI   ║  CLI ║  Motivazione           ║
-╠══════════════════════════════════╬════════╬══════╬════════════════════════╣
-║  VirtualBox: crea VM             ║  ✅    ║      ║ GUI è naturale qui     ║
-║  VirtualBox: dischi condivisi    ║  ✅    ║      ║ GUI è più sicura       ║
-║  OL 7.9 Installer               ║  ✅    ║      ║ Anaconda è grafico     ║
-║  Grid Infrastructure (gridSetup) ║  ✅    ║  ✅  ║ GUI per imparare,      ║
-║                                  ║        ║      ║ CLI per ripetibilità   ║
-║  ASMCA (Disk Groups)            ║  ✅    ║  ✅  ║ GUI mostra i FG        ║
-║  DBCA (crea database)           ║  ✅    ║  ✅  ║ GUI per la prima volta ║
-║  NETCA (Listener)               ║        ║  ✅  ║ CLI è più veloce       ║
-║  Config Rete/DNS/SSH             ║        ║  ✅  ║ Solo CLI possibile     ║
-║  Data Guard (DGMGRL)            ║        ║  ✅  ║ CLI è lo standard      ║
-║  GoldenGate (GGSCI)             ║        ║  ✅  ║ Solo CLI disponibile   ║
-║  RMAN                            ║        ║  ✅  ║ Solo CLI               ║
-║  SQL*Plus monitoring             ║        ║  ✅  ║ Solo CLI               ║
-╠══════════════════════════════════╩════════╩══════╩════════════════════════╣
-║                                                                          ║
-║  RACCOMANDAZIONE:                                                        ║
-║  ─────────────────                                                        ║
-║  Usa GUI per: VirtualBox, OS Install, Grid (prima volta), ASMCA, DBCA    ║
-║  Usa CLI per: tutto il resto (rete, DG, GG, RMAN, monitoring)            ║
-║                                                                          ║
-║  In produzione: TUTTO CLI (response file, script, automazione)           ║
-║  Nel lab: GUI per IMPARARE, poi ripeti in CLI per il CV                  ║
-╚══════════════════════════════════════════════════════════════════════════╝
++----------------------------------------------------------------------------+
+|     DOVE SERVE LA GRAFICA (GUI) vs DOVE BASTA LA LINEA DI COMANDO (CLI)  |
++----------------------------------+--------+------+------------------------+
+|  Operazione                      |  GUI   |  CLI |  Motivazione           |
++----------------------------------+--------+------+------------------------+
+|  VirtualBox: crea VM             |  ✅    |      | GUI è naturale qui     |
+|  VirtualBox: dischi condivisi    |  ✅    |      | GUI è più sicura       |
+|  OL 7.9 Installer               |  ✅    |      | Anaconda è grafico     |
+|  Grid Infrastructure (gridSetup) |  ✅    |  ✅  | GUI per imparare,      |
+|                                  |        |      | CLI per ripetibilità   |
+|  ASMCA (Disk Groups)            |  ✅    |  ✅  | GUI mostra i FG        |
+|  DBCA (crea database)           |  ✅    |  ✅  | GUI per la prima volta |
+|  NETCA (Listener)               |        |  ✅  | CLI è più veloce       |
+|  Config Rete/DNS/SSH             |        |  ✅  | Solo CLI possibile     |
+|  Data Guard (DGMGRL)            |        |  ✅  | CLI è lo standard      |
+|  GoldenGate (GGSCI)             |        |  ✅  | Solo CLI disponibile   |
+|  RMAN                            |        |  ✅  | Solo CLI               |
+|  SQL*Plus monitoring             |        |  ✅  | Solo CLI               |
++----------------------------------+--------+------+------------------------+
+|                                                                          |
+|  RACCOMANDAZIONE:                                                        |
+|  -----------------                                                        |
+|  Usa GUI per: VirtualBox, OS Install, Grid (prima volta), ASMCA, DBCA    |
+|  Usa CLI per: tutto il resto (rete, DG, GG, RMAN, monitoring)            |
+|                                                                          |
+|  In produzione: TUTTO CLI (response file, script, automazione)           |
+|  Nel lab: GUI per IMPARARE, poi ripeti in CLI per il CV                  |
++--------------------------------------------------------------------------+
 ```
 
 > **Conclusione**: Le nostre guide hanno **già il giusto mix**. La GUI è descritta dove serve (Fase 0 VirtualBox, Fase 2 Grid/DBCA), il resto è CLI. Non serve aggiungere GUI ad altre fasi.
@@ -151,24 +151,24 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 ## 3. SCORECARD FINALE
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                    SCORECARD BEST PRACTICES                      ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Storage (ASM)         :  █████████░  6/7   (86%)               ║
-║  Networking            :  ██████████  6/6   (100%) ✨            ║
-║  Grid Infrastructure   :  ██████████  5/5   (100%) ✨            ║
-║  Database              :  ██████████  8/8   (100%) ✨            ║
-║  Data Guard            :  ██████████  9/9   (100%) ✨            ║
-║  Backup & Recovery     :  ██████████  6/6   (100%) ✨            ║
-║  GoldenGate            :  ██████████  6/6   (100%) ✨            ║
-║  Monitoring            :  ██████████  7/7   (100%) ✨            ║
-║  ─────────────────────────────────────────────────               ║
-║  TOTALE                :  ██████████  53/54 (98%)               ║
-║                                                                  ║
-║  LIVELLO MAA: 🥇 GOLD                                           ║
-║  PRONTO PER PRODUZIONE: ✅ (scalando risorse hardware)          ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                    SCORECARD BEST PRACTICES                      |
++------------------------------------------------------------------+
+|                                                                  |
+|  Storage (ASM)         :  █████████░  6/7   (86%)               |
+|  Networking            :  ██████████  6/6   (100%) ✨            |
+|  Grid Infrastructure   :  ██████████  5/5   (100%) ✨            |
+|  Database              :  ██████████  8/8   (100%) ✨            |
+|  Data Guard            :  ██████████  9/9   (100%) ✨            |
+|  Backup & Recovery     :  ██████████  6/6   (100%) ✨            |
+|  GoldenGate            :  ██████████  6/6   (100%) ✨            |
+|  Monitoring            :  ██████████  7/7   (100%) ✨            |
+|  -------------------------------------------------               |
+|  TOTALE                :  ██████████  53/54 (98%)               |
+|                                                                  |
+|  LIVELLO MAA: 🥇 GOLD                                           |
+|  PRONTO PER PRODUZIONE: ✅ (scalando risorse hardware)          |
++------------------------------------------------------------------+
 ```
 
 ---
@@ -176,44 +176,44 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 ## 4. STRUTTURA COMPLETA DEL PROGETTO (Mappa)
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                 MAPPA COMPLETA DEL LAB                            ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  📖 STUDIO E TEORIA                                             ║
-║  ├── GUIDA_ARCHITETTURA_ORACLE.md    ← SGA/PGA/Redo/Undo/Temp  ║
-║  ├── GUIDA_COMANDI_DBA.md            ← Query + script OB        ║
-║  ├── GUIDA_LISTENER_SERVICES_DBA.md  ← Listener/SCAN/Services   ║
-║  └── GUIDA_MAA_BEST_PRACTICES.md     ← Validazione MAA Gold     ║
-║                                                                  ║
-║  🔧 COSTRUZIONE LAB (in ordine!)                                ║
-║  ├── FASE 0: Setup Macchine          ← VirtualBox, dischi, OS   ║
-║  ├── FASE 1: Preparazione OS         ← Rete, DNS, utenti, SSH   ║
-║  ├── FASE 2: Grid + RAC             ← ASM, Grid, DBCA          ║
-║  ├── FASE 3: RAC Standby            ← RMAN Duplicate, MRP      ║
-║  ├── FASE 4: Data Guard             ← DGMGRL, ADG              ║
-║  ├── FASE 5: GoldenGate             ← Extract, Pump, Replicat   ║
-║  ├── FASE 6: Test e Verifica        ← End-to-end, stress        ║
-║  └── FASE 7: RMAN Backup            ← Strategia, cron, restore  ║
-║                                                                  ║
-║  🏗️ OPERAZIONI AVANZATE                                         ║
-║  ├── GUIDA_SWITCHOVER.md             ← Switchover + Switchback   ║
-║  ├── GUIDA_FAILOVER_E_REINSTATE.md   ← Failover + Reinstate     ║
-║  ├── GUIDA_MIGRAZIONE_GOLDENGATE.md  ← Zero-downtime migration  ║
-║  ├── GUIDA_ATTIVITA_DBA.md           ← Batch, AWR, Patching     ║
-║  └── GUIDA_CLOUD_GOLDENGATE.md       ← OCI ARM Free Tier        ║
-║                                                                  ║
-║  📋 RIFERIMENTO                                                  ║
-║  ├── GUIDA_DA_LAB_A_PRODUZIONE.md    ← Sizing, HugePages        ║
-║  ├── ANALISI_ORACLEBASE_VAGRANT.md   ← Confronto Oracle Base    ║
-║  ├── PIANO_LABORATORIO.md     ← 22 giorni, CV            ║
-║  └── README.md                       ← Indice + Architettura    ║
-║                                                                  ║
-║  📂 scripts/                                                     ║
-║  ├── setup_node.sh                                               ║
-║  ├── configure_storage.sh                                        ║
-║  └── install_grid.sh                                             ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                 MAPPA COMPLETA DEL LAB                            |
++------------------------------------------------------------------+
+|                                                                  |
+|  📖 STUDIO E TEORIA                                             |
+|  +-- GUIDA_ARCHITETTURA_ORACLE.md    ← SGA/PGA/Redo/Undo/Temp  |
+|  +-- GUIDA_COMANDI_DBA.md            ← Query + script OB        |
+|  +-- GUIDA_LISTENER_SERVICES_DBA.md  ← Listener/SCAN/Services   |
+|  +-- GUIDA_MAA_BEST_PRACTICES.md     ← Validazione MAA Gold     |
+|                                                                  |
+|  🔧 COSTRUZIONE LAB (in ordine!)                                |
+|  +-- FASE 0: Setup Macchine          ← VirtualBox, dischi, OS   |
+|  +-- FASE 1: Preparazione OS         ← Rete, DNS, utenti, SSH   |
+|  +-- FASE 2: Grid + RAC             ← ASM, Grid, DBCA          |
+|  +-- FASE 3: RAC Standby            ← RMAN Duplicate, MRP      |
+|  +-- FASE 4: Data Guard             ← DGMGRL, ADG              |
+|  +-- FASE 5: GoldenGate             ← Extract, Pump, Replicat   |
+|  +-- FASE 6: Test e Verifica        ← End-to-end, stress        |
+|  +-- FASE 7: RMAN Backup            ← Strategia, cron, restore  |
+|                                                                  |
+|  🏗️ OPERAZIONI AVANZATE                                         |
+|  +-- GUIDA_SWITCHOVER.md             ← Switchover + Switchback   |
+|  +-- GUIDA_FAILOVER_E_REINSTATE.md   ← Failover + Reinstate     |
+|  +-- GUIDA_MIGRAZIONE_GOLDENGATE.md  ← Zero-downtime migration  |
+|  +-- GUIDA_ATTIVITA_DBA.md           ← Batch, AWR, Patching     |
+|  +-- GUIDA_CLOUD_GOLDENGATE.md       ← OCI ARM Free Tier        |
+|                                                                  |
+|  📋 RIFERIMENTO                                                  |
+|  +-- GUIDA_DA_LAB_A_PRODUZIONE.md    ← Sizing, HugePages        |
+|  +-- ANALISI_ORACLEBASE_VAGRANT.md   ← Confronto Oracle Base    |
+|  +-- PIANO_LABORATORIO.md     ← 22 giorni, CV            |
+|  +-- README.md                       ← Indice + Architettura    |
+|                                                                  |
+|  📂 scripts/                                                     |
+|  +-- setup_node.sh                                               |
+|  +-- configure_storage.sh                                        |
+|  +-- install_grid.sh                                             |
++------------------------------------------------------------------+
 ```
 
 ---
