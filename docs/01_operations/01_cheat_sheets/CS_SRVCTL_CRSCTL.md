@@ -1,247 +1,379 @@
-# Cheat Sheet SRVCTL e CRSCTL
+# Cheat Sheet SRVCTL & CRSCTL — Enterprise Completo ⚙️
 
 > [!NOTE]
-> **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
-> - **Cheat Sheet Operativi (Pronto Intervento)**:
->   - **SRVCTL & CRSCTL (questa scheda)**: [CS_SRVCTL_CRSCTL.md](./CS_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
->   - **DGMGRL (Broker)**: [CS_DGMGRL.md](./CS_DGMGRL.md) (lag, switchover rapido, comandi broker).
->   - **ASMCMD**: [CS_ASMCMD.md](./CS_ASMCMD.md) (gestione storage ASM).
->   - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md) (tutti i comandi consolidati).
-> - **Procedure di Produzione (Non-CDB)**:
->   - **Single Node Data Guard**: [GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) (architettura a singolo nodo primario e standby).
->   - **RAC Data Guard**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) (architettura multi-nodo primario e standby).
-> - **Guide di Laboratorio (RAC 19c Multi-Tenant/CDB)**:
->   - **Preparazione e Creazione Standby (Fase 3)**: [GUIDA_FASE3_RAC_STANDBY.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) (RMAN duplicate active database).
->   - **Configurazione Broker DGMGRL (Fase 4)**: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) (creazione e ottimizzazione broker).
->   - **Manuale Switchover Completo**: [GUIDA_SWITCHOVER_COMPLETO.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) (passaggi sicuri di switchover).
->   - **Manuale Failover & Reinstate**: [GUIDA_FAILOVER_E_REINSTATE.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) (gestione dei disastri e ripristino).
+> **DOCUMENTI CORRELATI:**
+> - **Guida Servizi Applicativi RAC**: [GUIDA_SERVIZI_APPLICATIVI_RAC.md](../../02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md)
+> - **Guida Start/Stop RAC**: [RUNBOOK_10_START_STOP_RAC.md](../02_runbooks_incidenti/RUNBOOK_10_START_STOP_RAC.md)
+> - **Guida Lab (Fase 2)**: [GUIDA_FASE2_GRID_E_RAC.md](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md)
+> - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md)
 
-## Differenza fondamentale
+---
 
-| Tool | Uso corretto |
-|---|---|
-| `srvctl` | Gestire risorse Oracle: database, istanze, servizi, listener, SCAN, ASM, diskgroup |
-| `crsctl` | Verificare e gestire Oracle Clusterware, CRS, CSS, EVM, OCR, voting disk, risorse cluster |
+## 1. CRSCTL — Gestione Clusterware
 
-Regola di produzione: per risorse Oracle con nome `ora.*`, usa `srvctl` quando esiste un comando equivalente. Usa `crsctl` per stato cluster e diagnostica Clusterware.
-
-## Comandi help e versione
-
+### 1.1 Status del Cluster
 ```bash
-srvctl -version
-srvctl -help
-srvctl status database -help
-srvctl config service -help
+# Status globale del cluster (tutti i nodi)
+crsctl stat res -t
 
-crsctl -help
+# Status esteso (include target, state, server)
+crsctl stat res -t -init
+
+# Check del cluster health
+crsctl check cluster
+crsctl check cluster -all    # tutti i nodi
+
+# Check CRS (Cluster Ready Services)
+crsctl check crs
+
+# Check specifico per componente
+crsctl check css    # Cluster Synchronization Services
+crsctl check evm    # Event Manager
+crsctl check has    # High Availability Services (single node)
+```
+
+### 1.2 Start / Stop del Cluster
+```bash
+# Stop cluster su questo nodo (come root)
+crsctl stop cluster
+
+# Stop cluster su tutti i nodi
+crsctl stop cluster -all
+
+# Start cluster su questo nodo
+crsctl start cluster
+
+# Start cluster su tutti i nodi
+crsctl start cluster -all
+
+# Stop/Start CRS (più profondo, include OHASD)
+crsctl stop crs
+crsctl start crs
+
+# Force stop (emergenza!)
+crsctl stop crs -f
+crsctl stop cluster -f
+```
+
+### 1.3 Abilitare/Disabilitare Auto-Start
+```bash
+# Abilitare auto-start del CRS al boot
+crsctl enable crs
+
+# Disabilitare auto-start (per manutenzione)
+crsctl disable crs
+
+# Verificare
+crsctl config crs
+```
+
+### 1.4 Diagnostica Clusterware
+```bash
+# Versione del Clusterware
 crsctl query crs activeversion
 crsctl query crs softwareversion
-```
 
-## Health check RAC/Grid
+# Stato dei nodi
+olsnodes -n -i -s -t
+# -n: node name, -i: VIP, -s: status, -t: type
 
-```bash
-crsctl check crs
-crsctl check cluster -all
-crsctl stat res -t
-crsctl stat res -t -init
-olsnodes -n -s -t
-```
-
-OCR e voting disk:
-
-```bash
-ocrcheck
-ocrconfig -showbackup
+# Stato CSS voting disk
 crsctl query css votedisk
+
+# Stato OCR (Oracle Cluster Registry)
+ocrcheck
+ocrcheck -local
+ocrconfig -showbackup
+
+# Backup manuale dell'OCR
+ocrconfig -manualbackup
+
+# Restore OCR (emergenza!)
+ocrconfig -restore /u01/app/grid/cdata/backup_ocr.ocr
 ```
 
-Network cluster:
-
+### 1.5 Gestione Risorse Custom
 ```bash
-oifcfg getif
-srvctl config network
-srvctl config scan
-srvctl status scan
-srvctl status scan_listener
+# Registrare una risorsa custom
+crsctl add resource my_app_resource \
+  -type local_resource \
+  -attr "ACTION_SCRIPT=/scripts/my_app.sh, CHECK_INTERVAL=60"
+
+# Start/Stop risorsa
+crsctl start resource my_app_resource
+crsctl stop resource my_app_resource
+
+# Rimuovere risorsa
+crsctl delete resource my_app_resource
+
+# Relocare risorsa
+crsctl relocate resource my_app_resource -n node2
 ```
 
-## Database RAC con SRVCTL
+---
 
-Configurazione:
+## 2. SRVCTL — Gestione Database RAC
 
+### 2.1 Status e Configurazione Database
 ```bash
+# Status database
+srvctl status database -d RACDB
+
+# Configurazione completa
+srvctl config database -d RACDB
+
+# Lista tutti i database registrati
 srvctl config database
-srvctl config database -d <DB_UNIQUE_NAME>
-srvctl config database -d <DB_UNIQUE_NAME> -a
+
+# Dettagli
+srvctl config database -d RACDB -a    # con dettagli avanzati
 ```
 
-Stato:
-
+### 2.2 Start / Stop Database
 ```bash
-srvctl status database -d <DB_UNIQUE_NAME>
-srvctl status database -d <DB_UNIQUE_NAME> -v
-srvctl status instance -d <DB_UNIQUE_NAME> -i <INSTANCE_NAME>
+# Start database (tutte le istanze)
+srvctl start database -d RACDB
+
+# Start con opzioni
+srvctl start database -d RACDB -o mount
+srvctl start database -d RACDB -o "read only"
+srvctl start database -d RACDB -o restrict
+
+# Stop database
+srvctl stop database -d RACDB
+srvctl stop database -d RACDB -o immediate
+srvctl stop database -d RACDB -o abort      # emergenza!
+srvctl stop database -d RACDB -o transactional
 ```
 
-Start/stop:
-
+### 2.3 Start / Stop Istanza Singola
 ```bash
-srvctl start database -d <DB_UNIQUE_NAME>
-srvctl stop database -d <DB_UNIQUE_NAME>
-srvctl stop database -d <DB_UNIQUE_NAME> -o immediate
-srvctl stop database -d <DB_UNIQUE_NAME> -o transactional
+# Start una sola istanza
+srvctl start instance -d RACDB -i RACDB1
+
+# Stop una sola istanza (le sessioni migrano se configurato TAF/AC)
+srvctl stop instance -d RACDB -i RACDB1
+srvctl stop instance -d RACDB -i RACDB1 -o immediate
+
+# Relocare istanze (per manutenzione nodo)
+srvctl relocate database -d RACDB -c "rac1" -n "rac2"
 ```
 
-Istanza singola:
-
+### 2.4 Abilitare/Disabilitare Auto-Start DB
 ```bash
-srvctl start instance -d <DB_UNIQUE_NAME> -i <INSTANCE_NAME>
-srvctl stop instance -d <DB_UNIQUE_NAME> -i <INSTANCE_NAME> -o immediate
+# Abilitare l'avvio automatico
+srvctl enable database -d RACDB
+srvctl enable instance -d RACDB -i RACDB1
+
+# Disabilitare (per patching/manutenzione)
+srvctl disable database -d RACDB
+srvctl disable instance -d RACDB -i RACDB1
+
+# Verificare policy
+srvctl config database -d RACDB | grep -i "start\|policy\|enabled"
 ```
 
-## Policy di startup
+---
 
+## 3. SRVCTL — Gestione Servizi Applicativi
+
+### 3.1 Creare Servizi
 ```bash
-srvctl config database -d <DB_UNIQUE_NAME> | grep -i "management policy"
-srvctl modify database -d <DB_UNIQUE_NAME> -policy AUTOMATIC
-srvctl modify database -d <DB_UNIQUE_NAME> -policy MANUAL
-```
+# Servizio con preferred/available (HA)
+srvctl add service -d RACDB -s APP_SVC \
+  -preferred RACDB1 -available RACDB2 \
+  -policy AUTOMATIC \
+  -failovertype SELECT \
+  -failovermethod BASIC \
+  -failoverretry 30 \
+  -failoverdelay 5
 
-Uso pratico:
+# Servizio per Application Continuity (AC)
+srvctl add service -d RACDB -s APP_AC_SVC \
+  -preferred RACDB1,RACDB2 \
+  -policy AUTOMATIC \
+  -failovertype TRANSACTION \
+  -commit_outcome TRUE \
+  -replay_init_time 1800 \
+  -retention 86400 \
+  -drain_timeout 60
 
-- `AUTOMATIC`: DB parte con cluster/node.
-- `MANUAL`: DB non parte automaticamente, utile per standby/test/change.
-
-## Services RAC
-
-Listare:
-
-```bash
-srvctl config service -d <DB_UNIQUE_NAME>
-srvctl status service -d <DB_UNIQUE_NAME>
-```
-
-Creare service role-based:
-
-```bash
-srvctl add service -d <DB_UNIQUE_NAME> -s APP_RW \
-  -preferred <INST1>,<INST2> \
-  -role PRIMARY \
-  -policy AUTOMATIC
-```
-
-Service per standby read only:
-
-```bash
-srvctl add service -d <DB_UNIQUE_NAME> -s APP_RO \
-  -preferred <INST1>,<INST2> \
+# Servizio read-only (per Active Data Guard)
+srvctl add service -d RACDB -s REPORT_SVC \
+  -preferred RACDB1,RACDB2 \
   -role PHYSICAL_STANDBY \
   -policy AUTOMATIC
 ```
 
-Start/stop/relocate:
-
+### 3.2 Operazioni sui Servizi
 ```bash
-srvctl start service -d <DB_UNIQUE_NAME> -s APP_RW
-srvctl stop service -d <DB_UNIQUE_NAME> -s APP_RW
-srvctl relocate service -d <DB_UNIQUE_NAME> -s APP_RW -oldinst <INST1> -newinst <INST2>
+# Status
+srvctl status service -d RACDB
+srvctl status service -d RACDB -s APP_SVC
+
+# Config
+srvctl config service -d RACDB
+srvctl config service -d RACDB -s APP_SVC
+
+# Start / Stop
+srvctl start service -d RACDB -s APP_SVC
+srvctl stop service -d RACDB -s APP_SVC
+
+# Stop con drain (zero downtime)
+srvctl stop service -d RACDB -s APP_SVC -drain_timeout 120
+
+# Relocare servizio su un altro nodo
+srvctl relocate service -d RACDB -s APP_SVC \
+  -oldinst RACDB1 -newinst RACDB2
+
+# Modificare servizio
+srvctl modify service -d RACDB -s APP_SVC \
+  -preferred RACDB2 -available RACDB1
+
+# Rimuovere servizio
+srvctl remove service -d RACDB -s APP_SVC
 ```
 
-Validazione SQL:
+---
 
-```sql
-select name, network_name, enabled from dba_services order by name;
-select inst_id, name from gv$active_services order by name, inst_id;
-```
+## 4. SRVCTL — Listener e SCAN
 
-## Listener e SCAN
-
+### 4.1 Listener Locale
 ```bash
+# Status listener
 srvctl status listener
+srvctl status listener -l LISTENER
+
+# Config
 srvctl config listener
+srvctl config listener -a   # con dettagli
+
+# Start / Stop
 srvctl start listener
 srvctl stop listener
+```
 
+### 4.2 SCAN Listener
+```bash
+# Status SCAN
+srvctl status scan
 srvctl status scan_listener
+
+# Config SCAN
+srvctl config scan
 srvctl config scan_listener
+
+# Start / Stop SCAN
+srvctl start scan
 srvctl start scan_listener
 srvctl stop scan_listener
 
-lsnrctl status
-lsnrctl services
+# Aggiornare SCAN (dopo cambio DNS)
+srvctl modify scan -n new-scan-name.domain.com
 ```
 
-## ASM e diskgroup con SRVCTL
+---
+
+## 5. SRVCTL — ASM e Diskgroup
 
 ```bash
+# Status ASM
 srvctl status asm
+srvctl status asm -n rac1
+
+# Config ASM
 srvctl config asm
+
+# Diskgroup
 srvctl status diskgroup -g DATA
 srvctl start diskgroup -g DATA
 srvctl stop diskgroup -g DATA
 ```
 
-## Resource troubleshooting con CRSCTL
+---
 
-Vista sintetica:
-
-```bash
-crsctl stat res -t
-```
-
-Dettaglio risorsa:
+## 6. SRVCTL — Network e VIP
 
 ```bash
-crsctl stat res ora.<db>.db -p
-crsctl stat res ora.<db>.db -f
+# Status VIP
+srvctl status vip -n rac1
+
+# Config VIP
+srvctl config vip -n rac1
+
+# Status rete
+srvctl status nodeapps
+srvctl config nodeapps -a
+
+# Modificare VIP (raro)
+srvctl modify nodeapps -n rac1 -A new-vip/255.255.255.0/eth0
 ```
 
-Log cluster:
+---
+
+## 7. SRVCTL — Data Guard Broker
 
 ```bash
-crsctl get log crs all
-crsctl get log css all
-crsctl get log evm all
+# Registrare il database con ruolo specifico
+srvctl modify database -d STANDBY_DB -r PHYSICAL_STANDBY -s MOUNT
+
+# Verificare il start options per standby
+srvctl config database -d STANDBY_DB | grep -i "start\|role\|policy"
 ```
 
-## Stop/start cluster
+---
 
-Singolo nodo:
+## 8. Troubleshooting Rapido
 
+| Sintomo | Diagnostica | Fix |
+|---|---|---|
+| CRS non si avvia | `crsctl check crs`, alert log Grid | `crsctl start crs`, check voting disk |
+| Istanza non si avvia | `srvctl status database`, alert log DB | `srvctl start instance`, check spfile |
+| VIP offline | `srvctl status vip -n node` | `crsctl start res ora.node.vip` |
+| SCAN non risponde | `srvctl status scan_listener` | `srvctl start scan_listener`, check DNS |
+| Servizio non parte | `srvctl config service -d DB -s SVC` | Verificare preferred/available, `srvctl start service` |
+| Risorsa UNKNOWN | `crsctl stat res -t` | `crsctl stop/start resource <name>` |
+| OCR corrotto | `ocrcheck` | `ocrconfig -restore` da backup |
+
+### Log importanti
 ```bash
-crsctl stop crs
-crsctl start crs
+# CRS alert log
+$GRID_HOME/log/<hostname>/alertrac1.log
+
+# CRSD/OHASD logs
+$GRID_HOME/log/<hostname>/crsd/crsd.log
+$GRID_HOME/log/<hostname>/ohasd/ohasd.log
+
+# Trace CSSD
+$GRID_HOME/log/<hostname>/cssd/
+
+# Listener log Grid
+$GRID_HOME/log/diag/tnslsnr/<hostname>/listener_scan*/
 ```
 
-Tutto il cluster, alto impatto:
+---
 
-```bash
-crsctl stop cluster -all
-crsctl start cluster -all
+## 9. Quick Reference
+
+```text
++-------------------------------+----------------------------------------------+
+| OPERAZIONE                    | COMANDO                                      |
++-------------------------------+----------------------------------------------+
+| Cluster status                | crsctl stat res -t                           |
+| Check cluster                 | crsctl check cluster -all                    |
+| DB status                     | srvctl status database -d DB                 |
+| DB start                      | srvctl start database -d DB                  |
+| DB stop                       | srvctl stop database -d DB -o immediate      |
+| Instance stop                 | srvctl stop instance -d DB -i DB1            |
+| Service status                | srvctl status service -d DB                  |
+| Service relocate              | srvctl relocate service -d DB -s SVC ...     |
+| Service drain stop            | srvctl stop service -d DB -s SVC -drain 120  |
+| Listener status               | srvctl status listener                       |
+| SCAN status                   | srvctl status scan_listener                  |
+| ASM status                    | srvctl status asm                            |
+| VIP status                    | srvctl status vip -n node                    |
+| Nodes                         | olsnodes -n -i -s -t                         |
+| OCR check                     | ocrcheck                                     |
+| Voting disk                   | crsctl query css votedisk                    |
++-------------------------------+----------------------------------------------+
 ```
-
-Usare solo in change approvata. Prima salvare:
-
-```bash
-crsctl stat res -t
-srvctl status database -d <DB_UNIQUE_NAME> -v
-srvctl status service -d <DB_UNIQUE_NAME>
-```
-
-## Comandi da evitare senza SR/change
-
-```bash
-crsctl delete resource ora.*
-crsctl modify resource ora.*
-crsctl stop resource ora.* -f
-```
-
-Motivo: puoi rompere configurazione Clusterware gestita da Oracle. Preferire `srvctl`.
-
-## Runbook collegati
-
-- [10 Start/Stop Database RAC](../02_runbooks_incidenti/RUNBOOK_10_START_STOP_RAC.md)
-- [25 ASM Storage Incidenti](../02_runbooks_incidenti/RUNBOOK_25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
-- [26 Listener, SCAN e Services RAC](../02_runbooks_incidenti/RUNBOOK_26_LISTENER_SCAN_SERVICES_RAC.md)
-- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md)
