@@ -9,6 +9,7 @@
 --   - ../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
 -- Uso rapido:
 --   sqlplus / as sysdba @09_dataguard_status.sql
+-- RAC: le viste operative Data Guard usano GV$ dove serve per mostrare INST_ID/thread.
 -- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
 SET LINESIZE 220
 SET PAGESIZE 200
@@ -58,11 +59,11 @@ COL target FOR A10
 COL destination FOR A40
 COL error FOR A40
 
-SELECT dest_name, status, target, destination, error
-FROM v$archive_dest
+SELECT inst_id, dest_name, status, target, destination, error
+FROM gv$archive_dest
 WHERE target IS NOT NULL
   AND status != 'INACTIVE'
-ORDER BY dest_id;
+ORDER BY inst_id, dest_id;
 
 
 PROMPT ====================================================================
@@ -90,10 +91,10 @@ COL thread# FOR 9
 COL sequence# FOR 999999
 COL block# FOR 9999999
 
-SELECT process, status, thread#, sequence#, block#
-FROM v$managed_standby
+SELECT inst_id, process, status, thread#, sequence#, block#
+FROM gv$managed_standby
 WHERE process IN ('MRP0', 'RFS', 'ARCH', 'LNS')
-ORDER BY process;
+ORDER BY inst_id, process;
 
 -- MRP0 con status APPLYING → lo standby sta applicando → OK
 -- Se MRP0 non c'è o è IDLE → lo standby NON sta applicando!
@@ -123,8 +124,8 @@ COL status FOR A15
 COL database_mode FOR A15
 COL recovery_mode FOR A15
 
-SELECT type, status, database_mode, recovery_mode
-FROM v$archive_dest_status
+SELECT inst_id, type, status, database_mode, recovery_mode
+FROM gv$archive_dest_status
 WHERE type != 'LOCAL'
   AND status != 'INACTIVE';
 

@@ -71,6 +71,7 @@ Apri:
 Apri:
 
 - [ASM Storage Incidenti](./docs/01_operations/02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
+- [Storage LUN/LVM/udev/ASM/ASMLib/AFD](./docs/02_core_dba/01_administration_and_security/GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md)
 - [Listener, SCAN e Services RAC](./docs/01_operations/02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md)
 - [TDE Wallet/Keystore](./docs/01_operations/02_runbooks_incidenti/27_TDE_WALLET_KEYSTORE_RUNBOOK.md)
 - [Scheduler Jobs e AutoTask](./docs/01_operations/02_runbooks_incidenti/28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md)
