@@ -70,6 +70,209 @@ Questo laboratorio è diviso in 4 macro-aree principali per facilitare la naviga
 *   🏗️ **`03_infra_lab/`**: Il codice sorgente dell'infrastruttura. Qui trovi i file Vagrant, Terraform e le istruzioni per creare fisicamente le macchine virtuali e installare Oracle. **(Da usare per tirare su il lab)**.
 *   🎓 **`04_governance_learning/`**: Regole d'oro, standard architetturali, roadmap di studio per Junior/Senior e preparazione per le certificazioni OCP. **(Da usare per la crescita professionale)**.
 
+
+<details>
+<summary>🌲 <b>Clicca per espandere l'Alberatura Completa del Repository (Tree)</b></summary>
+
+```text
+docs/
+├── 01_operations
+│   ├── 01_cheat_sheets
+│   │   ├── CS_ADRCI.md
+│   │   ├── CS_ASMCMD.md
+│   │   ├── CS_DGMGRL.md
+│   │   ├── CS_GOLDENGATE.md
+│   │   ├── CS_LSNRCTL_NET.md
+│   │   ├── CS_MASTER_DBA.md
+│   │   ├── CS_OPATCH_DATAPATCH.md
+│   │   ├── CS_ORACLE_TOOLS_COMMAND_CENTER.md
+│   │   ├── CS_RMAN_RAPIDO.md
+│   │   ├── CS_SQLPLUS_SQLCL_DBCA_NETCA.md
+│   │   ├── CS_SQL_ASSESSMENT.md
+│   │   └── CS_SRVCTL_CRSCTL.md
+│   └── 02_runbooks_incidenti
+│       ├── 00_TRIAGE_INCIDENTI_ORACLE.md
+│       ├── 01_MORNING_HEALTH_CHECK.md
+│       ├── 02_VERIFICA_BACKUP.md
+│       ├── 03_CHECK_DATAGUARD.md
+│       ├── 04_LOCK_SESSIONI_BLOCCATE.md
+│       ├── 05_QUERY_LENTA.md
+│       ├── 06_TABLESPACE_PIENO.md
+│       ├── 07_CPU_ALTA.md
+│       ├── 08_ORA_ERRORS.md
+│       ├── 09_GESTIONE_UTENTI.md
+│       ├── 10_START_STOP_RAC.md
+│       ├── 11_REVIEW_AWR.md
+│       ├── 12_CAPACITY_PLANNING_LIMITI.md
+│       ├── 13_REFRESH_SCHEMA_TEST.md
+│       ├── 14_CHAOS_NETWORK_PARTITION_DATAGUARD.md
+│       ├── 15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md
+│       ├── 16_RESIZE_TEMP.md
+│       ├── 17_PURGE_LOG_ORACLE.md
+│       ├── 18_GESTIONE_STATISTICHE_OPTIMIZER.md
+│       ├── 19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
+│       ├── 20_EXPORT_IMPORT_PROD_PREPROD.md
+│       ├── 21_GESTIONE_DB_LINK.md
+│       ├── 22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
+│       ├── 23_SQL_TUNING_CASI_ENTERPRISE.md
+│       ├── 24_GAP_ANALYSIS_COPERTURA_DBA.md
+│       ├── 25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md
+│       ├── 26_LISTENER_SCAN_SERVICES_RAC.md
+│       ├── 27_TDE_WALLET_KEYSTORE_RUNBOOK.md
+│       ├── 28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md
+│       ├── 29_PATCHING_ORACLE_RAC_DATAGUARD.md
+│       ├── 30_MULTITENANT_PDB_OPERATIONS.md
+│       ├── 31_GOLDENGATE_INCIDENT_RUNBOOK.md
+│       ├── 32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md
+│       ├── 33_AUDIT_COMPLIANCE_EVIDENCE.md
+│       ├── 34_TCPS_WALLET_CERTIFICATI.md
+│       ├── 35_CAPACITY_FORECAST_ENTERPRISE.md
+│       └── GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md
+├── 02_core_dba
+│   ├── 01_administration_and_security
+│   │   ├── CHECKLIST_SECURITY_BASELINE.md
+│   │   ├── GUIDA_ACL_NETWORK_ORACLE.md
+│   │   ├── GUIDA_AGGIUNTA_DISCHI_ASM.md
+│   │   ├── GUIDA_ANSIBLE_TEMPLATES.md
+│   │   ├── GUIDA_CDB_PDB_UTENTI.md
+│   │   ├── GUIDA_DATABASE_VAULT_ENTERPRISE.md
+│   │   ├── GUIDA_DATA_MASKING_REDACTION.md
+│   │   ├── GUIDA_IDENTITA_ORACLE_E_SERVIZI.md
+│   │   ├── GUIDA_LISTENER_SERVICES_DBA.md
+│   │   ├── GUIDA_PACKAGE_MONITOR_DDL.md
+│   │   ├── GUIDA_PASSWORD_ROLLOUT_ENTERPRISE.md
+│   │   ├── GUIDA_SCHEDULER_JOBS.md
+│   │   ├── GUIDA_SECURITY_HARDENING.md
+│   │   ├── GUIDA_SERVIZI_APPLICATIVI_RAC.md
+│   │   ├── GUIDA_SETUP_LDAP_ENTERPRISE.md
+│   │   ├── GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md
+│   │   ├── GUIDA_TDE_IN_PROFONDITA.md
+│   │   └── GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md
+│   ├── 02_backup_and_recovery
+│   │   ├── GUIDA_DATA_PUMP.md
+│   │   ├── GUIDA_FASE5_RMAN_BACKUP.md
+│   │   ├── GUIDA_MIGRAZIONE_XTTS_RMAN.md
+│   │   ├── GUIDA_RMAN_COMANDI_ENTERPRISE.md
+│   │   ├── GUIDA_RMAN_COMPLETA_19C.md
+│   │   └── GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md
+│   ├── 03_performance_and_diagnostics
+│   │   ├── GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md
+│   │   ├── GUIDA_ADRCI_TRACE_ENTERPRISE.md
+│   │   ├── GUIDA_AWR_ASH_ADDM.md
+│   │   ├── GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md
+│   │   ├── GUIDA_SQL_TUNING_SET_ADVISORS.md
+│   │   ├── GUIDA_TROUBLESHOOTING_COMPLETO.md
+│   │   └── TOP_100_SCRIPT_DBA.md
+│   ├── 04_high_availability_and_rac
+│   │   ├── GUIDA_APPLICATION_CONTINUITY_TAF.md
+│   │   ├── GUIDA_FAILOVER_E_REINSTATE.md
+│   │   ├── GUIDA_FAR_SYNC_DATAGUARD.md
+│   │   ├── GUIDA_FASE3_RAC_STANDBY.md
+│   │   ├── GUIDA_FASE4_DATAGUARD_DGMGRL.md
+│   │   ├── GUIDA_FLASHBACK_DATABASE.md
+│   │   ├── GUIDA_MAA_BEST_PRACTICES.md
+│   │   ├── GUIDA_PDB_DATAGUARD_SERVICES.md
+│   │   ├── GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md
+│   │   ├── GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md
+│   │   └── GUIDA_SWITCHOVER_COMPLETO.md
+│   ├── 05_patching_and_upgrades
+│   │   ├── GUIDA_AUTOUPGRADE_12C_TO_19C.md
+│   │   ├── GUIDA_AUTOUPGRADE_19C_TO_26.md
+│   │   ├── GUIDA_PATCHING_RAC.md
+│   │   ├── GUIDA_UPGRADE_19C_TO_26AI.md
+│   │   └── GUIDA_UPGRADE_RU_RAC.md
+│   ├── 06_monitoring_systems
+│   │   ├── GUIDA_FASE6_ENTERPRISE_MANAGER.md
+│   │   ├── GUIDA_MONITORING_OPENSOURCE.md
+│   │   └── GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md
+│   └── 07_replication_goldengate
+│       ├── CHEAT_SHEET_GOLDENGATE_19C.md
+│       ├── GUIDA_FASE7_GOLDENGATE.md
+│       ├── GUIDA_GOLDENGATE_19C_COMPLETA.md
+│       ├── GUIDA_GOLDENGATE_26AI_NOVITA.md
+│       ├── GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md
+│       ├── GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md
+│       ├── GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md
+│       ├── GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_19C.md
+│       ├── GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md
+│       ├── GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md
+│       ├── GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md
+│       ├── GUIDA_GOLDENGATE_QA_PROFESSIONALE.md
+│       ├── GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md
+│       ├── GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md
+│       ├── GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md
+│       ├── GUIDA_MIGRAZIONE_GOLDENGATE.md
+│       ├── GUIDA_MIGRAZIONE_ORACLE_POSTGRES.md
+│       ├── TESTLOG_GOLDENGATE_TEMPLATE.md
+│       └── use_cases
+│           ├── UC01_NO_DOWNTIME_MIGRATIONS.md
+│           ├── UC02_HIGH_AVAILABILITY.md
+│           ├── UC03_ANALYTICAL_DATA_INGEST.md
+│           ├── UC04_AI_READY_DATA.md
+│           ├── UC05_MULTICLOUD_DATA_INTEGRATION.md
+│           ├── UC06_APPLICATION_DATA_STREAMS.md
+│           └── UC07_STREAM_PROCESSING_ANALYTICS.md
+├── 03_infra_lab
+│   ├── 01_proxmox_hardware
+│   │   └── GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md
+│   ├── 02_oracle_installation_asm
+│   │   ├── GUIDA_FASE0_SETUP_MACCHINE.md
+│   │   ├── GUIDA_FASE1_PREPARAZIONE_OS.md
+│   │   ├── GUIDA_FASE2_GRID_E_RAC.md
+│   │   ├── GUIDA_FASE8_TEST_VERIFICA.md
+│   │   ├── GUIDA_PERCORSO_LITE_SINGLE_NODE.md
+│   │   ├── GUIDA_SSH_KEYS_RAC.md
+│   │   └── OBIETTIVI_E_CHECKLIST_FASI_0_8.md
+│   ├── 03_cloud_oci
+│   │   ├── GUIDA_CLOUD_GOLDENGATE.md
+│   │   └── GUIDA_RETE_LAB_OCI_GOLDENGATE.md
+│   └── 04_containerization
+│       └── GUIDA_ORACLE_26AI_PODMAN_DOCKER.md
+└── 04_governance_learning
+    ├── 01_fondamenti_teorici
+    │   ├── ANALISI_ORACLEBASE_VAGRANT.md
+    │   ├── DIARIO_DI_BORDO.md
+    │   ├── GLOSSARIO_ORACLE.md
+    │   ├── GUIDA_ARCHITETTURA_ORACLE.md
+    │   ├── GUIDA_CICLO_DI_VITA_TRANSAZIONE.md
+    │   ├── GUIDA_COMANDI_DBA.md
+    │   ├── GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md
+    │   ├── GUIDA_MEMORIA_ORACLE_SGA_PGA.md
+    │   ├── GUIDA_REDO_UNDO_CRASH_RECOVERY.md
+    │   ├── LEARNING_PATH_JUNIOR_MID_SENIOR.md
+    │   ├── PIANO_LABORATORIO.md
+    │   ├── QUIZ_HANDS_ON_JUNIOR_MID_SENIOR.md
+    │   └── TEMPLATE_GUIDA_STANDARD.md
+    ├── 02_enterprise_standards
+    │   ├── COMMUNITY_ONBOARDING_PATH.md
+    │   ├── COMMUNITY_ROADMAP.md
+    │   ├── COMPATIBILITY_BY_AREA_19c_21c_23ai_26c.md
+    │   ├── COMPATIBILITY_MATRIX.md
+    │   ├── COMPATIBILITY_POLICY.md
+    │   ├── DIDACTIC_COMPLIANCE_CHECKLIST.md
+    │   ├── DIDACTIC_EXCELLENCE_STANDARD.md
+    │   ├── GO_NO_GO_MASTER_MERGE_POLICY.md
+    │   ├── MAA_SCORECARD.md
+    │   ├── PRODUCTION_PROFILE.md
+    │   ├── PUBLIC_KPI_SCOREBOARD.md
+    │   ├── QUICKSTART_10_MINUTI.md
+    │   ├── RELEASE_ENGINEERING_POLICY.md
+    │   ├── RELIABILITY_FRAMEWORK.md
+    │   ├── TROUBLESHOOTING_DECISION_TREE.md
+    │   └── VULNERABILITY_DISCLOSURE_POLICY.md
+    └── 03_esami_e_carriera
+        ├── GUIDA_ATTIVITA_LAB_RAC.md
+        ├── GUIDA_CATALOGO_ATTIVITA_DBA.md
+        ├── GUIDA_CHECKLIST_ATTIVITA_DBA.md
+        ├── GUIDA_DA_LAB_A_PRODUZIONE.md
+        ├── GUIDA_ESAME_REVIEW.md
+        ├── GUIDA_RIPASSO_CONCETTI_DBA.md
+        └── VALIDAZIONE_BEST_PRACTICES.md
+```
+</details>
+
+
+
 ---
 
 ## ⚡ Procedure Utili e Pronto Intervento
