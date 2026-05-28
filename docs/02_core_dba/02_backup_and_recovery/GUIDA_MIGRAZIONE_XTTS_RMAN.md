@@ -1,5 +1,21 @@
 # GUIDA MONUMENTALE: Cross-Platform Transportable Tablespaces (XTTS) con RMAN Incremental Backups
 
+
+## [ARCHITETTURA VISIVA] XTTS RMAN Migration
+\\mermaid
+sequenceDiagram
+    participant Source as Source DB (Endian A)
+    participant Dest as Dest DB (Endian B)
+    
+    Source->>Source: Read-Only Tablespaces
+    Source->>Dest: Trasferimento Datafiles (SCP / NFS)
+    Source->>Source: Esportazione Metadati (Data Pump)
+    Source->>Dest: Trasferimento Dump File
+    Dest->>Dest: RMAN Convert Datafiles
+    Dest->>Dest: Importazione Metadati
+    Dest->>Dest: Read-Write Tablespaces
+\
+
 > [!NOTE]
 > **DOCUMENTI DI MIGRAZIONE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Cross-Platform XTTS (questa guida)**: [GUIDA_MIGRAZIONE_XTTS_RMAN.md](./GUIDA_MIGRAZIONE_XTTS_RMAN.md) (migrazioni di database multi-TB cross-endian AIX/Solaris -> Linux con downtime minimo).

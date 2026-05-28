@@ -1,5 +1,18 @@
 # GUIDA MONUMENTALE: Performance Tuning Data Pump — Ottimizzazione & Diagnostica per Database >10 TB
 
+
+## [ARCHITETTURA VISIVA] Data Pump Parallelism
+\\mermaid
+flowchart TD
+    Master[Master Process - DM00] -->|Distribuisce Lavoro| W1(Worker 1 - DW01)
+    Master -->|Distribuisce Lavoro| W2(Worker 2 - DW02)
+    Master -->|Distribuisce Lavoro| W3(Worker n - DWnn)
+    
+    W1 -->|Scrittura Parallela| D1[(Dump File 1)]
+    W2 -->|Scrittura Parallela| D2[(Dump File 2)]
+    W3 -->|Scrittura Parallela| D3[(Dump File n)]
+\
+
 > [!NOTE]
 > **DOCUMENTI DI MIGRAZIONE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Tuning Data Pump Enterprise (questa guida)**: [GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md](./GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md) (ottimizzazione export/import per database >10 TB, parametri avanzati, Streams Pool, troubleshooting, trace flags).
