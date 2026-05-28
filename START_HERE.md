@@ -54,6 +54,18 @@ Apri:
 - [Diagnosi RMAN e DR](./docs/01_operations/02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
 - [RMAN + Data Guard Recovery/DR](./docs/01_operations/02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
 
+## Se Devi Gestire Operativita Enterprise
+
+Apri:
+
+- [ASM Storage Incidenti](./docs/01_operations/02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
+- [Listener, SCAN e Services RAC](./docs/01_operations/02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md)
+- [TDE Wallet/Keystore](./docs/01_operations/02_runbooks_incidenti/27_TDE_WALLET_KEYSTORE_RUNBOOK.md)
+- [Scheduler Jobs e AutoTask](./docs/01_operations/02_runbooks_incidenti/28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md)
+- [Patching Oracle RAC/Data Guard](./docs/01_operations/02_runbooks_incidenti/29_PATCHING_ORACLE_RAC_DATAGUARD.md)
+- [Audit, Compliance ed Evidence](./docs/01_operations/02_runbooks_incidenti/33_AUDIT_COMPLIANCE_EVIDENCE.md)
+- [Capacity Forecast Enterprise](./docs/01_operations/02_runbooks_incidenti/35_CAPACITY_FORECAST_ENTERPRISE.md)
+
 ## Se Devi Fare Performance/Tuning
 
 Apri:
@@ -86,6 +98,12 @@ Apri:
 | SQL lento | [Query Lenta](./docs/01_operations/02_runbooks_incidenti/05_QUERY_LENTA.md) |
 | Spazio pieno | [Tablespace Pieno](./docs/01_operations/02_runbooks_incidenti/06_TABLESPACE_PIENO.md) |
 | FRA piena | [Purge Log Oracle](./docs/01_operations/02_runbooks_incidenti/17_PURGE_LOG_ORACLE.md) |
+| ASM diskgroup pieno o dischi offline | [ASM Storage Incidenti](./docs/01_operations/02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
+| ORA-12514/12541 o service non registrato | [Listener/SCAN/Services RAC](./docs/01_operations/02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md) |
+| Wallet TDE chiuso o restore cifrato | [TDE Wallet/Keystore](./docs/01_operations/02_runbooks_incidenti/27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |
+| Job scheduler fallito | [Scheduler Jobs e AutoTask](./docs/01_operations/02_runbooks_incidenti/28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
+| Alert OEM/EM | [Enterprise Manager Alert Handling](./docs/01_operations/02_runbooks_incidenti/32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) |
+| Connessione TCPS/certificato | [TCPS Wallet e Certificati](./docs/01_operations/02_runbooks_incidenti/34_TCPS_WALLET_CERTIFICATI.md) |
 | Creare standby fisico | [Produzione Single Instance DG](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) |
 | Creare standby RAC | [Produzione RAC DG](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) |
 
@@ -98,6 +116,9 @@ rg -n "ORA-01555|ORA-01652|ORA-19809" docs
 rg -n "DUPLICATE TARGET DATABASE" docs
 rg -n "SHOW CONFIGURATION|VALIDATE DATABASE" docs
 rg -n "DBMS_XPLAN|SQL_ID|PLAN_HASH_VALUE" docs
+rg -n "ORA-12514|ORA-12541|LOCAL_LISTENER|REMOTE_LISTENER" docs
+rg -n "ORA-28365|v\\$encryption_wallet|ADMINISTER KEY MANAGEMENT" docs
+rg -n "OGG-|INFO ALL|lag replicat|lag extract" docs
 ```
 
 Da PowerShell:
@@ -107,6 +128,9 @@ rg -n "ORA-01555|ORA-01652|ORA-19809" docs
 rg -n "DUPLICATE TARGET DATABASE" docs
 rg -n "SHOW CONFIGURATION|VALIDATE DATABASE" docs
 rg -n "DBMS_XPLAN|SQL_ID|PLAN_HASH_VALUE" docs
+rg -n "ORA-12514|ORA-12541|LOCAL_LISTENER|REMOTE_LISTENER" docs
+rg -n "ORA-28365|v\\$encryption_wallet|ADMINISTER KEY MANAGEMENT" docs
+rg -n "OGG-|INFO ALL|lag replicat|lag extract" docs
 ```
 
 ## Regole Di Uso Del Repo

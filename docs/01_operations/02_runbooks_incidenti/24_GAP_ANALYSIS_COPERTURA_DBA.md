@@ -10,14 +10,16 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 <!-- READY_SCRIPTS_END -->
 ## Casi piu frequenti da aprire prima
 - Se devi capire cosa studiare dopo: parti da [Priorita consigliata](#priorita-consigliata).
-- Se vuoi capire cosa manca per produzione bancaria: vai a [Gap enterprise ancora aperti](#gap-enterprise-ancora-aperti).
+- Se vuoi capire cosa e stato aggiunto per produzione enterprise: vai a [Copertura enterprise aggiunta](#copertura-enterprise-aggiunta).
+- Se vuoi capire cosa resta opzionale: vai a [Gap residui da valutare](#gap-residui-da-valutare).
 - Se vuoi trasformare il repo in runbook operativo: vai a [Backlog documentale suggerito](#backlog-documentale-suggerito).
 - Se vuoi evitare duplicazioni: vai a [Cosa e gia coperto bene](#cosa-e-gia-coperto-bene).
 
 ## Indice rapido
 - [Obiettivo](#obiettivo)
 - [Cosa e gia coperto bene](#cosa-e-gia-coperto-bene)
-- [Gap enterprise ancora aperti](#gap-enterprise-ancora-aperti)
+- [Copertura enterprise aggiunta](#copertura-enterprise-aggiunta)
+- [Gap residui da valutare](#gap-residui-da-valutare)
 - [Priorita consigliata](#priorita-consigliata)
 - [Backlog documentale suggerito](#backlog-documentale-suggerito)
 - [Criteri di qualita per i prossimi runbook](#criteri-di-qualita-per-i-prossimi-runbook)
@@ -39,83 +41,67 @@ Questo documento non e un runbook di emergenza. E una fotografia della copertura
 | DB link e 2PC | Buono | [21](./21_GESTIONE_DB_LINK.md) |
 | Utenti e privilegi | Buono | [09](./09_GESTIONE_UTENTI.md) |
 | RAC start/stop | Base solida | [10](./10_START_STOP_RAC.md) |
+| ASM/storage operativo | Buono | [25](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
+| Listener, SCAN e services | Buono | [26](./26_LISTENER_SCAN_SERVICES_RAC.md) |
+| TDE wallet/keystore | Buono | [27](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |
+| Scheduler jobs e AutoTask | Buono | [28](./28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
+| Patching RAC/Data Guard | Buono | [29](./29_PATCHING_ORACLE_RAC_DATAGUARD.md) |
+| Multitenant CDB/PDB | Buono | [30](./30_MULTITENANT_PDB_OPERATIONS.md) |
+| GoldenGate incidenti | Buono | [31](./31_GOLDENGATE_INCIDENT_RUNBOOK.md) |
+| OEM/EM alert handling | Buono | [32](./32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) |
+| Audit/compliance/evidence | Buono | [33](./33_AUDIT_COMPLIANCE_EVIDENCE.md) |
+| TCPS/certificati | Buono | [34](./34_TCPS_WALLET_CERTIFICATI.md) |
+| Capacity forecast | Buono | [35](./35_CAPACITY_FORECAST_ENTERPRISE.md) |
 
-## Gap enterprise ancora aperti
+## Copertura enterprise aggiunta
 
-| Gap | Perche conta | Documento suggerito |
+| Area | Perche conta | Documento |
 |---|---|---|
-| Incidenti ASM e storage | In RAC bancario molti incidenti partono da ASM diskgroup, path multipath, latency o rebalance | `25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md` |
-| Listener, SCAN, servizi e FAN/ONS | Molti outage applicativi sono service/listener, non database down | `26_LISTENER_SCAN_SERVICES_RAC.md` |
-| TDE wallet/keystore | In ambienti regolati TDE e wallet sono critici per startup, refresh, clone, restore | `27_TDE_WALLET_KEYSTORE_RUNBOOK.md` |
-| Patching RU/RUR e rollback | Serve procedura rolling/non-rolling, precheck opatch, datapatch, rollback | `28_PATCHING_ORACLE_RAC_DATAGUARD.md` |
-| Multitenant CDB/PDB operations | Open/close PDB, clone, unplug/plug, refreshable PDB, restore PDB | `29_MULTITENANT_PDB_OPERATIONS.md` |
-| GoldenGate incidenti | Lag, abend, trail pieno, extract fermo, replicat conflict | `30_GOLDENGATE_INCIDENT_RUNBOOK.md` |
-| OEM/EM alert handling | In produzione gli incidenti arrivano da EM, non da query manuali | `31_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md` |
-| Audit, compliance e evidence | Banca richiede tracciabilita: chi ha fatto cosa, quando, con quale ticket | `32_AUDIT_COMPLIANCE_EVIDENCE.md` |
-| Encryption network e certificates | TCPS, wallet client/server, rotazione certificati | `33_TCPS_WALLET_CERTIFICATI.md` |
-| Capacity forecasting avanzato | Trend AWR/DBA_HIST, forecast ASM/FRA/TEMP/UNDO | `34_CAPACITY_FORECAST_ENTERPRISE.md` |
+| Incidenti ASM e storage | In RAC molti incidenti partono da diskgroup, path multipath, latency o rebalance | [25](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
+| Listener, SCAN, servizi e FAN/ONS | Molti outage applicativi sono service/listener, non database down | [26](./26_LISTENER_SCAN_SERVICES_RAC.md) |
+| TDE wallet/keystore | Critico per startup, refresh, clone e restore cifrati | [27](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |
+| Scheduler jobs e AutoTask | Job bloccati o finestre manutentive generano impatti reali | [28](./28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
+| Patching RU/RUR e rollback | Serve procedura con precheck, OPatch/datapatch, rolling e rollback | [29](./29_PATCHING_ORACLE_RAC_DATAGUARD.md) |
+| Multitenant CDB/PDB operations | 19c richiede competenza PDB anche se alcuni ambienti restano non-CDB | [30](./30_MULTITENANT_PDB_OPERATIONS.md) |
+| GoldenGate incidenti | Lag, abend, trail pieno, extract fermo, replicat conflict | [31](./31_GOLDENGATE_INCIDENT_RUNBOOK.md) |
+| OEM/EM alert handling | In produzione gli incidenti spesso arrivano da EM, non da query manuali | [32](./32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) |
+| Audit, compliance e evidence | Ambienti regolati richiedono tracciabilita e output before/after | [33](./33_AUDIT_COMPLIANCE_EVIDENCE.md) |
+| Encryption network e certificates | TCPS, wallet client/server e rotazione certificati causano outage applicativi | [34](./34_TCPS_WALLET_CERTIFICATI.md) |
+| Capacity forecasting avanzato | Serve prevenire incidenti spazio con trend AWR/DBA_HIST | [35](./35_CAPACITY_FORECAST_ENTERPRISE.md) |
+
+## Gap residui da valutare
+
+Questi non sono bloccanti per un percorso DBA Oracle 19c enterprise generico, ma possono diventare importanti in aziende specifiche.
+
+| Gap residuo | Quando serve | Nota |
+|---|---|---|
+| Resource Manager incidenti | Consolidamento CDB/PDB, CPU governance, batch vs online | Da aggiungere se il cliente usa consumer group e plan complessi |
+| Application Continuity/FAN/TAF deep dive | Java pool, UCP, servizi RAC con failover trasparente | Parte coperta da [26](./26_LISTENER_SCAN_SERVICES_RAC.md), ma manca runbook applicativo dedicato |
+| Exadata/storage appliance | Celle Exadata, Smart Scan, IORM, cellcli | Non aggiungere se non c'e Exadata nel perimetro |
+| Data masking e subsetting | Refresh prod-preprod con dati sensibili | Collegato a [20](./20_EXPORT_IMPORT_PROD_PREPROD.md) e compliance |
+| ZDLRA/backup appliance | Backup enterprise centralizzati | Solo se presente in infrastruttura |
 
 ## Priorita consigliata
 
-1. ASM/storage incidenti: impatta RAC, RMAN, FRA, Data Guard e performance.
-2. Listener/SCAN/services: molto frequente nei ticket applicativi.
-3. TDE wallet/keystore: essenziale per ambienti bancari e restore cifrati.
-4. Patching RAC/Data Guard: necessario per parlare di produzione vera.
-5. GoldenGate incidenti: se il percorso professionale punta a replication expert.
-6. Multitenant PDB operations: 19c in produzione e quasi sempre CDB/PDB.
-7. OEM/EM alert handling: chiude il ciclo monitoraggio -> runbook -> evidence.
+1. [25 ASM/storage incidenti](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md): impatta RAC, RMAN, FRA, Data Guard e performance.
+2. [26 Listener/SCAN/services](./26_LISTENER_SCAN_SERVICES_RAC.md): molto frequente nei ticket applicativi.
+3. [27 TDE wallet/keystore](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md): essenziale per ambienti regolati e restore cifrati.
+4. [29 Patching RAC/Data Guard](./29_PATCHING_ORACLE_RAC_DATAGUARD.md): necessario per parlare di produzione vera.
+5. [32 Enterprise Manager alert](./32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md): chiude il ciclo monitoraggio -> runbook -> evidence.
+6. [33 Audit/compliance/evidence](./33_AUDIT_COMPLIANCE_EVIDENCE.md): obbligatorio dove ogni intervento deve essere tracciato.
+7. [35 Capacity forecast](./35_CAPACITY_FORECAST_ENTERPRISE.md): evita incidenti spazio ripetitivi.
+8. [31 GoldenGate incidenti](./31_GOLDENGATE_INCIDENT_RUNBOOK.md): prioritario se il percorso punta a replica/migrazioni.
+9. [30 Multitenant PDB operations](./30_MULTITENANT_PDB_OPERATIONS.md): prioritario se il cliente usa CDB/PDB.
 
 ## Backlog documentale suggerito
 
-### 25 - ASM e storage
+Il backlog principale 25-35 e stato trasformato in runbook operativi. Per nuove aggiunte usare questa priorita:
 
-Contenuti minimi:
-
-- `asmcmd lsdg`, `v$asm_diskgroup`, `v$asm_disk`, `v$asm_operation`.
-- Diskgroup full, rebalance lento, disk offline, voting disk/OCR issue.
-- Differenza tra capacity usable, required mirror free e free MB.
-- Check multipath e latency OS.
-- Regole: mai cancellare file ASM a mano se non sai cosa rappresentano.
-
-### 26 - Listener, SCAN e servizi RAC
-
-Contenuti minimi:
-
-- `srvctl status listener`, `srvctl status scan_listener`, `lsnrctl status`.
-- Service non registrato: `LOCAL_LISTENER`, `REMOTE_LISTENER`, PMON/LREG.
-- Failover applicativo, service relocation, preferred/available instances.
-- Test Easy Connect e TNS alias.
-- Diagnosi `ORA-12514`, `ORA-12541`, `ORA-12154`.
-
-### 27 - TDE wallet/keystore
-
-Contenuti minimi:
-
-- Wallet open/closed dopo restart.
-- Backup keystore prima di refresh o restore.
-- `ADMINISTER KEY MANAGEMENT`.
-- Auto-login wallet: quando usarlo e rischi.
-- Restore RMAN con backup cifrati e wallet mancante.
-
-### 28 - Patching RAC/Data Guard
-
-Contenuti minimi:
-
-- Precheck `opatch lsinventory`, `opatchauto`, `datapatch -verbose`.
-- Rolling patch Grid/DB home.
-- Data Guard switchover-first patching.
-- Rollback plan e validazione SQL registry.
-- Evidence per change management.
-
-### 30 - GoldenGate incidenti
-
-Contenuti minimi:
-
-- `INFO ALL`, lag extract/replicat, abend, report/discard.
-- Trail pieno o checkpoint bloccato.
-- Archive retention quando extract e fermo.
-- Conflict detection/resolution.
-- Microservices: Admin Server, Distribution Server, Receiver Server, REST API.
+1. Resource Manager incidenti se trovi workload CDB/PDB consolidato.
+2. Application Continuity/FAN/TAF se il cliente usa UCP/JDBC failover avanzato.
+3. Data masking/subsetting se fai refresh preprod con dati personali.
+4. Exadata solo se il perimetro reale include Exadata.
+5. ZDLRA solo se il backup e centralizzato su Recovery Appliance.
 
 ## Criteri di qualita per i prossimi runbook
 
