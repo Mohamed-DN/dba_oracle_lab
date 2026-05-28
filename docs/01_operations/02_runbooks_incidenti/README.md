@@ -20,7 +20,9 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 8. [02 Verifica Backup RMAN](./02_VERIFICA_BACKUP.md) - ultimo backup e restore evidence.
 9. [03 Check Data Guard](./03_CHECK_DATAGUARD.md) - lag, gap, broker, role.
 10. [22 RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - crash, drop, corruption, failover, PITR.
-11. [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - catalogo esteso di casi SQL tuning.
+11. [25 ASM Storage Incidenti](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) - diskgroup, dischi, rebalance, ORA-150xx.
+12. [26 Listener/SCAN/Services RAC](./26_LISTENER_SCAN_SERVICES_RAC.md) - ORA-125xx, servizi RAC, registrazione listener.
+13. [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - catalogo esteso di casi SQL tuning.
 
 ## Cheat Sheet specialistiche
 
@@ -56,6 +58,13 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 | 21 | [Gestione DB Link](./21_GESTIONE_DB_LINK.md) | DB link rotto/lento o post-clone |
 | 22 | [Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | Crash, perdita dati, corruzione, failover, switchover |
 | 23 | [Casi SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) | SQL tuning avanzato, AWR/ASH/SPM/optimizer |
+| 25 | [ASM Storage Incidenti](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) | Diskgroup pieno, dischi offline, rebalance, ORA-150xx |
+| 26 | [Listener, SCAN e Services RAC](./26_LISTENER_SCAN_SERVICES_RAC.md) | ORA-12514/12541/12154, service non registrato, failover servizi |
+| 27 | [TDE Wallet/Keystore](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md) | Wallet chiuso, restore cifrato, backup keystore |
+| 28 | [Scheduler Jobs e AutoTask](./28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) | Job falliti, job bloccati, maintenance window, AutoTask |
+| 31 | [GoldenGate Incident Runbook](./31_GOLDENGATE_INCIDENT_RUNBOOK.md) | Extract/Replicat abended, lag, trail pieno, archive mancanti |
+| 32 | [Enterprise Manager Alert Handling](./32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) | Alert OEM/EM da trasformare in runbook ed evidence |
+| 34 | [TCPS Wallet e Certificati](./34_TCPS_WALLET_CERTIFICATI.md) | Connessioni TCPS, certificati, wallet client/server |
 
 ### Manutenzione pianificata
 
@@ -65,6 +74,8 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 | 10 | [Start/Stop Database RAC](./10_START_STOP_RAC.md) | Manutenzione DB/RAC |
 | 13 | [Refresh Ambiente di Test](./13_REFRESH_SCHEMA_TEST.md) | Refresh schema test |
 | 20 | [Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md) | Refresh enterprise con Data Pump |
+| 29 | [Patching Oracle RAC/Data Guard](./29_PATCHING_ORACLE_RAC_DATAGUARD.md) | RU/RUR, OPatch, datapatch, rolling/non-rolling, DG |
+| 30 | [Multitenant CDB/PDB Operations](./30_MULTITENANT_PDB_OPERATIONS.md) | Open/close PDB, clone, plug/unplug, restore PDB |
 | 14 | [Chaos Network Partition Data Guard](./14_CHAOS_NETWORK_PARTITION_DATAGUARD.md) | Drill laboratorio resilienza |
 | 15 | [Checkmk Agent TLS + SMART/RAID](./15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md) | Onboarding o troubleshooting monitoraggio |
 
@@ -76,6 +87,8 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 | 12 | [Capacity Planning e Limiti](./12_CAPACITY_PLANNING_LIMITI.md) | Review mensile spazio/limiti |
 | 18 | [Gestione Statistiche Optimizer](./18_GESTIONE_STATISTICHE_OPTIMIZER.md) | Review statistiche o regressioni |
 | 24 | [Gap Analysis Copertura Runbook](./24_GAP_ANALYSIS_COPERTURA_DBA.md) | Pianificazione miglioramenti repository |
+| 33 | [Audit, Compliance ed Evidence](./33_AUDIT_COMPLIANCE_EVIDENCE.md) | Evidence ticket, audit trail, controlli before/after |
+| 35 | [Capacity Forecast Enterprise](./35_CAPACITY_FORECAST_ENTERPRISE.md) | Forecast spazio/FRA/ASM/SYSAUX/processi e change preventivi |
 
 ## Come usare i runbook
 

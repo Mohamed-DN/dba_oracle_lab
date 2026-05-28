@@ -20,7 +20,7 @@ Le risorse di pronto intervento e uso giornaliero. Quello che ti serve "al volo"
 | Directory | Contenuto Principale |
 |---|---|
 | [`01_operations/01_cheat_sheets`](./01_operations/01_cheat_sheets/) | Cheat sheet a colpo d'occhio: RMAN, DGMGRL, GoldenGate. |
-| [`01_operations/02_runbooks_incidenti`](./01_operations/02_runbooks_incidenti/) | **P1 Runbooks**: Check mattutino, RCA Backup falliti, Sessioni bloccate, Query lente, CPU alta, Capacity limits. |
+| [`01_operations/02_runbooks_incidenti`](./01_operations/02_runbooks_incidenti/) | **P1 Runbooks**: triage, backup/RMAN, Data Guard, performance, spazio, ASM, listener/services, TDE, scheduler, patching, GoldenGate, OEM, audit, TCPS e capacity forecast. |
 | [`01_operations/03_scripts_pronti`](./01_operations/03_scripts_pronti/) | Script SQL isolati per estrazioni e check rapidi. |
 | [`01_operations/04_libreria_script_completa`](./01_operations/04_libreria_script_completa/) | Libreria massiva di script DBA divisi per ambito (ASM, Performance, Patching, Utilities). |
 

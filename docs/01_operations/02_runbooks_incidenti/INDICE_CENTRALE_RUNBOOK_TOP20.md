@@ -6,7 +6,9 @@
 2. [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md) - stato generale.
 3. [08 ORA-Errors Comuni](./08_ORA_ERRORS.md) - errore ORA -> causa -> fix.
 4. [22 RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - recovery, DR, failover, PITR.
-5. [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - SQL tuning avanzato.
+5. [25 ASM Storage Incidenti](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) - ASM, diskgroup, dischi, rebalance.
+6. [26 Listener/SCAN/Services RAC](./26_LISTENER_SCAN_SERVICES_RAC.md) - connettivita applicativa, servizi, ORA-125xx.
+7. [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - SQL tuning avanzato.
 
 ## Runbook operativi
 
@@ -37,6 +39,17 @@
 - [22 Casi RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) - scenari operativi per crash DB, errori umani, PITR, standby, gap, failover e switchover.
 - [23 Casi SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md) - scenari optimizer, AWR/ASH, SQL Monitor, piani, statistiche, indici, SPM e tuning sicuro.
 - [24 Gap Analysis Copertura DBA](./24_GAP_ANALYSIS_COPERTURA_DBA.md) - cosa manca ancora per copertura enterprise.
+- [25 ASM Storage Incidenti Enterprise](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) - diskgroup full, dischi offline, ORA-150xx, rebalance, evidence storage.
+- [26 Listener, SCAN e Services RAC](./26_LISTENER_SCAN_SERVICES_RAC.md) - listener/SCAN, service role-based, PMON/LREG, ORA-12514/12541/12154.
+- [27 TDE Wallet/Keystore](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md) - wallet open/closed, backup keystore, restore cifrati, Data Guard/TDE.
+- [28 Scheduler Jobs e AutoTask](./28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) - job failure, stop/disable sicuro, AutoTask, maintenance windows.
+- [29 Patching Oracle RAC/Data Guard](./29_PATCHING_ORACLE_RAC_DATAGUARD.md) - OPatch, datapatch, rolling patch, Data Guard strategy, rollback.
+- [30 Multitenant CDB/PDB Operations](./30_MULTITENANT_PDB_OPERATIONS.md) - open/close PDB, clone, plug/unplug, service PDB, PDB recovery.
+- [31 GoldenGate Incident Runbook](./31_GOLDENGATE_INCIDENT_RUNBOOK.md) - ABEND, lag, trail, archive mancanti, Replicat error.
+- [32 Enterprise Manager Alert Handling](./32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) - triage alert OEM/EM, blackout, evidence, chiusura corretta.
+- [33 Audit, Compliance ed Evidence](./33_AUDIT_COMPLIANCE_EVIDENCE.md) - audit trail, unified audit, before/after, evidence ticket.
+- [34 TCPS Wallet e Certificati](./34_TCPS_WALLET_CERTIFICATI.md) - TCPS, wallet Oracle Net, certificati, DN match, rotazione.
+- [35 Capacity Forecast Enterprise](./35_CAPACITY_FORECAST_ENTERPRISE.md) - forecast tablespace/FRA/ASM/SYSAUX/processi.
 - [Guida Migrazione MAA](./GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md)
 
 ## Cheat sheet

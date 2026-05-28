@@ -8,4 +8,15 @@ Questa directory rappresenta il **cuore operativo** del repository, progettata p
 - **`04_libreria_script_completa/`**: Una monumentale raccolta (oltre 1000 file) categorizzata di script SQL e Bash provenienti dalla community (Tim Hall, Gwen Shapira, ecc.) e adattati per questo Lab.
 
 > [!TIP]
-> Durante una severity 1, apri prima la cartella `03_scripts_pronti` per l'analisi e poi `02_runbooks_incidenti` per la mitigazione.
+> Durante una severity 1, parti da [`02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md`](./02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md), usa gli script di `03_scripts_pronti` per raccogliere evidenze, poi rientra nel runbook specifico.
+
+## Shortcut operativi
+
+- [Indice Centrale Runbook Top20](./02_runbooks_incidenti/INDICE_CENTRALE_RUNBOOK_TOP20.md)
+- [Morning Health Check](./02_runbooks_incidenti/01_MORNING_HEALTH_CHECK.md)
+- [RMAN + Data Guard Recovery/DR](./02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
+- [ASM Storage Incidenti](./02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
+- [Listener, SCAN e Services RAC](./02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md)
+- [Patching Oracle RAC/Data Guard](./02_runbooks_incidenti/29_PATCHING_ORACLE_RAC_DATAGUARD.md)
+- [Audit, Compliance ed Evidence](./02_runbooks_incidenti/33_AUDIT_COMPLIANCE_EVIDENCE.md)
+- [Capacity Forecast Enterprise](./02_runbooks_incidenti/35_CAPACITY_FORECAST_ENTERPRISE.md)
