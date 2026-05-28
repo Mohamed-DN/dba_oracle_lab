@@ -647,6 +647,41 @@ SHUTDOWN IMMEDIATE;
 STARTUP NOMOUNT;
 ```
 
+
+### Copia del TDE Wallet (Keystore) dal Primario allo Standby
+
+> [!CRITICAL]
+> **ATTENZIONE**: Se il database primario utilizza Transparent Data Encryption (TDE), **è obbligatorio** copiare il wallet (Keystore) sul server standby *prima* di eseguire RMAN Duplicate. Se non lo fai, RMAN non riuscirà a decrittografare i datafile e fallirà con errori tipo `ORA-28365: wallet is not open` o `ORA-28361`.
+
+1. **Sul Primario**: Identifica dove si trova il wallet.
+```bash
+# Verifica da sqlplus
+SQL> SELECT WRL_PARAMETER, STATUS FROM V$ENCRYPTION_WALLET;
+```
+
+2. **Sullo Standby**: Crea la directory e copia i file.
+```bash
+# Sul server standby
+mkdir -p /opt/oracle/admin/M24/wallet/tde
+chmod 700 /opt/oracle/admin/M24/wallet/tde
+
+# Dal server primary (copia i file .p12 e .sso)
+scp /opt/oracle/admin/SOLE/wallet/tde/* oracle@m24-stby01:/opt/oracle/admin/M24/wallet/tde/
+```
+
+3. **Configurazione `sqlnet.ora`**: Assicurati che lo standby punti al wallet.
+```text
+# Nel file $ORACLE_HOME/network/admin/sqlnet.ora (sullo standby)
+ENCRYPTION_WALLET_LOCATION =
+  (SOURCE =
+    (METHOD = FILE)
+    (METHOD_DATA =
+      (DIRECTORY = /opt/oracle/admin/M24/wallet/tde)
+    )
+  )
+```
+*(Nota: da Oracle 19c in poi puoi usare il parametro init `WALLET_ROOT` invece di `sqlnet.ora`)*
+
 ## Fase 7 - Creare standby con RMAN active duplicate
 
 Dal primary o da un host con rete verso entrambi:

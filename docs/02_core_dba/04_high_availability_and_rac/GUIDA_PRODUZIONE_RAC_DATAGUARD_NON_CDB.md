@@ -455,6 +455,28 @@ Durante active duplicate RMAN puo sovrascrivere il password file auxiliary con q
 
 Se ASM, usa lo standard del cliente (`asmcmd pwcopy`, `orapwd input_file=... file=+DATA/...`) e poi registra con `srvctl modify database -pwfile`.
 
+
+### Copia del TDE Wallet (Keystore) dal Primario allo Standby
+
+> [!CRITICAL]
+> **ATTENZIONE**: Se il database primario utilizza Transparent Data Encryption (TDE), **è obbligatorio** copiare il wallet (Keystore) sui server standby *prima* di eseguire RMAN Duplicate. Senza il wallet, RMAN non può decrittografare i datafile.
+
+1. **Sui Nodi Standby**: Crea le cartelle.
+```bash
+# Su entrmabi i nodi standby (m24-stby01 e m24-stby02)
+mkdir -p /opt/oracle/admin/M24/wallet/tde
+chmod 700 /opt/oracle/admin/M24/wallet/tde
+```
+
+2. **Copia dal Primario**:
+```bash
+# Dal nodo 1 del primary
+scp /opt/oracle/admin/SOLE/wallet/tde/* oracle@m24-stby01:/opt/oracle/admin/M24/wallet/tde/
+scp /opt/oracle/admin/SOLE/wallet/tde/* oracle@m24-stby02:/opt/oracle/admin/M24/wallet/tde/
+```
+
+3. **Configurazione (sqlnet.ora o WALLET_ROOT)**: Assicurati che su tutti i nodi standby la configurazione punti a questa cartella, altrimenti il database non si aprirà per l'apply dei redo.
+
 ## Fase 7 - Creare standby RAC con RMAN duplicate
 
 Metodo operativo robusto:
