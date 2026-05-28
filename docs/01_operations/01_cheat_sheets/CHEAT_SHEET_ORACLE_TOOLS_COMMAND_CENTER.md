@@ -1,6 +1,11 @@
 # Oracle DBA Tools Command Center
 
-Questa pagina e il punto unico per scegliere il tool Oracle corretto durante attivita operative, incidenti o change.
+Questa pagina è il punto unico "veloce" per scegliere il tool Oracle corretto durante attività operative, incidenti o change. 
+
+> [!NOTE]
+> Per la raccolta completa di tutti i comandi consolidati in un unico documento gigante, consulta la **[Master Cheat Sheet DBA](./CHEAT_SHEET_MASTER_DBA.md)**.
+
+
 
 ## Regola di scelta rapida
 
