@@ -165,7 +165,7 @@ RECOVER DATABASE;
 ## Collegamenti
 
 - [Guida TDE in profondita](../../02_core_dba/01_administration_and_security/GUIDA_TDE_IN_PROFONDITA.md)
-- [RMAN + Data Guard Recovery/DR](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
+- [RMAN + Data Guard Recovery/DR](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
 
 ## Evidence ticket
 

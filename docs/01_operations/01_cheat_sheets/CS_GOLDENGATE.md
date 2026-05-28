@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
-> - **Cheat Sheet Verticale 19c**: [CHEAT_SHEET_GOLDENGATE_19C.md](../../02_core_dba/07_replication_goldengate/CHEAT_SHEET_GOLDENGATE_19C.md) (comandi analitici per Classic, Microservices, grant e PostgreSQL).
+> - **Cheat Sheet Verticale 19c**: [GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md) (comandi analitici per Classic, Microservices, grant e PostgreSQL).
 > - **Guida di Laboratorio Core**: [GUIDA_FASE7_GOLDENGATE.md](../../02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) (fondamenti di installazione e setup).
 > - **Guida di Riferimento 19c Core**: [GUIDA_GOLDENGATE_19C_COMPLETA.md](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) (manuale completo dei comandi e parametri).
 
@@ -92,5 +92,5 @@ GGSCI> STATS REPLICAT <replicat_name>, TOTAL
 
 - Guida lab: [GUIDA_FASE7_GOLDENGATE](../../02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md)
 - Migrazione: [GUIDA_MIGRAZIONE_GOLDENGATE](../../02_core_dba/07_replication_goldengate/GUIDA_MIGRAZIONE_GOLDENGATE.md)
-- Test template: [TESTLOG_GOLDENGATE_TEMPLATE](../../02_core_dba/07_replication_goldengate/TESTLOG_GOLDENGATE_TEMPLATE.md)
+- Test template: [TESTLOG_GOLDENGATE_TEMPLATE](../../02_core_dba/07_replication_goldengate/GUIDA_TESTLOG_GOLDENGATE_TEMPLATE.md)
 - Oracle ufficiale: <https://docs.oracle.com/en/middleware/goldengate/core/21.3/>

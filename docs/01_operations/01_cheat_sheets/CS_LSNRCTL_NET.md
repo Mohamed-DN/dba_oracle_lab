@@ -179,10 +179,10 @@ orapki wallet display -wallet /path/to/wallet
 tnsping APPDB_TCPS
 ```
 
-Runbook dedicato: [34 TCPS Wallet e Certificati](../02_runbooks_incidenti/34_TCPS_WALLET_CERTIFICATI.md).
+Runbook dedicato: [34 TCPS Wallet e Certificati](../02_runbooks_incidenti/RUNBOOK_34_TCPS_WALLET_CERTIFICATI.md).
 
 ## Link collegati
 
-- [26 Listener, SCAN e Services RAC](../02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md)
+- [26 Listener, SCAN e Services RAC](../02_runbooks_incidenti/RUNBOOK_26_LISTENER_SCAN_SERVICES_RAC.md)
 - [GUIDA_LISTENER_SERVICES_DBA](../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
 - [GUIDA_IDENTITA_ORACLE_E_SERVIZI](../../02_core_dba/01_administration_and_security/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md)

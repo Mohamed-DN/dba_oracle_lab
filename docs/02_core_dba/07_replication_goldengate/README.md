@@ -15,7 +15,7 @@
 | 7 | [Microservices Architecture 19c](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md) | Service Manager, Admin Server, Distribution Server, Receiver Server, Admin Client, REST |
 | 8 | [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md) | Manager, GGSCI, Extract, Pump, Collector, Replicat, parameter file |
 | 9 | [Oracle -> PostgreSQL](./GUIDA_GOLDENGATE_ORACLE_TO_POSTGRESQL.md) | Replica eterogenea, datatype mapping, initial load, cutover |
-| 10 | [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md) | Comandi rapidi GGSCI, Admin Client, SQL, troubleshooting |
+| 10 | [Cheat Sheet GoldenGate 19c](./GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md) | Comandi rapidi GGSCI, Admin Client, SQL, troubleshooting |
 | 11 | [Q&A Tecnico Professionale](./GUIDA_GOLDENGATE_QA_PROFESSIONALE.md) | Domande/risposte su architettura, errori, scenari e upgrade |
 | 12 | [Use Case, Topologie e Knowledge Hub](./GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Data fabric, topologie, top 7 use case con guide operative dedicate |
 | 13 | [Novita GoldenGate 26ai](./GUIDA_GOLDENGATE_26AI_NOVITA.md) | Cosa cambia in 26ai e quando valutarlo |
@@ -33,7 +33,7 @@
 
 ## Template utili
 
-- [Testlog GoldenGate Template](./TESTLOG_GOLDENGATE_TEMPLATE.md)
+- [Testlog GoldenGate Template](./GUIDA_TESTLOG_GOLDENGATE_TEMPLATE.md)
 
 ## Fonti principali
 

@@ -55,6 +55,9 @@
 | **Locks** | Sessioni bloccanti | WARN > 5min, CRIT > 30min |
 | **Performance** | Buffer cache hit, library cache | WARN < 95%, CRIT < 90% |
 | **Job Status** | DBMS_SCHEDULER jobs falliti | CRIT se FAILED |
+| **Database Vault** | Violazioni policy (ORA-47400) | CRIT se violazione |
+| **SQL Plan Management** | Baselines non accettate/evolute | WARN se regressione |
+| **App Continuity** | Draining timeouts e failover client | WARN se drain lento |
 | **Process Count** | Processi Oracle attivi | WARN > 80%, CRIT > 95% |
 
 ---
@@ -299,6 +302,58 @@ su - oracle -c "sqlplus checkmk_monitor/pwd@PROD"
 ```
 
 ---
+
+
+### 2.X Configurazione Check Custom per Funzionalità Avanzate
+
+Per monitorare funzionalità Enterprise (Database Vault, SPM, AC), è necessario creare script custom da inserire nella cartella locale dell'agent (`/usr/lib/check_mk_agent/local/`).
+
+#### A) Monitoring Database Vault (Violazioni DVSYS)
+Verifica i tentativi di accesso non autorizzati ai Realm protetti:
+```bash
+#!/bin/bash
+# check_oracle_vault_violations.sh
+VIOLATIONS=$(sqlplus -s checkmk_monitor/StrongP@ss2026!@PROD <<EOF
+set heading off feedback off pagesize 0
+SELECT count(*) FROM DVSYS.AUDIT_TRAIL$ WHERE ACTION_NAME='VIOLATION' AND TIMESTAMP > SYSDATE-1/24;
+EOF
+)
+if [ "$VIOLATIONS" -gt 0 ]; then
+    echo "2 Oracle_Vault_Violations count=$VIOLATIONS CRITICAL - Rilevate $VIOLATIONS violazioni Database Vault nell'ultima ora!"
+else
+    echo "0 Oracle_Vault_Violations count=0 OK - Nessuna violazione Database Vault"
+fi
+```
+
+#### B) Monitoring SQL Plan Management (SPM)
+Verifica che i profili e le baseline vengano utilizzati e non ci siano regressioni attive in auto-capture:
+```bash
+#!/bin/bash
+# check_oracle_spm.sh
+UNACCEPTED=$(sqlplus -s checkmk_monitor/StrongP@ss2026!@PROD <<EOF
+set heading off feedback off pagesize 0
+SELECT count(*) FROM dba_sql_plan_baselines WHERE accepted='NO';
+EOF
+)
+if [ "$UNACCEPTED" -gt 10 ]; then
+    echo "1 Oracle_SPM_Baselines unaccepted=$UNACCEPTED WARN - $UNACCEPTED SQL Plan Baselines in attesa di evoluzione/accettazione."
+else
+    echo "0 Oracle_SPM_Baselines unaccepted=$UNACCEPTED OK - SPM Baseline stabili"
+fi
+```
+
+#### C) Monitoring Application Continuity (AC) e Draining
+Monitora lo stato di draining dei servizi per patch zero-downtime:
+```bash
+#!/bin/bash
+# check_oracle_ac_draining.sh
+DRAINING=$(srvctl status service -d PROD | grep "draining" | wc -l)
+if [ "$DRAINING" -gt 0 ]; then
+    echo "1 Oracle_AC_Draining services_draining=$DRAINING WARN - Ci sono $DRAINING servizi attualmente in draining (Possibile rallentamento client)"
+else
+    echo "0 Oracle_AC_Draining services_draining=0 OK - Nessun servizio in draining"
+fi
+```
 
 ## PARTE III — CONFIGURAZIONE SOGLIE E ALERTING
 

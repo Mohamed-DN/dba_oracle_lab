@@ -32,7 +32,7 @@ Per guide dettagliate e approfondite, vedi le sezioni dedicate:
 |---|---|---|
 | RMAN Enterprise | ~1350 | [../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) |
 | ADRCI Enterprise | ~1150 | [../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_TRACE_ENTERPRISE.md](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_TRACE_ENTERPRISE.md) |
-| Backup RCA Runbook | ~1300 | [../../01_operations/02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md](../../01_operations/02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) |
+| Backup RCA Runbook | ~1300 | [../../01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md](../../01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) |
 | SQL Scripts Pronti | 14 script | [../../01_operations/03_scripts_pronti/](../../01_operations/03_scripts_pronti/) |
 
 ---

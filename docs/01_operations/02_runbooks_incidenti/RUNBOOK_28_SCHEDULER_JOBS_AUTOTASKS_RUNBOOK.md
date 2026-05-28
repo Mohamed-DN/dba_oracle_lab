@@ -185,8 +185,8 @@ id oracle
 ## Collegamenti
 
 - [Guida Scheduler Jobs](../../02_core_dba/01_administration_and_security/GUIDA_SCHEDULER_JOBS.md)
-- [Gestione statistiche optimizer](./18_GESTIONE_STATISTICHE_OPTIMIZER.md)
-- [Lock e sessioni bloccate](./04_LOCK_SESSIONI_BLOCCATE.md)
+- [Gestione statistiche optimizer](./RUNBOOK_18_GESTIONE_STATISTICHE_OPTIMIZER.md)
+- [Lock e sessioni bloccate](./RUNBOOK_04_LOCK_SESSIONI_BLOCCATE.md)
 
 ## Evidence ticket
 

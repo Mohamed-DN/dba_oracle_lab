@@ -20,7 +20,7 @@
 
 ## Checklist operativa
 
-- [Checklist Security Baseline](./CHECKLIST_SECURITY_BASELINE.md)
+- [Checklist Security Baseline](./GUIDA_CHECKLIST_SECURITY_BASELINE.md)
 
 ---
 

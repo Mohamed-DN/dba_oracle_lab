@@ -6,7 +6,7 @@
 - [Enterprise Manager](../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)
 - [Monitoring Open Source](../../02_core_dba/06_monitoring_systems/GUIDA_MONITORING_OPENSOURCE.md)
 - [Checkmk Oracle Enterprise](../../02_core_dba/06_monitoring_systems/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md)
-- [Morning Health Check](./01_MORNING_HEALTH_CHECK.md)
+- [Morning Health Check](./RUNBOOK_01_MORNING_HEALTH_CHECK.md)
 <!-- READY_SCRIPTS_END -->
 
 ## Obiettivo
@@ -17,14 +17,14 @@ Usare l'alert OEM/EM come ingresso operativo, non come diagnosi finale. Ogni ale
 
 | Alert | Prima destinazione |
 |---|---|
-| Tablespace, TEMP, FRA | [06 Tablespace Pieno](./06_TABLESPACE_PIENO.md), [16 Resize TEMP](./16_RESIZE_TEMP.md), [17 Purge Log](./17_PURGE_LOG_ORACLE.md) |
-| Database down, instance down | [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md), [10 Start/Stop RAC](./10_START_STOP_RAC.md) |
-| Data Guard lag/gap | [03 Check Data Guard](./03_CHECK_DATAGUARD.md), [22 RMAN + DG Recovery](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) |
-| Host CPU/memory/filesystem | [07 CPU Alta](./07_CPU_ALTA.md), [25 ASM Storage](./25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
-| Listener/service down | [26 Listener/SCAN/Services](./26_LISTENER_SCAN_SERVICES_RAC.md) |
-| Backup failed | [02 Verifica Backup](./02_VERIFICA_BACKUP.md), [19 Diagnosi RMAN](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) |
-| Job failed | [28 Scheduler Jobs](./28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
-| Wallet closed | [27 TDE Wallet](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |
+| Tablespace, TEMP, FRA | [06 Tablespace Pieno](./RUNBOOK_06_TABLESPACE_PIENO.md), [16 Resize TEMP](./RUNBOOK_16_RESIZE_TEMP.md), [17 Purge Log](./RUNBOOK_17_PURGE_LOG_ORACLE.md) |
+| Database down, instance down | [01 Morning Health Check](./RUNBOOK_01_MORNING_HEALTH_CHECK.md), [10 Start/Stop RAC](./RUNBOOK_10_START_STOP_RAC.md) |
+| Data Guard lag/gap | [03 Check Data Guard](./RUNBOOK_03_CHECK_DATAGUARD.md), [22 RMAN + DG Recovery](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) |
+| Host CPU/memory/filesystem | [07 CPU Alta](./RUNBOOK_07_CPU_ALTA.md), [25 ASM Storage](./RUNBOOK_25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
+| Listener/service down | [26 Listener/SCAN/Services](./RUNBOOK_26_LISTENER_SCAN_SERVICES_RAC.md) |
+| Backup failed | [02 Verifica Backup](./RUNBOOK_02_VERIFICA_BACKUP.md), [19 Diagnosi RMAN](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) |
+| Job failed | [28 Scheduler Jobs](./RUNBOOK_28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
+| Wallet closed | [27 TDE Wallet](./RUNBOOK_27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |
 
 ## Precheck OEM
 

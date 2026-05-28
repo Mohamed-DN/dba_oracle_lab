@@ -100,7 +100,7 @@ SHOW CONFIGURATION;
 
 ## Link correlati
 
-- Runbook: [03 Check Data Guard](../02_runbooks_incidenti/03_CHECK_DATAGUARD.md)
+- Runbook: [03 Check Data Guard](../02_runbooks_incidenti/RUNBOOK_03_CHECK_DATAGUARD.md)
 - Command center: [Oracle Tools Command Center](./CS_ORACLE_TOOLS_COMMAND_CENTER.md)
 - Guida estesa: [GUIDA_FASE4_DATAGUARD_DGMGRL](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 - Guida operativa: [GUIDA_SWITCHOVER_COMPLETO](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md)

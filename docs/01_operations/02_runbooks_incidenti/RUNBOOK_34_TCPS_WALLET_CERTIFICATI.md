@@ -4,7 +4,7 @@
 ## Guide collegate
 
 - [Listener Services DBA](../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
-- [TDE Wallet Runbook](./27_TDE_WALLET_KEYSTORE_RUNBOOK.md)
+- [TDE Wallet Runbook](./RUNBOOK_27_TDE_WALLET_KEYSTORE_RUNBOOK.md)
 - [Checkmk Oracle Enterprise](../../02_core_dba/06_monitoring_systems/GUIDA_SETUP_CHECKMK_ORACLE_ENTERPRISE.md)
 <!-- READY_SCRIPTS_END -->
 

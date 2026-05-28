@@ -8,13 +8,13 @@
 
 Usalo per questi use case:
 
-- [UC01 - No Downtime Migrations](./use_cases/UC01_NO_DOWNTIME_MIGRATIONS.md)
-- [UC02 - High Availability](./use_cases/UC02_HIGH_AVAILABILITY.md)
-- [UC03 - Analytical Data Ingest](./use_cases/UC03_ANALYTICAL_DATA_INGEST.md)
-- [UC04 - AI Ready Data](./use_cases/UC04_AI_READY_DATA.md)
-- [UC05 - Multicloud Data Integration](./use_cases/UC05_MULTICLOUD_DATA_INTEGRATION.md)
-- [UC06 - Application Data Streams](./use_cases/UC06_APPLICATION_DATA_STREAMS.md)
-- [UC07 - Stream Processing and Analytics](./use_cases/UC07_STREAM_PROCESSING_ANALYTICS.md)
+- [UC01 - No Downtime Migrations](./use_cases/GUIDA_UC01_NO_DOWNTIME_MIGRATIONS.md)
+- [UC02 - High Availability](./use_cases/GUIDA_UC02_HIGH_AVAILABILITY.md)
+- [UC03 - Analytical Data Ingest](./use_cases/GUIDA_UC03_ANALYTICAL_DATA_INGEST.md)
+- [UC04 - AI Ready Data](./use_cases/GUIDA_UC04_AI_READY_DATA.md)
+- [UC05 - Multicloud Data Integration](./use_cases/GUIDA_UC05_MULTICLOUD_DATA_INTEGRATION.md)
+- [UC06 - Application Data Streams](./use_cases/GUIDA_UC06_APPLICATION_DATA_STREAMS.md)
+- [UC07 - Stream Processing and Analytics](./use_cases/GUIDA_UC07_STREAM_PROCESSING_ANALYTICS.md)
 
 L'ordine consigliato e':
 
@@ -462,7 +462,7 @@ Verifica sul target dopo ogni step.
 
 ## 14. Active-active e CDR
 
-Prima di active-active devi leggere [UC02 - High Availability](./use_cases/UC02_HIGH_AVAILABILITY.md).
+Prima di active-active devi leggere [UC02 - High Availability](./use_cases/GUIDA_UC02_HIGH_AVAILABILITY.md).
 
 Concetto base:
 

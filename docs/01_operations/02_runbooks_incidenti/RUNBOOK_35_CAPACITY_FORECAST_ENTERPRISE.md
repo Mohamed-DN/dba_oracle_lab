@@ -3,7 +3,7 @@
 <!-- READY_SCRIPTS_START -->
 ## Script e runbook collegati
 
-- [12 Capacity Planning e Limiti](./12_CAPACITY_PLANNING_LIMITI.md)
+- [12 Capacity Planning e Limiti](./RUNBOOK_12_CAPACITY_PLANNING_LIMITI.md)
 - [05_asm_storage.sql](../03_scripts_pronti/05_asm_storage.sql)
 - [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql)
 - [monitoring_scripts/general/data-growth-db.sql](../04_libreria_script_completa/monitoring_scripts/general/data-growth-db.sql)

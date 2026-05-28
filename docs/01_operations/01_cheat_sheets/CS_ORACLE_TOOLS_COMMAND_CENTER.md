@@ -21,8 +21,8 @@ Questa pagina è il punto unico "veloce" per scegliere il tool Oracle corretto d
 | Patch Grid/DB home e SQL patch registry | `opatch`, `opatchauto`, `datapatch` | [OPatch/datapatch](./CS_OPATCH_DATAPATCH.md) |
 | SQL amministrativo, startup/shutdown, spool | `sqlplus`, `sqlcl` | [SQLPlus/SQLcl/DBCA/NETCA](./CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
 | Creare/configurare DB e listener in modo assistito/silent | `dbca`, `netca` | [SQLPlus/SQLcl/DBCA/NETCA](./CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
-| Export/import logico | `expdp`, `impdp` | [Export/Import Prod-Preprod](../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md) |
-| Wallet/certificati | `orapki`, `mkstore` | [TCPS Wallet](../02_runbooks_incidenti/34_TCPS_WALLET_CERTIFICATI.md) |
+| Export/import logico | `expdp`, `impdp` | [Export/Import Prod-Preprod](../02_runbooks_incidenti/RUNBOOK_20_EXPORT_IMPORT_PROD_PREPROD.md) |
+| Wallet/certificati | `orapki`, `mkstore` | [TCPS Wallet](../02_runbooks_incidenti/RUNBOOK_34_TCPS_WALLET_CERTIFICATI.md) |
 
 ## Utente corretto
 

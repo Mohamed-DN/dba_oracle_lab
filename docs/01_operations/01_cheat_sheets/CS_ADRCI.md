@@ -138,5 +138,5 @@ ips generate package <pkg> in /tmp
 
 - [ADRCI Enterprise](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_TRACE_ENTERPRISE.md)
 - [ADRCI Diagnostica Oracle](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)
-- [08 ORA Errors](../02_runbooks_incidenti/08_ORA_ERRORS.md)
-- [32 Enterprise Manager Alert Handling](../02_runbooks_incidenti/32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md)
+- [08 ORA Errors](../02_runbooks_incidenti/RUNBOOK_08_ORA_ERRORS.md)
+- [32 Enterprise Manager Alert Handling](../02_runbooks_incidenti/RUNBOOK_32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md)

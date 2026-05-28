@@ -4,7 +4,7 @@
 > **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Guida di Riferimento 19c Core (Single Source of Truth)**: [GUIDA_GOLDENGATE_19C_COMPLETA.md](./GUIDA_GOLDENGATE_19C_COMPLETA.md) (manuale completo di architettura, parametri e best practices).
 > - **Cheat Sheet Operativo (Veloce)**: [CS_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md) (comandi rapidi, lag, stop/start).
-> - **Cheat Sheet Verticale 19c**: [CHEAT_SHEET_GOLDENGATE_19C.md](./CHEAT_SHEET_GOLDENGATE_19C.md) (comandi analitici e grant).
+> - **Cheat Sheet Verticale 19c**: [GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md](./GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md) (comandi analitici e grant).
 
 > Questa fase configura Oracle GoldenGate **19c Microservices Architecture (MA)** per replicare dati in tempo reale dal RAC Primary verso un database Oracle target. Classic Architecture (`ggsci`) non e' il percorso principale del lab, ma resta fondamentale da conoscere per ambienti legacy e troubleshooting.
 
