@@ -28,13 +28,13 @@ Uso tipico                -> DR a costo ridotto, non HA locale sul sito standby
 Esempio naming:
 
 ```text
-DB_NAME:                 W4RAC
-Primary DB_UNIQUE_NAME:  W4RAC_PRI
-Standby DB_UNIQUE_NAME:  W4RAC_STBY
-Primary instances:       W4RAC1, W4RAC2
-Standby instances:       W4RACS1, W4RACS2
-Primary SCAN:            w4rac-pri-scan
-Standby SCAN:            w4rac-stby-scan
+DB_NAME:                 SOLE
+Primary DB_UNIQUE_NAME:  SOLE
+Standby DB_UNIQUE_NAME:  M24
+Primary instances:       SOLE1, SOLE2
+Standby instances:       M241, M242
+Primary SCAN:            sole-pri-scan
+Standby SCAN:            m24-stby-scan
 ASM DATA/FRA primary:    +DATA_PRI, +FRA_PRI
 ASM DATA/FRA standby:    +DATA_STBY, +FRA_STBY
 ```
@@ -219,22 +219,22 @@ FRA dimensionata per ogni DB_UNIQUE_NAME
 Esempio:
 
 ```text
-DB W4RAC_PRI:
-  node1 ORACLE_SID=W4RAC1 thread=1 instance_number=1
-  node2 ORACLE_SID=W4RAC2 thread=2 instance_number=2
+DB SOLE:
+  node1 ORACLE_SID=SOLE1 thread=1 instance_number=1
+  node2 ORACLE_SID=SOLE2 thread=2 instance_number=2
 
-DB W4BATCH_PRI:
-  node1 ORACLE_SID=W4BATCH1 thread=1 instance_number=1
-  node2 ORACLE_SID=W4BATCH2 thread=2 instance_number=2
+DB M24:
+  node1 ORACLE_SID=M241 thread=1 instance_number=1
+  node2 ORACLE_SID=M242 thread=2 instance_number=2
 ```
 
 ASM con OMF:
 
 ```text
-+DATA/W4RAC_PRI/DATAFILE
-+FRA/W4RAC_PRI/ARCHIVELOG
-+DATA/W4BATCH_PRI/DATAFILE
-+FRA/W4BATCH_PRI/ARCHIVELOG
++DATA/SOLE/DATAFILE
++FRA/SOLE/ARCHIVELOG
++DATA/M24/DATAFILE
++FRA/M24/ARCHIVELOG
 ```
 
 Non usare la stessa directory file system per due database se non c'e' un naming chiaramente separato. In ASM preferisci OMF e `DB_UNIQUE_NAME` distinto.
@@ -249,8 +249,8 @@ export PATH=$ORACLE_HOME/bin:$PATH
 
 dbca -silent -createDatabase \
   -templateName General_Purpose.dbc \
-  -gdbName W4RAC \
-  -sid W4RAC \
+  -gdbName SOLE \
+  -sid SOLE \
   -createAsContainerDatabase false \
   -databaseConfigType RAC \
   -nodelist racpri1,racpri2 \
@@ -264,7 +264,7 @@ dbca -silent -createDatabase \
   -sampleSchema false \
   -databaseType MULTIPURPOSE \
   -initParams \
-    db_unique_name=W4RAC_PRI,\
+    db_unique_name=SOLE,\
     db_block_size=8192,\
     sga_target=8192M,\
     pga_aggregate_target=2048M,\
@@ -276,8 +276,8 @@ dbca -silent -createDatabase \
 Validazione:
 
 ```bash
-srvctl status database -d W4RAC_PRI -v
-srvctl config database -d W4RAC_PRI
+srvctl status database -d SOLE -v
+srvctl config database -d SOLE
 crsctl stat res -t
 ```
 
@@ -307,12 +307,12 @@ ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 Se ARCHIVELOG non e' attivo:
 
 ```bash
-srvctl stop database -d W4RAC_PRI
+srvctl stop database -d SOLE
 sqlplus / as sysdba
 STARTUP MOUNT;
 ALTER DATABASE ARCHIVELOG;
 ALTER DATABASE OPEN;
-srvctl start database -d W4RAC_PRI
+srvctl start database -d SOLE
 ```
 
 Flashback:
@@ -371,21 +371,21 @@ Questi SRL vanno creati anche sullo standby dopo la duplicazione, se RMAN non li
 Usa SCAN quando appropriato, ma per broker e duplicate assicurati che il servizio risolva verso istanze raggiungibili.
 
 ```text
-W4RAC_PRI_DG =
+SOLE_DG =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = w4rac-pri-scan)(PORT = 1531))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = sole-pri-scan)(PORT = 1531))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = W4RAC_PRI_DG)
+      (SERVICE_NAME = SOLE_DG)
     )
   )
 
-W4RAC_STBY_DG =
+M24_DG =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = w4rac-stby-scan)(PORT = 1531))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = m24-stby-scan)(PORT = 1531))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = W4RAC_STBY_DG)
+      (SERVICE_NAME = M24_DG)
     )
   )
 ```
@@ -393,10 +393,10 @@ W4RAC_STBY_DG =
 Test:
 
 ```bash
-tnsping W4RAC_PRI_DG
-tnsping W4RAC_STBY_DG
-sqlplus sys@W4RAC_PRI_DG as sysdba
-sqlplus sys@W4RAC_STBY_DG as sysdba
+tnsping SOLE_DG
+tnsping M24_DG
+sqlplus sys@SOLE_DG as sysdba
+sqlplus sys@M24_DG as sysdba
 ```
 
 ### Servizi RAC role-based
@@ -404,13 +404,13 @@ sqlplus sys@W4RAC_STBY_DG as sysdba
 Dopo la configurazione, crea servizi applicativi governati dal ruolo:
 
 ```bash
-srvctl add service -d W4RAC_PRI -s W4RAC_APP_RW \
-  -preferred W4RAC1,W4RAC2 \
+srvctl add service -d SOLE -s SOLE_APP_RW \
+  -preferred SOLE1,SOLE2 \
   -role PRIMARY \
   -policy AUTOMATIC
 
-srvctl add service -d W4RAC_PRI -s W4RAC_APP_RO \
-  -preferred W4RAC1,W4RAC2 \
+srvctl add service -d SOLE -s SOLE_APP_RO \
+  -preferred SOLE1,SOLE2 \
   -role PHYSICAL_STANDBY \
   -policy AUTOMATIC
 ```
@@ -424,15 +424,15 @@ In RAC il password file puo trovarsi in ASM o in filesystem, a seconda dello sta
 Controlla primary:
 
 ```bash
-srvctl config database -d W4RAC_PRI | grep -i "Password"
-srvctl config database -d W4RAC_PRI
+srvctl config database -d SOLE | grep -i "Password"
+srvctl config database -d SOLE
 ```
 
 Se file system, prepara almeno un password file temporaneo/coerente sull'auxiliary per consentire la connessione SYS via Oracle Net:
 
 ```bash
-scp $ORACLE_HOME/dbs/orapwW4RAC1 oracle@racstby1:$ORACLE_HOME/dbs/orapwW4RACS1
-scp $ORACLE_HOME/dbs/orapwW4RAC1 oracle@racstby2:$ORACLE_HOME/dbs/orapwW4RACS2
+scp $ORACLE_HOME/dbs/orapwSOLE1 oracle@racstby1:$ORACLE_HOME/dbs/orapwM241
+scp $ORACLE_HOME/dbs/orapwSOLE1 oracle@racstby2:$ORACLE_HOME/dbs/orapwM242
 ```
 
 Durante active duplicate RMAN puo sovrascrivere il password file auxiliary con quello del target. Per backup-based duplicate, la copia del password file primary resta necessaria per il redo transport.
@@ -457,22 +457,22 @@ Sul primo nodo standby:
 
 ```bash
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-export ORACLE_SID=W4RACS1
+export ORACLE_SID=M241
 export PATH=$ORACLE_HOME/bin:$PATH
-mkdir -p $ORACLE_BASE/admin/W4RAC_STBY/adump
+mkdir -p $ORACLE_BASE/admin/M24/adump
 ```
 
-PFILE `/tmp/initW4RACS1.ora`:
+PFILE `/tmp/initM241.ora`:
 
 ```text
-db_name='W4RAC'
-db_unique_name='W4RAC_STBY'
+db_name='SOLE'
+db_unique_name='M24'
 cluster_database=FALSE
-instance_name='W4RACS1'
+instance_name='M241'
 instance_number=1
 thread=1
 remote_login_passwordfile='EXCLUSIVE'
-audit_file_dest='/u01/app/oracle/admin/W4RAC_STBY/adump'
+audit_file_dest='/u01/app/oracle/admin/M24/adump'
 sga_target=8192M
 pga_aggregate_target=2048M
 processes=2048
@@ -480,7 +480,7 @@ db_create_file_dest='+DATA_STBY'
 db_recovery_file_dest='+FRA_STBY'
 db_recovery_file_dest_size=102400M
 standby_file_management='AUTO'
-fal_server='W4RAC_PRI_DG'
+fal_server='SOLE_DG'
 dg_broker_start=TRUE
 ```
 
@@ -488,17 +488,17 @@ Start:
 
 ```sql
 sqlplus / as sysdba
-STARTUP NOMOUNT PFILE='/tmp/initW4RACS1.ora';
-CREATE SPFILE='+DATA_STBY/W4RAC_STBY/PARAMETERFILE/spfileW4RAC_STBY.ora'
-  FROM PFILE='/tmp/initW4RACS1.ora';
+STARTUP NOMOUNT PFILE='/tmp/initM241.ora';
+CREATE SPFILE='+DATA_STBY/M24/PARAMETERFILE/spfileM24.ora'
+  FROM PFILE='/tmp/initM241.ora';
 SHUTDOWN IMMEDIATE;
-STARTUP NOMOUNT SPFILE='+DATA_STBY/W4RAC_STBY/PARAMETERFILE/spfileW4RAC_STBY.ora';
+STARTUP NOMOUNT SPFILE='+DATA_STBY/M24/PARAMETERFILE/spfileM24.ora';
 ```
 
 RMAN:
 
 ```bash
-rman TARGET sys@W4RAC_PRI_DG AUXILIARY sys@W4RAC_STBY_DG
+rman TARGET sys@SOLE_DG AUXILIARY sys@M24_DG
 ```
 
 Duplicate:
@@ -515,13 +515,13 @@ RUN {
     FROM ACTIVE DATABASE
     DORECOVER
     SPFILE
-      PARAMETER_VALUE_CONVERT 'W4RAC_PRI','W4RAC_STBY'
-      SET DB_UNIQUE_NAME='W4RAC_STBY'
+      PARAMETER_VALUE_CONVERT 'SOLE','M24'
+      SET DB_UNIQUE_NAME='M24'
       SET CLUSTER_DATABASE='FALSE'
       SET DB_CREATE_FILE_DEST='+DATA_STBY'
       SET DB_RECOVERY_FILE_DEST='+FRA_STBY'
       SET DB_RECOVERY_FILE_DEST_SIZE='102400M'
-      SET FAL_SERVER='W4RAC_PRI_DG'
+      SET FAL_SERVER='SOLE_DG'
       SET STANDBY_FILE_MANAGEMENT='AUTO'
       SET DG_BROKER_START='TRUE'
     NOFILENAMECHECK;
@@ -531,8 +531,8 @@ RUN {
 Se primary e standby usano diskgroup o path diversi e non OMF, usa:
 
 ```sql
-SET DB_FILE_NAME_CONVERT='+DATA_PRI/W4RAC_PRI/','+DATA_STBY/W4RAC_STBY/'
-SET LOG_FILE_NAME_CONVERT='+FRA_PRI/W4RAC_PRI/','+FRA_STBY/W4RAC_STBY/'
+SET DB_FILE_NAME_CONVERT='+DATA_PRI/SOLE/','+DATA_STBY/M24/'
+SET LOG_FILE_NAME_CONVERT='+FRA_PRI/SOLE/','+FRA_STBY/M24/'
 ```
 
 Attenzione:
@@ -553,13 +553,13 @@ SHUTDOWN IMMEDIATE;
 STARTUP NOMOUNT;
 
 ALTER SYSTEM SET cluster_database=TRUE SCOPE=SPFILE;
-ALTER SYSTEM SET instance_number=1 SID='W4RACS1' SCOPE=SPFILE;
-ALTER SYSTEM SET thread=1 SID='W4RACS1' SCOPE=SPFILE;
-ALTER SYSTEM SET undo_tablespace='UNDOTBS1' SID='W4RACS1' SCOPE=SPFILE;
+ALTER SYSTEM SET instance_number=1 SID='M241' SCOPE=SPFILE;
+ALTER SYSTEM SET thread=1 SID='M241' SCOPE=SPFILE;
+ALTER SYSTEM SET undo_tablespace='UNDOTBS1' SID='M241' SCOPE=SPFILE;
 
-ALTER SYSTEM SET instance_number=2 SID='W4RACS2' SCOPE=SPFILE;
-ALTER SYSTEM SET thread=2 SID='W4RACS2' SCOPE=SPFILE;
-ALTER SYSTEM SET undo_tablespace='UNDOTBS2' SID='W4RACS2' SCOPE=SPFILE;
+ALTER SYSTEM SET instance_number=2 SID='M242' SCOPE=SPFILE;
+ALTER SYSTEM SET thread=2 SID='M242' SCOPE=SPFILE;
+ALTER SYSTEM SET undo_tablespace='UNDOTBS2' SID='M242' SCOPE=SPFILE;
 
 SHUTDOWN IMMEDIATE;
 ```
@@ -567,25 +567,25 @@ SHUTDOWN IMMEDIATE;
 Registra nel cluster standby:
 
 ```bash
-srvctl add database -d W4RAC_STBY \
+srvctl add database -d M24 \
   -oraclehome /u01/app/oracle/product/19.0.0/dbhome_1 \
-  -spfile +DATA_STBY/W4RAC_STBY/PARAMETERFILE/spfileW4RAC_STBY.ora \
+  -spfile +DATA_STBY/M24/PARAMETERFILE/spfileM24.ora \
   -role PHYSICAL_STANDBY \
   -startoption MOUNT \
   -stopoption IMMEDIATE \
-  -dbname W4RAC
+  -dbname SOLE
 
-srvctl add instance -d W4RAC_STBY -i W4RACS1 -n racstby1
-srvctl add instance -d W4RAC_STBY -i W4RACS2 -n racstby2
+srvctl add instance -d M24 -i M241 -n racstby1
+srvctl add instance -d M24 -i M242 -n racstby2
 
-srvctl start database -d W4RAC_STBY -o mount
-srvctl status database -d W4RAC_STBY -v
+srvctl start database -d M24 -o mount
+srvctl status database -d M24 -v
 ```
 
 Se usi password file in ASM:
 
 ```bash
-srvctl modify database -d W4RAC_STBY -pwfile +DATA_STBY/W4RAC_STBY/PASSWORD/pwdW4RAC_STBY
+srvctl modify database -d M24 -pwfile +DATA_STBY/M24/PASSWORD/pwdM24
 ```
 
 ## Fase 9 - Verificare redo thread e SRL sullo standby
@@ -634,39 +634,39 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 Da primary:
 
 ```bash
-dgmgrl sys@W4RAC_PRI_DG
+dgmgrl sys@SOLE_DG
 ```
 
 ```text
-CREATE CONFIGURATION 'DG_W4RAC' AS
-  PRIMARY DATABASE IS 'W4RAC_PRI'
-  CONNECT IDENTIFIER IS W4RAC_PRI_DG;
+CREATE CONFIGURATION 'DG_SOLE' AS
+  PRIMARY DATABASE IS 'SOLE'
+  CONNECT IDENTIFIER IS SOLE_DG;
 
-ADD DATABASE 'W4RAC_STBY' AS
-  CONNECT IDENTIFIER IS W4RAC_STBY_DG
+ADD DATABASE 'M24' AS
+  CONNECT IDENTIFIER IS M24_DG
   MAINTAINED AS PHYSICAL;
 
 ENABLE CONFIGURATION;
 
 SHOW CONFIGURATION;
-SHOW DATABASE 'W4RAC_PRI';
-SHOW DATABASE 'W4RAC_STBY';
-VALIDATE DATABASE 'W4RAC_PRI';
-VALIDATE DATABASE 'W4RAC_STBY';
+SHOW DATABASE 'SOLE';
+SHOW DATABASE 'M24';
+VALIDATE DATABASE 'SOLE';
+VALIDATE DATABASE 'M24';
 ```
 
 Controlla proprieta utili:
 
 ```text
-SHOW DATABASE VERBOSE 'W4RAC_PRI';
-SHOW DATABASE VERBOSE 'W4RAC_STBY';
+SHOW DATABASE VERBOSE 'SOLE';
+SHOW DATABASE VERBOSE 'M24';
 ```
 
 Se necessario:
 
 ```text
-EDIT DATABASE 'W4RAC_PRI' SET PROPERTY LogXptMode='ASYNC';
-EDIT DATABASE 'W4RAC_STBY' SET PROPERTY LogXptMode='ASYNC';
+EDIT DATABASE 'SOLE' SET PROPERTY LogXptMode='ASYNC';
+EDIT DATABASE 'M24' SET PROPERTY LogXptMode='ASYNC';
 ```
 
 Per zero data loss si valuta `SYNC/AFFIRM` solo con rete e latenza compatibili.
@@ -682,7 +682,7 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;
 Con broker, l'apply viene governato dal broker:
 
 ```text
-DGMGRL> EDIT DATABASE 'W4RAC_STBY' SET STATE='APPLY-ON';
+DGMGRL> EDIT DATABASE 'M24' SET STATE='APPLY-ON';
 ```
 
 Controlli SQL:
@@ -741,15 +741,15 @@ L'istanza standby applica redo in MRP, ma non ha istanze multiple.
 PFILE standby single:
 
 ```text
-db_name='W4RAC'
-db_unique_name='W4RAC_STBY'
+db_name='SOLE'
+db_unique_name='M24'
 cluster_database=FALSE
-instance_name='W4RACSTBY'
+instance_name='M24'
 remote_login_passwordfile='EXCLUSIVE'
 db_create_file_dest='+DATA_STBY'
 db_recovery_file_dest='+FRA_STBY'
 standby_file_management='AUTO'
-fal_server='W4RAC_PRI_DG'
+fal_server='SOLE_DG'
 dg_broker_start=TRUE
 ```
 
@@ -798,33 +798,33 @@ Readiness:
 
 ```text
 DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE 'W4RAC_PRI';
-DGMGRL> VALIDATE DATABASE 'W4RAC_STBY';
+DGMGRL> VALIDATE DATABASE 'SOLE';
+DGMGRL> VALIDATE DATABASE 'M24';
 ```
 
 Switchover:
 
 ```text
-DGMGRL> SWITCHOVER TO 'W4RAC_STBY';
+DGMGRL> SWITCHOVER TO 'M24';
 DGMGRL> SHOW CONFIGURATION;
 ```
 
 Switchback:
 
 ```text
-DGMGRL> SWITCHOVER TO 'W4RAC_PRI';
+DGMGRL> SWITCHOVER TO 'SOLE';
 ```
 
 Failover:
 
 ```text
-DGMGRL> FAILOVER TO 'W4RAC_STBY';
+DGMGRL> FAILOVER TO 'M24';
 ```
 
 Dopo failover, valuta reinstate del vecchio primary:
 
 ```text
-DGMGRL> REINSTATE DATABASE 'W4RAC_PRI';
+DGMGRL> REINSTATE DATABASE 'SOLE';
 ```
 
 Prerequisito pratico per reinstate veloce: Flashback Database attivo e FRA sufficiente.

@@ -18,11 +18,11 @@ Architettura                -> Non-CDB
 Esempio naming:
 
 ```text
-Vecchio DB sorgente:        W4HMO
-Nuovo primary/migrato:      W4UCIHMOC
-Standby fisico:             W4HMOSEC oppure W4UCIHMOC_STBY
-Primary host:               w4dwhdbpec01
-Standby host:               w4dwhdbsec01
+Vecchio DB sorgente:        SOLE
+Nuovo primary/migrato:      SOLE
+Standby fisico:             M24
+Primary host:               sole-pri01
+Standby host:               m24-stby01
 Listener app:               1521
 Listener Data Guard:        1531
 ```
@@ -290,19 +290,19 @@ Esempio file system:
 
 ```text
 /u01/app/oracle/product/19.0.0/dbhome_1
-/u02/oradata/W4UCIHMOC
-/u03/fra/W4UCIHMOC
-/u02/oradata/W4TEST
-/u03/fra/W4TEST
+/u02/oradata/SOLE
+/u03/fra/SOLE
+/u02/oradata/M24
+/u03/fra/M24
 ```
 
 Esempio ASM/OMF:
 
 ```text
-+DATA/W4UCIHMOC/DATAFILE
-+FRA/W4UCIHMOC/ARCHIVELOG
-+DATA/W4TEST/DATAFILE
-+FRA/W4TEST/ARCHIVELOG
++DATA/SOLE/DATAFILE
++FRA/SOLE/ARCHIVELOG
++DATA/M24/DATAFILE
++FRA/M24/ARCHIVELOG
 ```
 
 Ambiente:
@@ -310,7 +310,7 @@ Ambiente:
 ```bash
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-export ORACLE_SID=W4UCIHMOC
+export ORACLE_SID=SOLE
 export PATH=$ORACLE_HOME/bin:$PATH
 ```
 
@@ -350,19 +350,19 @@ non usare NOFILENAMECHECK senza convert espliciti
 Esempio path:
 
 ```text
-/u02/oradata/W4UCIHMOC_PRI
-/u03/fra/W4UCIHMOC_PRI
-/u02/oradata/W4UCIHMOC_STBY
-/u03/fra/W4UCIHMOC_STBY
+/u02/oradata/SOLE_PRI
+/u03/fra/SOLE_PRI
+/u02/oradata/M24
+/u03/fra/M24
 ```
 
 In ASM:
 
 ```text
-+DATA/W4UCIHMOC_PRI
-+FRA/W4UCIHMOC_PRI
-+DATA/W4UCIHMOC_STBY
-+FRA/W4UCIHMOC_STBY
++DATA/SOLE_PRI
++FRA/SOLE_PRI
++DATA/M24
++FRA/M24
 ```
 
 ## Fase 3 - Creazione del nuovo primary non-CDB
@@ -371,17 +371,17 @@ Se devi creare un nuovo primary indipendente ma simile al vecchio, usa DBCA. Ese
 
 ```bash
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-export ORACLE_SID=W4UCIHMOC
+export ORACLE_SID=SOLE
 export PATH=$ORACLE_HOME/bin:$PATH
 
 dbca -silent -createDatabase \
   -templateName General_Purpose.dbc \
-  -gdbName W4UCIHMOC \
-  -sid W4UCIHMOC \
+  -gdbName SOLE \
+  -sid SOLE \
   -createAsContainerDatabase false \
   -storageType ASM \
-  -diskGroupName +W4DMUCI_DATA \
-  -recoveryAreaDestination +W4DMUCI_FRA \
+  -diskGroupName +SOLE_DATA \
+  -recoveryAreaDestination +SOLE_FRA \
   -recoveryAreaSize 20480 \
   -characterSet AL32UTF8 \
   -nationalCharacterSet AL16UTF16 \
@@ -389,7 +389,7 @@ dbca -silent -createDatabase \
   -sampleSchema false \
   -databaseType MULTIPURPOSE \
   -initParams \
-    db_unique_name=W4UCIHMOC,\
+    db_unique_name=SOLE,\
     db_block_size=8192,\
     sga_target=4096M,\
     pga_aggregate_target=1024M,\
@@ -484,10 +484,10 @@ FROM v$log
 ORDER BY group#;
 
 ALTER DATABASE ADD STANDBY LOGFILE THREAD 1
-  GROUP 11 ('+W4DMUCI_DATA') SIZE 200M,
-  GROUP 12 ('+W4DMUCI_DATA') SIZE 200M,
-  GROUP 13 ('+W4DMUCI_DATA') SIZE 200M,
-  GROUP 14 ('+W4DMUCI_DATA') SIZE 200M;
+  GROUP 11 ('+SOLE_DATA') SIZE 200M,
+  GROUP 12 ('+SOLE_DATA') SIZE 200M,
+  GROUP 13 ('+SOLE_DATA') SIZE 200M,
+  GROUP 14 ('+SOLE_DATA') SIZE 200M;
 
 SELECT group#, thread#, bytes/1024/1024 AS size_mb, status
 FROM v$standby_log
@@ -499,18 +499,18 @@ ORDER BY group#;
 Con broker, puoi tenere minima la configurazione manuale, ma questi parametri devono essere coerenti:
 
 ```sql
-ALTER SYSTEM SET log_archive_config='DG_CONFIG=(W4UCIHMOC,W4UCIHMOC_STBY)' SCOPE=BOTH;
+ALTER SYSTEM SET log_archive_config='DG_CONFIG=(SOLE,M24)' SCOPE=BOTH;
 
 ALTER SYSTEM SET log_archive_dest_1=
-  'LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=W4UCIHMOC'
+  'LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=SOLE'
   SCOPE=BOTH;
 
 ALTER SYSTEM SET log_archive_dest_2=
-  'SERVICE=W4UCIHMOC_STBY_DG ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=W4UCIHMOC_STBY'
+  'SERVICE=M24_DG ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=M24'
   SCOPE=BOTH;
 
 ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH;
-ALTER SYSTEM SET fal_server='W4UCIHMOC_STBY_DG' SCOPE=BOTH;
+ALTER SYSTEM SET fal_server='M24_DG' SCOPE=BOTH;
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH;
 ```
 
@@ -523,21 +523,21 @@ Se lasci configurare il broker, evita doppie configurazioni incoerenti: verifica
 Su entrambi gli host, in `$ORACLE_HOME/network/admin/tnsnames.ora`:
 
 ```text
-W4UCIHMOC_DG =
+SOLE_DG =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = w4dwhdbpec01)(PORT = 1531))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = sole-pri01)(PORT = 1531))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = W4UCIHMOC_DG)
+      (SERVICE_NAME = SOLE_DG)
     )
   )
 
-W4UCIHMOC_STBY_DG =
+M24_DG =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = w4dwhdbsec01)(PORT = 1531))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = m24-stby01)(PORT = 1531))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = W4UCIHMOC_STBY_DG)
+      (SERVICE_NAME = M24_DG)
     )
   )
 ```
@@ -545,10 +545,10 @@ W4UCIHMOC_STBY_DG =
 Test incrociato:
 
 ```bash
-tnsping W4UCIHMOC_DG
-tnsping W4UCIHMOC_STBY_DG
-sqlplus sys@W4UCIHMOC_DG as sysdba
-sqlplus sys@W4UCIHMOC_STBY_DG as sysdba
+tnsping SOLE_DG
+tnsping M24_DG
+sqlplus sys@SOLE_DG as sysdba
+sqlplus sys@M24_DG as sysdba
 ```
 
 ### Static registration per auxiliary NOMOUNT
@@ -561,9 +561,9 @@ Durante RMAN duplicate, lo standby e' `NOMOUNT`; serve un listener che sappia ra
 SID_LIST_LISTENER_DG =
   (SID_LIST =
     (SID_DESC =
-      (GLOBAL_DBNAME = W4UCIHMOC_STBY_DG)
+      (GLOBAL_DBNAME = M24_DG)
       (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
-      (SID_NAME = W4UCIHMOC_STBY)
+      (SID_NAME = M24)
     )
   )
 ```
@@ -586,7 +586,7 @@ ls -l $ORACLE_HOME/dbs/orapw$ORACLE_SID
 Copia verso standby e rinomina coerentemente col SID auxiliary:
 
 ```bash
-scp $ORACLE_HOME/dbs/orapwW4UCIHMOC oracle@w4dwhdbsec01:$ORACLE_HOME/dbs/orapwW4UCIHMOC_STBY
+scp $ORACLE_HOME/dbs/orapwSOLE oracle@m24-stby01:$ORACLE_HOME/dbs/orapwM24
 ```
 
 Per active duplicate, RMAN richiede connettivita SYS verso target e auxiliary; prepara quindi un password file temporaneo/coerente sull'auxiliary. Durante active duplicate RMAN puo sovrascriverlo con la copia del target. Per backup-based duplicate, la copia del password file primary resta necessaria per il redo transport. Oracle 12.2+ propaga poi le modifiche password file dal primary agli standby tramite redo.
@@ -597,27 +597,27 @@ Sul nodo standby:
 
 ```bash
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-export ORACLE_SID=W4UCIHMOC_STBY
+export ORACLE_SID=M24
 export PATH=$ORACLE_HOME/bin:$PATH
-mkdir -p $ORACLE_BASE/admin/W4UCIHMOC_STBY/adump
+mkdir -p $ORACLE_BASE/admin/M24/adump
 ```
 
-PFILE minimo `/tmp/initW4UCIHMOC_STBY.ora`:
+PFILE minimo `/tmp/initM24.ora`:
 
 ```text
-db_name='W4UCIHMOC'
-db_unique_name='W4UCIHMOC_STBY'
+db_name='SOLE'
+db_unique_name='M24'
 memory_target=0
 sga_target=4096M
 pga_aggregate_target=1024M
 processes=2048
-audit_file_dest='/u01/app/oracle/admin/W4UCIHMOC_STBY/adump'
+audit_file_dest='/u01/app/oracle/admin/M24/adump'
 remote_login_passwordfile='EXCLUSIVE'
-db_create_file_dest='+W4DMUCI_DATA'
-db_recovery_file_dest='+W4DMUCI_FRA'
+db_create_file_dest='+M24_DATA'
+db_recovery_file_dest='+M24_FRA'
 db_recovery_file_dest_size=20480M
 standby_file_management='AUTO'
-fal_server='W4UCIHMOC_DG'
+fal_server='SOLE_DG'
 dg_broker_start=TRUE
 ```
 
@@ -625,8 +625,8 @@ Start:
 
 ```sql
 sqlplus / as sysdba
-STARTUP NOMOUNT PFILE='/tmp/initW4UCIHMOC_STBY.ora';
-CREATE SPFILE FROM PFILE='/tmp/initW4UCIHMOC_STBY.ora';
+STARTUP NOMOUNT PFILE='/tmp/initM24.ora';
+CREATE SPFILE FROM PFILE='/tmp/initM24.ora';
 SHUTDOWN IMMEDIATE;
 STARTUP NOMOUNT;
 ```
@@ -636,10 +636,10 @@ STARTUP NOMOUNT;
 Dal primary o da un host con rete verso entrambi:
 
 ```bash
-rman TARGET sys@W4UCIHMOC_DG AUXILIARY sys@W4UCIHMOC_STBY_DG
+rman TARGET sys@SOLE_DG AUXILIARY sys@M24_DG
 ```
 
-Metodo OMF/ASM simmetrico:
+Metodo OMF/ASM con diskgroup standby dedicati:
 
 ```sql
 RUN {
@@ -651,12 +651,12 @@ RUN {
     FROM ACTIVE DATABASE
     DORECOVER
     SPFILE
-      PARAMETER_VALUE_CONVERT 'W4UCIHMOC','W4UCIHMOC_STBY'
-      SET DB_UNIQUE_NAME='W4UCIHMOC_STBY'
-      SET DB_CREATE_FILE_DEST='+W4DMUCI_DATA'
-      SET DB_RECOVERY_FILE_DEST='+W4DMUCI_FRA'
+      PARAMETER_VALUE_CONVERT 'SOLE','M24'
+      SET DB_UNIQUE_NAME='M24'
+      SET DB_CREATE_FILE_DEST='+M24_DATA'
+      SET DB_RECOVERY_FILE_DEST='+M24_FRA'
       SET DB_RECOVERY_FILE_DEST_SIZE='20480M'
-      SET FAL_SERVER='W4UCIHMOC_DG'
+      SET FAL_SERVER='SOLE_DG'
       SET STANDBY_FILE_MANAGEMENT='AUTO'
       SET DG_BROKER_START='TRUE'
     NOFILENAMECHECK;
@@ -679,10 +679,10 @@ DUPLICATE TARGET DATABASE
   FROM ACTIVE DATABASE
   DORECOVER
   SPFILE
-    SET DB_UNIQUE_NAME='W4UCIHMOC_STBY'
-    SET DB_FILE_NAME_CONVERT='+DATA/W4UCIHMOC/','+DATA/W4UCIHMOC_STBY/'
-    SET LOG_FILE_NAME_CONVERT='+FRA/W4UCIHMOC/','+FRA/W4UCIHMOC_STBY/'
-    SET FAL_SERVER='W4UCIHMOC_DG'
+    SET DB_UNIQUE_NAME='M24'
+    SET DB_FILE_NAME_CONVERT='+DATA/SOLE/','+DATA/M24/'
+    SET LOG_FILE_NAME_CONVERT='+FRA/SOLE/','+FRA/M24/'
+    SET FAL_SERVER='SOLE_DG'
     SET STANDBY_FILE_MANAGEMENT='AUTO';
 ```
 
@@ -738,24 +738,24 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH;
 Da primary:
 
 ```bash
-dgmgrl sys@W4UCIHMOC_DG
+dgmgrl sys@SOLE_DG
 ```
 
 ```text
-CREATE CONFIGURATION 'DG_W4UCIHMOC' AS
-  PRIMARY DATABASE IS 'W4UCIHMOC'
-  CONNECT IDENTIFIER IS W4UCIHMOC_DG;
+CREATE CONFIGURATION 'DG_SOLE' AS
+  PRIMARY DATABASE IS 'SOLE'
+  CONNECT IDENTIFIER IS SOLE_DG;
 
-ADD DATABASE 'W4UCIHMOC_STBY' AS
-  CONNECT IDENTIFIER IS W4UCIHMOC_STBY_DG
+ADD DATABASE 'M24' AS
+  CONNECT IDENTIFIER IS M24_DG
   MAINTAINED AS PHYSICAL;
 
 ENABLE CONFIGURATION;
 
 SHOW CONFIGURATION;
-SHOW DATABASE 'W4UCIHMOC';
-SHOW DATABASE 'W4UCIHMOC_STBY';
-VALIDATE DATABASE 'W4UCIHMOC_STBY';
+SHOW DATABASE 'SOLE';
+SHOW DATABASE 'M24';
+VALIDATE DATABASE 'M24';
 ```
 
 Se i nomi broker non coincidono con `DB_UNIQUE_NAME`, correggi prima: in Data Guard moderno conviene usare `DB_UNIQUE_NAME` come nome database nel broker.
@@ -805,21 +805,21 @@ Prima:
 
 ```text
 DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE 'W4UCIHMOC';
-DGMGRL> VALIDATE DATABASE 'W4UCIHMOC_STBY';
+DGMGRL> VALIDATE DATABASE 'SOLE';
+DGMGRL> VALIDATE DATABASE 'M24';
 ```
 
 Switchover:
 
 ```text
-DGMGRL> SWITCHOVER TO 'W4UCIHMOC_STBY';
+DGMGRL> SWITCHOVER TO 'M24';
 DGMGRL> SHOW CONFIGURATION;
 ```
 
 Switchback:
 
 ```text
-DGMGRL> SWITCHOVER TO 'W4UCIHMOC';
+DGMGRL> SWITCHOVER TO 'SOLE';
 DGMGRL> SHOW CONFIGURATION;
 ```
 
