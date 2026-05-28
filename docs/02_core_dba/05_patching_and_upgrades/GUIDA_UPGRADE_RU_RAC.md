@@ -1,5 +1,10 @@
 # Guida all'Upgrade delle Release Update (RU) in Oracle RAC
 
+> [!NOTE]
+> **DOCUMENTI DI PATCHING CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Guida di Produzione Core RAC + DG (Fase 16)**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md#fase-16---patching-in-ambiente-rac-dataguard-standby-first) (manuale completo e dettagliato di patching rolling Standby-First).
+> - **Cheat Sheet Rapido**: [CHEAT_SHEET_OPATCH_DATAPATCH.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_OPATCH_DATAPATCH.md) (comandi rapidi di inventario, prereq e datapatch).
+
 Questa guida spiega come gestire il passaggio da una RU esistente (es. r19.25) a una più recente (es. r19.30) utilizzando il formato **Combo Patch** e l'automazione di **opatchauto**.
 
 > [!WARNING]

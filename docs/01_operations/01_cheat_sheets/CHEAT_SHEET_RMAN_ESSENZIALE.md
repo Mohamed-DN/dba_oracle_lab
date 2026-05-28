@@ -1,10 +1,15 @@
 # Cheat Sheet RMAN (Essenziale)
 
+> [!NOTE]
+> **DOCUMENTI RMAN CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](./CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
+> - **Cheat Sheet Enterprise**: [RMAN_FULL_CHEATSHEET.md](./RMAN_FULL_CHEATSHEET.md) (scenari complessi, TDE, BMR e tuning).
+> - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri).
+> - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
+
 ## Obiettivo
 
 Scheda ultra-rapida con i comandi RMAN più usati in operatività quotidiana.
-
-> Per il dettaglio completo: (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md)
 
 ## Connessione
 

@@ -1,5 +1,11 @@
 # Cheat Sheet GoldenGate (Operativa)
 
+> [!NOTE]
+> **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Verticale 19c**: [CHEAT_SHEET_GOLDENGATE_19C.md](../../02_core_dba/07_replication_goldengate/CHEAT_SHEET_GOLDENGATE_19C.md) (comandi analitici per Classic, Microservices, grant e PostgreSQL).
+> - **Guida di Laboratorio Core**: [GUIDA_FASE7_GOLDENGATE.md](../../02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) (fondamenti di installazione e setup).
+> - **Guida di Riferimento 19c Core**: [GUIDA_GOLDENGATE_19C_COMPLETA.md](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) (manuale completo dei comandi e parametri).
+
 ## Obiettivo
 
 Fornire una scheda rapida GoldenGate per controllo processi, lag replica, checkpoint e troubleshooting base.

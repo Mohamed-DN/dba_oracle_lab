@@ -1,5 +1,12 @@
 # Enterprise RMAN (Recovery Manager) - Cheat Sheet & Architettura
 
+> [!NOTE]
+> **DOCUMENTI RMAN CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Veloce**: [CHEAT_SHEET_RMAN_ESSENZIALE.md](./CHEAT_SHEET_RMAN_ESSENZIALE.md) (comandi rapidi quotidiani).
+> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](./CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
+> - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri).
+> - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
+
 Questo documento rappresenta la guida di riferimento definitiva per l'architettura di backup e ripristino Oracle (RMAN) in ambienti Enterprise, Multi-tenant (CDB/PDB), e Cloud-Hybrid. Contiene scenari di disastro estremi, recovery a livello di blocco, tuning dei canali I/O e logica di retention profonda.
 
 ---

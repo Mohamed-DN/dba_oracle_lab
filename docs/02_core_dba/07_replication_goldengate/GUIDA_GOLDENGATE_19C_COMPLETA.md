@@ -1,5 +1,11 @@
 # Oracle GoldenGate 19c Completa - Guida Enterprise
 
+> [!NOTE]
+> **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Guida di Laboratorio (Fase 7)**: [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) (configurazione passo-passo per il lab a Microservizi).
+> - **Cheat Sheet Operativo (Veloce)**: [CHEAT_SHEET_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md) (comandi rapidi, lag, stop/start).
+> - **Cheat Sheet Verticale 19c**: [CHEAT_SHEET_GOLDENGATE_19C.md](./CHEAT_SHEET_GOLDENGATE_19C.md) (comandi analitici e grant).
+
 > Versione principale del percorso: **Oracle GoldenGate 19c (19.1)**. Questa guida spiega i concetti che devi conoscere prima di installare o amministrare GoldenGate in produzione: architettura, prerequisiti DB, sicurezza, scenari di replica, monitoraggio, troubleshooting e integrazione con RAC/Data Guard.
 
 ---

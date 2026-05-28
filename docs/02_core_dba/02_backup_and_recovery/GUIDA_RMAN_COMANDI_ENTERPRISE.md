@@ -1,5 +1,12 @@
 # Guida RMAN Enterprise Completa — Il Riferimento Definitivo
 
+> [!NOTE]
+> **DOCUMENTI RMAN CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Veloce**: [CHEAT_SHEET_RMAN_ESSENZIALE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md) (comandi rapidi quotidiani).
+> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
+> - **Cheat Sheet Enterprise**: [RMAN_FULL_CHEATSHEET.md](../../01_operations/01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) (scenari complessi, TDE, BMR e tuning).
+> - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
+
 > Guida operativa completa per Oracle RMAN 19c/21c/23ai.
 > Copre OGNI aspetto: configurazione, backup, restore, recovery, duplicate, catalog,
 > encryption, multitenant, Data Guard, RAC, tape, scheduling, monitoring e troubleshooting.
