@@ -825,6 +825,148 @@ DGMGRL> SHOW CONFIGURATION;
 
 Non fare switchover in produzione senza change, backup recente, smoke test applicativo, rollback plan e finestra approvata.
 
+## Fase 12 - Hardening operativo post-creazione
+
+Questa fase e' spesso piu importante del duplicate: Data Guard puo essere tecnicamente attivo ma operativamente fragile se non governi backup, FRA, servizi, monitoring e reinstate.
+
+### RMAN retention e archivelog deletion policy
+
+Sul primary, dopo aver confermato che lo standby applica correttamente:
+
+```sql
+rman target /
+
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE BACKUP OPTIMIZATION ON;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+SHOW ALL;
+```
+
+Se lo standard richiede anche backup archivelog prima della cancellazione:
+
+```sql
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK;
+```
+
+Regola:
+
+```text
+Non liberare FRA cancellando archivelog se non sai se sono stati applicati allo
+standby e se servono a RMAN, GoldenGate o audit. Prima verifica, poi cancelli.
+```
+
+### Flashback per failover/reinstate
+
+Consigliato su primary e standby:
+
+```sql
+ALTER SYSTEM SET db_flashback_retention_target=1440 SCOPE=BOTH;
+ALTER DATABASE FLASHBACK ON;
+
+SELECT name, flashback_on
+FROM v$database;
+```
+
+Prima di change importanti:
+
+```sql
+CREATE RESTORE POINT rp_before_dg_change GUARANTEE FLASHBACK DATABASE;
+
+SELECT name, time, guarantee_flashback_database, storage_size
+FROM v$restore_point
+ORDER BY time DESC;
+```
+
+Dopo validazione:
+
+```sql
+DROP RESTORE POINT rp_before_dg_change;
+```
+
+### Lost write, blocchi e corruzione
+
+Valuta con lo standard aziendale:
+
+```sql
+ALTER SYSTEM SET db_lost_write_protect=TYPICAL SCOPE=BOTH;
+```
+
+Controlli periodici:
+
+```sql
+SELECT * FROM v$database_block_corruption;
+
+RMAN> BACKUP VALIDATE CHECK LOGICAL DATABASE;
+RMAN> RESTORE DATABASE VALIDATE;
+```
+
+### Servizi applicativi role-based
+
+Se usi Grid Infrastructure anche su single instance, registra servizi separati:
+
+```bash
+srvctl add service -d SOLE -s SOLE_RW -role PRIMARY -policy AUTOMATIC
+srvctl add service -d SOLE -s SOLE_RO -role PHYSICAL_STANDBY -policy AUTOMATIC
+```
+
+Se non usi GI, mantieni almeno alias TNS separati:
+
+```text
+SOLE_APP_RW  -> servizio primary
+M24_APP_RO   -> servizio standby read only, solo se Active Data Guard e licenza valida
+SOLE_DG/M24_DG -> solo traffico Data Guard e amministrazione
+```
+
+### Monitoring minimo da mettere in esercizio
+
+Soglie consigliate da adattare:
+
+| Controllo | Warning | Critical |
+| --- | --- | --- |
+| `transport lag` | > 60 secondi | > 5 minuti |
+| `apply lag` | > 5 minuti | > 15 minuti |
+| FRA used | > 80% | > 90% |
+| `v$archive_dest.error` | non vuoto | immediato |
+| MRP0 assente | immediato | immediato |
+| ultimo backup DB | > 24h | > 48h |
+
+Query:
+
+```sql
+SELECT name, value, datum_time, time_computed
+FROM v$dataguard_stats
+WHERE name IN ('transport lag','apply lag','apply finish time');
+
+SELECT dest_id, status, error, db_unique_name
+FROM v$archive_dest
+WHERE target='STANDBY';
+
+SELECT file_type, percent_space_used, percent_space_reclaimable, number_of_files
+FROM v$flash_recovery_area_usage
+ORDER BY percent_space_used DESC;
+
+SELECT input_type, status, start_time, end_time, output_bytes_display
+FROM v$rman_backup_job_details
+WHERE start_time > SYSDATE - 2
+ORDER BY start_time DESC;
+```
+
+### Checklist cutover/migrazione
+
+Prima di un cutover applicativo:
+
+- backup full o incremental recente validato;
+- `RESTORE DATABASE VALIDATE` eseguito o restore test recente disponibile;
+- Data Guard `SHOW CONFIGURATION` = `SUCCESS`;
+- `VALIDATE DATABASE` senza errori bloccanti;
+- log switch manuale e apply verificato;
+- smoke test applicativo pronto;
+- DNS/TNS/service name pronti;
+- rollback plan scritto;
+- restore point garantito se lo spazio FRA lo consente;
+- owner applicativo e operation allineati su finestra e criteri go/no-go.
+
 ## Troubleshooting rapido
 
 | Sintomo | Causa probabile | Azione |
