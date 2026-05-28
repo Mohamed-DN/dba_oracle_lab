@@ -34,13 +34,13 @@ Non partire da GoldenGate, upgrade o patching se non hai prima RAC/Data Guard st
 
 Apri prima:
 
-1. [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md)
-2. [SRVCTL / CRSCTL](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_SRVCTL_CRSCTL.md)
-3. [ASMCMD](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ASMCMD.md)
-4. [ADRCI](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ADRCI.md)
-5. [LSNRCTL / Oracle Net](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_LSNRCTL_NET.md)
-6. [OPatch / datapatch](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_OPATCH_DATAPATCH.md)
-7. [SQLPlus / SQLcl / DBCA / NETCA](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md)
+1. [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CS_ORACLE_TOOLS_COMMAND_CENTER.md)
+2. [SRVCTL / CRSCTL](./docs/01_operations/01_cheat_sheets/CS_SRVCTL_CRSCTL.md)
+3. [ASMCMD](./docs/01_operations/01_cheat_sheets/CS_ASMCMD.md)
+4. [ADRCI](./docs/01_operations/01_cheat_sheets/CS_ADRCI.md)
+5. [LSNRCTL / Oracle Net](./docs/01_operations/01_cheat_sheets/CS_LSNRCTL_NET.md)
+6. [OPatch / datapatch](./docs/01_operations/01_cheat_sheets/CS_OPATCH_DATAPATCH.md)
+7. [SQLPlus / SQLcl / DBCA / NETCA](./docs/01_operations/01_cheat_sheets/CS_SQLPLUS_SQLCL_DBCA_NETCA.md)
 
 ## Se Devi Fare Data Guard In Produzione
 
@@ -61,7 +61,7 @@ Scegli il caso:
 Apri:
 
 - [RMAN completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
-- [RMAN Full Cheatsheet](./docs/01_operations/01_cheat_sheets/RMAN_FULL_CHEATSHEET.md)
+- [RMAN Full Cheatsheet](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
 - [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/02_VERIFICA_BACKUP.md)
 - [Diagnosi RMAN e DR](./docs/01_operations/02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
 - [RMAN + Data Guard Recovery/DR](./docs/01_operations/02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
@@ -104,7 +104,7 @@ Apri:
 | Sintomo / Obiettivo | Primo documento |
 | --- | --- |
 | Non sai da dove iniziare | [Triage Incidenti Oracle](./docs/01_operations/02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md) |
-| Non sai quale comando Oracle usare | [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md) |
+| Non sai quale comando Oracle usare | [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CS_ORACLE_TOOLS_COMMAND_CENTER.md) |
 | DB non parte | [Morning Health Check](./docs/01_operations/02_runbooks_incidenti/01_MORNING_HEALTH_CHECK.md) |
 | Backup fallito | [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/02_VERIFICA_BACKUP.md) |
 | Standby in lag | [Check Data Guard](./docs/01_operations/02_runbooks_incidenti/03_CHECK_DATAGUARD.md) |

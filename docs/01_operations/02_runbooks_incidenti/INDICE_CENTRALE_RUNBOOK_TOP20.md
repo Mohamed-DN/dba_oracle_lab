@@ -54,16 +54,16 @@
 
 ## Cheat sheet
 
-- [Oracle Tools Command Center](../01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md) - mappa centrale SRVCTL/CRSCTL/ASMCMD/ADRCI/RMAN/DGMGRL/LSNRCTL/OPatch/SQLPlus.
-- [SRVCTL / CRSCTL](../01_cheat_sheets/CHEAT_SHEET_SRVCTL_CRSCTL.md)
-- [ASMCMD](../01_cheat_sheets/CHEAT_SHEET_ASMCMD.md)
-- [ADRCI](../01_cheat_sheets/CHEAT_SHEET_ADRCI.md)
-- [LSNRCTL / Oracle Net](../01_cheat_sheets/CHEAT_SHEET_LSNRCTL_NET.md)
-- [OPatch / datapatch](../01_cheat_sheets/CHEAT_SHEET_OPATCH_DATAPATCH.md)
-- [RMAN Full Cheatsheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
-- [RMAN Essentials](../01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md)
-- [DGMGRL](../01_cheat_sheets/CHEAT_SHEET_DGMGRL.md)
-- [GoldenGate](../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
+- [Oracle Tools Command Center](../01_cheat_sheets/CS_ORACLE_TOOLS_COMMAND_CENTER.md) - mappa centrale SRVCTL/CRSCTL/ASMCMD/ADRCI/RMAN/DGMGRL/LSNRCTL/OPatch/SQLPlus.
+- [SRVCTL / CRSCTL](../01_cheat_sheets/CS_SRVCTL_CRSCTL.md)
+- [ASMCMD](../01_cheat_sheets/CS_ASMCMD.md)
+- [ADRCI](../01_cheat_sheets/CS_ADRCI.md)
+- [LSNRCTL / Oracle Net](../01_cheat_sheets/CS_LSNRCTL_NET.md)
+- [OPatch / datapatch](../01_cheat_sheets/CS_OPATCH_DATAPATCH.md)
+- [RMAN Full Cheatsheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
+- [RMAN Essentials](../01_cheat_sheets/CS_RMAN_RAPIDO.md)
+- [DGMGRL](../01_cheat_sheets/CS_DGMGRL.md)
+- [GoldenGate](../01_cheat_sheets/CS_GOLDENGATE.md)
 
 ## Catalogo script enterprise
 

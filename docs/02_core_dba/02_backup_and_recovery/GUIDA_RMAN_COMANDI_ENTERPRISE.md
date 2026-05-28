@@ -5,9 +5,9 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (questa guida - riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet Veloce**: [CHEAT_SHEET_RMAN_ESSENZIALE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md) (comandi rapidi quotidiani).
-> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
-> - **Cheat Sheet Enterprise**: [RMAN_FULL_CHEATSHEET.md](../../01_operations/01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet Veloce**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi rapidi quotidiani).
+> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari operativi comuni).
+> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
 
 > Guida operativa completa per Oracle RMAN 19c/21c/23ai.
 > Copre OGNI aspetto: configurazione, backup, restore, recovery, duplicate, catalog,

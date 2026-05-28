@@ -3,7 +3,7 @@
 Questa pagina è il punto unico "veloce" per scegliere il tool Oracle corretto durante attività operative, incidenti o change. 
 
 > [!NOTE]
-> Per la raccolta completa di tutti i comandi consolidati in un unico documento gigante, consulta la **[Master Cheat Sheet DBA](./CHEAT_SHEET_MASTER_DBA.md)**.
+> Per la raccolta completa di tutti i comandi consolidati in un unico documento gigante, consulta la **[Master Cheat Sheet DBA](./CS_MASTER_DBA.md)**.
 
 
 
@@ -11,16 +11,16 @@ Questa pagina è il punto unico "veloce" per scegliere il tool Oracle corretto d
 
 | Devo fare | Tool principale | Guida |
 |---|---|---|
-| Gestire database, istanze, listener, servizi RAC | `srvctl` | [SRVCTL/CRSCTL](./CHEAT_SHEET_SRVCTL_CRSCTL.md) |
-| Verificare o gestire Clusterware, CRS, OCR, voting disk | `crsctl` | [SRVCTL/CRSCTL](./CHEAT_SHEET_SRVCTL_CRSCTL.md) |
-| Guardare o copiare file ASM, diskgroup, password file | `asmcmd` | [ASMCMD](./CHEAT_SHEET_ASMCMD.md) |
-| Leggere alert log, incidenti, trace, IPS package | `adrci` | [ADRCI](./CHEAT_SHEET_ADRCI.md) |
-| Gestire Data Guard Broker | `dgmgrl` | [DGMGRL](./CHEAT_SHEET_DGMGRL.md) |
-| Backup, restore, duplicate, validate | `rman` | [RMAN Full](./RMAN_FULL_CHEATSHEET.md) |
-| Listener, TNS, Easy Connect, connessioni | `lsnrctl`, `tnsping` | [LSNRCTL/Oracle Net](./CHEAT_SHEET_LSNRCTL_NET.md) |
-| Patch Grid/DB home e SQL patch registry | `opatch`, `opatchauto`, `datapatch` | [OPatch/datapatch](./CHEAT_SHEET_OPATCH_DATAPATCH.md) |
-| SQL amministrativo, startup/shutdown, spool | `sqlplus`, `sqlcl` | [SQLPlus/SQLcl/DBCA/NETCA](./CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md) |
-| Creare/configurare DB e listener in modo assistito/silent | `dbca`, `netca` | [SQLPlus/SQLcl/DBCA/NETCA](./CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md) |
+| Gestire database, istanze, listener, servizi RAC | `srvctl` | [SRVCTL/CRSCTL](./CS_SRVCTL_CRSCTL.md) |
+| Verificare o gestire Clusterware, CRS, OCR, voting disk | `crsctl` | [SRVCTL/CRSCTL](./CS_SRVCTL_CRSCTL.md) |
+| Guardare o copiare file ASM, diskgroup, password file | `asmcmd` | [ASMCMD](./CS_ASMCMD.md) |
+| Leggere alert log, incidenti, trace, IPS package | `adrci` | [ADRCI](./CS_ADRCI.md) |
+| Gestire Data Guard Broker | `dgmgrl` | [DGMGRL](./CS_DGMGRL.md) |
+| Backup, restore, duplicate, validate | `rman` | [RMAN Full](./CS_RMAN_RAPIDO.md) |
+| Listener, TNS, Easy Connect, connessioni | `lsnrctl`, `tnsping` | [LSNRCTL/Oracle Net](./CS_LSNRCTL_NET.md) |
+| Patch Grid/DB home e SQL patch registry | `opatch`, `opatchauto`, `datapatch` | [OPatch/datapatch](./CS_OPATCH_DATAPATCH.md) |
+| SQL amministrativo, startup/shutdown, spool | `sqlplus`, `sqlcl` | [SQLPlus/SQLcl/DBCA/NETCA](./CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
+| Creare/configurare DB e listener in modo assistito/silent | `dbca`, `netca` | [SQLPlus/SQLcl/DBCA/NETCA](./CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
 | Export/import logico | `expdp`, `impdp` | [Export/Import Prod-Preprod](../02_runbooks_incidenti/20_EXPORT_IMPORT_PROD_PREPROD.md) |
 | Wallet/certificati | `orapki`, `mkstore` | [TCPS Wallet](../02_runbooks_incidenti/34_TCPS_WALLET_CERTIFICATI.md) |
 

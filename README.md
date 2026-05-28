@@ -27,7 +27,7 @@
 - ☁️ **Cloud OCI & Terraform:** [Indice area](./docs/03_infra_lab/03_cloud_oci/README.md) · [Codice Terraform](./terraform/oci_base_infrastructure/README.md)
 - 🐳 **Containerizzazione 26ai:** [Guida Podman/Docker](./docs/03_infra_lab/04_containerization/GUIDA_ORACLE_26AI_PODMAN_DOCKER.md)
 - 🎓 **Esami & Carriera:** [Indice area](./docs/04_governance_learning/03_esami_e_carriera/README.md)
-- 🛠️ **Strumenti operativi:** [Command Center](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md) · [Runbook](./docs/01_operations/02_runbooks_incidenti/README.md) · [Script SQL](./docs/01_operations/03_scripts_pronti/README.md) · [Libreria script](./docs/01_operations/04_libreria_script_completa/README.md)
+- 🛠️ **Strumenti operativi:** [Command Center](./docs/01_operations/01_cheat_sheets/CS_ORACLE_TOOLS_COMMAND_CENTER.md) · [Runbook](./docs/01_operations/02_runbooks_incidenti/README.md) · [Script SQL](./docs/01_operations/03_scripts_pronti/README.md) · [Libreria script](./docs/01_operations/04_libreria_script_completa/README.md)
 - 🤖 **Automazione/IaC:** [Ansible](./automation/README.md)
 - 🧭 **Indice totale unico:** [docs/README.md](./docs/README.md)
 

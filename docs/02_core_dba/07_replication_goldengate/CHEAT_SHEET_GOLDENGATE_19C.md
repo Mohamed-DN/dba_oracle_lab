@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
-> - **Cheat Sheet Operativo (Veloce)**: [CHEAT_SHEET_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md) (Lag, checkpoint, stop/start rapido).
+> - **Cheat Sheet Operativo (Veloce)**: [CS_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md) (Lag, checkpoint, stop/start rapido).
 > - **Guida di Laboratorio Core**: [GUIDA_FASE7_GOLDENGATE.md](./GUIDA_FASE7_GOLDENGATE.md) (fondamenti di installazione e setup).
 > - **Guida di Riferimento 19c Core**: [GUIDA_GOLDENGATE_19C_COMPLETA.md](./GUIDA_GOLDENGATE_19C_COMPLETA.md) (manuale completo dei comandi e parametri).
 

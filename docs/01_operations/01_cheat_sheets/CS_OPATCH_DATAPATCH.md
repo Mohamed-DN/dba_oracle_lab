@@ -2,8 +2,8 @@
 
 > [!NOTE]
 > **DOCUMENTI DI PATCHING CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
-> - **Cheat Sheet Rapido (questa scheda)**: [CHEAT_SHEET_OPATCH_DATAPATCH.md](./CHEAT_SHEET_OPATCH_DATAPATCH.md) (comandi rapidi di inventario, prereq e datapatch).
-> - **Master DBA Cheat Sheet**: [CHEAT_SHEET_MASTER_DBA.md](./CHEAT_SHEET_MASTER_DBA.md) (comandi consolidati, include sezione patching).
+> - **Cheat Sheet Rapido (questa scheda)**: [CS_OPATCH_DATAPATCH.md](./CS_OPATCH_DATAPATCH.md) (comandi rapidi di inventario, prereq e datapatch).
+> - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md) (comandi consolidati, include sezione patching).
 > - **Procedure di Produzione (RAC + DG - Fase 16)**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md#fase-16---patching-in-ambiente-rac-dataguard-standby-first) (manuale completo di patching in produzione rolling Standby-First).
 > - **Guida al Patching Post-Installazione**: [GUIDA_PATCHING_RAC.md](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md) (gestione RU trimestrali e Combo Patch).
 > - **Guida all'Upgrade delle RU**: [GUIDA_UPGRADE_RU_RAC.md](../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md) (upgrade rolling di RU con opatchauto).

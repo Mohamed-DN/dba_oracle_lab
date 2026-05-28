@@ -102,7 +102,7 @@ ALERT / TICKET
 | TEMP piena | [16](./16_RESIZE_TEMP.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | sessioni TEMP, SQL_ID, tempfile |
 | FRA piena | [17](./17_PURGE_LOG_ORACLE.md) | [19](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | v$recovery_area_usage, archivelog, DG applied |
 | Backup failed | [02](./02_VERIFICA_BACKUP.md) | [19](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | RMAN log, error stack, backup pieces |
-| Drop table / delete errata | [22](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) | ora evento, oggetto, backup, flashback |
+| Drop table / delete errata | [22](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) | ora evento, oggetto, backup, flashback |
 | Data Guard lag | [03](./03_CHECK_DATAGUARD.md) | [22](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | transport/apply lag, gap, alert log |
 | DB link lento/rotto | [21](./21_GESTIONE_DB_LINK.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | connect string, ORA, remote SQL, network |
 | Refresh preprod | [20](./20_EXPORT_IMPORT_PROD_PREPROD.md) | [13](./13_REFRESH_SCHEMA_TEST.md) | dump size, parfile, masking, checksum |
