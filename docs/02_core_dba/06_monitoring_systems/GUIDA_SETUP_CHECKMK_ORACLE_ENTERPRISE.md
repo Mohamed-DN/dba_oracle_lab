@@ -15,17 +15,17 @@
 ## 1. Architettura del Monitoring
 
 ```
-┌──────────────────┐       ┌──────────────────┐
-│  CheckMK Server  │◄─────►│  CheckMK Agent   │
-│  (Central Site)  │ TCP   │  + mk_oracle     │
-│                  │ 6556  │  plugin           │
-│  ┌────────────┐  │       │                   │
-│  │ Web UI     │  │       │  ┌─────────────┐  │
-│  │ WATO       │  │       │  │ Oracle DB   │  │
-│  │ Dashboards │  │       │  │ (sqlplus)   │  │
-│  │ Alerting   │  │       │  └─────────────┘  │
-│  └────────────┘  │       │                   │
-└──────────────────┘       └──────────────────┘
++------------------+       +------------------+
+|  CheckMK Server  |&amp;lt;-----&gt;|  CheckMK Agent   |
+|  (Central Site)  | TCP   |  + mk_oracle     |
+|                  | 6556  |  plugin           |
+|  +------------+  |       |                   |
+|  | Web UI     |  |       |  +-------------+  |
+|  | WATO       |  |       |  | Oracle DB   |  |
+|  | Dashboards |  |       |  | (sqlplus)   |  |
+|  | Alerting   |  |       |  +-------------+  |
+|  +------------+  |       |                   |
++------------------+       +------------------+
 ```
 
 ### 1.1 Componenti

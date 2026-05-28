@@ -8,15 +8,15 @@
 
 ```
   LAB (VirtualBox)                         PRODUZIONE (Bare Metal / VM / Cloud)
-  ═════════════════                        ═══════════════════════════════════════
+  -----------------                        ---------------------------------------
 
-  ┌────────────────┐                       ┌────────────────────────────────┐
-  │ rac1    rac2   │                       │ racprod1         racprod2     │
-  │ 4GB     4GB    │    ───────────►       │ 64-256 GB        64-256 GB    │
-  │ 2 vCPU  2 vCPU │                       │ 16-32 CPU        16-32 CPU    │
-  │ VDI disks      │                       │ SAN/NAS/Exadata storage       │
-  │ 1 GbE          │                       │ 10-25 GbE intercon.           │
-  └────────────────┘                       └────────────────────────────────┘
+  +----------------+                       +--------------------------------+
+  | rac1    rac2   |                       | racprod1         racprod2     |
+  | 4GB     4GB    |    -----------&gt;       | 64-256 GB        64-256 GB    |
+  | 2 vCPU  2 vCPU |                       | 16-32 CPU        16-32 CPU    |
+  | VDI disks      |                       | SAN/NAS/Exadata storage       |
+  | 1 GbE          |                       | 10-25 GbE intercon.           |
+  +----------------+                       +--------------------------------+
 
   ASM: EXTERNAL redundancy                ASM: NORMAL o HIGH redundancy
   SGA: ~1 GB (auto)                        SGA: 32-128 GB (ASMM)
@@ -32,19 +32,19 @@
 ### Sizing RAM per Nodo
 
 ```
-╔═══════════════════════════════╦═══════════════╦═══════════════╦═══════════════╗
-║ Componente                    ║ Lab (4 GB)    ║ Small Prod    ║ Large Prod    ║
-╠═══════════════════════════════╬═══════════════╬═══════════════╬═══════════════╣
-║ SGA_TARGET                    ║ ~1 GB (auto)  ║ 32 GB         ║ 96-128 GB     ║
-║   ├─ Buffer Cache             ║ ~600 MB       ║ 20 GB         ║ 80 GB         ║
-║   ├─ Shared Pool              ║ ~200 MB       ║ 8 GB          ║ 16 GB         ║
-║   ├─ Large Pool               ║ ~50 MB        ║ 2 GB          ║ 8 GB          ║
-║   └─ Redo Log Buffer          ║ ~10 MB        ║ 256 MB        ║ 512 MB        ║
-║ PGA_AGGREGATE_TARGET          ║ ~500 MB       ║ 8 GB          ║ 32 GB         ║
-║ OS + CRS + ASM                ║ ~1.5 GB       ║ 8 GB          ║ 16 GB         ║
-╠═══════════════════════════════╬═══════════════╬═══════════════╬═══════════════╣
-║ RAM TOTALE PER NODO           ║ 4 GB          ║ 64 GB         ║ 256 GB        ║
-╚═══════════════════════════════╩═══════════════╩═══════════════╩═══════════════╝
++-------------------------------+---------------+---------------+---------------+
+| Componente                    | Lab (4 GB)    | Small Prod    | Large Prod    |
++-------------------------------+---------------+---------------+---------------+
+| SGA_TARGET                    | ~1 GB (auto)  | 32 GB         | 96-128 GB     |
+|   +- Buffer Cache             | ~600 MB       | 20 GB         | 80 GB         |
+|   +- Shared Pool              | ~200 MB       | 8 GB          | 16 GB         |
+|   +- Large Pool               | ~50 MB        | 2 GB          | 8 GB          |
+|   +- Redo Log Buffer          | ~10 MB        | 256 MB        | 512 MB        |
+| PGA_AGGREGATE_TARGET          | ~500 MB       | 8 GB          | 32 GB         |
+| OS + CRS + ASM                | ~1.5 GB       | 8 GB          | 16 GB         |
++-------------------------------+---------------+---------------+---------------+
+| RAM TOTALE PER NODO           | 4 GB          | 64 GB         | 256 GB        |
++-------------------------------+---------------+---------------+---------------+
 ```
 
 > **Regola pratica**: SGA = 60-70% della RAM totale. PGA_AGGREGATE_TARGET = 10-20%. Il resto per OS, CRS, ASM.
@@ -60,23 +60,23 @@
 ### Storage
 
 ```
-╔════════════════════╦═══════════════╦═══════════════════════════════════╗
-║ Disk Group         ║ Lab           ║ Produzione                        ║
-╠════════════════════╬═══════════════╬═══════════════════════════════════╣
-║ +CRS               ║ 5 GB          ║ 10-20 GB                          ║
-║                    ║ EXTERNAL      ║ NORMAL (3 failure groups)         ║
-╠════════════════════╬═══════════════╬═══════════════════════════════════╣
-║ +DATA              ║ 20 GB         ║ 500 GB - 10 TB+                  ║
-║                    ║ EXTERNAL      ║ NORMAL o HIGH redundancy          ║
-║                    ║ 1 disco VDI   ║ 8-16+ LUN SAN/NVMe               ║
-╠════════════════════╬═══════════════╬═══════════════════════════════════╣
-║ +FRA               ║ 15 GB         ║ 200 GB - 5 TB+                   ║
-║                    ║ EXTERNAL      ║ NORMAL redundancy                 ║
-║                    ║               ║ Dimensione = 2x DATA (ideale)     ║
-╠════════════════════╬═══════════════╬═══════════════════════════════════╣
-║ +REDO (opzionale)  ║ non presente  ║ SSD/NVMe dedicato per redo log    ║
-║                    ║               ║ Bassa latenza = COMMIT veloce     ║
-╚════════════════════╩═══════════════╩═══════════════════════════════════╝
++--------------------+---------------+-----------------------------------+
+| Disk Group         | Lab           | Produzione                        |
++--------------------+---------------+-----------------------------------+
+| +CRS               | 5 GB          | 10-20 GB                          |
+|                    | EXTERNAL      | NORMAL (3 failure groups)         |
++--------------------+---------------+-----------------------------------+
+| +DATA              | 20 GB         | 500 GB - 10 TB+                  |
+|                    | EXTERNAL      | NORMAL o HIGH redundancy          |
+|                    | 1 disco VDI   | 8-16+ LUN SAN/NVMe               |
++--------------------+---------------+-----------------------------------+
+| +FRA               | 15 GB         | 200 GB - 5 TB+                   |
+|                    | EXTERNAL      | NORMAL redundancy                 |
+|                    |               | Dimensione = 2x DATA (ideale)     |
++--------------------+---------------+-----------------------------------+
+| +REDO (opzionale)  | non presente  | SSD/NVMe dedicato per redo log    |
+|                    |               | Bassa latenza = COMMIT veloce     |
++--------------------+---------------+-----------------------------------+
 ```
 
 > **ASM Redundancy in Produzione:**
@@ -197,61 +197,61 @@ Alternativa OEM:                  Grafana + Prometheus + oracle_exporter
 ## 6. Checklist Produzione Finale
 
 ```
-╔═══════════════════════════════════════════════════════════════╗
-║              CHECKLIST GO-LIVE PRODUZIONE                     ║
-╠═══════════════════════════════════════════════════════════════╣
-║                                                               ║
-║  HARDWARE & OS                                               ║
-║  □ RAM: almeno 64 GB per nodo                                ║
-║  □ CPU: almeno 16 core per nodo                              ║
-║  □ Storage SAN/NVMe con multipath                            ║
-║  □ NIC bonding (LACP) per public + interconnect              ║
-║  □ HugePages configurate, THP disabilitate                   ║
-║  □ Kernel parameters ottimizzati (shmmax, sem, aio-max)      ║
-║  □ NTP/chrony sincronizzato su tutti i nodi                  ║
-║                                                               ║
-║  DATABASE                                                    ║
-║  □ ARCHIVELOG mode attivo                                    ║
-║  □ FORCE LOGGING attivo                                      ║
-║  □ BCT (Block Change Tracking) abilitato                     ║
-║  □ Undo retention >= 1800 secondi                            ║
-║  □ Redo Log: 4+ gruppi, 1-4 GB, switch ogni 15-20 min       ║
-║  □ Processes >= 1000 (basato su carico previsto)             ║
-║  □ Statistiche automatiche verificate                        ║
-║  □ Password policy attiva                                    ║
-║                                                               ║
-║  ASM                                                         ║
-║  □ +CRS: NORMAL redundancy (3 failure groups)                ║
-║  □ +DATA: NORMAL o HIGH redundancy                           ║
-║  □ +FRA: NORMAL redundancy, dimensione >= 2x DATA           ║
-║  □ Tutti i dischi stessa dimensione e performance            ║
-║                                                               ║
-║  HIGH AVAILABILITY                                           ║
-║  □ Data Guard configurato con standby fisico                 ║
-║  □ Fast-Start Failover (FSFO) opzionale con Observer         ║
-║  □ FAN (Fast Application Notification) abilitato             ║
-║  □ Services configurati (non usare default service!)         ║
-║  □ CLB + RLB (Connection/Runtime Load Balancing)             ║
-║                                                               ║
-║  BACKUP & RECOVERY                                           ║
-║  □ RMAN backup Level 0 settimanale + Level 1 giornaliero    ║
-║  □ Archivelog backup ogni 1-2 ore                            ║
-║  □ RESTORE DATABASE VALIDATE eseguito con successo           ║
-║  □ Procedura di DR testata (switchover + failover)           ║
-║                                                               ║
-║  SICUREZZA                                                   ║
-║  □ Firewall attivo con porte specifiche                      ║
-║  □ TDE per encryption dei datafile                           ║
-║  □ Unified Auditing abilitato                                ║
-║  □ Network encryption (Native o SSL)                         ║
-║                                                               ║
-║  MONITORING                                                  ║
-║  □ OEM o Grafana+Prometheus configurato                      ║
-║  □ orachk eseguito e PASS completo                           ║
-║  □ Alert email per: spazio, errori ORA-, job falliti         ║
-║  □ AWR snapshot ogni 30 min (default)                        ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
++---------------------------------------------------------------+
+|              CHECKLIST GO-LIVE PRODUZIONE                     |
++---------------------------------------------------------------+
+|                                                               |
+|  HARDWARE & OS                                               |
+|  □ RAM: almeno 64 GB per nodo                                |
+|  □ CPU: almeno 16 core per nodo                              |
+|  □ Storage SAN/NVMe con multipath                            |
+|  □ NIC bonding (LACP) per public + interconnect              |
+|  □ HugePages configurate, THP disabilitate                   |
+|  □ Kernel parameters ottimizzati (shmmax, sem, aio-max)      |
+|  □ NTP/chrony sincronizzato su tutti i nodi                  |
+|                                                               |
+|  DATABASE                                                    |
+|  □ ARCHIVELOG mode attivo                                    |
+|  □ FORCE LOGGING attivo                                      |
+|  □ BCT (Block Change Tracking) abilitato                     |
+|  □ Undo retention >= 1800 secondi                            |
+|  □ Redo Log: 4+ gruppi, 1-4 GB, switch ogni 15-20 min       |
+|  □ Processes >= 1000 (basato su carico previsto)             |
+|  □ Statistiche automatiche verificate                        |
+|  □ Password policy attiva                                    |
+|                                                               |
+|  ASM                                                         |
+|  □ +CRS: NORMAL redundancy (3 failure groups)                |
+|  □ +DATA: NORMAL o HIGH redundancy                           |
+|  □ +FRA: NORMAL redundancy, dimensione >= 2x DATA           |
+|  □ Tutti i dischi stessa dimensione e performance            |
+|                                                               |
+|  HIGH AVAILABILITY                                           |
+|  □ Data Guard configurato con standby fisico                 |
+|  □ Fast-Start Failover (FSFO) opzionale con Observer         |
+|  □ FAN (Fast Application Notification) abilitato             |
+|  □ Services configurati (non usare default service!)         |
+|  □ CLB + RLB (Connection/Runtime Load Balancing)             |
+|                                                               |
+|  BACKUP & RECOVERY                                           |
+|  □ RMAN backup Level 0 settimanale + Level 1 giornaliero    |
+|  □ Archivelog backup ogni 1-2 ore                            |
+|  □ RESTORE DATABASE VALIDATE eseguito con successo           |
+|  □ Procedura di DR testata (switchover + failover)           |
+|                                                               |
+|  SICUREZZA                                                   |
+|  □ Firewall attivo con porte specifiche                      |
+|  □ TDE per encryption dei datafile                           |
+|  □ Unified Auditing abilitato                                |
+|  □ Network encryption (Native o SSL)                         |
+|                                                               |
+|  MONITORING                                                  |
+|  □ OEM o Grafana+Prometheus configurato                      |
+|  □ orachk eseguito e PASS completo                           |
+|  □ Alert email per: spazio, errori ORA-, job falliti         |
+|  □ AWR snapshot ogni 30 min (default)                        |
+|                                                               |
++---------------------------------------------------------------+
 ```
 
 ---

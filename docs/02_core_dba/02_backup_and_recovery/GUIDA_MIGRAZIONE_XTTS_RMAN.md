@@ -38,22 +38,22 @@ La tecnica **XTTS con RMAN Incremental Backups** (MOS Note **1389592.1**) risolv
 
 ```
  SORGENTE (AIX / Big-Endian)                              TARGET (Linux / Little-Endian)
- ┌─────────────────────────┐                              ┌─────────────────────────┐
- │   DATABASE ATTIVO       │                              │   DATABASE STANDBY      │
- │    (READ WRITE)         │                              │       (MOUNT)           │
- ├─────────────────────────┤                              ├─────────────────────────┤
- │                         │                              │                         │
- │ 1. Backup Level 0 ──────┼─────── Copia Rete ──────────►│ 2. Conversione Endian   │
- │    (A caldo - 10 TB)    │                              │    (Carica in ASM Target)│
- │                         │                              │                         │
- │ 3. Backup Level 1 ──────┼─────── Copia Rete ──────────►│ 4. Conversione + Apply  │
- │    (Delta Giornaliero)  │                              │    (RMAN Incremental)   │
- │                         │                              │                         │
- │                         │   --- FINESTRA DI CUTOVER ---│                         │
- │ 5. Tablespace READ ONLY │                              │                         │
- │ 6. Ultimo Level 1 (Delta)───► Copia ed Apply finale ──►│ 7. plugging Metadati    │
- │    (Pochi MB / Secondi) │                              │ 8. Tablespace READ WRITE│
- └─────────────────────────┘                              └─────────────────────────┘
+ +-------------------------+                              +-------------------------+
+ |   DATABASE ATTIVO       |                              |   DATABASE STANDBY      |
+ |    (READ WRITE)         |                              |       (MOUNT)           |
+ +-------------------------+                              +-------------------------+
+ |                         |                              |                         |
+ | 1. Backup Level 0 ------+------- Copia Rete ----------&gt;| 2. Conversione Endian   |
+ |    (A caldo - 10 TB)    |                              |    (Carica in ASM Target)|
+ |                         |                              |                         |
+ | 3. Backup Level 1 ------+------- Copia Rete ----------&gt;| 4. Conversione + Apply  |
+ |    (Delta Giornaliero)  |                              |    (RMAN Incremental)   |
+ |                         |                              |                         |
+ |                         |   --- FINESTRA DI CUTOVER ---|                         |
+ | 5. Tablespace READ ONLY |                              |                         |
+ | 6. Ultimo Level 1 (Delta)---&gt; Copia ed Apply finale --&gt;| 7. plugging Metadati    |
+ |    (Pochi MB / Secondi) |                              | 8. Tablespace READ WRITE|
+ +-------------------------+                              +-------------------------+
 ```
 
 Durante il cutover finale, il downtime è ridotto esclusivamente al tempo necessario per:

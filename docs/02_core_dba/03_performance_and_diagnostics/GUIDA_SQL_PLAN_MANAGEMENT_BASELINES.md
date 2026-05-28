@@ -1,7 +1,7 @@
-# GUIDA COMPLETA: SQL Plan Management (SPM) ÔÇö Stabilit├á & Controllo dei Piani d'Esecuzione
+# GUIDA COMPLETA: SQL Plan Management (SPM) ÔÇö Stabilit+á & Controllo dei Piani d'Esecuzione
 
 > [!NOTE]
-> **DOCUMENTI DI PERFORMANCE CORRELATI (SCEGLI QUELLO PI├Ö ADATTO):**
+> **DOCUMENTI DI PERFORMANCE CORRELATI (SCEGLI QUELLO PI+Ö ADATTO):**
 > - **SQL Plan Management & Baselines (questa guida)**: [GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md](./GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md) (SPM, stabilizzazione dei piani di query, baselines, prevenzione regressioni).
 > - **SQL Tuning Set & Advisors**: [GUIDA_SQL_TUNING_SET_ADVISORS.md](./GUIDA_SQL_TUNING_SET_ADVISORS.md) (DBMS_SQLTUNE, SQL Tuning Advisor, SQL Profiles, Access Advisor).
 > - **AWR, ASH & ADDM**: [GUIDA_AWR_ASH_ADDM.md](./GUIDA_AWR_ASH_ADDM.md) (diagnostica delle prestazioni del carico di lavoro e statistica).
@@ -9,32 +9,32 @@
 
 ---
 
-## 1. Perch├® serve SQL Plan Management (SPM)?
+## 1. Perch+® serve SQL Plan Management (SPM)?
 
-Nelle basi dati di livello Enterprise, un cambio repentino del piano d'esecuzione di una query critica per il business rappresenta uno dei rischi pi├╣ elevati per la continuit├á operativa. Durante le manutenzioni ordinarie (raccolta statistiche di sistema, aggiornamenti parametri di inizializzazione, ricompilazione indici, migrazioni di versione, installazione di RU Patch trimestrali), l'**Optimizer** di Oracle pu├▓ stimare che un nuovo percorso di accesso ai dati sia ottimale, quando in realt├á causa regressioni disastrose.
+Nelle basi dati di livello Enterprise, un cambio repentino del piano d'esecuzione di una query critica per il business rappresenta uno dei rischi pi++ elevati per la continuit+á operativa. Durante le manutenzioni ordinarie (raccolta statistiche di sistema, aggiornamenti parametri di inizializzazione, ricompilazione indici, migrazioni di versione, installazione di RU Patch trimestrali), l'**Optimizer** di Oracle pu+▓ stimare che un nuovo percorso di accesso ai dati sia ottimale, quando in realt+á causa regressioni disastrose.
 
-**SQL Plan Management (SPM)** ├¿ un meccanismo integrato nel kernel di Oracle che **garantisce la stabilit├á delle prestazioni del database**. Impedisce all'optimizer di utilizzare un nuovo piano d'esecuzione non testato prima che il DBA (o un meccanismo automatico) lo abbia esaminato ed **accettato** verificando che non provochi regressioni.
+**SQL Plan Management (SPM)** +¿ un meccanismo integrato nel kernel di Oracle che **garantisce la stabilit+á delle prestazioni del database**. Impedisce all'optimizer di utilizzare un nuovo piano d'esecuzione non testato prima che il DBA (o un meccanismo automatico) lo abbia esaminato ed **accettato** verificando che non provochi regressioni.
 
 ```
                     [ RICHIESTA ESECUZIONE QUERY SQL ]
                                     Ôöé
-                                    Ôû╝
+                                    Ôû+
                      L'Optimizer genera un NUOVO PIANO
                                     Ôöé
-                                    Ôû╝
+                                    Ôû+
                  Esiste una SQL Plan Baseline per la query?
                                     Ôöé
-                    ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-                    Ôû╝ (SI)                          Ôû╝ (NO)
+                    ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+                    Ôû+ (SI)                          Ôû+ (NO)
          Cerca i piani ACCETTATI              Esegui il piano
             nella Baseline                    generato normalmente
                     Ôöé
-       ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-       Ôû╝                         Ôû╝
-Il nuovo piano ├¿      Il nuovo piano NON ├¿
+       ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+       Ôû+                         Ôû+
+Il nuovo piano +¿      Il nuovo piano NON +¿
    accettato?                accettato
        Ôöé                         Ôöé
-       Ôû╝                         Ôû╝
+       Ôû+                         Ôû+
 Usa il nuovo piano!    Usa il vecchio piano stabile!
                        Salva il nuovo piano come
                        NON ACCETTATO per l'evoluzione.
@@ -49,14 +49,14 @@ Il funzionamento di SPM si basa sulla persistenza all'interno del dizionario dat
 ### Il Ciclo di Vita in 3 Fasi:
 
 1.  **Cattura (Capture)**: Registrazione della firma della query SQL e memorizzazione del suo piano d'esecuzione corrente come baseline iniziale.
-2.  **Selezione (Selection)**: Ad ogni riesecuzione della query, l'optimizer ├¿ obbligato a selezionare esclusivamente i piani all'interno della baseline che sono marcati come **Accepted**.
+2.  **Selezione (Selection)**: Ad ogni riesecuzione della query, l'optimizer +¿ obbligato a selezionare esclusivamente i piani all'interno della baseline che sono marcati come **Accepted**.
 3.  **Evoluzione (Evolve)**: I nuovi piani alternativi calcolati dall'optimizer nel tempo vengono registrati all'interno della baseline ma marcati come **Non-Accepted** (`ACCEPTED = NO`). Il DBA esegue un test prestazionale dry-run (Evoluzione) per misurare l'I/O ed il tempo CPU del nuovo piano rispetto a quello vecchio. Se le prestazioni migliorano, il nuovo piano viene promosso ad **Accepted**.
 
 ---
 
 ## 3. Configurazione Parametriche e Strategie di Cattura
 
-Il comportamento di SPM ├¿ controllato principalmente da due parametri di inizializzazione del database:
+Il comportamento di SPM +¿ controllato principalmente da due parametri di inizializzazione del database:
 
 ```sql
 sqlplus / as sysdba
@@ -71,7 +71,7 @@ SHOW PARAMETER optimizer_use_sql_plan_baselines;
 | Criterio | Parametro `optimizer_capture_sql_plan_baselines` | Parametro `optimizer_use_sql_plan_baselines` | Descrizione |
 |---|---|---|---|
 | **Cattura Automatica** | `TRUE` | `TRUE` | **Consigliata in fase iniziale**: Il database registra automaticamente i piani per tutte le query eseguite almeno due volte. Da non tenere attivo per lunghi periodi in ambienti con milioni di query dinamiche per non saturare il tablespace `SYSAUX`. |
-| **Conservazione e Uso** | `FALSE` | `TRUE` | **Standard di Produzione**: Congela le baselines esistenti ed utilizza solo i piani precedentemente validati ed accettati. I nuovi piani non vengono pi├╣ catturati automaticamente. |
+| **Conservazione e Uso** | `FALSE` | `TRUE` | **Standard di Produzione**: Congela le baselines esistenti ed utilizza solo i piani precedentemente validati ed accettati. I nuovi piani non vengono pi++ catturati automaticamente. |
 
 ```sql
 -- Configurazione Standard di Produzione (Congelamento ed Uso)
@@ -83,7 +83,7 @@ ALTER SYSTEM SET optimizer_use_sql_plan_baselines = TRUE SCOPE=BOTH SID='*';
 
 ## 4. Workflow Avanzato: Caricamento Manuale delle Baselines
 
-La strategia pi├╣ sicura per stabilizzare query specifiche consiste nel caricare i piani desiderati manualmente dalla **Shared SQL Area (Cursor Cache)** o da un **SQL Tuning Set (STS)**.
+La strategia pi++ sicura per stabilizzare query specifiche consiste nel caricare i piani desiderati manualmente dalla **Shared SQL Area (Cursor Cache)** o da un **SQL Tuning Set (STS)**.
 
 ### Scenario: Stabilizzare una query critica
 Identifichiamo il `SQL_ID` e il piano stabile desiderato (`PLAN_HASH_VALUE`) tramite query in memoria:
@@ -134,7 +134,7 @@ END;
 
 ## 5. Gestione & Evoluzione delle Baselines
 
-I nuovi piani proposti dall'optimizer rimangono nello stato di `accepted = NO` finch├® non vengono evoluti. 
+I nuovi piani proposti dall'optimizer rimangono nello stato di `accepted = NO` finch+® non vengono evoluti. 
 
 ### 5.1 Monitorare lo stato delle Baselines attive
 ```sql
@@ -159,7 +159,7 @@ BEGIN
   v_report := DBMS_SPM.EVOLVE_SQL_PLAN_BASELINE(
     sql_handle => 'SQL_0b73s8df9ap3ws',
     verify     => 'YES', -- Esegue il test reale prima di decidere
-    commit     => 'YES'  -- Se il nuovo piano ├¿ prestazionalmente migliore del 1.5x, promuovilo ad ACCEPTED
+    commit     => 'YES'  -- Se il nuovo piano +¿ prestazionalmente migliore del 1.5x, promuovilo ad ACCEPTED
   );
   DBMS_OUTPUT.PUT_LINE(v_report);
 END;
@@ -192,7 +192,7 @@ END;
 
 ## 6. Procedura di Esportazione e Importazione (TEST Ô×ö PRODUZIONE)
 
-Se hai testato e stabilizzato le prestazioni delle query in un ambiente di laboratorio (UAT/TEST) ricreando baselines perfette, puoi esportarle e caricarle in Produzione per garantire la stabilit├á immediata prima del Go-Live.
+Se hai testato e stabilizzato le prestazioni delle query in un ambiente di laboratorio (UAT/TEST) ricreando baselines perfette, puoi esportarle e caricarle in Produzione per garantire la stabilit+á immediata prima del Go-Live.
 
 ```
  ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ                     ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
@@ -202,8 +202,8 @@ Se hai testato e stabilizzato le prestazioni delle query in un ambiente di labor
  Ôöé SPM Baseline attiva  Ôöé                     Ôöé                      Ôöé
  Ôöé          Ôöé           Ôöé                     Ôöé          Ôû▓           Ôöé
  Ôöé  (PACK nel DB)       Ôöé                     Ôöé  (UNPACK nel DB)     Ôöé
- Ôöé          Ôû╝           Ôöé                     Ôöé          Ôöé           Ôöé
- Ôöé   [ STAGING TABLE ]  ÔöéÔöÇÔöÇÔû║ Export/Import ÔöÇÔöÇÔû║Ôöé   [ STAGING TABLE ]  Ôöé
+ Ôöé          Ôû+           Ôöé                     Ôöé          Ôöé           Ôöé
+ Ôöé   [ STAGING TABLE ]  ÔöéÔöÇÔöÇÔû| Export/Import ÔöÇÔöÇÔû|Ôöé   [ STAGING TABLE ]  Ôöé
  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ      Data Pump      ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
 ```
 
@@ -265,10 +265,10 @@ END;
 
 ## 7. Risoluzione Problemi & Best Practices
 
-### 7.1 Perch├® l'optimizer non riproduce la Baseline? (`reproduced = NO`)
+### 7.1 Perch+® l'optimizer non riproduce la Baseline? (`reproduced = NO`)
 Se noti che la query continua ad usare un piano d'esecuzione pessimo ignorando la baseline attiva:
-1.  **Indice Eliminato**: Il piano salvato nella baseline faceva affidamento su un indice che ├¿ stato accidentalmente eliminato dal database (`DROP INDEX`). In questo caso, il flag `reproduced` passa a `NO`. Il DBA deve ricreare l'indice mancante.
-2.  **Cambiamento delle Partizioni**: La struttura fisica della tabella partizionata ├¿ cambiata radicalmente.
+1.  **Indice Eliminato**: Il piano salvato nella baseline faceva affidamento su un indice che +¿ stato accidentalmente eliminato dal database (`DROP INDEX`). In questo caso, il flag `reproduced` passa a `NO`. Il DBA deve ricreare l'indice mancante.
+2.  **Cambiamento delle Partizioni**: La struttura fisica della tabella partizionata +¿ cambiata radicalmente.
 3.  **Ottimizzazione Riorientata**: Parametri dell'ottimizzatore a livello di sessione forzano piani differenti non riproducibili.
 
 ### 7.2 Rimozione manuale di Baselines obsolete o difettose

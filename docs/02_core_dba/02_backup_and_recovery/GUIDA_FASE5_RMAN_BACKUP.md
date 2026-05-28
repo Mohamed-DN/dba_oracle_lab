@@ -77,27 +77,27 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
 ### Backup su TUTTI e 3 i Database
 
 ```
-                         ┌──────────────────────┐
-                         │   RAC PRIMARY         │
-                         │   (RACDB)             │
-                         │   → Archivelog backup │───→ 🗄️ +FRA
-                         │   → Level 1 leggero   │     (ogni 2h + giornaliero)
-                         └──────────┬─────────────┘
-                                    │ Redo Shipping
-                                    ▼
-                         ┌──────────────────────┐
-                         │   RAC STANDBY (ADG)   │
-                         │   (RACDB_STBY)        │
-                         │   → BACKUP PRINCIPALE │───→ 🗄️ +FRA
-                         │   Level 0 + Level 1   │     (full + incr + arch)
-                         └──────────┬─────────────┘
-                                    │ GoldenGate
-                                    ▼
-                         ┌──────────────────────┐
-                         │   TARGET DB           │
-                         │   (dbtarget)          │
-                         │   → Backup separato   │───→ 🗄️ Disco locale
-                         └──────────────────────┘
+                         +----------------------+
+                         |   RAC PRIMARY         |
+                         |   (RACDB)             |
+                         |   → Archivelog backup |---→ 🗄️ +FRA
+                         |   → Level 1 leggero   |     (ogni 2h + giornaliero)
+                         +----------+-------------+
+                                    | Redo Shipping
+                                    v
+                         +----------------------+
+                         |   RAC STANDBY (ADG)   |
+                         |   (RACDB_STBY)        |
+                         |   → BACKUP PRINCIPALE |---→ 🗄️ +FRA
+                         |   Level 0 + Level 1   |     (full + incr + arch)
+                         +----------+-------------+
+                                    | GoldenGate
+                                    v
+                         +----------------------+
+                         |   TARGET DB           |
+                         |   (dbtarget)          |
+                         |   → Backup separato   |---→ 🗄️ Disco locale
+                         +----------------------+
 ```
 
 > **Perché il backup PRINCIPALE sullo standby?** Il backup Level 0 (full) è un'operazione estremamente pesante: RMAN deve leggere fisicamente OGNI blocco del database (su un DB da 50 GB, legge tutti i 50 GB dal disco). Questo genera un carico enorme di I/O e CPU. Sullo standby, queste risorse non servono ai client perché nessun utente ci lavora sopra (a meno di Active Data Guard). Ecco perché il consiglio MAA è: **fai i backup pesanti sullo standby**, così il primario resta libero di servire le applicazioni.
@@ -1532,12 +1532,12 @@ Hai completato il core dell'architettura Oracle (HA + DR + replica + backup):
 
 ```
 RAC Primary (RACDB)
-    ├── Data Guard → RAC Standby (RACDB_STBY)
-    │                    ├── RMAN Backup (Level 0 + Level 1)
-    │                    └── GoldenGate Extract
-    │                            └── → Target DB (dbtarget)
-    │                                      └── RMAN Backup (Cumulative)
-    └── Force Logging + Archivelog Mode
+    +-- Data Guard → RAC Standby (RACDB_STBY)
+    |                    +-- RMAN Backup (Level 0 + Level 1)
+    |                    +-- GoldenGate Extract
+    |                            +-- → Target DB (dbtarget)
+    |                                      +-- RMAN Backup (Cumulative)
+    +-- Force Logging + Archivelog Mode
 ```
 
 Hai imparato:

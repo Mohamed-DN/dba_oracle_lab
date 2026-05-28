@@ -1,7 +1,7 @@
 # GUIDA COMPLETA: Oracle Data Masking & Redaction ÔÇö Mascheramento Dinamico & Statico a Livello Enterprise
 
 > [!NOTE]
-> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI├Ö ADATTO):**
+> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI+Ö ADATTO):**
 > - **Data Masking & Redaction (questa guida)**: [GUIDA_DATA_MASKING_REDACTION.md](./GUIDA_DATA_MASKING_REDACTION.md) (mascheramento dinamico in tempo reale e statico permanente).
 > - **Setup Database Vault**: [GUIDA_DATABASE_VAULT_ENTERPRISE.md](./GUIDA_DATABASE_VAULT_ENTERPRISE.md) (Separation of duties, Realms CDB/PDB, protezione SYSDBA).
 > - **Unified Auditing & Compliance**: [GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md](./GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md) (attivazione policy di audit, storage e purge automatico).
@@ -19,17 +19,17 @@ La protezione e l'oscuramento delle informazioni personali identificabili (PII) 
   Ôöé  NOME: Mario Rossi  |  CREDIT_CARD: 1234 5678 9012 3456 Ôöé
   ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
                               Ôöé
-       ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-       Ôû╝                                             Ôû╝
+       ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+       Ôû+                                             Ôû+
  [ ORACLE DATA REDACTION ]                    [ ORACLE DATA MASKING ]
       (Dinamico - SGA)                           (Statico - Disco)
        Ôöé                                             Ôöé
-       Ôû╝ (Esecuzione Query)                          Ôû╝ (Export / Refresh Test)
+       Ôû+ (Esecuzione Query)                          Ôû+ (Export / Refresh Test)
   Il dato sul disco rimane reale.              Il dato sul disco viene riscritto.
   Viene oscurato in memoria SGA                I dati reali sono persi e sostituiti
   on-the-fly per utenti non abilitati.         da dati fittizi ma coerenti.
        Ôöé                                             Ôöé
-       Ôû╝ (Output per Client)                         Ôû╝ (Output in Test / Dev)
+       Ôû+ (Output per Client)                         Ôû+ (Output in Test / Dev)
   NOME: Mario Rossi                            NOME: Antonio Bianchi
   CC:   ************3456                       CC:   4000 9876 5432 1111
 ```
@@ -41,7 +41,7 @@ La protezione e l'oscuramento delle informazioni personali identificabili (PII) 
 | **Ambiente Target** | Produzione (Client/Operatori Call Center/DBA). | Test, Sviluppo, UAT, Lab. |
 | **Persistenza** | Volatile in memoria (on-the-fly nella SGA). Il dato a disco rimane reale. | Fisico e permanente sul tablespace (irreversibile). |
 | **Impatto Prestazionale** | Minimo overhead CPU durante la query del client. | Overhead iniziale pesante durante il processo di mascheramento statico dei dati. |
-| **Reversibilit├á** | S├¼ (disabilitando la policy `DBMS_REDACT`). | NO (i dati reali sono persi per sempre). |
+| **Reversibilit+á** | S+¼ (disabilitando la policy `DBMS_REDACT`). | NO (i dati reali sono persi per sempre). |
 | **Licensing** | Opzione **Oracle Advanced Security** (licenziato). | Opzione **Oracle Data Masking and Subsetting Pack** (licenziato). |
 
 ---
@@ -112,7 +112,7 @@ END;
 ```
 
 ### 2.4 Esempio 4: Mascheramento tramite Funzione Personalizzata (Custom Redaction)
-├ê possibile richiamare funzioni esterne per logiche complesse (disponibile a partire da 19c):
++ê possibile richiamare funzioni esterne per logiche complesse (disponibile a partire da 19c):
 ```sql
 -- Esempio teorico di firma del metodo:
 -- Si utilizza la costante DBMS_REDACT.RANDOM o si associa una funzione personalizzata tramite DBMS_REDACT.ADD_POLICY
@@ -124,7 +124,7 @@ END;
 
 Se dobbiamo inviare un dump del database di produzione ad un fornitore di software esterno o al team di sviluppo in ambiente di test, dobbiamo **riscrivere fisicamente** i dati sensibili prima di esportare il file `.dmp`. 
 
-Data Pump offre una funzionalit├á nativa chiamata **`REMAP_DATA`** che intercetta la colonna durante l'esportazione o l'importazione e la elabora tramite una funzione PL/SQL personalizzata, in grado di generare valori realistici ma fittizi.
+Data Pump offre una funzionalit+á nativa chiamata **`REMAP_DATA`** che intercetta la colonna durante l'esportazione o l'importazione e la elabora tramite una funzione PL/SQL personalizzata, in grado di generare valori realistici ma fittizi.
 
 ```
   [ EXPORT IN PRODUZIONE ]
@@ -132,9 +132,9 @@ Data Pump offre una funzionalit├á nativa chiamata **`REMAP_DATA`** che interc
    Estrazione delle righe da tabella CUSTOMERS
              Ôöé
    Intercettazione tramite REMAP_DATA:
-   APP_CRM.CUSTOMERS.TAX_CODE ÔöÇÔöÇÔû║ crm_masking.anonymize_tax_code(VALORE)
+   APP_CRM.CUSTOMERS.TAX_CODE ÔöÇÔöÇÔû| crm_masking.anonymize_tax_code(VALORE)
                                                 Ôöé
-                                                Ôû╝ (Genera codice fittizio)
+                                                Ôû+ (Genera codice fittizio)
    Scrittura del valore modificato fisicamente sul file dump:
    [ export_masked_test.dmp ]
 ```
@@ -190,7 +190,7 @@ expdp system/SecurePwd123#@PROD_DB \
 ```
 
 > [!CAUTION]
-> **Gestione dei Vincoli e delle Chiavi Primarie**: Se applichi `REMAP_DATA` a una colonna soggetta a un vincolo di **Unique Key** o **Primary Key**, devi assicurarti che la funzione PL/SQL personalizzata generi valori **unici ed univoci**, altrimenti l'importazione (`impdp`) fallir├á sistematicamente a causa della violazione del vincolo di unicit├á.
+> **Gestione dei Vincoli e delle Chiavi Primarie**: Se applichi `REMAP_DATA` a una colonna soggetta a un vincolo di **Unique Key** o **Primary Key**, devi assicurarti che la funzione PL/SQL personalizzata generi valori **unici ed univoci**, altrimenti l'importazione (`impdp`) fallir+á sistematicamente a causa della violazione del vincolo di unicit+á.
 
 ---
 
@@ -238,16 +238,16 @@ In contesti Enterprise (Banche, Telco, Sanità), la gestione dei dati sensibili 
 
 ```
        Dato Reale su Disco: 4532 1122 3344 5566 (Carta di Credito)
-                                  │
+                                  |
                           [ DBMS_REDACT ] (Kernel)
-                                  │
-           ┌──────────────────────┴──────────────────────┐
-           ▼                                             ▼
+                                  |
+           +----------------------+----------------------+
+           v                                             v
   [ Applicativo di Billing ]                  [ Consulente Esterno SQL ]
        Match condition:                           Match condition:
          Sys_context = 'BILLING'                     Sys_context != 'BILLING'
-           │                                             │
-           ▼                                             ▼
+           |                                             |
+           v                                             v
        Vede il dato reale                         Vede il dato offuscato
      4532 1122 3344 5566                        XXXX XXXX XXXX 5566
 ```

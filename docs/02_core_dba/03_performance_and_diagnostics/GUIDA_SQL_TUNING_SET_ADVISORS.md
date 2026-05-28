@@ -21,23 +21,23 @@ Un **SQL Tuning Set (STS)** è un oggetto del database (memorizzato all'interno 
 
 ```
  FONTI DI INPUT:
- ┌───────────────────────────┐
- │  Cursor Cache (Memoria)  │──┐
- └───────────────────────────┘  │
- ┌───────────────────────────┐  │   CATTURA (LOAD)
- │  Snapshot AWR (Storico)   │──┼──► [ SQL TUNING SET ]
- └───────────────────────────┘  │    (Persistente in DB)
- ┌───────────────────────────┐  │
- │  SQL Text / Script Manual │──┘
- └───────────────────────────┘
-                                           │
-       ┌───────────────────────────────────┼───────────────────────────────────┐
-       ▼                                   ▼                                   ▼
- ┌──────────────┐                    ┌──────────────┐                    ┌──────────────┐
- │  SQL TUNING  │                    │  SQL ACCESS  │                    │     SQL      │
- │   ADVISOR    │                    │   ADVISOR    │                    │ PERFORMANCE  │
- │ (SQL Profile)│                    │(Indici/MView)│                    │ANALYZER (SPA)│
- └──────────────┘                    └──────────────┘                    └──────────────┘
+ +---------------------------+
+ |  Cursor Cache (Memoria)  |--+
+ +---------------------------+  |
+ +---------------------------+  |   CATTURA (LOAD)
+ |  Snapshot AWR (Storico)   |--+--&gt; [ SQL TUNING SET ]
+ +---------------------------+  |    (Persistente in DB)
+ +---------------------------+  |
+ |  SQL Text / Script Manual |--+
+ +---------------------------+
+                                           |
+       +-----------------------------------+-----------------------------------+
+       v                                   v                                   v
+ +--------------+                    +--------------+                    +--------------+
+ |  SQL TUNING  |                    |  SQL ACCESS  |                    |     SQL      |
+ |   ADVISOR    |                    |   ADVISOR    |                    | PERFORMANCE  |
+ | (SQL Profile)|                    |(Indici/MView)|                    |ANALYZER (SPA)|
+ +--------------+                    +--------------+                    +--------------+
 ```
 
 ### Le Viste del Dizionario Dati per STS:
@@ -373,16 +373,16 @@ In ambiente bancario o governativo è severamente proibito eseguire elaborazioni
 **Best Practice**: Popolare un STS sul primario in Prod, esportarlo su un database di Lab/Test speculare, eseguire qui il Tuning Advisor, validare ed accettare il SQL Profile risultante, ed infine esportare/importare il solo SQL Profile finale nel database di produzione (con downtime zero e overhead nullo).
 
 ```
- ┌──────────────────────┐                     ┌──────────────────────┐
- │ DATABASE DI SORGENTE │                     │ DATABASE DI TARGET   │
- │        (TEST)        │                     │     (PRODUZIONE)     │
- ├──────────────────────┤                     ├──────────────────────┤
- │  SQL_PROFILE attivo  │                     │                      │
- │          │           │                     │          ▲           │
- │  (PACK nel DB)       │                     │  (UNPACK nel DB)     │
- │          ▼           │                     │          │           │
- │   [ STAGING TABLE ]  │──► Export/Import ──►│   [ STAGING TABLE ]  │
- └──────────────────────┘      Data Pump      └──────────────────────┘
+ +----------------------+                     +----------------------+
+ | DATABASE DI SORGENTE |                     | DATABASE DI TARGET   |
+ |        (TEST)        |                     |     (PRODUZIONE)     |
+ +----------------------+                     +----------------------+
+ |  SQL_PROFILE attivo  |                     |                      |
+ |          |           |                     |          ^           |
+ |  (PACK nel DB)       |                     |  (UNPACK nel DB)     |
+ |          v           |                     |          |           |
+ |   [ STAGING TABLE ]  |--&gt; Export/Import --&gt;|   [ STAGING TABLE ]  |
+ +----------------------+      Data Pump      +----------------------+
 ```
 
 ### Step 1: Creazione della Staging Table in ambiente di Test (Sorgente)

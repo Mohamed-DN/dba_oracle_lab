@@ -1,7 +1,7 @@
 # GUIDA COMPLETA: Oracle Unified Auditing ÔÇö Migrazione, Policy Multitenant & Ottimizzazione Storage
 
 > [!NOTE]
-> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI├Ö ADATTO):**
+> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI+Ö ADATTO):**
 > - **Unified Auditing & Compliance (questa guida)**: [GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md](./GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md) (attivazione policy di audit, storage e purge automatico).
 > - **Setup Database Vault**: [GUIDA_DATABASE_VAULT_ENTERPRISE.md](./GUIDA_DATABASE_VAULT_ENTERPRISE.md) (Separation of duties, Realms CDB/PDB, protezione SYSDBA).
 > - **Data Masking & Redaction**: [GUIDA_DATA_MASKING_REDACTION.md](./GUIDA_DATA_MASKING_REDACTION.md) (mascheramento dinamico con DBMS_REDACT e statico con Data Pump).
@@ -23,16 +23,16 @@ Questo approccio creava colli di bottiglia e gravi rischi prestazionali. Le scri
 ```
                   [ ISTANTE DI QUERY / TRANSAZIONE APPLICATIVA ]
                                         Ôöé
-                                        Ôû╝
+                                        Ôû+
                    La sessione scatena una policy di audit
                                         Ôöé
-                                        Ôû╝
+                                        Ôû+
              ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
              Ôöé       UNIFIED AUDIT BUFFER (Memoria SGA)            Ôöé
              Ôöé Scrittura asincrona veloce per non bloccare il clientÔöé
              ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
                                         Ôöé
-                                        Ôû╝ (Flushing asincrono)
+                                        Ôû+ (Flushing asincrono)
              ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
              Ôöé            TABELLA AUDSYS.AUD$UNIFIED               Ôöé
              Ôöé       Vista di sistema: UNIFIED_AUDIT_TRAIL         Ôöé
@@ -46,35 +46,35 @@ Questo approccio creava colli di bottiglia e gravi rischi prestazionali. Le scri
 | **Prestazioni** | Scrittura sincrona su disco. Rallenta pesantemente le transazioni OLTP massive. | Scrittura asincrona in memoria (SGA buffer). Impatto prestazionale quasi impercettibile. |
 | **Archiviazione** | Frammentata in `SYS.AUD$`, `SYS.FGA_LOG$` e file di sistema OS. | Centralizzata ed unificata nello schema di sistema `AUDSYS` (tablespace `SYSAUX`). |
 | **Multitenancy** | Configurazione locale per ogni database. | Supporto per policy comuni (CDB) e locali (PDB). |
-| **Separazione Doveri** | Il DBA con ruoli di sistema pu├▓ cancellare i log direttamente. | Gestito dal ruolo delegato `AUDIT_ADMIN`. Nessun utente (incluso `SYS`) pu├▓ modificare i log di audit. |
+| **Separazione Doveri** | Il DBA con ruoli di sistema pu+▓ cancellare i log direttamente. | Gestito dal ruolo delegato `AUDIT_ADMIN`. Nessun utente (incluso `SYS`) pu+▓ modificare i log di audit. |
 
 ---
 
 ## 2. mixed Mode vs Pure Unified Auditing Mode
 
-Di default, quando installi o effettui un upgrade ad Oracle 19c/21c/23ai, il database si avvia in **Mixed Mode**. Questo consente di utilizzare Unified Auditing mantenendo attiva la retrocompatibilit├á con i vecchi parametri tradizionali. 
-Tuttavia, per conformarsi alle normative **PCI-DSS** o **GDPR** e sbloccare i massimi benefici prestazionali dell'auditing asincrono, ├¿ obbligatorio disabilitare l'audit tradizionale e passare alla modalit├á **Pure Unified Auditing Mode**.
+Di default, quando installi o effettui un upgrade ad Oracle 19c/21c/23ai, il database si avvia in **Mixed Mode**. Questo consente di utilizzare Unified Auditing mantenendo attiva la retrocompatibilit+á con i vecchi parametri tradizionali. 
+Tuttavia, per conformarsi alle normative **PCI-DSS** o **GDPR** e sbloccare i massimi benefici prestazionali dell'auditing asincrono, +¿ obbligatorio disabilitare l'audit tradizionale e passare alla modalit+á **Pure Unified Auditing Mode**.
 
 ### 2.1 Verifica dello stato attuale
-Controlliamo se la modalit├á Pure ├¿ attiva o se siamo ancora in modalit├á mista:
+Controlliamo se la modalit+á Pure +¿ attiva o se siamo ancora in modalit+á mista:
 
 ```sql
 sqlplus / as sysdba
 
--- 1. Controlla se l'opzione Unified Auditing ├¿ abilitata
+-- 1. Controlla se l'opzione Unified Auditing +¿ abilitata
 SELECT parameter, value FROM v$option WHERE parameter = 'Unified Auditing';
 -- Output atteso: Unified Auditing | TRUE
 
 -- 2. Verifica se i parametri tradizionali sono attivi (se diversi da NONE, siamo in Mixed Mode)
 SHOW PARAMETER audit_trail;
--- Se il parametro ├¿ diverso da NONE (es. DB, OS), l'audit tradizionale ├¿ ancora attivo.
+-- Se il parametro +¿ diverso da NONE (es. DB, OS), l'audit tradizionale +¿ ancora attivo.
 ```
 
 ---
 
 ## 3. Workflow di Abilitazione Pure Mode (Rolling RAC & Single Node)
 
-Per attivare la modalit├á **Pure**, occorre disabilitare i parametri tradizionali nel database e **ricompilare il binario eseguibile Oracle** a livello di sistema operativo per linkare la libreria `uniaud_on`.
+Per attivare la modalit+á **Pure**, occorre disabilitare i parametri tradizionali nel database e **ricompilare il binario eseguibile Oracle** a livello di sistema operativo per linkare la libreria `uniaud_on`.
 
 ### 3.1 Procedura Completa su Node Singolo (Single Instance)
 
@@ -104,7 +104,7 @@ EOF
 ```
 
 ### 3.2 Procedura in ambiente RAC (Rolling Upgrade Node-by-Node)
-In ambienti di produzione clusterizzati (RAC), ├¿ possibile abilitare la modalit├á Pure **senza causare il downtime completo del database**, agendo un nodo alla volta in modalit├á rolling.
+In ambienti di produzione clusterizzati (RAC), +¿ possibile abilitare la modalit+á Pure **senza causare il downtime completo del database**, agendo un nodo alla volta in modalit+á rolling.
 
 ```bash
 # ==========================================
@@ -219,7 +219,7 @@ ORDER BY event_timestamp DESC;
 
 ## 6. Ottimizzazione dello Storage: Purge Automatico e Spostamento in Tablespace Dedicato
 
-Per impostazione predefinita, le righe di audit vengono salvate all'interno del tablespace `SYSAUX`. In ambienti di produzione ad alto traffico, questo pu├▓ saturare rapidamente il tablespace di sistema, provocando rallentamenti gravissimi sul dizionario e disservizi globali.
+Per impostazione predefinita, le righe di audit vengono salvate all'interno del tablespace `SYSAUX`. In ambienti di produzione ad alto traffico, questo pu+▓ saturare rapidamente il tablespace di sistema, provocando rallentamenti gravissimi sul dizionario e disservizi globali.
 **Standard Enterprise**: Spostare l'archiviazione di Unified Auditing su un tablespace dedicato ed impostare un meccanismo automatico di pulizia (*Purge*).
 
 ```
@@ -227,8 +227,8 @@ Per impostazione predefinita, le righe di audit vengono salvate all'interno del 
                                     Ôöé
                   Verifica la locazione di destinazione:
                                     Ôöé
-         ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-         Ôû╝                                                     Ôû╝
+         ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+         Ôû+                                                     Ôû+
     (Default)                                             (Consigliato)
  Spazio su SYSAUX                                    Tablespace Isolato AUD_DATA
    - Rischio di stallo DB                              - Nessun rischio per SYSAUX
@@ -261,7 +261,7 @@ WHERE  parameter_name = 'AUDIT LEVEL';
 ```
 
 ### Step 3: Configurazione del Job di Purge Automatico
-Configuriamo una soglia di conservazione di 30 giorni. I dati pi├╣ vecchi verranno eliminati automaticamente ogni notte.
+Configuriamo una soglia di conservazione di 30 giorni. I dati pi++ vecchi verranno eliminati automaticamente ogni notte.
 
 ```sql
 -- 1. Inizializza il cleanup per Unified Audit
@@ -308,7 +308,7 @@ END;
 
 ## 7. Tuning Avanzato delle Performance di Unified Auditing
 
-In ambienti OLTP ad altissime transazioni (es. core banking), il comportamento predefinito di Unified Auditing pu├▓ essere calibrato per ottimizzare ulteriormente il throughput.
+In ambienti OLTP ad altissime transazioni (es. core banking), il comportamento predefinito di Unified Auditing pu+▓ essere calibrato per ottimizzare ulteriormente il throughput.
 
 ### 7.1 Immediate Write vs Queued Write
 Di default, Oracle utilizza la scrittura asincrona tramite un buffer in memoria SGA (**Queued Write Mode**). Se preferisci la sicurezza assoluta della persistenza immediata (es. per policy a livello governativo), puoi forzare la scrittura immediata (**Immediate Write Mode**), tenendo presente che questo potrebbe influire minimamente sulla latenza delle query.

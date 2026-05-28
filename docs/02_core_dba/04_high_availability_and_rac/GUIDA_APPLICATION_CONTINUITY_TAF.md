@@ -38,7 +38,7 @@ Nelle architetture ad alta affidabilità (Real Application Clusters - RAC e Data
 Per risolvere questo problema, Oracle ha sviluppato tre generazioni di tecnologie di failover client:
 
 ```
-  TAF (Transparent Application Failover) ──► TRANSACTION GUARD ──► APPLICATION CONTINUITY
+  TAF (Transparent Application Failover) --&gt; TRANSACTION GUARD --&gt; APPLICATION CONTINUITY
   - Sviluppata negli anni '90 (OCI/SQL*Plus)  - Introdotta in 12c      - Stato dell'arte (19c/21c/23ai)
   - Ripristina solo le SELECT                 - Risolve l'incertezza   - Buffering intelligente in memoria
   - Le DML attive falliscono                  - Ritorna con certezza   - Ricollega la sessione e

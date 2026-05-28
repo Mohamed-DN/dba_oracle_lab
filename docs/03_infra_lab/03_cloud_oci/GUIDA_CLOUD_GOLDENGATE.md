@@ -24,41 +24,41 @@
 Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci interessa:
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                  OCI ALWAYS FREE — Risorse                       ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  COMPUTE (VM.Standard.A1.Flex — ARM Ampere)                      ║
-║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 4 OCPU (ARM, equivalenti a ~4 core)  │                     ║
-║  │  • 24 GB RAM                            │                     ║
-║  │  • Puoi dividere in 1-4 VM              │                     ║
-║  │  • Oracle Linux 8 (aarch64)             │                     ║
-║  └─────────────────────────────────────────┘                     ║
-║                                                                  ║
-║  STORAGE                                                         ║
-║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 200 GB Block Volume totale           │                     ║
-║  │  • 10 GB Object Storage                 │                     ║
-║  └─────────────────────────────────────────┘                     ║
-║                                                                  ║
-║  NETWORKING                                                      ║
-║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 10 TB/mese outbound transfer         │                     ║
-║  │  • 1 Load Balancer (10 Mbps)            │                     ║
-║  │  • VCN, Subnet, Internet Gateway gratis  │                     ║
-║  └─────────────────────────────────────────┘                     ║
-║                                                                  ║
-║  DATABASE                                                        ║
-║  ┌─────────────────────────────────────────┐                     ║
-║  │  • 2 Autonomous DB (1 OCPU, 20 GB)      │                     ║
-║  │  • OPPURE: installa manualmente Oracle   │                     ║
-║  │    19c EE su VM ARM (noi facciamo questo)│                     ║
-║  └─────────────────────────────────────────┘                     ║
-║                                                                  ║
-║  💡 Per il LAB: 1 VM con 4 OCPU + 24 GB RAM → PERFETTA          ║
-║     per un DB target GoldenGate single-instance!                 ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                  OCI ALWAYS FREE — Risorse                       |
++------------------------------------------------------------------+
+|                                                                  |
+|  COMPUTE (VM.Standard.A1.Flex — ARM Ampere)                      |
+|  +-----------------------------------------+                     |
+|  |  • 4 OCPU (ARM, equivalenti a ~4 core)  |                     |
+|  |  • 24 GB RAM                            |                     |
+|  |  • Puoi dividere in 1-4 VM              |                     |
+|  |  • Oracle Linux 8 (aarch64)             |                     |
+|  +-----------------------------------------+                     |
+|                                                                  |
+|  STORAGE                                                         |
+|  +-----------------------------------------+                     |
+|  |  • 200 GB Block Volume totale           |                     |
+|  |  • 10 GB Object Storage                 |                     |
+|  +-----------------------------------------+                     |
+|                                                                  |
+|  NETWORKING                                                      |
+|  +-----------------------------------------+                     |
+|  |  • 10 TB/mese outbound transfer         |                     |
+|  |  • 1 Load Balancer (10 Mbps)            |                     |
+|  |  • VCN, Subnet, Internet Gateway gratis  |                     |
+|  +-----------------------------------------+                     |
+|                                                                  |
+|  DATABASE                                                        |
+|  +-----------------------------------------+                     |
+|  |  • 2 Autonomous DB (1 OCPU, 20 GB)      |                     |
+|  |  • OPPURE: installa manualmente Oracle   |                     |
+|  |    19c EE su VM ARM (noi facciamo questo)|                     |
+|  +-----------------------------------------+                     |
+|                                                                  |
+|  💡 Per il LAB: 1 VM con 4 OCPU + 24 GB RAM → PERFETTA          |
+|     per un DB target GoldenGate single-instance!                 |
++------------------------------------------------------------------+
 ```
 
 > **ARM vs x86**: Le CPU Ampere A1 sono ARM (aarch64), non x86_64. Devi scaricare i binari Oracle **per Linux ARM (aarch64)**, non quelli standard Linux x64!
@@ -68,49 +68,49 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ## 2. Architettura Ibrida
 
 ```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                     ARCHITETTURA IBRIDA ON-PREM → CLOUD                     ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║                                                                              ║
-║   IL TUO PC (VirtualBox)                       ORACLE CLOUD (OCI)           ║
-║   ═════════════════════                       ═══════════════════           ║
-║                                                                              ║
-║   ┌──────────────────┐                                                       ║
-║   │   RAC PRIMARY    │                                                       ║
-║   │   rac1 + rac2    │                                                       ║
-║   │   (192.168.1.x)  │                                                       ║
-║   └────────┬─────────┘                                                       ║
-║            │  Data Guard (Redo)                                              ║
-║            ▼                                                                  ║
-║   ┌──────────────────┐                                                       ║
-║   │   RAC STANDBY    │                                                       ║
-║   │   racstby1+stby2 │                                                       ║
-║   │   (192.168.1.2xx)│                                                       ║
-║   │                  │                                                       ║
-║   │   GG Extract     │                                                       ║
-║   │   GG Data Pump ──│──── SSH Tunnel / VPN ────────┐                       ║
-║   └──────────────────┘     (porta 7809 + 1521)       │                       ║
-║                                                       ▼                      ║
-║                            ┌────────────────────────────────────────┐        ║
-║                            │   OCI ARM VM (VM.Standard.A1.Flex)     │        ║
-║                            │   ─────────────────────────────────    │        ║
-║                            │   OS: Oracle Linux 8 (aarch64)        │        ║
-║                            │   CPU: 4 OCPU ARM Ampere A1           │        ║
-║                            │   RAM: 24 GB                          │        ║
-║                            │   Storage: 150 GB Block Volume        │        ║
-║                            │                                        │        ║
-║                            │   Oracle 19c EE (ARM)                  │        ║
-║                            │   + GoldenGate 19c (ARM)               │        ║
-║                            │   + Replicat (Integrated)              │        ║
-║                            │                                        │        ║
-║                            │   IP Pubblica: xxx.xxx.xxx.xxx         │        ║
-║                            │   IP Privata: 10.0.0.x                 │        ║
-║                            └────────────────────────────────────────┘        ║
-║                                                                              ║
-║   FLUSSO:                                                                    ║
-║   App → RAC Primary → (DG Redo) → RAC Standby → (GG Extract+Pump)          ║
-║       → SSH Tunnel → OCI ARM VM → (GG Replicat) → Target DB Cloud          ║
-╚══════════════════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------------------+
+|                     ARCHITETTURA IBRIDA ON-PREM → CLOUD                     |
++------------------------------------------------------------------------------+
+|                                                                              |
+|   IL TUO PC (VirtualBox)                       ORACLE CLOUD (OCI)           |
+|   ---------------------                       -------------------           |
+|                                                                              |
+|   +------------------+                                                       |
+|   |   RAC PRIMARY    |                                                       |
+|   |   rac1 + rac2    |                                                       |
+|   |   (192.168.1.x)  |                                                       |
+|   +--------+---------+                                                       |
+|            |  Data Guard (Redo)                                              |
+|            v                                                                  |
+|   +------------------+                                                       |
+|   |   RAC STANDBY    |                                                       |
+|   |   racstby1+stby2 |                                                       |
+|   |   (192.168.1.2xx)|                                                       |
+|   |                  |                                                       |
+|   |   GG Extract     |                                                       |
+|   |   GG Data Pump --|---- SSH Tunnel / VPN --------+                       |
+|   +------------------+     (porta 7809 + 1521)       |                       |
+|                                                       v                      |
+|                            +----------------------------------------+        |
+|                            |   OCI ARM VM (VM.Standard.A1.Flex)     |        |
+|                            |   ---------------------------------    |        |
+|                            |   OS: Oracle Linux 8 (aarch64)        |        |
+|                            |   CPU: 4 OCPU ARM Ampere A1           |        |
+|                            |   RAM: 24 GB                          |        |
+|                            |   Storage: 150 GB Block Volume        |        |
+|                            |                                        |        |
+|                            |   Oracle 19c EE (ARM)                  |        |
+|                            |   + GoldenGate 19c (ARM)               |        |
+|                            |   + Replicat (Integrated)              |        |
+|                            |                                        |        |
+|                            |   IP Pubblica: xxx.xxx.xxx.xxx         |        |
+|                            |   IP Privata: 10.0.0.x                 |        |
+|                            +----------------------------------------+        |
+|                                                                              |
+|   FLUSSO:                                                                    |
+|   App → RAC Primary → (DG Redo) → RAC Standby → (GG Extract+Pump)          |
+|       → SSH Tunnel → OCI ARM VM → (GG Replicat) → Target DB Cloud          |
++------------------------------------------------------------------------------+
 ```
 
 > **Perché questo è potente per il CV?** Dimostra che sai lavorare in ambienti ibridi (on-prem + cloud), che è esattamente quello che fanno le aziende che migrano a cloud.
@@ -122,49 +122,49 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ### 📖 Cosa Leggere PRIMA (Prima di Toccare OCI)
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║  ORDINE DI LETTURA — PRIMA DI INIZIARE                           ║
-╠═══╦═══════════════════════════════╦══════════════════════════════╣
-║ # ║ Cosa Leggere                  ║ Perché                       ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 1 ║ GUIDA_ARCHITETTURA_ORACLE.md  ║ Capire SGA, PGA, Redo,      ║
-║   ║                               ║ Undo, Temp — le basi         ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 2 ║ GUIDA_FASE0 + FASE1          ║ Capire networking, DNS,      ║
-║   ║                               ║ configurazione OS            ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 3 ║ GUIDA_LISTENER_SERVICES_DBA   ║ Capire Listener, Services,   ║
-║   ║                               ║ tnsnames.ora, SCAN           ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 4 ║ OCI Getting Started (Oracle)  ║ Console OCI, VCN, Subnet,    ║
-║   ║ cloud.oracle.com/get-started  ║ Security List, SSH Keys      ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 5 ║ GUIDA_FASE7_GOLDENGATE.md     ║ Capire Extract, Pump,        ║
-║   ║                               ║ Replicat prima del cloud     ║
-╚═══╩═══════════════════════════════╩══════════════════════════════╝
++-------------------------------------------------------------------+
+|  ORDINE DI LETTURA — PRIMA DI INIZIARE                           |
++---+-------------------------------+------------------------------+
+| # | Cosa Leggere                  | Perché                       |
++---+-------------------------------+------------------------------+
+| 1 | GUIDA_ARCHITETTURA_ORACLE.md  | Capire SGA, PGA, Redo,      |
+|   |                               | Undo, Temp — le basi         |
++---+-------------------------------+------------------------------+
+| 2 | GUIDA_FASE0 + FASE1          | Capire networking, DNS,      |
+|   |                               | configurazione OS            |
++---+-------------------------------+------------------------------+
+| 3 | GUIDA_LISTENER_SERVICES_DBA   | Capire Listener, Services,   |
+|   |                               | tnsnames.ora, SCAN           |
++---+-------------------------------+------------------------------+
+| 4 | OCI Getting Started (Oracle)  | Console OCI, VCN, Subnet,    |
+|   | cloud.oracle.com/get-started  | Security List, SSH Keys      |
++---+-------------------------------+------------------------------+
+| 5 | GUIDA_FASE7_GOLDENGATE.md     | Capire Extract, Pump,        |
+|   |                               | Replicat prima del cloud     |
++---+-------------------------------+------------------------------+
 ```
 
 ### 📖 Cosa Leggere DOPO (Dopo Aver Completato il Lab Cloud)
 
 ```
-╔═══╦═══════════════════════════════╦══════════════════════════════╗
-║ # ║ Cosa Leggere                  ║ Perché                       ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 1 ║ GUIDA_MAA_BEST_PRACTICES.md   ║ Validare la tua architettura ║
-║   ║                               ║ contro gli standard Oracle   ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 2 ║ GUIDA_ATTIVITA_DBA.md         ║ Batch jobs, AWR, patching,   ║
-║   ║                               ║ Data Pump, security          ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 3 ║ GUIDA_DA_LAB_A_PRODUZIONE.md  ║ Sizing, HugePages, tuning    ║
-║   ║                               ║ per produzione reale         ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 4 ║ GUIDA_SWITCHOVER + FAILOVER   ║ Praticare DG operations      ║
-║   ║                               ║ con il cloud come target     ║
-╠═══╬═══════════════════════════════╬══════════════════════════════╣
-║ 5 ║ Oracle Cloud Documentation    ║ Approfondire OCI networking,  ║
-║   ║ docs.oracle.com               ║ security, monitoring         ║
-╚═══╩═══════════════════════════════╩══════════════════════════════╝
++---+-------------------------------+------------------------------+
+| # | Cosa Leggere                  | Perché                       |
++---+-------------------------------+------------------------------+
+| 1 | GUIDA_MAA_BEST_PRACTICES.md   | Validare la tua architettura |
+|   |                               | contro gli standard Oracle   |
++---+-------------------------------+------------------------------+
+| 2 | GUIDA_ATTIVITA_DBA.md         | Batch jobs, AWR, patching,   |
+|   |                               | Data Pump, security          |
++---+-------------------------------+------------------------------+
+| 3 | GUIDA_DA_LAB_A_PRODUZIONE.md  | Sizing, HugePages, tuning    |
+|   |                               | per produzione reale         |
++---+-------------------------------+------------------------------+
+| 4 | GUIDA_SWITCHOVER + FAILOVER   | Praticare DG operations      |
+|   |                               | con il cloud come target     |
++---+-------------------------------+------------------------------+
+| 5 | Oracle Cloud Documentation    | Approfondire OCI networking,  |
+|   | docs.oracle.com               | security, monitoring         |
++---+-------------------------------+------------------------------+
 ```
 
 ---
@@ -183,21 +183,21 @@ Oracle offre risorse cloud **gratuite per sempre** (Always Free). Quello che ci 
 ### 4.2 Creare il Networking (VCN)
 
 ```
-╔════════════════════════════════════════════════════════╗
-║  TOPOLOGIA RETE OCI (Virtual Cloud Network)            ║
-╠════════════════════════════════════════════════════════╣
-║                                                        ║
-║  VCN: labnet (10.0.0.0/16)                             ║
-║  ├── Subnet pubblica: 10.0.0.0/24                      ║
-║  │   └── VM ARM (10.0.0.2, IP pubblica assegnata)      ║
-║  ├── Internet Gateway (IGW)                            ║
-║  ├── Route Table: 0.0.0.0/0 → IGW                     ║
-║  └── Security List:                                    ║
-║      ├── IN: TCP 22 (SSH) da 0.0.0.0/0                ║
-║      ├── IN: TCP 1521 (Oracle) dal TUO IP pubblico    ║
-║      ├── IN: TCP 7809 (GoldenGate) dal TUO IP         ║
-║      └── OUT: Tutto (0.0.0.0/0)                       ║
-╚════════════════════════════════════════════════════════╝
++--------------------------------------------------------+
+|  TOPOLOGIA RETE OCI (Virtual Cloud Network)            |
++--------------------------------------------------------+
+|                                                        |
+|  VCN: labnet (10.0.0.0/16)                             |
+|  +-- Subnet pubblica: 10.0.0.0/24                      |
+|  |   +-- VM ARM (10.0.0.2, IP pubblica assegnata)      |
+|  +-- Internet Gateway (IGW)                            |
+|  +-- Route Table: 0.0.0.0/0 → IGW                     |
+|  +-- Security List:                                    |
+|      +-- IN: TCP 22 (SSH) da 0.0.0.0/0                |
+|      +-- IN: TCP 1521 (Oracle) dal TUO IP pubblico    |
+|      +-- IN: TCP 7809 (GoldenGate) dal TUO IP         |
+|      +-- OUT: Tutto (0.0.0.0/0)                       |
++--------------------------------------------------------+
 ```
 
 **Passo per passo nella Console OCI:**
@@ -517,31 +517,31 @@ GGSCI> INFO MGR
 Il tuo lab è su una rete locale (192.168.1.x), ma la VM OCI è su Internet. Il Data Pump GoldenGate deve raggiungere la porta 7809 della VM cloud.
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                  OPZIONI DI CONNESSIONE                          ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  OPZIONE 1: SSH Tunnel (Consigliato per Lab)                     ║
-║  ─────────────────────────────────────────────                   ║
-║  racstby1 ──SSH tunnel──→ OCI VM (porta 7809 + 1521)             ║
-║  • Semplice, sicuro, gratuito                                    ║
-║  • Basta un comando SSH                                          ║
-║  • Perfetto per il lab                                           ║
-║                                                                  ║
-║  OPZIONE 2: VPN Site-to-Site                                     ║
-║  ──────────────────────────                                      ║
-║  Router locale ──IPSec──→ OCI DRG                                ║
-║  • Richiede router compatibile                                   ║
-║  • Più complesso da configurare                                  ║
-║  • Soluzione enterprise (produzione)                             ║
-║                                                                  ║
-║  OPZIONE 3: IP Pubblico Diretto                                  ║
-║  ────────────────────────────                                    ║
-║  Pump punta direttamente all'IP pubblico OCI                     ║
-║  • Richiede port forwarding sul router                           ║
-║  • Meno sicuro senza encryption                                  ║
-║  • Funziona se hai IP pubblico statico                           ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                  OPZIONI DI CONNESSIONE                          |
++------------------------------------------------------------------+
+|                                                                  |
+|  OPZIONE 1: SSH Tunnel (Consigliato per Lab)                     |
+|  ---------------------------------------------                   |
+|  racstby1 --SSH tunnel--→ OCI VM (porta 7809 + 1521)             |
+|  • Semplice, sicuro, gratuito                                    |
+|  • Basta un comando SSH                                          |
+|  • Perfetto per il lab                                           |
+|                                                                  |
+|  OPZIONE 2: VPN Site-to-Site                                     |
+|  --------------------------                                      |
+|  Router locale --IPSec--→ OCI DRG                                |
+|  • Richiede router compatibile                                   |
+|  • Più complesso da configurare                                  |
+|  • Soluzione enterprise (produzione)                             |
+|                                                                  |
+|  OPZIONE 3: IP Pubblico Diretto                                  |
+|  ----------------------------                                    |
+|  Pump punta direttamente all'IP pubblico OCI                     |
+|  • Richiede port forwarding sul router                           |
+|  • Meno sicuro senza encryption                                  |
+|  • Funziona se hai IP pubblico statico                           |
++------------------------------------------------------------------+
 ```
 
 ### 7.2 Opzione 1: SSH Tunnel (Raccomandato)
