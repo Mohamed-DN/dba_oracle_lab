@@ -1,14 +1,18 @@
 # FASE 7: Oracle GoldenGate - Microservices Architecture (MA)
 
+> [!NOTE]
+> **DOCUMENTI GOLDENGATE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Guida di Riferimento 19c Core (Single Source of Truth)**: [GUIDA_GOLDENGATE_19C_COMPLETA.md](./GUIDA_GOLDENGATE_19C_COMPLETA.md) (manuale completo di architettura, parametri e best practices).
+> - **Cheat Sheet Operativo (Veloce)**: [CHEAT_SHEET_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md) (comandi rapidi, lag, stop/start).
+> - **Cheat Sheet Verticale 19c**: [CHEAT_SHEET_GOLDENGATE_19C.md](./CHEAT_SHEET_GOLDENGATE_19C.md) (comandi analitici e grant).
+
 > Questa fase configura Oracle GoldenGate **19c Microservices Architecture (MA)** per replicare dati in tempo reale dal RAC Primary verso un database Oracle target. Classic Architecture (`ggsci`) non e' il percorso principale del lab, ma resta fondamentale da conoscere per ambienti legacy e troubleshooting.
 
 > Prima di eseguire questa fase leggi il percorso GoldenGate completo:
 > - [Prerequisiti DB e Architettura](./GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md)
-> - [GoldenGate 19c Completa](./GUIDA_GOLDENGATE_19C_COMPLETA.md)
 > - [Collegamento Source e Target](./GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md)
 > - [Microservices Architecture 19c](./GUIDA_GOLDENGATE_MICROSERVICES_ARCHITECTURE_19C.md)
 > - [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md)
-> - [Cheat Sheet GoldenGate 19c](./CHEAT_SHEET_GOLDENGATE_19C.md)
 
 ---
 ## 7.0 Teoria Profonda: L'Architettura a Microservizi

@@ -1,5 +1,12 @@
 # GUIDA LAB RMAN ORACLE 19C - COMPLETA (RAC + DATA GUARD + CDB/PDB)
 
+> [!NOTE]
+> **DOCUMENTI RMAN CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Veloce**: [CHEAT_SHEET_RMAN_ESSENZIALE.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN_ESSENZIALE.md) (comandi rapidi quotidiani).
+> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
+> - **Cheat Sheet Enterprise**: [RMAN_FULL_CHEATSHEET.md](../../01_operations/01_cheat_sheets/RMAN_FULL_CHEATSHEET.md) (scenari complessi, TDE, BMR e tuning).
+> - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri).
+
 > [!WARNING]
 > **Questa guida è stata sostituita dalla versione molto più dettagliata nella Fase 5.**
 > Vai a → [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md)
