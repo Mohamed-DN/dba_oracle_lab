@@ -358,14 +358,20 @@ echo "Report generato: $REPORT_FILE"
 
 
 ## [ARCHITETTURA VISIVA] AWR, ASH e ADDM
-\\mermaid
-flowchart TD
-    SGA[SGA - V\] -->|Campionamento ogni secondo| SGA
-    SGA -->|Flush ogni 10 sec| ASH[(DBA_HIST_ASH)]
-    Mem[Statistiche di Sistema Memoria] -->|Snapshot ogni 60 min| AWR[(DBA_HIST_WR...)]
-    AWR --> ADDM[ADDM AI Engine]
-    ADDM --> Report[Report Diagnostico]
-\
+```text
+
+(SGA) V$ACTIVE_SESSION_HISTORY ---> Campionamento 1/sec
+         |
+         +--> Flush ogni 10/sec ---> DBA_HIST_ASH (Disco)
+
+Statistiche di Sistema (Memoria) ---> Snapshot 60/min ---> AWR (DBA_HIST_WR...)
+                                                               |
+                                                               v
+                                                       ADDM Engine (AI)
+                                                               |
+                                                               v
+                                                     Report Diagnostico
+```
 
 # GUIDA MONUMENTALE: AWR, ASH e ADDM per Performance Tuning Avanzato (19c/21c/23ai)
 

@@ -297,16 +297,19 @@ END;
 
 
 ## [ARCHITETTURA VISIVA] Optimizer e SPM
-\\mermaid
-flowchart TD
-    Q[Nuova Query SQL] --> H[Hard Parse]
-    H --> P[Miglior Piano Teorico Calcolato]
-    P --> S{Esiste Baseline ACCEPTED in SPM?}
-    S -->|Si| C{Il piano calcolato è tra quelli ACCEPTED?}
-    C -->|Si| U1[Usa il piano calcolato]
-    C -->|No| U2[Aggiungi piano come UNACCEPTED, usa il miglior piano ACCEPTED]
-    S -->|No| U3[Esegui e salva come prima Baseline ACCEPTED]
-\
+```text
+
+[ Nuova Query ] ---> (Hard Parse) ---> [ Miglior Piano Teorico ]
+                                               |
+                                               v
+                          Esiste una Baseline ACCEPTED in SPM?
+                                  /                                                 SI                   NO
+                               /                            Piano calcolato e' tra quelli ACCEPTED?     Salva il piano e usalo
+               /                \                 (Diventa 1a Baseline)
+             SI                  NO
+            /                         Usa il piano calcolato    Salva come UNACCEPTED
+                             Usa miglior piano ACCEPTED
+```
 
 # GUIDA MONUMENTALE: SQL Plan Management (SPM) & Baselines in Oracle (19c/21c/23ai)
 

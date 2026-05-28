@@ -211,18 +211,14 @@ Oracle fornisce lo strumento **Data Masking and Subsetting Pack** integrato in *
 
 
 ## [ARCHITETTURA VISIVA] Dynamic Redaction vs Static Masking
-\\mermaid
-graph LR
-    subgraph Produzione
-        A[(Database Reale)] -->|Query| B{DBMS_REDACT}
-        B -->|Sviluppatore| C[Dati Oscurati]
-        B -->|Applicazione| D[Dati Reali]
-    end
-    subgraph UAT / DEV
-        A -->|PDB Clone & Masking Pack| E[(Database Mascherato)]
-        E -->|Qualsiasi Utente| F[Dati Staticamente Alterati]
-    end
-\
+```text
+
+PRODUZIONE (Data Redaction):
+[ Database ] ---> DBMS_REDACT ---> [ App (Dato Reale) / Consulente (XXX-XXX) ]
+
+UAT / DEV (Static Masking):
+[ Database ] ---> (PDB Clone & Masking) ---> [ Database Alterato ] ---> [ Sviluppatore ]
+```
 
 # GUIDA MONUMENTALE: Oracle Data Masking & Data Redaction
 
