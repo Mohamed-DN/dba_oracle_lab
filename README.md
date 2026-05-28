@@ -146,6 +146,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Failover + Reinstate](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) | ⚠️ **NON obbligatorio nel lab** — vedi nota sotto |
 | [Flashback Database](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md) | "Macchina del tempo" Oracle |
 | [MAA Best Practices](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_MAA_BEST_PRACTICES.md) | Oracle Maximum Availability Architecture |
+| [Data Guard Far Sync](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md) | **Nuovo**: Zero Data Loss a distanza geografica con istanza Far Sync |
+| [Application Continuity & TAF](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_APPLICATION_CONTINUITY_TAF.md) | **Nuovo**: Configurazione failover client trasparente lato DB e pool JDBC/UCP |
 
 > ⚠️ **FAILOVER**: Operazione distruttiva. **Prima** di tentarla:
 > 1. Spegni TUTTE le VM
@@ -161,6 +163,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [RMAN Completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
 | [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/README.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/02_core_dba/02_backup_and_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
+| [Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md) | **Nuovo**: Migrazione cross-endian AIX/Solaris -> Linux con downtime minimo |
+| [Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md) | **Nuovo**: Ottimizzazione Data Pump per database di grandi dimensioni (>10 TB) |
 
 ---
 
@@ -180,6 +184,9 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [**Identità Oracle e Servizi**](./docs/02_core_dba/01_administration_and_security/GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | **MEGA-GUIDA**: DB_NAME vs SID vs SERVICE_NAME, Listener, Role-Based Services, Switchover |
 | [LDAP / EUS / CMU](./docs/02_core_dba/01_administration_and_security/GUIDA_SETUP_LDAP_ENTERPRISE.md) | Integrazione Active Directory, EUSM, Wallet Orapki, Kerberos SSO, Proxy Auth |
 | [Password Rollout](./docs/02_core_dba/01_administration_and_security/GUIDA_PASSWORD_ROLLOUT_ENTERPRISE.md) | Rotazione Password Zero-Downtime, Integrazione PAM, Verify Functions |
+| [Oracle Database Vault](./docs/02_core_dba/01_administration_and_security/GUIDA_DATABASE_VAULT_ENTERPRISE.md) | **Nuovo**: Setup Database Vault, realms, realms authorization, separation of duties |
+| [Unified Auditing & Compliance](./docs/02_core_dba/01_administration_and_security/GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md) | **Nuovo**: Migrazione da traditional audit, custom policy, storage SYSAUX e purge automatico |
+| [Data Masking & Redaction](./docs/02_core_dba/01_administration_and_security/GUIDA_DATA_MASKING_REDACTION.md) | **Nuovo**: Mascheramento dinamico con DBMS_REDACT e statico con Data Pump |
 
 ---
 
@@ -191,6 +198,8 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [AWR/ASH/ADDM](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_AWR_ASH_ADDM.md) | SQL Monitor, SPM, SQL Quarantine |
 | [Top 100 Script DBA](./docs/02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md) | I 100 script più utili ogni giorno |
 | [ADRCI & Trace Enterprise](./docs/02_core_dba/03_performance_and_diagnostics/README.md) | ADR, alert log, trace file, incident package |
+| [SQL Plan Management (SPM)](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md) | **Nuovo**: Prevenzione delle regressioni delle query, baselines, evoluzione dei piani |
+| [SQL Tuning Set & Advisors](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_SQL_TUNING_SET_ADVISORS.md) | **Nuovo**: DBMS_SQLTUNE, creazione STS, SQL Tuning Advisor, SQL Access Advisor |
 
 ---
 
