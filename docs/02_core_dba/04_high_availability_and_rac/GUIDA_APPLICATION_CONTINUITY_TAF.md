@@ -2,13 +2,25 @@
 
 
 ## [ARCHITETTURA VISIVA] Application Continuity
-\\mermaid
-flowchart LR
-    App[Applicazione JDBC] -->|Connessione| SCAN[SCAN Listener]
-    SCAN --> Istanza1[(Istanza Node 1)]
-    Istanza1 -.->|Crash| SCAN
-    App -->|Replay Automatico Transazione| Istanza2[(Istanza Node 2)]
-\
+```text
+
+                               +---------------+
+                               |  Applicazione |
+                               |  (JDBC/UCP)   |
+                               +-------+-------+
+                                       |
+                                       v
+                               +---------------+
+                               | SCAN Listener |
+                               +---+-------+---+
+                                   |       |
+      (Connessione Iniziale) ----> |       | <---- (Replay Automatico)
+                                   v       v
+                       +-------------+   +-------------+
+                       | Istanza N.1 |   | Istanza N.2 |
+                       |   (Crash)   |   |   (Attiva)  |
+                       +-------------+   +-------------+
+```
 
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**

@@ -33,6 +33,51 @@
 
 ---
 
+## 🗺️ Mappa del Repository (Ecosistema Enterprise)
+
+```mermaid
+mindmap
+  root((Oracle DBA Lab))
+    Core Lab [Lab Infra & Setup]
+      Vagrant & Terraform
+      Oracle 19c RAC
+      Data Guard Standby
+    Operatività [Operations & Incidenti]
+      14 Runbook Giornalieri
+      15 Script Pronti (Copia-Incolla)
+      Libreria 1000+ Script
+    Guide Monumentali [Enterprise Knowledge]
+      Security (Vault, Audit, Masking)
+      HA (Far Sync, AC/TAF)
+      Backup (XTTS, DataPump)
+      Performance (AWR, ASH, SPM)
+    Automazione [Ansible IaC]
+      Provisioning
+      Patching Zero-Downtime
+      AutoUpgrade
+    GoldenGate [Replica & Eventi]
+      Microservices Architecture
+      Oracle to PostgreSQL
+```
+
+---
+
+## 🏆 Le 10 Guide Monumentali (Livello Senior/Architect)
+Abbiamo elevato le documentazioni chiave a veri e propri **Masterpiece Architetturali**. Queste guide contengono spiegazioni approfondite, diagrammi di flusso visivi, scenari di triage, comandi completi e best practices aziendali:
+
+1. 🛡️ **[Database Vault Enterprise](./docs/02_core_dba/01_administration_and_security/GUIDA_DATABASE_VAULT_ENTERPRISE.md)**: Separation of Duties, Realms, e Command Rules.
+2. 🛡️ **[Unified Auditing & Compliance](./docs/02_core_dba/01_administration_and_security/GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md)**: Pure Mode, AUDSYS purge, e offload su SIEM Syslog.
+3. 🛡️ **[Data Masking & Redaction](./docs/02_core_dba/01_administration_and_security/GUIDA_DATA_MASKING_REDACTION.md)**: Dynamic redaction in-transit vs Static masking per UAT/DEV.
+4. ⚡ **[SQL Plan Management (SPM)](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md)**: Prevenzione regressioni query, Baseline evolution e Adaptive Cursor Sharing.
+5. ⚡ **[AWR, ASH & ADDM](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_AWR_ASH_ADDM.md)**: Analisi profonda Wait Events, estrazione HTML batch e diagnostica AI.
+6. 💾 **[Migrazione Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md)**: Zero-downtime da AIX a Linux tramite Cross-Platform Transportable Tablespaces.
+7. 💾 **[Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md)**: Parallelismo estremo e ottimizzazione per database multiterabyte.
+8. 🔄 **[Application Continuity & TAF](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_APPLICATION_CONTINUITY_TAF.md)**: Failover client trasparente, FAN e configuration jdbc.
+9. 🔄 **[Far Sync Data Guard](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md)**: Zero Data Loss geografico a lunghissima distanza senza penalità.
+10. 🎯 **[Troubleshooting Completo](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_TROUBLESHOOTING_COMPLETO.md)**: La guida definitiva alla caccia al problema in ambienti Enterprise.
+
+---
+
 ## Ordine Consigliato di Lettura / Esecuzione
 
 Non leggere il repository in ordine alfabetico. Usa questo ordine, altrimenti rischi di entrare in GoldenGate, RMAN o troubleshooting senza avere prima rete, RAC, Data Guard e servizi stabili.

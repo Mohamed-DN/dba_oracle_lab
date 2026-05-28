@@ -2,19 +2,20 @@
 
 
 ## [ARCHITETTURA VISIVA] XTTS RMAN Migration
-\\mermaid
-sequenceDiagram
-    participant Source as Source DB (Endian A)
-    participant Dest as Dest DB (Endian B)
-    
-    Source->>Source: Read-Only Tablespaces
-    Source->>Dest: Trasferimento Datafiles (SCP / NFS)
-    Source->>Source: Esportazione Metadati (Data Pump)
-    Source->>Dest: Trasferimento Dump File
-    Dest->>Dest: RMAN Convert Datafiles
-    Dest->>Dest: Importazione Metadati
-    Dest->>Dest: Read-Write Tablespaces
-\
+```text
+
+[ Source DB (Endian A) ]                           [ Dest DB (Endian B) ]
+           |                                                 |
+  Read-Only Tablespaces                                      |
+           |---------- Trasferimento Datafiles (SCP) ------->|
+           |                                                 |
+  Esportazione Metadati                                      |
+           |------------- Trasferimento Dump --------------->|
+                                                             |
+                                                   RMAN Convert Datafiles
+                                                   Importazione Metadati
+                                                   Read-Write Tablespaces
+```
 
 > [!NOTE]
 > **DOCUMENTI DI MIGRAZIONE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**

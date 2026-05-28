@@ -2,16 +2,20 @@
 
 
 ## [ARCHITETTURA VISIVA] Data Pump Parallelism
-\\mermaid
-flowchart TD
-    Master[Master Process - DM00] -->|Distribuisce Lavoro| W1(Worker 1 - DW01)
-    Master -->|Distribuisce Lavoro| W2(Worker 2 - DW02)
-    Master -->|Distribuisce Lavoro| W3(Worker n - DWnn)
-    
-    W1 -->|Scrittura Parallela| D1[(Dump File 1)]
-    W2 -->|Scrittura Parallela| D2[(Dump File 2)]
-    W3 -->|Scrittura Parallela| D3[(Dump File n)]
-\
+```text
+
+                               +----------------+
+                               | Master (DM00)  |
+                               +-------+--------+
+                                       | (Distribuisce lavoro)
+             +-------------------------+-------------------------+
+             |                         |                         |
+             v                         v                         v
+       Worker 1 (DW01)           Worker 2 (DW02)           Worker N (DWnn)
+             |                         |                         |
+             v                         v                         v
+     [ Dump File 1 ]           [ Dump File 2 ]           [ Dump File N ]
+```
 
 > [!NOTE]
 > **DOCUMENTI DI MIGRAZIONE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**

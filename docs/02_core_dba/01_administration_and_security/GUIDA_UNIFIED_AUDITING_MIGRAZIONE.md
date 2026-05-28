@@ -342,14 +342,18 @@ END;
 
 
 ## [ARCHITETTURA VISIVA] Unified Auditing & SIEM
-\\mermaid
-flowchart TD
-    A[DB User / SYSDBA / RMAN] -->|Esegue Operazione| B(Oracle Unified Auditing Kernel)
-    B -->|Asincrono| C[(AUDSYS.UNIFIED_AUDIT_TRAIL)]
-    B -->|Asincrono| D[OS Syslog daemon]
-    C -->|Job DBMS_AUDIT_MGMT| E[Purge / Archiviazione]
-    D -->|Forwarder| F[SIEM - Splunk / QRadar]
-\
+```text
+
+[ Utenti / DBA ] ---> (Oracle Unified Auditing Kernel)
+                                 |
+           +---------------------+---------------------+
+           | Asincrono                                 | Asincrono
+           v                                           v
+[ AUDSYS.UNIFIED_AUDIT_TRAIL ]                 [ OS Syslog Daemon ]
+           |                                           |
+           v DBMS_AUDIT_MGMT (Purge)                   v Forwarder
+[ Archiviazione Storica ]                      [ SIEM (Splunk/QRadar) ]
+```
 
 # GUIDA MONUMENTALE: Migrazione e Gestione di Oracle Unified Auditing (19c/21c/23ai)
 

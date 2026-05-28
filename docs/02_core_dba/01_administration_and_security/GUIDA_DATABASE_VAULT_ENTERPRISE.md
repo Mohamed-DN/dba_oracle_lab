@@ -348,22 +348,14 @@ SELECT status FROM dba_dv_status;
 
 
 ## [ARCHITETTURA VISIVA] Database Vault Flow
-\\mermaid
-sequenceDiagram
-    participant App as Applicazione
-    participant DBA as SYSDBA / SYSTEM
-    participant DV as Database Vault Kernel
-    participant Data as Dati Sensibili (Realms)
+```text
 
-    App->>DV: Richiesta SQL (SELECT su dati Payroll)
-    DV->>DV: Verifica Contesto (App è autorizzata)
-    DV-->>App: Permesso Accordato
-    App->>Data: Lettura Dati
+[ Applicazione ] -----> [ Database Vault Kernel ] -----> [ Dati Sensibili ]
+                            (Verifica OK)                  (Accesso Consentito)
 
-    DBA->>DV: Richiesta SQL (SELECT su dati Payroll)
-    DV->>DV: Verifica Contesto (SYSDBA non autorizzato nel Realm)
-    DV-->>DBA: ORA-47400: Access Denied
-\
+[ DBA / SYSDBA ] -----> [ Database Vault Kernel ] --X--> (ORA-47400 Access Denied)
+                        (Sysdba bloccato dal Realm)
+```
 
 # GUIDA MONUMENTALE: Oracle Database Vault — Separation of Duties & Protezione Multitenant
 

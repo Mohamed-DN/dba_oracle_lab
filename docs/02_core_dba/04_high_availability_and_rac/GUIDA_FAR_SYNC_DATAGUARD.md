@@ -2,11 +2,11 @@
 
 
 ## [ARCHITETTURA VISIVA] Far Sync Data Guard
-\\mermaid
-flowchart LR
-    Prod[(Primary DB - New York)] -->|SYNC Redo (Bassa Latenza)| FS[Far Sync Instance - New York]
-    FS -->|ASYNC Redo (Alta Latenza)| Standby[(Standby DB - London)]
-\
+```text
+
+[ Primary DB ] --- SYNC Redo ---> [ Far Sync Instance ] --- ASYNC Redo ---> [ Standby DB ]
+ (New York)        (Bassa Latenza)     (New York)         (Alta Latenza)       (London)
+```
 
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
