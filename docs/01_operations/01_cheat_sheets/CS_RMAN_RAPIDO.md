@@ -5,8 +5,8 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet Operativo**: [CHEAT_SHEET_RMAN.md](./CHEAT_SHEET_RMAN.md) (scenari operativi comuni).
-> - **Cheat Sheet Enterprise**: [RMAN_FULL_CHEATSHEET.md](./RMAN_FULL_CHEATSHEET.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](./CS_RMAN_RAPIDO.md) (scenari operativi comuni).
+> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](./CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
 
 ## Obiettivo
 

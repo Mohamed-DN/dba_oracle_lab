@@ -3,7 +3,7 @@
 <!-- READY_SCRIPTS_START -->
 ## Script e guide collegati
 
-- [Cheat Sheet GoldenGate](../01_cheat_sheets/CHEAT_SHEET_GOLDENGATE.md)
+- [Cheat Sheet GoldenGate](../01_cheat_sheets/CS_GOLDENGATE.md)
 - [GoldenGate 19c completa](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md)
 - [Runbook End-to-End GoldenGate 19c](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md)
 - [GoldenGate ambienti critici](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md)

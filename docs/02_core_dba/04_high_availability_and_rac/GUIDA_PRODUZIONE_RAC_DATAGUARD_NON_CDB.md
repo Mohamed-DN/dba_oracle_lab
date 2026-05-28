@@ -11,10 +11,10 @@
 >   - **Manuale Switchover Completo**: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md) (passaggi sicuri di switchover).
 >   - **Manuale Failover & Reinstate**: [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md) (gestione dei disastri e ripristino).
 > - **Cheat Sheet Operativi (Pronto Intervento)**:
->   - **DGMGRL (Broker)**: [CHEAT_SHEET_DGMGRL.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_DGMGRL.md) (lag, switchover rapido, comandi broker).
->   - **SRVCTL & CRSCTL**: [CHEAT_SHEET_SRVCTL_CRSCTL.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
->   - **ASMCMD**: [CHEAT_SHEET_ASMCMD.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_ASMCMD.md) (gestione storage ASM).
->   - **Master DBA Cheat Sheet**: [CHEAT_SHEET_MASTER_DBA.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_MASTER_DBA.md) (tutti i comandi consolidati).
+>   - **DGMGRL (Broker)**: [CS_DGMGRL.md](../../01_operations/01_cheat_sheets/CS_DGMGRL.md) (lag, switchover rapido, comandi broker).
+>   - **SRVCTL & CRSCTL**: [CS_SRVCTL_CRSCTL.md](../../01_operations/01_cheat_sheets/CS_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
+>   - **ASMCMD**: [CS_ASMCMD.md](../../01_operations/01_cheat_sheets/CS_ASMCMD.md) (gestione storage ASM).
+>   - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](../../01_operations/01_cheat_sheets/CS_MASTER_DBA.md) (tutti i comandi consolidati).
 
 > Scopo: costruire o migrare un database Oracle 19c non-CDB in RAC e configurare un physical standby Data Guard. La configurazione raccomandata e' RAC primary verso RAC standby; e' inclusa anche la variante RAC primary verso standby single instance.
 

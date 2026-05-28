@@ -204,7 +204,7 @@ echo $?
 
 ## Tool collegati
 
-- [LSNRCTL e Oracle Net](./CHEAT_SHEET_LSNRCTL_NET.md)
-- [SRVCTL/CRSCTL](./CHEAT_SHEET_SRVCTL_CRSCTL.md)
+- [LSNRCTL e Oracle Net](./CS_LSNRCTL_NET.md)
+- [SRVCTL/CRSCTL](./CS_SRVCTL_CRSCTL.md)
 - [Produzione Single Node Data Guard Non-CDB](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md)
 - [Produzione RAC Data Guard Non-CDB](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md)

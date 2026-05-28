@@ -13,7 +13,7 @@ Questa directory rappresenta il **cuore operativo** del repository, progettata p
 ## Shortcut operativi
 
 - [Indice Centrale Runbook Top20](./02_runbooks_incidenti/INDICE_CENTRALE_RUNBOOK_TOP20.md)
-- [Oracle Tools Command Center](./01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md)
+- [Oracle Tools Command Center](./01_cheat_sheets/CS_ORACLE_TOOLS_COMMAND_CENTER.md)
 - [Morning Health Check](./02_runbooks_incidenti/01_MORNING_HEALTH_CHECK.md)
 - [RMAN + Data Guard Recovery/DR](./02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
 - [ASM Storage Incidenti](./02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)

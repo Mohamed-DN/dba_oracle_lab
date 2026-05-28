@@ -9,18 +9,18 @@
 
 | Cheat Sheet | Descrizione | Link |
 |---|---|---|
-| **Oracle Tools Command Center** | Mappa centrale: quale tool usare tra SRVCTL, CRSCTL, ASMCMD, ADRCI, DGMGRL, RMAN, LSNRCTL, OPatch, SQLPlus, DBCA | [CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md](CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md) |
-| **SRVCTL / CRSCTL** | Database RAC, servizi, listener, Clusterware, OCR, voting disk, start/stop cluster | [CHEAT_SHEET_SRVCTL_CRSCTL.md](CHEAT_SHEET_SRVCTL_CRSCTL.md) |
-| **ASMCMD** | Diskgroup, file ASM, password file, spazio ASM, copia file ASM | [CHEAT_SHEET_ASMCMD.md](CHEAT_SHEET_ASMCMD.md) |
-| **ADRCI** | Alert log, incidenti, trace, IPS package, purge diagnostica | [CHEAT_SHEET_ADRCI.md](CHEAT_SHEET_ADRCI.md) |
-| **LSNRCTL / Oracle Net** | Listener, SCAN, TNS, Easy Connect, ORA-125xx, static registration | [CHEAT_SHEET_LSNRCTL_NET.md](CHEAT_SHEET_LSNRCTL_NET.md) |
-| **OPatch / datapatch** | Inventory, prereq, patch apply, datapatch, rollback, registry SQL patch | [CHEAT_SHEET_OPATCH_DATAPATCH.md](CHEAT_SHEET_OPATCH_DATAPATCH.md) |
-| **SQLPlus / SQLcl / DBCA / NETCA** | Connessioni, spool, startup/shutdown, DBCA silent, NETCA | [CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md](CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md) |
-| **RMAN** | Comandi RMAN completi (backup, restore, catalog, validate) | [CHEAT_SHEET_RMAN.md](CHEAT_SHEET_RMAN.md) |
-| **RMAN Essenziale** | I 10 comandi RMAN che usi ogni giorno | [CHEAT_SHEET_RMAN_ESSENZIALE.md](CHEAT_SHEET_RMAN_ESSENZIALE.md) |
-| **Data Guard / DGMGRL** | Switchover, failover, reinstate, show configuration | [CHEAT_SHEET_DGMGRL.md](CHEAT_SHEET_DGMGRL.md) |
-| **GoldenGate** | Start/stop replicat, stats, lag, troubleshooting | [CHEAT_SHEET_GOLDENGATE.md](CHEAT_SHEET_GOLDENGATE.md) |
-| **SQL Assessment DBA** | PDB/service lookup, dimensione DB, trend crescita, redo rate | [CHEAT_SHEET_SQL_ASSESSMENT.md](CHEAT_SHEET_SQL_ASSESSMENT.md) |
+| **Oracle Tools Command Center** | Mappa centrale: quale tool usare tra SRVCTL, CRSCTL, ASMCMD, ADRCI, DGMGRL, RMAN, LSNRCTL, OPatch, SQLPlus, DBCA | [CS_ORACLE_TOOLS_COMMAND_CENTER.md](CS_ORACLE_TOOLS_COMMAND_CENTER.md) |
+| **SRVCTL / CRSCTL** | Database RAC, servizi, listener, Clusterware, OCR, voting disk, start/stop cluster | [CS_SRVCTL_CRSCTL.md](CS_SRVCTL_CRSCTL.md) |
+| **ASMCMD** | Diskgroup, file ASM, password file, spazio ASM, copia file ASM | [CS_ASMCMD.md](CS_ASMCMD.md) |
+| **ADRCI** | Alert log, incidenti, trace, IPS package, purge diagnostica | [CS_ADRCI.md](CS_ADRCI.md) |
+| **LSNRCTL / Oracle Net** | Listener, SCAN, TNS, Easy Connect, ORA-125xx, static registration | [CS_LSNRCTL_NET.md](CS_LSNRCTL_NET.md) |
+| **OPatch / datapatch** | Inventory, prereq, patch apply, datapatch, rollback, registry SQL patch | [CS_OPATCH_DATAPATCH.md](CS_OPATCH_DATAPATCH.md) |
+| **SQLPlus / SQLcl / DBCA / NETCA** | Connessioni, spool, startup/shutdown, DBCA silent, NETCA | [CS_SQLPLUS_SQLCL_DBCA_NETCA.md](CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
+| **RMAN** | Comandi RMAN completi (backup, restore, catalog, validate) | [CS_RMAN_RAPIDO.md](CS_RMAN_RAPIDO.md) |
+| **RMAN Essenziale** | I 10 comandi RMAN che usi ogni giorno | [CS_RMAN_RAPIDO.md](CS_RMAN_RAPIDO.md) |
+| **Data Guard / DGMGRL** | Switchover, failover, reinstate, show configuration | [CS_DGMGRL.md](CS_DGMGRL.md) |
+| **GoldenGate** | Start/stop replicat, stats, lag, troubleshooting | [CS_GOLDENGATE.md](CS_GOLDENGATE.md) |
+| **SQL Assessment DBA** | PDB/service lookup, dimensione DB, trend crescita, redo rate | [CS_SQL_ASSESSMENT.md](CS_SQL_ASSESSMENT.md) |
 
 ---
 

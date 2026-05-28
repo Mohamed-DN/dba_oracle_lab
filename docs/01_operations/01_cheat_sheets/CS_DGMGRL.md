@@ -3,10 +3,10 @@
 > [!NOTE]
 > **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Cheat Sheet Operativi (Pronto Intervento)**:
->   - **DGMGRL (Broker - questa scheda)**: [CHEAT_SHEET_DGMGRL.md](./CHEAT_SHEET_DGMGRL.md) (lag, switchover rapido, comandi broker).
->   - **SRVCTL & CRSCTL**: [CHEAT_SHEET_SRVCTL_CRSCTL.md](./CHEAT_SHEET_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
->   - **ASMCMD**: [CHEAT_SHEET_ASMCMD.md](./CHEAT_SHEET_ASMCMD.md) (gestione storage ASM).
->   - **Master DBA Cheat Sheet**: [CHEAT_SHEET_MASTER_DBA.md](./CHEAT_SHEET_MASTER_DBA.md) (tutti i comandi consolidati).
+>   - **DGMGRL (Broker - questa scheda)**: [CS_DGMGRL.md](./CS_DGMGRL.md) (lag, switchover rapido, comandi broker).
+>   - **SRVCTL & CRSCTL**: [CS_SRVCTL_CRSCTL.md](./CS_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
+>   - **ASMCMD**: [CS_ASMCMD.md](./CS_ASMCMD.md) (gestione storage ASM).
+>   - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md) (tutti i comandi consolidati).
 > - **Procedure di Produzione (Non-CDB)**:
 >   - **Single Node Data Guard**: [GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) (architettura a singolo nodo primario e standby).
 >   - **RAC Data Guard**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) (architettura multi-nodo primario e standby).
@@ -101,7 +101,7 @@ SHOW CONFIGURATION;
 ## Link correlati
 
 - Runbook: [03 Check Data Guard](../02_runbooks_incidenti/03_CHECK_DATAGUARD.md)
-- Command center: [Oracle Tools Command Center](./CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md)
+- Command center: [Oracle Tools Command Center](./CS_ORACLE_TOOLS_COMMAND_CENTER.md)
 - Guida estesa: [GUIDA_FASE4_DATAGUARD_DGMGRL](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
 - Guida operativa: [GUIDA_SWITCHOVER_COMPLETO](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md)
 - Oracle ufficiale: <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/>
