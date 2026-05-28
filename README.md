@@ -38,26 +38,198 @@
 ```mermaid
 mindmap
   root((Oracle DBA Lab))
-    Core Lab [Lab Infra & Setup]
-      Vagrant & Terraform
-      Oracle 19c RAC
-      Data Guard Standby
-    Operatività [Operations & Incidenti]
-      14 Runbook Giornalieri
-      15 Script Pronti (Copia-Incolla)
-      Libreria 1000+ Script
-    Guide Monumentali [Enterprise Knowledge]
-      Security (Vault, Audit, Masking)
-      HA (Far Sync, AC/TAF)
-      Backup (XTTS, DataPump)
-      Performance (AWR, ASH, SPM)
-    Automazione [Ansible IaC]
-      Provisioning
-      Patching Zero-Downtime
-      AutoUpgrade
-    GoldenGate [Replica & Eventi]
-      Microservices Architecture
-      Oracle to PostgreSQL
+    Operations
+      Cheat Sheets
+        Adrci
+        Asmcmd
+        Dgmgrl
+        Goldengate
+        Lsnrctl Net
+        Master Dba
+        Opatch Datapatch
+        Oracle Tools Command Center
+        Rman Rapido
+        Sqlplus Sqlcl Dbca Netca
+        Sql Assessment
+        Srvctl Crsctl
+      Runbooks Incidenti
+        Triage Incidenti Oracle
+        Morning Health Check
+        Verifica Backup
+        Check Dataguard
+        Lock Sessioni Bloccate
+        Query Lenta
+        Tablespace Pieno
+        Cpu Alta
+        Ora Errors
+        Gestione Utenti
+        Start Stop Rac
+        Review Awr
+        Capacity Planning Limiti
+        Refresh Schema Test
+        Chaos Network Partition Dataguard
+        Checkmk Agent Tls Smart Raid Tro...
+        Resize Temp
+        Purge Log Oracle
+        Gestione Statistiche Optimizer
+        Diagnosi Backup Rman Falliti E R...
+        Export Import Prod Preprod
+        Gestione Db Link
+        Rman Dataguard Casi Recovery Dr
+        Sql Tuning Casi Enterprise
+        Gap Analysis Copertura Dba
+        Asm Storage Incidenti Enterprise
+        Listener Scan Services Rac
+        Tde Wallet Keystore Runbook
+        Scheduler Jobs Autotasks Runbook
+        Patching Oracle Rac Dataguard
+        Multitenant Pdb Operations
+        Goldengate Incident Runbook
+        Enterprise Manager Alert Runbook
+        Audit Compliance Evidence
+        Tcps Wallet Certificati
+        Capacity Forecast Enterprise
+        Migrazione Maa Best Practices
+    Core Dba
+      Administration And Security
+        Checklist Security Baseline
+        Acl Network Oracle
+        Aggiunta Dischi Asm
+        Ansible Templates
+        Cdb Pdb Utenti
+        Database Vault Enterprise
+        Data Masking Redaction
+        Identita Oracle E Servizi
+        Listener Services Dba
+        Package Monitor Ddl
+        Password Rollout Enterprise
+        Scheduler Jobs
+        Security Hardening
+        Servizi Applicativi Rac
+        Setup Ldap Enterprise
+        Storage Lun Lvm Udev Asm Asmlib Afd
+        Tde In Profondita
+        Unified Auditing Migrazione
+      Backup And Recovery
+        Data Pump
+        Rman Backup
+        Migrazione Xtts Rman
+        Rman Comandi Enterprise
+        Rman Completa 19c
+        Tuning Data Pump Enterprise
+      Performance And Diagnostics
+        Adrci Diagnostica Oracle
+        Adrci Trace Enterprise
+        Awr Ash Addm
+        Sql Plan Management Baselines
+        Sql Tuning Set Advisors
+        Troubleshooting Completo
+        Top 100 Script Dba
+      High Availability And Rac
+        Application Continuity Taf
+        Failover E Reinstate
+        Far Sync Dataguard
+        Rac Standby
+        Dataguard Dgmgrl
+        Flashback Database
+        Maa Best Practices
+        Pdb Dataguard Services
+        Produzione Rac Dataguard Non Cdb
+        Produzione Single Node Dataguard...
+        Switchover Completo
+      Patching And Upgrades
+        Autoupgrade 12c To 19c
+        Autoupgrade 19c To 26
+        Patching Rac
+        Upgrade 19c To 26ai
+        Upgrade Ru Rac
+      Monitoring Systems
+        Enterprise Manager
+        Monitoring Opensource
+        Setup Checkmk Oracle Enterprise
+      Replication Goldengate
+        Cheat Sheet Goldengate 19c
+        Goldengate
+        Goldengate 19c Completa
+        Goldengate 26ai Novita
+        Goldengate Ambienti Critici Bancari
+        Goldengate Classic Architecture 19c
+        Goldengate Collegamento Source T...
+        Goldengate Grants Privilegi 19c
+        Goldengate Microservices Archite...
+        Goldengate Oracle To Postgresql
+        Goldengate Prerequisiti Db Archi...
+        Goldengate Qa Professionale
+        Goldengate Runbook End To End 19c
+        Goldengate Upgrade 19c To 26ai
+        Goldengate Use Cases Knowledge Hub
+        Migrazione Goldengate
+        Migrazione Oracle Postgres
+        Testlog Goldengate Template
+        Use Cases
+          Uc01 No Downtime Migrations
+          Uc02 High Availability
+          Uc03 Analytical Data Ingest
+          Uc04 Ai Ready Data
+          Uc05 Multicloud Data Integration
+          Uc06 Application Data Streams
+          Uc07 Stream Processing Analytics
+    Infra Lab
+      Proxmox Hardware
+        Track Proxmox Production End To End
+      Oracle Installation Asm
+        Setup Macchine
+        Preparazione Os
+        Grid E Rac
+        Test Verifica
+        Percorso Lite Single Node
+        Ssh Keys Rac
+        Obiettivi E Checklist Fasi 0 8
+      Cloud Oci
+        Cloud Goldengate
+        Rete Lab Oci Goldengate
+      Containerization
+        Oracle 26ai Podman Docker
+    Governance Learning
+      Fondamenti Teorici
+        Analisi Oraclebase Vagrant
+        Diario Di Bordo
+        Glossario Oracle
+        Architettura Oracle
+        Ciclo Di Vita Transazione
+        Comandi Dba
+        Locking Concurrency Wait Events
+        Memoria Oracle Sga Pga
+        Redo Undo Crash Recovery
+        Learning Path Junior Mid Senior
+        Piano Laboratorio
+        Quiz Hands On Junior Mid Senior
+        Template Guida Standard
+      Enterprise Standards
+        Community Onboarding Path
+        Community Roadmap
+        Compatibility By Area 19c 21c 23...
+        Compatibility Matrix
+        Compatibility Policy
+        Didactic Compliance Checklist
+        Didactic Excellence Standard
+        Go No Go Master Merge Policy
+        Maa Scorecard
+        Production Profile
+        Public Kpi Scoreboard
+        Quickstart 10 Minuti
+        Release Engineering Policy
+        Reliability Framework
+        Troubleshooting Decision Tree
+        Vulnerability Disclosure Policy
+      Esami E Carriera
+        Attivita Lab Rac
+        Catalogo Attivita Dba
+        Checklist Attivita Dba
+        Da Lab A Produzione
+        Esame Review
+        Ripasso Concetti Dba
+        Validazione Best Practices
 ```
 
 ---
