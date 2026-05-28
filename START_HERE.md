@@ -30,6 +30,18 @@ Percorso principale:
 
 Non partire da GoldenGate, upgrade o patching se non hai prima RAC/Data Guard stabile.
 
+## Se Devi Usare I Comandi Oracle
+
+Apri prima:
+
+1. [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md)
+2. [SRVCTL / CRSCTL](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_SRVCTL_CRSCTL.md)
+3. [ASMCMD](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ASMCMD.md)
+4. [ADRCI](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ADRCI.md)
+5. [LSNRCTL / Oracle Net](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_LSNRCTL_NET.md)
+6. [OPatch / datapatch](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_OPATCH_DATAPATCH.md)
+7. [SQLPlus / SQLcl / DBCA / NETCA](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_SQLPLUS_SQLCL_DBCA_NETCA.md)
+
 ## Se Devi Fare Data Guard In Produzione
 
 Scegli il caso:
@@ -91,6 +103,7 @@ Apri:
 | Sintomo / Obiettivo | Primo documento |
 | --- | --- |
 | Non sai da dove iniziare | [Triage Incidenti Oracle](./docs/01_operations/02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md) |
+| Non sai quale comando Oracle usare | [Oracle Tools Command Center](./docs/01_operations/01_cheat_sheets/CHEAT_SHEET_ORACLE_TOOLS_COMMAND_CENTER.md) |
 | DB non parte | [Morning Health Check](./docs/01_operations/02_runbooks_incidenti/01_MORNING_HEALTH_CHECK.md) |
 | Backup fallito | [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/02_VERIFICA_BACKUP.md) |
 | Standby in lag | [Check Data Guard](./docs/01_operations/02_runbooks_incidenti/03_CHECK_DATAGUARD.md) |
