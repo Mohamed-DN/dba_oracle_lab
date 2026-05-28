@@ -28,7 +28,7 @@
 | **Multitenant e lifecycle PDB** | Crea, clona, apre/chiude, plug/unplug, refresh, controlla servizi PDB | Su richiesta / mensile | (../../02_core_dba/01_administration_and_security/GUIDA_CDB_PDB_UTENTI.md) |
 | **Data movement e refresh** | Esegue export/import Data Pump, refresh ambienti, clone database/PDB | Su richiesta / progetto | (GUIDA_ATTIVITA_DBA.md), (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) |
 | **Patching e lifecycle software** | Applica RU/OJVM, aggiorna OPatch, esegue rollback piano, verifica post-patch | Mensile / trimestrale / change | (../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md), (../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md) |
-| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | (../../02_core_dba/07_replication_goldengate/TESTLOG_GOLDENGATE_TEMPLATE.md), (../01_fondamenti_teorici/PIANO_LABORATORIO.md) |
+| **Documentazione e change management** | Tiene runbook, backlog rischi, evidenze test, capacity trend, lesson learned | Continuo | (../../02_core_dba/07_replication_goldengate/GUIDA_TESTLOG_GOLDENGATE_TEMPLATE.md), (../01_fondamenti_teorici/PIANO_LABORATORIO.md) |
 
 ## 3. Attivita complete per dominio operativo
 
@@ -110,7 +110,7 @@ In RAC serve anche guardare:
 Nel tuo repo:
 - (GUIDA_ATTIVITA_DBA.md)
 - (../01_fondamenti_teorici/GUIDA_COMANDI_DBA.md)
-- (../../02_core_dba/03_performance_and_diagnostics/TOP_100_SCRIPT_DBA.md)
+- (../../02_core_dba/03_performance_and_diagnostics/GUIDA_TOP_100_SCRIPT_DBA.md)
 
 ## 3.5 Storage, tablespace, ASM e capacity planning
 

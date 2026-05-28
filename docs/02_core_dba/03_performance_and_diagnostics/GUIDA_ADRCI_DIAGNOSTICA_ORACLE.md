@@ -23,6 +23,6 @@ ips generate package <package_id> in /tmp
 ## Runbook collegati
 
 - [ADRCI & Trace Enterprise](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_TRACE_ENTERPRISE.md)
-- [08_ORA_ERRORS](../../01_operations/02_runbooks_incidenti/08_ORA_ERRORS.md)
-- [05_QUERY_LENTA](../../01_operations/02_runbooks_incidenti/05_QUERY_LENTA.md)
-- [11_REVIEW_AWR](../../01_operations/02_runbooks_incidenti/11_REVIEW_AWR.md)
+- [08_ORA_ERRORS](../../01_operations/02_runbooks_incidenti/RUNBOOK_08_ORA_ERRORS.md)
+- [05_QUERY_LENTA](../../01_operations/02_runbooks_incidenti/RUNBOOK_05_QUERY_LENTA.md)
+- [11_REVIEW_AWR](../../01_operations/02_runbooks_incidenti/RUNBOOK_11_REVIEW_AWR.md)

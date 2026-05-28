@@ -11,13 +11,13 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 - [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) - diagnosi FRA piena, archivelog, ORA-19809, ORA-00257.
 <!-- READY_SCRIPTS_END -->
 ## Casi piu frequenti da aprire prima
-- Applicazione non entra o login fallisce: parti da [08 ORA-Errors Comuni](./08_ORA_ERRORS.md), poi rete/listener o utenti.
-- Database o istanza non disponibili: parti da [01 Morning Health Check](./01_MORNING_HEALTH_CHECK.md), poi [10 Start/Stop RAC](./10_START_STOP_RAC.md) e [22 RMAN/Data Guard](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
-- Spazio pieno: parti da [06 Tablespace Pieno](./06_TABLESPACE_PIENO.md), [16 Resize TEMP](./16_RESIZE_TEMP.md), [17 Purge Log](./17_PURGE_LOG_ORACLE.md).
-- Backup fallito o restore richiesto: parti da [02 Verifica Backup](./02_VERIFICA_BACKUP.md), poi [19 Diagnosi RMAN](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) e [22 RMAN/Data Guard](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
-- Query lenta o CPU alta: parti da [05 Query Lenta](./05_QUERY_LENTA.md), [07 CPU Alta](./07_CPU_ALTA.md), poi [23 SQL Tuning Enterprise](./23_SQL_TUNING_CASI_ENTERPRISE.md).
-- Data Guard in errore: parti da [03 Check Data Guard](./03_CHECK_DATAGUARD.md), poi [22 RMAN/Data Guard](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
-- Refresh o clone preprod: parti da [20 Export/Import Prod-Preprod](./20_EXPORT_IMPORT_PROD_PREPROD.md), [21 DB Link](./21_GESTIONE_DB_LINK.md), [13 Refresh Schema Test](./13_REFRESH_SCHEMA_TEST.md).
+- Applicazione non entra o login fallisce: parti da [08 ORA-Errors Comuni](./RUNBOOK_08_ORA_ERRORS.md), poi rete/listener o utenti.
+- Database o istanza non disponibili: parti da [01 Morning Health Check](./RUNBOOK_01_MORNING_HEALTH_CHECK.md), poi [10 Start/Stop RAC](./RUNBOOK_10_START_STOP_RAC.md) e [22 RMAN/Data Guard](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
+- Spazio pieno: parti da [06 Tablespace Pieno](./RUNBOOK_06_TABLESPACE_PIENO.md), [16 Resize TEMP](./RUNBOOK_16_RESIZE_TEMP.md), [17 Purge Log](./RUNBOOK_17_PURGE_LOG_ORACLE.md).
+- Backup fallito o restore richiesto: parti da [02 Verifica Backup](./RUNBOOK_02_VERIFICA_BACKUP.md), poi [19 Diagnosi RMAN](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) e [22 RMAN/Data Guard](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
+- Query lenta o CPU alta: parti da [05 Query Lenta](./RUNBOOK_05_QUERY_LENTA.md), [07 CPU Alta](./RUNBOOK_07_CPU_ALTA.md), poi [23 SQL Tuning Enterprise](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md).
+- Data Guard in errore: parti da [03 Check Data Guard](./RUNBOOK_03_CHECK_DATAGUARD.md), poi [22 RMAN/Data Guard](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
+- Refresh o clone preprod: parti da [20 Export/Import Prod-Preprod](./RUNBOOK_20_EXPORT_IMPORT_PROD_PREPROD.md), [21 DB Link](./RUNBOOK_21_GESTIONE_DB_LINK.md), [13 Refresh Schema Test](./RUNBOOK_13_REFRESH_SCHEMA_TEST.md).
 
 ## Indice rapido
 - [Obiettivo](#obiettivo)
@@ -95,18 +95,18 @@ ALERT / TICKET
 
 | Alert o sintomo | Primo runbook | Escalation documentale | Evidenza minima |
 |---|---|---|---|
-| Applicazione bloccata | [04](./04_LOCK_SESSIONI_BLOCCATE.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | blocker, waiter, SQL_ID, evento wait |
-| Query lenta | [05](./05_QUERY_LENTA.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | SQL_ID, plan hash, elapsed, buffer gets |
-| CPU alta | [07](./07_CPU_ALTA.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | top process OS, ASH, AAS, SQL_ID |
-| Tablespace pieno | [06](./06_TABLESPACE_PIENO.md) | [12](./12_CAPACITY_PLANNING_LIMITI.md) | tablespace, datafile, autoextend, maxsize |
-| TEMP piena | [16](./16_RESIZE_TEMP.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | sessioni TEMP, SQL_ID, tempfile |
-| FRA piena | [17](./17_PURGE_LOG_ORACLE.md) | [19](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | v$recovery_area_usage, archivelog, DG applied |
-| Backup failed | [02](./02_VERIFICA_BACKUP.md) | [19](./19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | RMAN log, error stack, backup pieces |
-| Drop table / delete errata | [22](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) | ora evento, oggetto, backup, flashback |
-| Data Guard lag | [03](./03_CHECK_DATAGUARD.md) | [22](./22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | transport/apply lag, gap, alert log |
-| DB link lento/rotto | [21](./21_GESTIONE_DB_LINK.md) | [23](./23_SQL_TUNING_CASI_ENTERPRISE.md) | connect string, ORA, remote SQL, network |
-| Refresh preprod | [20](./20_EXPORT_IMPORT_PROD_PREPROD.md) | [13](./13_REFRESH_SCHEMA_TEST.md) | dump size, parfile, masking, checksum |
-| Utente bloccato/accesso | [09](./09_GESTIONE_UTENTI.md) | [08](./08_ORA_ERRORS.md) | username, profile, audit, richiesta autorizzata |
+| Applicazione bloccata | [04](./RUNBOOK_04_LOCK_SESSIONI_BLOCCATE.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | blocker, waiter, SQL_ID, evento wait |
+| Query lenta | [05](./RUNBOOK_05_QUERY_LENTA.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | SQL_ID, plan hash, elapsed, buffer gets |
+| CPU alta | [07](./RUNBOOK_07_CPU_ALTA.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | top process OS, ASH, AAS, SQL_ID |
+| Tablespace pieno | [06](./RUNBOOK_06_TABLESPACE_PIENO.md) | [12](./RUNBOOK_12_CAPACITY_PLANNING_LIMITI.md) | tablespace, datafile, autoextend, maxsize |
+| TEMP piena | [16](./RUNBOOK_16_RESIZE_TEMP.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | sessioni TEMP, SQL_ID, tempfile |
+| FRA piena | [17](./RUNBOOK_17_PURGE_LOG_ORACLE.md) | [19](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | v$recovery_area_usage, archivelog, DG applied |
+| Backup failed | [02](./RUNBOOK_02_VERIFICA_BACKUP.md) | [19](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | RMAN log, error stack, backup pieces |
+| Drop table / delete errata | [22](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) | ora evento, oggetto, backup, flashback |
+| Data Guard lag | [03](./RUNBOOK_03_CHECK_DATAGUARD.md) | [22](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | transport/apply lag, gap, alert log |
+| DB link lento/rotto | [21](./RUNBOOK_21_GESTIONE_DB_LINK.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | connect string, ORA, remote SQL, network |
+| Refresh preprod | [20](./RUNBOOK_20_EXPORT_IMPORT_PROD_PREPROD.md) | [13](./RUNBOOK_13_REFRESH_SCHEMA_TEST.md) | dump size, parfile, masking, checksum |
+| Utente bloccato/accesso | [09](./RUNBOOK_09_GESTIONE_UTENTI.md) | [08](./RUNBOOK_08_ORA_ERRORS.md) | username, profile, audit, richiesta autorizzata |
 
 ## Severita e comunicazione
 

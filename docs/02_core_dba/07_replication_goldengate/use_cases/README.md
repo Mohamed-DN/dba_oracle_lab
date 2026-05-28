@@ -23,13 +23,13 @@ Motivo: in ambienti bancari non basta sapere configurare Extract e Replicat. Dev
 
 | # | Use case | Guida | Pattern principale |
 | --- | --- | --- | --- |
-| 1 | No Downtime Migrations | [UC01_NO_DOWNTIME_MIGRATIONS.md](./UC01_NO_DOWNTIME_MIGRATIONS.md) | Initial load + CDC + cutover |
-| 2 | High Availability | [UC02_HIGH_AVAILABILITY.md](./UC02_HIGH_AVAILABILITY.md) | Live standby logico / active-active controllato |
-| 3 | Analytical Data Ingest | [UC03_ANALYTICAL_DATA_INGEST.md](./UC03_ANALYTICAL_DATA_INGEST.md) | CDC verso warehouse/lakehouse |
-| 4 | AI Ready Data | [UC04_AI_READY_DATA.md](./UC04_AI_READY_DATA.md) | CDC verso pipeline AI/RAG/vector |
-| 5 | Multicloud Data Integration | [UC05_MULTICLOUD_DATA_INTEGRATION.md](./UC05_MULTICLOUD_DATA_INTEGRATION.md) | On-prem/cloud/cloud-to-cloud |
-| 6 | Application Data Streams | [UC06_APPLICATION_DATA_STREAMS.md](./UC06_APPLICATION_DATA_STREAMS.md) | CDC verso eventi applicativi |
-| 7 | Stream Processing and Analytics | [UC07_STREAM_PROCESSING_ANALYTICS.md](./UC07_STREAM_PROCESSING_ANALYTICS.md) | Kafka/stream analytics/lakehouse |
+| 1 | No Downtime Migrations | [GUIDA_UC01_NO_DOWNTIME_MIGRATIONS.md](./GUIDA_UC01_NO_DOWNTIME_MIGRATIONS.md) | Initial load + CDC + cutover |
+| 2 | High Availability | [GUIDA_UC02_HIGH_AVAILABILITY.md](./GUIDA_UC02_HIGH_AVAILABILITY.md) | Live standby logico / active-active controllato |
+| 3 | Analytical Data Ingest | [GUIDA_UC03_ANALYTICAL_DATA_INGEST.md](./GUIDA_UC03_ANALYTICAL_DATA_INGEST.md) | CDC verso warehouse/lakehouse |
+| 4 | AI Ready Data | [GUIDA_UC04_AI_READY_DATA.md](./GUIDA_UC04_AI_READY_DATA.md) | CDC verso pipeline AI/RAG/vector |
+| 5 | Multicloud Data Integration | [GUIDA_UC05_MULTICLOUD_DATA_INTEGRATION.md](./GUIDA_UC05_MULTICLOUD_DATA_INTEGRATION.md) | On-prem/cloud/cloud-to-cloud |
+| 6 | Application Data Streams | [GUIDA_UC06_APPLICATION_DATA_STREAMS.md](./GUIDA_UC06_APPLICATION_DATA_STREAMS.md) | CDC verso eventi applicativi |
+| 7 | Stream Processing and Analytics | [GUIDA_UC07_STREAM_PROCESSING_ANALYTICS.md](./GUIDA_UC07_STREAM_PROCESSING_ANALYTICS.md) | Kafka/stream analytics/lakehouse |
 
 ---
 

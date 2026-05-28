@@ -333,7 +333,7 @@ SELECT count(*) FROM SCHEMA_A.ORDERS;
 ## 9. Next Steps Obbligatori
 Dopo ogni refresh di ambiente (da un DB all'altro), devi immediatamente agire sulle vulnerabilità introdotte dalla clonazione dei dati.
 Le priorità assolute sono:
-1. **Gestione dei DB_LINK:** I DB link appena importati stanno ancora puntando alla Produzione! Seguire ciecamente la procedura nel runbook [21_GESTIONE_DB_LINK.md](./21_GESTIONE_DB_LINK.md).
+1. **Gestione dei DB_LINK:** I DB link appena importati stanno ancora puntando alla Produzione! Seguire ciecamente la procedura nel runbook [RUNBOOK_21_GESTIONE_DB_LINK.md](./RUNBOOK_21_GESTIONE_DB_LINK.md).
 2. **Password Utenti App:** Spesso i DB di Preprod devono avere password diverse (oppure note ai developer). I file di DataPump mantengono gli hash delle password di produzione. Eseguire uno script standard per resettarle: `ALTER USER my_app_usr IDENTIFIED BY <PASSWORD_PREPROD>;`.
 3. **Schedulatori Job:** Controllare `DBA_SCHEDULER_JOBS`. I job (es. invio fatture, email, interfacce batch) appena importati potrebbero essere attivi. Disabilitare immediatamente quelli non desiderati in Preprod!
 ```sql

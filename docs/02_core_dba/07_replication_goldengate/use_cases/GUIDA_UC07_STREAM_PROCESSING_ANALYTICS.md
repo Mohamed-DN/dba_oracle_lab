@@ -4,8 +4,8 @@
 
 Guide correlate:
 
-- [Analytical Data Ingest](./UC03_ANALYTICAL_DATA_INGEST.md)
-- [Application Data Streams](./UC06_APPLICATION_DATA_STREAMS.md)
+- [Analytical Data Ingest](./GUIDA_UC03_ANALYTICAL_DATA_INGEST.md)
+- [Application Data Streams](./GUIDA_UC06_APPLICATION_DATA_STREAMS.md)
 - [Use Case e Knowledge Hub](../GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md)
 
 Fonti Oracle utili:
@@ -111,7 +111,7 @@ Prima di implementare questo use case in laboratorio o in UAT:
 3. Configura [Collegamento Source e Target](../GUIDA_GOLDENGATE_COLLEGAMENTO_SOURCE_TARGET.md).
 4. Valida rete e sicurezza con [Ambienti critici/bancari](../GUIDA_GOLDENGATE_AMBIENTI_CRITICI_BANCARI.md).
 5. Esegui il [Runbook End-to-End 19c](../GUIDA_GOLDENGATE_RUNBOOK_END_TO_END_19C.md).
-6. Usa [Cheat Sheet GoldenGate 19c](../CHEAT_SHEET_GOLDENGATE_19C.md) per i comandi rapidi.
+6. Usa [Cheat Sheet GoldenGate 19c](../GUIDA_GOLDENGATE_19C_CHEAT_SHEET.md) per i comandi rapidi.
 
 Grant minimi da non saltare:
 

@@ -150,7 +150,7 @@ GRANT SELECT ON SYS.V_$DIAG_ALERT_EXT TO C##MONITOR CONTAINER=ALL;
 
 ### Checkmk enterprise-ready (TLS + Agent Update + SMART/RAID)
 
-> Runbook operativo dedicato: [15 Checkmk Agent TLS + SMART/RAID Troubleshooting](../../01_operations/02_runbooks_incidenti/15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md)
+> Runbook operativo dedicato: [15 Checkmk Agent TLS + SMART/RAID Troubleshooting](../../01_operations/02_runbooks_incidenti/RUNBOOK_15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md)
 
 #### Obiettivo
 

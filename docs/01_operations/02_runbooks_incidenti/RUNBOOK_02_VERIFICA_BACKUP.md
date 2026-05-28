@@ -157,7 +157,7 @@ cat /home/oracle/scripts/logs/rman_*.log | tail -100
 
 # 3. Se hai solo una notifica (es. "DB INCR backup ... status FAILED"),
 #    usa il runbook di diagnosi per mappare la notifica al job e allo stack errori:
-#    docs/01_operations/02_runbooks_incidenti/19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
+#    docs/01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
 
 # 4. Cause comuni:
 # - FRA piena → DELETE OBSOLETE, espandi FRA

@@ -182,6 +182,6 @@ RAC/Grid rollback segue readme patch e deve essere testato in preprod.
 
 ## Runbook collegati
 
-- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/29_PATCHING_ORACLE_RAC_DATAGUARD.md)
+- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md)
 - [GUIDA_PATCHING_RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md)
 - [GUIDA_UPGRADE_RU_RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md)

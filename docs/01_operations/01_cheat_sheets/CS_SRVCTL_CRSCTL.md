@@ -241,7 +241,7 @@ Motivo: puoi rompere configurazione Clusterware gestita da Oracle. Preferire `sr
 
 ## Runbook collegati
 
-- [10 Start/Stop Database RAC](../02_runbooks_incidenti/10_START_STOP_RAC.md)
-- [25 ASM Storage Incidenti](../02_runbooks_incidenti/25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
-- [26 Listener, SCAN e Services RAC](../02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md)
-- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/29_PATCHING_ORACLE_RAC_DATAGUARD.md)
+- [10 Start/Stop Database RAC](../02_runbooks_incidenti/RUNBOOK_10_START_STOP_RAC.md)
+- [25 ASM Storage Incidenti](../02_runbooks_incidenti/RUNBOOK_25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md)
+- [26 Listener, SCAN e Services RAC](../02_runbooks_incidenti/RUNBOOK_26_LISTENER_SCAN_SERVICES_RAC.md)
+- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md)
