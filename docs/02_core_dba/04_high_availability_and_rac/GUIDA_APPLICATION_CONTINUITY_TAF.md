@@ -1,4 +1,4 @@
-# GUIDA COMPLETA: Application Continuity (AC) & TAF — Failover Client Trasparente & Resilienza Applicativa
+# GUIDA MONUMENTALE: Application Continuity (AC) & TAF — Failover Client Trasparente & Resilienza Applicativa
 
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
@@ -11,7 +11,7 @@
 
 ## 1. Il problema del Failover Client e l'evoluzione tecnologica
 
-Nelle architetture ad alta affidabilità (RAC e Data Guard), lo switchover pianificato o il failover sposta i servizi del database sulle istanze integre in pochi secondi. Tuttavia, senza un'adeguata configurazione lato client, le connessioni applicative attive subiscono interruzioni drastiche (errori del tipo `ORA-03113: end-of-file on communication channel` o `ORA-12541: TNS:no listener`), causando lo svuotamento dei carrelli, transazioni incomplete a metà e crash di processi batch critici.
+Nelle architetture ad alta affidabilità (Real Application Clusters - RAC e Data Guard), lo switchover pianificato o il failover sposta i servizi del database sulle istanze integre in pochi secondi. Tuttavia, senza un'adeguata configurazione lato client, le connessioni applicative attive subiscono interruzioni drastiche (errori del tipo `ORA-03113: end-of-file on communication channel` o `ORA-12541: TNS:no listener`), causando lo svuotamento dei carrelli degli utenti, transazioni incomplete a metà e crash di processi batch critici con conseguenti disallineamenti di dati.
 
 Per risolvere questo problema, Oracle ha sviluppato tre generazioni di tecnologie di failover client:
 
