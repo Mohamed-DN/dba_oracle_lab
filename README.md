@@ -275,83 +275,6 @@ docs/
 
 ---
 
-## ⚡ Procedure Utili e Pronto Intervento
-
-Oltre alle 10 Guide Monumentali, ecco i link diretti agli strumenti più utili per salvarti la vita in produzione:
-
-### 🔥 Top 5 Cheat Sheets (Comandi Rapidi)
-1. 🩺 [Triage e Caccia all'Incidente](./docs/01_operations/01_cheat_sheets/CS_MASTER_DBA.md): Il punto di partenza per ogni disastro.
-2. 💾 [RMAN Rapido](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md): Backup e Restore al volo.
-3. 🛡️ [Data Guard (DGMGRL)](./docs/01_operations/01_cheat_sheets/CS_DGMGRL.md): Gestione standby e failover.
-4. 🔄 [GoldenGate (GGSCI)](./docs/01_operations/01_cheat_sheets/CS_GOLDENGATE.md): Check stato estrattori e replicat.
-5. 💽 [Storage ASM (ASMCMD)](./docs/01_operations/01_cheat_sheets/CS_ASMCMD.md): Gestione dischi e spazio esaurito.
-
-### 🚨 Top 5 Runbooks (Risoluzione Incidenti)
-1. 🔴 [Database Crash / Non Raggiungibile](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_00_TRIAGE_INCIDENTI_ORACLE.md)
-2. 🐢 [Query Lenta Improvvisa](./docs/01_operations/02_runbooks_incidenti/03_QUERY_LENTA.md)
-3. 🔒 [Sessioni Bloccate (Lock/Deadlock)](./docs/01_operations/02_runbooks_incidenti/02_LOCK_SESSIONI_BLOCCATE.md)
-4. 📈 [CPU al 100% o Memoria Esaurita](./docs/01_operations/02_runbooks_incidenti/05_CPU_ALTA.md)
-5. 💾 [Spazio Tablespace Esaurito](./docs/01_operations/02_runbooks_incidenti/04_TABLESPACE_PIENO.md)
-
-## 🏆 Le 10 Guide Monumentali (Livello Senior/Architect)
-Abbiamo elevato le documentazioni chiave a veri e propri **Masterpiece Architetturali**. Queste guide contengono spiegazioni approfondite, diagrammi di flusso visivi, scenari di triage, comandi completi e best practices aziendali:
-
-1. 🛡️ **[Database Vault Enterprise](./docs/02_core_dba/01_administration_and_security/GUIDA_DATABASE_VAULT_ENTERPRISE.md)**: Separation of Duties, Realms, e Command Rules.
-2. 🛡️ **[Unified Auditing & Compliance](./docs/02_core_dba/01_administration_and_security/GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md)**: Pure Mode, AUDSYS purge, e offload su SIEM Syslog.
-3. 🛡️ **[Data Masking & Redaction](./docs/02_core_dba/01_administration_and_security/GUIDA_DATA_MASKING_REDACTION.md)**: Dynamic redaction in-transit vs Static masking per UAT/DEV.
-4. ⚡ **[SQL Plan Management (SPM)](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md)**: Prevenzione regressioni query, Baseline evolution e Adaptive Cursor Sharing.
-5. ⚡ **[AWR, ASH & ADDM](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_AWR_ASH_ADDM.md)**: Analisi profonda Wait Events, estrazione HTML batch e diagnostica AI.
-6. 💾 **[Migrazione Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md)**: Zero-downtime da AIX a Linux tramite Cross-Platform Transportable Tablespaces.
-7. 💾 **[Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md)**: Parallelismo estremo e ottimizzazione per database multiterabyte.
-8. 🔄 **[Application Continuity & TAF](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_APPLICATION_CONTINUITY_TAF.md)**: Failover client trasparente, FAN e configuration jdbc.
-9. 🔄 **[Far Sync Data Guard](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md)**: Zero Data Loss geografico a lunghissima distanza senza penalità.
-10. 🎯 **[Troubleshooting Completo](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_TROUBLESHOOTING_COMPLETO.md)**: La guida definitiva alla caccia al problema in ambienti Enterprise.
-
----
-
-## Ordine Consigliato di Lettura / Esecuzione
-
-Non leggere il repository in ordine alfabetico. Usa questo ordine, altrimenti rischi di entrare in GoldenGate, RMAN o troubleshooting senza avere prima rete, RAC, Data Guard e servizi stabili.
-
-| Ordine | Modulo | Quando leggerlo/eseguirlo | Output atteso |
-|---|---|---|---|
-| 0 | [Fondamenti Oracle](./docs/04_governance_learning/01_fondamenti_teorici/README.md) | Prima di creare le VM | Capisci architettura Oracle, redo/undo, memoria, lock, wait event |
-| 1 | [Lab Core Fase 0 -> 4](./docs/03_infra_lab/02_oracle_installation_asm/README.md) | Primo blocco pratico obbligatorio | VM, DNS, OS, Grid, RAC, standby, Data Guard Broker |
-| 2 | [Backup & Monitoring Fase 5 -> 6](./docs/02_core_dba/02_backup_and_recovery/README.md) | Dopo Data Guard stabile | RMAN, restore, BCT, Enterprise Manager/monitoring |
-| 3 | [GoldenGate prerequisiti e collegamento](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md) | Prima della Fase 7 | Logging, GGADMIN, FRA, TNS, credential store, source/target connectivity |
-| 4 | [GoldenGate 19c operativo](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) | Prima o durante Fase 7 | Concetti Extract, trail, Replicat, checkpoint, lag, troubleshooting |
-| 5 | [Fase 7 GoldenGate Microservices](./docs/02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | Dopo prerequisiti GoldenGate | Replica lab source -> target con Microservices Architecture |
-| 6 | [GoldenGate Classic + migrazioni](./docs/02_core_dba/07_replication_goldengate/README.md) | Dopo il lab Microservices | GGSCI, Classic, Oracle->Oracle, Oracle->PostgreSQL, cutover, scenari enterprise |
-| 7 | [Patching, upgrade e 26ai](./docs/02_core_dba/05_patching_and_upgrades/README.md) | Solo dopo 19c stabile | Upgrade DB, upgrade GoldenGate 19c->26ai, rollback, compatibilita |
-| 8 | [Runbook, script e automazione](./docs/01_operations/02_runbooks_incidenti/README.md) | Day-2 operations | Health check, incident response, script SQL, Ansible |
-
-Regole pratiche:
-
-- Se stai costruendo il lab: esegui **Fase 0 -> 8** in sequenza.
-- Se stai studiando GoldenGate: segui l'ordine della sezione **Replica & Migrazione**, non partire direttamente dalla Fase 7.
-- Non fare upgrade 19c -> 26ai prima di conoscere bene GoldenGate 19c Microservices e Classic.
-
----
-
-## 📚 Guide per Area Tematica
-
-### 🟢 Fondamenti — leggi prima del lab
-
-| Guida | Cosa Impari |
-|---|---|
-| [Architettura Oracle](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, ASM, Cache Fusion |
-| [**Ciclo di Vita di una Transazione**](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_CICLO_DI_VITA_TRANSAZIONE.md) | Anatomia di un UPDATE: Parsing, Cache, ITL, Redo, DBWR, LGWR |
-| [Memory Architecture (SGA/PGA)](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_MEMORIA_ORACLE_SGA_PGA.md) | Deep Dive: Buffer Cache, Shared Pool, AMM vs ASMM, HugePages |
-| [Redo/Undo & Crash Recovery](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_REDO_UNDO_CRASH_RECOVERY.md) | Deep Dive: Write-Ahead Logging, Checkpoint, Roll Forward/Back |
-| [Locking, Concurrency & Wait Events](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md) | Deep Dive: MVCC, ITL, Deadlocks, e Top 15 Wait Events |
-| [Comandi DBA](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_COMANDI_DBA.md) | 100+ query SQL essenziali per il DBA |
-| [**Analisi Base Vagrant**](./docs/04_governance_learning/01_fondamenti_teorici/ANALISI_ORACLEBASE_VAGRANT.md) | Studio approfondito della configurazione automatizzata |
-| [Glossario](./docs/04_governance_learning/01_fondamenti_teorici/GLOSSARIO_ORACLE.md) | 100+ acronimi e termini Oracle spiegati |
-| [Piano Laboratorio](./docs/04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md) | 8 settimane × 3h/giorno, roadmap completa |
-| [Diario di Bordo](./docs/04_governance_learning/01_fondamenti_teorici/DIARIO_DI_BORDO.md) | Note e avanzamento lavori del lab |
-
----
-
 ## 🏗️ Architettura del Lab
 
 ```mermaid
@@ -411,6 +334,83 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | 8 | **Test Verifica** | [GUIDA_FASE8](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
 
 > **Tempo totale stimato**: ~30 ore di lavoro pratico.
+
+---
+
+## ⚡ Procedure Utili e Pronto Intervento
+
+Oltre alle 10 Guide Monumentali, ecco i link diretti agli strumenti più utili per salvarti la vita in produzione:
+
+### 🔥 Top 5 Cheat Sheets (Comandi Rapidi)
+1. 🩺 [Triage e Caccia all'Incidente](./docs/01_operations/01_cheat_sheets/CS_MASTER_DBA.md): Il punto di partenza per ogni disastro.
+2. 💾 [RMAN Rapido](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md): Backup e Restore al volo.
+3. 🛡️ [Data Guard (DGMGRL)](./docs/01_operations/01_cheat_sheets/CS_DGMGRL.md): Gestione standby e failover.
+4. 🔄 [GoldenGate (GGSCI)](./docs/01_operations/01_cheat_sheets/CS_GOLDENGATE.md): Check stato estrattori e replicat.
+5. 💽 [Storage ASM (ASMCMD)](./docs/01_operations/01_cheat_sheets/CS_ASMCMD.md): Gestione dischi e spazio esaurito.
+
+### 🚨 Top 5 Runbooks (Risoluzione Incidenti)
+1. 🔴 [Database Crash / Non Raggiungibile](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_00_TRIAGE_INCIDENTI_ORACLE.md)
+2. 🐢 [Query Lenta Improvvisa](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_05_QUERY_LENTA.md)
+3. 🔒 [Sessioni Bloccate (Lock/Deadlock)](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_04_LOCK_SESSIONI_BLOCCATE.md)
+4. 📈 [CPU al 100% o Memoria Esaurita](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_07_CPU_ALTA.md)
+5. 💾 [Spazio Tablespace Esaurito](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_06_TABLESPACE_PIENO.md)
+
+## 🏆 Le 10 Guide Monumentali (Livello Senior/Architect)
+Abbiamo elevato le documentazioni chiave a veri e propri **Masterpiece Architetturali**. Queste guide contengono spiegazioni approfondite, diagrammi di flusso visivi, scenari di triage, comandi completi e best practices aziendali:
+
+1. 🛡️ **[Database Vault Enterprise](./docs/02_core_dba/01_administration_and_security/GUIDA_DATABASE_VAULT_ENTERPRISE.md)**: Separation of Duties, Realms, e Command Rules.
+2. 🛡️ **[Unified Auditing & Compliance](./docs/02_core_dba/01_administration_and_security/GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md)**: Pure Mode, AUDSYS purge, e offload su SIEM Syslog.
+3. 🛡️ **[Data Masking & Redaction](./docs/02_core_dba/01_administration_and_security/GUIDA_DATA_MASKING_REDACTION.md)**: Dynamic redaction in-transit vs Static masking per UAT/DEV.
+4. ⚡ **[SQL Plan Management (SPM)](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_SQL_PLAN_MANAGEMENT_BASELINES.md)**: Prevenzione regressioni query, Baseline evolution e Adaptive Cursor Sharing.
+5. ⚡ **[AWR, ASH & ADDM](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_AWR_ASH_ADDM.md)**: Analisi profonda Wait Events, estrazione HTML batch e diagnostica AI.
+6. 💾 **[Migrazione Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md)**: Zero-downtime da AIX a Linux tramite Cross-Platform Transportable Tablespaces.
+7. 💾 **[Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md)**: Parallelismo estremo e ottimizzazione per database multiterabyte.
+8. 🔄 **[Application Continuity & TAF](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_APPLICATION_CONTINUITY_TAF.md)**: Failover client trasparente, FAN e configuration jdbc.
+9. 🔄 **[Far Sync Data Guard](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md)**: Zero Data Loss geografico a lunghissima distanza senza penalità.
+10. 🎯 **[Troubleshooting Completo](./docs/02_core_dba/03_performance_and_diagnostics/GUIDA_TROUBLESHOOTING_COMPLETO.md)**: La guida definitiva alla caccia al problema in ambienti Enterprise.
+
+---
+
+## Ordine Consigliato di Lettura / Esecuzione
+
+Non leggere il repository in ordine alfabetico. Usa questo ordine, altrimenti rischi di entrare in GoldenGate, RMAN o troubleshooting senza avere prima rete, RAC, Data Guard e servizi stabili.
+
+| Ordine | Modulo | Quando leggerlo/eseguirlo | Output atteso |
+|---|---|---|---|
+| 0 | [Fondamenti Oracle](./docs/04_governance_learning/01_fondamenti_teorici/README.md) | Prima di creare le VM | Capisci architettura Oracle, redo/undo, memoria, lock, wait event |
+| 1 | [Lab Core Fase 0 -> 4](./docs/03_infra_lab/02_oracle_installation_asm/README.md) | Primo blocco pratico obbligatorio | VM, DNS, OS, Grid, RAC, standby, Data Guard Broker |
+| 2 | [Backup & Monitoring Fase 5 -> 6](./docs/02_core_dba/02_backup_and_recovery/README.md) | Dopo Data Guard stabile | RMAN, restore, BCT, Enterprise Manager/monitoring |
+| 3 | [GoldenGate prerequisiti e collegamento](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md) | Prima della Fase 7 | Logging, GGADMIN, FRA, TNS, credential store, source/target connectivity |
+| 4 | [GoldenGate 19c operativo](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) | Prima o durante Fase 7 | Concetti Extract, trail, Replicat, checkpoint, lag, troubleshooting |
+| 5 | [Fase 7 GoldenGate Microservices](./docs/02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | Dopo prerequisiti GoldenGate | Replica lab source -> target con Microservices Architecture |
+| 6 | [GoldenGate Classic + migrazioni](./docs/02_core_dba/07_replication_goldengate/README.md) | Dopo il lab Microservices | GGSCI, Classic, Oracle->Oracle, Oracle->PostgreSQL, cutover, scenari enterprise |
+| 7 | [Patching, upgrade e 26ai](./docs/02_core_dba/05_patching_and_upgrades/README.md) | Solo dopo 19c stabile | Upgrade DB, upgrade GoldenGate 19c->26ai, rollback, compatibilita |
+| 8 | [Runbook, script e automazione](./docs/01_operations/02_runbooks_incidenti/README.md) | Day-2 operations | Health check, incident response, script SQL, Ansible |
+
+Regole pratiche:
+
+- Se stai costruendo il lab: esegui **Fase 0 -> 8** in sequenza.
+- Se stai studiando GoldenGate: segui l'ordine della sezione **Replica & Migrazione**, non partire direttamente dalla Fase 7.
+- Non fare upgrade 19c -> 26ai prima di conoscere bene GoldenGate 19c Microservices e Classic.
+
+---
+
+## 📚 Guide per Area Tematica
+
+### 🟢 Fondamenti — leggi prima del lab
+
+| Guida | Cosa Impari |
+|---|---|
+| [Architettura Oracle](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_ARCHITETTURA_ORACLE.md) | SGA, PGA, Redo Log, Undo, ASM, Cache Fusion |
+| [**Ciclo di Vita di una Transazione**](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_CICLO_DI_VITA_TRANSAZIONE.md) | Anatomia di un UPDATE: Parsing, Cache, ITL, Redo, DBWR, LGWR |
+| [Memory Architecture (SGA/PGA)](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_MEMORIA_ORACLE_SGA_PGA.md) | Deep Dive: Buffer Cache, Shared Pool, AMM vs ASMM, HugePages |
+| [Redo/Undo & Crash Recovery](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_REDO_UNDO_CRASH_RECOVERY.md) | Deep Dive: Write-Ahead Logging, Checkpoint, Roll Forward/Back |
+| [Locking, Concurrency & Wait Events](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_LOCKING_CONCURRENCY_WAIT_EVENTS.md) | Deep Dive: MVCC, ITL, Deadlocks, e Top 15 Wait Events |
+| [Comandi DBA](./docs/04_governance_learning/01_fondamenti_teorici/GUIDA_COMANDI_DBA.md) | 100+ query SQL essenziali per il DBA |
+| [**Analisi Base Vagrant**](./docs/04_governance_learning/01_fondamenti_teorici/ANALISI_ORACLEBASE_VAGRANT.md) | Studio approfondito della configurazione automatizzata |
+| [Glossario](./docs/04_governance_learning/01_fondamenti_teorici/GLOSSARIO_ORACLE.md) | 100+ acronimi e termini Oracle spiegati |
+| [Piano Laboratorio](./docs/04_governance_learning/01_fondamenti_teorici/PIANO_LABORATORIO.md) | 8 settimane × 3h/giorno, roadmap completa |
+| [Diario di Bordo](./docs/04_governance_learning/01_fondamenti_teorici/DIARIO_DI_BORDO.md) | Note e avanzamento lavori del lab |
 
 ---
 

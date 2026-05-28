@@ -1,187 +1,257 @@
-# Cheat Sheet OPatch, OPatchAuto e Datapatch
+# Cheat Sheet OPatch & Datapatch — Enterprise Completo 🩹
 
 > [!NOTE]
-> **DOCUMENTI DI PATCHING CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
-> - **Cheat Sheet Rapido (questa scheda)**: [CS_OPATCH_DATAPATCH.md](./CS_OPATCH_DATAPATCH.md) (comandi rapidi di inventario, prereq e datapatch).
-> - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md) (comandi consolidati, include sezione patching).
-> - **Procedure di Produzione (RAC + DG - Fase 16)**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md#fase-16---patching-in-ambiente-rac-dataguard-standby-first) (manuale completo di patching in produzione rolling Standby-First).
-> - **Guida al Patching Post-Installazione**: [GUIDA_PATCHING_RAC.md](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md) (gestione RU trimestrali e Combo Patch).
-> - **Guida all'Upgrade delle RU**: [GUIDA_UPGRADE_RU_RAC.md](../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md) (upgrade rolling di RU con opatchauto).
+> **DOCUMENTI CORRELATI:**
+> - **Guida Patching RAC + DG**: [GUIDA_PATCHING_RAC.md](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md)
+> - **Runbook Patching**: [RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md](../02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md)
+> - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md)
 
-## Differenza strumenti
+---
 
-| Tool | Cosa fa |
-|---|---|
-| `opatch` | Applica patch a una Oracle Home specifica |
-| `opatchauto` | Orchestra patch Grid/RAC e piu home, spesso con step root |
-| `datapatch` | Applica componenti SQL della patch dentro i database |
-| `dba_registry_sqlpatch` | Verifica cosa e stato applicato lato SQL |
+## 1. OPatch — Gestione Patch
 
-## Precheck minimo
-
+### 1.1 Informazioni Base
 ```bash
-echo $ORACLE_HOME
-echo $GRID_HOME
+# Versione OPatch
 $ORACLE_HOME/OPatch/opatch version
+
+# Inventario patch applicati
 $ORACLE_HOME/OPatch/opatch lsinventory
-$GRID_HOME/OPatch/opatch version
-$GRID_HOME/OPatch/opatch lsinventory
-```
-
-Spazio:
-
-```bash
-df -h
-du -sh $ORACLE_HOME $GRID_HOME 2>/dev/null
-```
-
-Cluster:
-
-```bash
-crsctl check crs
-crsctl stat res -t
-srvctl status database -d <DB_UNIQUE_NAME> -v
-```
-
-Database:
-
-```sql
-select name, open_mode, database_role from v$database;
-select patch_id, action, status, action_time, description
-from dba_registry_sqlpatch
-order by action_time desc;
-```
-
-## Analisi patch prima di applicare
-
-```bash
-cd /u01/app/patch/<PATCH_DIR>
-$ORACLE_HOME/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
-$ORACLE_HOME/OPatch/opatch prereq CheckSystemSpace -ph ./
-```
-
-Inventory:
-
-```bash
 $ORACLE_HOME/OPatch/opatch lsinventory -detail
-$ORACLE_HOME/OPatch/opatch lsinventory -bugs_fixed
+
+# Inventario in formato leggibile (solo patch ID)
+$ORACLE_HOME/OPatch/opatch lspatches
+
+# Verificare un patch specifico
+$ORACLE_HOME/OPatch/opatch lsinventory | grep 35642822
+
+# Inventario locale Oracle (oraInst.loc)
+cat /etc/oraInst.loc
 ```
 
-## Backup home
-
+### 1.2 Aggiornare OPatch (SEMPRE prima di applicare patch!)
 ```bash
-tar -czf /backup/dbhome_$(date +%Y%m%d_%H%M).tgz $ORACLE_HOME
-tar -czf /backup/gridhome_$(date +%Y%m%d_%H%M).tgz $GRID_HOME
+# Rimuovere il vecchio OPatch
+mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch.bak
+
+# Estrarre il nuovo (scaricato da MOS Patch 6880880)
+unzip -d $ORACLE_HOME p6880880_190000_Linux-x86-64.zip
+
+# Verificare
+$ORACLE_HOME/OPatch/opatch version
+# Deve essere >= 12.2.0.1.42 per 19c RU recenti
 ```
 
-Backup database:
-
-```rman
-backup database plus archivelog tag 'PRE_PATCH';
-restore database validate;
-```
-
-## Applicare patch DB home single instance
-
-Stop DB/listener secondo change:
-
+### 1.3 Prerequisite Check (SEMPRE prima dell'apply)
 ```bash
-sqlplus / as sysdba
-shutdown immediate
-exit
-lsnrctl stop
+# Conflict detection
+$ORACLE_HOME/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./35642822
+
+# System space check
+$ORACLE_HOME/OPatch/opatch prereq CheckSystemSpace -ph ./35642822
+
+# Check completo
+$ORACLE_HOME/OPatch/opatch prereq CheckApplicable -ph ./35642822
 ```
 
-Patch:
-
+### 1.4 Applicare Patch (One-off)
 ```bash
-cd /u01/app/patch/<PATCH_DIR>
+# Single Instance (DB ferma!)
+cd /stage/patches/35642822
 $ORACLE_HOME/OPatch/opatch apply
+
+# Con -silent (non interattivo)
+$ORACLE_HOME/OPatch/opatch apply -silent
+
+# Con force (se ci sono conflitti gestiti)
+$ORACLE_HOME/OPatch/opatch apply -force
 ```
 
-Start e datapatch:
-
+### 1.5 Rollback Patch
 ```bash
-lsnrctl start
-sqlplus / as sysdba
-startup
-exit
+# Rollback di un patch specifico
+$ORACLE_HOME/OPatch/opatch rollback -id 35642822
+
+# Rollback silenzioso
+$ORACLE_HOME/OPatch/opatch rollback -id 35642822 -silent
+```
+
+---
+
+## 2. OPatchAuto — RAC e Grid Infrastructure
+
+### 2.1 Combo Patch (Release Update) su RAC
+```bash
+# DEVE essere eseguito come ROOT!
+# Applica automaticamente alla Grid Home e alla DB Home
+
+# Analyze (dry-run)
+opatchauto apply /stage/patches/35940989 -analyze
+
+# Apply
+opatchauto apply /stage/patches/35940989
+
+# Con logging verboso
+opatchauto apply /stage/patches/35940989 -log /tmp/opatchauto.log
+
+# Solo Grid Home
+opatchauto apply /stage/patches/35940989 -oh $GRID_HOME
+
+# Solo DB Home
+opatchauto apply /stage/patches/35940989 -oh $ORACLE_HOME
+```
+
+### 2.2 Rollback OPatchAuto
+```bash
+# Rollback (come root)
+opatchauto rollback /stage/patches/35940989
+opatchauto rollback /stage/patches/35940989 -oh $ORACLE_HOME
+```
+
+### 2.3 Resume (dopo un'interruzione)
+```bash
+# Se opatchauto viene interrotto, resumere
+opatchauto resume
+```
+
+---
+
+## 3. Datapatch — Post-Patch SQL
+
+### 3.1 Applicare Datapatch (FONDAMENTALE dopo ogni RU!)
+```bash
+# Come utente oracle, DB aperta
 $ORACLE_HOME/OPatch/datapatch -verbose
+
+# Per una PDB specifica (Multitenant)
+$ORACLE_HOME/OPatch/datapatch -verbose -pdbs PDB1
+
+# Tutte le PDB
+$ORACLE_HOME/OPatch/datapatch -verbose -pdbs ALL
 ```
 
-## Applicare patch RAC/Grid con opatchauto
-
-Precheck:
-
-```bash
-opatchauto apply /u01/app/patch/<PATCH_DIR> -analyze
-```
-
-Applicazione:
-
-```bash
-opatchauto apply /u01/app/patch/<PATCH_DIR>
-```
-
-Se patch solo DB home:
-
-```bash
-opatchauto apply /u01/app/patch/<PATCH_DIR> -oh $ORACLE_HOME
-```
-
-## Datapatch
-
-Eseguire come owner DB home, con DB aperto quando richiesto.
-
-```bash
-$ORACLE_HOME/OPatch/datapatch -verbose
-```
-
-Verifica:
-
+### 3.2 Verificare lo stato di Datapatch
 ```sql
-select patch_id, patch_type, action, status, action_time, description
-from dba_registry_sqlpatch
-order by action_time desc;
+-- Verificare se datapatch è stato eseguito
+SELECT patch_id, patch_uid, version, action, status, description
+FROM DBA_REGISTRY_SQLPATCH
+ORDER BY action_time DESC;
+
+-- Status deve essere: SUCCESS
+-- Se APPLYING o WITH ERRORS: rieseguire datapatch
+
+-- In CDB: verificare per ogni PDB
+ALTER SESSION SET CONTAINER = PDB1;
+SELECT patch_id, status, description FROM DBA_REGISTRY_SQLPATCH;
 ```
 
-Invalidi:
+### 3.3 Rollback Datapatch
+```bash
+# Rollback SQL di un patch specifico
+$ORACLE_HOME/OPatch/datapatch -rollback_id 35642822 -verbose
+```
 
+---
+
+## 4. Workflow Completo di Patching (Single Instance)
+
+```text
+Step 1:  Backup DB + controlfile + SPFILE
+Step 2:  Aggiornare OPatch (p6880880)
+Step 3:  Estrarre il patch nella staging area
+Step 4:  opatch prereq CheckConflictAgainstOHWithDetail
+Step 5:  Fermare il database e il listener
+Step 6:  opatch apply (dalla directory del patch)
+Step 7:  Start database e listener
+Step 8:  datapatch -verbose
+Step 9:  Verificare: opatch lspatches + DBA_REGISTRY_SQLPATCH
+Step 10: Compilare oggetti invalidi: @?/rdbms/admin/utlrp.sql
+```
+
+### Compilazione Post-Patch
 ```sql
-select owner, object_type, object_name
-from dba_objects
-where status <> 'VALID'
-order by owner, object_type, object_name;
+-- Compilare tutti gli oggetti invalidi
+@?/rdbms/admin/utlrp.sql
+
+-- Verificare oggetti invalidi residui
+SELECT owner, object_type, object_name, status
+FROM DBA_OBJECTS
+WHERE status = 'INVALID'
+ORDER BY owner, object_type;
+
+-- Conteggio
+SELECT COUNT(*) FROM DBA_OBJECTS WHERE status = 'INVALID';
+
+-- Compilare un singolo oggetto
+ALTER PACKAGE schema.pkg_name COMPILE;
+ALTER PACKAGE schema.pkg_name COMPILE BODY;
 ```
 
-## Rollback
+---
 
-Software:
+## 5. Workflow RAC + Data Guard (Standby-First)
 
-```bash
-$ORACLE_HOME/OPatch/opatch rollback -id <PATCH_ID>
+```text
+Step 1:  Backup su entrambi i siti (primary + standby)
+Step 2:  Fermare apply sullo standby (MRP)
+Step 3:  Aggiornare OPatch su TUTTI i nodi
+Step 4:  opatchauto apply sullo STANDBY (come root, nodo per nodo)
+Step 5:  Riavviare standby, verificare apply
+Step 6:  Switchover (standby diventa primary)
+Step 7:  opatchauto apply sul VECCHIO primary (ora standby)
+Step 8:  Riavviare, verificare sincronizzazione
+Step 9:  datapatch -verbose sul nuovo primary
+Step 10: (Opzionale) Switchback
 ```
 
-SQL:
+---
+
+## 6. OJVM Patch (Java in DB)
 
 ```bash
+# Applicare il patch OJVM (separato dalla RU)
+cd /stage/patches/35926646   # OJVM patch ID
+$ORACLE_HOME/OPatch/opatch apply
+
+# Datapatch è obbligatorio per OJVM
 $ORACLE_HOME/OPatch/datapatch -verbose
+
+# Verificare
+SELECT comp_name, version, status FROM DBA_REGISTRY WHERE comp_name LIKE '%JAVA%';
 ```
 
-RAC/Grid rollback segue readme patch e deve essere testato in preprod.
+---
 
-## Errori comuni
+## 7. Troubleshooting
 
-| Sintomo | Controllo |
-|---|---|
-| `opatch` vecchio | aggiornare OPatch con patch 6880880 secondo policy |
-| conflict prereq | leggere `CheckConflictAgainstOHWithDetail` |
-| datapatch fallisce | controllare DB aperto, registry, log in `$ORACLE_BASE/cfgtoollogs/sqlpatch` |
-| risorsa non riparte | `crsctl stat res -t`, alert CRS/DB con ADRCI |
-| standby non allineato | DGMGRL validate e `dba_registry_sqlpatch` su entrambi |
+| Problema | Causa | Fix |
+|---|---|---|
+| `OPatch failed: prerequisite check` | Conflitto con patch esistente | `opatch lspatches`, rollback conflitto |
+| `Inventory corrupted` | oraInventory danneggiato | `opatch util renew -oh $ORACLE_HOME` |
+| `datapatch: ORA-20000` | Eseguito con utente sbagliato | Eseguire come SYS con SYSDBA |
+| `opatchauto: permission denied` | Non eseguito come root | `sudo opatchauto apply ...` |
+| Oggetti INVALID dopo patch | Normale, serve ricompilazione | `@?/rdbms/admin/utlrp.sql` |
+| `OPatch version too old` | OPatch non aggiornato | Scaricare p6880880 da MOS |
+| `datapatch: PDB not open` | PDB chiusa durante datapatch | Aprire tutte le PDB prima |
 
-## Runbook collegati
+---
 
-- [29 Patching Oracle RAC/Data Guard](../02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md)
-- [GUIDA_PATCHING_RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md)
-- [GUIDA_UPGRADE_RU_RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md)
+## 8. Quick Reference
+
+```text
++---------------------------+----------------------------------------------+
+| OPERAZIONE                | COMANDO                                      |
++---------------------------+----------------------------------------------+
+| Versione OPatch           | opatch version                               |
+| Patch installati          | opatch lspatches                             |
+| Inventario completo       | opatch lsinventory                           |
+| Prerequisite check        | opatch prereq CheckConflictAgainstOH...      |
+| Apply patch               | opatch apply                                 |
+| Rollback patch            | opatch rollback -id XXXXXX                   |
+| RAC patch (root)          | opatchauto apply /stage/patch_dir            |
+| Datapatch post-apply      | datapatch -verbose                           |
+| Verifica SQL patch        | SELECT * FROM DBA_REGISTRY_SQLPATCH          |
+| Ricompila invalidi        | @?/rdbms/admin/utlrp.sql                     |
+| Aggiorna OPatch           | unzip p6880880 in $ORACLE_HOME               |
++---------------------------+----------------------------------------------+
+```
