@@ -31,13 +31,13 @@ Oracle Data Pump (`expdp` e `impdp`) è una tecnologia server-side introdotta pe
 
 ```
                       [ CLINET RIGA DI COMANDO expdp ]
-                                     │
-                                     ▼ (Invia comandi PL/SQL)
+                                     |
+                                     v (Invia comandi PL/SQL)
                          [ MASTER PROCESS DM00 ]
-                                     │
-               ┌─────────────────────┴─────────────────────┐
-               ▼ (Assegna Lavoro)                          ▼ (Crea/Aggiorna)
-      [ WORKER PROCESSES DWnn ] ◄────────────────────► [ MASTER TABLE ]
+                                     |
+               +---------------------+---------------------+
+               v (Assegna Lavoro)                          v (Crea/Aggiorna)
+      [ WORKER PROCESSES DWnn ] &amp;lt;--------------------&gt; [ MASTER TABLE ]
         - Leggono datafile                               - Stato del job
         - Scrivono dumpfiles                             - Elenco oggetti
         - Parallelizzazione                              - Monitoraggio

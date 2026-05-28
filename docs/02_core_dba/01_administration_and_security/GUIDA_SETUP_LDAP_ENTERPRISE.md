@@ -27,44 +27,44 @@ Oracle Database supporta 3 metodi principali di integrazione LDAP:
 
 ```
 Quale directory usi?
-│
-├── Microsoft Active Directory
-│   └── Versione DB >= 18c?
-│       ├── SI --> CMU (piu semplice, nessuna licenza extra)
-│       └── NO --> EUS con OID/OUD come proxy
-│
-├── Oracle Internet Directory (OID) / Oracle Unified Directory (OUD)
-│   └── EUS (metodo nativo Oracle)
-│
-└── OpenLDAP / 389DS / altro
-    └── Custom LDAP auth tramite password verifier
+|
++-- Microsoft Active Directory
+|   +-- Versione DB >= 18c?
+|       +-- SI --> CMU (piu semplice, nessuna licenza extra)
+|       +-- NO --> EUS con OID/OUD come proxy
+|
++-- Oracle Internet Directory (OID) / Oracle Unified Directory (OUD)
+|   +-- EUS (metodo nativo Oracle)
+|
++-- OpenLDAP / 389DS / altro
+    +-- Custom LDAP auth tramite password verifier
 ```
 
 ### 1.2 Architettura EUS
 
 ```
-┌──────────────┐     ┌───────────────┐     ┌──────────────┐
-│  Client App  │────►│ Oracle DB     │────►│ LDAP Server  │
-│  (sqlplus,   │     │ (EUS config)  │     │ (OID/OUD/AD) │
-│   app server)│     │               │     │              │
-└──────────────┘     │ ldap.ora      │     │ Utenti       │
-                     │ sqlnet.ora    │     │ Gruppi       │
-                     │ wallet        │     │ Oracle       │
-                     └───────────────┘     │ Context      │
-                                           └──────────────┘
++--------------+     +---------------+     +--------------+
+|  Client App  |----&gt;| Oracle DB     |----&gt;| LDAP Server  |
+|  (sqlplus,   |     | (EUS config)  |     | (OID/OUD/AD) |
+|   app server)|     |               |     |              |
++--------------+     | ldap.ora      |     | Utenti       |
+                     | sqlnet.ora    |     | Gruppi       |
+                     | wallet        |     | Oracle       |
+                     +---------------+     | Context      |
+                                           +--------------+
 ```
 
 ### 1.3 Architettura CMU (Active Directory)
 
 ```
-┌──────────────┐     ┌───────────────┐     ┌──────────────┐
-│  Client App  │────►│ Oracle DB     │────►│ Active       │
-│              │     │ (CMU config)  │     │ Directory    │
-└──────────────┘     │               │     │              │
-                     │ dsi.ora       │     │ Users/Groups │
-                     │ wallet (AD    │     │ OracleDB     │
-                     │  password)    │     │ Schema ext.  │
-                     └───────────────┘     └──────────────┘
++--------------+     +---------------+     +--------------+
+|  Client App  |----&gt;| Oracle DB     |----&gt;| Active       |
+|              |     | (CMU config)  |     | Directory    |
++--------------+     |               |     |              |
+                     | dsi.ora       |     | Users/Groups |
+                     | wallet (AD    |     | OracleDB     |
+                     |  password)    |     | Schema ext.  |
+                     +---------------+     +--------------+
 ```
 
 ---

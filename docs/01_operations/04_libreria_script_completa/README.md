@@ -14,42 +14,42 @@
 
 ```
 libreria_oracle/
-│
-├── asm_storage/          ← Gestione dischi ASM: add, remove, migrate LUN
-├── dataguard/            ← Data Guard: config, verifica GAP, recovery DR
-├── monitoring_scripts/   ← 586 script monitoraggio (sessioni, lock, I/O, ASH, rete)
-│   ├── community_gwenshap/  ← 25 script da GwenShap (Oracle ACE)
-│   └── community_jkstill/   ← 509 script da Jared Still (Oracle guru)
-│       ├── sessions_locks/  ← Lock, blocking, kill session
-│       ├── io_redo/         ← I/O statistiche, redo log analysis
-│       ├── users_logged/    ← Utenti connessi, audit login
-│       ├── dates/           ← Funzioni data Oracle
-│       ├── drcp/            ← Database Resident Connection Pooling
-│       ├── instance_db/     ← Parametri istanza, NLS, versione
-│       ├── metrics/         ← V$METRIC, V$SYSMETRIC
-│       ├── mviews/          ← Materialized Views: refresh, log, stato
-│       ├── plsql/           ← PL/SQL utilities
-│       ├── rdbms_utilities/ ← DBMS_SCHEDULER, DBMS_STATS, etc.
-│       ├── resource_manager/← Resource Manager plans
-│       ├── temp_sorts/      ← TEMP usage, sort operations
-│       └── general/         ← 359 script generali (il cuore della collezione)
-│
-├── user_management/      ← Creazione utenti, profili password, Oracle Vault
-├── patching/             ← Procedure patching, Golden Images (OHCTL)
-├── backup_recovery/      ← Flashback, Restore Point, verifiche RMAN
-├── performance_tuning/   ← 225 script: SPM, AWR analysis, statistiche
-│   └── community_scripts/   ← Script performance dalla community Oracle
-│
-├── tde_security/         ← Transparent Data Encryption, Vault, audit
-├── compression/          ← Compressione HCC, DBMS_REDEFINITION online
-├── partition_manager/    ← Package gestione automatica partizioni
-├── sql_templates/        ← Template DDL/DML standard con error handling
-└── utilities/            ← Utility: TEMP/UNDO monitor, MView refresh, profili
-    └── community_scripts/   ← 98 script utility dalla community
-        ├── bin/             ← Script bash/perl operativi
-        ├── cdb_pdb/         ← Query CDB/PDB
-        ├── scheduler/       ← Oracle Scheduler jobs
-        └── storage/         ← Storage e tablespace
+|
++-- asm_storage/          ← Gestione dischi ASM: add, remove, migrate LUN
++-- dataguard/            ← Data Guard: config, verifica GAP, recovery DR
++-- monitoring_scripts/   ← 586 script monitoraggio (sessioni, lock, I/O, ASH, rete)
+|   +-- community_gwenshap/  ← 25 script da GwenShap (Oracle ACE)
+|   +-- community_jkstill/   ← 509 script da Jared Still (Oracle guru)
+|       +-- sessions_locks/  ← Lock, blocking, kill session
+|       +-- io_redo/         ← I/O statistiche, redo log analysis
+|       +-- users_logged/    ← Utenti connessi, audit login
+|       +-- dates/           ← Funzioni data Oracle
+|       +-- drcp/            ← Database Resident Connection Pooling
+|       +-- instance_db/     ← Parametri istanza, NLS, versione
+|       +-- metrics/         ← V$METRIC, V$SYSMETRIC
+|       +-- mviews/          ← Materialized Views: refresh, log, stato
+|       +-- plsql/           ← PL/SQL utilities
+|       +-- rdbms_utilities/ ← DBMS_SCHEDULER, DBMS_STATS, etc.
+|       +-- resource_manager/← Resource Manager plans
+|       +-- temp_sorts/      ← TEMP usage, sort operations
+|       +-- general/         ← 359 script generali (il cuore della collezione)
+|
++-- user_management/      ← Creazione utenti, profili password, Oracle Vault
++-- patching/             ← Procedure patching, Golden Images (OHCTL)
++-- backup_recovery/      ← Flashback, Restore Point, verifiche RMAN
++-- performance_tuning/   ← 225 script: SPM, AWR analysis, statistiche
+|   +-- community_scripts/   ← Script performance dalla community Oracle
+|
++-- tde_security/         ← Transparent Data Encryption, Vault, audit
++-- compression/          ← Compressione HCC, DBMS_REDEFINITION online
++-- partition_manager/    ← Package gestione automatica partizioni
++-- sql_templates/        ← Template DDL/DML standard con error handling
++-- utilities/            ← Utility: TEMP/UNDO monitor, MView refresh, profili
+    +-- community_scripts/   ← 98 script utility dalla community
+        +-- bin/             ← Script bash/perl operativi
+        +-- cdb_pdb/         ← Query CDB/PDB
+        +-- scheduler/       ← Oracle Scheduler jobs
+        +-- storage/         ← Storage e tablespace
 ```
 
 ---

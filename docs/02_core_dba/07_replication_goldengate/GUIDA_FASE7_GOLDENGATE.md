@@ -30,25 +30,25 @@ In GoldenGate MA, i processi classici (Manager, Extract, Pump, Replicat) sono st
 
 ```
   SOURCE DATABASE (rac1)                           TARGET DATABASE (dbtarget)
-  ═══════════════════════                          ══════════════════════════
+  -----------------------                          --------------------------
   
-  ┌────────────────────────┐                       ┌────────────────────────┐
-  │ Service Manager (SM)   │                       │ Service Manager (SM)   │
-  │ Porta: 9011            │                       │ Porta: 9011            │
-  └────────────────────────┘                       └────────────────────────┘
+  +------------------------+                       +------------------------+
+  | Service Manager (SM)   |                       | Service Manager (SM)   |
+  | Porta: 9011            |                       | Porta: 9011            |
+  +------------------------+                       +------------------------+
   
-  ┌────────────────────────┐                       ┌────────────────────────┐
-  │ Administration Server  │                       │ Administration Server  │
-  │ Porta: 9012            │                       │ Porta: 9012            │
-  │ - Gestisce EXTRACT     │                       │ - Gestisce REPLICAT    │
-  └──────────┬─────────────┘                       └──────────▲─────────────┘
-             │                                                │
-             ▼                                                │
-  ┌────────────────────────┐                       ┌──────────┴─────────────┐
-  │ Distribution Server    │══ Rete (HTTPS/WSS) ══►│ Receiver Server        │
-  │ Porta: 9013            │                       │ Porta: 9014            │
-  │ - Invia i Trail files  │                       │ - Riceve i Trail files │
-  └────────────────────────┘                       └────────────────────────┘
+  +------------------------+                       +------------------------+
+  | Administration Server  |                       | Administration Server  |
+  | Porta: 9012            |                       | Porta: 9012            |
+  | - Gestisce EXTRACT     |                       | - Gestisce REPLICAT    |
+  +----------+-------------+                       +----------^-------------+
+             |                                                |
+             v                                                |
+  +------------------------+                       +----------+-------------+
+  | Distribution Server    |-- Rete (HTTPS/WSS) --&gt;| Receiver Server        |
+  | Porta: 9013            |                       | Porta: 9014            |
+  | - Invia i Trail files  |                       | - Riceve i Trail files |
+  +------------------------+                       +------------------------+
 ```
 
 > [!TIP]

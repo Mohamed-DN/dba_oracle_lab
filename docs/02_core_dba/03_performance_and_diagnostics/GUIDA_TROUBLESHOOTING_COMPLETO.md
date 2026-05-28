@@ -61,7 +61,7 @@ graph TD
 
 ```
 Cos'è il DB Time?
-═══════════════════
+-------------------
 
 DB Time = tempo TOTALE che TUTTE le sessioni hanno passato nel database.
 
@@ -69,12 +69,12 @@ Se in 1 ora hai 10 sessioni attive, ciascuna che lavora per 30 minuti:
   DB Time = 10 × 30 min = 300 minuti di DB Time in 1 ora di wall clock.
 
 DB Time = CPU Time + Wait Time
-  ├── CPU Time: il database stava ELABORANDO (eseguendo SQL)
-  └── Wait Time: il database stava ASPETTANDO qualcosa
-       ├── I/O: aspettava un blocco dal disco
-       ├── Lock: aspettava che un'altra sessione rilasciasse un lock
-       ├── Network: aspettava dati dalla rete (RAC interconnect)
-       └── Altro: commit, latch, redo write, ecc.
+  +-- CPU Time: il database stava ELABORANDO (eseguendo SQL)
+  +-- Wait Time: il database stava ASPETTANDO qualcosa
+       +-- I/O: aspettava un blocco dal disco
+       +-- Lock: aspettava che un'altra sessione rilasciasse un lock
+       +-- Network: aspettava dati dalla rete (RAC interconnect)
+       +-- Altro: commit, latch, redo write, ecc.
 
 PRINCIPIO: Se vuoi velocizzare il database, devi ridurre il DB Time.
 Per ridurre il DB Time, devi capire DOVE lo passa.
@@ -90,7 +90,7 @@ Ogni volta che una sessione Oracle non può procedere, registra un wait event.
 I wait events sono organizzati in Wait Classes:
 
   Wait Class        Significato                     Preoccupante?
-  ──────────────────────────────────────────────────────────────────
+  ------------------------------------------------------------------
   User I/O          Lettura/Scrittura dati          Dipende dal volume
   System I/O        I/O del sistema (redo, undo)    Raro
   Concurrency       Lock, mutex, latch              Sì, se alto
@@ -100,7 +100,7 @@ I wait events sono organizzati in Wait Classes:
   Configuration     Problema di configurazione      Sì
   Administrative    Azione DBA in corso             Temporaneo
   Idle              Sessione in attesa di lavoro     IGNORALO
-  ──────────────────────────────────────────────────────────────────
+  ------------------------------------------------------------------
 
 ⚠️ IMPORTANTE: IGNORA SEMPRE gli eventi "Idle"!
    "SQL*Net message from client" = il cliente non sta mandando query.
@@ -128,9 +128,9 @@ timeline
 Questa è la vista più usata da un DBA. Ogni riga è una sessione connessa.
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 1: "Chi è connesso e cosa sta facendo?"
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     s.sid,                    -- Session ID (numero univoco della sessione)
     s.serial#,                -- Serial number (per kill della sessione)
@@ -156,9 +156,9 @@ ORDER BY s.seconds_in_wait DESC;
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 2: "Quali wait events stanno consumando più tempo?"
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     wait_class,
     event,
@@ -183,9 +183,9 @@ ORDER BY sessioni_in_attesa DESC;
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 3: "Chi sta bloccando chi?" (Blocchi e Lock)
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     b.sid AS blocker_sid,
     b.serial# AS blocker_serial,
@@ -213,9 +213,9 @@ ORDER BY w.seconds_in_wait DESC;
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 4: "Qual è il testo SQL della query bloccante?"
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT sql_id, sql_text
 FROM v$sql
 WHERE sql_id = '&inserisci_sql_id';
@@ -223,9 +223,9 @@ WHERE sql_id = '&inserisci_sql_id';
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 5: Kill di una sessione bloccante (EMERGENZA!)
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 ALTER SYSTEM KILL SESSION '234,56789' IMMEDIATE;
 -- ^^^ 234 = SID, 56789 = SERIAL# (presi da v$session)
 --     IMMEDIATE = non aspettare che la transazione finisca, uccidila
@@ -244,9 +244,9 @@ ALTER SYSTEM KILL SESSION '234,56789,@2' IMMEDIATE;
 ASH campiona le sessioni attive **ogni secondo**. È perfetto per problemi transitori.
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 6: "Top SQL degli ultimi 10 minuti"
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     sql_id,
     COUNT(*) AS campioni,         -- Più campioni = più tempo = più impatto
@@ -272,9 +272,9 @@ FETCH FIRST 10 ROWS ONLY;
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 7: "In quali minuti il database era più carico?"
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     TO_CHAR(sample_time, 'HH24:MI') AS minuto,
     COUNT(*) AS sessioni_attive,
@@ -300,9 +300,9 @@ ORDER BY minuto;
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 8: "Chi era attivo alle 14:02?" (Drill-down nel picco)
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     sql_id,
     session_id AS sid,
@@ -336,9 +336,9 @@ FETCH FIRST 10 ROWS ONLY;
 AWR fa una "fotografia" (snapshot) del database ogni 30-60 minuti. Il report AWR confronta 2 snapshot e mostra le differenze.
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 9: Configurazione AWR
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- Verifica configurazione attuale
 SELECT snap_interval, retention FROM dba_hist_wr_control;
 -- Default: snap ogni 60 min, retention 8 giorni
@@ -359,9 +359,9 @@ EXEC DBMS_WORKLOAD_REPOSITORY.CREATE_SNAPSHOT();
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- QUERY 10: Lista snapshot disponibili
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT snap_id,
        TO_CHAR(begin_interval_time, 'DD-MON HH24:MI') AS inizio,
        TO_CHAR(end_interval_time, 'DD-MON HH24:MI') AS fine
@@ -386,7 +386,7 @@ FETCH FIRST 30 ROWS ONLY;
 
 ```
 SEZIONE 1: REPORT SUMMARY
-═══════════════════════════
+---------------------------
 
   Snap Id       Begin Snap        End Snap          Elapsed    DB Time
   --------      ---------------   ---------------   --------   --------
@@ -400,10 +400,10 @@ SEZIONE 1: REPORT SUMMARY
   - Se il rapporto fosse 50/60 = 0.83, il database è poco utilizzato.
   - Se il rapporto fosse 500/60 = 8.3, il database è molto carico.
 
-──────────────────────────────────────────────────────────────────────
+----------------------------------------------------------------------
 
 SEZIONE 2: TOP 5 TIMED FOREGROUND EVENTS  ← LA PIÙ IMPORTANTE!
-═══════════════════════════════════════════
+-------------------------------------------
 
   Event                          Waits     Time(s)  % DB time  Wait Class
   ------------------------------ --------- -------- --------- -----------
@@ -414,39 +414,39 @@ SEZIONE 2: TOP 5 TIMED FOREGROUND EVENTS  ← LA PIÙ IMPORTANTE!
   gc buffer busy acquire         89,012    500      4.6%     Cluster
 
   COME LEGGERE:
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 1. "db file sequential read" = 41.7% del tempo                │
-  │    → Letture singolo-blocco (indice). Normal se < 30%.         │
-  │    → Se alto: query con troppi accessi per indice               │
-  │    → O indice non selettivo, o tabella molto grande             │
-  │                                                                 │
-  │ 2. "CPU" = 29.6%                                               │
-  │    → Il database stava calcolando, non aspettando               │
-  │    → Normale se non eccessivo. Se > 60% e il sistema rallenta,│
-  │      cerca query con troppi logical reads (scansioni in cache). │
-  │                                                                 │
-  │ 3. "log file sync" = 11.1%                                     │
-  │    → Tempo per COMMIT. Ogni COMMIT aspetta che LGWR finisca    │
-  │      di scrivere il redo sul disco.                             │
-  │    → Se alto: l'applicazione fa troppi COMMIT (es. 1 per riga) │
-  │    → O il disco dei redo log è lento.                           │
-  │                                                                 │
-  │ 4. "db file scattered read" = 7.4%                             │
-  │    → Letture multi-blocco (full table scan)                     │
-  │    → Se alto: query senza indice o con indice non usato         │
-  │    → O la tabella è piccola e Oracle sceglie il full scan       │
-  │                                                                 │
-  │ 5. "gc buffer busy acquire" = 4.6%                             │
-  │    → SOLO IN RAC: contesa per blocchi tra nodi (Cache Fusion)   │
-  │    → Un nodo chiede un blocco che un altro nodo sta usando      │
-  │    → Se alto: le query fanno DML sulle stesse righe da nodi    │
-  │      diversi → soluzione: partizionare servizi                  │
-  └─────────────────────────────────────────────────────────────────┘
+  +-----------------------------------------------------------------+
+  | 1. "db file sequential read" = 41.7% del tempo                |
+  |    → Letture singolo-blocco (indice). Normal se < 30%.         |
+  |    → Se alto: query con troppi accessi per indice               |
+  |    → O indice non selettivo, o tabella molto grande             |
+  |                                                                 |
+  | 2. "CPU" = 29.6%                                               |
+  |    → Il database stava calcolando, non aspettando               |
+  |    → Normale se non eccessivo. Se > 60% e il sistema rallenta,|
+  |      cerca query con troppi logical reads (scansioni in cache). |
+  |                                                                 |
+  | 3. "log file sync" = 11.1%                                     |
+  |    → Tempo per COMMIT. Ogni COMMIT aspetta che LGWR finisca    |
+  |      di scrivere il redo sul disco.                             |
+  |    → Se alto: l'applicazione fa troppi COMMIT (es. 1 per riga) |
+  |    → O il disco dei redo log è lento.                           |
+  |                                                                 |
+  | 4. "db file scattered read" = 7.4%                             |
+  |    → Letture multi-blocco (full table scan)                     |
+  |    → Se alto: query senza indice o con indice non usato         |
+  |    → O la tabella è piccola e Oracle sceglie il full scan       |
+  |                                                                 |
+  | 5. "gc buffer busy acquire" = 4.6%                             |
+  |    → SOLO IN RAC: contesa per blocchi tra nodi (Cache Fusion)   |
+  |    → Un nodo chiede un blocco che un altro nodo sta usando      |
+  |    → Se alto: le query fanno DML sulle stesse righe da nodi    |
+  |      diversi → soluzione: partizionare servizi                  |
+  +-----------------------------------------------------------------+
 
-──────────────────────────────────────────────────────────────────────
+----------------------------------------------------------------------
 
 SEZIONE 3: SQL ORDERED BY ELAPSED TIME
-═══════════════════════════════════════
+---------------------------------------
 
   Elapsed Time(s)  Executions  Elapsed per Exec(s)  SQL Id
   ---------------  ----------  -------------------  -------------
@@ -460,25 +460,25 @@ SEZIONE 3: SQL ORDERED BY ELAPSED TIME
     → Il totale (1890s) è alto per il VOLUME non per la lentezza
     → Soluzione: ridurre il numero di esecuzioni (caching, batch)
 
-──────────────────────────────────────────────────────────────────────
+----------------------------------------------------------------------
 
 SEZIONE 4: SQL ORDERED BY CPU TIME
-═══════════════════════════════════
+-----------------------------------
   (Stessa struttura: mostra le query che consumano più CPU)
 
 SEZIONE 5: SQL ORDERED BY GETS (Buffer Gets / Logical Reads)
-═════════════════════════════════════════════════════════════
+-------------------------------------------------------------
   - "Gets" = letture logiche (dalla buffer cache, senza I/O fisico)
   - Una query con milioni di Gets probabilmente ha un piano subottimale
   - Anche se non fa I/O fisico, consuma CPU per ogni blocco letto
 
-──────────────────────────────────────────────────────────────────────
+----------------------------------------------------------------------
 
 SEZIONE 6: INSTANCE ACTIVITY STATISTICS (per secondo)
-═════════════════════════════════════════════════════
+-----------------------------------------------------
 
   Statistic                     Per Second    Per Transaction
-  ────────────────────────────  ──────────    ───────────────
+  ----------------------------  ----------    ---------------
   physical reads                1,250         42
   physical writes               450           15
   redo size (bytes)              2,500,000     83,333
@@ -495,10 +495,10 @@ SEZIONE 6: INSTANCE ACTIVITY STATISTICS (per secondo)
     Se alto (>50/s): l'applicazione non usa bind variables!
     → Soluzione: usa bind variables o CURSOR_SHARING=FORCE.
 
-──────────────────────────────────────────────────────────────────────
+----------------------------------------------------------------------
 
 SEZIONE 7: ADVISORY SECTIONS
-═══════════════════════════════
+-------------------------------
 
   Buffer Pool Advisory:
     Se la buffer cache fosse 4 GB (attualmente 2 GB),
@@ -667,9 +667,9 @@ ALTER SYSTEM KILL SESSION '&blocker_sid,&blocker_serial' IMMEDIATE;
 ### 3.3 Scenario: "Lo spazio sta finendo"
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- Tablespace usage
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     tablespace_name,
     ROUND(used_percent, 1) AS pct_usato,
@@ -681,9 +681,9 @@ SELECT
 FROM dba_tablespace_usage_metrics
 ORDER BY used_percent DESC;
 
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- ASM disk groups
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     name,
     ROUND(total_mb/1024) AS total_gb,
@@ -696,9 +696,9 @@ SELECT
     END AS stato
 FROM v$asm_diskgroup;
 
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- FRA (Fast Recovery Area)
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     file_type,
     ROUND(percent_space_used, 1) AS pct_usato,
@@ -825,9 +825,9 @@ Soluzione: assicurati che le statistiche siano aggiornate.
 ```
 
 ```sql
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 -- Verifica quando sono state raccolte le statistiche
--- ═══════════════════════════════════════════════════════════════════
+-- -------------------------------------------------------------------
 SELECT
     owner,
     table_name,
@@ -872,7 +872,7 @@ END;
 SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('TUNE_&sql_id') AS report FROM dual;
 
 -- ESEMPIO DI OUTPUT:
--- ─────────────────────────────────────────────────
+-- -------------------------------------------------
 -- FINDING: La query esegue un Full Table Scan su HR.ORDERS
 --          che contiene 2.500.000 righe.
 --
@@ -886,14 +886,14 @@ SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('TUNE_&sql_id') AS report FROM dual;
 --
 -- ALTERNATIVE: Accettare il seguente SQL Profile:
 --   EXEC DBMS_SQLTUNE.ACCEPT_SQL_PROFILE(task_name => 'TUNE_abc123');
--- ─────────────────────────────────────────────────
+-- -------------------------------------------------
 ```
 
 ### 4.3 Operazioni del Piano di Esecuzione — Cheat Sheet
 
 ```
 OPERAZIONE                          SIGNIFICATO          BUONO/MALE?
-────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------
 TABLE ACCESS FULL                   Full Table Scan      🟡 Dipende
   → Scansiona TUTTA la tabella.
   → Buono su tabelle piccole (<1000 righe).
@@ -1107,9 +1107,9 @@ chmod +x /home/oracle/scripts/run_health_check.sh
 ## PARTE 8: DOVE TROVARE I LOG
 
 ```bash
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # ALERT LOG — IL FILE PIÙ IMPORTANTE DEL DATABASE
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # Contiene: startup/shutdown, errori ORA, switch redo log, checkpoint.
 # Controllalo OGNI GIORNO.
 
@@ -1128,9 +1128,9 @@ WHERE originating_timestamp > SYSDATE - 1
   AND (message_text LIKE '%ORA-%' OR message_text LIKE '%error%')
 ORDER BY originating_timestamp DESC;
 
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # TRACE FILES — Dettagli di un errore specifico
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # Quando Oracle ha un ORA-600 o un errore grave, scrive un trace file.
 # L'alert log dice DOVE è il trace file.
 
@@ -1141,9 +1141,9 @@ SELECT value FROM v$diag_info WHERE name = 'Diag Trace';
 # Trovare il trace file di una sessione specifica:
 SELECT value FROM v$diag_info WHERE name = 'Default Trace File';
 
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # LOG CRS / GRID INFRASTRUCTURE
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 # Problemi di cluster: nodo evicted, VIP non migra, ecc.
 tail -100 /u01/app/19.0.0/grid/log/$(hostname)/alert$(hostname).log
 # CSSD (membership):

@@ -24,34 +24,34 @@
 DBMS_SCHEDULER è il sistema di scheduling di Oracle. Sostituisce il vecchio DBMS_JOB ed è molto più potente.
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                 COMPONENTI DBMS_SCHEDULER                        ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  PROGRAM ──────── Cosa eseguire (PL/SQL, script, eseguibile)     ║
-║       │                                                          ║
-║  SCHEDULE ─────── Quando eseguire (cron-like)                    ║
-║       │                                                          ║
-║  JOB ──────────── Combina Program + Schedule                     ║
-║       │                                                          ║
-║  WINDOW ───────── Finestra temporale per resource management     ║
-║       │                                                          ║
-║  JOB CLASS ────── Raggruppa job per gestione risorse              ║
-║                                                                  ║
-║  Hierarchy:                                                      ║
-║  ┌──────────┐    ┌──────────┐                                    ║
-║  │ PROGRAM  │ +  │ SCHEDULE │ = JOB                              ║
-║  └──────────┘    └──────────┘                                    ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                 COMPONENTI DBMS_SCHEDULER                        |
++------------------------------------------------------------------+
+|                                                                  |
+|  PROGRAM -------- Cosa eseguire (PL/SQL, script, eseguibile)     |
+|       |                                                          |
+|  SCHEDULE ------- Quando eseguire (cron-like)                    |
+|       |                                                          |
+|  JOB ------------ Combina Program + Schedule                     |
+|       |                                                          |
+|  WINDOW --------- Finestra temporale per resource management     |
+|       |                                                          |
+|  JOB CLASS ------ Raggruppa job per gestione risorse              |
+|                                                                  |
+|  Hierarchy:                                                      |
+|  +----------+    +----------+                                    |
+|  | PROGRAM  | +  | SCHEDULE | = JOB                              |
+|  +----------+    +----------+                                    |
++------------------------------------------------------------------+
 ```
 
 ### 1.2 Creare un Job di Raccolta Statistiche (Lab)
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Job: Raccogliere statistiche ogni notte alle 02:00
 -- (Fondamentale per l'optimizer!)
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 BEGIN
   DBMS_SCHEDULER.CREATE_JOB(
@@ -78,9 +78,9 @@ END;
 ### 1.3 Job di Pulizia Archivelog
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Job: Pulizia archivelog vecchi ogni 4 ore
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 BEGIN
   DBMS_SCHEDULER.CREATE_JOB(
@@ -104,9 +104,9 @@ END;
 ### 1.4 Job di Health Check Automatico
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Job: Health Check ogni 30 minuti
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 -- Prima, crea la tabella dei risultati
 CREATE TABLE dba_health_log (
@@ -195,30 +195,30 @@ EXEC DBMS_SCHEDULER.DROP_JOB('JOB_HEALTH_CHECK', TRUE); -- rimuovi
 **AWR = Automatic Workload Repository**. Oracle scatta degli "snapshot" dell'attività del database ogni ora e li conserva per 8 giorni (default). Puoi generare report che mostrano cosa è successo tra due snapshot.
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                    AWR / ADDM / ASH                              ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  AWR (Automatic Workload Repository)                             ║
-║  ├── Snapshot ogni 60 minuti (configurabile)                     ║
-║  ├── Retention: 8 giorni (configurabile)                         ║
-║  ├── Contiene: SQL stats, wait events, SGA, I/O, etc.            ║
-║  └── Report: HTML confronto tra 2 snapshot                       ║
-║                                                                  ║
-║  ADDM (Automatic Database Diagnostic Monitor)                    ║
-║  ├── Analizza automaticamente ogni snapshot AWR                  ║
-║  ├── Genera raccomandazioni (es. "add more memory")              ║
-║  └── Il "dottore" del database                                   ║
-║                                                                  ║
-║  ASH (Active Session History)                                    ║
-║  ├── Campiona sessioni attive ogni secondo                       ║
-║  ├── In memoria (V$ACTIVE_SESSION_HISTORY)                       ║
-║  ├── Storico su disco (DBA_HIST_ACTIVE_SESS_HISTORY)             ║
-║  └── Perfetto per "cosa stava succedendo 10 minuti fa?"          ║
-║                                                                  ║
-║  RELAZIONE:                                                      ║
-║  ASH (real-time, 1 sec) → AWR (aggregato, 1 ora) → ADDM (analisi)║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                    AWR / ADDM / ASH                              |
++------------------------------------------------------------------+
+|                                                                  |
+|  AWR (Automatic Workload Repository)                             |
+|  +-- Snapshot ogni 60 minuti (configurabile)                     |
+|  +-- Retention: 8 giorni (configurabile)                         |
+|  +-- Contiene: SQL stats, wait events, SGA, I/O, etc.            |
+|  +-- Report: HTML confronto tra 2 snapshot                       |
+|                                                                  |
+|  ADDM (Automatic Database Diagnostic Monitor)                    |
+|  +-- Analizza automaticamente ogni snapshot AWR                  |
+|  +-- Genera raccomandazioni (es. "add more memory")              |
+|  +-- Il "dottore" del database                                   |
+|                                                                  |
+|  ASH (Active Session History)                                    |
+|  +-- Campiona sessioni attive ogni secondo                       |
+|  +-- In memoria (V$ACTIVE_SESSION_HISTORY)                       |
+|  +-- Storico su disco (DBA_HIST_ACTIVE_SESS_HISTORY)             |
+|  +-- Perfetto per "cosa stava succedendo 10 minuti fa?"          |
+|                                                                  |
+|  RELAZIONE:                                                      |
+|  ASH (real-time, 1 sec) → AWR (aggregato, 1 ora) → ADDM (analisi)|
++------------------------------------------------------------------+
 ```
 
 ### 2.2 Generare un Report AWR
@@ -330,31 +330,31 @@ EXEC DBMS_WORKLOAD_REPOSITORY.CREATE_SNAPSHOT;
 ### 3.1 Workflow di Patching
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║              WORKFLOW PATCHING ORACLE 19c                        ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  1. PREPARAZIONE                                                 ║
-║     ├── Download patch da My Oracle Support (MOS)                ║
-║     ├── Leggi README della patch                                 ║
-║     ├── Verifica prerequisiti (OPatch version, conflitti)        ║
-║     └── SNAPSHOT VM! 📸                                          ║
-║                                                                  ║
-║  2. PRE-CHECK                                                    ║
-║     ├── OPatch lsinventory (stato attuale)                       ║
-║     ├── Analyze mode (dry run)                                    ║
-║     └── Backup ORACLE_HOME                                       ║
-║                                                                  ║
-║  3. APPLICAZIONE                                                 ║
-║     ├── RAC: opatchauto apply (gestisce rolling)                 ║
-║     ├── Single: OPatch apply                                     ║
-║     └── OJVM: separato, richiede shutdown                        ║
-║                                                                  ║
-║  4. POST-PATCH                                                   ║
-║     ├── datapatch -verbose (SQL patch nel dizionario)            ║
-║     ├── utlrp.sql (ricompila invalidi)                           ║
-║     └── Verifica: OPatch lsinventory                             ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|              WORKFLOW PATCHING ORACLE 19c                        |
++------------------------------------------------------------------+
+|                                                                  |
+|  1. PREPARAZIONE                                                 |
+|     +-- Download patch da My Oracle Support (MOS)                |
+|     +-- Leggi README della patch                                 |
+|     +-- Verifica prerequisiti (OPatch version, conflitti)        |
+|     +-- SNAPSHOT VM! 📸                                          |
+|                                                                  |
+|  2. PRE-CHECK                                                    |
+|     +-- OPatch lsinventory (stato attuale)                       |
+|     +-- Analyze mode (dry run)                                    |
+|     +-- Backup ORACLE_HOME                                       |
+|                                                                  |
+|  3. APPLICAZIONE                                                 |
+|     +-- RAC: opatchauto apply (gestisce rolling)                 |
+|     +-- Single: OPatch apply                                     |
+|     +-- OJVM: separato, richiede shutdown                        |
+|                                                                  |
+|  4. POST-PATCH                                                   |
+|     +-- datapatch -verbose (SQL patch nel dizionario)            |
+|     +-- utlrp.sql (ricompila invalidi)                           |
+|     +-- Verifica: OPatch lsinventory                             |
++------------------------------------------------------------------+
 ```
 
 ### 3.2 Aggiornare OPatch
@@ -377,9 +377,9 @@ $ORACLE_HOME/OPatch/opatch version
 ### 3.3 Applicare Release Update (RU)
 
 ```bash
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # APPLICARE RU su RAC (Rolling — nessun downtime!)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # 1. Pre-check (dry run)
 $ORACLE_HOME/OPatch/opatchauto apply /path/to/patch_dir \
@@ -434,32 +434,32 @@ sqlplus / as sysdba @$ORACLE_HOME/rdbms/admin/utlrp.sql
 ### 4.1 Architettura Data Pump
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                   DATA PUMP ARCHITETTURA                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  expdp (Export)          impdp (Import)                          ║
-║  ┌──────────┐            ┌──────────┐                            ║
-║  │ Client   │            │ Client   │                            ║
-║  │ (CLI)    │            │ (CLI)    │                            ║
-║  └────┬─────┘            └────┬─────┘                            ║
-║       │                       │                                  ║
-║       ▼                       ▼                                  ║
-║  ┌──────────────────────────────────────────┐                    ║
-║  │  Data Pump Engine (Server-side!)         │                    ║
-║  │  - Master Table (traccia il progresso)    │                    ║
-║  │  - Worker Processes (paralleli)           │                    ║
-║  │  - Direct Path / External Table mode      │                    ║
-║  └────────────────────┬─────────────────────┘                    ║
-║                       │                                          ║
-║                       ▼                                          ║
-║  ┌────────────────────────────────────────────┐                  ║
-║  │  Dump File (.dmp) su DIRECTORY Oracle       │                  ║
-║  │  (deve essere un path del SERVER, non client)│                 ║
-║  └────────────────────────────────────────────┘                  ║
-║                                                                  ║
-║  KEY: I file .dmp sono SEMPRE sul server, mai sul client!        ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                   DATA PUMP ARCHITETTURA                         |
++------------------------------------------------------------------+
+|                                                                  |
+|  expdp (Export)          impdp (Import)                          |
+|  +----------+            +----------+                            |
+|  | Client   |            | Client   |                            |
+|  | (CLI)    |            | (CLI)    |                            |
+|  +----+-----+            +----+-----+                            |
+|       |                       |                                  |
+|       v                       v                                  |
+|  +------------------------------------------+                    |
+|  |  Data Pump Engine (Server-side!)         |                    |
+|  |  - Master Table (traccia il progresso)    |                    |
+|  |  - Worker Processes (paralleli)           |                    |
+|  |  - Direct Path / External Table mode      |                    |
+|  +--------------------+---------------------+                    |
+|                       |                                          |
+|                       v                                          |
+|  +--------------------------------------------+                  |
+|  |  Dump File (.dmp) su DIRECTORY Oracle       |                  |
+|  |  (deve essere un path del SERVER, non client)|                 |
+|  +--------------------------------------------+                  |
+|                                                                  |
+|  KEY: I file .dmp sono SEMPRE sul server, mai sul client!        |
++------------------------------------------------------------------+
 ```
 
 ### 4.2 Creare Directory Oracle
@@ -477,9 +477,9 @@ mkdir -p /u01/app/oracle/dpump
 ### 4.3 Export — Vari Livelli
 
 ```bash
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # EXPORT FULL DATABASE
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 expdp system/<password> \
     full=y \
     directory=DPUMP_DIR \
@@ -490,9 +490,9 @@ expdp system/<password> \
     compression=ALL \
     reuse_dumpfiles=y
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # EXPORT SCHEMA (più comune)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 expdp system/<password> \
     schemas=HR,OE \
     directory=DPUMP_DIR \
@@ -500,18 +500,18 @@ expdp system/<password> \
     logfile=schemas_export.log \
     compression=ALL
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # EXPORT TABELLE SPECIFICHE
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 expdp hr/<password> \
     tables=HR.EMPLOYEES,HR.DEPARTMENTS \
     directory=DPUMP_DIR \
     dumpfile=tables_emp_dept.dmp \
     logfile=tables_export.log
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # EXPORT CON FILTRO (solo dati recenti)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 expdp hr/<password> \
     tables=HR.EMPLOYEES \
     directory=DPUMP_DIR \
@@ -522,9 +522,9 @@ expdp hr/<password> \
 ### 4.4 Import
 
 ```bash
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # IMPORT SCHEMA SUL TARGET
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 impdp system/<password>@CLOUDDB \
     schemas=HR \
     directory=DPUMP_DIR \
@@ -532,9 +532,9 @@ impdp system/<password>@CLOUDDB \
     logfile=schemas_import.log \
     table_exists_action=REPLACE
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # IMPORT CON REMAP (cambia schema/tablespace)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 impdp system/<password>@CLOUDDB \
     schemas=HR \
     remap_schema=HR:HR_CLOUD \
@@ -569,9 +569,9 @@ impdp system/<password>@CLOUDDB \
 ### 5.1 Password Profile
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Creare un profilo password sicuro
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 CREATE PROFILE SECURE_PROFILE LIMIT
     PASSWORD_LIFE_TIME      90      -- scade ogni 90 giorni
     PASSWORD_GRACE_TIME     7       -- 7 giorni di grazia
@@ -594,9 +594,9 @@ WHERE  oracle_maintained = 'N';
 ### 5.2 Unified Auditing
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Abilitare audit su operazioni critiche
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 -- Audit su login falliti
 CREATE AUDIT POLICY pol_failed_login
@@ -634,33 +634,33 @@ FETCH FIRST 20 ROWS ONLY;
 ### 5.3 Transparent Data Encryption (TDE) — Concetti
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                    TDE — Come Funziona                            ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  ┌──────────────┐                                                ║
-║  │   Wallet     │ ← Master Key (protetta da password)            ║
-║  │  (keystore)  │                                                ║
-║  └──────┬───────┘                                                ║
-║         │                                                        ║
-║         ▼                                                        ║
-║  ┌──────────────┐                                                ║
-║  │Table Keys    │ ← Una chiave per tabella/tablespace            ║
-║  │(encriptate   │   (encriptata con la Master Key)               ║
-║  │ con master)  │                                                ║
-║  └──────┬───────┘                                                ║
-║         │                                                        ║
-║         ▼                                                        ║
-║  ┌──────────────┐                                                ║
-║  │  Datafile    │ ← Dati encriptati a livello blocco             ║
-║  │  (.dbf)      │   Trasparente per l'applicazione               ║
-║  └──────────────┘                                                ║
-║                                                                  ║
-║  ATTENZIONE:                                                     ║
-║  • TDE encripta i dati SU DISCO, non in memoria                 ║
-║  • Le prestazioni calano ~5-10% (CPU per encrypt/decrypt)        ║
-║  • Il wallet DEVE essere backuppato separatamente!               ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                    TDE — Come Funziona                            |
++------------------------------------------------------------------+
+|                                                                  |
+|  +--------------+                                                |
+|  |   Wallet     | ← Master Key (protetta da password)            |
+|  |  (keystore)  |                                                |
+|  +------+-------+                                                |
+|         |                                                        |
+|         v                                                        |
+|  +--------------+                                                |
+|  |Table Keys    | ← Una chiave per tabella/tablespace            |
+|  |(encriptate   |   (encriptata con la Master Key)               |
+|  | con master)  |                                                |
+|  +------+-------+                                                |
+|         |                                                        |
+|         v                                                        |
+|  +--------------+                                                |
+|  |  Datafile    | ← Dati encriptati a livello blocco             |
+|  |  (.dbf)      |   Trasparente per l'applicazione               |
+|  +--------------+                                                |
+|                                                                  |
+|  ATTENZIONE:                                                     |
+|  • TDE encripta i dati SU DISCO, non in memoria                 |
+|  • Le prestazioni calano ~5-10% (CPU per encrypt/decrypt)        |
+|  • Il wallet DEVE essere backuppato separatamente!               |
++------------------------------------------------------------------+
 ```
 
 ```sql
@@ -712,9 +712,9 @@ SQLNET.CRYPTO_CHECKSUM_TYPES_CLIENT = (SHA256)
 ### 6.1 Operazioni Comuni
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- CREARE UN TABLESPACE
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 -- Standard (autoextend, max 32G)
 CREATE TABLESPACE APP_DATA
@@ -728,9 +728,9 @@ CREATE TEMPORARY TABLESPACE TEMP_LARGE
     TEMPFILE '+DATA' SIZE 2G
     AUTOEXTEND ON NEXT 500M MAXSIZE 10G;
 
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- GESTIRE DATAFILE
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 -- Aggiungere datafile
 ALTER TABLESPACE APP_DATA
@@ -739,9 +739,9 @@ ALTER TABLESPACE APP_DATA
 -- Ridimensionare datafile
 ALTER DATABASE DATAFILE '+DATA/RACDB/datafile/app_data01.dbf' RESIZE 2G;
 
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- MONITORING TABLESPACE
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 
 -- Vista rapida utilizzo
 SELECT tablespace_name,
@@ -807,31 +807,31 @@ ALTER DATABASE TEMPFILE '+DATA/RACDB/tempfile/temp01.dbf' RESIZE 500M;
 ## Checklist Attività DBA Quotidiane
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║  CHECKLIST DBA — Attività Giornaliere                             ║
-╠═══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
-║  MATTINA (15 min)                                                ║
-║  ☐ Controlla alert log per errori ORA-                           ║
-║  ☐ Controlla spazio tablespace (> 85% = warning)                 ║
-║  ☐ Verifica backup RMAN completato con successo                  ║
-║  ☐ Verifica DG lag (< 60 sec)                                    ║
-║  ☐ Controlla job schedulati falliti                              ║
-║                                                                   ║
-║  SETTIMANALE (30 min)                                            ║
-║  ☐ Genera report AWR per la settimana                            ║
-║  ☐ Revedi raccomandazioni ADDM                                   ║
-║  ☐ Controlla crescita datafile                                   ║
-║  ☐ Verifica validità backup (RESTORE VALIDATE)                   ║
-║  ☐ Controlla patch disponibili su MOS                            ║
-║                                                                   ║
-║  MENSILE (1-2 ore)                                               ║
-║  ☐ Report capacity planning (crescita storage)                   ║
-║  ☐ Revisione security (utenti, privilegi, audit)                 ║
-║  ☐ Test RMAN restore su ambiente di test                         ║
-║  ☐ Applica patch di sicurezza (CPU/PSU)                          ║
-║  ☐ Verifica statistiche aggiornate                               ║
-╚═══════════════════════════════════════════════════════════════════╝
++-------------------------------------------------------------------+
+|  CHECKLIST DBA — Attività Giornaliere                             |
++-------------------------------------------------------------------+
+|                                                                   |
+|  MATTINA (15 min)                                                |
+|  ☐ Controlla alert log per errori ORA-                           |
+|  ☐ Controlla spazio tablespace (> 85% = warning)                 |
+|  ☐ Verifica backup RMAN completato con successo                  |
+|  ☐ Verifica DG lag (< 60 sec)                                    |
+|  ☐ Controlla job schedulati falliti                              |
+|                                                                   |
+|  SETTIMANALE (30 min)                                            |
+|  ☐ Genera report AWR per la settimana                            |
+|  ☐ Revedi raccomandazioni ADDM                                   |
+|  ☐ Controlla crescita datafile                                   |
+|  ☐ Verifica validità backup (RESTORE VALIDATE)                   |
+|  ☐ Controlla patch disponibili su MOS                            |
+|                                                                   |
+|  MENSILE (1-2 ore)                                               |
+|  ☐ Report capacity planning (crescita storage)                   |
+|  ☐ Revisione security (utenti, privilegi, audit)                 |
+|  ☐ Test RMAN restore su ambiente di test                         |
+|  ☐ Applica patch di sicurezza (CPU/PSU)                          |
+|  ☐ Verifica statistiche aggiornate                               |
++-------------------------------------------------------------------+
 ```
 
 ---

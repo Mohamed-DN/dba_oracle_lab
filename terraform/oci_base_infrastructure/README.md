@@ -40,17 +40,17 @@ OCI offre il proprio servizio di IaC (Resource Manager), che è essenzialmente u
 Il codice in questa directory crea la seguente infrastruttura:
 ```
 OCI Region (eu-frankfurt-1)
-└── Compartment: Oracle_Lab
-    └── VCN: Oracle_26ai_VCN (10.0.0.0/16)
-        ├── Internet Gateway (IGW)
-        ├── Route Table (Public)
-        ├── Security List (SSH + Oracle Net)
-        └── Public Subnet (10.0.1.0/24)
-            └── Compute Instance: oracle-26ai-primary
-                ├── Shape: VM.Standard.A1.Flex (ARM, 4 OCPU, 24GB)
-                ├── OS: Oracle Linux 8.9
-                ├── Boot Volume: 100 GB
-                └── Public IP: (dinamico, output di Terraform)
++-- Compartment: Oracle_Lab
+    +-- VCN: Oracle_26ai_VCN (10.0.0.0/16)
+        +-- Internet Gateway (IGW)
+        +-- Route Table (Public)
+        +-- Security List (SSH + Oracle Net)
+        +-- Public Subnet (10.0.1.0/24)
+            +-- Compute Instance: oracle-26ai-primary
+                +-- Shape: VM.Standard.A1.Flex (ARM, 4 OCPU, 24GB)
+                +-- OS: Oracle Linux 8.9
+                +-- Boot Volume: 100 GB
+                +-- Public IP: (dinamico, output di Terraform)
 ```
 
 ---

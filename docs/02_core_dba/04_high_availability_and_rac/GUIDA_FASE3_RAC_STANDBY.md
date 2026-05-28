@@ -35,42 +35,42 @@
 
 ```
   PRIMA                                           DOPO
-  ═════                                           ════
+  -----                                           ----
 
-┌─────────────┐                          ┌─────────────┐
-│ RAC PRIMARY │                          │ RAC PRIMARY │
-│   RACDB     │                          │   RACDB     │
-│ ┌────┐┌────┐│                          │ ┌────┐┌────┐│
-│ │DB1 ││DB2 ││                          │ │DB1 ││DB2 ││
-│ └────┘└────┘│                          │ └────┘└────┘│
-│ rac1  rac2  │                          │ rac1  rac2  │
-└─────────────┘                          └──────┬──────┘
-                                                │ Redo Shipping
-                                                │ (LGWR ASYNC)
-┌─────────────┐                                 ▼
-│ RAC STANDBY │   RMAN Duplicate     ┌──────────────────┐
-│  (vuoto)    │  ═══════════════►    │ RAC STANDBY      │
-│ Grid + SW   │   Copia DB via       │ RACDB_STBY       │
-│ NO database │   rete in tempo      │ ┌────┐ ┌────┐   │
-│ racstby1/2  │   reale!             │ │DB1 │ │DB2 │   │
-└─────────────┘                      │ └────┘ └────┘   │
-                                     │ in tempo reale   │
-                                     └──────────────────┘
++-------------+                          +-------------+
+| RAC PRIMARY |                          | RAC PRIMARY |
+|   RACDB     |                          |   RACDB     |
+| +----++----+|                          | +----++----+|
+| |DB1 ||DB2 ||                          | |DB1 ||DB2 ||
+| +----++----+|                          | +----++----+|
+| rac1  rac2  |                          | rac1  rac2  |
++-------------+                          +------+------+
+                                                | Redo Shipping
+                                                | (LGWR ASYNC)
++-------------+                                 v
+| RAC STANDBY |   RMAN Duplicate     +------------------+
+|  (vuoto)    |  ---------------&gt;    | RAC STANDBY      |
+| Grid + SW   |   Copia DB via       | RACDB_STBY       |
+| NO database |   rete in tempo      | +----+ +----+   |
+| racstby1/2  |   reale!             | |DB1 | |DB2 |   |
++-------------+                      | +----+ +----+   |
+                                     | in tempo reale   |
+                                     +------------------+
 ```
 
 ### Ordine di Installazione in Questa Fase (stile Fase 2)
 
 ```text
-Passo 1:  Golden Image clone standby        ━━━━━━━━━━━━━━━━━━━▶ racstby1/racstby2 pronti
-Passo 2:  Rete + hostname + fix systemd     ━━━━━━━━━━━━━━━━━━━▶ nodi stabili e raggiungibili
-Passo 3:  ASM dischi standby                ━━━━━━━━━━━━━━━━━━━▶ CRS/DATA/RECO visibili
-Passo 4:  Grid Infrastructure standby       ━━━━━━━━━━━━━━━━━━━▶ cluster standby online
-Passo 5:  Patch Grid RU                     ━━━━━━━━━━━━━━━━━━━▶ allineamento con primario
-Passo 6:  DB Home Software Only             ━━━━━━━━━━━━━━━━━━━▶ motore DB installato
-Passo 7:  Patch DB Home RU + OJVM           ━━━━━━━━━━━━━━━━━━━▶ home standby allineata
-Passo 8:  Config DG network/listener/TNS    ━━━━━━━━━━━━━━━━━━━▶ connettivita primaria-standby
-Passo 9:  RMAN Duplicate Active Database    ━━━━━━━━━━━━━━━━━━━▶ RACDB_STBY creato
-Passo 10: OCR registration + MRP apply      ━━━━━━━━━━━━━━━━━━━▶ standby sincronizzato
+Passo 1:  Golden Image clone standby        -------------------▶ racstby1/racstby2 pronti
+Passo 2:  Rete + hostname + fix systemd     -------------------▶ nodi stabili e raggiungibili
+Passo 3:  ASM dischi standby                -------------------▶ CRS/DATA/RECO visibili
+Passo 4:  Grid Infrastructure standby       -------------------▶ cluster standby online
+Passo 5:  Patch Grid RU                     -------------------▶ allineamento con primario
+Passo 6:  DB Home Software Only             -------------------▶ motore DB installato
+Passo 7:  Patch DB Home RU + OJVM           -------------------▶ home standby allineata
+Passo 8:  Config DG network/listener/TNS    -------------------▶ connettivita primaria-standby
+Passo 9:  RMAN Duplicate Active Database    -------------------▶ RACDB_STBY creato
+Passo 10: OCR registration + MRP apply      -------------------▶ standby sincronizzato
 ```
 
 ### Percorso da seguire in pratica
@@ -1184,32 +1184,32 @@ ORDER  BY DEST_ID;
 
 ```
 PRIMARIO (RACDB)                              STANDBY (RACDB_STBY)
-════════════════                              ═════════════════════
+----------------                              ---------------------
 
 Utente fa COMMIT
-     │
-     ▼
-┌──────────┐                                  
-│  LGWR    │──── Scrive ───►┌──────────────┐  
-│          │                │ Online Redo  │  
-│          │                │ Log (locale) │  
-│          │                └──────┬───────┘  
-│          │                       │          
-│          │── Spedisce ──────────────────────►┌──────────────┐
-│          │   (ASYNC via rete)               │ Standby Redo │
-└──────────┘                                  │ Log (SRL)    │
-                                              └──────┬───────┘
-                                                     │
-                                                     ▼
-                                              ┌──────────────┐
-                                              │  MRP (Managed│
-                                              │  Recovery    │
-                                              │  Process)    │
-                                              │              │
-                                              │  Applica i   │
-                                              │  redo ai     │
-                                              │  datafile    │
-                                              └──────────────┘
+     |
+     v
++----------+                                  
+|  LGWR    |---- Scrive ---&gt;+--------------+  
+|          |                | Online Redo  |  
+|          |                | Log (locale) |  
+|          |                +------+-------+  
+|          |                       |          
+|          |-- Spedisce ----------------------&gt;+--------------+
+|          |   (ASYNC via rete)               | Standby Redo |
++----------+                                  | Log (SRL)    |
+                                              +------+-------+
+                                                     |
+                                                     v
+                                              +--------------+
+                                              |  MRP (Managed|
+                                              |  Recovery    |
+                                              |  Process)    |
+                                              |              |
+                                              |  Applica i   |
+                                              |  redo ai     |
+                                              |  datafile    |
+                                              +--------------+
 ```
 
 ### Spiegazione scritta (passo-passo)

@@ -42,18 +42,18 @@
 ## Switchover vs Failover — La Differenza Cruciale
 
 ```
-╔═══════════════════════╦════════════════════════════╦════════════════════════════╗
-║                       ║     SWITCHOVER             ║     FAILOVER               ║
-╠═══════════════════════╬════════════════════════════╬════════════════════════════╣
-║ Quando si usa?        ║ Manutenzione pianificata   ║ EMERGENZA — Primary morto! ║
-║ Data loss?            ║ ZERO (sempre)              ║ Possibile (MaxPerformance) ║
-║                       ║                            ║ Zero (MaxAvailability)     ║
-║ Primary è attivo?     ║ Sì                         ║ NO — è crashato!           ║
-║ Reversibile?          ║ Sì (switchback)            ║ Richiede REINSTATE o       ║
-║                       ║                            ║ ricostruzione completa     ║
-║ Tempo di downtime     ║ ~30-60 secondi             ║ ~1-5 minuti                ║
-║ Comando               ║ SWITCHOVER TO ...          ║ FAILOVER TO ...            ║
-╚═══════════════════════╩════════════════════════════╩════════════════════════════╝
++-----------------------+----------------------------+----------------------------+
+|                       |     SWITCHOVER             |     FAILOVER               |
++-----------------------+----------------------------+----------------------------+
+| Quando si usa?        | Manutenzione pianificata   | EMERGENZA — Primary morto! |
+| Data loss?            | ZERO (sempre)              | Possibile (MaxPerformance) |
+|                       |                            | Zero (MaxAvailability)     |
+| Primary è attivo?     | Sì                         | NO — è crashato!           |
+| Reversibile?          | Sì (switchback)            | Richiede REINSTATE o       |
+|                       |                            | ricostruzione completa     |
+| Tempo di downtime     | ~30-60 secondi             | ~1-5 minuti                |
+| Comando               | SWITCHOVER TO ...          | FAILOVER TO ...            |
++-----------------------+----------------------------+----------------------------+
 ```
 
 ---
@@ -61,26 +61,26 @@
 ## Scenario: Il Primary è Morto
 
 ```
-┌─────────────────┐                          ┌─────────────────┐
-│  RAC PRIMARY    │                          │  RAC STANDBY    │
-│  RACDB          │                          │  RACDB_STBY     │
-│                 │      ✕ MORTO! ✕          │  Tutti i redo   │
-│  💀 💀 💀      │      Nessun redo         │  applicati fino │
-│  Server rotto   │      viene spedito!      │  all'ultimo     │
-│  Disco corrotto │                          │  ricevuto       │
-│  Datacenter KO  │                          │                 │
-└─────────────────┘                          └─────────────────┘
-                                                     │
-                    Il DBA deve decidere:            │
-                    FAILOVER → promuovo lo           │
-                    standby a Primary                ▼
-                                             ┌─────────────────┐
-                                             │  NUOVO PRIMARY  │
-                                             │  RACDB_STBY     │
-                                             │  OPEN (R/W)     │
-                                             │  I client si    │
-                                             │  connettono QUI │
-                                             └─────────────────┘
++-----------------+                          +-----------------+
+|  RAC PRIMARY    |                          |  RAC STANDBY    |
+|  RACDB          |                          |  RACDB_STBY     |
+|                 |      ✕ MORTO! ✕          |  Tutti i redo   |
+|  💀 💀 💀      |      Nessun redo         |  applicati fino |
+|  Server rotto   |      viene spedito!      |  all'ultimo     |
+|  Disco corrotto |                          |  ricevuto       |
+|  Datacenter KO  |                          |                 |
++-----------------+                          +-----------------+
+                                                     |
+                    Il DBA deve decidere:            |
+                    FAILOVER → promuovo lo           |
+                    standby a Primary                v
+                                             +-----------------+
+                                             |  NUOVO PRIMARY  |
+                                             |  RACDB_STBY     |
+                                             |  OPEN (R/W)     |
+                                             |  I client si    |
+                                             |  connettono QUI |
+                                             +-----------------+
 ```
 
 ---
@@ -252,19 +252,19 @@ SHOW CONFIGURATION;
 ## Opzione Avanzata: Fast-Start Failover (FSFO) — Failover AUTOMATICO
 
 ```
-┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
-│  RAC PRIMARY    │        │  RAC STANDBY    │        │   OBSERVER      │
-│  RACDB          │        │  RACDB_STBY     │        │  (su dbtarget)  │
-│                 │        │                 │        │                 │
-│                 │◄══════►│                 │◄══════►│  Monitora lo    │
-│                 │  DG    │                 │        │  stato di       │
-│                 │  Redo  │                 │        │  entrambi i DB  │
-└─────────────────┘        └─────────────────┘        │                 │
-                                                      │  Se Primary     │
-                                                      │  muore →        │
-                                                      │  FAILOVER       │
-                                                      │  AUTOMATICO!    │
-                                                      └─────────────────┘
++-----------------+        +-----------------+        +-----------------+
+|  RAC PRIMARY    |        |  RAC STANDBY    |        |   OBSERVER      |
+|  RACDB          |        |  RACDB_STBY     |        |  (su dbtarget)  |
+|                 |        |                 |        |                 |
+|                 |&amp;lt;------&gt;|                 |&amp;lt;------&gt;|  Monitora lo    |
+|                 |  DG    |                 |        |  stato di       |
+|                 |  Redo  |                 |        |  entrambi i DB  |
++-----------------+        +-----------------+        |                 |
+                                                      |  Se Primary     |
+                                                      |  muore →        |
+                                                      |  FAILOVER       |
+                                                      |  AUTOMATICO!    |
+                                                      +-----------------+
 ```
 
 ```bash
@@ -287,27 +287,27 @@ START OBSERVER;
 
 ```
 Il Primary è down?
-        │
-        ├── NO ────→ È manutenzione pianificata?
-        │                    │
-        │                    ├── SÌ → SWITCHOVER (→ vedi guida switchover)
-        │                    │
-        │                    └── NO → Non fare niente
-        │
-        └── SÌ ────→ Riesci a riavviarlo in < 5 minuti?
-                         │
-                         ├── SÌ → Riavvia e aspetta il recovery automatico
-                         │
-                         └── NO → FAILOVER!
-                                    │
-                                    └── Dopo → Vecchio Primary è ripartito?
-                                                  │
-                                                  ├── SÌ → Flashback attivo?
-                                                  │            │
-                                                  │            ├── SÌ → REINSTATE
-                                                  │            │
-                                                  │            └── NO → RMAN DUPLICATE
-                                                  │
-                                                  └── NO → Ricostruisci il server,
+        |
+        +-- NO ----→ È manutenzione pianificata?
+        |                    |
+        |                    +-- SÌ → SWITCHOVER (→ vedi guida switchover)
+        |                    |
+        |                    +-- NO → Non fare niente
+        |
+        +-- SÌ ----→ Riesci a riavviarlo in < 5 minuti?
+                         |
+                         +-- SÌ → Riavvia e aspetta il recovery automatico
+                         |
+                         +-- NO → FAILOVER!
+                                    |
+                                    +-- Dopo → Vecchio Primary è ripartito?
+                                                  |
+                                                  +-- SÌ → Flashback attivo?
+                                                  |            |
+                                                  |            +-- SÌ → REINSTATE
+                                                  |            |
+                                                  |            +-- NO → RMAN DUPLICATE
+                                                  |
+                                                  +-- NO → Ricostruisci il server,
                                                             poi RMAN DUPLICATE
 ```

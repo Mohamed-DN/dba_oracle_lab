@@ -1,15 +1,15 @@
-# Guida AWR, ASH, ADDM ÔÇö Comandi Avanzati e Automazione
+# Guida AWR, ASH, ADDM — Comandi Avanzati e Automazione
 
-> Questa guida ├¿ il **compagno pratico** della [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md). Quella insegna il METODO e la teoria. Questa contiene tutti i COMANDI avanzati, gli script automatizzati, e le tecniche di tuning SQL.
+> Questa guida è il **compagno pratico** della [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md). Quella insegna il METODO e la teoria. Questa contiene tutti i COMANDI avanzati, gli script automatizzati, e le tecniche di tuning SQL.
 
 ---
 
-## 1. Configurazione AWR ÔÇö Best Practice
+## 1. Configurazione AWR — Best Practice
 
 ```sql
--- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+-- -------------------------------------------------------------------
 -- Configurazione consigliata per produzione/lab
--- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+-- -------------------------------------------------------------------
 BEGIN
     DBMS_WORKLOAD_REPOSITORY.MODIFY_SNAPSHOT_SETTINGS(
         interval  => 30,      -- snapshot ogni 30 min (default: 60)
@@ -53,7 +53,7 @@ FROM dba_hist_baseline;
 
 ---
 
-## 2. Report AWR ÔÇö Generazione Automatizzata
+## 2. Report AWR — Generazione Automatizzata
 
 ### 2.1 Generare AWR via PL/SQL (senza interazione)
 
@@ -95,7 +95,7 @@ SPOOL OFF
 
 ---
 
-## 3. ASH ÔÇö Query Avanzate
+## 3. ASH — Query Avanzate
 
 ### 3.1 Heat Map: Minuto per Minuto
 
@@ -123,9 +123,9 @@ ORDER BY minuto;
 -- MINUTO ATTIVE CPU IO LOCK GRAFICO
 -- 14:00  4      2   1  1    |CCILLL
 -- 14:01  5      3   2  0    |CCCII
--- 14:02  35     3   30 2    |CCCIIIIIIIIIIIIIIIIIIIIIIIIIIIILL  ÔåÉ PICCO!
+-- 14:02  35     3   30 2    |CCCIIIIIIIIIIIIIIIIIIIIIIIIIIIILL  -> PICCO!
 -- 14:03  38     2   33 3    |CCIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILLL
--- 14:04  6      4   2  0    |CCCCII  ÔåÉ Tornato normale
+-- 14:04  6      4   2  0    |CCCCII  -> Tornato normale
 ```
 
 ### 3.2 Top SQL per Periodo Storico (DBA_HIST_ACTIVE_SESS_HISTORY)
@@ -169,7 +169,7 @@ ORDER BY sample_time;
 
 ---
 
-## 4. ADDM ÔÇö Automazione
+## 4. ADDM — Automazione
 
 ### 4.1 Creare un Task ADDM Manuale
 
@@ -217,7 +217,7 @@ FETCH FIRST 20 ROWS ONLY;
 
 ```sql
 -- SQL Monitor cattura automaticamente le query che:
--- - Durano pi├╣ di 5 secondi
+-- - Durano pi++ di 5 secondi
 -- - Usano parallelismo
 -- - Sono monitorate manualmente con MONITOR hint
 
@@ -243,7 +243,7 @@ SELECT DBMS_SQLTUNE.REPORT_SQL_MONITOR(
 ) FROM dual;
 ```
 
-### 5.2 SQL Plan Management (SPM) ÔÇö Congelare un Piano Buono
+### 5.2 SQL Plan Management (SPM) — Congelare un Piano Buono
 
 ```sql
 -- Se hai trovato un piano buono e vuoi che l'optimizer lo usi SEMPRE:
@@ -279,7 +279,7 @@ END;
 /
 ```
 
-### 5.3 SQL Quarantine (19c) ÔÇö Bloccare Query Pericolose
+### 5.3 SQL Quarantine (19c) — Bloccare Query Pericolose
 
 ```sql
 -- Se una query impazzisce e consuma troppe risorse,
@@ -289,7 +289,7 @@ BEGIN
     DBMS_SQLQ.CREATE_QUARANTINE_BY_SQL_ID(
         sql_id         => '&sql_id',
         plan_hash_value => &bad_plan_hash,
-        elapsed_time   => 300    -- blocca se dura pi├╣ di 300 secondi
+        elapsed_time   => 300    -- blocca se dura pi++ di 300 secondi
     );
 END;
 /

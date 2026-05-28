@@ -76,16 +76,16 @@ Flusso di una transazione:
 I Redo Log files sono organizzati in **gruppi** che vengono usati in modo **circolare**:
 
 ```
-┌──────────┐    ┌──────────┐    ┌──────────┐
-│ Gruppo 1 │───▶│ Gruppo 2 │───▶│ Gruppo 3 │──┐
-│ CURRENT  │    │ ACTIVE   │    │ INACTIVE │  │
-│ (LGWR    │    │ (serve   │    │ (non     │  │
-│  scrive  │    │  ancora  │    │  serve   │  │
-│  qui)    │    │  per     │    │  più)    │  │
-│          │    │  recovery│    │          │  │
-└──────────┘    └──────────┘    └──────────┘  │
-     ▲                                         │
-     └─────────────────────────────────────────┘
++----------+    +----------+    +----------+
+| Gruppo 1 |---▶| Gruppo 2 |---▶| Gruppo 3 |--+
+| CURRENT  |    | ACTIVE   |    | INACTIVE |  |
+| (LGWR    |    | (serve   |    | (non     |  |
+|  scrive  |    |  ancora  |    |  serve   |  |
+|  qui)    |    |  per     |    |  più)    |  |
+|          |    |  recovery|    |          |  |
++----------+    +----------+    +----------+  |
+     ^                                         |
+     +-----------------------------------------+
                     LOG SWITCH (circolare)
 ```
 

@@ -46,34 +46,34 @@ sequenceDiagram
 ### Listener Statico vs Dinamico
 
 ```
-╔═══════════════════════════════════════════════════╗
-║           REGISTRAZIONE SERVIZI                    ║
-╠═══════════════════════════════════════════════════╣
-║                                                    ║
-║  STATICA (listener.ora)         DINAMICA (PMON)    ║
-║  ─────────────────────         ─────────────────   ║
-║  - Definita nel file            - Il processo PMON  ║
-║    listener.ora                   si registra       ║
-║  - Serve PRIMA che il            automaticamente    ║
-║    DB sia aperto                - Funziona quando   ║
-║  - Necessaria per RMAN            il DB è OPEN      ║
-║    DUPLICATE (NOMOUNT)          - Aggiorna i servizi║
-║  - Necessaria per Data            ogni 60 sec       ║
-║    Guard standby                - Preferita in prod ║
-║                                                    ║
-║  Quando usare quale:                               ║
-║  ┌─────────────────────────────────────────────┐   ║
-║  │ SEMPRE statico per:                         │   ║
-║  │   - DB in MOUNT (Data Guard standby)        │   ║
-║  │   - RMAN Duplicate (NOMOUNT)                │   ║
-║  │   - Startup dopo crash                      │   ║
-║  │                                             │   ║
-║  │ SEMPRE dinamico per:                        │   ║
-║  │   - Produzione normale (OPEN)               │   ║
-║  │   - Load balancing RAC                      │   ║
-║  │   - Failover automatico                     │   ║
-║  └─────────────────────────────────────────────┘   ║
-╚═══════════════════════════════════════════════════╝
++---------------------------------------------------+
+|           REGISTRAZIONE SERVIZI                    |
++---------------------------------------------------+
+|                                                    |
+|  STATICA (listener.ora)         DINAMICA (PMON)    |
+|  ---------------------         -----------------   |
+|  - Definita nel file            - Il processo PMON  |
+|    listener.ora                   si registra       |
+|  - Serve PRIMA che il            automaticamente    |
+|    DB sia aperto                - Funziona quando   |
+|  - Necessaria per RMAN            il DB è OPEN      |
+|    DUPLICATE (NOMOUNT)          - Aggiorna i servizi|
+|  - Necessaria per Data            ogni 60 sec       |
+|    Guard standby                - Preferita in prod |
+|                                                    |
+|  Quando usare quale:                               |
+|  +---------------------------------------------+   |
+|  | SEMPRE statico per:                         |   |
+|  |   - DB in MOUNT (Data Guard standby)        |   |
+|  |   - RMAN Duplicate (NOMOUNT)                |   |
+|  |   - Startup dopo crash                      |   |
+|  |                                             |   |
+|  | SEMPRE dinamico per:                        |   |
+|  |   - Produzione normale (OPEN)               |   |
+|  |   - Load balancing RAC                      |   |
+|  |   - Failover automatico                     |   |
+|  +---------------------------------------------+   |
++---------------------------------------------------+
 ```
 
 ---
@@ -191,45 +191,45 @@ ORCL_STBY =
 Un Service è un **nome logico** che raggruppa istanze del database per un certo scopo.
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║                    SERVIZI IN AZIONE                             ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Service: ORCL_OLTP                                              ║
-║  ├── Preferred: Nodo1, Nodo2                                     ║
-║  ├── Available: (nessuno)                                        ║
-║  ├── TAF Policy: BASIC (failover automatico)                     ║
-║  └── Scopo: Transazioni OLTP, bassa latenza                     ║
-║                                                                  ║
-║  Service: ORCL_REPORT                                            ║
-║  ├── Preferred: Nodo2                                            ║
-║  ├── Available: Nodo1 (se Nodo2 muore)                           ║
-║  ├── TAF Policy: NONE                                            ║
-║  └── Scopo: Report pesanti, solo su un nodo                     ║
-║                                                                  ║
-║  Service: ORCL_BATCH                                             ║
-║  ├── Preferred: Nodo1                                            ║
-║  ├── Available: Nodo2                                            ║
-║  ├── TAF Policy: NONE                                            ║
-║  └── Scopo: Job batch notturni                                   ║
-║                                                                  ║
-║  ┌──────────────────────────────────────────────────────────┐    ║
-║  │  VANTAGGIO DEI SERVIZI:                                  │    ║
-║  │  - Separazione workload (OLTP vs Report vs Batch)        │    ║
-║  │  - Failover automatico (se un nodo cade)                 │    ║
-║  │  - Monitoraggio per servizio (AWR, wait events)          │    ║
-║  │  - Load balancing intelligente                           │    ║
-║  │  - Gestione risorse (Resource Manager per service)       │    ║
-║  └──────────────────────────────────────────────────────────┘    ║
-╚══════════════════════════════════════════════════════════════════╝
++------------------------------------------------------------------+
+|                    SERVIZI IN AZIONE                             |
++------------------------------------------------------------------+
+|                                                                  |
+|  Service: ORCL_OLTP                                              |
+|  +-- Preferred: Nodo1, Nodo2                                     |
+|  +-- Available: (nessuno)                                        |
+|  +-- TAF Policy: BASIC (failover automatico)                     |
+|  +-- Scopo: Transazioni OLTP, bassa latenza                     |
+|                                                                  |
+|  Service: ORCL_REPORT                                            |
+|  +-- Preferred: Nodo2                                            |
+|  +-- Available: Nodo1 (se Nodo2 muore)                           |
+|  +-- TAF Policy: NONE                                            |
+|  +-- Scopo: Report pesanti, solo su un nodo                     |
+|                                                                  |
+|  Service: ORCL_BATCH                                             |
+|  +-- Preferred: Nodo1                                            |
+|  +-- Available: Nodo2                                            |
+|  +-- TAF Policy: NONE                                            |
+|  +-- Scopo: Job batch notturni                                   |
+|                                                                  |
+|  +----------------------------------------------------------+    |
+|  |  VANTAGGIO DEI SERVIZI:                                  |    |
+|  |  - Separazione workload (OLTP vs Report vs Batch)        |    |
+|  |  - Failover automatico (se un nodo cade)                 |    |
+|  |  - Monitoraggio per servizio (AWR, wait events)          |    |
+|  |  - Load balancing intelligente                           |    |
+|  |  - Gestione risorse (Resource Manager per service)       |    |
+|  +----------------------------------------------------------+    |
++------------------------------------------------------------------+
 ```
 
 ### 3.2 Creare e Gestire Servizi (Lab)
 
 ```bash
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # CREARE UN SERVIZIO RAC (come utente oracle)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # Servizio OLTP — su entrambi i nodi
 srvctl add service -db ORCL -service ORCL_OLTP \
@@ -251,9 +251,9 @@ srvctl add service -db ORCL -service ORCL_BATCH \
   -preferred ORCL1 \
   -available ORCL2
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # GESTIRE I SERVIZI
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # Avviare un servizio
 srvctl start service -db ORCL -service ORCL_OLTP
@@ -270,9 +270,9 @@ srvctl config service -db ORCL -service ORCL_OLTP
 # Rimuovere un servizio
 srvctl remove service -db ORCL -service ORCL_BATCH
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # VERIFICARE IN SQL*PLUS
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 ```
 
 ```sql
@@ -349,9 +349,9 @@ nslookup rac-scan
 ## 5. Gestione Listener (Comandi)
 
 ```bash
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # COMANDI lsnrctl (Listener Control)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # Stato del listener
 lsnrctl status
@@ -364,9 +364,9 @@ lsnrctl start
 lsnrctl stop
 lsnrctl reload    # rilegge listener.ora senza riavviare
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # COMANDI srvctl (per RAC — usa SEMPRE questi!)
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # Listener locale
 srvctl status listener
@@ -384,9 +384,9 @@ srvctl config scan_listener
 # Da SQL*Plus come SYS:
 ALTER SYSTEM REGISTER;
 
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 # TROUBLESHOOTING LISTENER
-# ═══════════════════════════════════════════════════════
+# -------------------------------------------------------
 
 # 1. TNS-12541: TNS:no listener
 #    → Controlla se il listener è attivo: lsnrctl status
@@ -416,10 +416,10 @@ SHOW PARAMETER remote_listener;
 ### 6.1 Sessioni RAC (Cross-Instance)
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- sessions_rac.sql — Sessioni su TUTTI i nodi RAC
 -- Fonte: oraclebase/dba/rac/sessions_rac.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 SET LINESIZE 500
 SET PAGESIZE 1000
 
@@ -449,10 +449,10 @@ ORDER BY s.username, s.osuser;
 ### 6.2 Lock RAC (Chi Blocca Chi?)
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- locked_objects_rac.sql — Lock su tutti i nodi
 -- Fonte: oraclebase/dba/rac/locked_objects_rac.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 SET LINESIZE 500
 
 COLUMN owner FORMAT A20
@@ -483,10 +483,10 @@ ORDER BY 1, 2, 3, 4;
 ### 6.3 Spazio Tablespace (con Barra Visuale!)
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- free_space.sql — Spazio utilizzato per datafile
 -- Fonte: oraclebase/dba/monitoring/free_space.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 SET PAGESIZE 100 LINESIZE 265
 COLUMN tablespace_name FORMAT A20
 COLUMN file_name FORMAT A50
@@ -511,10 +511,10 @@ ORDER BY df.tablespace_name, df.file_name;
 ### 6.4 Tuning Rapido (6 Hit Ratio con Raccomandazioni)
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- tuning.sql — Performance check istantaneo
 -- Fonte: oraclebase/dba/monitoring/tuning.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- Controlla automaticamente:
 -- ✓ Dictionary Cache Hit Ratio  (target: >90%)
 -- ✓ Library Cache Hit Ratio     (target: >99%)
@@ -530,10 +530,10 @@ ORDER BY df.tablespace_name, df.file_name;
 ### 6.5 Sessioni Attive
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- active_sessions.sql — Solo sessioni ATTIVE
 -- Fonte: oraclebase/dba/monitoring/active_sessions.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 SELECT NVL(s.username, '(oracle)') AS username,
        s.sid, s.serial#, p.spid,
        s.status, s.machine, s.program,
@@ -550,10 +550,10 @@ ORDER BY s.last_call_et DESC;
 ### 6.6 Info Database Completa
 
 ```sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 -- db_info.sql — Vista completa del database
 -- Fonte: oraclebase/dba/monitoring/db_info.sql
--- ═══════════════════════════════════════════════════════
+-- -------------------------------------------------------
 SELECT * FROM v$database;
 SELECT * FROM v$instance;
 SELECT * FROM v$version;

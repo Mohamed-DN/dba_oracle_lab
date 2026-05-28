@@ -18,21 +18,21 @@
 
 ```
   Senza DNS:                          Con DNS:
-  ══════════                          ═════════
+  ----------                          ---------
 
   Applicazione:                       Applicazione:
   "Connettimi a                       "Connettimi a
    192.168.56.105"                      rac-scan.localdomain"
-           │                                    │
-           ▼                                    ▼
-  ┌────────────────┐                  ┌────────────────┐
-  │  Connessione   │                  │  DNS Server    │
-  │  a UN solo IP  │                  │  Risponde con  │
-  │  (se cambia,   │                  │  3 IP in round │
-  │   tutto si     │                  │  robin:        │
-  │   rompe!)      │                  │  .105 .106 .107│
-  └────────────────┘                  └────────┬───────┘
-                                               │
+           |                                    |
+           v                                    v
+  +----------------+                  +----------------+
+  |  Connessione   |                  |  DNS Server    |
+  |  a UN solo IP  |                  |  Risponde con  |
+  |  (se cambia,   |                  |  3 IP in round |
+  |   tutto si     |                  |  robin:        |
+  |   rompe!)      |                  |  .105 .106 .107|
+  +----------------+                  +--------+-------+
+                                               |
                                       Load balanced!
                                       Se cambi un IP,
                                       aggiorni solo il DNS
@@ -49,7 +49,7 @@ Per **semplificare enormemente**, noi useremo **Dnsmasq**. Dnsmasq è un DNS leg
 
 ```
   Il trucco di Dnsmasq:
-  ═════════════════════
+  ---------------------
   1. Compiliamo /etc/hosts sul nodo 'dnsnode' con tutti gli IP (inclusi i 3 SCAN)
   2. Avviamo dnsmasq
   3. dnsmasq legge quel file e "serve" quelle traduzioni agli altri nodi (rac1, rac2)
@@ -86,37 +86,37 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
 ### Come Funzionano le Reti del RAC
 
 ```
-                     ┌───────────────────────────────────────────┐
-                     │        RETE PUBBLICA (enp0s8)             │
-                     │     192.168.56.0/24 (Host-Only)           │
-      Client App     │                                           │
-          │          │  ┌──────┐  ┌──────┐  ┌──────┐            │
-          ▼          │  │SCAN  │  │SCAN  │  │SCAN  │            │
-    ┌──────────┐     │  │ .105 │  │ .106 │  │ .107 │            │
-    │ SCAN     │◄────│──┤      │  │      │  │      │ DNS        │
-    │ Listener │     │  └──────┘  └──────┘  └──────┘ Round-Robin│
-    └────┬─────┘     │                                           │
-         │           │  ┌─────────────┐   ┌─────────────┐       │
-         ├──────────►│  │ rac1        │   │ rac2        │       │
-         │           │  │ IP: .101    │   │ IP: .102    │       │
-         │           │  │ VIP: .111   │   │ VIP: .112   │       │
-         │           │  │ (Se rac1    │   │ (Se rac2    │       │
-         │           │  │  muore, VIP │   │  muore, VIP │       │
-         │           │  │  migra su   │   │  migra su   │       │
-         │           │  │  rac2)      │   │  rac1)      │       │
-         │           │  └──────┬──────┘   └──────┬──────┘       │
-         │           └─────────┼──────────────────┼─────────────┘
-         │                     │                  │
-         │           ┌─────────┼──────────────────┼─────────────┐
-         │           │         │  RETE PRIVATA    │  (enp0s9)   │
-         │           │         │  192.168.1.0/24   │  Internal   │
-         │           │  ┌──────┴──────┐   ┌──────┴──────┐      │
-         │           │  │ rac1-priv   │   │ rac2-priv   │      │
-         │           │  │ 192.168.1.101  │◄═►│ 192.168.1.102  │      │
-         │           │  └─────────────┘   └─────────────┘      │
-         │           │         Cache Fusion (GCS/GES)           │
-         │           │    Blocchi dati trasferiti via RAM        │
-         │           └─────────────────────────────────────────┘
+                     +-------------------------------------------+
+                     |        RETE PUBBLICA (enp0s8)             |
+                     |     192.168.56.0/24 (Host-Only)           |
+      Client App     |                                           |
+          |          |  +------+  +------+  +------+            |
+          v          |  |SCAN  |  |SCAN  |  |SCAN  |            |
+    +----------+     |  | .105 |  | .106 |  | .107 |            |
+    | SCAN     |&amp;lt;----|--+      |  |      |  |      | DNS        |
+    | Listener |     |  +------+  +------+  +------+ Round-Robin|
+    +----+-----+     |                                           |
+         |           |  +-------------+   +-------------+       |
+         +----------&gt;|  | rac1        |   | rac2        |       |
+         |           |  | IP: .101    |   | IP: .102    |       |
+         |           |  | VIP: .111   |   | VIP: .112   |       |
+         |           |  | (Se rac1    |   | (Se rac2    |       |
+         |           |  |  muore, VIP |   |  muore, VIP |       |
+         |           |  |  migra su   |   |  migra su   |       |
+         |           |  |  rac2)      |   |  rac1)      |       |
+         |           |  +------+------+   +------+------+       |
+         |           +---------+------------------+-------------+
+         |                     |                  |
+         |           +---------+------------------+-------------+
+         |           |         |  RETE PRIVATA    |  (enp0s9)   |
+         |           |         |  192.168.1.0/24   |  Internal   |
+         |           |  +------+------+   +------+------+      |
+         |           |  | rac1-priv   |   | rac2-priv   |      |
+         |           |  | 192.168.1.101  |&amp;lt;-&gt;| 192.168.1.102  |      |
+         |           |  +-------------+   +-------------+      |
+         |           |         Cache Fusion (GCS/GES)           |
+         |           |    Blocchi dati trasferiti via RAM        |
+         |           +-----------------------------------------+
 ```
 
 > **VIP (Virtual IP)**: Quando un nodo crasha, il suo VIP "migra" sull'altro nodo in pochi secondi. I client connessi al VIP vengono re-indirizzati automaticamente senza cambiare configurazione.
@@ -470,33 +470,33 @@ Domanda fondamentale! La risposta ha **due parti**:
 Non esiste una risposta unica. La dimensione dipende dalla RAM totale della tua VM:
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║     GUIDA DI DIMENSIONAMENTO /tmp (tmpfs) PER ORACLE 19c       ║
-╠════════════════════╦════════════════════╦════════════════════════╣
-║ RAM della VM       ║ Dimensione /tmp    ║ Note                  ║
-╠════════════════════╬════════════════════╬════════════════════════╣
-║ 8 GB  (il nostro!) ║ size=4g            ║ OK per lab didattico  ║
-║ 16 GB              ║ size=6g            ║ Confortevole          ║
-║ 32 GB              ║ size=10g           ║ Enterprise standard   ║
-║ 64 GB+             ║ size=10g           ║ 10 GB bastano sempre  ║
-╚════════════════════╩════════════════════╩════════════════════════╝
++------------------------------------------------------------------+
+|     GUIDA DI DIMENSIONAMENTO /tmp (tmpfs) PER ORACLE 19c       |
++--------------------+--------------------+------------------------+
+| RAM della VM       | Dimensione /tmp    | Note                  |
++--------------------+--------------------+------------------------+
+| 8 GB  (il nostro!) | size=4g            | OK per lab didattico  |
+| 16 GB              | size=6g            | Confortevole          |
+| 32 GB              | size=10g           | Enterprise standard   |
+| 64 GB+             | size=10g           | 10 GB bastano sempre  |
++--------------------+--------------------+------------------------+
 ```
 
 Nel nostro caso con **8 GB di RAM totali**, la dobbiamo dividere tra diversi inquilini:
 
 ```
-╔══════════════════════════════════════════════════════════╗
-║              BUDGET RAM (8 GB totali)                    ║
-╠══════════════════════════════════════════════════════════╣
-║  Sistema Operativo Linux       ~1.0 GB (fisso)          ║
-║  Oracle SGA (memoria condivisa)~1.5 GB (per il DB)      ║
-║  Oracle PGA (memoria processi) ~0.5 GB (per il DB)      ║
-║  Grid Infrastructure (ASM/CRS) ~0.5 GB                  ║
-║  ─────────────────────────────────────────────────       ║
-║  /tmp (tmpfs) — TETTO MASSIMO   4.0 GB ← il nostro!    ║
-║  ─────────────────────────────────────────────────       ║
-║  Margine di sicurezza          ~0.5 GB                  ║
-╚══════════════════════════════════════════════════════════╝
++----------------------------------------------------------+
+|              BUDGET RAM (8 GB totali)                    |
++----------------------------------------------------------+
+|  Sistema Operativo Linux       ~1.0 GB (fisso)          |
+|  Oracle SGA (memoria condivisa)~1.5 GB (per il DB)      |
+|  Oracle PGA (memoria processi) ~0.5 GB (per il DB)      |
+|  Grid Infrastructure (ASM/CRS) ~0.5 GB                  |
+|  -------------------------------------------------       |
+|  /tmp (tmpfs) — TETTO MASSIMO   4.0 GB ← il nostro!    |
+|  -------------------------------------------------       |
+|  Margine di sicurezza          ~0.5 GB                  |
++----------------------------------------------------------+
 ```
 
 Ecco perché scegliamo **4 GB**: supera di 4 volte il minimo Oracle (1 GB), è vicino alla best practice (5 GB), e non toglie troppa RAM al DB. Nella pratica, `/tmp` non arriverà mai a usare tutti e 4 i GB (l'installer Oracle ne usa al massimo 1-2 GB di picco), ma il tetto ci protegge da sorprese.
