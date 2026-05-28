@@ -21,21 +21,21 @@
 ### 1.2 Strutture di Memoria
 
 ```
-┌─────────────── ISTANZA ORACLE ───────────────┐
-│                                               │
-│  ┌──── SGA (System Global Area) ────┐        │
-│  │ Shared Pool (SQL cache, dict.)   │        │
-│  │ Database Buffer Cache            │        │
-│  │ Redo Log Buffer                  │        │
-│  │ Large Pool (RMAN, shared server) │        │
-│  │ Java Pool                        │        │
-│  │ Streams Pool                     │        │
-│  └──────────────────────────────────┘        │
-│                                               │
-│  ┌──── PGA (per ogni sessione) ─────┐        │
-│  │ Sort Area, Hash Area, Session    │        │
-│  └──────────────────────────────────┘        │
-└───────────────────────────────────────────────┘
++--------------- ISTANZA ORACLE ---------------+
+|                                               |
+|  +---- SGA (System Global Area) ----+        |
+|  | Shared Pool (SQL cache, dict.)   |        |
+|  | Database Buffer Cache            |        |
+|  | Redo Log Buffer                  |        |
+|  | Large Pool (RMAN, shared server) |        |
+|  | Java Pool                        |        |
+|  | Streams Pool                     |        |
+|  +----------------------------------+        |
+|                                               |
+|  +---- PGA (per ogni sessione) -----+        |
+|  | Sort Area, Hash Area, Session    |        |
+|  +----------------------------------+        |
++-----------------------------------------------+
 ```
 
 **Comandi chiave**:
@@ -65,11 +65,11 @@ SELECT * FROM v$pgastat;
 
 ```
 LOGICHE                          FISICHE
-────────                         ────────
-Tablespace ──────────────────── Datafile(s)
-  └── Segment                    Control File(s)
-       └── Extent                Redo Log File(s)
-            └── Data Block       Archive Log File(s)
+--------                         --------
+Tablespace -------------------- Datafile(s)
+  +-- Segment                    Control File(s)
+       +-- Extent                Redo Log File(s)
+            +-- Data Block       Archive Log File(s)
                                  Parameter File (spfile)
                                  Password File
 ```
@@ -137,10 +137,10 @@ SHUTDOWN ABORT;        -- Crash! (richiede recovery al restart)
 ```bash
 # Struttura ADR
 $ORACLE_BASE/diag/rdbms/<db_name>/<instance_name>/
-├── alert/     # Alert log in XML
-├── trace/     # Trace files
-├── incident/  # Incidenti (crash, ORA-600)
-└── cdump/     # Core dumps
++-- alert/     # Alert log in XML
++-- trace/     # Trace files
++-- incident/  # Incidenti (crash, ORA-600)
++-- cdump/     # Core dumps
 
 # Usa ADRCI per navigare
 adrci

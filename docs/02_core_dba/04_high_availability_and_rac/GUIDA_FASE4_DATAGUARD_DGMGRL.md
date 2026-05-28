@@ -22,24 +22,24 @@
 
 ```
   SWITCHOVER (Pianificato, 0 data loss)         FAILOVER (Emergenza!)
-  ══════════════════════════════════════         ═══════════════════════
+  --------------------------------------         -----------------------
 
   PRIMA:                                        PRIMA:
-  ┌────────┐    redo    ┌────────┐              ┌────────┐    redo    ┌────────┐
-  │PRIMARY │───────────►│STANDBY │              │PRIMARY │───────────►│STANDBY │
-  │ RACDB  │            │RACDB_  │              │ RACDB  │     ✕      │RACDB_  │
-  │  OPEN  │            │  STBY  │              │  💀    │   MORTO!   │  STBY  │
-  │        │            │ MOUNT  │              │  DOWN  │            │ MOUNT  │
-  └────────┘            └────────┘              └────────┘            └────────┘
+  +--------+    redo    +--------+              +--------+    redo    +--------+
+  |PRIMARY |-----------&gt;|STANDBY |              |PRIMARY |-----------&gt;|STANDBY |
+  | RACDB  |            |RACDB_  |              | RACDB  |     ✕      |RACDB_  |
+  |  OPEN  |            |  STBY  |              |  💀    |   MORTO!   |  STBY  |
+  |        |            | MOUNT  |              |  DOWN  |            | MOUNT  |
+  +--------+            +--------+              +--------+            +--------+
 
   DOPO:                                         DOPO:
-  ┌────────┐    redo    ┌────────┐              ┌────────┐             ┌────────┐
-  │STANDBY │◄───────────│PRIMARY │              │  ???   │             │PRIMARY │
-  │ RACDB  │            │RACDB_  │              │Richiede│             │RACDB_  │
-  │ MOUNT  │            │  STBY  │              │REINSTATE             │  STBY  │
-  │(ex-pri)│            │  OPEN  │              │o rifare│             │  OPEN  │
-  └────────┘            └────────┘              │Fase 3  │             └────────┘
-                                                └────────┘
+  +--------+    redo    +--------+              +--------+             +--------+
+  |STANDBY |&amp;lt;-----------|PRIMARY |              |  ???   |             |PRIMARY |
+  | RACDB  |            |RACDB_  |              |Richiede|             |RACDB_  |
+  | MOUNT  |            |  STBY  |              |REINSTATE             |  STBY  |
+  |(ex-pri)|            |  OPEN  |              |o rifare|             |  OPEN  |
+  +--------+            +--------+              |Fase 3  |             +--------+
+                                                +--------+
   ✅ Ruoli invertiti      ✅ Zero data loss      ⚠️ Possibile data loss
   ✅ Reversibile           ✅ ~30 secondi         ⚠️ Vecchio primary da
                                                     ricostruire
@@ -321,18 +321,18 @@ Questa sezione ti dice:
 ### 4.4.1 Capire le 3 modalita (in pratica)
 
 ```
-╔═══════════════════╦═══════════════════════════════════════════════════════════╦══════════════╗
-║ Mode              ║ RPO / comportamento commit                               ║ Impatto       ║
-╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
-║ MaxPerformance    ║ Commit locale immediato, redo spedito ASYNC             ║ Minimo        ║
-║ (default)         ║ (possibile perdita secondi in disastro)                 ║              ║
-╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
-║ MaxAvailability   ║ Obiettivo zero data loss quando standby sincronizzato;   ║ Medio         ║
-║                   ║ se standby non risponde, primario resta disponibile      ║              ║
-╠═══════════════════╬═══════════════════════════════════════════════════════════╬══════════════╣
-║ MaxProtection     ║ Zero data loss prioritario assoluto; se non puo          ║ Alto          ║
-║                   ║ proteggere i commit, il primario si ferma                ║              ║
-╚═══════════════════╩═══════════════════════════════════════════════════════════╩══════════════╝
++-------------------+-----------------------------------------------------------+--------------+
+| Mode              | RPO / comportamento commit                               | Impatto       |
++-------------------+-----------------------------------------------------------+--------------+
+| MaxPerformance    | Commit locale immediato, redo spedito ASYNC             | Minimo        |
+| (default)         | (possibile perdita secondi in disastro)                 |              |
++-------------------+-----------------------------------------------------------+--------------+
+| MaxAvailability   | Obiettivo zero data loss quando standby sincronizzato;   | Medio         |
+|                   | se standby non risponde, primario resta disponibile      |              |
++-------------------+-----------------------------------------------------------+--------------+
+| MaxProtection     | Zero data loss prioritario assoluto; se non puo          | Alto          |
+|                   | proteggere i commit, il primario si ferma                |              |
++-------------------+-----------------------------------------------------------+--------------+
 ```
 
 Regola veloce:

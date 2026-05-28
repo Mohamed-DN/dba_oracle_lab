@@ -93,33 +93,33 @@ L'**ITL** è una struttura dati nell'**header di ogni blocco Oracle** (8KB). È 
 ### Come Funziona
 
 ```
-┌─────────────────────────────────────────┐
-│         BLOCCO ORACLE (8KB)              │
-│                                          │
-│  ┌───────────────────────────────────┐  │
-│  │       BLOCK HEADER                │  │
-│  │                                    │  │
-│  │  ITL Slot 1: TxID=10.5.312        │  │
-│  │              Undo Block=file#3     │  │
-│  │              Lock Count=5          │  │
-│  │              Flag=C--- (Committed) │  │
-│  │                                    │  │
-│  │  ITL Slot 2: TxID=10.12.890       │  │
-│  │              Undo Block=file#7     │  │
-│  │              Lock Count=2          │  │
-│  │              Flag=---- (Active)    │  │
-│  │                                    │  │
-│  │  ITL Slot 3: [VUOTO]              │  │
-│  └───────────────────────────────────┘  │
-│                                          │
-│  ┌───────────────────────────────────┐  │
-│  │       ROW DATA                     │  │
-│  │  Row 1: (locked by ITL slot 2)     │  │
-│  │  Row 2: (locked by ITL slot 2)     │  │
-│  │  Row 3: (free)                     │  │
-│  │  Row 4: (free)                     │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
++-----------------------------------------+
+|         BLOCCO ORACLE (8KB)              |
+|                                          |
+|  +-----------------------------------+  |
+|  |       BLOCK HEADER                |  |
+|  |                                    |  |
+|  |  ITL Slot 1: TxID=10.5.312        |  |
+|  |              Undo Block=file#3     |  |
+|  |              Lock Count=5          |  |
+|  |              Flag=C--- (Committed) |  |
+|  |                                    |  |
+|  |  ITL Slot 2: TxID=10.12.890       |  |
+|  |              Undo Block=file#7     |  |
+|  |              Lock Count=2          |  |
+|  |              Flag=---- (Active)    |  |
+|  |                                    |  |
+|  |  ITL Slot 3: [VUOTO]              |  |
+|  +-----------------------------------+  |
+|                                          |
+|  +-----------------------------------+  |
+|  |       ROW DATA                     |  |
+|  |  Row 1: (locked by ITL slot 2)     |  |
+|  |  Row 2: (locked by ITL slot 2)     |  |
+|  |  Row 3: (free)                     |  |
+|  |  Row 4: (free)                     |  |
+|  +-----------------------------------+  |
++-----------------------------------------+
 ```
 
 - **INITRANS**: Numero iniziale di slot ITL preconfigurati nel blocco. Default: 1 per le tabelle, 2 per gli indici.

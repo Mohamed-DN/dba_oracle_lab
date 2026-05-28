@@ -270,20 +270,20 @@ sudo smartctl -a /dev/sda
 ### Architettura
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
-│ Oracle DB Server │     │ Prometheus Server │     │   Grafana    │
-│                  │     │                  │     │              │
-│ ┌──────────────┐ │     │ Scrape ogni 30s  │     │ Dashboard    │
-│ │ oracledb     │─┼────►│ Salva metriche   │────►│ interattive  │
-│ │ _exporter    │ │     │ Alert rules      │     │ + alert      │
-│ │ :9161        │ │     │ :9090            │     │ :3000        │
-│ └──────────────┘ │     └──────────────────┘     └──────────────┘
-│ ┌──────────────┐ │
-│ │ node         │─┼────► (metriche OS: CPU, RAM, disco, rete)
-│ │ _exporter    │ │
-│ │ :9100        │ │
-│ └──────────────┘ │
-└─────────────────┘
++-----------------+     +------------------+     +--------------+
+| Oracle DB Server |     | Prometheus Server |     |   Grafana    |
+|                  |     |                  |     |              |
+| +--------------+ |     | Scrape ogni 30s  |     | Dashboard    |
+| | oracledb     |-+----&gt;| Salva metriche   |----&gt;| interattive  |
+| | _exporter    | |     | Alert rules      |     | + alert      |
+| | :9161        | |     | :9090            |     | :3000        |
+| +--------------+ |     +------------------+     +--------------+
+| +--------------+ |
+| | node         |-+----&gt; (metriche OS: CPU, RAM, disco, rete)
+| | _exporter    | |
+| | :9100        | |
+| +--------------+ |
++-----------------+
 ```
 
 ### Installazione Prometheus + Grafana

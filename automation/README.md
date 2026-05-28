@@ -27,40 +27,40 @@
 
 ```
 automation/
-├── README.md                              ← Questo file
-├── ansible.cfg                            ← Configurazione Ansible
-├── inventory/
-│   ├── production.ini                     ← Server di produzione
-│   └── lab.ini                            ← Server del lab
-├── group_vars/
-│   └── all.yml                            ← Variabili globali (lab + produzione)
-├── collections_requirements.yml           ← Collections consigliate (oravirt/community)
-├── playbooks/
-│   ├── oracle_install.yml              ← Installazione 19c Software-Only
-│   ├── oracle_patching.yml             ← Patching RU (rolling RAC)
-│   ├── oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
-│   ├── daily_health_check.yml          ← Health Check giornaliero
-│   ├── rman_backup.yml                 ← Backup RMAN con validazione
-│   ├── dataguard_switchover.yml        ← Switchover DG automatizzato
-│   ├── create_users_tablespaces.yml    ← Automazione User/Tablespace
-│   ├── gather_stats.yml                ← Raccolta statistiche schema
-│   ├── datapump_export.yml             ← Logical backup con expdp
-│   ├── manage_services.yml             ← Gestione RAC services
-│   ├── create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
-│   ├── dba_maintenance.yml             ← Maintenance DBA periodica
-│   ├── maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
-│   └── checkmk_oracle_checks_setup.yml ← Bootstrap automatico Checkmk + check Oracle/SMART
-├── roles/
-│   ├── maa_guardrails/                    ← Ruolo MAA baseline enterprise
-│   ├── oracle_daily_health/               ← Ruolo riusabile health-check
-│   ├── oracle_rman_backup/                ← Ruolo riusabile RMAN backup
-│   └── oracle_dataguard_switchover/       ← Ruolo riusabile switchover DG
-├── templates/
-│   ├── grid_install.rsp.j2                ← Template Silent Install Grid (19c)
-│   ├── db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
-│   ├── dbca_rac.rsp.j2                    ← Template Creazione RAC DB
-│   └── netca_rac.rsp.j2                   ← Template Configurazione Reti
-└── Struttura in transizione playbook-centric → role-centric.
++-- README.md                              ← Questo file
++-- ansible.cfg                            ← Configurazione Ansible
++-- inventory/
+|   +-- production.ini                     ← Server di produzione
+|   +-- lab.ini                            ← Server del lab
++-- group_vars/
+|   +-- all.yml                            ← Variabili globali (lab + produzione)
++-- collections_requirements.yml           ← Collections consigliate (oravirt/community)
++-- playbooks/
+|   +-- oracle_install.yml              ← Installazione 19c Software-Only
+|   +-- oracle_patching.yml             ← Patching RU (rolling RAC)
+|   +-- oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
+|   +-- daily_health_check.yml          ← Health Check giornaliero
+|   +-- rman_backup.yml                 ← Backup RMAN con validazione
+|   +-- dataguard_switchover.yml        ← Switchover DG automatizzato
+|   +-- create_users_tablespaces.yml    ← Automazione User/Tablespace
+|   +-- gather_stats.yml                ← Raccolta statistiche schema
+|   +-- datapump_export.yml             ← Logical backup con expdp
+|   +-- manage_services.yml             ← Gestione RAC services
+|   +-- create_cdb_pdb.yml              ← Creazione CDB/PDB idempotente (safe gate)
+|   +-- dba_maintenance.yml             ← Maintenance DBA periodica
+|   +-- maa_guardrails.yml              ← Guardrail MAA (DG validate + parametri)
+|   +-- checkmk_oracle_checks_setup.yml ← Bootstrap automatico Checkmk + check Oracle/SMART
++-- roles/
+|   +-- maa_guardrails/                    ← Ruolo MAA baseline enterprise
+|   +-- oracle_daily_health/               ← Ruolo riusabile health-check
+|   +-- oracle_rman_backup/                ← Ruolo riusabile RMAN backup
+|   +-- oracle_dataguard_switchover/       ← Ruolo riusabile switchover DG
++-- templates/
+|   +-- grid_install.rsp.j2                ← Template Silent Install Grid (19c)
+|   +-- db_install.rsp.j2                  ← Template Silent Install RDBMS (19c)
+|   +-- dbca_rac.rsp.j2                    ← Template Creazione RAC DB
+|   +-- netca_rac.rsp.j2                   ← Template Configurazione Reti
++-- Struttura in transizione playbook-centric → role-centric.
 ```
 
 ---

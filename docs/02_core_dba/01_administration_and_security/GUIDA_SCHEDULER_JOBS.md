@@ -7,31 +7,31 @@
 ## 1. Concetti Fondamentali
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║                  ARCHITETTURA SCHEDULER                           ║
-╠═══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
-║   JOB = Cosa fare + Quando farlo + Con quale identità             ║
-║   ┌──────────────────────────────────────────────────────┐       ║
-║   │  PROGRAM      = "cosa fare" (PL/SQL, script, exec)  │       ║
-║   │  SCHEDULE     = "quando farlo" (cron-like, event)    │       ║
-║   │  CREDENTIAL   = "con quale utente OS" (per external) │       ║
-║   │  JOB CLASS    = "con quale priorità/resource group"  │       ║
-║   └──────────────────────────────────────────────────────┘       ║
-║                                                                   ║
-║   WINDOW = Finestra temporale con Resource Plan associato         ║
-║   ┌──────────────────────────────────────────────────────┐       ║
-║   │  MAINTENANCE_WINDOW_GROUP: lunedì-venerdì 22:00-02:00│       ║
-║   │  WEEKEND_WINDOW: sabato-domenica 00:00-24:00         │       ║
-║   │  → Oracle auto-tasks girano SOLO nelle finestre      │       ║
-║   └──────────────────────────────────────────────────────┘       ║
-║                                                                   ║
-║   CHAIN = Sequenza condizionale di step (workflow)                ║
-║   ┌──────────────────────────────────────────────────────┐       ║
-║   │  Step 1 (export) → Step 2 (compress) → Step 3 (scp) │       ║
-║   │  Se Step 1 fallisce → Step 4 (notify)                │       ║
-║   └──────────────────────────────────────────────────────┘       ║
-╚═══════════════════════════════════════════════════════════════════╝
++-------------------------------------------------------------------+
+|                  ARCHITETTURA SCHEDULER                           |
++-------------------------------------------------------------------+
+|                                                                   |
+|   JOB = Cosa fare + Quando farlo + Con quale identità             |
+|   +------------------------------------------------------+       |
+|   |  PROGRAM      = "cosa fare" (PL/SQL, script, exec)  |       |
+|   |  SCHEDULE     = "quando farlo" (cron-like, event)    |       |
+|   |  CREDENTIAL   = "con quale utente OS" (per external) |       |
+|   |  JOB CLASS    = "con quale priorità/resource group"  |       |
+|   +------------------------------------------------------+       |
+|                                                                   |
+|   WINDOW = Finestra temporale con Resource Plan associato         |
+|   +------------------------------------------------------+       |
+|   |  MAINTENANCE_WINDOW_GROUP: lunedì-venerdì 22:00-02:00|       |
+|   |  WEEKEND_WINDOW: sabato-domenica 00:00-24:00         |       |
+|   |  → Oracle auto-tasks girano SOLO nelle finestre      |       |
+|   +------------------------------------------------------+       |
+|                                                                   |
+|   CHAIN = Sequenza condizionale di step (workflow)                |
+|   +------------------------------------------------------+       |
+|   |  Step 1 (export) → Step 2 (compress) → Step 3 (scp) |       |
+|   |  Se Step 1 fallisce → Step 4 (notify)                |       |
+|   +------------------------------------------------------+       |
++-------------------------------------------------------------------+
 ```
 
 ### Differenza: DBMS_JOB vs DBMS_SCHEDULER

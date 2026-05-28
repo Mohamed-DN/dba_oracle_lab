@@ -1,6 +1,6 @@
 # Guida AWR, ASH, ADDM ÔÇö Comandi Avanzati e Automazione
 
-> Questa guida ├¿ il **compagno pratico** della [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md). Quella insegna il METODO e la teoria. Questa contiene tutti i COMANDI avanzati, gli script automatizzati, e le tecniche di tuning SQL.
+> Questa guida +¿ il **compagno pratico** della [GUIDA_TROUBLESHOOTING_COMPLETO.md](./GUIDA_TROUBLESHOOTING_COMPLETO.md). Quella insegna il METODO e la teoria. Questa contiene tutti i COMANDI avanzati, gli script automatizzati, e le tecniche di tuning SQL.
 
 ---
 
@@ -217,7 +217,7 @@ FETCH FIRST 20 ROWS ONLY;
 
 ```sql
 -- SQL Monitor cattura automaticamente le query che:
--- - Durano pi├╣ di 5 secondi
+-- - Durano pi++ di 5 secondi
 -- - Usano parallelismo
 -- - Sono monitorate manualmente con MONITOR hint
 
@@ -289,7 +289,7 @@ BEGIN
     DBMS_SQLQ.CREATE_QUARANTINE_BY_SQL_ID(
         sql_id         => '&sql_id',
         plan_hash_value => &bad_plan_hash,
-        elapsed_time   => 300    -- blocca se dura pi├╣ di 300 secondi
+        elapsed_time   => 300    -- blocca se dura pi++ di 300 secondi
     );
 END;
 /

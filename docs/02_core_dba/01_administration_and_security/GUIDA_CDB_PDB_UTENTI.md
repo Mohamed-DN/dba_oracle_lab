@@ -9,10 +9,10 @@
 ## Percorso di Lettura
 
 ```
-╔══════════════════════════════════════════════════════════════════════════╗
-║  PRIMA di questa guida leggi: GUIDA_ARCHITETTURA_ORACLE.md              ║
-║  DOPO questa guida leggi:     GUIDA_ATTIVITA_DBA.md                     ║
-╚══════════════════════════════════════════════════════════════════════════╝
++--------------------------------------------------------------------------+
+|  PRIMA di questa guida leggi: GUIDA_ARCHITETTURA_ORACLE.md              |
+|  DOPO questa guida leggi:     GUIDA_ATTIVITA_DBA.md                     |
++--------------------------------------------------------------------------+
 ```
 
 ---
@@ -55,41 +55,41 @@ Prima di Oracle 12c, ogni database era indipendente: un'istanza, un database, un
 **Oracle 12c+ ha introdotto il Multitenant:**
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║                ARCHITETTURA NON-CDB (prima di 12c)                ║
-║                                                                    ║
-║   Istanza A     Istanza B     Istanza C     Istanza D              ║
-║   ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐             ║
-║   │SGA    │     │SGA    │     │SGA    │     │SGA    │             ║
-║   │1 GB   │     │1 GB   │     │1 GB   │     │1 GB   │   = 4 GB   ║
-║   └───┬───┘     └───┬───┘     └───┬───┘     └───┬───┘   di RAM   ║
-║       │             │             │             │                   ║
-║   ┌───┴───┐     ┌───┴───┐     ┌───┴───┐     ┌───┴───┐             ║
-║   │ DB_A  │     │ DB_B  │     │ DB_C  │     │ DB_D  │             ║
-║   │Dict! │     │ Dict! │     │ Dict! │     │ Dict! │   4 copie   ║
-║   └───────┘     └───────┘     └───────┘     └───────┘   del dict  ║
-╚═══════════════════════════════════════════════════════════════════╝
++-------------------------------------------------------------------+
+|                ARCHITETTURA NON-CDB (prima di 12c)                |
+|                                                                    |
+|   Istanza A     Istanza B     Istanza C     Istanza D              |
+|   +-------+     +-------+     +-------+     +-------+             |
+|   |SGA    |     |SGA    |     |SGA    |     |SGA    |             |
+|   |1 GB   |     |1 GB   |     |1 GB   |     |1 GB   |   = 4 GB   |
+|   +---+---+     +---+---+     +---+---+     +---+---+   di RAM   |
+|       |             |             |             |                   |
+|   +---+---+     +---+---+     +---+---+     +---+---+             |
+|   | DB_A  |     | DB_B  |     | DB_C  |     | DB_D  |             |
+|   |Dict! |     | Dict! |     | Dict! |     | Dict! |   4 copie   |
+|   +-------+     +-------+     +-------+     +-------+   del dict  |
++-------------------------------------------------------------------+
 
-╔═══════════════════════════════════════════════════════════════════╗
-║                ARCHITETTURA CDB/PDB (12c e oltre)                 ║
-║                                                                    ║
-║               UNA SOLA Istanza (CDB)                               ║
-║               ┌──────────────────────────────────┐                 ║
-║               │  SGA (2 GB = tutto condiviso!)    │                 ║
-║               └──────────────┬───────────────────┘                 ║
-║                              │                                     ║
-║   ┌──────────────────────────┴───────────────────────────┐         ║
-║   │                          CDB$ROOT                     │         ║
-║   │                    (Dizionario Master)                 │         ║
-║   │  SYSTEM, SYSAUX, UNDO, TEMP ← Condivisi             │         ║
-║   └──────┬──────────┬──────────┬─────────────────────────┘         ║
-║          │          │          │                                    ║
-║   ┌──────┴──┐ ┌─────┴───┐ ┌───┴─────┐                             ║
-║   │PDB$SEED │ │  PDB_A  │ │  PDB_B  │     ← Ogni PDB ha i suoi   ║
-║   │(template│ │  App A  │ │  App B  │        datafile, ma il dict ║
-║   │ vuoto)  │ │  dati   │ │  dati   │        è un "link" al ROOT  ║
-║   └─────────┘ └─────────┘ └─────────┘                             ║
-╚═══════════════════════════════════════════════════════════════════╝
++-------------------------------------------------------------------+
+|                ARCHITETTURA CDB/PDB (12c e oltre)                 |
+|                                                                    |
+|               UNA SOLA Istanza (CDB)                               |
+|               +----------------------------------+                 |
+|               |  SGA (2 GB = tutto condiviso!)    |                 |
+|               +--------------+-------------------+                 |
+|                              |                                     |
+|   +--------------------------+---------------------------+         |
+|   |                          CDB$ROOT                     |         |
+|   |                    (Dizionario Master)                 |         |
+|   |  SYSTEM, SYSAUX, UNDO, TEMP ← Condivisi             |         |
+|   +------+----------+----------+-------------------------+         |
+|          |          |          |                                    |
+|   +------+--+ +-----+---+ +---+-----+                             |
+|   |PDB$SEED | |  PDB_A  | |  PDB_B  |     ← Ogni PDB ha i suoi   |
+|   |(template| |  App A  | |  App B  |        datafile, ma il dict |
+|   | vuoto)  | |  dati   | |  dati   |        è un "link" al ROOT  |
+|   +---------+ +---------+ +---------+                             |
++-------------------------------------------------------------------+
 ```
 
 ### I Componenti del CDB
@@ -291,30 +291,30 @@ ORDER  BY tablespace_name;
 ### Tipi di Utenti Oracle
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║                    GERARCHIA UTENTI ORACLE                        ║
-╠═══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
-║  ┌─────────────────────────────────────────────────────────────┐  ║
-║  │ SYS (SYSDBA)                                                │  ║
-║  │ • Proprietario del DD (data dictionary)                     │  ║
-║  │ • Può fare TUTTO (startup, shutdown, recover)               │  ║
-║  │ • Mai usare direttamente per operazioni normali!            │  ║
-║  └───────────────────────────┬─────────────────────────────────┘  ║
-║                              │                                    ║
-║  ┌───────────────────────────┴─────────────────────────────────┐  ║
-║  │ SYSTEM                                                       │  ║
-║  │ • DBA amministrativo (non proprietario del DD)              │  ║
-║  │ • Per operazioni giornaliere                                │  ║
-║  └───────────────────────────┬─────────────────────────────────┘  ║
-║                              │                                    ║
-║  ┌───────────────────────────┴────────────┐  ┌────────────────┐  ║
-║  │ Utenti DBA personalizzati              │  │ Utenti App     │  ║
-║  │ • dba_admin, backup_admin              │  │ • app_user     │  ║
-║  │ • Ruoli: DBA, SYSDBA (se servono)      │  │ • app_readonly │  ║
-║  │ • Usa QUESTI per il lavoro quotidiano  │  │ • Ruoli custom │  ║
-║  └────────────────────────────────────────┘  └────────────────┘  ║
-╚═══════════════════════════════════════════════════════════════════╝
++-------------------------------------------------------------------+
+|                    GERARCHIA UTENTI ORACLE                        |
++-------------------------------------------------------------------+
+|                                                                   |
+|  +-------------------------------------------------------------+  |
+|  | SYS (SYSDBA)                                                |  |
+|  | • Proprietario del DD (data dictionary)                     |  |
+|  | • Può fare TUTTO (startup, shutdown, recover)               |  |
+|  | • Mai usare direttamente per operazioni normali!            |  |
+|  +---------------------------+---------------------------------+  |
+|                              |                                    |
+|  +---------------------------+---------------------------------+  |
+|  | SYSTEM                                                       |  |
+|  | • DBA amministrativo (non proprietario del DD)              |  |
+|  | • Per operazioni giornaliere                                |  |
+|  +---------------------------+---------------------------------+  |
+|                              |                                    |
+|  +---------------------------+------------+  +----------------+  |
+|  | Utenti DBA personalizzati              |  | Utenti App     |  |
+|  | • dba_admin, backup_admin              |  | • app_user     |  |
+|  | • Ruoli: DBA, SYSDBA (se servono)      |  | • app_readonly |  |
+|  | • Usa QUESTI per il lavoro quotidiano  |  | • Ruoli custom |  |
+|  +----------------------------------------+  +----------------+  |
++-------------------------------------------------------------------+
 ```
 
 ### Creare un Utente DBA Personalizzato (Best Practice!)
@@ -469,18 +469,18 @@ WHERE grantee = 'APP_USER';
 **EM Express** è l'interfaccia web integrata in Oracle 19c che NON richiede installazioni aggiuntive. È un servlet dentro Oracle XML DB che gira sulla porta HTTPS 5500.
 
 ```
-╔═══════════════════════════════════════════════════════════════════╗
-║                    EM EXPRESS vs EM Cloud Control                  ║
-╠══════════════════════════════╦════════════════════════════════════╣
-║       EM Express             ║     EM Cloud Control (OMS)        ║
-╠══════════════════════════════╬════════════════════════════════════╣
-║ ✅ Integrato nel DB          ║ ❌ Installazione separata        ║
-║ ✅ Zero overhead             ║ ⚠️ Server dedicato (WebLogic)    ║
-║ ✅ Gestisce 1 DB             ║ ✅ Gestisce 100+ DB             ║
-║ ✅ Perfetto per il lab       ║ ✅ Perfetto per produzione       ║
-║ ❌ No startup/shutdown       ║ ✅ Operazioni complete           ║
-║ ❌ No job scheduling         ║ ✅ Job, patching, compliance     ║
-╚══════════════════════════════╩════════════════════════════════════╝
++-------------------------------------------------------------------+
+|                    EM EXPRESS vs EM Cloud Control                  |
++------------------------------+------------------------------------+
+|       EM Express             |     EM Cloud Control (OMS)        |
++------------------------------+------------------------------------+
+| ✅ Integrato nel DB          | ❌ Installazione separata        |
+| ✅ Zero overhead             | ⚠️ Server dedicato (WebLogic)    |
+| ✅ Gestisce 1 DB             | ✅ Gestisce 100+ DB             |
+| ✅ Perfetto per il lab       | ✅ Perfetto per produzione       |
+| ❌ No startup/shutdown       | ✅ Operazioni complete           |
+| ❌ No job scheduling         | ✅ Job, patching, compliance     |
++------------------------------+------------------------------------+
 ```
 
 ### Configurare EM Express nel Lab

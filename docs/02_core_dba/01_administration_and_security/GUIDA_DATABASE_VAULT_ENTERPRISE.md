@@ -1,46 +1,46 @@
 # GUIDA COMPLETA: Oracle Database Vault ÔÇö Separation of Duties & Protezione Multitenant
 
 > [!NOTE]
-> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI├Ö ADATTO):**
+> **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PI+Ö ADATTO):**
 > - **Setup Database Vault (questa guida)**: [GUIDA_DATABASE_VAULT_ENTERPRISE.md](./GUIDA_DATABASE_VAULT_ENTERPRISE.md) (Separation of duties, Realms CDB/PDB, protezione SYSDBA).
 > - **Unified Auditing & Compliance**: [GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md](./GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md) (attivazione policy di audit, storage e purge automatico).
 > - **Data Masking & Redaction**: [GUIDA_DATA_MASKING_REDACTION.md](./GUIDA_DATA_MASKING_REDACTION.md) (mascheramento dinamico con DBMS_REDACT e statico con Data Pump).
 > - **Security Hardening Generale**: [GUIDA_SECURITY_HARDENING.md](./GUIDA_SECURITY_HARDENING.md) (TDE, Auditing base, Password Profiles).
-> - **TDE in Profondit├á**: [GUIDA_TDE_IN_PROFONDITA.md](./GUIDA_TDE_IN_PROFONDITA.md) (Keystore, Master Key, colonna/tablespace encryption).
+> - **TDE in Profondit+á**: [GUIDA_TDE_IN_PROFONDITA.md](./GUIDA_TDE_IN_PROFONDITA.md) (Keystore, Master Key, colonna/tablespace encryption).
 
 ---
 
 ## 1. Architettura & Separation of Duties (SoD)
 
-Nelle architetture tradizionali di database, l'utente con privilegio `SYSDBA` (es. `SYS`) possiede poteri illimitati: pu├▓ leggere qualsiasi dato applicativo di business, creare e alterare account, disabilitare gli audit log ed estrarre record sensibili (es. carte di credito, dati sanitari, conti correnti). Questo scenario viola i principali standard internazionali di compliance (**PCI-DSS**, **GDPR**, **SOX**), che richiedono esplicitamente la **Separazione dei Doveri (Separation of Duties - SoD)**.
+Nelle architetture tradizionali di database, l'utente con privilegio `SYSDBA` (es. `SYS`) possiede poteri illimitati: pu+▓ leggere qualsiasi dato applicativo di business, creare e alterare account, disabilitare gli audit log ed estrarre record sensibili (es. carte di credito, dati sanitari, conti correnti). Questo scenario viola i principali standard internazionali di compliance (**PCI-DSS**, **GDPR**, **SOX**), che richiedono esplicitamente la **Separazione dei Doveri (Separation of Duties - SoD)**.
 
 **Oracle Database Vault (DV)** risponde a questa esigenza imponendo un controllo di sicurezza preventivo ed invalicabile all'interno del kernel del database. Isola l'amministratore del database (DBA) dalle anagrafiche applicative. 
 
 ```
                        [ RICHIESTA DI ACCESSO SQL ]
                                     Ôöé
-                                    Ôû╝
+                                    Ôû+
                 ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
                 Ôöé       FILTRO DATABASE VAULT          Ôöé
                 ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
                                     Ôöé
                   Se tocca un Realm o Command Rule
                                     Ôöé
-                                    Ôû╝
+                                    Ôû+
                Ispeziona i privilegi ed il contesto
                (Client IP, Programma, Session User)
                                     Ôöé
-                    ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-                    Ôû╝                               Ôû╝
+                    ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+                    Ôû+                               Ôû+
                [ PASS ]                         [ BLOCK ]
-         La richiesta ├¿ ammessa.          Genera ORA-47400
+         La richiesta +¿ ammessa.          Genera ORA-47400
        (L'applicazione legge i dati)     (Il DBA riceve errore)
 ```
 
 ### La Separazione dei Tre Ruoli Fondamentali:
-1.  **System/Infrastructure DBA (`SYSDBA` / `DBA`)**: Mantiene tutte le facolt├á operative. Esegue backup, restore, tuning fisico, manutenzione storage (ASM), patching, riavvio dell'istanza. **Non pu├▓** visualizzare i dati all'interno dei Realms protetti.
+1.  **System/Infrastructure DBA (`SYSDBA` / `DBA`)**: Mantiene tutte le facolt+á operative. Esegue backup, restore, tuning fisico, manutenzione storage (ASM), patching, riavvio dell'istanza. **Non pu+▓** visualizzare i dati all'interno dei Realms protetti.
 2.  **Database Vault Owner (`DV_OWNER`)**: Il responsabile della sicurezza e della compliance. Definisce le regole di accesso, crea i Realms, autorizza i ruoli applicativi e configura le Command Rules. **Non ha** poteri di amministrazione fisica sul DB.
-3.  **Database Vault Account Manager (`DV_ACCTMGR`)**: Il gestore delle identit├á. Esegue `CREATE USER`, `ALTER USER`, `GRANT` e gestisce le password. Impedisce che il DBA crei account "fantasma" per bypassare i Realms o che il DV Owner si auto-crei privilegi operativi.
+3.  **Database Vault Account Manager (`DV_ACCTMGR`)**: Il gestore delle identit+á. Esegue `CREATE USER`, `ALTER USER`, `GRANT` e gestisce le password. Impedisce che il DBA crei account "fantasma" per bypassare i Realms o che il DV Owner si auto-crei privilegi operativi.
 
 ---
 
@@ -49,12 +49,12 @@ Nelle architetture tradizionali di database, l'utente con privilegio `SYSDBA` (e
 In Oracle 19c/21c/23ai (Multitenant Architecture), l'abilitazione di Database Vault segue una gerarchia rigida per garantire la sicurezza del consolidamento dei dati.
 
 > [!IMPORTANT]
-> Non ├¿ possibile abilitare Database Vault all'interno di un singolo Pluggable Database (PDB) se questo non ├¿ stato prima **configurato ed abilitato nel container root (`CDB$ROOT`)**. L'omissione di questo ordine provoca l'errore `ORA-47503: Database Vault is not enabled on CDB$ROOT`.
+> Non +¿ possibile abilitare Database Vault all'interno di un singolo Pluggable Database (PDB) se questo non +¿ stato prima **configurato ed abilitato nel container root (`CDB$ROOT`)**. L'omissione di questo ordine provoca l'errore `ORA-47503: Database Vault is not enabled on CDB$ROOT`.
 
 ### Architettura CDB/PDB in Database Vault:
 *   **Common Database Vault Manager**: Configurato nel `CDB$ROOT`, utilizza utenti comuni (es. `C##DV_OWNER_COMMON`) per controllare la sicurezza a livello globale.
 *   **Local Database Vault Manager**: Configurato all'interno del singolo PDB, consente di delegare la gestione della sicurezza a responsabili locali dei dati applicativi tramite utenti locali del PDB.
-*   **Operations Control (Novit├á 19c)**: Consente all'amministratore della sicurezza del CDB di impedire ai DBA comuni (che hanno accesso al `CDB$ROOT`) di connettersi ai PDB ed ispezionare dati sensibili locali, anche se DV non ├¿ abilitato nei singoli PDB.
+*   **Operations Control (Novit+á 19c)**: Consente all'amministratore della sicurezza del CDB di impedire ai DBA comuni (che hanno accesso al `CDB$ROOT`) di connettersi ai PDB ed ispezionare dati sensibili locali, anche se DV non +¿ abilitato nei singoli PDB.
 
 ---
 
@@ -66,7 +66,7 @@ Connettiti all'istanza primaria in `CDB$ROOT` come `SYSDBA` e crea gli utenti co
 ```sql
 sqlplus / as sysdba
 
--- Verifica che il DB sia in modalit├á multitenant
+-- Verifica che il DB sia in modalit+á multitenant
 SELECT cdb FROM v$database; -- Deve restituire YES
 
 -- 1. Creazione del Common Database Vault Owner
@@ -158,7 +158,7 @@ ALTER PLUGGABLE DATABASE PDB_PROD OPEN;
 
 ## 4. Configurazione Pratica: Realms & Protezione Dati
 
-Un **Realm** ├¿ un perimetro logico di sicurezza a cui ├¿ associato un insieme di oggetti (schemi, tabelle, viste, ruoli). Una volta che un oggetto fa parte di un Realm, l'accesso ├¿ **bloccato a tutti**, compresi gli amministratori `SYS`, `SYSTEM` e gli utenti con ruoli `DBA`, a meno che non siano stati autorizzati esplicitamente dal `dbvowner`.
+Un **Realm** +¿ un perimetro logico di sicurezza a cui +¿ associato un insieme di oggetti (schemi, tabelle, viste, ruoli). Una volta che un oggetto fa parte di un Realm, l'accesso +¿ **bloccato a tutti**, compresi gli amministratori `SYS`, `SYSTEM` e gli utenti con ruoli `DBA`, a meno che non siano stati autorizzati esplicitamente dal `dbvowner`.
 
 ### Scenario: Proteggere i dati dello schema `PAYROLL`
 Vogliamo fare in modo che solo l'utente applicativo `PAYROLL_APP` possa accedere alla tabella `SALARIES` dello schema `PAYROLL`. I DBA devono poter fare la manutenzione fisica ma non leggere i dati dei dipendenti.
@@ -169,15 +169,15 @@ Vogliamo fare in modo che solo l'utente applicativo `PAYROLL_APP` possa accedere
                   Ôöé  - Oggetto protetto: PAYROLL.SALARIES   Ôöé
                   ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ
                                       Ôöé
-                                      Ôû╝
+                                      Ôû+
              Controlla l'utente che effettua la query:
                                       Ôöé
-             ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
-             Ôû╝                                                 Ôû╝
+             ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+             Ôû+                                                 Ôû+
      [ PAYROLL_APP ]                                    [ SYS / SYSTEM / DBA ]
    Utente autorizzato                                   Utente NON autorizzato
              Ôöé                                                 Ôöé
-             Ôû╝                                                 Ôû╝
+             Ôû+                                                 Ôû+
          Consenti                                       Blocca (Genera ORA-47400)
 ```
 
@@ -283,11 +283,11 @@ END;
 
 ## 6. Diagnostica & Triage: Risoluzione Errori Comuni
 
-Quando Database Vault ├¿ attivo, le tradizionali operazioni del DBA cambiano drasticamente. Ecco una guida ai problemi tipici di produzione.
+Quando Database Vault +¿ attivo, le tradizionali operazioni del DBA cambiano drasticamente. Ecco una guida ai problemi tipici di produzione.
 
 ### 6.1 Errore ORA-47400 / ORA-47401 (Realm/Command Violation)
 *   **Problema**: Un batch applicativo o un DBA riceve `ORA-47400: Command Rule violation for SELECT on PAYROLL.SALARIES`.
-*   **Causa**: La tabella ├¿ protetta da un Realm e l'utente che sta tentando l'operazione non ├¿ stato autorizzato dal `dbvowner`.
+*   **Causa**: La tabella +¿ protetta da un Realm e l'utente che sta tentando l'operazione non +¿ stato autorizzato dal `dbvowner`.
 *   **Risoluzione (Esegui come `dbvowner`)**:
     1.  Verificare quale Realm protegge l'oggetto:
         ```sql
@@ -301,12 +301,12 @@ Quando Database Vault ├¿ attivo, le tradizionali operazioni del DBA cambiano 
         FROM   dba_dv_realm_auth 
         WHERE  realm_name = 'Realm Protezione Payroll';
         ```
-    3.  Se l'applicazione ├¿ legittima, concedere l'autorizzazione:
+    3.  Se l'applicazione +¿ legittima, concedere l'autorizzazione:
         ```sql
         EXEC DBMS_MACADM.ADD_AUTH_TO_REALM('Realm Protezione Payroll', 'NOME_UTENTE_APPLICATIVO');
         ```
 
-### 6.2 Il DBA non pu├▓ creare Utenti o assegnare Privilegi (`ORA-01031`)
+### 6.2 Il DBA non pu+▓ creare Utenti o assegnare Privilegi (`ORA-01031`)
 *   **Causa**: Con Database Vault abilitato, l'utente `SYS` o `SYSTEM` o chiunque abbia il ruolo `DBA` **perde** il privilegio di eseguire `CREATE USER`, `DROP USER`, `GRANT` e `REVOKE`.
 *   **Risoluzione**: Queste operazioni devono essere eseguite connettendosi con l'account `dbvacctmgr` dedicato (o `C##DV_ACCTMGR` per il CDB).
     ```sql
@@ -322,7 +322,7 @@ Quando Database Vault ├¿ attivo, le tradizionali operazioni del DBA cambiano 
 
 ## 7. Disabilitazione di Database Vault (Emergency Rollback)
 
-In caso di incidenti catastrofici in produzione o necessit├á di manutenzioni strutturali di terze parti non compatibili con i filtri di Database Vault, ├¿ possibile disattivare temporaneamente l'opzione.
+In caso di incidenti catastrofici in produzione o necessit+á di manutenzioni strutturali di terze parti non compatibili con i filtri di Database Vault, +¿ possibile disattivare temporaneamente l'opzione.
 
 ```sql
 -- 1. Connettiti come Database Vault Owner locale o comune
@@ -377,20 +377,20 @@ Nelle architetture tradizionali di database, l'utente con privilegio `SYSDBA` (e
 
 ```
                        [ RICHIESTA DI ACCESSO SQL ]
-                                    │
-                                    ▼
-                ┌──────────────────────────────────────┐
-                │       FILTRO DATABASE VAULT          │
-                └──────────────────────────────────────┘
-                                    │
+                                    |
+                                    v
+                +--------------------------------------+
+                |       FILTRO DATABASE VAULT          |
+                +--------------------------------------+
+                                    |
                   Se tocca un Realm o Command Rule
-                                    │
-                                    ▼
+                                    |
+                                    v
                Ispeziona i privilegi ed il contesto
                (Client IP, Programma, Session User)
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
+                                    |
+                    +---------------+---------------+
+                    v                               v
                [ PASS ]                         [ BLOCK ]
          La richiesta è ammessa.          Genera ORA-47400
        (L'applicazione legge i dati)     (Il DBA riceve errore)
@@ -527,20 +527,20 @@ Esistono due tipologie di Realms:
 Vogliamo fare in modo che solo l'utente applicativo `PAYROLL_APP` possa accedere alla tabella `SALARIES` dello schema `PAYROLL`. I DBA devono poter fare la manutenzione fisica ma non leggere i dati dei dipendenti.
 
 ```
-                  ┌────────────────────────────────────────┐
-                  │    REALM: Protezione Dati Payroll      │
-                  │  - Oggetto protetto: PAYROLL.SALARIES   │
-                  └────────────────────────────────────────┘
-                                      │
-                                      ▼
+                  +----------------------------------------+
+                  |    REALM: Protezione Dati Payroll      |
+                  |  - Oggetto protetto: PAYROLL.SALARIES   |
+                  +----------------------------------------+
+                                      |
+                                      v
              Controlla l'utente che effettua la query:
-                                      │
-             ┌────────────────────────┴────────────────────────┐
-             ▼                                                 ▼
+                                      |
+             +------------------------+------------------------+
+             v                                                 v
      [ PAYROLL_APP ]                                    [ SYS / SYSTEM / DBA ]
    Utente autorizzato                                   Utente NON autorizzato
-             │                                                 │
-             ▼                                                 ▼
+             |                                                 |
+             v                                                 v
          Consenti                                       Blocca (Genera ORA-47400)
 ```
 

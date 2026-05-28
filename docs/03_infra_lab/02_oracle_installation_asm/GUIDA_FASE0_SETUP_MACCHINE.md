@@ -6,37 +6,37 @@
 ### Vista d'Insieme del Lab VirtualBox
 
 ```
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║                         IL TUO PC (HOST VIRTUALBOX)                             ║
-║                                                                                  ║
-║   ┌───────────────────────────────────────────────────────────────────────┐      ║
-║   │              Rete Host-Only #1 (192.168.56.0/24)                      │      ║
-║   │                    "Pubblica" per il cluster                          │      ║
-║   └──┬─────────┬────────┬──────────┬──────────┬──────────────────────────┘      ║
-║      │         │        │          │          │                                  ║
-║   ┌──┴───┐  ┌──┴──┐  ┌──┴──┐   ┌──┴──┐   ┌──┴──┐                              ║
-║   │dns   │  │rac1 │  │rac2 │   │stby1│   │stby2│                               ║
-║   │.56.50│  │.56.1│  │.56.2│   │.56.3│   │.56.4│   dbtarget + GG su cloud     ║
-║   │1GB   │  │8GB  │  │8GB  │   │8GB  │   │8GB  │                               ║
-║   │1CPU  │  │4CPU │  │4CPU │   │4CPU │   │4CPU │                               ║
-║   └──────┘  └──┬──┘  └──┬──┘   └──┬──┘   └──┬──┘                               ║
-║                │        │        │         │                                    ║
-║             ┌──┴────────┴──┐  ┌──┴─────────┴──┐                                ║
-║             │  Host-Only   │  │  Host-Only    │    (Reti Private Interconnect)  ║
-║             │  #2: 192.168 │  │  #3: 192.168  │    Separate per ogni cluster   ║
-║             │  .1.x (Prim) │  │  .2.x (Stby)  │                                ║
-║             └──────────────┘  └───────────────┘                                ║
-║                                                                                  ║
-║   Dischi Condivisi (Shareable VDI):                                             ║
-║   ┌────────────────────────┐    ┌────────────────────────┐                      ║
-║   │ rac1 + rac2            │    │ racstby1 + racstby2    │                      ║
-║   │ asm-crs-disk1  2GB     │    │ asm-stby-crs-1  2GB   │                      ║
-║   │ asm-crs-disk2  2GB     │    │ asm-stby-crs-2  2GB   │                      ║
-║   │ asm-crs-disk3  2GB     │    │ asm-stby-crs-3  2GB   │                      ║
-║   │ asm-data-disk1 20GB    │    │ asm-stby-data   20GB  │                      ║
-║   │ asm-reco-disk1 15GB    │    │ asm-stby-reco   15GB  │                      ║
-║   └────────────────────────┘    └────────────────────────┘                      ║
-╚══════════════════════════════════════════════════════════════════════════════════╝
++----------------------------------------------------------------------------------+
+|                         IL TUO PC (HOST VIRTUALBOX)                             |
+|                                                                                  |
+|   +-----------------------------------------------------------------------+      |
+|   |              Rete Host-Only #1 (192.168.56.0/24)                      |      |
+|   |                    "Pubblica" per il cluster                          |      |
+|   +--+---------+--------+----------+----------+--------------------------+      |
+|      |         |        |          |          |                                  |
+|   +--+---+  +--+--+  +--+--+   +--+--+   +--+--+                              |
+|   |dns   |  |rac1 |  |rac2 |   |stby1|   |stby2|                               |
+|   |.56.50|  |.56.1|  |.56.2|   |.56.3|   |.56.4|   dbtarget + GG su cloud     |
+|   |1GB   |  |8GB  |  |8GB  |   |8GB  |   |8GB  |                               |
+|   |1CPU  |  |4CPU |  |4CPU |   |4CPU |   |4CPU |                               |
+|   +------+  +--+--+  +--+--+   +--+--+   +--+--+                               |
+|                |        |        |         |                                    |
+|             +--+--------+--+  +--+---------+--+                                |
+|             |  Host-Only   |  |  Host-Only    |    (Reti Private Interconnect)  |
+|             |  #2: 192.168 |  |  #3: 192.168  |    Separate per ogni cluster   |
+|             |  .1.x (Prim) |  |  .2.x (Stby)  |                                |
+|             +--------------+  +---------------+                                |
+|                                                                                  |
+|   Dischi Condivisi (Shareable VDI):                                             |
+|   +------------------------+    +------------------------+                      |
+|   | rac1 + rac2            |    | racstby1 + racstby2    |                      |
+|   | asm-crs-disk1  2GB     |    | asm-stby-crs-1  2GB   |                      |
+|   | asm-crs-disk2  2GB     |    | asm-stby-crs-2  2GB   |                      |
+|   | asm-crs-disk3  2GB     |    | asm-stby-crs-3  2GB   |                      |
+|   | asm-data-disk1 20GB    |    | asm-stby-data   20GB  |                      |
+|   | asm-reco-disk1 15GB    |    | asm-stby-reco   15GB  |                      |
+|   +------------------------+    +------------------------+                      |
++----------------------------------------------------------------------------------+
 ```
 
 ### 📸 Riferimenti Visivi
@@ -353,21 +353,21 @@ Questo è il disco dove vivranno tutti i binari Oracle (Grid + Database). Viene 
 > 💡 **Allocazione Dinamica vs Pre-allocazione — Quando usare cosa?**
 >
 > ```
-> ╔══════════════════════════════════════════════════════════════════════════════╗
-> ║           REGOLA D'ORO PER I DISCHI VIRTUALBOX NEL LAB ORACLE             ║
-> ╠═══════════════════════════════╦════════════════════════════════════════════╣
-> ║  ALLOCAZIONE DINAMICA        ║  PRE-ALLOCAZIONE (Dimensione Fissa)       ║
-> ║  (senza spunta)              ║  (con spunta ✅)                          ║
-> ╠═══════════════════════════════╬════════════════════════════════════════════╣
-> ║  • Disco OS (50 GB)          ║  • Dischi ASM condivisi (asm-crs-*)      ║
-> ║  • Disco /u01 (100 GB)       ║  • Dischi ASM condivisi (asm-data-*)     ║
-> ║                               ║  • Dischi ASM condivisi (asm-reco-*)     ║
-> ╠═══════════════════════════════╬════════════════════════════════════════════╣
-> ║  Non condivisi tra VM        ║  Condivisi tra 2 VM (es. rac1 + rac2)    ║
-> ║  Occupano solo lo spazio     ║  Occupano SUBITO tutta la dimensione     ║
-> ║  effettivamente usato        ║  sul tuo PC                              ║
-> ║  (risparmio spazio su PC)    ║  (garanzia di stabilità I/O per ASM)     ║
-> ╚═══════════════════════════════╩════════════════════════════════════════════╝
+> +------------------------------------------------------------------------------+
+> |           REGOLA D'ORO PER I DISCHI VIRTUALBOX NEL LAB ORACLE             |
+> +-------------------------------+--------------------------------------------+
+> |  ALLOCAZIONE DINAMICA        |  PRE-ALLOCAZIONE (Dimensione Fissa)       |
+> |  (senza spunta)              |  (con spunta ✅)                          |
+> +-------------------------------+--------------------------------------------+
+> |  • Disco OS (50 GB)          |  • Dischi ASM condivisi (asm-crs-*)      |
+> |  • Disco /u01 (100 GB)       |  • Dischi ASM condivisi (asm-data-*)     |
+> |                               |  • Dischi ASM condivisi (asm-reco-*)     |
+> +-------------------------------+--------------------------------------------+
+> |  Non condivisi tra VM        |  Condivisi tra 2 VM (es. rac1 + rac2)    |
+> |  Occupano solo lo spazio     |  Occupano SUBITO tutta la dimensione     |
+> |  effettivamente usato        |  sul tuo PC                              |
+> |  (risparmio spazio su PC)    |  (garanzia di stabilità I/O per ASM)     |
+> +-------------------------------+--------------------------------------------+
 > ```
 >
 > **Perché la pre-allocazione per i dischi ASM?** I dischi condivisibili devono essere a **dimensione fissa** per due motivi:
@@ -599,27 +599,27 @@ A questo punto il pannello di sinistra deve mostrare **esattamente 3 partizioni*
 > 🏗️ **IL CONCETTO: Perché un Disco Separato per `/u01`?**
 >
 > ```
-> ╔═══════════════════════════════════════════════════════════════════════╗
-> ║                    ARCHITETTURA DISCHI DI rac1                       ║
-> ╠═════════════════════════════╦════════════════════════════════════════╣
-> ║  DISCO 1: sda (50 GB)      ║  DISCO 2: sdb (100 GB)               ║
-> ║  ─────────────────────────  ║  ───────────────────────────────────  ║
-> ║  /boot   → Kernel (1 GB)   ║  /u01    → Software Oracle           ║
-> ║  swap    → Swap   (8 GB)   ║           ├── Grid Infrastructure    ║
-> ║  /       → OS     (41 GB)  ║           ├── Database 19c           ║
-> ║                             ║           ├── OPatch & Patch         ║
-> ║  Gestito dall'installer     ║           └── oraInventory           ║
-> ║  durante l'installazione    ║                                      ║
-> ║  (Sezione 0.6 ✅ FATTO)     ║  Gestito MANUALMENTE dopo il boot   ║
-> ║                             ║  (Questa sezione 0.7)                ║
-> ╠═════════════════════════════╩════════════════════════════════════════╣
-> ║  PERCHÉ SEPARARE?                                                   ║
-> ║  1. Se il SO si corrompe → reinstalli l'OS senza perdere Oracle    ║
-> ║  2. Se /u01 si riempie → il SO continua a funzionare              ║
-> ║  3. Backup/snapshot indipendenti: salvi lo storage Oracle senza    ║
-> ║     portarti dietro 50 GB di OS                                    ║
-> ║  4. Oracle Base raccomanda esplicitamente questa separazione       ║
-> ╚═════════════════════════════════════════════════════════════════════╝
+> +-----------------------------------------------------------------------+
+> |                    ARCHITETTURA DISCHI DI rac1                       |
+> +-----------------------------+----------------------------------------+
+> |  DISCO 1: sda (50 GB)      |  DISCO 2: sdb (100 GB)               |
+> |  -------------------------  |  -----------------------------------  |
+> |  /boot   → Kernel (1 GB)   |  /u01    → Software Oracle           |
+> |  swap    → Swap   (8 GB)   |           +-- Grid Infrastructure    |
+> |  /       → OS     (41 GB)  |           +-- Database 19c           |
+> |                             |           +-- OPatch & Patch         |
+> |  Gestito dall'installer     |           +-- oraInventory           |
+> |  durante l'installazione    |                                      |
+> |  (Sezione 0.6 ✅ FATTO)     |  Gestito MANUALMENTE dopo il boot   |
+> |                             |  (Questa sezione 0.7)                |
+> +-----------------------------+----------------------------------------+
+> |  PERCHÉ SEPARARE?                                                   |
+> |  1. Se il SO si corrompe → reinstalli l'OS senza perdere Oracle    |
+> |  2. Se /u01 si riempie → il SO continua a funzionare              |
+> |  3. Backup/snapshot indipendenti: salvi lo storage Oracle senza    |
+> |     portarti dietro 50 GB di OS                                    |
+> |  4. Oracle Base raccomanda esplicitamente questa separazione       |
+> +---------------------------------------------------------------------+
 > ```
 
 Dopo il primo boot di `rac1`, apri MobaXterm (o usa la console se non hai ancora configurato la rete) ed esegui questi comandi come utente `root` passo dopo passo.
@@ -635,10 +635,10 @@ L'output atteso deve mostrare qualcosa come:
 ```
 NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda             8:0    0   50G  0 disk
-├─sda1          8:1    0    1G  0 part /boot
-└─sda2          8:2    0   49G  0 part
-  ├─ol-root   253:0    0   41G  0 lvm  /
-  └─ol-swap   253:1    0    8G  0 lvm  [SWAP]
++-sda1          8:1    0    1G  0 part /boot
++-sda2          8:2    0   49G  0 part
+  +-ol-root   253:0    0   41G  0 lvm  /
+  +-ol-swap   253:1    0    8G  0 lvm  [SWAP]
 sdb             8:16   0  100G  0 disk           ← QUESTO! Nessuna partizione, nessun mount
 ```
 
