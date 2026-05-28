@@ -9,6 +9,7 @@
 --   - ../02_runbooks_incidenti/13_REFRESH_SCHEMA_TEST.md
 -- Uso rapido:
 --   sqlplus / as sysdba @04_datapump_operativo.sql
+-- RAC: monitoraggio sessioni/longops con GV$ e INST_ID.
 -- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
 SET LINESIZE 220
 SET PAGESIZE 200
@@ -87,20 +88,20 @@ WHERE state != 'NOT RUNNING';
 
 -- 3B. Progresso dettagliato (percentuale)
 COL message FOR A80
-SELECT sid, serial#, opname,
+SELECT inst_id, sid, serial#, opname,
        ROUND(sofar/NULLIF(totalwork, 0) * 100, 1) AS pct_done,
        ROUND(elapsed_seconds/60, 1) AS elapsed_min,
        message
-FROM v$session_longops
+FROM gv$session_longops
 WHERE opname LIKE 'DATAPUMP%' OR opname LIKE '%EXPORT%' OR opname LIKE '%IMPORT%'
 ORDER BY start_time DESC;
 
 
 -- 3C. Sessioni Data Pump (per kill se necessario)
-SELECT s.sid, s.serial#, s.username, s.program, s.status,
+SELECT s.inst_id, s.sid, s.serial#, s.username, s.program, s.status,
        ROUND(t.used_ublk * 8192 / 1024/1024, 1) AS undo_mb
-FROM v$session s
-LEFT JOIN v$transaction t ON s.saddr = t.ses_addr
+FROM gv$session s
+LEFT JOIN gv$transaction t ON s.inst_id = t.inst_id AND s.saddr = t.ses_addr
 WHERE s.program LIKE '%DM%' OR s.program LIKE '%DW%'
 ORDER BY undo_mb DESC NULLS LAST;
 

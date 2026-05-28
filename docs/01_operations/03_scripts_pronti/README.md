@@ -2,6 +2,8 @@
 
 Raccolta di script SQL pronti per diagnosi rapida. Gli script non sostituiscono i runbook: servono come acceleratore operativo dopo aver scelto lo scenario corretto.
 
+Molti script sono RAC-aware: quando vedi `INST_ID`, non ragionare piu' solo su `SID/SERIAL#`. Per kill session, longops, Data Pump, RMAN e lock cross-instance usa sempre anche l'istanza corretta.
+
 ## Ordine consigliato
 
 1. Parti dal [Triage Incidenti Oracle](../02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md).
@@ -34,6 +36,7 @@ Raccolta di script SQL pronti per diagnosi rapida. Gli script non sostituiscono 
 | 12 | [Log purge e audit](./12_log_purge_audit.sql) | FRA, unified audit cleanup, audit recenti | [17_PURGE_LOG_ORACLE](../02_runbooks_incidenti/17_PURGE_LOG_ORACLE.md) |
 | 13 | [Monitor DDL package](./13_monitor_ddl_package.sql) | audit operativo DDL con tabella, package e trigger | [09_GESTIONE_UTENTI](../02_runbooks_incidenti/09_GESTIONE_UTENTI.md), [24_GAP_ANALYSIS_COPERTURA_DBA](../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md) |
 | 14 | [Optimizer stats operations](./14_optimizer_stats.sql) | stale stats, gather database/table mirato | [18_GESTIONE_STATISTICHE_OPTIMIZER](../02_runbooks_incidenti/18_GESTIONE_STATISTICHE_OPTIMIZER.md), [05_QUERY_LENTA](../02_runbooks_incidenti/05_QUERY_LENTA.md), [23_SQL_TUNING_CASI_ENTERPRISE](../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md) |
+| 15 | [RAC global health](./15_rac_global_health.sql) | istanze, servizi, sessioni per istanza, blocker cross-instance, top SQL GV$, gc/ges wait, longops | [00_TRIAGE_INCIDENTI_ORACLE](../02_runbooks_incidenti/00_TRIAGE_INCIDENTI_ORACLE.md), [10_START_STOP_RAC](../02_runbooks_incidenti/10_START_STOP_RAC.md), [26_LISTENER_SCAN_SERVICES_RAC](../02_runbooks_incidenti/26_LISTENER_SCAN_SERVICES_RAC.md) |
 
 ## Esecuzione standard
 
@@ -57,3 +60,4 @@ SPOOL OFF
 - ADR e alert log: [Guida ADRCI](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md).
 - Recovery/DR: [RMAN + Data Guard casi enterprise](../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md).
 - SQL tuning: [SQL Tuning casi enterprise](../02_runbooks_incidenti/23_SQL_TUNING_CASI_ENTERPRISE.md).
+- Storage LUN/ASM/udev/ASMLib/AFD: [Guida storage enterprise](../../02_core_dba/01_administration_and_security/GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md).

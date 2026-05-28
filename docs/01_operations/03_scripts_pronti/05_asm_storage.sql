@@ -1,15 +1,16 @@
 -- ============================================================================
--- SCRIPT 05: ASM STORAGE — Diskgroup, AU_SIZE, Limiti Fisici
--- Scenario: Capacity planning, add disk, check limiti reali
+-- SCRIPT 05: ASM STORAGE - Diskgroup, AU_SIZE, limiti fisici
+-- Scenario: capacity planning, add disk, controllo LUN/path/ASM
 -- ============================================================================
 
--- Runbook collegati:
+-- Runbook/guide collegati:
 --   - ../02_runbooks_incidenti/12_CAPACITY_PLANNING_LIMITI.md
 --   - ../02_runbooks_incidenti/24_GAP_ANALYSIS_COPERTURA_DBA.md
+--   - ../../02_core_dba/01_administration_and_security/GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md
 -- Uso rapido:
---   sqlplus / as sysdba @05_asm_storage.sql
--- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
-SET LINESIZE 220
+--   sqlplus / as sysasm @05_asm_storage.sql
+-- Nota: le viste ASM vanno interrogate da istanza ASM con privilegi SYSASM.
+SET LINESIZE 240
 SET PAGESIZE 200
 SET TRIMSPOOL ON
 SET TAB OFF
@@ -22,21 +23,23 @@ PROMPT ====================================================================
 
 COL name FOR A15
 COL type FOR A10
-COL state FOR A10
+COL state FOR A12
 COL total_gb FOR 999,999.99
 COL free_gb FOR 999,999.99
 COL usable_gb FOR 999,999.99
 COL pct_used FOR 999.9
 
 SELECT
-    name, type, state,
+    name,
+    type,
+    state,
     ROUND(total_mb/1024, 2) AS total_gb,
     ROUND(free_mb/1024, 2) AS free_gb,
-    -- Usable = spazio realmente utilizzabile (tiene conto del mirroring)
     ROUND(CASE
         WHEN type = 'EXTERN' THEN free_mb
         WHEN type = 'NORMAL' THEN free_mb / 2
-        WHEN type = 'HIGH'   THEN free_mb / 3
+        WHEN type = 'HIGH' THEN free_mb / 3
+        ELSE usable_file_mb
     END / 1024, 2) AS usable_gb,
     ROUND((1 - free_mb / NULLIF(total_mb, 0)) * 100, 1) AS pct_used
 FROM v$asm_diskgroup
@@ -44,15 +47,16 @@ ORDER BY pct_used DESC;
 
 
 PROMPT ====================================================================
-PROMPT  2. DISCHI ASM — Dettaglio per diskgroup
+PROMPT  2. DISCHI ASM - Dettaglio per diskgroup e path
 PROMPT ====================================================================
 
-COL disk_name FOR A20
+COL disk_name FOR A25
 COL dg_name FOR A15
-COL path FOR A40
-COL total_gb FOR 999.99
-COL free_gb FOR 999.99
-COL status FOR A10
+COL path FOR A70
+COL total_gb FOR 999,999.99
+COL free_gb FOR 999,999.99
+COL header_status FOR A15
+COL mode_status FOR A12
 
 SELECT
     dg.name AS dg_name,
@@ -60,32 +64,30 @@ SELECT
     d.path,
     ROUND(d.total_mb/1024, 2) AS total_gb,
     ROUND(d.free_mb/1024, 2) AS free_gb,
-    d.mode_status AS status
+    d.header_status,
+    d.mode_status
 FROM v$asm_disk d
 JOIN v$asm_diskgroup dg ON d.group_number = dg.group_number
 ORDER BY dg.name, d.name;
 
 
 PROMPT ====================================================================
-PROMPT  3. AU_SIZE E LIMITI FISICI (CRITICO per Capacity Planning!)
+PROMPT  3. AU_SIZE E LIMITI FISICI
 PROMPT ====================================================================
 
--- AU_SIZE (Allocation Unit) determina il limite massimo di un file ASM:
---   AU_SIZE 1MB  → max file = 16TB
---   AU_SIZE 4MB  → max file = 64TB
---   AU_SIZE 16MB → max file = 256TB
---
--- ⚠️ La trap: se hai AU_SIZE=1MB e un bigfile tablespace vicino ai 16TB,
--- non puoi più crescere anche se il diskgroup ha spazio!
+-- AU_SIZE determina il limite massimo teorico di un file ASM.
+-- Esempi pratici:
+--   AU_SIZE 1MB  -> max file circa 16TB
+--   AU_SIZE 4MB  -> max file circa 64TB
+--   AU_SIZE 16MB -> max file circa 256TB
+-- Se un bigfile tablespace si avvicina al limite, non basta avere spazio libero.
 
-COL name FOR A15
 COL au_size_mb FOR 999
-COL max_file_size_tb FOR 999.9
+COL max_file_size_tb FOR 999,999.9
 
 SELECT
     dg.name,
     dg.allocation_unit_size / 1024 / 1024 AS au_size_mb,
-    -- Formula Oracle: max file = AU_SIZE * 4194304 (per extent variabile)
     ROUND(dg.allocation_unit_size * 4194304.0 / 1024/1024/1024/1024, 1) AS max_file_size_tb,
     dg.type
 FROM v$asm_diskgroup dg
@@ -93,14 +95,25 @@ ORDER BY dg.name;
 
 
 PROMPT ====================================================================
-PROMPT  4. FILE ASM — Dimensione file nel diskgroup
+PROMPT  4. CLIENT ASM - Database/istanze collegate ai diskgroup
 PROMPT ====================================================================
 
--- Esegui da istanza ASM: sqlplus / as sysasm
+COL instance_name FOR A20
+COL db_name FOR A15
+COL status FOR A12
 
-COL full_path FOR A60
+SELECT group_number, instance_name, db_name, status
+FROM v$asm_client
+ORDER BY group_number, instance_name;
+
+
+PROMPT ====================================================================
+PROMPT  5. FILE ASM - Top file per dimensione
+PROMPT ====================================================================
+
+COL full_path FOR A90
 COL size_gb FOR 999,999.99
-COL type FOR A15
+COL type FOR A18
 
 SELECT
     CONCAT('+' || gname, SYS_CONNECT_BY_PATH(aname, '/')) AS full_path,
@@ -122,18 +135,38 @@ FETCH FIRST 20 ROWS ONLY;
 
 
 PROMPT ====================================================================
-PROMPT  5. SOLUZIONI — Aggiungere spazio ASM
+PROMPT  6. OPERAZIONI ASM IN CORSO
 PROMPT ====================================================================
 
--- ---- ADD DISK a diskgroup esistente ----
--- ALTER DISKGROUP DATA ADD DISK '/dev/oracleasm/disk4' NAME data_disk4;
---
--- ---- REBALANCE manuale (se serve accelerare) ----
--- ALTER DISKGROUP DATA REBALANCE POWER 8;  -- da 0 (off) a 11 (max)
---
--- ---- CHECK rebalance in corso ----
--- SELECT * FROM v$asm_operation WHERE group_number = (SELECT group_number FROM v$asm_diskgroup WHERE name = 'DATA');
+COL operation FOR A12
+COL state FOR A12
+COL est_minutes FOR 999999
+
+SELECT group_number, operation, state, power, actual, sofar, est_work,
+       ROUND(est_minutes, 0) AS est_minutes
+FROM v$asm_operation
+ORDER BY group_number, operation;
+
 
 PROMPT ====================================================================
-PROMPT  Fine Script 05 — ASM Storage
+PROMPT  7. COMANDI OPERATIVI ASM - esempi
+PROMPT ====================================================================
+
+-- Add disk a diskgroup esistente:
+-- ALTER DISKGROUP DATA ADD DISK '/dev/oracleasm/disks/DATA04' NAME DATA04;
+--
+-- Drop disk:
+-- ALTER DISKGROUP DATA DROP DISK DATA04;
+--
+-- Rebalance manuale:
+-- ALTER DISKGROUP DATA REBALANCE POWER 8;
+--
+-- Compatibilita' diskgroup:
+-- SELECT name, compatibility, database_compatibility FROM v$asm_diskgroup;
+--
+-- Verifica path candidati prima di ADD DISK:
+-- SELECT path, header_status, mode_status, state, total_mb FROM v$asm_disk ORDER BY path;
+
+PROMPT ====================================================================
+PROMPT  Fine Script 05 - ASM Storage
 PROMPT ====================================================================

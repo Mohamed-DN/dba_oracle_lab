@@ -7,6 +7,7 @@
 | [Servizi Applicativi RAC](./GUIDA_SERVIZI_APPLICATIVI_RAC.md) | TAF, FAN, CLB/RLB, AC |
 | [Ansible Response Templates](./GUIDA_ANSIBLE_TEMPLATES.md) | Silent install con template |
 | [Gestione Dischi ASM](./GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove dischi ASM |
+| [Storage LUN/LVM/udev/ASM/ASMLib/AFD](./GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md) | Differenze LUN, PV, VG, LV, multipath, udev, ASMLib, ASMFD deprecato e scelte corrette |
 | [Oracle Scheduler](./GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks |
 | [Security Hardening](./GUIDA_SECURITY_HARDENING.md) | TDE, auditing, encryption, profili |
 | [TDE in Profondità](./GUIDA_TDE_IN_PROFONDITA.md) | Keystore, master key, cifratura e validazione operativa |

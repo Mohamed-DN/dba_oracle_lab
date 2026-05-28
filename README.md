@@ -173,6 +173,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [Servizi Applicativi RAC](./docs/02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | TAF, FAN, CLB/RLB, Application Continuity |
 | [Ansible Response Templates](./docs/02_core_dba/01_administration_and_security/GUIDA_ANSIBLE_TEMPLATES.md) | **Nuovo**: Come fare *silent install* al 100% con Jinja2 |
 | [Gestione Dischi ASM](./docs/02_core_dba/01_administration_and_security/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Add/remove dischi ASM (ASMLib + AFD) |
+| [Storage LUN/LVM/udev/ASM](./docs/02_core_dba/01_administration_and_security/GUIDA_STORAGE_LUN_LVM_UDEV_ASM_ASMLIB_AFD.md) | LUN, PV/VG/LV, multipath, udev, ASMLib, AFD deprecato, scelte storage |
 | [Oracle Scheduler](./docs/02_core_dba/01_administration_and_security/GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks, monitoring |
 | [Security Hardening](./docs/02_core_dba/01_administration_and_security/GUIDA_SECURITY_HARDENING.md) | TDE, Auditing, Encryption, Password Profiles |
 | [TDE in Profondità](./docs/02_core_dba/01_administration_and_security/GUIDA_TDE_IN_PROFONDITA.md) | Keystore, master key, colonna/tablespace encryption, backup e operatività RAC/DG |
@@ -267,7 +268,7 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 
 ### Script SQL per Scenario (`docs/01_operations/03_scripts_pronti/`)
 
-> **10 script pronti al copia-incolla** — [Indice completo](./docs/01_operations/03_scripts_pronti/README.md)
+> **15 script pronti al copia-incolla, inclusi controlli RAC con GV$** — [Indice completo](./docs/01_operations/03_scripts_pronti/README.md)
 
 | Script | Scenario | Errori Coperti |
 |---|---|---|
@@ -281,6 +282,11 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | [08 RMAN Backup](./docs/01_operations/03_scripts_pronti/08_rman_backup_status.sql) | Ultimo backup, fallimenti | Morning check |
 | [09 Data Guard](./docs/01_operations/03_scripts_pronti/09_dataguard_status.sql) | Lag, GAP, MRP, switchover ready | Morning check |
 | [10 Oggetti/Schema](./docs/01_operations/03_scripts_pronti/10_oggetti_schema.sql) | Invalidi, segmenti grandi, recyclebin | Post-upgrade |
+| [11 TEMP Resize](./docs/01_operations/03_scripts_pronti/11_temp_resize.sql) | TEMP/tempfile, ORA-01652 | Capacity |
+| [12 Log Purge/Audit](./docs/01_operations/03_scripts_pronti/12_log_purge_audit.sql) | FRA, audit cleanup | Manutenzione |
+| [13 Monitor DDL](./docs/01_operations/03_scripts_pronti/13_monitor_ddl_package.sql) | Audit DDL con package/trigger | Governance |
+| [14 Optimizer Stats](./docs/01_operations/03_scripts_pronti/14_optimizer_stats.sql) | Stale stats, gather mirato | Performance |
+| [15 RAC Global Health](./docs/01_operations/03_scripts_pronti/15_rac_global_health.sql) | GV$, servizi, blocker cross-instance | RAC |
 
 ---
 

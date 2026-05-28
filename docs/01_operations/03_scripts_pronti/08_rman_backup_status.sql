@@ -9,6 +9,7 @@
 --   - ../02_runbooks_incidenti/22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md
 -- Uso rapido:
 --   sqlplus / as sysdba @08_rman_backup_status.sql
+-- RAC: backup job e controlfile view sono globali; longops usa GV$ con INST_ID.
 -- Nota: verificare sempre ambiente, ruolo database e privilegi prima di eseguire azioni correttive.
 SET LINESIZE 220
 SET PAGESIZE 200
@@ -85,16 +86,17 @@ PROMPT  4. BACKUP IN ESECUZIONE
 PROMPT ====================================================================
 
 COL sid FOR 99999
+COL inst_id FOR 999
 COL operation FOR A25
 COL pct_done FOR 999.9
 COL elapsed_min FOR 999,999
 COL remaining_min FOR 999,999
 
-SELECT sid, serial#, opname AS operation,
+SELECT inst_id, sid, serial#, opname AS operation,
        ROUND(sofar/NULLIF(totalwork,0)*100, 1) AS pct_done,
        ROUND(elapsed_seconds/60) AS elapsed_min,
        ROUND(time_remaining/60) AS remaining_min
-FROM v$session_longops
+FROM gv$session_longops
 WHERE opname LIKE 'RMAN%'
   AND sofar != totalwork
 ORDER BY start_time DESC;
