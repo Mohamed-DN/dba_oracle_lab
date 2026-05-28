@@ -1,5 +1,15 @@
 # GUIDA MONUMENTALE: Application Continuity (AC) & TAF — Failover Client Trasparente & Resilienza Applicativa
 
+
+## [ARCHITETTURA VISIVA] Application Continuity
+\\mermaid
+flowchart LR
+    App[Applicazione JDBC] -->|Connessione| SCAN[SCAN Listener]
+    SCAN --> Istanza1[(Istanza Node 1)]
+    Istanza1 -.->|Crash| SCAN
+    App -->|Replay Automatico Transazione| Istanza2[(Istanza Node 2)]
+\
+
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Application Continuity & Failover (questa guida)**: [GUIDA_APPLICATION_CONTINUITY_TAF.md](./GUIDA_APPLICATION_CONTINUITY_TAF.md) (transparent application failover, JDBC, UCP, Transaction Guard).

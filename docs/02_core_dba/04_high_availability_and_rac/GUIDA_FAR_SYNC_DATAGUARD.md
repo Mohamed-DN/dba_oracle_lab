@@ -1,5 +1,13 @@
 # GUIDA MONUMENTALE: Oracle Data Guard Far Sync — Zero Data Loss a Distanza Geografica Illimitata
 
+
+## [ARCHITETTURA VISIVA] Far Sync Data Guard
+\\mermaid
+flowchart LR
+    Prod[(Primary DB - New York)] -->|SYNC Redo (Bassa Latenza)| FS[Far Sync Instance - New York]
+    FS -->|ASYNC Redo (Alta Latenza)| Standby[(Standby DB - London)]
+\
+
 > [!NOTE]
 > **DOCUMENTI DI ALTA AFFIDABILITÀ CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Data Guard Far Sync (questa guida)**: [GUIDA_FAR_SYNC_DATAGUARD.md](./GUIDA_FAR_SYNC_DATAGUARD.md) (architettura, setup, SYNC a corto raggio, ASYNC a lungo raggio, Broker & Redo Routes).
