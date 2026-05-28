@@ -14,6 +14,7 @@
 
 ## 📑 Navigazione Rapida (livello 1)
 
+- 🧭 **Start Here:** [mappa operativa rapida](./START_HERE.md)
 - 🟢 **Fondamenti:** [Indice area](./docs/04_governance_learning/01_fondamenti_teorici/README.md)
 - 🏛️ **Core Lab 0→8:** [Indice area](./docs/03_infra_lab/02_oracle_installation_asm/README.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
 - 🔵 **High Availability:** [Indice area](./docs/02_core_dba/04_high_availability_and_rac/README.md)

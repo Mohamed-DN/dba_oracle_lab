@@ -829,6 +829,180 @@ DGMGRL> REINSTATE DATABASE 'SOLE';
 
 Prerequisito pratico per reinstate veloce: Flashback Database attivo e FRA sufficiente.
 
+## Fase 15 - Hardening operativo post-creazione RAC
+
+Questa fase chiude la configurazione per produzione. In RAC non basta che il broker dica `SUCCESS`: devi verificare backup, FRA, servizi role-based, thread redo, reinstate e monitoraggio per ogni istanza.
+
+### RMAN retention e archivelog deletion policy
+
+Sul primary:
+
+```sql
+rman target /
+
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE BACKUP OPTIMIZATION ON;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+SHOW ALL;
+```
+
+Se lo standard richiede backup prima della cancellazione:
+
+```sql
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK;
+```
+
+Regola:
+
+```text
+In RAC + Data Guard la cancellazione archivelog deve considerare tutti i thread.
+Non cancellare per liberare FRA senza verificare apply, backup e possibili consumer
+come GoldenGate.
+```
+
+### Flashback e reinstate
+
+Consigliato su primary e standby:
+
+```sql
+ALTER SYSTEM SET db_flashback_retention_target=1440 SCOPE=BOTH SID='*';
+ALTER DATABASE FLASHBACK ON;
+
+SELECT name, flashback_on
+FROM v$database;
+```
+
+Prima di patch, switchover o cambio parametri critico:
+
+```sql
+CREATE RESTORE POINT rp_before_rac_dg_change GUARANTEE FLASHBACK DATABASE;
+```
+
+Dopo validazione:
+
+```sql
+DROP RESTORE POINT rp_before_rac_dg_change;
+```
+
+### Lost write, corruzione e validate
+
+Valuta con lo standard aziendale:
+
+```sql
+ALTER SYSTEM SET db_lost_write_protect=TYPICAL SCOPE=BOTH SID='*';
+```
+
+Controlli periodici:
+
+```sql
+SELECT * FROM v$database_block_corruption;
+
+RMAN> BACKUP VALIDATE CHECK LOGICAL DATABASE;
+RMAN> RESTORE DATABASE VALIDATE;
+```
+
+### Servizi role-based dopo switchover
+
+I servizi applicativi devono seguire il ruolo:
+
+```bash
+srvctl config service -d SOLE
+srvctl status service -d SOLE
+srvctl config service -d M24
+srvctl status service -d M24
+```
+
+Esempio concettuale:
+
+```bash
+srvctl add service -d SOLE -s SOLE_RW \
+  -preferred SOLE1,SOLE2 \
+  -role PRIMARY \
+  -policy AUTOMATIC
+
+srvctl add service -d M24 -s M24_RO \
+  -preferred M241,M242 \
+  -role PHYSICAL_STANDBY \
+  -policy AUTOMATIC
+```
+
+Adatta sempre alle opzioni della tua release (`srvctl add service -help`). Non esporre servizi read only sullo standby se non hai licenza Active Data Guard o se lo standby resta solo `MOUNTED`.
+
+### Monitoring minimo per RAC Data Guard
+
+Soglie consigliate da adattare:
+
+| Controllo | Warning | Critical |
+| --- | --- | --- |
+| `transport lag` | > 60 secondi | > 5 minuti |
+| `apply lag` | > 5 minuti | > 15 minuti |
+| FRA used | > 80% | > 90% |
+| `v$archive_dest.error` | non vuoto | immediato |
+| MRP0 assente | immediato | immediato |
+| thread senza archivelog recente | > 30 minuti | > 60 minuti |
+| istanza RAC offline | immediato | immediato |
+| ultimo backup DB | > 24h | > 48h |
+
+Query:
+
+```sql
+SELECT inst_id, instance_name, host_name, status, thread#
+FROM gv$instance
+ORDER BY inst_id;
+
+SELECT name, value, datum_time, time_computed
+FROM v$dataguard_stats
+WHERE name IN ('transport lag','apply lag','apply finish time');
+
+SELECT dest_id, status, error, db_unique_name
+FROM v$archive_dest
+WHERE target='STANDBY';
+
+SELECT thread#, MAX(sequence#) AS last_applied
+FROM v$archived_log
+WHERE applied='YES'
+GROUP BY thread#
+ORDER BY thread#;
+
+SELECT file_type, percent_space_used, percent_space_reclaimable, number_of_files
+FROM v$flash_recovery_area_usage
+ORDER BY percent_space_used DESC;
+```
+
+Cluster:
+
+```bash
+crsctl stat res -t
+srvctl status database -d SOLE -v
+srvctl status database -d M24 -v
+srvctl status service -d SOLE
+srvctl status service -d M24
+```
+
+### Checklist cutover/switchover produzione
+
+Prima:
+
+- `SHOW CONFIGURATION` = `SUCCESS`;
+- `VALIDATE DATABASE 'SOLE'` e `VALIDATE DATABASE 'M24'`;
+- log switch manuale su tutti i thread e apply verificato;
+- servizi role-based documentati;
+- backup e restore validate recenti;
+- restore point garantito se FRA sufficiente;
+- owner applicativo pronto per smoke test;
+- DNS/TNS/service name preparati;
+- piano di ritorno approvato.
+
+Dopo:
+
+- servizi RW attivi solo sul nuovo primary;
+- servizi RO coerenti con licensing e ruolo;
+- `transport lag`/`apply lag` azzerati dopo switchback o nuova direzione;
+- backup job aggiornati al nuovo primary;
+- monitoring aggiornato con nuovo ruolo;
+- ticket/change chiuso con evidenze before/after.
+
 ## Troubleshooting RAC Data Guard
 
 | Sintomo | Causa probabile | Azione |

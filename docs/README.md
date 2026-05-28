@@ -4,6 +4,10 @@
 
 Questo repository contiene script, runbook e guide enterprise ad altissima densità per ambienti Oracle 19c/21c/23ai (RAC, Data Guard, ASM, OEM, CheckMK, TDE).
 
+## Percorso Rapido
+
+Se non sai da dove partire, apri prima la [mappa operativa START_HERE](../START_HERE.md).
+
 ---
 
 ## 🗺️ Struttura del Repository
