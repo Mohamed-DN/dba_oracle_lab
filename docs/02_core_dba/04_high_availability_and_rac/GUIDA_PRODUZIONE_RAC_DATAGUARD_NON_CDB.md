@@ -1003,6 +1003,171 @@ Dopo:
 - monitoring aggiornato con nuovo ruolo;
 - ticket/change chiuso con evidenze before/after.
 
+### Fase 16 - Patching in ambiente RAC Data Guard (Standby-First)
+
+Il patching in ambienti RAC con Data Guard unisce i concetti di **Rolling Patching** (a livello di singolo cluster) e **Standby-First** (a livello di disaster recovery). Questa combinazione consente di mantenere la massima disponibilità sul sito primario durante il patching del sito di DR, per poi effettuare uno switchover controllato.
+
+Tuttavia, il patching in ambienti complessi (RAC + Data Guard) richiede una gestione rigorosa delle patch binarie e delle patch **OJVM (Oracle Java Virtual Machine)**, oltre all'aggiornamento preliminare dei tool di installazione.
+
+> [!IMPORTANT]
+> **REGOLA D'ORO DEL PATCHING IN CONFIGURAZIONI RAC + DG**
+> 1. Non eseguire **MAI** `datapatch` sul database Standby Fisico (sia RAC che single instance). Il comando deve essere lanciato esclusivamente dal nuovo cluster Primario attivo dopo lo switchover.
+> 2. `opatchauto` è lo strumento preferito per ambienti RAC perché patcha in un unico comando sia la Grid Home che la Database Home come utente `root`. Tuttavia, sulle configurazioni Standby Fisiche, `opatchauto` salta automaticamente l'applicazione di `datapatch` (oppure lo si può forzare con l'opzione `-binary` per impedire errori).
+
+---
+
+### 1. Prerequisiti Fondamentali e Aggiornamento OPatch sui Nodi RAC
+
+Prima di procedere con `opatchauto`, è fondamentale aggiornare manualmente l'utility **OPatch** in **tutte le Oracle Home** (sia Grid Infrastructure che RDBMS Database) su **tutti i nodi** di entrambi i cluster (sito primary e standby).
+
+1. **Download di OPatch:** Scarica l'ultima release di OPatch da My Oracle Support (Note **274526.1**) adatta al rilascio 19c.
+2. **Aggiornamento di OPatch (da eseguire su ciascun nodo come utente `grid` per la GI Home e `oracle` per la DB Home):**
+   ```bash
+   # Come utente grid (nella GI Home)
+   mv $GRID_HOME/OPatch $GRID_HOME/OPatch_old_backup
+   unzip -q p6880880_190000_Linux-x86-64.zip -d $GRID_HOME
+   
+   # Come utente oracle (nella RDBMS Home)
+   mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch_old_backup
+   unzip -q p6880880_190000_Linux-x86-64.zip -d $ORACLE_HOME
+   ```
+
+---
+
+### 2. Vincoli di Compatibilità OJVM in Ambienti RAC Data Guard
+
+> [!WARNING]
+> **OJVM NON È STANDBY-FIRST INSTALLABLE (MOS Note 1929745.1)**
+> Le patch **OJVM non supportano l'interoperabilità tra versioni diverse**. Se applichi una patch OJVM al cluster Standby, non dovresti far comunicare i due siti in modalità attiva/mista prima di aver applicato la patch OJVM anche sul Primario.
+
+Per gli ambienti RAC in produzione, sono adottabili tre strategie:
+
+*   **Opzione A: Out-of-Place Patching Completo (Consigliata per zero downtime dei binari):**
+    Si clonano e patchano a monte sia la Grid Home che la DB Home su tutti i nodi di entrambi i siti. Al momento dello switch, si esegue il boot delle istanze sulle nuove Home e si applica `datapatch` sul primario.
+*   **Opzione B: Manutenzione In-Place con Redo Apply Fermo:**
+    Si ferma temporaneamente l'applicazione dei log. Si esegue il rolling patch (RU + OJVM) tramite `opatchauto` sul cluster Standby. Si esegue quindi lo switchover, si patcha il vecchio primario (ora standby) e infine si lancia `datapatch` sul primario attivo.
+*   **Opzione C: Applicazione Separata (RU Rolling + OJVM a database spento):**
+    Si patchano in modalità rolling e Standby-First solo le RU (Database e GI). Successivamente, si ferma il database per applicare la parte OJVM in una finestra di manutenzione ridotta.
+
+---
+
+### 3. Procedura Operativa di Patching Rolling + Standby-First (Opzione B)
+
+Di seguito viene illustrata la procedura dettagliata passo-passo per il patching in-place coordinato.
+
+#### A. Preparazione e Sicurezza
+1. Disabilitare il Fast-Start Failover (FSFO) dal Broker se attivo per evitare failover indesiderati durante i riavvii dei nodi:
+   ```text
+   DGMGRL> DISABLE FAST_START FAILOVER;
+   ```
+2. Verificare lo stato della configurazione:
+   ```text
+   DGMGRL> SHOW CONFIGURATION;
+   ```
+
+#### B. Patching del Cluster Standby (M24 - 2 nodi)
+Il patching si esegue in modalità rolling (nodo per nodo).
+
+1. **Disattivazione del Redo Apply dal Broker:**
+   ```text
+   DGMGRL> EDIT DATABASE 'M24' SET STATE='LOG-APPLY-OFF';
+   ```
+2. **Patching del Nodo 1 Standby (`racstby1`):**
+   Collegarsi come utente `root` sul primo nodo standby ed eseguire `opatchauto`. Questo comando arresterà automaticamente lo stack Grid Infrastructure, le istanze ASM e l'istanza DB locale su questo nodo, applicherà le patch alla Grid Home e alla DB Home, e riavvierà tutti i servizi:
+   ```bash
+   # Come root su racstby1
+   $GRID_HOME/OPatch/opatchauto apply /path/to/patch_dir -binary
+   ```
+   *(Nota: Il flag `-binary` istruisce opatchauto a non tentare l'esecuzione di datapatch sul database Standby, operazione che fallirebbe).*
+3. **Patching del Nodo 2 Standby (`racstby2`):**
+   Una volta che tutti i servizi sul Nodo 1 sono ripartiti e stabili, procedere sul secondo nodo standby:
+   ```bash
+   # Come root su racstby2
+   $GRID_HOME/OPatch/opatchauto apply /path/to/patch_dir -binary
+   ```
+4. **Riattivazione temporanea del Redo Apply per allineamento:**
+   Assicurarsi che tutte le istanze dello standby siano tornate attive in stato `MOUNT` (o `READ ONLY`) e riattivare il Redo Apply:
+   ```text
+   DGMGRL> EDIT DATABASE 'M24' SET STATE='APPLY-ON';
+   ```
+   Lasciare allineare lo standby, quindi disattivarlo nuovamente prima dello switchover se necessario per evitare comunicazioni OJVM miste prolungate.
+
+#### C. Ruoli in Transizione (Switchover)
+Promuovere il cluster standby (con i binari RU + OJVM già patchati) a nuovo Primario:
+```text
+DGMGRL> SWITCHOVER TO 'M24';
+```
+Ora il traffico applicativo è reindirizzato sul nuovo cluster primario `M24` che esegue i binari patchati.
+
+#### D. Patching del vecchio Cluster Primario (SOLE - 2 nodi, ora Standby)
+Seguire la stessa identica procedura rolling nodo per nodo su `SOLE`:
+
+1. **Disattivazione del Redo Apply su SOLE (ora Standby):**
+   ```text
+   DGMGRL> EDIT DATABASE 'SOLE' SET STATE='LOG-APPLY-OFF';
+   ```
+2. **Patching del Nodo 1 vecchio Primario (`racpri1`):**
+   ```bash
+   # Come root su racpri1
+   $GRID_HOME/OPatch/opatchauto apply /path/to/patch_dir -binary
+   ```
+3. **Patching del Nodo 2 vecchio Primario (`racpri2`):**
+   ```bash
+   # Come root su racpri2
+   $GRID_HOME/OPatch/opatchauto apply /path/to/patch_dir -binary
+   ```
+
+---
+
+### 4. Esecuzione di Datapatch sul nuovo Primario Attivo (M24)
+
+Una volta che tutti i nodi di entrambi i cluster (sito primario e sito standby) eseguono le stesse patch binarie (RU + OJVM), è possibile applicare le modifiche SQL a livello di dizionario.
+
+1. **Esecuzione di Datapatch sul Primario Attivo (M24):**
+   Collegarsi a un singolo nodo del **nuovo cluster Primario** (`M24`) ed eseguire `datapatch` come utente `oracle`:
+   ```bash
+   cd $ORACLE_HOME/OPatch
+   ./datapatch -verbose
+   ```
+2. **Ricompilazione degli Oggetti Invalidi:**
+   Esegui la ricompilazione sul database primario:
+   ```sql
+   sqlplus / as sysdba
+   @?/rdbms/admin/utlrp.sql
+   ```
+3. **Verifica dei Log delle Patch SQL:**
+   Interroga la vista del dizionario per verificare lo stato di successo:
+   ```sql
+   SET LINES 200 PAGES 100
+   COL version FORMAT A12
+   COL status FORMAT A15
+   COL description FORMAT A60
+   SELECT patch_id, patch_uid, version, status, description 
+   FROM dba_registry_sqlpatch
+   ORDER BY action_time DESC;
+   ```
+   *(Le modifiche apportate da datapatch verranno replicate automaticamente a `SOLE` tramite Redo Apply).*
+
+---
+
+### 5. Finalizzazione e Ripristino
+
+1. **Riattivazione del Redo Apply su SOLE (Standby):**
+   ```text
+   DGMGRL> EDIT DATABASE 'SOLE' SET STATE='APPLY-ON';
+   ```
+2. **Switchback (Opzionale):**
+   Se richiesto dal piano operativo, ripristina la configurazione originale riassegnando i ruoli iniziali:
+   ```text
+   DGMGRL> SWITCHOVER TO 'SOLE';
+   ```
+3. **Riattivazione FSFO:**
+   Se precedentemente configurato, riabilita il Fast-Start Failover:
+   ```text
+   DGMGRL> ENABLE FAST_START FAILOVER;
+   ```
+   ```
+
 ## Troubleshooting RAC Data Guard
 
 | Sintomo | Causa probabile | Azione |

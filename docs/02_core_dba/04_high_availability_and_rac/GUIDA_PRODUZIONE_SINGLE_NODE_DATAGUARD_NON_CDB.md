@@ -967,6 +967,179 @@ Prima di un cutover applicativo:
 - restore point garantito se lo spazio FRA lo consente;
 - owner applicativo e operation allineati su finestra e criteri go/no-go.
 
+## Fase 13 - Patching in ambiente Data Guard Single Instance (Standby-First)
+
+Il patching del software Oracle Database in una configurazione Data Guard deve seguire la metodologia **Standby-First** raccomandata da Oracle MAA per ridurre al minimo i rischi in produzione. 
+
+Tuttavia, è fondamentale distinguere tra le patch **Database Release Update (RU)** standard e le patch **OJVM (Oracle Java Virtual Machine)**, in quanto presentano requisiti di compatibilità drasticamente diversi.
+
+> [!IMPORTANT]
+> **REGOLA D'ORO DEL PATCHING IN DATA GUARD**
+> Non eseguire **MAI** il comando `datapatch` sul database Standby Fisico. Il tool `datapatch` effettua aggiornamenti e modifiche al dizionario dei dati SQL, operazione che richiede che il database sia in modalità Read/Write. Tali modifiche devono essere eseguite **esclusivamente sul database Primario attivo** e verranno replicate nativamente sul database Standby tramite il normale flusso di Redo Apply.
+
+---
+
+### 1. Prerequisiti Fondamentali e Gestione OPatch
+
+Prima di applicare qualsiasi patch (sia essa una RU o OJVM), è obbligatorio aggiornare l'utility **OPatch** all'ultima versione disponibile per evitare errori di compilazione o conflitti di inventario.
+
+1. **Download di OPatch:** Scarica l'ultima release di OPatch da My Oracle Support (MOS Note **274526.1**) adatta alla versione di rilascio del tuo DB (19c).
+2. **Aggiornamento di OPatch (eseguito su entrambi i server):**
+   ```bash
+   # Esegui il backup della vecchia directory
+   mv $ORACLE_HOME/OPatch $ORACLE_HOME/OPatch_old_backup
+   # Estrai il nuovo file zip di OPatch direttamente in ORACLE_HOME
+   unzip -q p6880880_190000_Linux-x86-64.zip -d $ORACLE_HOME
+   # Verifica della versione installata
+   $ORACLE_HOME/OPatch/opatch version
+   ```
+
+---
+
+### 2. Vincoli di Compatibilità OJVM in Data Guard
+
+> [!WARNING]
+> **OJVM E COMPATIBILITÀ CON DATA GUARD (MOS Note 1929745.1)**
+> A differenza delle normali Database RU, le patch **OJVM non sono certificate come "Data Guard Standby-First Installable"**. Ciò significa che non è supportata una configurazione in cui lo standby esegue binari OJVM patchati mentre il primario esegue binari non aggiornati, in quanto potrebbero verificarsi disallineamenti di dizionario ed errori nel caricamento delle classi Java.
+
+Per gestire il patching di OJVM all'interno di una topologia Data Guard, si possono seguire **tre opzioni operative**:
+
+*   **Opzione A: Downtime Coordinato Standard (Consigliata per Semplicità):**
+    Si arrestano sia il Primario che lo Standby, si applicano le patch binarie (RU + OJVM) a entrambe le Oracle Home contemporaneamente, quindi si avvia il primario in modalità normale e si esegue `datapatch` (le cui modifiche SQL vengono replicate via redo allo standby montato).
+*   **Opzione B: Out-of-Place Patching (Consigliata per Massima Disponibilità):**
+    Si creano due nuove Oracle Home a monte sia sul primario che sullo standby, installando sia la RU che la OJVM patchata. Nella finestra di manutenzione, si esegue lo switch dei database sulle nuove Home, azzerando i tempi di applicazione fisica delle patch binarie.
+*   **Opzione C: Approccio Ibrido (Solo RU rolling + OJVM coordinata):**
+    Si applicano prima le sole patch Database RU seguendo la normale procedura rolling Standby-First (in quanto le RU sono 100% Standby-First installabili). In una finestra coordinata successiva, si applica la parte OJVM e si esegue `datapatch`.
+
+---
+
+### 3. Procedura Operativa Coordinata (In-Place RU + OJVM)
+
+Di seguito viene descritta la procedura standard per l'applicazione pulita di **Database RU + OJVM** con allineamento binario.
+
+#### Parte A: Patching dei Binari sul server Standby (M24)
+1. **Verifica dello stato iniziale:**
+   Assicurarsi che la configurazione Data Guard sia in salute e che il Broker indichi `SUCCESS`:
+   ```bash
+   dgmgrl sys/pass@SOLE_DG "show configuration"
+   ```
+2. **Disattivazione temporanea del Redo Apply:**
+   ```text
+   DGMGRL> EDIT DATABASE 'M24' SET STATE='LOG-APPLY-OFF';
+   ```
+3. **Shutdown del database Standby e del Listener:**
+   Sul server Standby (`m24-stby01`):
+   ```sql
+   sqlplus / as sysdba
+   SHUTDOWN IMMEDIATE;
+   ```
+   Fermare il listener dedicato Data Guard:
+   ```bash
+   lsnrctl stop LISTENER_DG
+   ```
+4. **Applicazione delle patch binarie (Database RU + OJVM):**
+   ```bash
+   cd /path/to/patches/RU
+   $ORACLE_HOME/OPatch/opatch apply -silent
+   
+   cd /path/to/patches/OJVM
+   $ORACLE_HOME/OPatch/opatch apply -silent
+   ```
+5. **Avvio del database Standby e del Listener:**
+   Avviare il listener e montare il database standby (in stato `MOUNT` o `READ ONLY` se in licenza ADG):
+   ```bash
+   lsnrctl start LISTENER_DG
+   ```
+   ```sql
+   sqlplus / as sysdba
+   STARTUP MOUNT;
+   ```
+   *(Nota: Il Redo Apply rimane al momento in LOG-APPLY-OFF).*
+
+#### Parte B: Patching dei Binari sul server Primario (SOLE)
+1. **Defer del Redo Transport sul Primario:**
+   Evita che il primario tenti di inviare redo durante lo spegnimento:
+   ```sql
+   ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=DEFER SCOPE=BOTH;
+   ```
+2. **Shutdown del database Primario e del Listener:**
+   Sul server Primario (`sole-pri01`):
+   ```sql
+   sqlplus / as sysdba
+   SHUTDOWN IMMEDIATE;
+   ```
+   Fermare il listener:
+   ```bash
+   lsnrctl stop LISTENER
+   ```
+3. **Applicazione delle patch binarie (Database RU + OJVM) sul Primario:**
+   ```bash
+   cd /path/to/patches/RU
+   $ORACLE_HOME/OPatch/opatch apply -silent
+   
+   cd /path/to/patches/OJVM
+   $ORACLE_HOME/OPatch/opatch apply -silent
+   ```
+4. **Avvio del database Primario e del Listener:**
+   ```bash
+   lsnrctl start LISTENER
+   ```
+   ```sql
+   sqlplus / as sysdba
+   STARTUP;
+   ```
+
+---
+
+### 4. Esecuzione di Datapatch sul Primario e Validazione
+
+Con entrambi i database aggiornati a livello binario (stesso livello di RU e OJVM), è possibile applicare le modifiche SQL a livello di dizionario.
+
+1. **Esecuzione di Datapatch sul Primario (SOLE):**
+   Eseguire il comando **esclusivamente sul database Primario**:
+   ```bash
+   cd $ORACLE_HOME/OPatch
+   ./datapatch -verbose
+   ```
+2. **Ricompilazione degli Oggetti Invalidi:**
+   Dopo l'applicazione delle patch SQL, ricompila eventuali oggetti di sistema o applicativi invalidati:
+   ```sql
+   sqlplus / as sysdba
+   @?/rdbms/admin/utlrp.sql
+   ```
+3. **Verifica dei Log e dello Stato delle Patch SQL:**
+   Interroga il dizionario sul primario per assicurarti che tutte le patch (sia RU che OJVM) siano in stato `SUCCESS`:
+   ```sql
+   SET LINES 200 PAGES 100
+   COL version FORMAT A12
+   COL status FORMAT A15
+   COL description FORMAT A60
+   SELECT patch_id, patch_uid, version, status, description 
+   FROM dba_registry_sqlpatch
+   ORDER BY action_time DESC;
+   ```
+
+---
+
+### 5. Riattivazione del Flusso Data Guard
+
+1. **Riattivazione del Redo Transport dal Primario:**
+   ```sql
+   ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE SCOPE=BOTH;
+   ```
+2. **Riattivazione del Redo Apply dallo Standby:**
+   Dal Broker:
+   ```text
+   DGMGRL> EDIT DATABASE 'M24' SET STATE='APPLY-ON';
+   ```
+3. **Validazione finale:**
+   Verifica che le modifiche al dizionario SQL siano state replicate correttamente via redo allo Standby e che la configurazione sia pulita:
+   ```text
+   DGMGRL> SHOW CONFIGURATION;
+   DGMGRL> VALIDATE DATABASE 'M24';
+   ```
+   *(Nota: Il file alert.log del database standby M24 mostrerà l'applicazione ordinata delle modifiche SQL propagate dal primario).*
+
 ## Troubleshooting rapido
 
 | Sintomo | Causa probabile | Azione |
