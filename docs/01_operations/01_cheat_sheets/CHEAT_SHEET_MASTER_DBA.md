@@ -2,6 +2,14 @@
 
 > **Scopo:** Questa è la guida operativa "gigante" del DBA, che raccoglie in un unico punto di riferimento tutti i comandi, le sintassi, i precheck e le procedure di troubleshooting relativi ai principali strumenti di amministrazione Oracle 19c. 
 
+> [!TIP]
+> **GUIDE DI PRODUZIONE E PROCEDURE OPERATIVE CORRELATE:**
+> - **Backup & Recovery**: [FASE 5: Strategia RMAN Backup](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | [RMAN Enterprise](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md)
+> - **RAC & High Availability**: [RAC Primary + Standby Data Guard](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | [Single Node Data Guard](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md)
+> - **Data Guard Operations**: [Configurazione Broker (Fase 4)](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | [Switchover](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) | [Failover & Reinstate](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md)
+> - **Patching & Upgrades**: [Patching RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_PATCHING_RAC.md) | [Upgrade RU RAC](../../02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_RU_RAC.md)
+> - **Replicazione GoldenGate**: [GoldenGate Microservices (Fase 7)](../../02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | [GoldenGate 19c Completa](../../02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md)
+
 ---
 
 ## Indice della Guida

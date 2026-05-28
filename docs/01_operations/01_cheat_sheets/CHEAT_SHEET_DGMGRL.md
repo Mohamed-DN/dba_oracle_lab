@@ -1,5 +1,21 @@
 # Cheat Sheet DGMGRL (Data Guard Broker)
 
+> [!NOTE]
+> **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Cheat Sheet Operativi (Pronto Intervento)**:
+>   - **DGMGRL (Broker - questa scheda)**: [CHEAT_SHEET_DGMGRL.md](./CHEAT_SHEET_DGMGRL.md) (lag, switchover rapido, comandi broker).
+>   - **SRVCTL & CRSCTL**: [CHEAT_SHEET_SRVCTL_CRSCTL.md](./CHEAT_SHEET_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
+>   - **ASMCMD**: [CHEAT_SHEET_ASMCMD.md](./CHEAT_SHEET_ASMCMD.md) (gestione storage ASM).
+>   - **Master DBA Cheat Sheet**: [CHEAT_SHEET_MASTER_DBA.md](./CHEAT_SHEET_MASTER_DBA.md) (tutti i comandi consolidati).
+> - **Procedure di Produzione (Non-CDB)**:
+>   - **Single Node Data Guard**: [GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) (architettura a singolo nodo primario e standby).
+>   - **RAC Data Guard**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) (architettura multi-nodo primario e standby).
+> - **Guide di Laboratorio (RAC 19c Multi-Tenant/CDB)**:
+>   - **Preparazione e Creazione Standby (Fase 3)**: [GUIDA_FASE3_RAC_STANDBY.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) (RMAN duplicate active database).
+>   - **Configurazione Broker DGMGRL (Fase 4)**: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) (creazione e ottimizzazione broker).
+>   - **Manuale Switchover Completo**: [GUIDA_SWITCHOVER_COMPLETO.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) (passaggi sicuri di switchover).
+>   - **Manuale Failover & Reinstate**: [GUIDA_FAILOVER_E_REINSTATE.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) (gestione dei disastri e ripristino).
+
 ## Obiettivo
 
 Fornire una scheda rapida per gestire Data Guard Broker con DGMGRL: stato, switchover, failover e monitoraggio lag.

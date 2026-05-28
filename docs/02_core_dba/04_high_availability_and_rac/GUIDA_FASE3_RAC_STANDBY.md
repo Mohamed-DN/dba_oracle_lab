@@ -1,5 +1,21 @@
 # FASE 3: Preparazione e Creazione Oracle RAC Standby (tramite RMAN Duplicate)
 
+> [!NOTE]
+> **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
+> - **Procedure di Produzione (Non-CDB)**:
+>   - **Single Node Data Guard**: [GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) (architettura a singolo nodo primario e standby).
+>   - **RAC Data Guard**: [GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) (architettura multi-nodo primario e standby).
+> - **Guide di Laboratorio (RAC 19c Multi-Tenant/CDB)**:
+>   - **Preparazione e Creazione Standby (Fase 3 - questa guida)**: [GUIDA_FASE3_RAC_STANDBY.md](./GUIDA_FASE3_RAC_STANDBY.md) (RMAN duplicate active database).
+>   - **Configurazione Broker DGMGRL (Fase 4)**: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) (creazione e ottimizzazione broker).
+>   - **Manuale Switchover Completo**: [GUIDA_SWITCHOVER_COMPLETO.md](./GUIDA_SWITCHOVER_COMPLETO.md) (passaggi sicuri di switchover).
+>   - **Manuale Failover & Reinstate**: [GUIDA_FAILOVER_E_REINSTATE.md](./GUIDA_FAILOVER_E_REINSTATE.md) (gestione dei disastri e ripristino).
+> - **Cheat Sheet Operativi (Pronto Intervento)**:
+>   - **DGMGRL (Broker)**: [CHEAT_SHEET_DGMGRL.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_DGMGRL.md) (lag, switchover rapido, comandi broker).
+>   - **SRVCTL & CRSCTL**: [CHEAT_SHEET_SRVCTL_CRSCTL.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_SRVCTL_CRSCTL.md) (gestione risorse cluster RAC e Grid).
+>   - **ASMCMD**: [CHEAT_SHEET_ASMCMD.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_ASMCMD.md) (gestione storage ASM).
+>   - **Master DBA Cheat Sheet**: [CHEAT_SHEET_MASTER_DBA.md](../../01_operations/01_cheat_sheets/CHEAT_SHEET_MASTER_DBA.md) (tutti i comandi consolidati).
+
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
 
 > 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
