@@ -1,4 +1,4 @@
-# GUIDA COMPLETA: Oracle Database Vault — Separation of Duties & Protezione Multitenant
+# GUIDA MONUMENTALE: Oracle Database Vault — Separation of Duties & Protezione Multitenant
 
 > [!NOTE]
 > **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
@@ -160,6 +160,10 @@ ALTER PLUGGABLE DATABASE PDB_PROD OPEN;
 
 Un **Realm** è un perimetro logico di sicurezza a cui è associato un insieme di oggetti (schemi, tabelle, viste, ruoli). Una volta che un oggetto fa parte di un Realm, l'accesso è **bloccato a tutti**, compresi gli amministratori `SYS`, `SYSTEM` e gli utenti con ruoli `DBA`, a meno che non siano stati autorizzati esplicitamente dal `dbvowner`.
 
+Esistono due tipologie di Realms:
+1.  **Regular Realm**: Consente ai proprietari degli schemi (es. lo schema `PAYROLL` che possiede la tabella) di accedere liberamente ai propri dati senza essere esplicitamente autorizzati nel realm.
+2.  **Mandatory Realm**: Estremamente restrittivo. Anche il proprietario stesso dello schema viene bloccato a meno che non gli venga concessa un'autorizzazione formale all'interno del realm. Ottimo per proteggere tabelle da application owner compromessi.
+
 ### Scenario: Proteggere i dati dello schema `PAYROLL`
 Vogliamo fare in modo che solo l'utente applicativo `PAYROLL_APP` possa accedere alla tabella `SALARIES` dello schema `PAYROLL`. I DBA devono poter fare la manutenzione fisica ma non leggere i dati dei dipendenti.
 
@@ -192,7 +196,8 @@ BEGIN
     realm_name    => 'Realm Protezione Payroll',
     description   => 'Protezione dei dati contrattuali e stipendi dipendenti',
     enabled       => DBMS_MACUTL.G_YES,
-    audit_options => DBMS_MACUTL.G_AUDIT_ON_FAILURE
+    audit_options => DBMS_MACUTL.G_AUDIT_ON_FAILURE,
+    realm_type    => 1 -- 0 per Regular, 1 per Mandatory
   );
 END;
 /
@@ -247,12 +252,13 @@ END;
 /
 
 -- 2. Creazione del Rule Set (Insieme di Regole)
+-- Un Rule Set può contenere più Rules e definirne il criterio di valutazione (TUTTE o ALMENO UNA)
 BEGIN
   DBMS_MACADM.CREATE_RULE_SET(
     rule_set_name => 'RuleSet_Maint_Only',
     description   => 'Consente DDL critiche solo nella finestra notturna da IP sicuro',
     enabled       => DBMS_MACUTL.G_YES,
-    eval_options  => DBMS_MACUTL.G_EVAL_ALL,
+    eval_options  => DBMS_MACUTL.G_EVAL_ALL, -- Tutte le regole interne devono restituire TRUE
     audit_options => DBMS_MACUTL.G_AUDIT_ON_FAILURE
   );
 END;
@@ -285,7 +291,14 @@ END;
 
 Quando Database Vault è attivo, le tradizionali operazioni del DBA cambiano drasticamente. Ecco una guida ai problemi tipici di produzione.
 
-### 6.1 Errore ORA-47400 / ORA-47401 (Realm/Command Violation)
+### 6.1 Viste di Sistema per Database Vault
+*   `DBA_DV_REALM`: Elenco dei realm attivi e configurati.
+*   `DBA_DV_REALM_OBJECT`: Oggetti protetti da un realm.
+*   `DBA_DV_REALM_AUTH`: Autorizzazioni esplicite concesse all'interno di un realm.
+*   `DBA_DV_COMMAND_RULE`: Elenco delle command rules create.
+*   `DBA_DV_STATUS`: Stato generale di abilitazione del servizio DV.
+
+### 6.2 Errore ORA-47400 / ORA-47401 (Realm/Command Violation)
 *   **Problema**: Un batch applicativo o un DBA riceve `ORA-47400: Command Rule violation for SELECT on PAYROLL.SALARIES`.
 *   **Causa**: La tabella è protetta da un Realm e l'utente che sta tentando l'operazione non è stato autorizzato dal `dbvowner`.
 *   **Risoluzione (Esegui come `dbvowner`)**:
@@ -306,7 +319,7 @@ Quando Database Vault è attivo, le tradizionali operazioni del DBA cambiano dra
         EXEC DBMS_MACADM.ADD_AUTH_TO_REALM('Realm Protezione Payroll', 'NOME_UTENTE_APPLICATIVO');
         ```
 
-### 6.2 Il DBA non può creare Utenti o assegnare Privilegi (`ORA-01031`)
+### 6.3 Il DBA non può creare Utenti o assegnare Privilegi (`ORA-01031`)
 *   **Causa**: Con Database Vault abilitato, l'utente `SYS` o `SYSTEM` o chiunque abbia il ruolo `DBA` **perde** il privilegio di eseguire `CREATE USER`, `DROP USER`, `GRANT` e `REVOKE`.
 *   **Risoluzione**: Queste operazioni devono essere eseguite connettendosi con l'account `dbvacctmgr` dedicato (o `C##DV_ACCTMGR` per il CDB).
     ```sql
@@ -324,6 +337,7 @@ Quando Database Vault è attivo, le tradizionali operazioni del DBA cambiano dra
 
 In caso di incidenti catastrofici in produzione o necessità di manutenzioni strutturali di terze parti non compatibili con i filtri di Database Vault, è possibile disattivare temporaneamente l'opzione.
 
+### 7.1 Disabilitazione Standard via Software
 ```sql
 -- 1. Connettiti come Database Vault Owner locale o comune
 connect dbvowner_local/SecureLocalOwner123#@PDB_PROD
@@ -339,4 +353,17 @@ ALTER PLUGGABLE DATABASE PDB_PROD OPEN;
 
 -- 4. Verifica lo stato (deve mostrare status = DISABLED)
 SELECT status FROM dba_dv_status;
+```
+
+### 7.2 Disabilitazione Fisica a livello Kernel (Estrema Emergenza)
+Se hai perso le password degli account `DV_OWNER` o se il database non si avvia a causa di configurazioni errate di DV, puoi disabilitare il servizio ricompilando i binari a livello di OS Unix.
+
+```bash
+# Esegui come utente oracle a livello OS
+srvctl stop database -d RACDB
+
+cd $ORACLE_HOME/rdbms/lib
+make -f ins_rdbms.mk dv_off ioracle
+
+srvctl start database -d RACDB
 ```
