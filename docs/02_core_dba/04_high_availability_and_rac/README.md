@@ -10,6 +10,8 @@
 | [Failover + Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md) | Scenario distruttivo e recovery |
 | [Flashback Database](./GUIDA_FLASHBACK_DATABASE.md) | Ripristino temporale database |
 | [MAA Best Practices](./GUIDA_MAA_BEST_PRACTICES.md) | Linee guida Oracle MAA |
+| [Produzione: Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) | Primary single instance + standby fisico 19c non-CDB |
+| [Produzione: RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | RAC primary + standby fisico 19c non-CDB |
 
 > ⚠️ Prima di testare failover: spegni tutte le VM e fai backup della cartella VirtualBox VMs.
 
