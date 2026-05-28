@@ -19,6 +19,8 @@
 | [MAA Best Practices](./GUIDA_MAA_BEST_PRACTICES.md) | Linee guida Oracle MAA |
 | [Produzione: Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) | Primary single instance + standby fisico 19c non-CDB |
 | [Produzione: RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | RAC primary + standby fisico 19c non-CDB |
+| [Data Guard Far Sync](./GUIDA_FAR_SYNC_DATAGUARD.md) | Zero Data Loss a distanza geografica con istanza Far Sync |
+| [Application Continuity & TAF](./GUIDA_APPLICATION_CONTINUITY_TAF.md) | Configurazione failover client trasparente lato DB e pool JDBC/UCP |
 
 > ⚠️ Prima di testare failover: spegni tutte le VM e fai backup della cartella VirtualBox VMs.
 

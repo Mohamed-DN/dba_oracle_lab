@@ -11,6 +11,9 @@
 | [Oracle Scheduler](./GUIDA_SCHEDULER_JOBS.md) | Job, chain, auto-tasks |
 | [Security Hardening](./GUIDA_SECURITY_HARDENING.md) | TDE, auditing, encryption, profili |
 | [TDE in Profondità](./GUIDA_TDE_IN_PROFONDITA.md) | Keystore, master key, cifratura e validazione operativa |
+| [Oracle Database Vault](./GUIDA_DATABASE_VAULT_ENTERPRISE.md) | Setup Database Vault, realms, realms authorization, separation of duties |
+| [Unified Auditing & Compliance](./GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md) | Migrazione da traditional audit, policy custom, storage e purge |
+| [Data Masking & Redaction](./GUIDA_DATA_MASKING_REDACTION.md) | Mascheramento dinamico con DBMS_REDACT e statico con Data Pump |
 | [Identità Oracle e Servizi](./GUIDA_IDENTITA_ORACLE_E_SERVIZI.md) | DB_NAME, SID, SERVICE_NAME |
 | [ACL Network Oracle](./GUIDA_ACL_NETWORK_ORACLE.md) | ORA-24247, ACL host/porta, UTL_HTTP/SMTP |
 | [Package Monitor DDL](./GUIDA_PACKAGE_MONITOR_DDL.md) | Trigger DDL + package di audit operativo |
