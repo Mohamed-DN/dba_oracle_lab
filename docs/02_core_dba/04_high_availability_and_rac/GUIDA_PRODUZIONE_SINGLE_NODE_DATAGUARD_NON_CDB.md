@@ -93,7 +93,7 @@ genera un database indipendente con DBID diverso.
 
 Le fasi seguenti sono in ordine di esecuzione consigliato. Non saltare la verifica
 dei file di init: se ORACLE_SID non corrisponde al SID creato con DBCA, SQL*Plus
-cerchera' un `init<SID>.ora` inesistente e l'istanza non partira'.
+cercherà un `init<SID>.ora` inesistente e l'istanza non partirà.
 
 ## Fase 0 - Raccolta evidenze dal vecchio database
 
