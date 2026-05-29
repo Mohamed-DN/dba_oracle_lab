@@ -103,6 +103,7 @@ Esegui sul DB sorgente e salva output in spool.
 SET LINES 220 PAGES 500 TRIMSPOOL ON
 COL name FORMAT A45
 COL value FORMAT A120
+COL member FORMAT A60
 SPOOL old_db_assessment_&&_DATE..log
 
 SELECT name, dbid, db_unique_name, open_mode, database_role,
@@ -176,6 +177,13 @@ ORDER BY l.thread#, l.group#, lf.member;
 SELECT group#, thread#, bytes/1024/1024 AS size_mb, status
 FROM v$standby_log
 ORDER BY thread#, group#;
+
+SELECT l.group#,
+       l.bytes/1024/1024 AS size_mb,
+       f.member
+FROM v$standby_log l
+JOIN v$logfile f ON l.group# = f.group#
+ORDER BY l.group#, f.member;
 
 SELECT file#, name, bytes/1024/1024 AS size_mb, status
 FROM v$datafile
