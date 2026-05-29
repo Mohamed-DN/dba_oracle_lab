@@ -51,6 +51,12 @@ Deve essere una copia fisica del primary, con stesso DBID. Il metodo standard e'
 RMAN DUPLICATE TARGET DATABASE FOR STANDBY, da backup o FROM ACTIVE DATABASE.
 ```
 
+## Obiettivi
+
+- creare o migrare un primary non-CDB apribile senza ambiguita' di SID;
+- predisporre i prerequisiti Data Guard (ARCHIVELOG, FORCE LOGGING, SRL, parametri);
+- creare lo standby fisico con RMAN e validare transport/apply.
+
 ## Fonti Oracle ufficiali usate
 
 - Oracle 19c Data Guard - Creating a Physical Standby Database: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/creating-oracle-data-guard-physical-standby.html
@@ -82,6 +88,12 @@ DBCA Create Database va bene per creare il nuovo primary non-CDB.
 DBCA Create Database non va bene per creare uno standby fisico Data Guard, perche'
 genera un database indipendente con DBID diverso.
 ```
+
+## Procedura operativa
+
+Le fasi seguenti sono in ordine di esecuzione consigliato. Non saltare la verifica
+dei file di init: se ORACLE_SID non corrisponde al SID creato con DBCA, SQL*Plus
+cerchera' un `init<SID>.ora` inesistente e l'istanza non partira'.
 
 ## Fase 0 - Raccolta evidenze dal vecchio database
 
@@ -428,6 +440,52 @@ Management: EM Express off se non usato
 All Initialization Parameters: includi in SPFILE i parametri decisi
 Redo: gruppi e membri multiplexati, dimensione coerente con sorgente/carico
 ```
+
+### Avvio iniziale del primary e verifica file di init (SPFILE/PFILE)
+
+Se `SQL*Plus` mostra **Connected to an idle instance** e `STARTUP` fallisce con
+`ORA-01078 / LRM-00109: could not open parameter file ... init<SID>.ora`, il
+problema e' quasi sempre un **ORACLE_SID errato** o **file di init mancanti**.
+
+Checklist rapida:
+
+```bash
+echo "$ORACLE_HOME"
+echo "$ORACLE_SID"
+grep -i "^${ORACLE_SID}:" /etc/oratab
+ls -l "$ORACLE_HOME/dbs"/spfile${ORACLE_SID}.ora
+ls -l "$ORACLE_HOME/dbs"/init${ORACLE_SID}.ora
+ls -l "$ORACLE_HOME/dbs"/orapw${ORACLE_SID}
+```
+
+Se lo SPFILE esiste con nome diverso (es. `spfileSOLE.ora`), crea un PFILE di
+puntamento:
+
+```bash
+echo "SPFILE='$ORACLE_HOME/dbs/spfileSOLE.ora'" > "$ORACLE_HOME/dbs/init${ORACLE_SID}.ora"
+```
+
+Se non hai alcuno SPFILE/PFILE, recupera i parametri dal response/log DBCA o
+crea un PFILE minimo (sostituisci i valori con quelli reali) e rigenera lo SPFILE:
+
+```bash
+cat > /tmp/initSOLE.ora <<'EOF'
+db_name=SOLE
+db_unique_name=SOLE
+memory_target=2G
+db_create_file_dest='+DATA'
+db_recovery_file_dest='+FRA'
+EOF
+```
+
+```sql
+STARTUP NOMOUNT PFILE='/tmp/initSOLE.ora';
+CREATE SPFILE FROM PFILE='/tmp/initSOLE.ora';
+SHUTDOWN IMMEDIATE;
+STARTUP;
+```
+
+Se non usi OMF/ASM, aggiungi `control_files` e i path fisici corretti nel PFILE.
 
 Validazione post-DBCA:
 
@@ -1191,11 +1249,40 @@ Con entrambi i database aggiornati a livello binario (stesso livello di RU e OJV
    ```
    *(Nota: Il file alert.log del database standby M24 mostrerà l'applicazione ordinata delle modifiche SQL propagate dal primario).*
 
+## Validazione finale
+
+Primary:
+
+```sql
+SELECT name, open_mode, database_role, log_mode, force_logging, flashback_on
+FROM v$database;
+```
+
+Standby:
+
+```sql
+SELECT name, open_mode, database_role, switchover_status
+FROM v$database;
+
+SELECT process, status, thread#, sequence#
+FROM v$managed_standby
+ORDER BY process;
+```
+
+Broker (se usato):
+
+```text
+DGMGRL> SHOW CONFIGURATION;
+DGMGRL> VALIDATE DATABASE 'SOLE';
+DGMGRL> VALIDATE DATABASE 'M24';
+```
+
 ## Troubleshooting rapido
 
 | Sintomo | Causa probabile | Azione |
 | --- | --- | --- |
 | DBCA `DBT-10002` Grid home | Ambiente punta a Grid Home | Carica profilo DB Home corretto |
+| ORA-01078 / LRM-00109 init<SID>.ora | ORACLE_SID errato o SPFILE/PFILE assente | Verifica SID, crea PFILE di puntamento o rigenera SPFILE |
 | RMAN non si connette a auxiliary | Listener statico assente o password file errata | `lsnrctl services`, ricopia password file |
 | Broker ORA-16664/ORA-12514 | Service DG non registrato | Static listener o local_listener |
 | `WAIT_FOR_GAP` | Archivelog mancante | `v$archive_gap`, copia log o roll-forward |
