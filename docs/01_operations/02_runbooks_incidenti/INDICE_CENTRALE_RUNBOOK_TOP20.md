@@ -50,6 +50,7 @@
 - [33 Audit, Compliance ed Evidence](./RUNBOOK_33_AUDIT_COMPLIANCE_EVIDENCE.md) - audit trail, unified audit, before/after, evidence ticket.
 - [34 TCPS Wallet e Certificati](./RUNBOOK_34_TCPS_WALLET_CERTIFICATI.md) - TCPS, wallet Oracle Net, certificati, DN match, rotazione.
 - [35 Capacity Forecast Enterprise](./RUNBOOK_35_CAPACITY_FORECAST_ENTERPRISE.md) - forecast tablespace/FRA/ASM/SYSAUX/processi.
+- [36 Cambio DB_UNIQUE_NAME e Sanitizzazione ASM](./RUNBOOK_36_CAMBIO_DB_UNIQUE_NAME_SANITIZZAZIONE_ASM.md) - allineamento naming e pulizia ASM.
 - [Guida Migrazione MAA](./GUIDA_MIGRAZIONE_MAA_BEST_PRACTICES.md)
 
 ## Cheat sheet

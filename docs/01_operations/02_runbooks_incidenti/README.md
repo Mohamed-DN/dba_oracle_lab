@@ -76,6 +76,7 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 | 20 | [Export/Import Prod-Preprod](./RUNBOOK_20_EXPORT_IMPORT_PROD_PREPROD.md) | Refresh enterprise con Data Pump |
 | 29 | [Patching Oracle RAC/Data Guard](./RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md) | RU/RUR, OPatch, datapatch, rolling/non-rolling, DG |
 | 30 | [Multitenant CDB/PDB Operations](./RUNBOOK_30_MULTITENANT_PDB_OPERATIONS.md) | Open/close PDB, clone, plug/unplug, restore PDB |
+| 36 | [Cambio DB_UNIQUE_NAME e Sanitizzazione ASM](./RUNBOOK_36_CAMBIO_DB_UNIQUE_NAME_SANITIZZAZIONE_ASM.md) | Allineamento naming e pulizia ASM |
 | 14 | [Chaos Network Partition Data Guard](./RUNBOOK_14_CHAOS_NETWORK_PARTITION_DATAGUARD.md) | Drill laboratorio resilienza |
 | 15 | [Checkmk Agent TLS + SMART/RAID](./RUNBOOK_15_CHECKMK_AGENT_TLS_SMART_RAID_TROUBLESHOOTING.md) | Onboarding o troubleshooting monitoraggio |
 
