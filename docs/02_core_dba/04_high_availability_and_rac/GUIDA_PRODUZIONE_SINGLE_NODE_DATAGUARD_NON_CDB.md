@@ -53,7 +53,7 @@ RMAN DUPLICATE TARGET DATABASE FOR STANDBY, da backup o FROM ACTIVE DATABASE.
 
 ## Obiettivi
 
-- creare o migrare un primary non-CDB apribile senza ambiguita' di SID;
+- creare o migrare un primary non-CDB apribile senza ambiguità di SID;
 - predisporre i prerequisiti Data Guard (ARCHIVELOG, FORCE LOGGING, SRL, parametri);
 - creare lo standby fisico con RMAN e validare transport/apply.
 
@@ -85,7 +85,7 @@ Regola:
 
 ```text
 DBCA Create Database va bene per creare il nuovo primary non-CDB.
-DBCA Create Database non va bene per creare uno standby fisico Data Guard, perche'
+DBCA Create Database non va bene per creare uno standby fisico Data Guard, perché
 genera un database indipendente con DBID diverso.
 ```
 
@@ -445,7 +445,7 @@ Redo: gruppi e membri multiplexati, dimensione coerente con sorgente/carico
 
 Se `SQL*Plus` mostra **Connected to an idle instance** e `STARTUP` fallisce con
 `ORA-01078 / LRM-00109: could not open parameter file ... init<SID>.ora`, il
-problema e' quasi sempre un **ORACLE_SID errato** o **file di init mancanti**.
+problema è quasi sempre un **ORACLE_SID errato** o **file di init mancanti**.
 
 Checklist rapida:
 
