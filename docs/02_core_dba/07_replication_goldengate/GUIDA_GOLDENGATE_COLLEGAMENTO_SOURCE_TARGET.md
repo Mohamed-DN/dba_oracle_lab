@@ -138,14 +138,14 @@ Dal source GoldenGate host:
 
 ```bash
 tnsping RACDB_GG
-sqlplus c##ggadmin/<PASSWORD_SICURA>@RACDB_GG
+sqlplus /@RACDB_GG
 ```
 
 Dal target GoldenGate host:
 
 ```bash
 tnsping DBTARGET_GG
-sqlplus ggadmin/<PASSWORD_SICURA>@DBTARGET_GG
+sqlplus /@DBTARGET_GG
 ```
 
 Per evitare password in shell history, usa login interattivo o wallet/credential store.

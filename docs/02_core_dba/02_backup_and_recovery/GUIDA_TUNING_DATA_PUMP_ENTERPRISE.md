@@ -2,6 +2,23 @@
 
 
 ## [ARCHITETTURA VISIVA] Data Pump Parallelism
+
+## Obiettivo operativo
+
+Ridurre la durata di export e import mantenendo un carico prevedibile su database e storage.
+
+## Procedura operativa
+
+Misura baseline, scegli `PARALLEL` e dump file coerenti, monitora worker e I/O, poi aumenta
+gradualmente il parallelismo solo se il collo di bottiglia lo consente.
+
+## Validazione finale
+
+Confronta durata, throughput, errori e impatto sul workload con la baseline.
+
+## Troubleshooting rapido
+
+Se il job rallenta, verifica worker, spazio, filesystem, wait event e master table prima del rilancio.
 ```text
 
                                +----------------+
@@ -37,7 +54,7 @@ Oracle Data Pump (`expdp` e `impdp`) è una tecnologia server-side introdotta pe
                                      |
                +---------------------+---------------------+
                v (Assegna Lavoro)                          v (Crea/Aggiorna)
-      [ WORKER PROCESSES DWnn ] &amp;lt;--------------------&gt; [ MASTER TABLE ]
+      [ WORKER PROCESSES DWnn ] <--------------------&gt; [ MASTER TABLE ]
         - Leggono datafile                               - Stato del job
         - Scrivono dumpfiles                             - Elenco oggetti
         - Parallelizzazione                              - Monitoraggio
@@ -63,7 +80,7 @@ Il parallelismo definisce il numero di worker process attivi contemporaneamente.
 *   *Vincolo dei Dumpfile*: Se configuri `PARALLEL=16`, **devi specificare almeno 16 file di dump distinti** (o usare il metacarattere `%U` per la generazione automatica). Se più worker provano a scrivere sullo stesso file dump, l'I/O viene serializzato eliminando i benefici del parallelismo.
 
 ```bash
-expdp system/SecureEnterprisePassword123# \
+expdp system \
   schemas=APP_CRM \
   directory=DPUMP_DIR \
   dumpfile=crm_prod_export_%U.dmp \ -- %U genera file multipli (es. crm_prod_export_01.dmp, crm_prod_export_02.dmp)
@@ -77,7 +94,7 @@ In ambienti Real Application Clusters (RAC), di default Data Pump tenta di distr
 *   *Soluzione*: Impostare sempre **`CLUSTER=NO`**. Questo forza tutti i worker process a girare **esclusivamente sull'istanza locale** a cui ci si connette, azzerando il traffico di rete privata Interconnect.
 
 ```bash
-expdp system/SecureEnterprisePassword123#@RACDB_INST1 \
+expdp /@RACDB_INST1 \
   schemas=APP_CRM \
   directory=DPUMP_DIR \
   dumpfile=crm_prod_export_%U.dmp \
@@ -92,7 +109,7 @@ Data Pump sceglie autonomamente il metodo di caricamento/scaricamento dei dati:
 
 Se le tue tabelle non hanno vincoli bloccanti, forza il metodo Direct Path per raddoppiare le performance:
 ```bash
-expdp system/SecureEnterprisePassword123# \
+expdp system \
   schemas=APP_CRM \
   directory=DPUMP_DIR \
   dumpfile=crm_prod_export_%U.dmp \
@@ -106,7 +123,7 @@ Per analizzare dove si perdono secondi preziosi durante operazioni su database d
 *   `EXCLUDE=STATISTICS`: Esclude le statistiche in fase di importazione. Le statistiche verranno rigenerate successivamente in parallelo tramite `DBMS_STATS`, riducendo i tempi di importazione del 30%.
 
 ```bash
-impdp system/SecureEnterprisePassword123# \
+impdp system \
   schemas=APP_CRM \
   directory=DPUMP_DIR \
   dumpfile=crm_prod_export_01.dmp \
@@ -169,7 +186,7 @@ In caso di rallentamenti inspiegabili dell'I/O sui file di dump, è possibile av
 *   `TRACE=480300`: Abilita il tracciamento completo delle performance di I/O e dei worker process, scrivendo file di trace dettagliati sotto la directory di diagnostica ADR del database.
 
 ```bash
-expdp system/SecureEnterprisePassword123# \
+expdp system \
   schemas=APP_CRM \
   directory=DPUMP_DIR \
   dumpfile=crm_prod_export_%U.dmp \

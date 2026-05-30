@@ -11,21 +11,24 @@
 
 ## 1. Connessione RMAN
 
+Gli alias remoti `/@ALIAS` presuppongono un wallet SEPS. Per una sessione locale
+usa OS authentication con `/`; non inserire password nella command line.
+
 ```rman
 -- Connessione locale (OS Auth)
 rman target /
 
--- Connessione con password (non-CDB / CDB Root)
-rman target sys/password@orcl
+-- Connessione remota tramite wallet SEPS (non-CDB / CDB Root)
+rman target /@orcl
 
 -- Connessione con catalog
-rman target / catalog rman/password@catdb
+rman target / catalog /@catdb
 
 -- Connessione target + auxiliary (per duplicate)
-rman target sys/pass@PRIMARY auxiliary sys/pass@STANDBY
+rman target /@PRIMARY auxiliary /@STANDBY
 
 -- Connessione a CDB root
-rman target sys/pass@CDB1
+rman target /@CDB1
 
 -- Connessione diagnostica (solo lettura, senza recovery catalog)
 rman checksyntax
@@ -165,11 +168,11 @@ BACKUP SPFILE FORMAT '/backup/rman/spfile_%U.bkp';
 BACKUP DATABASE;  -- i backup saranno già criptati
 
 -- Encryption con password RMAN (se TDE NON è attivo)
-SET ENCRYPTION ON IDENTIFIED BY 'backup_encrypt_pass' ONLY;
+SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>' ONLY;
 BACKUP DATABASE;
 
 -- Encryption duale (TDE + password, per trasferimento offsite)
-SET ENCRYPTION ON IDENTIFIED BY 'offsite_pass';
+SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>';
 BACKUP DATABASE FORMAT '/backup/offsite/%U.bkp';
 
 -- Verificare stato encryption
@@ -349,7 +352,11 @@ DELETE NOPROMPT OBSOLETE;
 -- Elimina backup specifici
 DELETE BACKUP TAG 'OLD_FULL_20260101';
 DELETE BACKUPSET 456;
-DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+
+-- Elimina solo archivelog eleggibili secondo la deletion policy configurata.
+-- In Data Guard verifica prima transport/apply lag.
+SHOW ARCHIVELOG DELETION POLICY;
+DELETE NOPROMPT ARCHIVELOG ALL;
 ```
 
 ### 5.4 Report
@@ -399,7 +406,7 @@ LIST ARCHIVELOG ALL;
 ### 6.1 Active Duplicate (via rete, senza backup)
 ```rman
 -- Da eseguire dallo standby verso il primary
-rman target sys/pass@PRIMARY auxiliary sys/pass@CLONE
+rman target /@PRIMARY auxiliary /@CLONE
 
 DUPLICATE TARGET DATABASE TO CLONEDB
   FROM ACTIVE DATABASE
@@ -414,7 +421,7 @@ DUPLICATE TARGET DATABASE TO CLONEDB
 
 ### 6.2 Active Duplicate FOR STANDBY (Data Guard)
 ```rman
-rman target sys/pass@PRIMARY auxiliary sys/pass@STANDBY
+rman target /@PRIMARY auxiliary /@STANDBY
 
 DUPLICATE TARGET DATABASE FOR STANDBY
   FROM ACTIVE DATABASE
@@ -428,7 +435,7 @@ DUPLICATE TARGET DATABASE FOR STANDBY
 
 ### 6.3 Duplicate da Backup (Backup-Based)
 ```rman
-rman auxiliary sys/pass@CLONE
+rman auxiliary /@CLONE
 
 DUPLICATE TARGET DATABASE TO CLONEDB
   BACKUP LOCATION '/backup/rman/'
@@ -451,6 +458,31 @@ RECOVER TABLESPACE users
 -- Verifica post-TSPITR
 ALTER TABLESPACE users ONLINE;
 ```
+
+---
+
+## 7A. Recover Table (Errore Umano: DROP o DELETE)
+
+```rman
+-- Esegui RMAN localmente sul target aperto read-write e in ARCHIVELOG mode.
+RECOVER TABLE HR.ORDERS
+  UNTIL TIME 'SYSDATE-1'
+  AUXILIARY DESTINATION '/tmp/rman_table_aux'
+  REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';
+
+-- Variante PDB: collegati localmente alla root CDB.
+RECOVER TABLE HR.ORDERS OF PLUGGABLE DATABASE APPPDB
+  UNTIL SCN 123456789
+  AUXILIARY DESTINATION '/tmp/rman_table_aux'
+  DATAPUMP DESTINATION '/tmp/rman_table_dump'
+  DUMP FILE 'orders_recovered.dmp'
+  NOTABLEIMPORT;
+```
+
+RMAN crea un auxiliary database temporaneo, recupera l'oggetto al PITR richiesto
+e usa Data Pump. Verifica backup e archivelog continui, spazio auxiliary e limiti
+Oracle prima del comando. Approfondimento:
+[Fase 5 RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md).
 
 ---
 

@@ -128,12 +128,16 @@ asmcmd lsdg
 
 **Risoluzione Tattica (se +FRA è pieno al 100%)**:
 Il database è fermo. Gli archivelog non possono essere scritti.
-1. Accedere a RMAN e pulire forzatamente i backup e log vecchi:
+1. Accedere a RMAN, verificare policy e pulire solo file eleggibili:
 ```bash
 rman target /
+RMAN> SHOW ARCHIVELOG DELETION POLICY;
 RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';
+RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+RMAN> DELETE NOPROMPT OBSOLETE;
 ```
+Se Data Guard e' in lag o irraggiungibile, preservare prima gli archivelog e
+usare `RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md`, scenario DG-061.
 
 **Risoluzione Tattica (se +DATA è pieno)**:
 Aggiungere urgentemente un disco LUN (richiede il team Storage).
@@ -351,10 +355,12 @@ Se il disco fisico è pieno e non puoi aumentare il parametro:
 ```bash
 rman target /
 RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';
--- Rispondere YES.
+RMAN> SHOW ARCHIVELOG DELETION POLICY;
+RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+RMAN> DELETE NOPROMPT OBSOLETE;
 ```
-*Attenzione: Se l'archivelog eliminato non è stato backuppato, il database non è più ripristinabile al Point-In-Time odierno.*
+*Attenzione: Se Data Guard e' in lag o irraggiungibile, preservare prima i redo.
+`DELETE FORCE` ignora la deletion policy e richiede autorizzazione Sev1 esplicita.*
 
 ---
 

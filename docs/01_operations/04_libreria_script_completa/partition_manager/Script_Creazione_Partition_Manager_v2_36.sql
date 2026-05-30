@@ -1195,9 +1195,9 @@ IS
 
     20220309      versione 2.23     Modificata RenamePartition per evitare di rinominare la partizioni di indice dell'ultima partizione ( che presumibilemente e' quella "attiva"
             Fixato problema della CreatePartition che nel caso di partizione Cestino creaca la parzione di default con lo steso nome della nuova partizione
-            Modificata SendMail per abbasssare priorit������ a WARn nel caso in cui il mail server non sia raggiungibile
+            Modificata SendMail per abbasssare priorita' a WARn nel caso in cui il mail server non sia raggiungibile
 
-    20220314      versione 2.24     Modificata CanBeOnline per riattivare la possibilit������ di fare lavori in online attivando Advanced Compression
+    20220314      versione 2.24     Modificata CanBeOnline per riattivare la possibilita' di fare lavori in online attivando Advanced Compression
                                        Modificata CompressPartition per rebuildare partitioni di indice non valide a seguito della compress della partizione
                                        Modificata CompressPartition per permettere la compressione OLTP ( il default resta BASIC )
                                        Modificato Trigger di check per permettere la compress oltp
@@ -1221,11 +1221,11 @@ IS
                                        Modifica della commit per funzionalita ArchiveQuery
                                        Modificata clausola di start in caso si specifichi Table	_Name in modo che il record debba essere enabled per essere eseguito
 
-    20231114      versione 2.32     Fix trigger di compatibilit�� logiche
+    20231114      versione 2.32     Fix trigger di compatibilita' logiche
 
     20240214   versione 2.33     Fix enable/disable fk per logica append
 
-	20240314   versione 2.34     Aggiunta exception nella clausola di export per partitione gi�� lavorata
+	20240314   versione 2.34     Aggiunta exception nella clausola di export per partitione gia' lavorata
 
 	20241004	versione 2.35    Aggiunta modifica a select in procedure "StartMaintenance" per evitare errore "ORA-01555: snapshot too old"
 
@@ -4441,7 +4441,7 @@ IS
          IF IsIndexPartitionUnusable (pTable, pName) = TRUE
          THEN
             /*
-                -- La rebuild di salvaguardia viene fatta sotto in modalit������ NON online, percui la sostituisco con un rebuild costruito
+                -- La rebuild di salvaguardia viene fatta sotto in modalita' NON online, percui la sostituisco con un rebuild costruito
                 -- Questa e' una rebuild di salvaguardia, non dovrebbe mai essere eseguita
                 LogFacility(LOG_SEV_INFO, 'After compression of partition : ' || pName || ' some indexes were found unusable. Rebuilding...' , pTable);
 
@@ -5680,7 +5680,7 @@ IS
             --vNewPartDate      := GetNextPartitionWithRetention(pDate, pRetentionUnit , 0) ;
             --vNewPartName      := CalculatePartitionName(pDate, pRetentionUnit, pNamePrefix);
 
-            -- Dobbiamo rinominare la partizione cestino in pDate + una RETENTION UNIT . Lo 0 nelal function sotto e' perch������ il +1 e' direttamente presente nella funzion
+            -- Dobbiamo rinominare la partizione cestino in pDate + una RETENTION UNIT . Lo 0 nelal function sotto e' perche' il +1 e' direttamente presente nella funzion
             vNewDefPartDate :=
                GetNextPartitionWithRetention (pDate, pRetentionUnit, 0);
             vNewDefPartName :=

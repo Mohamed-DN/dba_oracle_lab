@@ -109,7 +109,7 @@ Dopo aver analizzato ogni fase, ecco la raccomandazione:
 | 31 | `DB_BLOCK_CHECKSUM` | ✅ Aggiunto in MAA guide | ✅ | Appena aggiunto |
 | 32 | `DB_LOST_WRITE_PROTECT` | ✅ Aggiunto in MAA guide | ✅ | Appena aggiunto |
 | 33 | Flashback Database | ✅ Aggiunto in MAA guide | ✅ | Appena aggiunto |
-| 34 | FSFO descritto | ✅ MAA + Failover guide | ✅ | Appena aggiunto |
+| 34 | FSFO operativo | ⚠️ Fase 4B disponibile | ⚠️ | Richiede evidenza runtime Observer |
 | 35 | FAL_SERVER configurato | ✅ Fase 3 | ✅ | Per automatic gap resolution |
 
 ### 2.6 Backup e Recovery

@@ -2,6 +2,28 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Added
+
+- **Fase 4B Observer FSFO**: guida operativa per Observer dedicato, wallet SEPS,
+  attivazione graduale e backup Observer opzionale.
+- **Dossier Colloquio Oracle DBA Produzione**: 260 domande tecniche, 15 drill
+  Severity 1, piano di ripasso e mock interview.
+
+### Changed
+
+- **Data Guard FSFO**: consolidati setup, rollback e drill nella nuova fase core.
+- **RMAN Recover Table**: resa visibile la procedura di recupero tabella nei
+  riferimenti rapidi e corretta la sintassi didattica.
+- **FRA e Data Guard**: rafforzati i guardrail operativi per `ORA-00257`
+  quando lo standby e' in lag o irraggiungibile.
+- **Bonifica documentale**: riscritti i cataloghi RMAN/Data Guard e SQL tuning
+  come playbook leggibili; rimossi boilerplate nel dossier, link locali
+  malformati, artefatti encoding ed esempi con password in command line.
+- **CI documentale**: rimosso il job Markdown lint cosmetico; restano link
+  check, conformita' didattica, ShellCheck, sicurezza e governance.
+
 ## [2.0.0] - 2026-05-14
 ### Added
 - **Governance Framework**: Introdotta la directory `docs/04_governance_learning/02_enterprise_standards/` con MAA Scorecard, SRE Framework e GitOps Policy.

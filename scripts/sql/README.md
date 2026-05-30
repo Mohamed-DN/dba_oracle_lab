@@ -39,13 +39,13 @@ Ogni file `.sql` contiene:
 
 ### Eseguire in SQL*Plus
 ```bash
-sqlplus sys/password@//host:1521/ORCL as sysdba
+sqlplus /@//host:1521/ORCL as sysdba
 SQL> @scripts/sql/sessioni/KILL_sessioni_UTENTE_Oracle.sql
 ```
 
 ### Eseguire con SQLcl
 ```bash
-sql sys/password@//host:1521/ORCL as sysdba
+sql /@//host:1521/ORCL as sysdba
 SQL> script scripts/sql/utenti/Query_stato_password_utente_Oracle.sql
 ```
 

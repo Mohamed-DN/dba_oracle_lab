@@ -3,33 +3,22 @@
 <!-- RUNBOOK_NAV_START -->
 ## Indice operativo rapido
 
-### Casi piu frequenti da aprire prima
-- [Top SQL da AWR con elapsed time alto](#sql-001---top-sql-da-awr-con-elapsed-time-alto)
-- [Top SQL da AWR con CPU time alto](#sql-002---top-sql-da-awr-con-cpu-time-alto)
-- [Top SQL da ASH durante picco applicativo](#sql-005---top-sql-da-ash-durante-picco-applicativo)
-- [SQL_ID noto con piano cambiato](#sql-006---sql_id-noto-con-piano-cambiato)
-- [Regressione dopo raccolta statistiche](#sql-008---regressione-dopo-raccolta-statistiche)
-- [Query lenta solo in produzione](#sql-011---query-lenta-solo-in-produzione)
-- [Bind peeking e adaptive cursor sharing](#sql-013---bind-peeking-e-adaptive-cursor-sharing)
-- [Statistiche stale su tabella grande](#sql-015---statistiche-stale-su-tabella-grande)
-- [Full table scan inatteso](#sql-021---full-table-scan-inatteso)
-- [Partition pruning non avviene](#sql-033---partition-pruning-non-avviene)
-- [Hash join consuma troppa PGA/TEMP](#sql-039---hash-join-consuma-troppa-pgatemp)
-- [SQL Plan Management baseline](#sql-073---sql-plan-management-baseline)
-- [Tuning in emergenza SEV1](#sql-154---tuning-in-emergenza-sev1)
-- [Quando aprire SR Oracle](#sql-159---quando-aprire-sr-oracle)
+### Playbook principali
+- [Triage SQL e baseline](#sql-p01---triage-sql-e-baseline)
+- [Regressione del piano](#sql-p02---regressione-del-piano)
+- [CPU o IO elevati](#sql-p03---cpu-o-io-elevati)
+- [Bind e cardinalita](#sql-p04---bind-e-cardinalita)
+- [Statistiche optimizer](#sql-p05---statistiche-optimizer)
+- [TEMP e PGA](#sql-p06---temp-e-pga)
+- [Lock e concorrenza](#sql-p07---lock-e-concorrenza)
+- [RAC gc waits](#sql-p08---rac-gc-waits)
+- [DB link lento](#sql-p09---db-link-lento)
+- [Fix reversibili](#sql-p10---fix-reversibili-e-validazione)
 
-### Macro-aree
-- [Spiegazione didattica](#spiegazione-didattica-cosa-significa-fare-sql-tuning)
-- [Concetti fondamentali](#concetti-fondamentali-da-saper-spiegare)
-- [Matrice decisionale rapida](#matrice-decisionale-rapida)
-- [Workflow standard production-grade](#workflow-standard-production-grade)
-- [Regole bancarie per tuning in produzione](#regole-bancarie-per-tuning-in-produzione)
-- [Blocco comune per tutti gli scenari SQL](#blocco-comune-per-tutti-gli-scenari-sql)
-- [Parte 1 - Scenari SQL Tuning Enterprise](#parte-1---scenari-sql-tuning-enterprise)
-
-### Come spiegare il documento
-Non iniziare mai dal fix. Prima identifica sintomo, SQL_ID, baseline storica, piano attuale, piano precedente, cardinalita stimate vs reali e wait prevalente. Solo dopo scegli se intervenire su statistiche, indice, riscrittura SQL, SPM, SQL Profile o parametri di sessione controllati.
+### Come usare il documento
+Parti dal sintomo business, identifica `SQL_ID`, confronta baseline e piano reale,
+poi scegli il playbook. La matrice finale instrada i casi secondari senza
+replicare lo stesso paragrafo decine di volte.
 <!-- RUNBOOK_NAV_END -->
 
 <!-- READY_SCRIPTS_START -->
@@ -45,6 +34,28 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre diagnostica SQL, optimizer, statistiche, piani di esecuzione, AWR/ASH, SQL Monitor, indici, join, partizionamento, parallelismo, wait events, RAC, Exadata, SQL Plan Management e tuning sicuro in produzione.
 
 ---
+
+## Obiettivi
+
+- Diagnosticare SQL lenti con evidenze misurabili.
+- Separare sintomo, causa e workaround reversibile.
+- Chiudere ogni intervento con confronto before/after e rollback.
+
+## Procedura operativa
+
+Apri il playbook coerente con il sintomo, usa il toolbox D01-D10 e applica una
+sola modifica misurabile per volta. In produzione privilegia mitigazioni
+reversibili prima dei cambi strutturali.
+
+## Validazione finale
+
+Conserva SQL_ID, piano reale, statistiche, wait event, tempi, buffer gets,
+physical reads, righe elaborate e risultato dello smoke test applicativo.
+
+## Troubleshooting rapido
+
+Se non hai una baseline, raccogli prima il comportamento attuale. Non creare un
+indice o cambiare parametri globali soltanto perche' una query e' lenta.
 
 ## Come usare questo documento
 
@@ -369,799 +380,204 @@ WHERE  l.status = 'ACTIVE';
 SET ARRAYSIZE 5000
 ```
 
-# Parte 1 - Scenari SQL Tuning Enterprise
+# Parte 1 - Playbook SQL Tuning Enterprise
 
-## SQL-001 - Top SQL da AWR con elapsed time alto
+## SQL-P01 - Triage SQL e baseline
 
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
+### Decisione
 
-## SQL-002 - Top SQL da AWR con CPU time alto
+Prima del fix raccogli finestra temporale, impatto business, SQL_ID, piano reale
+e metriche. Un singolo snapshot non dimostra una causa.
 
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
+### Procedura
 
-## SQL-003 - Top SQL da AWR con buffer gets alto
+1. Cerca il SQL in `v$sql` o nello storico AWR se licenziato.
+2. Usa D01 per ordinare il carico e D04 per il SQL_ID specifico.
+3. Confronta executions, elapsed, CPU, buffer gets, physical reads e righe.
+4. Salva il piano corrente con D02 e la finestra ASH con D03.
 
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
+### Validazione
 
-## SQL-004 - Top SQL da AWR con physical reads alto
+Hai una baseline riproducibile e sai distinguere regressione singola da carico
+cumulativo.
 
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
+## SQL-P02 - Regressione del piano
 
-## SQL-005 - Top SQL da ASH durante picco applicativo
+### Sintomo
 
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
+Una query prima veloce rallenta dopo deploy, patch, upgrade o refresh
+statistiche; il `PLAN_HASH_VALUE` cambia.
 
-## SQL-006 - SQL_ID noto con piano cambiato
+### Procedura
 
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
+1. Confronta piano corrente e storico con D02.
+2. Verifica statistiche, bind e outline.
+3. Se il servizio e' degradato, stabilizza con baseline o SQL Patch testata.
+4. Correggi la root cause in test: statistiche, indice, SQL o cardinalita.
 
-## SQL-007 - Plan hash value diverso dopo deploy
+### Guardrail
 
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
+Non cambiare parametri optimizer globali per correggere un singolo SQL.
 
-## SQL-008 - Regressione dopo raccolta statistiche
+## SQL-P03 - CPU o IO elevati
 
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
+### Decisione
 
-## SQL-009 - Regressione dopo upgrade database
+Separa CPU, logical I/O e physical I/O. Un SQL eseguito milioni di volte puo'
+pesare piu' di una singola esecuzione lenta.
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+### Procedura
 
-## SQL-010 - Regressione dopo patch RU
+- Usa D01 e D03 per ordinare i consumatori nella finestra corretta.
+- Mappa sessioni e processi OS.
+- Controlla access path, righe elaborate ed executions.
+- Valuta rewrite, indice, pruning o riduzione chiamate applicative.
 
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
+### Validazione
 
-## SQL-011 - Query lenta solo in produzione
+Confronta elapsed, CPU, gets, reads e throughput prima e dopo il fix.
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+## SQL-P04 - Bind e cardinalita
 
-## SQL-012 - Query lenta solo con bind specifico
+### Sintomo
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+Il SQL e' veloce per alcuni valori e lento per altri oppure E-Rows e A-Rows
+divergono fortemente.
 
-## SQL-013 - Bind peeking e adaptive cursor sharing
+### Procedura
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+1. Usa D02 e D04 per child cursor, peeked bind e piano reale.
+2. Controlla distribuzione dati e istogrammi con D05.
+3. Verifica adaptive cursor sharing.
+4. Valuta extended statistics, SQL Profile o riscrittura del predicato.
 
-## SQL-014 - Cardinalita stimata molto diversa da righe reali
+### Guardrail
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+Non forzare un piano unico se workload diversi richiedono access path diversi.
 
-## SQL-015 - Statistiche stale su tabella grande
+## SQL-P05 - Statistiche optimizer
 
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
+### Sintomo
 
-## SQL-016 - Statistiche mancanti su colonne correlate
+Regressione dopo refresh dati, statistiche stale, colonne correlate o
+partizioni con distribuzione diversa.
 
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
+### Procedura
 
-## SQL-017 - Istogramma mancante su colonna skewed
+- Usa D05 per stato e storico.
+- Raccogli statistiche in modo mirato, non sull'intero database in emergenza.
+- Preferisci `AUTO_SAMPLE_SIZE`, `AUTO_INVALIDATE` e test rappresentativi.
+- Verifica istogrammi, extended statistics e statistiche incrementali su
+  partizioni.
 
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
+### Validazione
 
-## SQL-018 - Istogramma dannoso su colonna non selettiva
+Controlla piano, cardinalita e workload DML dopo la raccolta.
 
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
+## SQL-P06 - TEMP e PGA
 
-## SQL-019 - Extended statistics per colonne correlate
+### Sintomo
 
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
+TEMP cresce rapidamente, hash join o sort riversano su disco, ETL impatta altri
+utenti.
 
-## SQL-020 - Dynamic sampling troppo alto o insufficiente
+### Procedura
 
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
+1. Identifica sessione, SQL_ID, workarea e parallelismo.
+2. Usa D03 e D08 per trovare lo step costoso.
+3. Aggiungi tempfile solo come mitigazione con storage disponibile.
+4. Correggi piano, join order, filtro, PGA o grado parallelo.
 
-## SQL-021 - Full table scan inatteso
+### Validazione
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+Misura TEMP, elapsed e concorrenza nel batch successivo.
 
-## SQL-022 - Index range scan non usato
+## SQL-P07 - Lock e concorrenza
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+### Decisione
 
-## SQL-023 - Index skip scan indesiderato
+Un lock non si risolve creando un indice alla cieca. Trova blocker, waiter,
+transazione e oggetto prima di killare sessioni.
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+### Procedura
 
-## SQL-024 - Index full scan vs fast full scan
+- Usa D03 e i runbook lock collegati.
+- Salva SQL, modulo, utente, durata e catena dei blocker.
+- Concorda kill o rollback con owner applicativo.
+- Correggi ordine transazioni, commit scope o hot row.
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+## SQL-P08 - RAC gc waits
 
-## SQL-025 - Bitmap index usato in OLTP
+### Decisione
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+I wait `gc` non significano automaticamente rete lenta. Correlali con SQL,
+oggetto, istanza e service placement.
 
-## SQL-026 - Indice invisibile per test tuning
+### Procedura
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+1. Usa D03 per SQL_ID e istanza.
+2. Verifica hot block, access path e distribuzione workload.
+3. Controlla interconnect soltanto dopo aver identificato il pattern DB.
+4. Valuta service affinity, partizionamento o riduzione accessi concorrenti.
 
-## SQL-027 - Indice composito con ordine colonne sbagliato
+## SQL-P09 - DB link lento
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+### Decisione
 
-## SQL-028 - Indice funzione-based non usato
+Misura cosa viene eseguito localmente e cosa da remoto. Evita trasferimenti
+massivi quando il filtro puo' essere applicato sul sito remoto.
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+### Procedura
 
-## SQL-029 - Predicato non sargable con funzione su colonna
+- Usa D10 e piano remoto.
+- Controlla latenza rete, cardinalita e fetch array size.
+- Valuta predicate pushdown e `DRIVING_SITE` solo con test.
+- Verifica timeout e transazioni distribuite.
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+## SQL-P10 - Fix reversibili e validazione
 
-## SQL-030 - LIKE con wildcard iniziale
+### Toolbox
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+| Fix | Quando usarlo | Rollback |
+| --- | --- | --- |
+| SQL Plan Baseline | Piano noto buono dopo regressione | Disabilita o rimuovi baseline |
+| SQL Patch | Workaround mirato con hint | Rimuovi patch |
+| SQL Profile | Stime optimizer errate | Disabilita profile |
+| Indice invisibile | Test access path | Rendi invisibile o elimina |
+| Statistiche mirate | Stale o distribuzione cambiata | Ripristina statistiche precedenti |
 
-## SQL-031 - Conversione implicita tra VARCHAR2 e NUMBER
+### Chiusura
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+Conserva piano, metriche before/after, smoke test, rischio residuo e intervento
+strutturale successivo.
 
-## SQL-032 - Date filter non usa indice
+## Matrice dei casi secondari
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
+| Sintomo | Playbook | Toolbox iniziale |
+| --- | --- | --- |
+| Top SQL elapsed, CPU, gets o reads | SQL-P01, SQL-P03 | D01, D03 |
+| Piano cambiato dopo deploy o patch | SQL-P02 | D02, D04 |
+| Query lenta solo con alcuni bind | SQL-P04 | D02, D04, D05 |
+| Statistiche stale o istogramma errato | SQL-P05 | D05 |
+| Full scan o indice non usato | SQL-P03, SQL-P05 | D02, D06 |
+| Partition pruning assente | SQL-P03 | D02, D07 |
+| Hash join, sort o TEMP piena | SQL-P06 | D03, D08 |
+| Sessioni bloccate o deadlock | SQL-P07 | D03 |
+| RAC gc waits | SQL-P08 | D03 |
+| Query remota lenta | SQL-P09 | D10 |
+| SQL long-running o parallelo | SQL-P03, SQL-P06 | D08 |
+| Fix emergenziale reversibile | SQL-P10 | D02, D09 |
 
-## SQL-033 - Partition pruning non avviene
+## Validazione finale
 
-### Diagnostica mirata
-- Usa [D07 - Partizionamento](#d07-partizionamento).
+- SQL_ID e finestra temporale registrati.
+- Piano reale e storico confrontati.
+- Metriche before/after conservate.
+- Workaround reversibile e rollback documentati.
+- Smoke test applicativo completato.
 
-## SQL-034 - Local index vs global index su partizioni
+## Troubleshooting rapido
 
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-035 - Partizione stale stats
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-036 - Query su tabella partizionata con bind
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-037 - Join order errato
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-038 - Nested loop lento su grandi volumi
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-039 - Hash join consuma troppa PGA/TEMP
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-040 - Merge join inatteso
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-041 - Cartesian join accidentale
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-042 - Join su colonne con datatype diverso
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-043 - Subquery correlated lenta
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-044 - IN vs EXISTS
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-045 - NOT IN con NULL
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-046 - Anti-join inefficiente
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-047 - OR expansion e predicate transformation
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-048 - View merging non avviene
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-049 - Predicate pushdown non avviene
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-050 - WITH clause materializzata o inline
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-051 - Materialized view rewrite non avviene
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-052 - Result cache appropriata o dannosa
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-053 - Parallel query non parte
-
-### Diagnostica mirata
-- Usa [D08 - SQL Monitor](#d08-sql-monitor).
-
-## SQL-054 - Parallel query parte troppo aggressiva
-
-### Diagnostica mirata
-- Usa [D08 - SQL Monitor](#d08-sql-monitor).
-
-## SQL-055 - PX skew tra slave
-
-### Diagnostica mirata
-- Usa [D08 - SQL Monitor](#d08-sql-monitor).
-
-## SQL-056 - DOP automatico non corretto
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-057 - PGA insufficiente e sort su TEMP
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-058 - TEMP piena per hash/sort
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-059 - Direct path read alto
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-060 - Db file sequential read alto
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-061 - Db file scattered read alto
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-062 - Read by other session alto
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-063 - Log file sync percepito come SQL lento
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-064 - Enqueue TX row lock contention
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-065 - Library cache lock/pin
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-066 - Mutex e cursor: pin S wait on X
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-067 - Hard parse elevato
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-068 - Soft parse ma molte versioni child cursor
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-069 - Cursor sharing force come workaround
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-070 - SQL con literal invece di bind
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-071 - Bind mismatch e child cursors
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-072 - Adaptive plans e statistics feedback
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-073 - SQL Plan Management baseline
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-074 - SQL Profile da SQL Tuning Advisor
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-075 - SQL Patch con hint correttivo
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-076 - Outline/hint temporaneo
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-077 - Hints ignorati o sbagliati
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-078 - Plan baseline non accettata
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-079 - Evolve SQL plan baseline
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-080 - SQL Monitor per query long-running
-
-### Diagnostica mirata
-- Usa [D08 - SQL Monitor](#d08-sql-monitor).
-
-## SQL-081 - DBMS_XPLAN display_cursor con ALLSTATS LAST
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-082 - EXPLAIN PLAN fuorviante rispetto al piano reale
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-083 - AWR SQL report
-
-### Diagnostica mirata
-- Usa [D01 - Top SQL AWR](#d01-top-sql-awr).
-
-## SQL-084 - ASH report per sessione bloccata
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-085 - SQL Tuning Advisor automatico
-
-### Diagnostica mirata
-- Usa [D09 - SQL Tuning Advisor](#d09-sql-tuning-advisor).
-
-## SQL-086 - SQL Access Advisor per indici/MV
-
-### Diagnostica mirata
-- Usa [D09 - SQL Tuning Advisor](#d09-sql-tuning-advisor).
-
-## SQL-087 - Statistiche di sistema mancanti
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-088 - Statistiche fixed objects mancanti
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-089 - Dictionary stats obsolete
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-090 - Gather stats con no_invalidate
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-091 - Incremental stats su partizioni
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-092 - Pending statistics test
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-093 - Locked statistics su tabella volatile
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-094 - Global temporary table stats
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-095 - Session private statistics GTT
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-096 - Cardinality hint come diagnostica
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-097 - OPT_PARAM come workaround controllato
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-098 - Optimizer feature enable dopo upgrade
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-099 - Query con ROWNUM/top-N inefficiente
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-100 - Pagination lenta OFFSET FETCH
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-101 - Analytic functions con sort enorme
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-102 - Group by pesante
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-103 - Distinct inutile
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-104 - UNION vs UNION ALL
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-105 - CTAS per materializzare risultato intermedio
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-106 - Delete massivo lento
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-107 - Update massivo lento
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-108 - Merge statement lento
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-109 - Insert append e nologging decisione
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-110 - DDL indice online lento
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-111 - Rebuild index inutile
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-112 - Coalesce index vs rebuild
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-113 - Segment high water mark e full scan
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-114 - Table compression impatto query
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-115 - Hybrid Columnar Compression in Exadata
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-116 - In-Memory column store query
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-117 - Bloom filter e star transformation
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-118 - Star schema bitmap indexes
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-119 - Exadata smart scan non attivo
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-120 - Storage index non usato
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-121 - Cell offload percentage basso
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-122 - RAC gc cr request alto
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-123 - RAC gc buffer busy acquire
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-124 - Service placement e SQL tuning in RAC
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-125 - Plan diverso tra nodi RAC
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-126 - Application module/action mancanti
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-127 - End-to-end tracing DBMS_MONITOR
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-128 - 10046 trace per SQL singolo
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-129 - 10053 trace optimizer ultima istanza
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-130 - TKPROF interpretazione
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-131 - SQL trace con bind e waits
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-132 - Optimizer trace troppo pesante in produzione
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
-
-## SQL-133 - Query su DB link lenta
-
-### Diagnostica mirata
-- Usa [D10 - DB link e fetch remoto](#d10-db-link-e-fetch-remoto).
-
-## SQL-134 - DRIVING_SITE hint su DB link
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-135 - Fetch array size basso via DB link
-
-### Diagnostica mirata
-- Usa [D10 - DB link e fetch remoto](#d10-db-link-e-fetch-remoto).
-
-## SQL-136 - Remote predicate pushdown
-
-### Diagnostica mirata
-- Usa [D10 - DB link e fetch remoto](#d10-db-link-e-fetch-remoto).
-
-## SQL-137 - PLSQL function chiamata per ogni riga
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-138 - Context switch SQL PL/SQL elevato
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-139 - Bulk collect/forall mancante
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-140 - Pipelined function lenta
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-141 - JSON query senza indici appropriati
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-142 - XMLTABLE lento
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-143 - Spatial query lenta
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-144 - LOB read/write lento
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-145 - SecureFiles LOB tuning
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-146 - Audit/FGA impatta query critica
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-147 - VPD policy rallenta SQL
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-148 - Redaction impatta piano
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-149 - Masking/preprod stats diverse
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-150 - Query intermittente lenta per load concorrente
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-151 - Statistiche e bind dopo refresh preprod
-
-### Diagnostica mirata
-- Usa [D05 - Statistiche optimizer](#d05-statistiche-optimizer).
-
-## SQL-152 - Baseline da produzione a preprod
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-153 - Comparare piano prod/preprod
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-154 - Tuning in emergenza SEV1
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-155 - Tuning strutturale post incidente
-
-### Diagnostica mirata
-- Usa [D04 - Diagnostica minima SQL_ID](#d04-diagnostica-minima-sql_id).
-
-## SQL-156 - Quando non creare indice
-
-### Diagnostica mirata
-- Usa [D06 - Indici e colonne](#d06-indici-e-colonne).
-
-## SQL-157 - Quando riscrivere SQL invece di hintare
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-158 - Quando usare SPM invece di SQL Profile
-
-### Diagnostica mirata
-- Usa [D02 - Piano reale e storico](#d02-piano-reale-e-storico).
-
-## SQL-159 - Quando aprire SR Oracle
-
-### Diagnostica mirata
-- Usa [D03 - ASH e wait event](#d03-ash-e-wait-event).
+Se non trovi il SQL in cursor cache, usa storico AWR se licenziato oppure trace
+mirato. Se il problema non e' riproducibile, non applicare fix permanenti senza
+una baseline osservabile.

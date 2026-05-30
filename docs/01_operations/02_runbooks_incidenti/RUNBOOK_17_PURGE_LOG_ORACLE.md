@@ -17,7 +17,7 @@
   - [Step 3: Purge archivelog in sicurezza (RMAN)](#step-3-purge-archivelog-in-sicurezza-rman)
   - [Step 4: Purge Unified Audit Trail (se cresce troppo)](#step-4-purge-unified-audit-trail-se-cresce-troppo)
 - [Validazione Finale](#validazione-finale)
-- [Troubleshooting / Guardrail importanti](#troubleshooting-guardrail-importanti)
+- [Troubleshooting rapido e guardrail importanti](#troubleshooting-rapido-e-guardrail-importanti)
 <!-- RUNBOOK_NAV_END -->
 
 <!-- READY_SCRIPTS_START -->
@@ -81,6 +81,7 @@ adrci exec="set home diag/rdbms/racdb/RACDB1; purge -age 604800 -type incident"
 ```rman
 rman target /
 
+SHOW ARCHIVELOG DELETION POLICY;
 CROSSCHECK ARCHIVELOG ALL;
 DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
 
@@ -91,7 +92,11 @@ DELETE NOPROMPT ARCHIVELOG ALL BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 DELETE NOPROMPT OBSOLETE;
 ```
 
-> In Data Guard, applica policy coerente con retention e lag standby.
+> In Data Guard, verifica prima transport/apply lag e applica una policy coerente,
+> ad esempio `CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;`.
+> Se lo standby e' irraggiungibile e la FRA del primary e' piena, non applicare
+> una cancellazione cieca: usa il caso
+> [DG-061](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag).
 
 ---
 
@@ -133,8 +138,10 @@ du -sh $ORACLE_BASE/diag/rdbms/*/*/trace
 
 ---
 
-## Troubleshooting / Guardrail importanti
+## Troubleshooting rapido e guardrail importanti
 
 - Non cancellare archivelog non ancora backuppati/applicati su standby.
 - Evita `rm` diretto dei file Oracle senza passare da RMAN/ADRCI dove richiesto.
 - Documenta policy retention (giorni) nel ticket di change.
+- `DELETE FORCE` ignora la deletion policy RMAN: e' una misura Sev1 autorizzata,
+  non una procedura periodica.

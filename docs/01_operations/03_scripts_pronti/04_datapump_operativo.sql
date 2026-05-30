@@ -116,9 +116,9 @@ SELECT
     ROUND(space_used * 100 / NULLIF(space_limit, 0), 1) AS fra_pct
 FROM v$recovery_file_dest;
 
--- Se supera l'80%, fai SUBITO:
--- rman target /
--- RMAN> DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';
+-- Se supera l'80%, interrompi nuove attivita' ad alto redo e verifica subito
+-- spazio reale, deletion policy RMAN e Data Guard lag. Non cancellare per eta':
+-- preserva gli archivelog e usa il runbook RUNBOOK_22, scenario DG-061.
 
 
 PROMPT ====================================================================

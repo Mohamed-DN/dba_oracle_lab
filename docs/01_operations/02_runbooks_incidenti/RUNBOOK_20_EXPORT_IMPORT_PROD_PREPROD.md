@@ -1,5 +1,22 @@
 # Guida Enterprise: Export e Import da Produzione a Pre-Produzione (Data Pump)
 
+## Obiettivo operativo
+
+Eseguire refresh Data Pump tracciabili senza esporre credenziali o sovrascrivere dati per errore.
+
+## Procedura operativa
+
+Conferma scope, spazio, directory e wallet; usa parfile versionati senza secret e valida il mapping prima dell'import.
+
+## Validazione finale
+
+Confronta log, errori, conteggi e smoke test applicativi sul target.
+
+## Troubleshooting rapido
+
+Se il job fallisce, conserva log e master table prima di correggere spazio, privilegi o mapping.
+
+
 <!-- RUNBOOK_NAV_START -->
 ## Casi piu frequenti da aprire prima
 - Refresh completo o parziale da PROD a PREPROD.
@@ -163,11 +180,11 @@ EXCLUDE=INDEX:"LIKE '%_TMP_IDX%'"
 
 ### 3.2 Avvio dell'Export in Background (Nohup)
 ```bash
-nohup expdp system/<PASSWORD>@PROD parfile=export.par > expdp_out.log 2>&1 &
+nohup expdp /@PROD parfile=export.par > expdp_out.log 2>&1 &
 ```
 ### 3.3 Monitoraggio in Real-Time (Interactive e SQL)
 Per monitorare lo stato di `expdp`:
-1. **Interactive mode:** `expdp system/<PASSWORD> attach=EXP_PROD_REFRESH` (Digita `status` per vedere il progresso. Digita `continue_client` per uscire dall'interactive).
+1. **Interactive mode:** `expdp system attach=EXP_PROD_REFRESH` (Digita `status` per vedere il progresso. Digita `continue_client` per uscire dall'interactive).
 2. **SQL Monitoring (Session Longops):**
 ```sql
 SELECT opname, target_desc, sofar, totalwork, trunc(sofar/totalwork*100,2) as pct_complete, time_remaining
@@ -242,7 +259,7 @@ Il package `PKG_MASKING` deve essere creato nel database prima di avviare l'impo
 
 ### 5.4 Esecuzione dell'Import
 ```bash
-nohup impdp system/<PASSWORD>@PREPROD parfile=import.par > impdp_out.log 2>&1 &
+nohup impdp /@PREPROD parfile=import.par > impdp_out.log 2>&1 &
 ```
 
 ---

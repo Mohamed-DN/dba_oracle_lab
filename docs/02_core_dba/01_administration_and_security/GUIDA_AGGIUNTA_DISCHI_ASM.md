@@ -1,5 +1,22 @@
 # Guida: Creazione e Aggiunta Dischi ASM (Scopo Formativo)
 
+## Obiettivo operativo
+
+Espandere ASM senza perdere ridondanza e senza confondere spazio grezzo con spazio utilizzabile.
+
+## Procedura operativa
+
+Verifica discovery string, visibilita' multipath e stato del diskgroup; aggiungi un disco alla
+volta e controlla il rebalance prima di aumentare il carico.
+
+## Validazione finale
+
+Conferma `MOUNTED`, `USABLE_FILE_MB` coerente e rebalance completato in `V$ASM_OPERATION`.
+
+## Troubleshooting rapido
+
+Se il disco non appare, controlla mapping OS, permessi e discovery string prima di modificare ASM.
+
 Questa guida illustra la procedura operativa per gestire i dischi in Oracle ASM (Automatic Storage Management). 
 
 > [!IMPORTANT]
@@ -105,7 +122,7 @@ Se invece si vuole espandere un Disk Group esistente (es. abbiamo già `+DATA` e
 ## 📚 Approfondisci
 
 Per procedure operative reali da ambiente Enterprise (con multipath, VMAX, Pure Storage), consulta:
-- (../../01_operations/04_libreria_script_completa/asm_storage/procedura_aggiunta_dischi_asm.md)
-- (../../01_operations/04_libreria_script_completa/asm_storage/deallocazione_dischi_asm.md)
+- [procedura_aggiunta_dischi_asm.md](../../01_operations/04_libreria_script_completa/asm_storage/procedura_aggiunta_dischi_asm.md)
+- [deallocazione_dischi_asm.md](../../01_operations/04_libreria_script_completa/asm_storage/deallocazione_dischi_asm.md)
 
 *Torna alla guida principale per le attività di [Preparazione Storage e Grid](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md).*

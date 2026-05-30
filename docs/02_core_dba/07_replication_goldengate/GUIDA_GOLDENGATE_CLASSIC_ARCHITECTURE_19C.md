@@ -259,13 +259,13 @@ SELECT current_scn FROM v$database;
 Export source:
 
 ```bash
-expdp system/<PASSWORD> schemas=HR,APP directory=DATA_PUMP_DIR dumpfile=ogg_init_%U.dmp logfile=ogg_init_exp.log flashback_scn=123456789 parallel=4
+expdp system schemas=HR,APP directory=DATA_PUMP_DIR dumpfile=ogg_init_%U.dmp logfile=ogg_init_exp.log flashback_scn=123456789 parallel=4
 ```
 
 Import target:
 
 ```bash
-impdp system/<PASSWORD> schemas=HR,APP directory=DATA_PUMP_DIR dumpfile=ogg_init_%U.dmp logfile=ogg_init_imp.log parallel=4
+impdp system schemas=HR,APP directory=DATA_PUMP_DIR dumpfile=ogg_init_%U.dmp logfile=ogg_init_imp.log parallel=4
 ```
 
 Start Replicat da SCN:
@@ -414,7 +414,7 @@ Non sceglierlo come default per nuove architetture se puoi usare Microservices.
 - Process interfaces: https://docs.oracle.com/en/middleware/goldengate/core/18.1/admin/getting-started-oracle-goldengate-process-interfaces.html
 
 ## Obiettivo
-Descrivere lâ€™implementazione Classic Architecture 19c basata su GGSCI e processi Manager/Extract/Pump/Replicat.
+Descrivere l'implementazione Classic Architecture 19c basata su GGSCI e processi Manager/Extract/Pump/Replicat.
 
 ## Procedura operativa
 Configurare processi da linea comando GGSCI, trail locali/remoti, parametri e lifecycle start/stop dei componenti classici.

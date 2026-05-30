@@ -1,5 +1,22 @@
 # Guida Completa: Switchover Data Guard (Passo per Passo)
 
+## Obiettivo operativo
+
+Invertire i ruoli Data Guard in modo pianificato, osservabile e reversibile.
+
+## Procedura operativa
+
+Porta Broker in `SUCCESS`, verifica lag e readiness, esegui lo switchover con DGMGRL e completa
+smoke test applicativi prima di chiudere il change.
+
+## Validazione finale
+
+Conferma ruoli, redo transport, apply e connessioni ai service sul nuovo primary.
+
+## Troubleshooting rapido
+
+Se Broker segnala warning o gap, interrompi lo switchover e risolvi la sincronizzazione.
+
 > [!NOTE]
 > **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Procedure di Produzione (Non-CDB)**:
@@ -56,7 +73,7 @@ stateDiagram-v2
 ### 1. Verifica che Data Guard sia sano
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 SHOW CONFIGURATION;
 # Configuration Status: SUCCESS  ← OBBLIGATORIO!
@@ -115,7 +132,7 @@ VBoxManage snapshot "racstby2" take "PRE-SWITCHOVER"
 ### Step 1: Switchover con DGMGRL
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 # Comando singolo — DGMGRL gestisce tutto automaticamente
 SWITCHOVER TO RACDB_STBY;
@@ -181,7 +198,7 @@ SELECT process, status FROM v$managed_standby WHERE process = 'MRP0';
 ### Step 5: Test DML sul nuovo Primary
 
 ```sql
-sqlplus testdg/testdg123@RACDB_STBY
+sqlplus testdg@RACDB_STBY
 
 INSERT INTO test_replica VALUES (7777, 'Switchover completato!', SYSTIMESTAMP);
 COMMIT;
@@ -197,7 +214,7 @@ SELECT * FROM testdg.test_replica WHERE id = 7777;
 ## Switchback (Ritorno alla Configurazione Originale)
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 # Verifica
 VALIDATE DATABASE RACDB;

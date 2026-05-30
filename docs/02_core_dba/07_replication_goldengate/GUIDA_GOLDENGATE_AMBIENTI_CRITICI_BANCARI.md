@@ -437,13 +437,13 @@ Prima di una modifica GoldenGate in banca:
 - GoldenGate Connectivity and Certifications: https://www.oracle.com/integration/goldengate/certifications/
 
 ## Obiettivo
-Definire lâ€™adozione GoldenGate in contesti bancari critici rispettando requisiti di sicurezza, continuitÃ  e governance.
+Definire l'adozione GoldenGate in contesti bancari critici rispettando requisiti di sicurezza, continuita' e governance.
 
 ## Procedura operativa
 Applicare segmentazione rete, hardening host, controllo accessi, change process e runbook di escalation per ambienti regolati.
 
 ## Validazione finale
-Validare audit trail, segregazione ruoli, SLA di lag/availability e conformitÃ  ai controlli operativi richiesti.
+Validare audit trail, segregazione ruoli, SLA di lag/availability e conformita' ai controlli operativi richiesti.
 
 ## Troubleshooting rapido
 In caso di incidente, seguire flusso war-room: evidenze log, impatto transazionale, rollback controllato ed escalation compliance.

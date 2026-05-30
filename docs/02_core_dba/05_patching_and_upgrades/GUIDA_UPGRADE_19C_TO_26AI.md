@@ -473,7 +473,7 @@ END;
 ### 11.1. RMAN Recovery Catalog
 Se utilizzi un Recovery Catalog esterno (raccomandato in Enterprise), questo deve essere aggiornato alla versione 26ai:
 ```bash
-rman target / catalog rman_user/rman_pwd@RCAT_DB
+rman target / catalog /@RCAT_DB
 ```
 ```text
 RMAN> UPGRADE CATALOG;

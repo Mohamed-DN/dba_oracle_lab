@@ -19,7 +19,7 @@
 
 ```sql
 -- Sul PRIMARY o STANDBY
-dgmgrl sys/<password>
+dgmgrl /
 
 DGMGRL> show configuration;
 
@@ -61,7 +61,7 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 ### 5. Riedita la configurazione nel Broker (se necessario)
 
 ```sql
-dgmgrl sys/<password>
+dgmgrl /
 
 -- Esempio: edit database con il connect identifier corretto
 DGMGRL> edit database 'NOME_DB' SET PROPERTY StaticConnectIdentifier='(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=hostname)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=NOME_DB_DGMGRL)(INSTANCE_NAME=NOME_DB1)(SERVER=DEDICATED)))';

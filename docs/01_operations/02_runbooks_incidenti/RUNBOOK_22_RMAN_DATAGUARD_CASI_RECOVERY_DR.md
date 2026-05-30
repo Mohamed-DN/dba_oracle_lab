@@ -3,32 +3,26 @@
 <!-- RUNBOOK_NAV_START -->
 ## Indice operativo rapido
 
-### Casi piu frequenti da aprire prima
-- [Database crash con istanza non avviabile](#rman-001---database-crash-con-istanza-non-avviabile)
-- [Instance crash ma storage integro](#rman-002---instance-crash-ma-storage-integro)
-- [Tabella cancellata con DROP TABLE](#rman-018---tabella-cancellata-con-drop-table)
-- [DELETE senza WHERE o update massivo errato](#rman-020---delete-senza-where-o-update-massivo-errato)
-- [Corruzione blocco ORA-01578](#rman-015---corruzione-blocco-ora-01578)
-- [Recovery di singola tabella con RMAN RECOVER TABLE](#rman-028---recovery-di-singola-tabella-con-rman-recover-table)
-- [Duplicate active database per clone preprod](#rman-030---duplicate-active-database-per-clone-preprod)
-- [Primary database down totale](#dg-004---primary-database-down-totale)
-- [Failover manuale a standby](#dg-005---failover-manuale-a-standby)
-- [Switchover pianificato](#dg-006---switchover-pianificato)
-- [Archive gap su physical standby](#dg-022---archive-gap-su-physical-standby)
-- [Standby apply lag crescente](#dg-026---standby-apply-lag-crescente)
-- [MRP0 non parte](#dg-032---mrp0-non-parte)
-- [Roll-forward standby con incremental from SCN](#dg-036---roll-forward-standby-con-incremental-from-scn)
+### Playbook RMAN
+- [Triage recovery](#rman-p01---triage-recovery-prima-di-cambiare-stato)
+- [SPFILE e controlfile](#rman-p03---perdita-spfile-o-controlfile)
+- [Datafile e tablespace](#rman-p04---perdita-datafile-o-tablespace)
+- [Corruzione blocchi](#rman-p05---corruzione-blocchi)
+- [Errore logico e RECOVER TABLE](#rman-p06---errore-logico-e-recover-table)
+- [FRA piena](#rman-p08---fra-piena-con-database-bloccato)
 
-### Macro-aree
-- [Spiegazione didattica](#spiegazione-didattica-come-raccontare-rman-e-data-guard)
-- [Matrice decisionale rapida](#matrice-decisionale-rapida)
-- [Pre-check universale](#pre-check-universale-prima-di-qualsiasi-recovery)
-- [Blocco comune per tutti gli scenari](#blocco-comune-per-tutti-gli-scenari-rmandata-guard)
-- [Parte 1 - Scenari RMAN, Flashback e Backup/Recovery](#parte-1---scenari-rman-flashback-e-backuprecovery)
-- [Parte 2 - Scenari Data Guard, Broker, Standby e Disaster Recovery](#parte-2---scenari-data-guard-broker-standby-e-disaster-recovery)
+### Playbook Data Guard
+- [Diagnosi lag e gap](#dg-p01---diagnosi-transport-lag-apply-lag-e-gap)
+- [Switchover pianificato](#dg-p02---switchover-pianificato)
+- [Failover e reinstate](#dg-p03---failover-e-reinstate)
+- [Observer e FSFO](#dg-p04---observer-e-fsfo)
+- [Primary FRA piena con standby in lag](#dg-061---primary-fra-piena-per-standby-lag)
+- [Riallineamento standby](#dg-062---riallineamento-standby-dopo-gap)
 
-### Come spiegare il documento
-Parti sempre dal danno reale: indisponibilita, perdita dati logica, corruzione fisica, gap Data Guard o richiesta di clone. Poi dichiara RTO/RPO, verifica backup e archivelog, scegli tra RMAN, Flashback, Data Guard o rebuild, e chiudi con evidenze di validazione.
+### Come usare il documento
+Apri il playbook che descrive il danno reale, esegui prima la diagnosi e usa la
+matrice finale per i casi secondari. Non scegliere un comando soltanto perche'
+compare vicino al sintomo: verifica prerequisiti, ruolo database e rischio.
 <!-- RUNBOOK_NAV_END -->
 
 <!-- READY_SCRIPTS_START -->
@@ -43,6 +37,28 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
 
 ---
+
+## Obiettivi
+
+- Scegliere il recovery path con blast radius minimo compatibile con RPO e RTO.
+- Preservare redo e backup necessari prima delle mitigazioni di emergenza.
+- Validare database e Data Guard dopo restore, recovery o role transition.
+
+## Procedura operativa
+
+Parti dal pre-check universale, individua lo scenario RMAN o Data Guard e applica
+la sequenza documentata. Nei Sev1 registra evidenze, autorizzazioni e rischio
+residuo prima di ogni comando irreversibile.
+
+## Validazione finale
+
+Chiudi lo scenario solo dopo aver verificato ruolo database, alert log, workload,
+backup recuperabili e stato Data Guard coerente con il livello di protezione.
+
+## Troubleshooting rapido
+
+Se mancano redo o backup, non improvvisare cancellazioni o role transition:
+ferma il change, conserva output e usa escalation e fallback documentati.
 
 ## Spiegazione didattica: come raccontare RMAN e Data Guard
 
@@ -312,2461 +328,390 @@ SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id IN (1,2,3);
 - Failover o perdita dati potenziale: decisione formale con owner applicativo e management.
 - Wallet/TDE mancante: coinvolgere security/key management prima di tentativi distruttivi.
 
-# Parte 1 - Scenari RMAN, Flashback e Backup/Recovery
+# Parte 1 - Playbook RMAN, Flashback e Backup/Recovery
 
-## RMAN-001 - Database crash con istanza non avviabile
+## RMAN-P01 - Triage recovery prima di cambiare stato
 
-### Comandi base
-```bash
+### Quando usarlo
+
+Usa questo blocco prima di ogni restore o recover. Lo scopo e' capire se il danno
+e' logico o fisico, quale RPO e' accettabile e quali backup sono davvero leggibili.
+
+### Procedura
+
+1. Registra impatto, timestamp, database, container e ultimo evento noto buono.
+2. Conserva alert log, error stack RMAN e stato storage.
+3. Controlla backup, archivelog e preview prima di avviare un restore.
+4. Scegli il recupero con blast radius minimo: blocco, file, tablespace, tabella,
+   PDB o intero database.
+
+```rman
 rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
+
+LIST BACKUP SUMMARY;
+REPORT SCHEMA;
+REPORT NEED BACKUP;
+RESTORE DATABASE PREVIEW SUMMARY;
 ```
 
-## RMAN-002 - Instance crash ma storage integro
+### Validazione
 
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
+Il ticket deve indicare oggetto coinvolto, punto di recovery, backup scelto,
+archivelog necessari, rollback e smoke test applicativo.
 
-## RMAN-003 - Perdita SPFILE o PFILE
+## RMAN-P02 - Instance crash con storage integro
 
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
+### Decisione
 
-## RMAN-004 - Perdita control file singolo multiplexed
+Un instance crash non richiede automaticamente restore. Se datafile, redo e
+controlfile sono integri, Oracle esegue crash recovery applicando redo al riavvio.
 
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-005 - Perdita di tutti i control file
-
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-006 - Perdita datafile SYSTEM
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-007 - Perdita datafile SYSAUX
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-008 - Perdita datafile USERS non critico
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-009 - Perdita datafile UNDO
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-010 - Perdita datafile in tablespace applicativa
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-011 - Perdita tempfile TEMP
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-012 - Perdita membro redo log multiplexed
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-013 - Perdita gruppo redo log inattivo
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-014 - Perdita current redo log
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-015 - Corruzione blocco ORA-01578
-
-### Comandi base
-```bash
-rman target /
-RMAN> VALIDATE DATABASE CHECK LOGICAL;
-RMAN> LIST FAILURE;
-RMAN> RECOVER CORRUPTION LIST;
-RMAN> RECOVER DATAFILE <file#> BLOCK <block#>;
-```
-
-## RMAN-016 - Corruzione blocchi rilevata da RMAN VALIDATE
-
-### Comandi base
-```bash
-rman target /
-RMAN> VALIDATE DATABASE CHECK LOGICAL;
-RMAN> LIST FAILURE;
-RMAN> RECOVER CORRUPTION LIST;
-RMAN> RECOVER DATAFILE <file#> BLOCK <block#>;
-```
-
-## RMAN-017 - Corruzione dizionario o SYSTEM tablespace
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-018 - Tabella cancellata con DROP TABLE
-
-### Comandi base
-```bash
+```sql
 sqlplus / as sysdba
-SQL> FLASHBACK TABLE APP.TAB TO BEFORE DROP;
 
-rman target /
-RMAN> RECOVER TABLE APP.TAB UNTIL TIME "SYSDATE-1/24" AUXILIARY DESTINATION '/u02/aux';
+STARTUP;
+SELECT instance_name, status, database_status FROM v$instance;
+SELECT name, open_mode FROM v$database;
 ```
 
-## RMAN-019 - Tabella svuotata con TRUNCATE
+Se l'istanza non apre, torna a RMAN-P01 e identifica l'errore fisico reale.
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
+## RMAN-P03 - Perdita SPFILE o controlfile
 
+### Decisione
+
+Per SPFILE e controlfile usa autobackup RMAN. Conserva il `DBID` fuori dal
+database: in un disaster recovery puo' essere indispensabile.
+
+```rman
 rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
+
+SET DBID <dbid>;
+STARTUP NOMOUNT;
+RESTORE SPFILE FROM AUTOBACKUP;
+STARTUP FORCE NOMOUNT;
+RESTORE CONTROLFILE FROM AUTOBACKUP;
+ALTER DATABASE MOUNT;
 ```
 
-## RMAN-020 - DELETE senza WHERE o update massivo errato
+Completa `RESTORE DATABASE` e `RECOVER DATABASE` soltanto se i datafile lo
+richiedono. Un singolo membro controlfile perso va prima ripristinato dalla copia
+multiplexed sana, non trattato come perdita totale.
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
+## RMAN-P04 - Perdita datafile o tablespace
 
+### Decisione
+
+Per un file applicativo isola il file, ripristina e applica redo. `SYSTEM`,
+`SYSAUX` e `UNDO` richiedono una valutazione piu' prudente e spesso downtime.
+
+```rman
 rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
+
+SQL "ALTER DATABASE DATAFILE <file_number> OFFLINE";
+RESTORE DATAFILE <file_number>;
+RECOVER DATAFILE <file_number>;
+SQL "ALTER DATABASE DATAFILE <file_number> ONLINE";
 ```
 
-## RMAN-021 - DROP USER CASCADE accidentale
+Per un tablespace usa `RESTORE TABLESPACE <name>` e `RECOVER TABLESPACE <name>`.
+Valida alert log e una query funzionale sull'oggetto applicativo coinvolto.
 
-### Comandi base
-```bash
+## RMAN-P05 - Corruzione blocchi
+
+### Decisione
+
+Non ripristinare l'intero database per un singolo blocco corrotto. Identifica
+file, blocco e oggetto; usa Block Media Recovery quando applicabile.
+
+```rman
 rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
+
+VALIDATE DATABASE CHECK LOGICAL;
+LIST FAILURE;
+ADVISE FAILURE;
+RECOVER CORRUPTION LIST;
 ```
 
-## RMAN-022 - DROP TABLESPACE accidentale
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> FLASHBACK TABLE APP.TAB TO BEFORE DROP;
-
-rman target /
-RMAN> RECOVER TABLE APP.TAB UNTIL TIME "SYSDATE-1/24" AUXILIARY DESTINATION '/u02/aux';
+```sql
+SELECT * FROM v$database_block_corruption;
 ```
 
-## RMAN-023 - DROP PDB accidentale
+Per errori `ORA-00600`, `ORA-07445`, dizionario o lost write conserva evidenze e
+apri SR Oracle prima di modifiche distruttive.
 
-### Comandi base
-```bash
+## RMAN-P06 - Errore logico e RECOVER TABLE
+
+### Decisione
+
+Per `DROP TABLE ... PURGE`, `TRUNCATE` o perdita logica limitata valuta prima
+Flashback. Se undo o recycle bin non bastano, usa `RECOVER TABLE`: Data Guard non
+risolve l'errore logico perche' replica anche la modifica sbagliata.
+
+```rman
 rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
+
+RECOVER TABLE HR.ORDERS
+  UNTIL TIME 'SYSDATE-1'
+  AUXILIARY DESTINATION '/u01/rman_table_aux'
+  REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';
+
+RECOVER TABLE HR.ORDERS OF PLUGGABLE DATABASE APPPDB
+  UNTIL SCN <scn_before_error>
+  AUXILIARY DESTINATION '/u01/rman_table_aux'
+  DATAPUMP DESTINATION '/u01/rman_table_dump'
+  DUMP FILE 'orders_recovered.dmp'
+  NOTABLEIMPORT;
 ```
 
-## RMAN-024 - PDB corrotto ma CDB sano
+### Guardrail
 
-### Comandi base
-```bash
-rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
-```
+Il target deve essere locale, aperto read-write e in `ARCHIVELOG`. Servono
+backup e archivelog continui, spazio per l'auxiliary database e Data Pump.
+`SYS`, `SYSTEM`, `SYSAUX`, physical standby e alcuni oggetti con constraint
+nominati non sono supportati. Lo schema target di un remap cross-schema deve
+esistere prima del recover.
 
-## RMAN-025 - PDB point-in-time recovery
+## RMAN-P07 - Perdita server e restore su nuovo host
 
-### Comandi base
-```bash
-rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
-```
+### Decisione
 
-## RMAN-026 - CDB point-in-time recovery
+Prepara un host compatibile, ripristina wallet TDE se necessario, usa autobackup
+per bootstrap e completa restore/recover. Per clone o standby usa `DUPLICATE`
+con autenticazione wallet-backed oppure prompt interattivo, mai password negli
+argomenti shell.
 
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
+```rman
+rman TARGET /@SOURCE AUXILIARY /@AUX
 
-## RMAN-027 - TSPITR per tablespace applicativa
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-028 - Recovery di singola tabella con RMAN RECOVER TABLE
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-029 - Restore su nuovo host per test restore evidence
-
-### Comandi base
-```bash
-rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
-RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
-  SPFILE
-  PARAMETER_VALUE_CONVERT ('SOURCE','TARGET')
-  SET DB_UNIQUE_NAME='<target_unique_name>'
+DUPLICATE TARGET DATABASE TO CLONEDB
+  FROM ACTIVE DATABASE
   NOFILENAMECHECK;
 ```
 
-## RMAN-030 - Duplicate active database per clone preprod
+### Validazione
 
-### Comandi base
-```bash
-rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
-RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
-  SPFILE
-  PARAMETER_VALUE_CONVERT ('SOURCE','TARGET')
-  SET DB_UNIQUE_NAME='<target_unique_name>'
-  NOFILENAMECHECK;
-```
-
-## RMAN-031 - Duplicate da backup senza connessione source
-
-### Comandi base
-```bash
-rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
-RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
-  SPFILE
-  PARAMETER_VALUE_CONVERT ('SOURCE','TARGET')
-  SET DB_UNIQUE_NAME='<target_unique_name>'
-  NOFILENAMECHECK;
-```
-
-## RMAN-032 - Migrazione storage filesystem verso ASM
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-033 - Migrazione host con stesso DB_NAME
-
-### Comandi base
-```bash
-rman target sys/<PASSWORD>@SOURCE auxiliary sys/<PASSWORD>@AUX
-RMAN> DUPLICATE TARGET DATABASE TO <new_db_name> FROM ACTIVE DATABASE
-  SPFILE
-  PARAMETER_VALUE_CONVERT ('SOURCE','TARGET')
-  SET DB_UNIQUE_NAME='<target_unique_name>'
-  NOFILENAMECHECK;
-```
-
-## RMAN-034 - Ripristino con backup controlfile
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-035 - Recovery oltre RESETLOGS precedente
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-036 - Ripristino da incarnation precedente
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-037 - Archivelog mancanti durante recovery
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-038 - FRA piena con database bloccato
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-039 - Backup piece mancante o expired
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-040 - Catalogo RMAN non disponibile
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-041 - Recovery catalog corrotto o perso
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-042 - Control file record keep time insufficiente
-
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-043 - Backup encrypted con wallet non aperto
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-044 - Backup encrypted password-based
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-045 - TDE wallet perso o non sincronizzato
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-046 - NOARCHIVELOG database crash
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-047 - Backup cold consistente
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-048 - Backup incremental level 0 e level 1
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-049 - Incremental merge image copy
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-050 - Block Change Tracking corrotto
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-051 - Backup su NFS lento o instabile
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-052 - Backup su SBT/tape fallito
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-053 - Canali RMAN insufficienti
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-054 - Bigfile tablespace molto grande
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-055 - Section size per datafile enorme
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-056 - FILESPERSET e MAXPIECESIZE tuning
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-057 - Compressione RMAN e licensing
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-058 - Archivelog deletion policy con Data Guard
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-059 - Backup validate per audit
-
-### Comandi base
-```bash
-rman target /
-RMAN> BACKUP VALIDATE CHECK LOGICAL DATABASE;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-```
-
-## RMAN-060 - Restore validate per audit
-
-### Comandi base
-```bash
-rman target /
-RMAN> BACKUP VALIDATE CHECK LOGICAL DATABASE;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-```
-
-## RMAN-061 - Restore archivelog validate
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-062 - Recover database until time
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-063 - Recover database until SCN
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-064 - Recover database until sequence
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-065 - Restore singolo tablespace
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-066 - Restore singolo datafile online
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-067 - Restore controlfile da autobackup
-
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-068 - Restore SPFILE da autobackup
-
-### Comandi base
-```bash
-rman target /
-RMAN> SET DBID <DBID>;
-RMAN> STARTUP NOMOUNT;
-RMAN> RESTORE SPFILE FROM AUTOBACKUP;
-RMAN> RESTORE CONTROLFILE FROM AUTOBACKUP;
-RMAN> ALTER DATABASE MOUNT;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-069 - Lost write detection e recovery
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-070 - NOLOGGING operation da recuperare
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-071 - Schema refresh con Data Pump non sufficiente
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-072 - Ripristino oggetti invalidi post recovery
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-073 - Resync catalog dopo restore
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-074 - Crosscheck dopo cancellazione manuale file
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-075 - Delete obsolete e retention window
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-
-rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
-```
-
-## RMAN-076 - Report need backup
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-077 - Backup database plus archivelog
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-078 - Backup PDB singolo
-
-### Comandi base
-```bash
-rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
-```
-
-## RMAN-079 - Restore PDB singolo
-
-### Comandi base
-```bash
-rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
-```
-
-## RMAN-080 - Clone PDB da backup
-
-### Comandi base
-```bash
-rman target /
-RMAN> RUN {
-  ALTER PLUGGABLE DATABASE <pdb_name> CLOSE;
-  SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')";
-  RESTORE PLUGGABLE DATABASE <pdb_name>;
-  RECOVER PLUGGABLE DATABASE <pdb_name>;
-  ALTER PLUGGABLE DATABASE <pdb_name> OPEN RESETLOGS;
-}
-```
-
-## RMAN-081 - Ripristino standby tramite RMAN incremental
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-082 - Recovery dopo errore umano con Flashback Database
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-
-rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
-```
-
-## RMAN-083 - Flashback Table per tabella modificata
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-
-rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
-```
-
-## RMAN-084 - Flashback Drop da recycle bin
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-
-rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
-```
-
-## RMAN-085 - Flashback Query per estrazione dati puntuale
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM APP.TAB AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-SQL> FLASHBACK TABLE APP.TAB TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
-
-rman target /
-RMAN> RUN { SET UNTIL TIME "TO_DATE('2026-05-27 10:00:00','YYYY-MM-DD HH24:MI:SS')"; RESTORE DATABASE; RECOVER DATABASE; }
-```
-
-## RMAN-086 - PITR con tabella senza recycle bin
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-087 - PITR con vincoli cross-tablespace
-
-### Comandi base
-```bash
-rman target /
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> OFFLINE';
-RMAN> RESTORE DATAFILE <file#>;
-RMAN> RECOVER DATAFILE <file#>;
-RMAN> SQL 'ALTER DATABASE DATAFILE <file#> ONLINE';
-```
-
-## RMAN-088 - Restore su ambiente isolato per forensics
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
+Verifica ruolo, open mode, incarnation, alert log, servizi e smoke test.
 
-## RMAN-089 - Validazione checksum backup offsite
+## RMAN-P08 - FRA piena con database bloccato
 
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-090 - Restore da backup copiati manualmente
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-091 - Catalog start with per backup non catalogati
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-092 - RMAN in RAC con backup locale non condiviso
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-093 - RMAN in RAC con canali su istanze diverse
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-094 - Ripristino dopo patch fallita
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-095 - Rollback applicativo con guaranteed restore point
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-096 - DR test annuale con misurazione RTO/RPO
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## RMAN-097 - Emergenza ORA-19809 FRA limit exceeded
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-098 - Emergenza ORA-01113 file needs media recovery
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-099 - Emergenza RMAN-06059 archivelog expected not found
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
-
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
-```
-
-## RMAN-100 - Emergenza ORA-19504 failed to create file
-
-### Comandi base
-```bash
-rman target /
-RMAN> LIST BACKUP SUMMARY;
-RMAN> REPORT SCHEMA;
-RMAN> RESTORE DATABASE PREVIEW SUMMARY;
-RMAN> RESTORE DATABASE VALIDATE;
-RMAN> RECOVER DATABASE;
-```
-
-## DG-001 - Creazione physical standby da active duplicate
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-002 - Creazione physical standby da backup
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-003 - Configurazione Data Guard Broker
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
-
-## DG-004 - Primary database down totale
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
-
-## DG-005 - Failover manuale a standby
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
-
-## DG-006 - Switchover pianificato
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
-DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-007 - Reinstate failed primary con flashback
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-008 - Recreate failed primary senza flashback
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-009 - Fast-Start Failover con observer
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
-
-## DG-010 - Observer down o isolato
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-011 - Maximum Performance baseline
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-012 - Maximum Availability con SYNC AFFIRM
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-013 - Maximum Protection e rischio stall primary
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-014 - Cambio protection mode
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-015 - Redo transport destination error
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-016 - ORA-12514 listener non conosce service
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-017 - ORA-12154 TNS resolution
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-018 - Password file mismatch primary standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-019 - DB_UNIQUE_NAME errato
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-020 - LOG_ARCHIVE_CONFIG errata
+### Decisione
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-021 - FAL_SERVER o FAL_CLIENT errati
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-022 - Archive gap su physical standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-023 - V$ARCHIVE_GAP non vuoto
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-024 - Archivelog mancante sul primary
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-025 - Manual gap resolution
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-026 - Standby apply lag crescente
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-027 - Transport lag crescente
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-028 - Redo apply tuning
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-029 - Standby redo logs mancanti
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+Con `ORA-00257`, prima misura quota FRA, spazio fisico e file reclaimable.
+Non usare `rm` sui file Oracle e non cancellare archivelog alla cieca per eta'.
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-030 - Standby redo logs dimensione errata
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-031 - RFS non riceve redo
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-032 - MRP0 non parte
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-033 - MRP0 WAIT_FOR_GAP
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-034 - Apply bloccato da NOLOGGING operation
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-035 - Standby unrecoverable datafile
-
-### Comandi base
-```bash
--- On standby
-SQL> SELECT current_scn FROM v$database;
-
--- On primary, create incremental from standby SCN
-rman target /
-RMAN> BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE FORMAT '/tmp/for_standby_%U';
+```sql
+SELECT name,
+       ROUND(space_limit/1024/1024/1024, 2) AS limit_gb,
+       ROUND(space_used/1024/1024/1024, 2) AS used_gb,
+       ROUND(space_reclaimable/1024/1024/1024, 2) AS reclaimable_gb
+FROM   v$recovery_file_dest;
 
--- On standby
-RMAN> CATALOG START WITH '/tmp/';
-RMAN> RECOVER DATABASE NOREDO;
+SELECT file_type, percent_space_used, percent_space_reclaimable
+FROM   v$recovery_area_usage;
 ```
-
-## DG-036 - Roll-forward standby con incremental from SCN
 
-### Comandi base
-```bash
--- On standby
-SQL> SELECT current_scn FROM v$database;
-
--- On primary, create incremental from standby SCN
+```rman
 rman target /
-RMAN> BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE FORMAT '/tmp/for_standby_%U';
-
--- On standby
-RMAN> CATALOG START WITH '/tmp/';
-RMAN> RECOVER DATABASE NOREDO;
-```
-
-## DG-037 - Standby datafile missing
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-038 - Standby controlfile da ricreare
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-039 - Standby database corruption
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-040 - Primary lost write rilevato da standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-041 - Standby snapshot per test applicativi
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO SNAPSHOT STANDBY;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
-```
-
-## DG-042 - Convert snapshot standby back to physical
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO SNAPSHOT STANDBY;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
-```
-
-## DG-043 - Active Data Guard read only with apply
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-044 - Query reporting su standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-045 - Standby services per read-only workload
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-046 - Role-based services con srvctl
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-047 - RAC primary e RAC standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-048 - Switchover con RAC
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
-DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-049 - Failover con RAC
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
 
-## DG-050 - Broker warning ORA-168xx
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
-
-## DG-051 - DGMGRL status non SUCCESS
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
+SHOW ARCHIVELOG DELETION POLICY;
+CROSSCHECK ARCHIVELOG ALL;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT OBSOLETE;
 ```
 
-## DG-052 - Validate database broker
+Se Data Guard e' in lag o irraggiungibile, passa a DG-061 prima di eliminare
+archivelog.
 
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
-
-## DG-053 - Static listener per broker
+## Matrice RMAN dei casi secondari
 
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
+| Sintomo | Playbook | Nota |
+| --- | --- | --- |
+| Perdita tempfile TEMP | RMAN-P02 | Ricrea tempfile; non e' oggetto di restore RMAN |
+| Redo log member perso | RMAN-P02 | Verifica multiplexing e stato gruppo prima di operare |
+| Tablespace applicativo perso | RMAN-P04 | Restore e recover mirati |
+| Corruzione singolo blocco | RMAN-P05 | Preferisci BMR |
+| `DROP`, `TRUNCATE`, `DELETE` errato | RMAN-P06 | Flashback oppure `RECOVER TABLE` |
+| Clone preproduzione | RMAN-P07 | `DUPLICATE`, wallet e validazione servizi |
+| Backup piece assente | RMAN-P01 | `CROSSCHECK`, `LIST EXPIRED`, verifica storage |
+| FRA piena | RMAN-P08 | Verifica Data Guard prima del purge |
 
-## DG-054 - Redo routes e cascaded standby
+# Parte 2 - Playbook Data Guard, Broker, Standby e Disaster Recovery
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+## DG-P01 - Diagnosi transport lag, apply lag e gap
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
+### Decisione
 
-## DG-055 - Cascading standby
+Separa sempre rete e apply. Sul primary controlla le destinazioni; sullo standby
+controlla lag, processi e `v$archive_gap`.
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+```sql
+-- Primary
+SELECT dest_id, status, target, error, destination
+FROM   v$archive_dest_status
+ORDER  BY dest_id;
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+-- Standby
+SELECT name, value, unit FROM v$dataguard_stats;
+SELECT process, status, thread#, sequence# FROM v$managed_standby;
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
 ```
 
-## DG-056 - Far Sync instance
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```text
+dgmgrl /@RACDB
+SHOW CONFIGURATION;
+SHOW DATABASE VERBOSE RACDB_STBY;
+VALIDATE DATABASE RACDB_STBY;
 ```
-
-## DG-057 - Zero data loss planning
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
+## DG-P02 - Switchover pianificato
 
-## DG-058 - Network partition e split brain prevention
+### Decisione
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+Lo switchover e' manutenzione controllata. Eseguilo solo con configurazione
+`SUCCESS`, lag accettabile, servizi verificati e rollback documentato.
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```text
+dgmgrl /@RACDB
+SHOW CONFIGURATION;
+VALIDATE DATABASE RACDB_STBY;
+SWITCHOVER TO RACDB_STBY;
+SHOW CONFIGURATION;
 ```
-
-## DG-059 - Primary isolato ma ancora aperto
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+Valida ruolo database, servizi applicativi e redo transport nel verso opposto.
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
+## DG-P03 - Failover e reinstate
 
-## DG-060 - Standby FRA piena
+### Decisione
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+Il failover e' una scelta di emergenza: dichiara perdita dati potenziale secondo
+protection mode e lag osservato. Non usarlo per correggere errori logici.
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
+```text
+dgmgrl /@RACDB_STBY
+SHOW CONFIGURATION;
+FAILOVER TO RACDB_STBY;
+SHOW CONFIGURATION;
+REINSTATE DATABASE RACDB;
+```
+
+Se il reinstate non e' disponibile, verifica Flashback Database; in assenza dei
+flashback log necessari ricostruisci il vecchio primary con RMAN Duplicate.
+
+## DG-P04 - Observer e FSFO
+
+La configurazione FSFO e' centralizzata nella
+[Fase 4B Observer Server e FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
+Usa un host dedicato, wallet SEPS, fase iniziale `OBSERVE ONLY`,
+`VALIDATE FAST_START FAILOVER` e servizio `systemd`. Non avviare Observer con
+password nella command line.
 
 ## DG-061 - Primary FRA piena per standby lag
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
+### Scenario Severity 1
 
-DGMGRL> SHOW DATABASE <db_unique_name>;
+Il primary restituisce `ORA-00257`, la FRA e' al 100% e lo standby non e'
+raggiungibile. Gli archivelog accumulati potrebbero essere indispensabili per
+colmare il gap quando la rete tornera' disponibile.
+
+### Procedura operativa
+
+1. Registra alert log, spazio reale, destinazioni `MANDATORY`, deletion policy e
+   sequenze non ancora spedite o applicate.
+2. Preferisci aumento temporaneo della FRA solo con storage realmente
+   disponibile oppure backup controllato verso storage alternativo.
+3. Elimina soltanto file eleggibili secondo retention e deletion policy.
+4. Se il business autorizza il degrado DR e non esiste alternativa, usa
+   `DELETE FORCE` per il minimo intervallo necessario e registra le sequenze.
+
+```rman
+rman target /
+
+SHOW ARCHIVELOG DELETION POLICY;
+CROSSCHECK ARCHIVELOG ALL;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT OBSOLETE;
+
+-- Ultima scelta autorizzata: ignora la deletion policy.
+DELETE FORCE NOPROMPT ARCHIVELOG FROM SEQUENCE <first_sequence>
+  UNTIL SEQUENCE <last_sequence> THREAD <thread_number>;
 ```
 
-## DG-062 - RMAN archivelog deletion policy in Data Guard
+### Validazione finale
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+- Il primary accetta transazioni.
+- L'alert log non genera nuovi `ORA-00257`.
+- Il ticket contiene sequenze preservate ed eventualmente eliminate.
+- Esiste un piano esplicito di riallineamento tramite DG-062.
+
+## DG-062 - Riallineamento standby dopo gap
+
+### Log ancora disponibili
+
+Lascia lavorare FAL oppure copia i log sullo standby e registrali:
+
+```sql
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
+ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
-## DG-063 - Backup su standby
+### Log persi
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+Ferma MRP e usa roll-forward dalla rete:
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```sql
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ```
 
-## DG-064 - Restore primary usando backup standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```rman
+rman target /
+RECOVER STANDBY DATABASE FROM SERVICE <primary_service>;
 ```
 
-## DG-065 - Offload backup to standby
+Se la rete non consente il recupero diretto, crea sul primary un
+`BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE`, trasferiscilo, catalogalo
+sullo standby e completa il recover. Ricostruisci lo standby soltanto quando il
+roll-forward incrementale non e' praticabile.
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
+### Validazione finale
 
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```sql
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
+SELECT name, value, unit FROM v$dataguard_stats;
+SELECT process, status, thread#, sequence# FROM v$managed_standby;
 ```
 
-## DG-066 - TDE wallet su primary e standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
+```text
+dgmgrl /@RACDB
+SHOW CONFIGURATION;
+SHOW DATABASE RACDB_STBY;
 ```
 
-## DG-067 - PDB creation replicated to standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-068 - PDB open mode dopo switchover
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
-DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-069 - Data Guard con CDB/PDB
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-070 - Data Guard rolling upgrade
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-071 - DBMS_ROLLING overview
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-072 - Patch GI/DB con standby disponibile
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-073 - Application connection string dopo role transition
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-074 - Service relocation dopo switchover
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
-DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-075 - Standby rebuild completo
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-076 - Broker configuration file perso
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
-
-## DG-077 - Config drift tra init parameters
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-078 - Archive destination mandatory bloccante
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-079 - Alternate archive destination
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-080 - Standby in recovery ma lag zero
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-081 - Data Guard health check giornaliero
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-082 - Data Guard disaster recovery drill
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-083 - Data Guard failback dopo failover
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
-
-## DG-084 - Switchover status NOT ALLOWED
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> VALIDATE DATABASE VERBOSE <standby_db_unique_name>;
-DGMGRL> SWITCHOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-085 - Flashback standby dopo errore operativo
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-086 - Logical corruption replicata allo standby
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-087 - Errore umano: tabella cancellata con Data Guard attivo
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-088 - Standby non protegge da DROP TABLE replicato
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-089 - Quando usare RMAN invece di Data Guard
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-090 - Quando usare Flashback invece di failover
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@STANDBY
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> FAILOVER TO <standby_db_unique_name>;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> REINSTATE DATABASE <old_primary_db_unique_name>;
-```
-
-## DG-091 - Quando usare Snapshot Standby invece di clone
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO SNAPSHOT STANDBY;
-DGMGRL> SHOW CONFIGURATION;
-DGMGRL> CONVERT DATABASE <standby_db_unique_name> TO PHYSICAL STANDBY;
-```
-
-## DG-092 - Quando usare GoldenGate invece di Data Guard
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-093 - Data Guard in cloud/on-prem hybrid
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-094 - Latency alta tra regioni
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-095 - SYNC vs ASYNC decisione bancaria
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-096 - FSFO falso positivo da rete instabile
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-097 - Data Guard broker disabilitato temporaneamente
-
-### Comandi base
-```bash
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION VERBOSE;
-DGMGRL> SHOW DATABASE VERBOSE <db_unique_name>;
-DGMGRL> VALIDATE DATABASE VERBOSE <db_unique_name>;
-DGMGRL> SHOW DATABASE <db_unique_name> STATUSREPORT;
-```
-
-## DG-098 - Redo transport compression e encryption
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
-
-## DG-099 - Data Guard dopo resetlogs
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT database_role, open_mode, switchover_status FROM v$database;
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-
-dgmgrl sys/<PASSWORD>@PRIMARY
-DGMGRL> SHOW CONFIGURATION;
-```
-
-## DG-100 - Gap dopo manutenzione lunga
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
-```
-
-## DG-101 - Apply parallelism e performance
-
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
-
-DGMGRL> SHOW DATABASE <db_unique_name>;
-```
+## Matrice Data Guard dei casi secondari
+
+| Sintomo | Playbook | Nota |
+| --- | --- | --- |
+| Transport destination error | DG-P01 | Controlla rete e `v$archive_dest_status` sul primary |
+| Apply lag crescente | DG-P01 | Controlla MRP, I/O standby e workload ADG |
+| Archive gap | DG-P01, DG-062 | Interroga `v$archive_gap` sullo standby |
+| Switchover manutentivo | DG-P02 | Prima `VALIDATE DATABASE` |
+| Primary perso | DG-P03 | Dichiarare RPO osservato |
+| Reinstate non disponibile | DG-P03 | Flashback oppure RMAN Duplicate |
+| Observer down | DG-P04 | Nessun failover automatico finche' Observer non torna sano |
+| FRA primary piena con standby down | DG-061 | Preserva redo prima del purge |
+
+## Validazione finale
+
+- Ruolo database coerente con l'azione eseguita.
+- Alert log senza errori bloccanti.
+- Backup, archivelog e wallet recuperabili.
+- `SHOW CONFIGURATION` coerente con il livello di protezione atteso.
+- Smoke test applicativo completato.
+
+## Troubleshooting rapido
+
+Se mancano backup o redo, interrompi le modifiche distruttive, conserva output e
+attiva escalation DBA, storage e owner applicativo. Un restore non provato non e'
+una strategia di recovery.

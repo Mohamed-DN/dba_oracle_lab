@@ -20,6 +20,13 @@
 
 ---
 
+## Obiettivo
+
+Gestire un failover manuale di emergenza e il successivo reinstate. Per il failover
+automatico usa la [Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md).
+
+## Procedura Operativa
+
 ## ⚠️ AVVERTENZA LAB: Snapshot VirtualBox e Test di Failover
 
 > **DOMANDA FREQUENTE**: *"Visto che sono su VirtualBox, posso fare uno snapshot di tutte e 4 le macchine, testare il failover, e poi rimettere gli snapshot per tornare indietro velocemente?"*
@@ -91,7 +98,7 @@
 
 ```bash
 # Prova a connetterti al Primary
-sqlplus sys/<password>@RACDB as sysdba
+sqlplus /@RACDB as sysdba
 # Se timeout → il Primary è probabilmente morto
 
 # Prova SSH
@@ -100,7 +107,7 @@ ssh root@rac2
 # Se entrambi non rispondono → conferma che il Primary è down
 
 # Controlla il DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 SHOW CONFIGURATION;
 # Se RACDB mostra "Error" → conferma
 ```
@@ -112,7 +119,7 @@ SHOW CONFIGURATION;
 ### Con DGMGRL (consigliato)
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 # Verifica quanti dati si perderebbero
 SHOW DATABASE RACDB_STBY;
@@ -202,7 +209,7 @@ STARTUP MOUNT;
 
 ```bash
 # 6. Reinstate con DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 REINSTATE DATABASE RACDB;
 
@@ -224,7 +231,7 @@ STARTUP MOUNT RESTRICT;
 DROP DATABASE;
 
 # 2. Rifai l'RMAN Duplicate (come nella Fase 3)
-rman TARGET sys/<password>@RACDB_STBY AUXILIARY sys/<password>@RACDB1
+rman TARGET /@RACDB_STBY AUXILIARY /@RACDB1
 
 DUPLICATE TARGET DATABASE
   FOR STANDBY
@@ -239,7 +246,7 @@ DUPLICATE TARGET DATABASE
 
 ```bash
 # 3. Registra nel DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 ENABLE DATABASE RACDB;
 
@@ -249,37 +256,15 @@ SHOW CONFIGURATION;
 
 ---
 
-## Opzione Avanzata: Fast-Start Failover (FSFO) — Failover AUTOMATICO
+## Opzione Avanzata: Fast-Start Failover (FSFO)
 
-```
-+-----------------+        +-----------------+        +-----------------+
-|  RAC PRIMARY    |        |  RAC STANDBY    |        |   OBSERVER      |
-|  RACDB          |        |  RACDB_STBY     |        |  (su dbtarget)  |
-|                 |        |                 |        |                 |
-|                 |&amp;lt;------&gt;|                 |&amp;lt;------&gt;|  Monitora lo    |
-|                 |  DG    |                 |        |  stato di       |
-|                 |  Redo  |                 |        |  entrambi i DB  |
-+-----------------+        +-----------------+        |                 |
-                                                      |  Se Primary     |
-                                                      |  muore →        |
-                                                      |  FAILOVER       |
-                                                      |  AUTOMATICO!    |
-                                                      +-----------------+
-```
+La configurazione operativa di FSFO è centralizzata nella
+[Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md). La procedura usa
+un host `observer1` dedicato, wallet SEPS, `ENABLE FAST_START FAILOVER OBSERVE ONLY`
+e `VALIDATE FAST_START FAILOVER` prima dell'attivazione.
 
-```bash
-dgmgrl sys/<password>@RACDB
-
-# Configura FSFO
-ENABLE FAST_START FAILOVER;
-
-# Avvia l'Observer (su una terza macchina, es. dbtarget)
-dgmgrl sys/<password>@RACDB
-START OBSERVER;
-# L'observer gira in foreground — mettilo in un screen/tmux!
-```
-
-> **FSFO**: Se il Primary non risponde per `FastStartFailoverThreshold` secondi (default 30), l'Observer ordina automaticamente il failover allo standby. **Zero intervento umano!**
+Non usare credenziali nella command line e non ospitare l'Observer su primary,
+standby o server OEM condivisi con altri ruoli critici.
 
 ---
 
@@ -311,3 +296,14 @@ Il Primary è down?
                                                   +-- NO → Ricostruisci il server,
                                                             poi RMAN DUPLICATE
 ```
+
+## Validazione Finale
+
+Dopo il reinstate verifica `SHOW CONFIGURATION`, il ruolo dei database e la ripresa
+del trasporto redo. Per FSFO verifica anche `SHOW FAST_START FAILOVER` e
+`SHOW OBSERVER` seguendo la Fase 4B.
+
+## Troubleshooting Rapido
+
+Se `REINSTATE DATABASE` non è disponibile, verifica Flashback Database. In assenza
+dei flashback log necessari ricostruisci il vecchio primary con RMAN Duplicate.

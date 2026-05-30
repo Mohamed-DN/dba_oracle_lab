@@ -1,5 +1,22 @@
 # Extra DBA - PDB, Data Guard, Services e Listener
 
+## Obiettivo operativo
+
+Gestire servizi PDB coerenti con i ruoli Data Guard e con il routing applicativo.
+
+## Procedura operativa
+
+Definisci service role-aware, prova apertura PDB e connessioni prima e dopo una role transition.
+
+## Validazione finale
+
+Conferma service placement, open mode PDB e login applicativo.
+
+## Troubleshooting rapido
+
+Per `ORA-12514`, verifica registrazione, service name e stato della PDB sul ruolo corrente.
+
+
 > Guida operativa per testare la propagazione di un PDB dal primary al physical standby e per pubblicare servizi RAC corretti lato primary e, se vuoi Active Data Guard, lato standby.
 
 ## Quando farla
@@ -91,7 +108,7 @@ sqlplus / as sysdba
 SHOW CON_NAME;
 
 CREATE PLUGGABLE DATABASE LABPDB1
-  ADMIN USER pdbadmin IDENTIFIED BY "LabPdb_1234"
+  ADMIN USER pdbadmin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
   STANDBYS=ALL;
 
 ALTER PLUGGABLE DATABASE LABPDB1 OPEN INSTANCES=ALL;
@@ -155,7 +172,7 @@ ALTER SESSION SET CONTAINER=LABPDB1;
 
 CREATE TABLESPACE labpdb1_ts DATAFILE SIZE 100M AUTOEXTEND ON NEXT 50M;
 
-CREATE USER app1 IDENTIFIED BY "App1_1234";
+CREATE USER app1 IDENTIFIED BY "<PASSWORD_APP>";
 GRANT CONNECT, RESOURCE TO app1;
 
 CREATE TABLE app1.t1 (id NUMBER PRIMARY KEY, note VARCHAR2(100));
@@ -230,7 +247,7 @@ Poi prova:
 
 ```bash
 tnsping LABPDB1_RW
-sqlplus pdbadmin/LabPdb_1234@LABPDB1_RW
+sqlplus pdbadmin@LABPDB1_RW
 ```
 
 ## 7. Servizio lato standby: farlo solo se usi Active Data Guard

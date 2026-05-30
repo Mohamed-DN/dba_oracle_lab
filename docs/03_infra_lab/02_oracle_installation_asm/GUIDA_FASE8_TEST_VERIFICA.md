@@ -4,6 +4,13 @@
 
 ---
 
+## Obiettivo
+
+Validare il laboratorio end-to-end e, opzionalmente, raccogliere evidenza runtime
+del failover automatico configurato nella Fase 4B.
+
+## Procedura Operativa
+
 ## 8.0 Ingresso da Fase 7 (preflight)
 
 Questa fase e un test di sistema: non partire se la Fase 7 (GoldenGate) non e stabile, e se RMAN (Fase 5) o EM (Fase 6) non sono configurati.
@@ -12,7 +19,7 @@ Checklist minima:
 
 ```bash
 # Data Guard
-dgmgrl sys/<password>@RACDB "show configuration;"
+dgmgrl /@RACDB "show configuration;"
 
 # GoldenGate sul PRIMARIO (rac1) — è lì che gira l'Extract
 cd $OGG_HOME && ./ggsci
@@ -42,12 +49,12 @@ Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](../../0
 sqlplus / as sysdba
 
 -- Crea uno schema di test
-CREATE USER testdg IDENTIFIED BY testdg123
+CREATE USER testdg IDENTIFIED BY "<PASSWORD_TESTDG>"
     DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
 GRANT CREATE SESSION, CREATE TABLE TO testdg;
 
 -- Inserisci dati
-CONNECT testdg/testdg123
+CONNECT testdg
 
 CREATE TABLE test_replica (
     id        NUMBER PRIMARY KEY,
@@ -93,7 +100,7 @@ WHERE name IN ('transport lag','apply lag','apply finish time');
 ### Verifica con DGMGRL
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 SHOW CONFIGURATION;
 -- Configuration Status: SUCCESS
@@ -109,7 +116,7 @@ SHOW DATABASE RACDB_STBY;
 ## 8.2 Test Data Guard — Switchover Completo
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 -- Verifica che lo switchover sia possibile
 VALIDATE DATABASE RACDB_STBY;
@@ -131,7 +138,7 @@ SHOW CONFIGURATION;
 ```
 
 ```sql
-sqlplus testdg/testdg123@RACDB_STBY
+sqlplus testdg@RACDB_STBY
 
 INSERT INTO test_replica VALUES (3, 'Post-Switchover Test', SYSTIMESTAMP);
 COMMIT;
@@ -148,7 +155,7 @@ SELECT * FROM testdg.test_replica;
 ### Switchover di ritorno
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 SWITCHOVER TO RACDB;
 
@@ -199,7 +206,7 @@ REPLICAT    RUNNING     rep_rac     00:00:01      00:00:02
 
 ```sql
 -- Sul Primario (RACDB) — rac1
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 INSERT INTO test_replica VALUES (100, 'GoldenGate Test 1', SYSTIMESTAMP);
 INSERT INTO test_replica VALUES (101, 'GoldenGate Test 2', SYSTIMESTAMP);
@@ -209,7 +216,7 @@ COMMIT;
 
 ```sql
 -- Sul Target (dbtarget) - dopo pochi secondi
-sqlplus testdg/testdg123@dbtarget
+sqlplus testdg@dbtarget
 
 SELECT * FROM test_replica WHERE id >= 100;
 -- Devi vedere le 3 righe inserite dal primario!
@@ -240,7 +247,7 @@ GGSCI> STATS REPLICAT rep_rac, LATEST
 
 ```sql
 -- Sul Primario
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 BEGIN
     FOR i IN 1000..2000 LOOP
@@ -269,7 +276,7 @@ SELECT COUNT(*) FROM testdg.test_replica;
 
 ```sql
 -- Sul Primario
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 -- UPDATE
 UPDATE test_replica SET nome = 'UPDATED ROW' WHERE id = 1;
@@ -396,7 +403,7 @@ DOPO lo switchover:
 
 ```bash
 # 1. Fai switchover
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 SWITCHOVER TO RACDB_STBY;
 
 # 2. L'Extract era sul vecchio primario (rac1).
@@ -417,19 +424,19 @@ INFO ALL
 # Extract e Pump devono essere RUNNING
 
 # 3. Inserisci dati sul nuovo primario
-sqlplus testdg/testdg123@RACDB_STBY
+sqlplus testdg@RACDB_STBY
 INSERT INTO test_replica VALUES (6000, 'Post-Switchover GG Test', SYSTIMESTAMP);
 COMMIT;
 
 # 4. Verifica sul target
-sqlplus testdg/testdg123@dbtarget
+sqlplus testdg@dbtarget
 SELECT * FROM test_replica WHERE id = 6000;
 -- Deve esistere!
 ```
 
 ```bash
 # 5. Switchback
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 SWITCHOVER TO RACDB;
 
 # 6. Sposta di nuovo l'Extract su rac1
@@ -443,6 +450,45 @@ START EXTRACT pump_rac
 INFO ALL
 # Tutto RUNNING? → BRAVO!
 ```
+
+---
+
+## 8.8A Drill FSFO Opzionale — Crash Primary
+
+Esegui questo drill solo dopo aver completato la
+[Fase 4B: Observer Server e FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
+Il test è distruttivo: arresta tutte le VM e crea un cold backup completo delle
+cartelle VirtualBox prima di iniziare.
+
+> [!IMPORTANT]
+> Non usare `SHUTDOWN IMMEDIATE`: Oracle non lo considera un evento FSFO. Simula
+> invece il guasto improvviso dell'intero primary site spegnendo forzatamente le
+> VM primary oppure isolandone la rete, lasciando attivi standby e `observer1`.
+
+Prima del fault verifica:
+
+```dgmgrl
+SHOW CONFIGURATION;
+VALIDATE FAST_START FAILOVER;
+SHOW FAST_START FAILOVER;
+SHOW OBSERVER;
+```
+
+Dopo il fault, collegati al database promosso e verifica:
+
+```dgmgrl
+SHOW CONFIGURATION;
+SHOW FAST_START FAILOVER;
+SHOW OBSERVER;
+```
+
+Conferma che `RACDB_STBY` sia diventato primary e che le applicazioni usino il
+servizio corretto. Ripristina poi le VM del vecchio primary e valida il reinstate
+automatico; se Flashback Database non è utilizzabile, esegui RMAN Duplicate
+seguendo la [guida failover e reinstate](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md).
+
+Come test separato e non distruttivo, arresta solo `observer1`: il database non
+deve cambiare ruolo. Se hai configurato `observer2`, verifica che diventi master.
 
 ---
 
@@ -549,6 +595,13 @@ cat $OGG_HOME/dirrpt/ext_racdb.rpt
 | 13 | **GG dopo switchover** → replica intatta | DG+GG | Extract RUNNING, dati replicati | |
 | 14 | RMAN backup da standby | RMAN | Backup completato senza errori | |
 | 15 | RMAN RESTORE VALIDATE | RMAN | Restore simulato OK | |
+| 16 | `observer1` registrato | FSFO | `SHOW OBSERVER` coerente | |
+| 17 | Drill FSFO opzionale | FSFO | Promozione automatica e reinstate validato | |
+
+## Validazione Finale
+
+Conserva l'output delle verifiche completate. Il drill FSFO è opzionale, ma serve
+come evidenza runtime prima di dichiarare FSFO implementato nel laboratorio.
 
 ---
 

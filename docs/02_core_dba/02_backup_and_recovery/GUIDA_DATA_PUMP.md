@@ -1,5 +1,22 @@
 # Guida Data Pump (expdp/impdp) — Oracle 19c
 
+## Obiettivo operativo
+
+Esportare e importare dati in modo ripetibile con log, parfile e credenziali protette.
+
+## Procedura operativa
+
+Definisci scope e directory, verifica spazio, usa wallet o prompt e controlla i log del job.
+
+## Validazione finale
+
+Confronta errori, oggetti, conteggi e smoke test sul database target.
+
+## Troubleshooting rapido
+
+Per job bloccati controlla master table, worker, spazio e privilegi prima del rilancio.
+
+
 > Data Pump è lo strumento standard Oracle per export e import logici di dati. È superiore al vecchio exp/imp in tutto: velocità, parallelismo, filtraggio, rete.
 
 ---
@@ -48,7 +65,7 @@ chown oracle:oinstall /u01/backup/datapump
 ### 3.1 Export di uno Schema Completo
 
 ```bash
-expdp system/<password> \
+expdp system \
   SCHEMAS=HR \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=hr_export_%U.dmp \
@@ -66,7 +83,7 @@ expdp system/<password> \
 ### 3.2 Export di Tabelle Specifiche
 
 ```bash
-expdp system/<password> \
+expdp system \
   TABLES=HR.EMPLOYEES,HR.DEPARTMENTS \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=hr_tables.dmp \
@@ -76,7 +93,7 @@ expdp system/<password> \
 ### 3.3 Export con Filtro WHERE
 
 ```bash
-expdp system/<password> \
+expdp system \
   TABLES=HR.EMPLOYEES \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=hr_emp_filtered.dmp \
@@ -87,7 +104,7 @@ expdp system/<password> \
 ### 3.4 Export Full Database
 
 ```bash
-expdp system/<password> \
+expdp system \
   FULL=Y \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=full_db_%U.dmp \
@@ -105,7 +122,7 @@ expdp system/<password> \
 # Prendi l'SCN corrente
 sqlplus -s / as sysdba <<< "SELECT CURRENT_SCN FROM v\$database;"
 
-expdp ggadmin/<password> \
+expdp ggadmin \
   SCHEMAS=HR,APP \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=gg_init_%U.dmp \
@@ -119,7 +136,7 @@ expdp ggadmin/<password> \
 ### 3.6 Solo Stima (senza esportare)
 
 ```bash
-expdp system/<password> \
+expdp system \
   SCHEMAS=HR \
   ESTIMATE_ONLY=Y
 # ^^^ Mostra quanto spazio occuperebbe l'export SENZA farlo.
@@ -133,7 +150,7 @@ expdp system/<password> \
 ### 4.1 Import Standard
 
 ```bash
-impdp system/<password> \
+impdp system \
   SCHEMAS=HR \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=hr_export_%U.dmp \
@@ -144,7 +161,7 @@ impdp system/<password> \
 ### 4.2 Import con REMAP_SCHEMA (Cambia il Nome dello Schema)
 
 ```bash
-impdp system/<password> \
+impdp system \
   REMAP_SCHEMA=HR:HR_TEST \
   DIRECTORY=DATA_PUMP_DIR \
   DUMPFILE=hr_export_%U.dmp \
@@ -157,7 +174,7 @@ impdp system/<password> \
 ### 4.3 Import con REMAP_TABLESPACE
 
 ```bash
-impdp system/<password> \
+impdp system \
   SCHEMAS=HR \
   REMAP_TABLESPACE=USERS:TEST_TS \
   DIRECTORY=DATA_PUMP_DIR \
@@ -168,7 +185,7 @@ impdp system/<password> \
 ### 4.4 Import con TABLE_EXISTS_ACTION
 
 ```bash
-impdp system/<password> \
+impdp system \
   SCHEMAS=HR \
   TABLE_EXISTS_ACTION=REPLACE \
   DIRECTORY=DATA_PUMP_DIR \
@@ -183,7 +200,7 @@ impdp system/<password> \
 ### 4.5 Network Import (senza File Dump!)
 
 ```bash
-impdp system/<password>@TARGET_DB \
+impdp /@TARGET_DB \
   NETWORK_LINK=SOURCE_DBLINK \
   SCHEMAS=HR \
   PARALLEL=4

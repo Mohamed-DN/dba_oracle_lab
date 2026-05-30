@@ -4,6 +4,11 @@
 
 ---
 
+## Obiettivo
+
+Valutare il laboratorio rispetto alle pratiche MAA e applicare i miglioramenti
+documentati senza confondere una guida disponibile con evidenza runtime.
+
 ## 1. Cos'è MAA?
 
 ```
@@ -105,6 +110,8 @@
 ```
 
 ---
+
+## Procedura Operativa
 
 ## 3. Fix per Raggiungere MAA GOLD
 
@@ -209,53 +216,15 @@ ALTER DATABASE DROP LOGFILE GROUP <old_group_number>;
 
 ### 3.4 Fast-Start Failover (FSFO)
 
-```
-+------------------------------------------------------------------+
-|               FSFO — FAILOVER AUTOMATICO                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|   +----------+      +----------+      +----------+              |
-|   | PRIMARY  |&amp;lt;----&gt;| STANDBY  |&amp;lt;----&gt;| OBSERVER |              |
-|   | (RACDB)  |      | (STBY)   |      | (3° host)|              |
-|   +----------+      +----------+      +----------+              |
-|                                                                  |
-|   Observer monitora continuamente Primary e Standby.             |
-|   Se il Primary è irraggiungibile per FastStartFailoverThreshold |
-|   secondi (default 30), l'Observer ordina allo Standby di       |
-|   diventare Primary AUTOMATICAMENTE.                             |
-|                                                                  |
-|   REQUISITI:                                                     |
-|   ✓ DG Broker configurato                                       |
-|   ✓ Flashback Database ON su entrambi                            |
-|   ✓ Standby Redo Logs configurati                               |
-|   ✓ Un terzo host per l'Observer (può essere dbtarget)           |
-+------------------------------------------------------------------+
-```
+Per rendere operativo FSFO segui la
+[Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md). La guida
+configura `observer1` su una VM dedicata, usa wallet SEPS e attiva inizialmente
+`OBSERVE ONLY` prima della modalità automatica.
 
-```bash
-# Configurare FSFO
-dgmgrl sys/<password>@RACDB
-
-# 1. Abilita Flashback su entrambi
-DGMGRL> EDIT DATABASE 'RACDB' SET PROPERTY FlashbackOn = 'YES';
-DGMGRL> EDIT DATABASE 'RACDB_STBY' SET PROPERTY FlashbackOn = 'YES';
-
-# 2. Configura FSFO
-DGMGRL> ENABLE FAST_START FAILOVER;
-DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold = 30;
-
-# 3. Avvia l'Observer (su dbtarget o altro host)
-# Da un terzo host:
-dgmgrl sys/<password>@RACDB
-DGMGRL> START OBSERVER;
-# L'Observer rimane attivo in foreground — usa nohup o screen
-
-# 4. Verifica
-DGMGRL> SHOW FAST_START FAILOVER;
-# Fast-Start Failover: Enabled
-# Threshold:           30 seconds
-# Observer:            oci-dbcloud (o dbtarget)
-```
+I requisiti operativi comprendono Broker in stato `SUCCESS`, standby redo log e
+trasporto redo coerente con la protection mode scelta. Flashback Database è
+raccomandato su entrambi i database per consentire l'auto-reinstate, ma non è un
+requisito assoluto per abilitare FSFO.
 
 ### 3.5 Verificare FAN
 
@@ -322,11 +291,21 @@ ORCL_HA =
 | 3 | `DB_LOST_WRITE_PROTECT = TYPICAL` | Alta | 1 min | Sez. 3.1 |
 | 4 | Flashback Database ON | Alta | 5 min | Sez. 3.2 |
 | 5 | Verificare Redo Log sizing | Media | 10 min | Sez. 3.3 |
-| 6 | FSFO con Observer su dbtarget | Bassa | 15 min | Sez. 3.4 |
+| 6 | FSFO con `observer1` dedicato | Alta | 1-2h | [Fase 4B](./GUIDA_FASE4B_FSFO_OBSERVER.md) |
 | 7 | Verificare FAN/ONS | Bassa | 2 min | Sez. 3.5 |
 | 8 | Connection string HA | Media | 5 min | Sez. 4 |
 
-> Dopo aver applicato tutti i fix: **il lab sarà MAA GOLD compliant** 🥇
+> Dopo aver applicato i fix, raccogli evidenza runtime prima di dichiarare il lab MAA GOLD compliant.
+
+## Validazione Finale
+
+Per FSFO verifica `VALIDATE FAST_START FAILOVER`, `SHOW FAST_START FAILOVER` e
+`SHOW OBSERVER`. Conserva l'output del drill come evidenza operativa.
+
+## Troubleshooting Rapido
+
+Per errori Observer, wallet o validazione Broker usa la sezione troubleshooting
+della [Fase 4B](./GUIDA_FASE4B_FSFO_OBSERVER.md).
 
 ---
 

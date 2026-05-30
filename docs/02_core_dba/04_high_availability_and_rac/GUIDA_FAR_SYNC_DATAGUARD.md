@@ -1,5 +1,22 @@
 # GUIDA MONUMENTALE: Oracle Data Guard Far Sync — Zero Data Loss a Distanza Geografica Illimitata
 
+## Obiettivo operativo
+
+Ridurre la perdita dati geografica con Far Sync senza confonderlo con uno standby applicabile.
+
+## Procedura operativa
+
+Verifica rete, redo route, protection mode e standby terminale; prova fault controllati e rollback.
+
+## Validazione finale
+
+Conferma transport, apply sullo standby terminale e stato Broker.
+
+## Troubleshooting rapido
+
+Se cresce il lag, separa tratta primary-Far Sync e tratta Far Sync-standby.
+
+
 
 ## [ARCHITETTURA VISIVA] Far Sync Data Guard
 ```text
@@ -123,7 +140,7 @@ Le **Redo Routes** permettono di definire il flusso dinamico di transito dei blo
 Connettiti a `dgmgrl` sul primario per configurare la topologia:
 
 ```bash
-dgmgrl sys/SecurePwd123#@RACDB
+dgmgrl /@RACDB
 ```
 
 ### Step 1: Registrazione di Far Sync nel Broker

@@ -1,5 +1,22 @@
 # GUIDA MONUMENTALE: Oracle Database Vault — Separation of Duties & Protezione Multitenant
 
+## Obiettivo operativo
+
+Separare i ruoli amministrativi e proteggere gli oggetti critici con policy verificabili.
+
+## Procedura operativa
+
+Definisci owner, account manager, realm e command rule; prova le eccezioni con account dedicati.
+
+## Validazione finale
+
+Verifica accessi consentiti, accessi negati e audit trail.
+
+## Troubleshooting rapido
+
+Se una policy blocca operazioni legittime, usa account break-glass tracciato e correggi la regola.
+
+
 > [!NOTE]
 > **DOCUMENTI DI SICUREZZA CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Setup Database Vault (questa guida)**: [GUIDA_DATABASE_VAULT_ENTERPRISE.md](./GUIDA_DATABASE_VAULT_ENTERPRISE.md) (Separation of duties, Realms CDB/PDB, protezione SYSDBA).
@@ -70,12 +87,12 @@ sqlplus / as sysdba
 SELECT cdb FROM v$database; -- Deve restituire YES
 
 -- 1. Creazione del Common Database Vault Owner
-CREATE USER C##DV_OWNER IDENTIFIED BY "SecurePwdCommonOwner123#$" CONTAINER=ALL;
+CREATE USER C##DV_OWNER IDENTIFIED BY "<PASSWORD_DV_OWNER>" CONTAINER=ALL;
 GRANT CONNECT, RESOURCE TO C##DV_OWNER CONTAINER=ALL;
 GRANT AUDIT SYSTEM TO C##DV_OWNER CONTAINER=ALL;
 
 -- 2. Creazione del Common Database Vault Account Manager
-CREATE USER C##DV_ACCTMGR IDENTIFIED BY "SecurePwdCommonAcct123#$" CONTAINER=ALL;
+CREATE USER C##DV_ACCTMGR IDENTIFIED BY "<PASSWORD_DV_ACCTMGR>" CONTAINER=ALL;
 GRANT CONNECT, RESOURCE TO C##DV_ACCTMGR CONTAINER=ALL;
 ```
 
@@ -93,7 +110,7 @@ END;
 /
 
 -- 2. Connettiti come C##DV_OWNER comune per abilitare il servizio nel root container
-connect C##DV_OWNER/SecurePwdCommonOwner123#$
+connect C##DV_OWNER
 
 BEGIN
   DBMS_MACADM.ENABLE_DV;
@@ -123,10 +140,12 @@ sqlplus / as sysdba
 ALTER SESSION SET CONTAINER = PDB_PROD;
 
 -- Crea le utenze locali specifiche del PDB per la separation of duties localizzata
-CREATE USER dbvowner_local IDENTIFIED BY "SecureLocalOwner123#";
+-- <PASSWORD_DV_OWNER> e' un placeholder: sceglilo fuori dal repository.
+CREATE USER dbvowner_local IDENTIFIED BY "<PASSWORD_DV_OWNER>";
 GRANT CONNECT, RESOURCE TO dbvowner_local;
 
-CREATE USER dbvacctmgr_local IDENTIFIED BY "SecureLocalAcct123#";
+-- <PASSWORD_DV_ACCTMGR> e' un placeholder: sceglilo fuori dal repository.
+CREATE USER dbvacctmgr_local IDENTIFIED BY "<PASSWORD_DV_ACCTMGR>";
 GRANT CONNECT, RESOURCE TO dbvacctmgr_local;
 
 -- Registra gli utenti locali
@@ -139,7 +158,7 @@ END;
 /
 
 -- Connettiti come utente di sicurezza locale del PDB
-connect dbvowner_local/SecureLocalOwner123#@PDB_PROD
+connect dbvowner_local@PDB_PROD
 
 -- Abilita localmente
 BEGIN
@@ -189,7 +208,7 @@ Vogliamo fare in modo che solo l'utente applicativo `PAYROLL_APP` possa accedere
 Connettiti come `dbvowner_local` al PDB applicativo:
 
 ```sql
-connect dbvowner_local/SecureLocalOwner123#@PDB_PROD
+connect dbvowner_local@PDB_PROD
 
 BEGIN
   DBMS_MACADM.CREATE_REALM(
@@ -240,7 +259,7 @@ Mentre i Realms proteggono i dati (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), le *
 Vogliamo evitare che un malintenzionato possa alterare parametri strutturali del database al di fuori della finestra di manutenzione ordinaria (dalle 22:00 alle 02:00) o se non si connette dal server di amministrazione (`192.168.56.50`).
 
 ```sql
-connect dbvowner_local/SecureLocalOwner123#@PDB_PROD
+connect dbvowner_local@PDB_PROD
 
 -- 1. Creazione della Regola basata su IP ed Ora
 BEGIN
@@ -324,10 +343,10 @@ Quando Database Vault è attivo, le tradizionali operazioni del DBA cambiano dra
 *   **Risoluzione**: Queste operazioni devono essere eseguite connettendosi con l'account `dbvacctmgr` dedicato (o `C##DV_ACCTMGR` per il CDB).
     ```sql
     -- Connettiti come Account Manager
-    connect dbvacctmgr_local/SecureLocalAcct123#@PDB_PROD
+    connect dbvacctmgr_local@PDB_PROD
     
     -- Esegui l'operazione di gestione utenze
-    CREATE USER app_developer IDENTIFIED BY "DevPassword123#";
+    CREATE USER app_developer IDENTIFIED BY "<PASSWORD_APP_DEVELOPER>";
     GRANT CREATE SESSION TO app_developer;
     ```
 
@@ -340,7 +359,7 @@ In caso di incidenti catastrofici in produzione o necessità di manutenzioni str
 ### 7.1 Disabilitazione Standard via Software
 ```sql
 -- 1. Connettiti come Database Vault Owner locale o comune
-connect dbvowner_local/SecureLocalOwner123#@PDB_PROD
+connect dbvowner_local@PDB_PROD
 
 -- 2. Disabilita Database Vault
 EXEC DBMS_MACADM.DISABLE_DV;

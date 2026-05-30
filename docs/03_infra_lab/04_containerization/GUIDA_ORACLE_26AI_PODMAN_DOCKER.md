@@ -22,6 +22,25 @@
 
 ---
 
+## Obiettivi
+
+- Creare e amministrare container Oracle per sviluppo e test.
+- Applicare procedure di manutenzione verificabili senza introdurre purge ciechi.
+
+## Procedura operativa
+
+Segui le sezioni in ordine, valida storage e servizi prima dei test e usa RMAN
+per la manutenzione degli archivelog.
+
+## Validazione finale
+
+Verifica container, listener, connessione SQL, storage e log dopo ogni modifica.
+
+## Troubleshooting rapido
+
+Per problemi di spazio o startup raccogli prima output container, log e metriche
+host; applica purge RMAN solo dopo aver controllato la deletion policy.
+
 ## 1. Architettura e Scelta del Runtime Container
 
 ### 1.1. Docker vs Podman: Analisi Comparativa Enterprise
@@ -219,8 +238,8 @@ services:
 
     # ===== VARIABILI D'AMBIENTE =====
     environment:
-      # Password per SYS, SYSTEM e PDBADMIN. Sarà impostata solo al PRIMO avvio.
-      - ORACLE_PWD=EnterpriseSuperSecure_2026!
+      # Definisci ORACLE_PWD in un file .env locale con permessi stretti. Non versionarlo.
+      - ORACLE_PWD=${ORACLE_PWD}
       # SID del Container Database (CDB)
       - ORACLE_SID=FREE
       # Abilita l'archivelog mode per simulare scenari di backup/recovery
@@ -322,7 +341,7 @@ CREATE TABLESPACE ts_core_app
     SIZE 500M AUTOEXTEND ON NEXT 100M MAXSIZE 5G;
 
 -- Creare l'utente applicativo
-CREATE USER core_app IDENTIFIED BY "CoreApp_Enterprise_2026"
+CREATE USER core_app IDENTIFIED BY "<PASSWORD_APP>"
     DEFAULT TABLESPACE ts_core_app
     TEMPORARY TABLESPACE temp
     QUOTA UNLIMITED ON ts_core_app;
@@ -375,7 +394,7 @@ EOF
 podman exec -it oracle26ai_ent_dev sqlplus / as sysdba
 
 # Connessione come SYSTEM al PDB applicativo
-podman exec -it oracle26ai_ent_dev sqlplus system/EnterpriseSuperSecure_2026!@FREEPDB1
+podman exec -it oracle26ai_ent_dev sqlplus system@FREEPDB1
 ```
 
 ### 7.2. Connessione Esterna (SQL Developer, DBeaver, SQLcl)
@@ -388,7 +407,7 @@ Parametri:
 
 ### 7.3. Connessione con stringa Easy Connect
 ```bash
-sqlcl system/EnterpriseSuperSecure_2026!@localhost:1521/FREEPDB1
+sqlcl system@localhost:1521/FREEPDB1
 ```
 
 ### 7.4. Validazione della Versione 26ai
@@ -500,7 +519,7 @@ networks:
 ### 10.2. Setup Multi-PDB (Simulazione Multi-Tenant)
 Dopo il primo avvio, puoi creare PDB aggiuntivi:
 ```sql
-CREATE PLUGGABLE DATABASE pdb_test ADMIN USER pdb_admin IDENTIFIED BY "PdbAdmin_2026"
+CREATE PLUGGABLE DATABASE pdb_test ADMIN USER pdb_admin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
     FILE_NAME_CONVERT=('/opt/oracle/oradata/FREE/pdbseed/','/opt/oracle/oradata/FREE/pdb_test/');
 ALTER PLUGGABLE DATABASE pdb_test OPEN;
 ALTER PLUGGABLE DATABASE pdb_test SAVE STATE;
@@ -524,7 +543,7 @@ Per ambienti Enterprise con stack di osservabilità centralizzato, aggiungere un
     image: ghcr.io/iamseth/oracledb_exporter:latest
     container_name: oracle_exporter
     environment:
-      - DATA_SOURCE_NAME=system/EnterpriseSuperSecure_2026!@oracle26ai_ent_dev:1521/FREEPDB1
+      - DATA_SOURCE_NAME=${ORACLE_EXPORTER_DSN}
     ports:
       - "9161:9161"
     depends_on:
@@ -561,10 +580,14 @@ sudo chcon -Rt svirt_sandbox_file_t /u01/docker_data/oracle_26ai/oradata
 ```bash
 podman exec -it oracle26ai_ent_dev bash -c "df -h /opt/oracle/oradata"
 ```
-Se lo spazio è insufficiente, espandere il volume host o pulire gli archivelog:
-```sql
--- Dentro sqlplus
-DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-3';
+Se lo spazio è insufficiente, espandere il volume host o pulire solo gli
+archivelog eleggibili secondo la deletion policy:
+```bash
+# Dentro il container, come utente oracle
+rman target /
+RMAN> SHOW ARCHIVELOG DELETION POLICY;
+RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+RMAN> DELETE NOPROMPT OBSOLETE;
 ```
 
 ---
@@ -582,7 +605,7 @@ jobs:
       oracle:
         image: container-registry.oracle.com/database/free:latest
         env:
-          ORACLE_PWD: TestPassword123
+          ORACLE_PWD: ${{ secrets.ORACLE_TEST_PASSWORD }}
         ports:
           - 1521:1521
         options: --shm-size=2g --health-cmd="ps -ef | grep pmon | grep -v grep"
@@ -593,7 +616,7 @@ jobs:
       - name: Wait for Oracle to be ready
         run: |
           for i in $(seq 1 60); do
-            if docker exec ${{ job.services.oracle.id }} sqlplus -s system/TestPassword123@FREEPDB1 <<< "SELECT 1 FROM DUAL;" 2>/dev/null | grep -q "1"; then
+            if docker exec ${{ job.services.oracle.id }} sqlplus -s /@FREEPDB1 <<< "SELECT 1 FROM DUAL;" 2>/dev/null | grep -q "1"; then
               echo "Oracle is ready!"
               break
             fi
@@ -602,5 +625,5 @@ jobs:
           done
       - name: Run SQL tests
         run: |
-          docker exec ${{ job.services.oracle.id }} sqlplus -s system/TestPassword123@FREEPDB1 @tests/schema_test.sql
+          docker exec ${{ job.services.oracle.id }} sqlplus -s /@FREEPDB1 @tests/schema_test.sql
 ```
