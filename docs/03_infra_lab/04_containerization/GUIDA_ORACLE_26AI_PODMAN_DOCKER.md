@@ -22,6 +22,25 @@
 
 ---
 
+## Obiettivi
+
+- Creare e amministrare container Oracle per sviluppo e test.
+- Applicare procedure di manutenzione verificabili senza introdurre purge ciechi.
+
+## Procedura operativa
+
+Segui le sezioni in ordine, valida storage e servizi prima dei test e usa RMAN
+per la manutenzione degli archivelog.
+
+## Validazione finale
+
+Verifica container, listener, connessione SQL, storage e log dopo ogni modifica.
+
+## Troubleshooting rapido
+
+Per problemi di spazio o startup raccogli prima output container, log e metriche
+host; applica purge RMAN solo dopo aver controllato la deletion policy.
+
 ## 1. Architettura e Scelta del Runtime Container
 
 ### 1.1. Docker vs Podman: Analisi Comparativa Enterprise
@@ -561,10 +580,14 @@ sudo chcon -Rt svirt_sandbox_file_t /u01/docker_data/oracle_26ai/oradata
 ```bash
 podman exec -it oracle26ai_ent_dev bash -c "df -h /opt/oracle/oradata"
 ```
-Se lo spazio è insufficiente, espandere il volume host o pulire gli archivelog:
-```sql
--- Dentro sqlplus
-DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-3';
+Se lo spazio è insufficiente, espandere il volume host o pulire solo gli
+archivelog eleggibili secondo la deletion policy:
+```bash
+# Dentro il container, come utente oracle
+rman target /
+RMAN> SHOW ARCHIVELOG DELETION POLICY;
+RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+RMAN> DELETE NOPROMPT OBSOLETE;
 ```
 
 ---

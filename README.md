@@ -264,6 +264,7 @@ docs/
         +-- GUIDA_ATTIVITA_LAB_RAC.md
         +-- GUIDA_CATALOGO_ATTIVITA_DBA.md
         +-- GUIDA_CHECKLIST_ATTIVITA_DBA.md
+        +-- GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md
         +-- GUIDA_DA_LAB_A_PRODUZIONE.md
         +-- GUIDA_ESAME_REVIEW.md
         +-- GUIDA_RIPASSO_CONCETTI_DBA.md
@@ -437,7 +438,7 @@ Regole pratiche:
 | Guida | Cosa Impari |
 |---|---|
 | [RMAN Completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
-| [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/README.md) | Comandi RMAN, runbook e troubleshooting avanzato |
+| [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/02_core_dba/02_backup_and_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
 | [Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md) | **Nuovo**: Migrazione cross-endian AIX/Solaris -> Linux con downtime minimo |
 | [Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md) | **Nuovo**: Ottimizzazione Data Pump per database di grandi dimensioni (>10 TB) |
@@ -540,6 +541,7 @@ Regole pratiche:
 
 | Guida | Cosa Impari |
 |---|---|
+| [Dossier Colloquio Oracle DBA Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md) | 260 domande, 15 drill Sev1, piano di studio e mock interview |
 | [Ripasso Concetti DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 sezioni Q&A su architettura, RAC, DG, performance, scenari |
 | [Preparazione Esami](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
 | [Da Lab a Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
@@ -632,6 +634,7 @@ Regole pratiche:
 |---|---|
 | [Catalogo Attività DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
 | [Checklist Operativa](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
+| [Dossier Colloquio Oracle DBA Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md) | 260 domande tecniche e 15 drill Sev1 per colloqui senior |
 | [Domande Tecniche DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Domande e risposte per esami e certificazioni |
 
 ---

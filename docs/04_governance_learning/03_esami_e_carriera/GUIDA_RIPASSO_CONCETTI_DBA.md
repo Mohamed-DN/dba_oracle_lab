@@ -1,6 +1,9 @@
 # 🎯 Guida Definitiva Ripasso Oracle DBA & Preparazione Colloqui
 
 > **Obiettivo**: Questa è la "Master Guide" definitiva del repository. Unifica tutta la teoria architettonica, i runbook operativi e gli scenari di crisi in un'unica lista sequenziale di domande e risposte (Q1 - Q106).
+>
+> Per un percorso mirato al colloquio tecnico senior usa anche il
+> [Dossier Colloquio Oracle DBA Produzione](./GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md).
 > 
 > ⏱️ **Utilizzo**: Ogni risposta è strutturata in 3 strati (Senior Answer):
 > 1. **Definizione**: Cos'è l'oggetto/concetto in modo preciso.
@@ -346,6 +349,11 @@ graph TD
 *   **Definizione**: Se hai attivato l'**Autobackup**, puoi riavviare l'istanza in modalità "blind" (STARTUP NOMOUNT) e dire a RMAN di ripescare il file dal backup.
 *   **Operatività**: `SET DBID <numero>; STARTUP NOMOUNT; RESTORE SPFILE FROM AUTOBACKUP;`.
 
+### Q36: Come recuperi una singola tabella cancellata con DROP o DELETE?
+*   **Definizione**: Se Flashback Table non e' applicabile, usa RMAN `RECOVER TABLE` a un PITR precedente all'errore. RMAN crea un auxiliary database temporaneo e usa Data Pump.
+*   **Impatto**: Recuperi il solo oggetto senza riportare indietro tutto il database.
+*   **Operatività**: `RECOVER TABLE HR.ORDERS UNTIL TIME 'SYSDATE-1' AUXILIARY DESTINATION '/tmp/rman_table_aux' REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';`. Servono backup, archivelog continui, target locale aperto read-write e spazio per l'auxiliary.
+
 ## 🔌 DATA GUARD
 
 ### Q37: Differenza tra Physical, Logical e Snapshot Standby.
@@ -628,8 +636,6 @@ graph TD
 
 ## 🛠️ SCENARI OPERATIVI "SUL CAMPO"
 
-## 🛠️ SCENARI OPERATIVI "SUL CAMPO"
-
 ### Q85: ORA-01034: Oracle not available.
 *   **Analisi**: Il database è spento o le variabili d'ambiente OS (`ORACLE_SID`) sono errate.
 *   **Azione**: Verifica con `ps -ef | grep pmon` se l'istanza è viva. Se sì, controlla il profilo dell'utente. Se no, esegui uno `startup`.
@@ -640,11 +646,11 @@ graph TD
 
 ### Q87: Lo Standby Database non riceve o non applica i log.
 *   **Analisi**: Possibile problema di rete o processo MRP spento.
-*   **Azione**: Controlla `v$archive_gap` sul primario. Sullo standby, verifica lo stato con `v$managed_standby`. Se l'apply è fermo, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;`.
+*   **Azione**: Controlla `v$archive_gap` e `v$managed_standby` sullo standby. Sul primario verifica `v$archive_dest_status`. Se l'apply è fermo e non ci sono errori bloccanti, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;`.
 
 ### Q88: FRA (Flash Recovery Area) Piena al 100%.
 *   **Analisi**: Il database si blocca ("hangs") perché non può scrivere gli archivelog.
-*   **Azione**: Connettiti con RMAN e libera spazio immediatamente: `DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';`. Se non basta, aggiungi spazio al parametro `db_recovery_file_dest_size`.
+*   **Azione**: Verifica spazio reale, `v$recovery_file_dest`, `v$recovery_area_usage`, deletion policy RMAN e stato Data Guard. Aumenta temporaneamente la FRA solo se lo storage lo consente oppure preserva gli archivelog con backup controllato. Non cancellare alla cieca per eta': se lo standby e' irraggiungibile potresti creare un gap non colmabile con i redo originali. `DELETE FORCE` e' solo un'ultima scelta Sev1 autorizzata, registrando le sequenze eliminate e accettando il degrado DR.
 
 ### Q89: ORA-00060: Deadlock detected.
 *   **Analisi**: Due utenti si bloccano a vicenda (A aspetta B, B aspetta A).
