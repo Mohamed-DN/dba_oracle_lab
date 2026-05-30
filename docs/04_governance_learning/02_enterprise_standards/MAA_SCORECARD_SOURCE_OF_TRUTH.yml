@@ -28,8 +28,9 @@ controls:
       - automation/roles/maa_guardrails/tasks/main.yml
   - id: MAA-04
     title: FSFO operationalization
-    status: planned
+    status: partial
     evidence:
+      - docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md
       - docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md
   - id: MAA-05
     title: E2E validation evidence on PR

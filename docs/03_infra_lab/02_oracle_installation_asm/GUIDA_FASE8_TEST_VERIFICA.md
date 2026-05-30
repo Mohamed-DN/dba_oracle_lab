@@ -4,6 +4,13 @@
 
 ---
 
+## Obiettivo
+
+Validare il laboratorio end-to-end e, opzionalmente, raccogliere evidenza runtime
+del failover automatico configurato nella Fase 4B.
+
+## Procedura Operativa
+
 ## 8.0 Ingresso da Fase 7 (preflight)
 
 Questa fase e un test di sistema: non partire se la Fase 7 (GoldenGate) non e stabile, e se RMAN (Fase 5) o EM (Fase 6) non sono configurati.
@@ -446,6 +453,45 @@ INFO ALL
 
 ---
 
+## 8.8A Drill FSFO Opzionale — Crash Primary
+
+Esegui questo drill solo dopo aver completato la
+[Fase 4B: Observer Server e FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
+Il test è distruttivo: arresta tutte le VM e crea un cold backup completo delle
+cartelle VirtualBox prima di iniziare.
+
+> [!IMPORTANT]
+> Non usare `SHUTDOWN IMMEDIATE`: Oracle non lo considera un evento FSFO. Simula
+> invece il guasto improvviso dell'intero primary site spegnendo forzatamente le
+> VM primary oppure isolandone la rete, lasciando attivi standby e `observer1`.
+
+Prima del fault verifica:
+
+```dgmgrl
+SHOW CONFIGURATION;
+VALIDATE FAST_START FAILOVER;
+SHOW FAST_START FAILOVER;
+SHOW OBSERVER;
+```
+
+Dopo il fault, collegati al database promosso e verifica:
+
+```dgmgrl
+SHOW CONFIGURATION;
+SHOW FAST_START FAILOVER;
+SHOW OBSERVER;
+```
+
+Conferma che `RACDB_STBY` sia diventato primary e che le applicazioni usino il
+servizio corretto. Ripristina poi le VM del vecchio primary e valida il reinstate
+automatico; se Flashback Database non è utilizzabile, esegui RMAN Duplicate
+seguendo la [guida failover e reinstate](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md).
+
+Come test separato e non distruttivo, arresta solo `observer1`: il database non
+deve cambiare ruolo. Se hai configurato `observer2`, verifica che diventi master.
+
+---
+
 ## 8.9 Troubleshooting — Problemi Comuni e Soluzioni
 
 ### Problemi Cluster (Clusterware)
@@ -549,6 +595,13 @@ cat $OGG_HOME/dirrpt/ext_racdb.rpt
 | 13 | **GG dopo switchover** → replica intatta | DG+GG | Extract RUNNING, dati replicati | |
 | 14 | RMAN backup da standby | RMAN | Backup completato senza errori | |
 | 15 | RMAN RESTORE VALIDATE | RMAN | Restore simulato OK | |
+| 16 | `observer1` registrato | FSFO | `SHOW OBSERVER` coerente | |
+| 17 | Drill FSFO opzionale | FSFO | Promozione automatica e reinstate validato | |
+
+## Validazione Finale
+
+Conserva l'output delle verifiche completate. Il drill FSFO è opzionale, ma serve
+come evidenza runtime prima di dichiarare FSFO implementato nel laboratorio.
 
 ---
 

@@ -18,6 +18,12 @@
 
 > Data Guard Broker è il "pannello di controllo" centralizzato per gestire la configurazione Data Guard. Senza Broker potresti gestire tutto manualmente (con ALTER SYSTEM SET ...), ma Broker semplifica enormemente switchover, failover e monitoraggio.
 
+## Obiettivo
+
+Configurare e validare Data Guard Broker come prerequisito della successiva Fase 4B dedicata a Observer e FSFO.
+
+## Procedura Operativa
+
 ### Switchover vs Failover — La Differenza Cruciale
 
 ```
@@ -591,77 +597,15 @@ srvctl start database -d RACDB_STBY
 
 ---
 
-## 4.8 Fast-Start Failover (FSFO) e Observer (Best Practice MAA)
+## 4.8 Passaggio alla Fase 4B: Observer Server e FSFO
 
-Per ottenere una vera *Maximum Availability Architecture (MAA)* con Recovery Time Objective (RTO) tendente a zero, il failover manuale non basta. È necessario configurare il **Fast-Start Failover (FSFO)**. 
+Il Broker configurato in questa fase abilita il passo successivo. Per rendere operativo il
+failover automatico usa la [Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md).
 
-L'FSFO demanda a un processo terzo indipendente, chiamato **Observer**, il compito di monitorare il primario e lo standby. Se il primario cade, l'Observer attiva *automaticamente* il failover verso lo standby, senza intervento umano e senza "split-brain".
-
-> [!IMPORTANT]
-> **Dove installare l'Observer?** L'Observer NON deve stare né sul server primario né su quello standby. Deve risiedere in un terzo dominio di guasto. Nel nostro lab, il nodo ideale è la macchina **OEM** (Enterprise Manager) che creeremo nella Fase 6.
-
-### 4.8.1 Prerequisiti per FSFO
-1. Flashback Database deve essere attivo su primario e standby (fondamentale per il ripristino post-failover automatico).
-2. Data Guard Broker in stato `SUCCESS`.
-3. Modalità `MaxAvailability` o `MaxPerformance` (in 19c FSFO supporta anche l'asincrono, ma avvisa in caso di potenziale perdita di dati).
-
-```sql
--- Verifica o attiva Flashback su ENTRAMBI (primario e standby)
-sqlplus / as sysdba
-ALTER SYSTEM SET db_recovery_file_dest_size=10G SCOPE=BOTH;
-ALTER SYSTEM SET db_recovery_file_dest='+RECO' SCOPE=BOTH;
-ALTER DATABASE FLASHBACK ON;
-```
-
-### 4.8.2 Configurazione FSFO dal Primario
-
-```bash
-dgmgrl sys/<password>@RACDB
-```
-
-```
--- 1. Definisci i target di failover (chi fa failover su chi)
-DGMGRL> EDIT DATABASE RACDB SET PROPERTY FastStartFailoverTarget='RACDB_STBY';
-DGMGRL> EDIT DATABASE RACDB_STBY SET PROPERTY FastStartFailoverTarget='RACDB';
-
--- 2. Imposta il tempo di attesa prima del failover automatico (es. 30 secondi)
-DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold=30;
-
--- 3. Abilita il reintegro automatico del vecchio primario
-DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverAutoReinstate=TRUE;
-
--- 4. Abilita FSFO
-DGMGRL> ENABLE FAST_START FAILOVER;
-```
-
-### 4.8.3 Avvio dell'Observer (Sul nodo OEM)
-
-Sul nodo OEM, assicurati di avere il client Oracle installato, e lancia l'Observer in background.
-
-```bash
-# Sul nodo OEM
-# L'observer richiede il file tnsnames.ora configurato con gli alias RACDB e RACDB_STBY
-nohup dgmgrl sys/<password>@RACDB "start observer file='/home/oracle/fsfo_observer.dat'" > /home/oracle/observer.log 2>&1 &
-```
-
-> [!TIP]
-> **Observer in Background:** L'Observer è un processo continuo. In produzione, usa `nohup`, `screen`, o crea un servizio `systemd` per mantenerlo sempre in esecuzione anche dopo il logout.
-
-### 4.8.4 Verifica dello Stato FSFO
-
-```
-DGMGRL> SHOW FAST_START FAILOVER;
-```
-
-Output atteso:
-```
-Fast-Start Failover: ENABLED
-  Threshold: 30 seconds
-  Target: RACDB_STBY
-  Observer: oem.localdomain
-  Lag Limit: 30 seconds
-...
-```
+La procedura dedicata include VM Observer separata, Oracle Client Administrator 19c,
+wallet SEPS, attivazione iniziale `OBSERVE ONLY`, validazione, rollback e persistenza
+`systemd`. Non avviare l'Observer su primary o standby e non inserire password nella
+command line.
 
 ---
 
@@ -693,6 +637,8 @@ EDIT DATABASE RACDB_STBY SET PROPERTY LogXptMode='SYNC';  -- o 'ASYNC' / 'FASTSY
 
 ---
 
+## Validazione Finale
+
 ## ✅ Checklist Fine Fase 4
 
 ```
@@ -705,6 +651,12 @@ DGMGRL> SHOW DATABASE RACDB_STBY;
 -- Database Status: SUCCESS
 ```
 
+## Troubleshooting Rapido
+
+Se il Broker non restituisce `SUCCESS`, risolvi gli errori prima di procedere alla
+[Fase 4B](./GUIDA_FASE4B_FSFO_OBSERVER.md). Usa `SHOW CONFIGURATION VERBOSE`,
+`VALIDATE DATABASE RACDB_STBY` e `SHOW DATABASE RACDB_STBY StatusReport`.
+
 ---
 
-**← [FASE 3: RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 5: RMAN Backup](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md)**
+**← [FASE 3: RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 4B: Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)**

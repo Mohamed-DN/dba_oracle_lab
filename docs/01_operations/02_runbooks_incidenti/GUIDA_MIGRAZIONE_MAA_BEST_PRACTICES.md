@@ -18,7 +18,7 @@
   - [2. Tuning Memoria Enterprise Manager (Fase 6)](#2-tuning-memoria-enterprise-manager-fase-6)
   - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
   - [Come applicare la Best Practice (Memory Clamping)](#come-applicare-la-best-practice-memory-clamping)
-  - [3. Aggiunta del Fast-Start Failover (Observer) (Fase 4)](#3-aggiunta-del-fast-start-failover-observer-fase-4)
+  - [3. Aggiunta del Fast-Start Failover (Observer) (Fase 4B)](#3-aggiunta-del-fast-start-failover-observer-fase-4b)
   - [Qual era il problema della vecchia configurazione?](#qual-era-il-problema-della-vecchia-configurazione)
   - [Come applicare la Best Practice](#come-applicare-la-best-practice)
   - [4. Migrazione a GoldenGate Microservices Architecture (MA) (Fase 7)](#4-migrazione-a-goldengate-microservices-architecture-ma-fase-7)
@@ -127,36 +127,34 @@ STARTUP;
 
 ---
 
-### 3. Aggiunta del Fast-Start Failover (Observer) (Fase 4)
+### 3. Aggiunta del Fast-Start Failover (Observer) (Fase 4B)
 
 ### Qual era il problema della vecchia configurazione?
 Avevamo configurato il Data Guard Broker. Se il database primario veniva spento o la macchina crashava, i dati erano al sicuro sul Physical Standby, ma il servizio si interrompeva. Il DBA doveva ricevere una notifica, svegliarsi (magari alle 3 di notte), collegarsi in VPN, aprire `dgmgrl` e digitare `FAILOVER TO RACDB_STBY`. 
 Questo introduce tempi di inattività (RTO) inaccettabili in una **Maximum Availability Architecture (MAA)**.
 
 ### Come applicare la Best Practice
-Serve un componente terzo: l'**Observer**.
-L'Observer è un processo leggero (un client OCI) che continua a "pingare" il primario e lo standby. Se nota che il primario è irraggiungibile per `X` secondi, e che lo standby è allineato e pronto, "preme il grilletto" e avvia il failover in automatico.
+Serve un componente terzo: l'**Observer**. Nel lab usa la VM dedicata
+`observer1.localdomain`, non il primary, lo standby o il server OEM.
 
-**Come evitare lo Split-Brain?**
-Perché l'Observer deve stare su un terzo server (es. il server OEM)? Se l'Observer stesse sul Primario e la rete del primario saltasse, non potrebbe comunicare con lo standby. Se stesse sullo Standby e ci fosse un problema di rete locale allo standby, potrebbe pensare erroneamente che il primario sia morto. Mettendolo su un terzo nodo neutrale (dominio di guasto separato), se l'Observer non vede il primario *ma* il primario riesce ancora a comunicare con lo standby, lo split-brain viene evitato tramite un "quorum" tra i tre nodi.
+La procedura completa è nella
+[Fase 4B: Observer Server e FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
+Configura Oracle Client Administrator 19c, wallet SEPS, fase iniziale `OBSERVE ONLY`
+e validazione Broker prima di attivare il failover automatico.
 
-1. **Configurazione sul Broker (da rac1):**
-```
-DGMGRL> EDIT DATABASE RACDB SET PROPERTY FastStartFailoverTarget='RACDB_STBY';
-DGMGRL> EDIT DATABASE RACDB_STBY SET PROPERTY FastStartFailoverTarget='RACDB';
--- Tempo di tolleranza prima di considerare il server morto
-DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold=30;
-DGMGRL> ENABLE FAST_START FAILOVER;
-```
+L'avvio supportato Oracle usa credenziali wallet-backed e non espone password:
 
-2. **Avvio dell'Observer sul server OEM:**
-```bash
-# L'observer girerà in background e scriverà i log nel file observer.log
-nohup dgmgrl sys/<password>@RACDB "start observer file='/home/oracle/fsfo_observer.dat'" > /home/oracle/observer.log 2>&1 &
+```dgmgrl
+START OBSERVER observer1 IN BACKGROUND
+  CONNECT IDENTIFIER IS RACDB
+  FILE IS '/home/oracle/admin/fsfo/observer1.dat'
+  LOGFILE IS '/home/oracle/admin/fsfo/observer1.log';
 ```
 
 > [!TIP]
-> **La Magia del Reinstate Automatico:** Se il server primario crasha (es. blackout elettrico), l'Observer promuove lo standby a nuovo primario. Quando, due ore dopo, ridai corrente al vecchio server rotto, questo si accenderà cercando di essere il primario. L'Observer lo intercetterà subito dicendogli: *"Fermo! C'è già un nuovo primario. Usa i Flashback Logs per riavvolgere il tuo stato al momento esatto del crash, e convertiti in database standby"*. Il tutto senza il minimo intervento del DBA.
+> L'auto-reinstate richiede Flashback Database e
+> `FastStartFailoverAutoReinstate=TRUE`. In assenza dei flashback log necessari,
+> ricostruisci il vecchio primary con RMAN Duplicate.
 
 ---
 

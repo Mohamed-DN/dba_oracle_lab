@@ -41,7 +41,8 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 | **3.2** | **Gestire lo Storage Pieno** | [Aggiunta/Rimozione Dischi ASM](../../02_core_dba/01_administration_and_security/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Espandi il cluster a caldo aggiungendo dischi ad ASM senza `downtime`. |
 | **3.3** | **Lo Standby Fisico** | [Fase 3: Standby Database](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) | Usando *RMAN Active Duplicate*, duplichi un cluster intero via rete su un datacenter secondario. |
 | **3.4** | **Data Guard Broker** | [Fase 4: Configurare Data Guard](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Installi il Broker (`dgmgrl`) per gestire la sincronizzazione in tempo reale e fare Switchover. |
-| **3.5** | **Servizi Infrangibili** | [Servizi Applicativi RAC](../../02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | Impari Load Balancing (CLB/RLB) e Application Continuity (le query non cadono se un nodo muore). |
+| **3.5** | **Observer FSFO** | [Fase 4B: Observer Server](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Attivi il failover automatico con un Observer dedicato e credenziali wallet-backed. |
+| **3.6** | **Servizi Infrangibili** | [Servizi Applicativi RAC](../../02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | Impari Load Balancing (CLB/RLB) e Application Continuity (le query non cadono se un nodo muore). |
 
 ---
 
