@@ -43,7 +43,7 @@ mindmap
       Oracle 19c RAC
       Data Guard Standby
     Operatività [Operations & Incidenti]
-      14 Runbook Giornalieri
+      36 Runbook Operativi (00-35)
       15 Script Pronti (Copia-Incolla)
       Libreria 1000+ Script
     Guide Monumentali [Enterprise Knowledge]
@@ -67,12 +67,23 @@ Questo laboratorio è diviso in 4 macro-aree principali per facilitare la naviga
 
 *   🛠️ **`01_operations/`**: Il tuo "Pronto Soccorso". Contiene script pronti all'uso, Cheat Sheets rapidi e i Runbook per risolvere gli incidenti di produzione (es. database bloccato, performance degradate). **(Da usare durante le emergenze)**.
 *   🧠 **`02_core_dba/`**: La libreria della conoscenza Enterprise. Contiene tutte le guide approfondite e le procedure architetturali (Data Guard, Backup RMAN, Patching, Tuning, Security, GoldenGate). **(Da usare per studiare e progettare)**.
-*   🏗️ **`03_infra_lab/`**: Il codice sorgente dell'infrastruttura. Qui trovi i file Vagrant, Terraform e le istruzioni per creare fisicamente le macchine virtuali e installare Oracle. **(Da usare per tirare su il lab)**.
+*   🏗️ **`03_infra_lab/`**: Le guide per preparare infrastruttura, macchine virtuali, cloud e container e per installare Oracle. Il codice eseguibile Vagrant e Terraform vive nelle directory dedicate alla radice. **(Da usare per tirare su il lab)**.
 *   🎓 **`04_governance_learning/`**: Regole d'oro, standard architetturali, roadmap di studio per Junior/Senior e preparazione per le certificazioni OCP. **(Da usare per la crescita professionale)**.
 
+Le quattro macro-aree precedenti vivono sotto `docs/`. Le directory operative alla radice
+completano il repository:
+
+| Directory | Contenuto |
+|---|---|
+| [`automation/`](./automation/) | Playbook Ansible per installazione, manutenzione e controlli |
+| [`scripts/`](./scripts/) | Script SQL e shell mantenuti dal progetto |
+| [`vagrant_rac_dataguard/`](./vagrant_rac_dataguard/) | Provisioning Vagrant del lab RAC + Data Guard |
+| [`terraform/`](./terraform/) | Infrastruttura OCI gestita con Terraform |
+| [`.github/`](./.github/) · [`policy/`](./policy/) · [`security/`](./security/) · [`reliability/`](./reliability/) · [`tests/`](./tests/) | CI, policy, controlli di sicurezza, KPI e test |
+| [`images/`](./images/) | Asset grafici usati dalla documentazione |
 
 <details>
-<summary>🌲 <b>Clicca per espandere l'Alberatura Completa del Repository (Tree)</b></summary>
+<summary>🌲 <b>Clicca per espandere l'alberatura documentale principale (sintesi)</b></summary>
 
 ```text
 docs/
@@ -591,7 +602,7 @@ Regole pratiche:
 
 ### Runbook Operativi (`docs/01_operations/02_runbooks_incidenti/`)
 
-> **14 runbook giornalieri** — [Indice completo](./docs/01_operations/02_runbooks_incidenti/README.md)
+> **36 runbook operativi (`00`-`35`)** — [Indice completo](./docs/01_operations/02_runbooks_incidenti/README.md)
 
 | # | Procedura | Frequenza |
 |---|---|---|
@@ -601,6 +612,7 @@ Regole pratiche:
 | 04-08 | [Lock, Query Lenta, TBS Pieno, CPU, ORA-Errors](./docs/01_operations/02_runbooks_incidenti/README.md) | Su richiesta / alert |
 | 09-11 | [Gestione Utenti, Start/Stop RAC, Review AWR](./docs/01_operations/02_runbooks_incidenti/README.md) | Settimanale |
 | 12-13 | [Capacity Planning, Refresh Schema Test](./docs/01_operations/02_runbooks_incidenti/README.md) | Mensile |
+| 14-35 | [Drill ed estensioni enterprise](./docs/01_operations/02_runbooks_incidenti/README.md) | Incidenti complessi, manutenzione e review |
 
 ---
 
