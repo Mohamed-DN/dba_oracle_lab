@@ -23,6 +23,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
   malformati, artefatti encoding ed esempi con password in command line.
 - **CI documentale**: rimosso il job Markdown lint cosmetico; restano link
   check, conformita' didattica, ShellCheck, sicurezza e governance.
+- **Indici README**: riallineata la mappa root con le directory operative,
+  i 36 runbook disponibili e il percorso opzionale di containerizzazione.
 
 ## [2.0.0] - 2026-05-14
 ### Added
