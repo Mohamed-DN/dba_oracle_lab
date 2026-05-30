@@ -9,6 +9,7 @@
 
 # --- Configurazione Variabili d'Ambiente ---
 if [ -f ~/.bash_profile ]; then
+    # shellcheck source=/dev/null
     source ~/.bash_profile
 fi
 

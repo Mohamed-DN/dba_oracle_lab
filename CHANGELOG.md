@@ -18,6 +18,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
   riferimenti rapidi e corretta la sintassi didattica.
 - **FRA e Data Guard**: rafforzati i guardrail operativi per `ORA-00257`
   quando lo standby e' in lag o irraggiungibile.
+- **Bonifica documentale**: riscritti i cataloghi RMAN/Data Guard e SQL tuning
+  come playbook leggibili; rimossi boilerplate nel dossier, link locali
+  malformati, artefatti encoding ed esempi con password in command line.
+- **CI documentale**: rimosso il job Markdown lint cosmetico; restano link
+  check, conformita' didattica, ShellCheck, sicurezza e governance.
 
 ## [2.0.0] - 2026-05-14
 ### Added

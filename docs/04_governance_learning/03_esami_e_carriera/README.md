@@ -12,10 +12,10 @@
 
 ## Archivio
 
-- (../../../README.md)
+- [README.md](../../../README.md)
 - [Catalogo Attività DBA](./GUIDA_CATALOGO_ATTIVITA_DBA.md)
 - [Checklist Operativa DBA](./GUIDA_CHECKLIST_ATTIVITA_DBA.md)
-- (../../02_core_dba/04_high_availability_and_rac/GUIDA_PDB_DATAGUARD_SERVICES.md)
+- [GUIDA_PDB_DATAGUARD_SERVICES.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PDB_DATAGUARD_SERVICES.md)
 
 ---
 

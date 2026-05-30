@@ -39,7 +39,7 @@ WHERE dest_id IN (1,2);
 
 -- 6. Verifica del Data Guard Broker (più semplice)
 -- Da shell:
--- dgmgrl sys/<password>
+-- dgmgrl /
 -- DGMGRL> show configuration;
 -- DGMGRL> show database verbose 'NOME_STANDBY';
 ```

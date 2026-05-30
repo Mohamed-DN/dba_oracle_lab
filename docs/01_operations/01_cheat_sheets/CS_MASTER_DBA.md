@@ -432,7 +432,7 @@ purge -age 129600 -type incident
 dgmgrl /
 
 # Connessione remota sicura tramite alias di rete dedicati
-dgmgrl sys/password@SOLE_DG
+dgmgrl /@SOLE_DG
 ```
 
 ### Comandi di Diagnostica e Stato (Sicuri)
@@ -493,10 +493,10 @@ REINSTATE DATABASE 'SOLE';
 rman target /
 
 # Connessione a target con catalogo di ripristino esterno
-rman target / catalog rman/password@catdb
+rman target / catalog /@catdb
 
 # Connessione a istanza auxiliary di clone/standby in NOMOUNT
-rman target sys/password@SOLE_DG auxiliary sys/password@M24_DG
+rman target /@SOLE_DG auxiliary /@M24_DG
 ```
 
 ### 2) Backup Database (Strategie e Comandi)

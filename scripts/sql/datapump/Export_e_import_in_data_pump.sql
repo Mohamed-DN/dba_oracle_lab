@@ -13,9 +13,9 @@ select owner,sum(bytes/1024/1024) MB from dba_segments where owner='&owner' grou
 
 select owner,sum(bytes/1024/1024) MB from dba_segments where owner='&owner' group by owner;
 
-expdp scott/scott@test directory=DIR_PROVA dumpfile=exp_tipoexport.dmp logfile=exp_tipoexport.logfile
+expdp scott@test directory=DIR_PROVA dumpfile=exp_tipoexport.dmp logfile=exp_tipoexport.logfile
 
-expdp scott/scott@test directory=DIR_PROVA dumpfile=exp_tipoexport.dmp logfile=exp_tipoexport.logfile
+expdp scott@test directory=DIR_PROVA dumpfile=exp_tipoexport.dmp logfile=exp_tipoexport.logfile
 
 select sum(bytes/1024/1024) MB from dba_segments;
 

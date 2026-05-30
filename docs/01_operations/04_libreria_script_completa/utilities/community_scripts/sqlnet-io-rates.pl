@@ -381,7 +381,7 @@ usage: $basename
 
   --database          target instance
   --username          target instance account name
-  --password          target instance account password
+  --password          legacy option: prefer --local-sysdba to avoid process-list exposure
   --sysdba				 logon as sysdba
   --sysoper				 logon as sysoper
   --iterations			 number of iterations

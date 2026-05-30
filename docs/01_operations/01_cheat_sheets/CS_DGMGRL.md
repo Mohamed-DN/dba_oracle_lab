@@ -12,13 +12,16 @@
 
 ## 1. Connessione e Status Iniziale
 
+Gli alias `/@PRIMARY` presuppongono un wallet SEPS. Per una sessione locale puoi
+usare `/`; non inserire password nella command line.
+
 ```bash
 # Connessione al broker
-dgmgrl sys/password@PRIMARY
+dgmgrl /@PRIMARY
 dgmgrl /
 
 # Connessione in read-only (per check senza rischi)
-dgmgrl -logfile /tmp/dgmgrl.log sys/pass@PRIMARY
+dgmgrl -logfile /tmp/dgmgrl.log /@PRIMARY
 ```
 
 ### Status globale

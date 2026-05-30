@@ -1,5 +1,21 @@
 # 🔬 Attività di Laboratorio RAC — Esercizi Pratici
 
+## Obiettivo operativo
+
+Allenare le verifiche quotidiane e i drill principali su un laboratorio RAC e Data Guard.
+
+## Procedura operativa
+
+Esegui un esercizio alla volta, raccogli output prima e dopo e ripristina il baseline al termine.
+
+## Validazione finale
+
+Registra esito, tempi, evidenze e anomalie osservate per ogni esercizio.
+
+## Troubleshooting rapido
+
+Se un esercizio devia dal runbook, ferma il test e verifica lo stato del cluster prima di proseguire.
+
 > **Prerequisito**: Hai completato le Fasi 0-7 e il tuo lab RAC è operativo con:
 > - 2 nodi RAC primary (rac1, rac2)
 > - 2 nodi RAC standby (racstby1, racstby2) con Data Guard attivo
@@ -55,7 +71,7 @@ FROM v$asm_diskgroup ORDER BY name;
 ### 1.4 Verifica Data Guard
 ```sql
 -- Connettiti al primary
-dgmgrl sys/<password>
+dgmgrl /
 DGMGRL> show configuration;
 DGMGRL> show database verbose 'RACDB';
 DGMGRL> show database verbose 'RACDB_STBY';
@@ -258,7 +274,7 @@ EXEC DBMS_STATS.GATHER_SCHEMA_STATS('HR', METHOD_OPT => 'FOR ALL COLUMNS SIZE AU
 
 ```sql
 -- 1. Verifica stato iniziale
-dgmgrl sys/<password>
+dgmgrl /
 DGMGRL> show configuration;
 
 -- 2. Switchover

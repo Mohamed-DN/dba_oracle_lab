@@ -98,7 +98,7 @@ automatico usa la [Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER
 
 ```bash
 # Prova a connetterti al Primary
-sqlplus sys/<password>@RACDB as sysdba
+sqlplus /@RACDB as sysdba
 # Se timeout → il Primary è probabilmente morto
 
 # Prova SSH
@@ -107,7 +107,7 @@ ssh root@rac2
 # Se entrambi non rispondono → conferma che il Primary è down
 
 # Controlla il DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 SHOW CONFIGURATION;
 # Se RACDB mostra "Error" → conferma
 ```
@@ -119,7 +119,7 @@ SHOW CONFIGURATION;
 ### Con DGMGRL (consigliato)
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 # Verifica quanti dati si perderebbero
 SHOW DATABASE RACDB_STBY;
@@ -209,7 +209,7 @@ STARTUP MOUNT;
 
 ```bash
 # 6. Reinstate con DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 REINSTATE DATABASE RACDB;
 
@@ -231,7 +231,7 @@ STARTUP MOUNT RESTRICT;
 DROP DATABASE;
 
 # 2. Rifai l'RMAN Duplicate (come nella Fase 3)
-rman TARGET sys/<password>@RACDB_STBY AUXILIARY sys/<password>@RACDB1
+rman TARGET /@RACDB_STBY AUXILIARY /@RACDB1
 
 DUPLICATE TARGET DATABASE
   FOR STANDBY
@@ -246,7 +246,7 @@ DUPLICATE TARGET DATABASE
 
 ```bash
 # 3. Registra nel DGMGRL
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 ENABLE DATABASE RACDB;
 

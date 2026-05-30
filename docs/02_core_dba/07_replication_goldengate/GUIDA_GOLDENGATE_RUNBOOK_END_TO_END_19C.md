@@ -1,5 +1,21 @@
 ﻿# GoldenGate 19c - Runbook End-to-End per Implementazione Use Case
 
+## Obiettivo operativo
+
+Costruire un flusso GoldenGate verificabile senza salvare credenziali nei parametri o negli script.
+
+## Procedura operativa
+
+Completa assessment, credential store, Extract, trail e Replicat; prova una tabella pilota prima del cutover.
+
+## Validazione finale
+
+Conferma processi, checkpoint, heartbeat, lag e riconciliazione dati.
+
+## Troubleshooting rapido
+
+Se il flusso si ferma, separa capture, trail, rete e apply prima di modificare il posizionamento.
+
 > Runbook unico da usare come procedura operativa per costruire un flusso GoldenGate 19c da zero. Le guide use case spiegano il perche' e il disegno; questa guida spiega il come operativo: assessment, grant, collegamento, Extract, Distribution/Pump, Replicat, heartbeat, validazione, cutover e troubleshooting.
 
 ---
@@ -249,8 +265,8 @@ Nota: `ALLCOLS` aumenta redo. Usarlo solo dove serve davvero.
 Scelta consigliata per Oracle -> Oracle:
 
 ```bash
-expdp ggadmin/<password> schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_export.log parallel=4 flashback_time=systimestamp
-impdp ggadmin/<password> schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_import.log parallel=4
+expdp ggadmin schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_export.log parallel=4 flashback_time=systimestamp
+impdp ggadmin schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_import.log parallel=4
 ```
 
 Per migrazione con SCN esplicito:

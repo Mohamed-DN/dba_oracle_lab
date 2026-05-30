@@ -1,5 +1,22 @@
 # Guida Password Rollout Oracle Database — Enterprise
 
+## Obiettivo operativo
+
+Ruotare credenziali senza interruzioni non pianificate e senza inserirle nei comandi versionati.
+
+## Procedura operativa
+
+Identifica dipendenze, aggiorna vault e client in sequenza controllata, prova login e prepara rollback.
+
+## Validazione finale
+
+Conferma login applicativi, job schedulati, monitoring e audit trail.
+
+## Troubleshooting rapido
+
+Se un consumer fallisce, ripristina la versione precedente dal vault e correggi la dipendenza mancante.
+
+
 > Guida operativa completa per la gestione, rotazione e rollout delle password
 > in ambienti Oracle Database 19c/21c/23ai. Copre: profili, verify function,
 > gradual rollover (zero-downtime), password file, wallet, Data Guard, RAC,
@@ -279,7 +296,7 @@ ALTER PROFILE app_service_profile LIMIT
 ALTER USER app_user PROFILE app_service_profile;
 
 -- 4. Cambia la password (inizia il rollover)
-ALTER USER app_user IDENTIFIED BY "NewP@ssword2026!";
+ALTER USER app_user IDENTIFIED BY "<NUOVA_PASSWORD_APP>";
 
 -- 5. Verifica lo stato
 SELECT username, account_status, password_change_date
@@ -359,7 +376,7 @@ srvctl modify database -d PROD -pwfile '+DATA/PROD/orapwprod'
 
 ```sql
 -- Cambia password SYS (aggiorna automaticamente il password file)
-ALTER USER SYS IDENTIFIED BY "NewSysP@ss2026!";
+ALTER USER SYS IDENTIFIED BY "<NUOVA_PASSWORD_SYS>";
 
 -- Verifica
 SELECT username, password_change_date FROM dba_users WHERE username = 'SYS';
@@ -476,17 +493,17 @@ Procedura:
   1. [ ] Verifica stato attuale:
          SELECT username, account_status, expiry_date FROM dba_users WHERE username='APP_USER';
   2. [ ] Cambia password:
-         ALTER USER app_user IDENTIFIED BY "NuovaP@ss2026!";
+         ALTER USER app_user IDENTIFIED BY "<NUOVA_PASSWORD_APP>";
   3. [ ] Verifica rollover attivo:
          SELECT username, account_status FROM dba_users WHERE username='APP_USER';
   4. [ ] Comunica nuova password al team applicativo (via vault/canale sicuro)
   5. [ ] Team applicativo aggiorna config e riavvia (entro finestra rollover)
   6. [ ] Verifica connessione con nuova password:
-         sqlplus app_user/"NuovaP@ss2026!"@PROD
+         sqlplus app_user@PROD
   7. [ ] (Opzionale) Forza fine rollover:
          ALTER USER app_user EXPIRE PASSWORD ROLLOVER PERIOD;
   8. [ ] Aggiorna wallet (se usato):
-         mkstore -wrl /wallet_path -modifyCredential PROD app_user "NuovaP@ss2026!"
+         mkstore -wrl /wallet_path -modifyCredential PROD app_user "<NUOVA_PASSWORD_APP>"
   9. [ ] Documenta nel change management
 ```
 
@@ -578,7 +595,7 @@ CyberArk Privileged Session Manager (PSM)
 ```
 1. CyberArk CPM genera nuova password conforme alla policy
 2. CPM si connette al DB con le credenziali correnti
-3. CPM esegue ALTER USER ... IDENTIFIED BY "nuova_password"
+3. CPM esegue `ALTER USER ... IDENTIFIED BY "<NUOVA_PASSWORD>"`
 4. CPM salva la nuova password nel Vault
 5. Le applicazioni recuperano la password dal Vault via API
 6. Nessun umano vede mai la password
@@ -698,7 +715,7 @@ WHERE password_change_date < SYSDATE - 180
 
 | Problema | Causa | Risoluzione |
 |---|---|---|
-| ORA-28001: password expired | PASSWORD_LIFE_TIME superato | `ALTER USER x IDENTIFIED BY "new";` |
+| ORA-28001: password expired | PASSWORD_LIFE_TIME superato | `ALTER USER x IDENTIFIED BY "<NUOVA_PASSWORD>";` |
 | ORA-28000: account locked | FAILED_LOGIN_ATTEMPTS superato | `ALTER USER x ACCOUNT UNLOCK;` |
 | ORA-28003: verify function fail | Password non conforme | Usa password piu complessa |
 | ORA-28007: password cannot reused | PASSWORD_REUSE_TIME/MAX | Usa password mai usata prima |

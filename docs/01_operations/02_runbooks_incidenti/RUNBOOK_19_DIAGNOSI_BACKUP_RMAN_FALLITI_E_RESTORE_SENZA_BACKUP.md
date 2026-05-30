@@ -397,7 +397,7 @@ ALTER DATABASE OPEN RESETLOGS;
 ```bash
 tnsping CATDB
 lsnrctl status
-sqlplus rman_admin/pwd@CATDB
+sqlplus /@CATDB
 ```
 
 **Remediation**: Fix TNS/listener del catalog. Dopo: `RESYNC CATALOG;`
@@ -502,11 +502,11 @@ FROM v$encryption_wallet;
 **Remediation**:
 ```sql
 -- Apri wallet manualmente
-ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "wallet_password";
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "<WALLET_PASSWORD>";
 
 -- Per auto-login (consigliato per backup schedulati):
 ADMINISTER KEY MANAGEMENT CREATE AUTO_LOGIN KEYSTORE 
-  FROM KEYSTORE '/path/to/wallet' IDENTIFIED BY "wallet_password";
+  FROM KEYSTORE '/path/to/wallet' IDENTIFIED BY "<WALLET_PASSWORD>";
 ```
 
 ---
@@ -531,7 +531,7 @@ cat $ORACLE_HOME/network/admin/sqlnet.ora | grep -i wallet
 
 **Remediation** (workaround con password):
 ```rman
-SET ENCRYPTION ON IDENTIFIED BY 'backup_password' ONLY;
+SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>' ONLY;
 BACKUP DATABASE;
 ```
 
@@ -626,7 +626,7 @@ restorecon -Rv /backup
 ```sql
 GRANT SYSBACKUP TO backup_user;
 -- Connessione corretta:
--- rman target '"backup_user/pwd@PROD as sysbackup"'
+-- rman target '"backup_user@PROD as sysbackup"'
 ```
 
 ---
@@ -734,7 +734,7 @@ RESTORE CONTROLFILE FROM AUTOBACKUP
   DB_RECOVERY_FILE_DEST='/backup/fra';
 
 -- 5. Verifica Recovery Catalog (se esiste)
--- rman target / catalog rman/pwd@CATDB
+-- rman target / catalog /@CATDB
 -- LIST BACKUP SUMMARY;
 
 -- 6. Cerca backup su tape/cloud
@@ -751,7 +751,7 @@ Se esiste un database fisico standby — OPZIONE MIGLIORE.
 
 ```bash
 # Con DGMGRL (raccomandato)
-dgmgrl sys/pwd@STBY
+dgmgrl /@STBY
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> FAILOVER TO 'stby_db' IMMEDIATE;
 ```
@@ -840,7 +840,7 @@ Ultimo resort se NESSUNA altra opzione.
 4. Verifica completezza dati con application team
 
 ```bash
-impdp system/pwd@NEWDB \
+impdp /@NEWDB \
   DIRECTORY=dpump_dir \
   DUMPFILE=full_export_%U.dmp \
   FULL=YES \

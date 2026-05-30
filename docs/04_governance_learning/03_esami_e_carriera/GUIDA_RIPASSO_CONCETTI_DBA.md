@@ -47,9 +47,9 @@ Usare questa guida come ripasso tecnico strutturato per colloqui, supporto opera
    - [Runbook operativi](../../01_operations/02_runbooks_incidenti/README.md)
    - [Script SQL pronti](../../01_operations/03_scripts_pronti/README.md)
 3. Per comandi veloci usa cheat sheet:
-   - (../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
-   - (../../01_operations/01_cheat_sheets/CS_DGMGRL.md)
-   - (../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md)
+   - [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
+   - [CS_DGMGRL.md](../../01_operations/01_cheat_sheets/CS_DGMGRL.md)
+   - [CS_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md)
 
 ---
 
@@ -320,7 +320,7 @@ graph TD
 ### Q30: Recovery Catalog vs Nocatalog.
 *   **Definizione**: In modalità **Nocatalog**, Oracle memorizza le informazioni sui backup dentro il Control File del database stesso. In modalità **Catalog**, le memorizza in un database Oracle esterno dedicato.
 *   **Impatto**: Il Catalog è caldamente consigliato per gestire molti database in modo centralizzato o per mantenere la storia dei backup molto vecchia (che verrebbe invece "sovrascritta" nel control file dopo qualche settimana).
-*   **Operatività**: Si connette con `rman target / catalog rman/pwd@catdb`.
+*   **Operatività**: Si connette con `rman target / catalog /@catdb`.
 
 ### Q31: Cos'è il Block Change Tracking (BCT)?
 *   **Definizione**: È un file binario speciale in cui Oracle annota quali blocchi sono stati modificati tra un backup e l'altro tramite una bitmap.
@@ -671,7 +671,7 @@ graph TD
 *   **Azione**: Avvia in `NOMOUNT`, restaura il controlfile dall'autobackup (`RESTORE CONTROLFILE FROM AUTOBACKUP`), monta il DB e fai un `RECOVER` speciale (`USING BACKUP CONTROLFILE`).
 
 ### Q94: L'applicazione non si connette ma il DB sembra OK.
-*   **Azione**: Test di connettività a strati: 1. Ping IP. 2. Telnet sulla porta 1521. 3. `tnsping alias`. 4. Test di login con `sqlplus user/pwd@alias`.
+*   **Azione**: Test di connettività a strati: 1. Ping IP. 2. Telnet sulla porta 1521. 3. `tnsping alias`. 4. Test di login con `sqlplus user@alias`.
 
 ### Q95: Qual è la giornata tipica di un DBA Senior?
 *   **Descrizione**: Inizia con il controllo dei backup (RMAN) e degli Alert Log. Segue il monitoraggio del lag della Data Guard e il controllo dello spazio libero (Tablespace/FRA). Il resto della giornata è dedicato all'ottimizzazione delle query lente (Tuning) e al supporto ai team di sviluppo.
@@ -717,7 +717,7 @@ graph TD
 ---
 
 ## 📅 PIANO DI STUDIO CONSIGLIATO (8 SETTIMANE)
-➔ (../01_fondamenti_teorici/PIANO_LABORATORIO.md)
+➔ [PIANO_LABORATORIO.md](../01_fondamenti_teorici/PIANO_LABORATORIO.md)
 
 ---
 <p align="center">

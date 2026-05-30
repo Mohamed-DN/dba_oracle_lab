@@ -19,7 +19,7 @@ Checklist minima:
 
 ```bash
 # Data Guard
-dgmgrl sys/<password>@RACDB "show configuration;"
+dgmgrl /@RACDB "show configuration;"
 
 # GoldenGate sul PRIMARIO (rac1) — è lì che gira l'Extract
 cd $OGG_HOME && ./ggsci
@@ -49,12 +49,12 @@ Per test avanzati usa la matrice completa in [GUIDA_FASE7_GOLDENGATE.md](../../0
 sqlplus / as sysdba
 
 -- Crea uno schema di test
-CREATE USER testdg IDENTIFIED BY testdg123
+CREATE USER testdg IDENTIFIED BY "<PASSWORD_TESTDG>"
     DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
 GRANT CREATE SESSION, CREATE TABLE TO testdg;
 
 -- Inserisci dati
-CONNECT testdg/testdg123
+CONNECT testdg
 
 CREATE TABLE test_replica (
     id        NUMBER PRIMARY KEY,
@@ -100,7 +100,7 @@ WHERE name IN ('transport lag','apply lag','apply finish time');
 ### Verifica con DGMGRL
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 SHOW CONFIGURATION;
 -- Configuration Status: SUCCESS
@@ -116,7 +116,7 @@ SHOW DATABASE RACDB_STBY;
 ## 8.2 Test Data Guard — Switchover Completo
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 
 -- Verifica che lo switchover sia possibile
 VALIDATE DATABASE RACDB_STBY;
@@ -138,7 +138,7 @@ SHOW CONFIGURATION;
 ```
 
 ```sql
-sqlplus testdg/testdg123@RACDB_STBY
+sqlplus testdg@RACDB_STBY
 
 INSERT INTO test_replica VALUES (3, 'Post-Switchover Test', SYSTIMESTAMP);
 COMMIT;
@@ -155,7 +155,7 @@ SELECT * FROM testdg.test_replica;
 ### Switchover di ritorno
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 
 SWITCHOVER TO RACDB;
 
@@ -206,7 +206,7 @@ REPLICAT    RUNNING     rep_rac     00:00:01      00:00:02
 
 ```sql
 -- Sul Primario (RACDB) — rac1
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 INSERT INTO test_replica VALUES (100, 'GoldenGate Test 1', SYSTIMESTAMP);
 INSERT INTO test_replica VALUES (101, 'GoldenGate Test 2', SYSTIMESTAMP);
@@ -216,7 +216,7 @@ COMMIT;
 
 ```sql
 -- Sul Target (dbtarget) - dopo pochi secondi
-sqlplus testdg/testdg123@dbtarget
+sqlplus testdg@dbtarget
 
 SELECT * FROM test_replica WHERE id >= 100;
 -- Devi vedere le 3 righe inserite dal primario!
@@ -247,7 +247,7 @@ GGSCI> STATS REPLICAT rep_rac, LATEST
 
 ```sql
 -- Sul Primario
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 BEGIN
     FOR i IN 1000..2000 LOOP
@@ -276,7 +276,7 @@ SELECT COUNT(*) FROM testdg.test_replica;
 
 ```sql
 -- Sul Primario
-sqlplus testdg/testdg123@RACDB
+sqlplus testdg@RACDB
 
 -- UPDATE
 UPDATE test_replica SET nome = 'UPDATED ROW' WHERE id = 1;
@@ -403,7 +403,7 @@ DOPO lo switchover:
 
 ```bash
 # 1. Fai switchover
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 SWITCHOVER TO RACDB_STBY;
 
 # 2. L'Extract era sul vecchio primario (rac1).
@@ -424,19 +424,19 @@ INFO ALL
 # Extract e Pump devono essere RUNNING
 
 # 3. Inserisci dati sul nuovo primario
-sqlplus testdg/testdg123@RACDB_STBY
+sqlplus testdg@RACDB_STBY
 INSERT INTO test_replica VALUES (6000, 'Post-Switchover GG Test', SYSTIMESTAMP);
 COMMIT;
 
 # 4. Verifica sul target
-sqlplus testdg/testdg123@dbtarget
+sqlplus testdg@dbtarget
 SELECT * FROM test_replica WHERE id = 6000;
 -- Deve esistere!
 ```
 
 ```bash
 # 5. Switchback
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 SWITCHOVER TO RACDB;
 
 # 6. Sposta di nuovo l'Extract su rac1

@@ -1,5 +1,21 @@
 # GUIDA COMPLETA: SQL Tuning Set (STS) & Advisors — Ottimizzazione Avanzata, SQL Profiles & Access Advisor
 
+## Obiettivo operativo
+
+Usare STS e advisor con baseline misurabili e fix reversibili.
+
+## Procedura operativa
+
+Cattura SQL rappresentativo, esegui advisor in ambiente controllato e valuta ogni raccomandazione prima del rollout.
+
+## Validazione finale
+
+Confronta piano, elapsed time, CPU, I/O e regressioni sul workload.
+
+## Troubleshooting rapido
+
+Se il risultato non è stabile, verifica statistiche, bind, licenze e qualità del campione STS.
+
 > [!NOTE]
 > **DOCUMENTI DI PERFORMANCE CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **SQL Tuning Set & Advisors (questa guida)**: [GUIDA_SQL_TUNING_SET_ADVISORS.md](./GUIDA_SQL_TUNING_SET_ADVISORS.md) (DBMS_SQLTUNE, SQL Tuning Advisor, SQL Profiles, Access Advisor).
@@ -416,7 +432,7 @@ END;
 Esportiamo fisicamente la tabella in un file dump.
 ```bash
 # Esegui sul server OS di TEST
-expdp system/password TABLES=SYSTEM.STAGE_SQL_PROFILES DIRECTORY=DPUMP_DIR DUMPFILE=export_sql_profiles.dmp LOGFILE=exp_profiles.log
+expdp system TABLES=SYSTEM.STAGE_SQL_PROFILES DIRECTORY=DPUMP_DIR DUMPFILE=export_sql_profiles.dmp LOGFILE=exp_profiles.log
 ```
 
 Trasferisci il file dump `export_sql_profiles.dmp` sul server di produzione.
@@ -425,7 +441,7 @@ Trasferisci il file dump `export_sql_profiles.dmp` sul server di produzione.
 Importiamo la tabella di transito sul database di destinazione.
 ```bash
 # Esegui sul server OS di PRODUZIONE
-impdp system/password TABLES=SYSTEM.STAGE_SQL_PROFILES DIRECTORY=DPUMP_DIR DUMPFILE=export_sql_profiles.dmp LOGFILE=imp_profiles.log TABLE_EXISTS_ACTION=REPLACE
+impdp system TABLES=SYSTEM.STAGE_SQL_PROFILES DIRECTORY=DPUMP_DIR DUMPFILE=export_sql_profiles.dmp LOGFILE=imp_profiles.log TABLE_EXISTS_ACTION=REPLACE
 ```
 
 ### Step 5: Sballamento (Unpack) e Attivazione dei SQL Profiles in Produzione

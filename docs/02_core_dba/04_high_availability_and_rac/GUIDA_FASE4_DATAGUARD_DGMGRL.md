@@ -40,7 +40,7 @@ Configurare e validare Data Guard Broker come prerequisito della successiva Fase
 
   DOPO:                                         DOPO:
   +--------+    redo    +--------+              +--------+             +--------+
-  |STANDBY |&amp;lt;-----------|PRIMARY |              |  ???   |             |PRIMARY |
+  |STANDBY |<-----------|PRIMARY |              | EX-PRI |             |PRIMARY |
   | RACDB  |            |RACDB_  |              |Richiede|             |RACDB_  |
   | MOUNT  |            |  STBY  |              |REINSTATE             |  STBY  |
   |(ex-pri)|            |  OPEN  |              |o rifare|             |  OPEN  |
@@ -177,7 +177,7 @@ Questa normalizzazione e coerente con la Fase 3:
 Se in passato hai gia creato una configurazione Broker (test precedenti), pulisci prima di ricreare:
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 SHOW CONFIGURATION;
 -- Se esiste una configurazione precedente:
 DISABLE CONFIGURATION;
@@ -188,7 +188,7 @@ Connettiti a `dgmgrl` dal **nodo primario**:
 
 ```bash
 # Come oracle su rac1
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 ```
 
 ```
@@ -230,7 +230,7 @@ ENABLE CONFIGURATION;
 In RAC, e buona pratica usare alias dedicati al trasporto redo anche nel Broker.
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 ```
 
 ```
@@ -364,7 +364,7 @@ Prima di cambiare mode, verifica:
 ### 4.4.3 Pre-check operativo (prima del cambio mode)
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 ```
 
 ```
@@ -455,7 +455,7 @@ FROM   v$database;
 ```
 
 ```bash
-dgmgrl sys/<password>@RACDB
+dgmgrl /@RACDB
 ```
 
 ```

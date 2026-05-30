@@ -5,9 +5,7 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (questa guida - impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari operativi comuni).
-> - **Cheat Sheet Veloce**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi rapidi quotidiani).
-> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 
@@ -65,7 +63,7 @@ Prima di impostare la strategia RMAN, il sistema deve essere stabile. Se il Data
 # Questo comando si connette al Broker tramite il TNS alias "RACDB"
 # e chiede lo stato globale della configurazione.
 # DEVI vedere "SUCCESS" — se vedi WARNING o ERROR, torna alla Fase 4.
-dgmgrl sys/<password>@RACDB "show configuration;"
+dgmgrl /@RACDB "show configuration;"
 ```
 
 ```sql
@@ -174,7 +172,7 @@ Devi essere loggato come utente `oracle` ed avere le variabili d'ambiente (`ORAC
 rman TARGET /
 
 # Se vuoi connetterti a un database remoto via TNS:
-rman TARGET sys/oracle@RACDB
+rman TARGET /@RACDB
 ```
 
 ### Configurazione Iniziale (esegui su ogni DB)
@@ -405,8 +403,8 @@ RUN {
     -- a connettersi alle specifiche istanze del cluster (RACDB1_STBY e RACDB2_STBY).
     -- In questo modo, il lavoro di lettura/compressione viene distribuito
     -- su tutti i nodi, dimezzando l'impatto CPU e I/O sul singolo server.
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
     # ^^^ Apre 2 "lavoratori" paralleli distribuiti sui 2 nodi.
     #     ch1 lavorerà su racstby1, ch2 lavorerà su racstby2.
 
@@ -510,8 +508,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC: un canale per nodo
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
 
     -- Backup Incrementale Level 1
     BACKUP AS COMPRESSED BACKUPSET
@@ -645,8 +643,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC sul primario
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2';
 
     -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
     BACKUP AS COMPRESSED BACKUPSET

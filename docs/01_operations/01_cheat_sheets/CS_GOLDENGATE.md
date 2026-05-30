@@ -17,10 +17,7 @@ cd $OGG_HOME
 ./ggsci
 
 -- Login al database
-DBLOGIN USERID ogg_admin PASSWORD "StrongP@ss!" 
-DBLOGIN USERID ogg_admin@ORCL PASSWORD "StrongP@ss!"
-
--- Con wallet
+-- Login tramite credential store GoldenGate
 DBLOGIN USERIDALIAS ogg_admin_alias
 ```
 
@@ -109,7 +106,7 @@ EDIT PARAMS ext_prod
 ```
 ```text
 EXTRACT ext_prod
-USERID ogg_admin@ORCL, PASSWORD "StrongP@ss!"
+USERIDALIAS ogg_admin_alias
 EXTTRAIL ./dirdat/et
 LOGALLSUPCOLS
 UPDATERECORDFORMAT COMPACT
@@ -136,7 +133,7 @@ ADD RMTTRAIL ./dirdat/rt, EXTRACT pump_prod, MEGABYTES 200
 ```text
 -- Parametri Data Pump
 EXTRACT pump_prod
-USERID ogg_admin@ORCL, PASSWORD "StrongP@ss!"
+USERIDALIAS ogg_admin_alias
 RMTHOST target-host, MGRPORT 7809
 RMTTRAIL ./dirdat/rt
 PASSTHRU
@@ -179,7 +176,7 @@ EDIT PARAMS rep_prod
 ```
 ```text
 REPLICAT rep_prod
-USERID ogg_admin@ORCL, PASSWORD "StrongP@ss!"
+USERIDALIAS ogg_admin_alias
 
 -- Performance
 BATCHSQL BATCHTRANSOPS 5000
@@ -228,7 +225,7 @@ ADD EXTRACT initext, SOURCEISTABLE
 ```
 ```text
 EXTRACT initext
-USERID ogg_admin@ORCL, PASSWORD "StrongP@ss!"
+USERIDALIAS ogg_admin_alias
 RMTHOST target-host, MGRPORT 7809
 RMTFILE ./dirdat/initload, MEGABYTES 2000
 TABLE src_schema.*;
@@ -240,7 +237,7 @@ ADD REPLICAT initrep, SPECIALRUN
 ```
 ```text
 REPLICAT initrep
-USERID ogg_admin@ORCL, PASSWORD "StrongP@ss!"
+USERIDALIAS ogg_admin_alias
 SOURCEDEFS ./dirdef/src_schema.def
 DISCARDFILE ./dirrpt/initrep.dsc, PURGE
 MAP src_schema.*, TARGET tgt_schema.*;
