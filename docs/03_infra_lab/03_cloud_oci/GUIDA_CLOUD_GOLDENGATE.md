@@ -1,5 +1,22 @@
 # GUIDA CLOUD: GoldenGate verso Oracle Cloud Infrastructure (OCI ARM)
 
+## Obiettivo operativo
+
+Collegare GoldenGate a OCI con rete, account e credential store verificabili.
+
+## Procedura operativa
+
+Prepara reachability, TLS, alias credenziali e mapping; prova una tabella pilota prima del rollout.
+
+## Validazione finale
+
+Conferma processi, checkpoint, lag e riconciliazione dei dati.
+
+## Troubleshooting rapido
+
+Se il lag cresce, separa capture, rete, trail e apply prima di cambiare configurazione.
+
+
 > **Obiettivo**: Configurare un target database GoldenGate su Oracle Cloud Free Tier (ARM Ampere A1) per creare un'architettura **ibrida on-prem → cloud**. Questo aggiunge esperienza cloud reale al tuo CV.
 
 ---
@@ -400,10 +417,12 @@ dbca -silent -createDatabase \
   -datafileDestination /u01/app/oracle/oradata \
   -redoLogFileSize 100 \
   -emConfiguration NONE \
-  -sysPassword <password> \
-  -systemPassword <password> \
+  -responseFile /secure/dbca-clouddb-secrets.rsp \
   -databaseType MULTIPURPOSE
 ```
+
+Il response file contiene i secret DBCA: crealo fuori dal repository, usa
+permessi `600` e rimuovilo dopo la creazione.
 
 ### 5.5 Configurare Listener
 
@@ -581,7 +600,7 @@ CLOUDDB =
 ```bash
 # Test connessione
 tnsping CLOUDDB
-sqlplus ggadmin/<password>@CLOUDDB
+sqlplus /@CLOUDDB
 ```
 
 ### 7.4 Opzione 3: Connessione Diretta (se hai IP statico)
@@ -684,7 +703,7 @@ END;
 
 ```bash
 # Sullo Standby (racstby1) — esporta
-expdp ggadmin/<password>@RACDB_STBY \
+expdp /@RACDB_STBY \
     schemas=HR \
     directory=DATA_PUMP_DIR \
     dumpfile=hr_cloud_init.dmp \
@@ -696,7 +715,7 @@ scp -i /home/oracle/.ssh/oci_key \
     opc@<IP_PUBBLICA_OCI>:/tmp/
 
 # Sulla VM OCI — importa
-impdp ggadmin/<password> \
+impdp ggadmin \
     schemas=HR \
     directory=DATA_PUMP_DIR \
     dumpfile=hr_cloud_init.dmp \
@@ -778,7 +797,7 @@ GGSCI> START REPLICAT rep_cloud
 
 ```sql
 -- 1. Sul PRIMARY (rac1)
-sqlplus hr/hr@ORCL
+sqlplus hr@ORCL
 INSERT INTO employees (employee_id, first_name, last_name, email, hire_date, job_id)
 VALUES (9999, 'Cloud', 'Test', 'cloud@test.com', SYSDATE, 'IT_PROG');
 COMMIT;
@@ -786,7 +805,7 @@ COMMIT;
 -- 2. Attendi ~30 secondi (rede internet ha latenza)
 
 -- 3. Sulla VM OCI
-sqlplus hr/hr@CLOUDDB
+sqlplus hr@CLOUDDB
 SELECT * FROM employees WHERE employee_id = 9999;
 -- Devi vedere la riga! 🎉
 ```

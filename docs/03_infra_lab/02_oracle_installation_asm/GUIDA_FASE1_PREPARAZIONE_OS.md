@@ -1,5 +1,21 @@
 # FASE 1: Preparazione Nodi e OS (Oracle Linux 7.9)
 
+## Obiettivo operativo
+
+Preparare nodi coerenti per Grid Infrastructure e RAC prima dell'installazione Oracle.
+
+## Procedura operativa
+
+Configura rete, DNS, utenti, limiti, filesystem, tempo e SSH trust; ripeti i controlli su ogni nodo.
+
+## Validazione finale
+
+Conferma hostname, SCAN DNS, reachability, SSH senza password e prerequisiti OS.
+
+## Troubleshooting rapido
+
+Se un nodo diverge, correggi la golden image o la configurazione locale prima di installare Grid.
+
 > **Architettura di riferimento**: 2 nodi RAC primario (`rac1`, `rac2`) + 2 nodi RAC standby (`racstby1`, `racstby2`).
 > Tutti i comandi vanno eseguiti come `root` salvo dove diversamente indicato.
 > I passaggi di questa fase vanno ripetuti su **tutti i nodi** salvo dove specificato.
@@ -93,7 +109,7 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
           |          |  +------+  +------+  +------+            |
           v          |  |SCAN  |  |SCAN  |  |SCAN  |            |
     +----------+     |  | .105 |  | .106 |  | .107 |            |
-    | SCAN     |&amp;lt;----|--+      |  |      |  |      | DNS        |
+    | SCAN     |<----|--+      |  |      |  |      | DNS        |
     | Listener |     |  +------+  +------+  +------+ Round-Robin|
     +----+-----+     |                                           |
          |           |  +-------------+   +-------------+       |
@@ -112,7 +128,7 @@ Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qual
          |           |         |  192.168.1.0/24   |  Internal   |
          |           |  +------+------+   +------+------+      |
          |           |  | rac1-priv   |   | rac2-priv   |      |
-         |           |  | 192.168.1.101  |&amp;lt;-&gt;| 192.168.1.102  |      |
+         |           |  | 192.168.1.101  |<-&gt;| 192.168.1.102  |      |
          |           |  +-------------+   +-------------+      |
          |           |         Cache Fusion (GCS/GES)           |
          |           |    Blocchi dati trasferiti via RAM        |

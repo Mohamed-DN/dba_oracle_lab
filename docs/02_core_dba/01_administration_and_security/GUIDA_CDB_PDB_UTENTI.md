@@ -122,15 +122,16 @@ dbca -silent -createDatabase \
   -createAsContainerDatabase true \
   -numberOfPDBs 1 \
   -pdbName PDB1 \
-  -pdbAdminPassword Oracle_19c \
-  -sysPassword Oracle_19c \
-  -systemPassword Oracle_19c \
+  -responseFile /secure/dbca-cdbrac-secrets.rsp \
   -storageType ASM \
   -diskGroupName +DATA \
   -recoveryAreaDestination +FRA \
   -characterSet AL32UTF8 \
   -nodeinfo rac1,rac2
 ```
+
+Il response file contiene i secret DBCA: crealo fuori dal repository, proteggilo
+con `chmod 600` e rimuovilo dopo la creazione.
 
 #### Navigare tra CDB e PDB
 
@@ -163,7 +164,7 @@ ALTER SESSION SET CONTAINER = CDB$ROOT;
 ```sql
 -- Creare una PDB dal SEED
 CREATE PLUGGABLE DATABASE PDB2
-  ADMIN USER pdb2admin IDENTIFIED BY Oracle_19c
+  ADMIN USER pdb2admin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
   FILE_NAME_CONVERT = ('+DATA/CDBRAC/pdbseed/', '+DATA/CDBRAC/pdb2/');
 
 -- Aprire la PDB
@@ -236,7 +237,7 @@ SELECT status, wallet_type, keystore_mode
 FROM   v$encryption_wallet;
 
 -- 2) Se CLOSED, apri il keystore
-ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "Wallet#Pass123" CONTAINER=ALL;
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "<WALLET_PASSWORD>" CONTAINER=ALL;
 
 -- 3) Verifica presenza chiave master
 SELECT con_id, key_id, creation_time
@@ -248,7 +249,7 @@ Creazione PDB da seed con TDE già operativo nel CDB:
 
 ```sql
 CREATE PLUGGABLE DATABASE PDB_SEC
-  ADMIN USER pdbsec_admin IDENTIFIED BY "StrongPdb#2026"
+  ADMIN USER pdbsec_admin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
   FILE_NAME_CONVERT = ('+DATA/CDBRAC/pdbseed/', '+DATA/CDBRAC/pdb_sec/');
 
 ALTER PLUGGABLE DATABASE PDB_SEC OPEN;
@@ -260,7 +261,7 @@ Clone/spostamento PDB cifrata (quando richiesto dal caso operativo):
 ```sql
 CREATE PLUGGABLE DATABASE PDB_SEC_CLONE FROM PDB_SEC
   FILE_NAME_CONVERT = ('+DATA/CDBRAC/pdb_sec/', '+DATA/CDBRAC/pdb_sec_clone/')
-  KEYSTORE IDENTIFIED BY "Wallet#Pass123";
+  KEYSTORE IDENTIFIED BY "<WALLET_PASSWORD>";
 ```
 
 ### Validazione specifica TDE su PDB
@@ -326,7 +327,7 @@ CREATE TABLESPACE users_ts
   AUTOEXTEND ON NEXT 100M MAXSIZE 2G;
 
 -- 2. Crea l'utente DBA
-CREATE USER dba_admin IDENTIFIED BY "Str0ng_P@ssw0rd!"
+CREATE USER dba_admin IDENTIFIED BY "<PASSWORD_DBA_ADMIN>"
   DEFAULT TABLESPACE users_ts
   TEMPORARY TABLESPACE TEMP
   QUOTA UNLIMITED ON users_ts
@@ -365,7 +366,7 @@ GRANT app_connect_role TO app_readwrite_role;
 GRANT INSERT ANY TABLE, UPDATE ANY TABLE, DELETE ANY TABLE TO app_readwrite_role;
 
 -- 2. Crea l'utente e assegna il ruolo
-CREATE USER app_user IDENTIFIED BY "App_P@ss!"
+CREATE USER app_user IDENTIFIED BY "<PASSWORD_APP>"
   DEFAULT TABLESPACE users_ts
   TEMPORARY TABLESPACE TEMP
   QUOTA 500M ON users_ts;
@@ -373,7 +374,7 @@ CREATE USER app_user IDENTIFIED BY "App_P@ss!"
 GRANT app_readwrite_role TO app_user;
 
 -- 3. Utente di sola lettura (per reporting)
-CREATE USER app_readonly IDENTIFIED BY "Read_P@ss!"
+CREATE USER app_readonly IDENTIFIED BY "<PASSWORD_READONLY>"
   DEFAULT TABLESPACE users_ts
   TEMPORARY TABLESPACE TEMP
   QUOTA 0 ON users_ts;  -- zero quota = non può creare oggetti
@@ -417,13 +418,13 @@ ALTER USER app_user PASSWORD EXPIRE;
 -- In un CDB, esistono 2 tipi di utenti:
 
 -- COMMON USER: visibile in TUTTO il CDB (nome inizia con C##)
-CREATE USER C##DBA_ADMIN IDENTIFIED BY Oracle_19c CONTAINER=ALL;
+CREATE USER C##DBA_ADMIN IDENTIFIED BY "<PASSWORD_COMMON_ADMIN>" CONTAINER=ALL;
 GRANT DBA TO C##DBA_ADMIN CONTAINER=ALL;
 -- → Questo utente esiste nel ROOT e in TUTTE le PDB
 
 -- LOCAL USER: esiste SOLO in una PDB specifica
 ALTER SESSION SET CONTAINER = PDB1;
-CREATE USER app_user IDENTIFIED BY Oracle_19c;
+CREATE USER app_user IDENTIFIED BY "<PASSWORD_APP>";
 GRANT CREATE SESSION, CREATE TABLE TO app_user;
 -- → Questo utente esiste SOLO in PDB1
 ```
@@ -722,14 +723,14 @@ END;
 ```sql
 -- Sul tuo RACDB, crea un utente che usi per il lavoro quotidiano
 -- invece di SYS:
-CREATE USER lab_dba IDENTIFIED BY "Lab_DBA_2024!"
+CREATE USER lab_dba IDENTIFIED BY "<PASSWORD_LAB_DBA>"
   DEFAULT TABLESPACE USERS
   TEMPORARY TABLESPACE TEMP;
 GRANT DBA TO lab_dba;
 GRANT SYSDBA TO lab_dba;
 
 -- Test: connettiti con il nuovo utente
--- sqlplus lab_dba/"Lab_DBA_2024!"@rac-scan:1521/RACDB
+-- sqlplus lab_dba@rac-scan:1521/RACDB
 ```
 
 ### Esercizio 2: Configura EM Express

@@ -15,6 +15,10 @@
 | Backup and Recovery User's Guide (RMAN) | <https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/> |
 | Data Guard Concepts and Administration | <https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/> |
 | Data Guard Broker (DGMGRL) | <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/> |
+| Data Guard Broker — Observer installation | <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/oracle-data-guard-broker-installation-requirements.html> |
+| Data Guard Broker — FSFO and Observer operations | <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/using-data-guard-broker-to-manage-switchovers-failovers.html> |
+| Data Guard Broker — DGMGRL Command Reference | <https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/oracle-data-guard-broker-commands.html> |
+| Secure External Password Store (SEPS) | <https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/configuring-authentication.html> |
 | RAC Administration and Deployment Guide | <https://docs.oracle.com/en/database/oracle/oracle-database/19/racad/> |
 | Database Performance Tuning Guide | <https://docs.oracle.com/en/database/oracle/oracle-database/19/tgdba/> |
 | SQL Tuning Guide | <https://docs.oracle.com/en/database/oracle/oracle-database/19/tgsql/> |

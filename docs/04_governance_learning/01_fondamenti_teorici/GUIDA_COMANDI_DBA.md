@@ -1,5 +1,22 @@
 # Comandi DBA Essenziali + Script Oracle-Base.com (con Spiegazioni)
 
+## Obiettivo operativo
+
+Usare i comandi DBA come riferimento rapido, verificando contesto e impatto prima dell'esecuzione.
+
+## Procedura operativa
+
+Scegli il comando dal sintomo, controlla container e privilegi, raccogli output prima e dopo.
+
+## Validazione finale
+
+Registra esito, timestamp e rollback applicabile nel ticket o nel quaderno lab.
+
+## Troubleshooting rapido
+
+Se un comando non e' compatibile, verifica versione Oracle e guida specialistica collegata.
+
+
 > Raccolta organizzata dei comandi DBA più utili per il tuo lab, con query selezionate da [oracle-base.com/dba/scripts](https://oracle-base.com/dba/scripts), spiegate e valutate.
 
 ---
@@ -404,7 +421,7 @@ ALTER TABLESPACE app_data ONLINE;
 
 ```sql
 -- Crea utente
-CREATE USER app_user IDENTIFIED BY "Password123!"
+CREATE USER app_user IDENTIFIED BY "<PASSWORD_DA_SCEGLIERE>"
     DEFAULT TABLESPACE app_data
     TEMPORARY TABLESPACE temp
     QUOTA UNLIMITED ON app_data;
@@ -414,7 +431,7 @@ GRANT CONNECT, RESOURCE TO app_user;
 GRANT CREATE VIEW, CREATE SYNONYM TO app_user;
 
 -- Cambia password
-ALTER USER app_user IDENTIFIED BY "NuovaPassword!";
+ALTER USER app_user IDENTIFIED BY "<NUOVA_PASSWORD>";
 
 -- Locka/Unlocka utente
 ALTER USER app_user ACCOUNT LOCK;

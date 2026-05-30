@@ -1,5 +1,22 @@
 # GUIDA MONUMENTALE: Oracle Data Masking & Data Redaction
 
+## Obiettivo operativo
+
+Ridurre l'esposizione dei dati sensibili in ambienti non produttivi e nelle query autorizzate.
+
+## Procedura operativa
+
+Classifica colonne, scegli masking o redaction, prova la policy su dati rappresentativi e documenta rollback.
+
+## Validazione finale
+
+Confronta risultati per utenti autorizzati e non autorizzati e conserva evidenze di audit.
+
+## Troubleshooting rapido
+
+Se una regola non si applica, controlla espressione, privilegi, container e percorso applicativo.
+
+
 > [!NOTE]
 > **DOCUMENTI DI SICUREZZA CORRELATI:**
 > - **Unified Auditing**: [GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md](./GUIDA_UNIFIED_AUDITING_MIGRAZIONE.md)
@@ -45,7 +62,7 @@ Creiamo una policy sullo schema `FINANCE`, tabella `CUSTOMERS`.
 ```sql
 sqlplus / as sysdba
 GRANT EXECUTE ON DBMS_REDACT TO security_admin;
-connect security_admin/StrongPwd123@PDB_PROD;
+connect security_admin@PDB_PROD;
 
 -- 1. Creiamo la policy principale sulla tabella per la colonna PAN (Carta di Credito)
 BEGIN
@@ -105,7 +122,7 @@ END;
 
 #### Step 2: Utilizzo con Data Pump (`expdp` / `impdp`)
 ```bash
-expdp system/password@PDB_PROD \
+expdp /@PDB_PROD \
   DIRECTORY=PUMP_DIR \
   DUMPFILE=masked_export.dmp \
   SCHEMAS=FINANCE \

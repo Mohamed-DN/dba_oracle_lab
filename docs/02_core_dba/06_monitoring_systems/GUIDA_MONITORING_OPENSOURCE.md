@@ -84,9 +84,9 @@ sudo cp /opt/omd/versions/default/share/check_mk/agents/plugins/mk_oracle \
 sudo mkdir -p /etc/check_mk
 cat > /etc/check_mk/mk_oracle.cfg << 'EOF'
 # Connessione al database Oracle
-DBUSER=C##MONITOR:<MONITOR_DB_PASSWORD>:RACDB:localhost:1521
+DBUSER="/:@RACDB_MONITOR"
 # Per ASM (opzionale):
-# ASMUSER=ASMSNMP:<ASM_MONITOR_PASSWORD>
+# ASMUSER="/::SYSASM:localhost:1521:+ASM"
 
 # Controlla tablespace, sessions, backup, alert log
 SECTIONS="instance sessions logswitches undostat recovery_area processes
@@ -102,7 +102,8 @@ sudo chmod 600 /etc/check_mk/mk_oracle.cfg
 ```
 
 ```sql
--- Crea utente dedicato al monitoraggio (read-only!)
+-- Crea utente dedicato al monitoraggio (read-only!).
+-- <MONITOR_DB_PASSWORD> e' un placeholder: scegli il valore fuori dal repository.
 CREATE USER C##MONITOR IDENTIFIED BY "<MONITOR_DB_PASSWORD>"
     DEFAULT TABLESPACE USERS
     QUOTA 0 ON USERS
@@ -332,11 +333,11 @@ wget https://github.com/iamseth/oracledb_exporter/releases/latest/download/oracl
 tar xzf oracledb_exporter-linux-amd64.tar.gz
 sudo cp oracledb_exporter /usr/local/bin/
 
-# Configura connessione Oracle
-export DATA_SOURCE_NAME="C##MONITOR/<MONITOR_DB_PASSWORD>@//localhost:1521/RACDB"
+# Configura connessione Oracle. L'alias richiede wallet SEPS e sqlnet.ora.
+export DATA_SOURCE_NAME="/@RACDB_MONITOR"
 # Oppure crea un file di env:
 sudo cat > /etc/default/oracledb_exporter << 'EOF'
-DATA_SOURCE_NAME=C##MONITOR/<MONITOR_DB_PASSWORD>@//localhost:1521/RACDB
+DATA_SOURCE_NAME=/@RACDB_MONITOR
 EOF
 
 # Crea servizio systemd

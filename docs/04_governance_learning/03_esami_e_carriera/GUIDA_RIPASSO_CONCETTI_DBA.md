@@ -1,6 +1,9 @@
 # 🎯 Guida Definitiva Ripasso Oracle DBA & Preparazione Colloqui
 
 > **Obiettivo**: Questa è la "Master Guide" definitiva del repository. Unifica tutta la teoria architettonica, i runbook operativi e gli scenari di crisi in un'unica lista sequenziale di domande e risposte (Q1 - Q106).
+>
+> Per un percorso mirato al colloquio tecnico senior usa anche il
+> [Dossier Colloquio Oracle DBA Produzione](./GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md).
 > 
 > ⏱️ **Utilizzo**: Ogni risposta è strutturata in 3 strati (Senior Answer):
 > 1. **Definizione**: Cos'è l'oggetto/concetto in modo preciso.
@@ -44,9 +47,9 @@ Usare questa guida come ripasso tecnico strutturato per colloqui, supporto opera
    - [Runbook operativi](../../01_operations/02_runbooks_incidenti/README.md)
    - [Script SQL pronti](../../01_operations/03_scripts_pronti/README.md)
 3. Per comandi veloci usa cheat sheet:
-   - (../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
-   - (../../01_operations/01_cheat_sheets/CS_DGMGRL.md)
-   - (../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md)
+   - [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
+   - [CS_DGMGRL.md](../../01_operations/01_cheat_sheets/CS_DGMGRL.md)
+   - [CS_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md)
 
 ---
 
@@ -317,7 +320,7 @@ graph TD
 ### Q30: Recovery Catalog vs Nocatalog.
 *   **Definizione**: In modalità **Nocatalog**, Oracle memorizza le informazioni sui backup dentro il Control File del database stesso. In modalità **Catalog**, le memorizza in un database Oracle esterno dedicato.
 *   **Impatto**: Il Catalog è caldamente consigliato per gestire molti database in modo centralizzato o per mantenere la storia dei backup molto vecchia (che verrebbe invece "sovrascritta" nel control file dopo qualche settimana).
-*   **Operatività**: Si connette con `rman target / catalog rman/pwd@catdb`.
+*   **Operatività**: Si connette con `rman target / catalog /@catdb`.
 
 ### Q31: Cos'è il Block Change Tracking (BCT)?
 *   **Definizione**: È un file binario speciale in cui Oracle annota quali blocchi sono stati modificati tra un backup e l'altro tramite una bitmap.
@@ -345,6 +348,11 @@ graph TD
 ### Q35: Come recuperi l'SPFILE se viene cancellato dal disco?
 *   **Definizione**: Se hai attivato l'**Autobackup**, puoi riavviare l'istanza in modalità "blind" (STARTUP NOMOUNT) e dire a RMAN di ripescare il file dal backup.
 *   **Operatività**: `SET DBID <numero>; STARTUP NOMOUNT; RESTORE SPFILE FROM AUTOBACKUP;`.
+
+### Q36: Come recuperi una singola tabella cancellata con DROP o DELETE?
+*   **Definizione**: Se Flashback Table non e' applicabile, usa RMAN `RECOVER TABLE` a un PITR precedente all'errore. RMAN crea un auxiliary database temporaneo e usa Data Pump.
+*   **Impatto**: Recuperi il solo oggetto senza riportare indietro tutto il database.
+*   **Operatività**: `RECOVER TABLE HR.ORDERS UNTIL TIME 'SYSDATE-1' AUXILIARY DESTINATION '/tmp/rman_table_aux' REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';`. Servono backup, archivelog continui, target locale aperto read-write e spazio per l'auxiliary.
 
 ## 🔌 DATA GUARD
 
@@ -628,8 +636,6 @@ graph TD
 
 ## 🛠️ SCENARI OPERATIVI "SUL CAMPO"
 
-## 🛠️ SCENARI OPERATIVI "SUL CAMPO"
-
 ### Q85: ORA-01034: Oracle not available.
 *   **Analisi**: Il database è spento o le variabili d'ambiente OS (`ORACLE_SID`) sono errate.
 *   **Azione**: Verifica con `ps -ef | grep pmon` se l'istanza è viva. Se sì, controlla il profilo dell'utente. Se no, esegui uno `startup`.
@@ -640,11 +646,11 @@ graph TD
 
 ### Q87: Lo Standby Database non riceve o non applica i log.
 *   **Analisi**: Possibile problema di rete o processo MRP spento.
-*   **Azione**: Controlla `v$archive_gap` sul primario. Sullo standby, verifica lo stato con `v$managed_standby`. Se l'apply è fermo, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;`.
+*   **Azione**: Controlla `v$archive_gap` e `v$managed_standby` sullo standby. Sul primario verifica `v$archive_dest_status`. Se l'apply è fermo e non ci sono errori bloccanti, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;`.
 
 ### Q88: FRA (Flash Recovery Area) Piena al 100%.
 *   **Analisi**: Il database si blocca ("hangs") perché non può scrivere gli archivelog.
-*   **Azione**: Connettiti con RMAN e libera spazio immediatamente: `DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-1';`. Se non basta, aggiungi spazio al parametro `db_recovery_file_dest_size`.
+*   **Azione**: Verifica spazio reale, `v$recovery_file_dest`, `v$recovery_area_usage`, deletion policy RMAN e stato Data Guard. Aumenta temporaneamente la FRA solo se lo storage lo consente oppure preserva gli archivelog con backup controllato. Non cancellare alla cieca per eta': se lo standby e' irraggiungibile potresti creare un gap non colmabile con i redo originali. `DELETE FORCE` e' solo un'ultima scelta Sev1 autorizzata, registrando le sequenze eliminate e accettando il degrado DR.
 
 ### Q89: ORA-00060: Deadlock detected.
 *   **Analisi**: Due utenti si bloccano a vicenda (A aspetta B, B aspetta A).
@@ -665,7 +671,7 @@ graph TD
 *   **Azione**: Avvia in `NOMOUNT`, restaura il controlfile dall'autobackup (`RESTORE CONTROLFILE FROM AUTOBACKUP`), monta il DB e fai un `RECOVER` speciale (`USING BACKUP CONTROLFILE`).
 
 ### Q94: L'applicazione non si connette ma il DB sembra OK.
-*   **Azione**: Test di connettività a strati: 1. Ping IP. 2. Telnet sulla porta 1521. 3. `tnsping alias`. 4. Test di login con `sqlplus user/pwd@alias`.
+*   **Azione**: Test di connettività a strati: 1. Ping IP. 2. Telnet sulla porta 1521. 3. `tnsping alias`. 4. Test di login con `sqlplus user@alias`.
 
 ### Q95: Qual è la giornata tipica di un DBA Senior?
 *   **Descrizione**: Inizia con il controllo dei backup (RMAN) e degli Alert Log. Segue il monitoraggio del lag della Data Guard e il controllo dello spazio libero (Tablespace/FRA). Il resto della giornata è dedicato all'ottimizzazione delle query lente (Tuning) e al supporto ai team di sviluppo.
@@ -711,7 +717,7 @@ graph TD
 ---
 
 ## 📅 PIANO DI STUDIO CONSIGLIATO (8 SETTIMANE)
-➔ (../01_fondamenti_teorici/PIANO_LABORATORIO.md)
+➔ [PIANO_LABORATORIO.md](../01_fondamenti_teorici/PIANO_LABORATORIO.md)
 
 ---
 <p align="center">

@@ -2,6 +2,7 @@
 
 | Guida | Cosa impari |
 | --- | --- |
+| [Dossier Colloquio Oracle DBA Produzione](./GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md) | 260 domande, 15 drill Sev1, piano di studio e mock interview |
 | [Ripasso Concetti DBA](./GUIDA_RIPASSO_CONCETTI_DBA.md) | Q&A su architettura, RAC, DG, performance |
 | [Preparazione Esami](./GUIDA_ESAME_REVIEW.md) | Piano 1Z0-082 + 1Z0-083 |
 | [Da Lab a Produzione](./GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
@@ -11,10 +12,10 @@
 
 ## Archivio
 
-- (../../../README.md)
+- [README.md](../../../README.md)
 - [Catalogo Attività DBA](./GUIDA_CATALOGO_ATTIVITA_DBA.md)
 - [Checklist Operativa DBA](./GUIDA_CHECKLIST_ATTIVITA_DBA.md)
-- (../../02_core_dba/04_high_availability_and_rac/GUIDA_PDB_DATAGUARD_SERVICES.md)
+- [GUIDA_PDB_DATAGUARD_SERVICES.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_PDB_DATAGUARD_SERVICES.md)
 
 ---
 

@@ -3,7 +3,7 @@
 -- does not dump blocks to hex, but dumps to a datafile format
 -- How to dump or extract a raw block from a file stored in ASM diskgroup (Doc ID 603962.1)
 --  local: sqlplus / as sysasm
--- remote: sqlplus sys/<password>@//hostname/+ASM1 as sysasm
+-- remote: sqlplus /@//hostname/+ASM1 as sysasm
 -- file will be on the db/asm server
 
 declare

@@ -55,7 +55,7 @@ END;
 ### 3) Esempio test con UTL_HTTP
 
 ```sql
-CONN app_schema/<password>
+CONN app_schema
 
 DECLARE
   l_req  UTL_HTTP.req;

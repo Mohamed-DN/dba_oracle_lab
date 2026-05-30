@@ -1,5 +1,22 @@
 # GUIDA: Checklist Operativa DBA
 
+## Obiettivo operativo
+
+Trasformare i controlli DBA ricorrenti in una routine tracciabile.
+
+## Procedura operativa
+
+Esegui la checklist della finestra corrente, collega le evidenze al ticket e apri incidenti separati
+per le anomalie che richiedono analisi.
+
+## Validazione finale
+
+Chiudi la checklist solo con stato, timestamp, owner e riferimenti alle evidenze.
+
+## Troubleshooting rapido
+
+Se un controllo non è disponibile, dichiara il gap e usa il runbook collegato per il fallback.
+
 > Checklist pratica per trasformare il catalogo delle attivita DBA in una routine eseguibile.
 > Usala nel lab come runbook operativo, poi adattala a produzione con owner, orari e SLA reali.
 
@@ -133,8 +150,8 @@ Evidenza minima:
 ## 14. Guide del repo da tenere affiancate
 
 - (GUIDA_ATTIVITA_DBA.md)
-- (../01_fondamenti_teorici/GUIDA_COMANDI_DBA.md)
-- (../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
-- (../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
-- (../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
-- (../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)
+- [GUIDA_COMANDI_DBA.md](../01_fondamenti_teorici/GUIDA_COMANDI_DBA.md)
+- [GUIDA_RMAN_COMPLETA_19C.md](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
+- [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [GUIDA_LISTENER_SERVICES_DBA.md](../../02_core_dba/01_administration_and_security/GUIDA_LISTENER_SERVICES_DBA.md)
+- [GUIDA_FASE6_ENTERPRISE_MANAGER.md](../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)

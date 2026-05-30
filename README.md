@@ -169,6 +169,7 @@ docs/
 |   |   +-- GUIDA_FAR_SYNC_DATAGUARD.md
 |   |   +-- GUIDA_FASE3_RAC_STANDBY.md
 |   |   +-- GUIDA_FASE4_DATAGUARD_DGMGRL.md
+|   |   +-- GUIDA_FASE4B_FSFO_OBSERVER.md
 |   |   +-- GUIDA_FLASHBACK_DATABASE.md
 |   |   +-- GUIDA_MAA_BEST_PRACTICES.md
 |   |   +-- GUIDA_PDB_DATAGUARD_SERVICES.md
@@ -264,6 +265,7 @@ docs/
         +-- GUIDA_ATTIVITA_LAB_RAC.md
         +-- GUIDA_CATALOGO_ATTIVITA_DBA.md
         +-- GUIDA_CHECKLIST_ATTIVITA_DBA.md
+        +-- GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md
         +-- GUIDA_DA_LAB_A_PRODUZIONE.md
         +-- GUIDA_ESAME_REVIEW.md
         +-- GUIDA_RIPASSO_CONCETTI_DBA.md
@@ -306,8 +308,17 @@ flowchart TD
         dns -.-> rac2
         dns -.-> racstby1
         dns -.-> racstby2
+
+        observer1("observer1\n192.168.56.121\nFSFO Master")
+        observer2("observer2\n192.168.56.122\nFSFO Backup opzionale")
+        dns -.-> observer1
+        dns -.-> observer2
         
-        db1 == "Data Guard (LGWR ASYNC)" ==> db2
+        db1 == "Data Guard (LGWR SYNC/ASYNC)" ==> db2
+        observer1 -. "FSFO Observer" .-> db1
+        observer1 -. "FSFO Observer" .-> db2
+        observer2 -. "FSFO Backup" .-> db1
+        observer2 -. "FSFO Backup" .-> db2
         db1 -. "GoldenGate Extract" .-> gg("Target (Locale / OCI)")
         
     end
@@ -328,12 +339,13 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | 2 | **Grid + RAC** | [GUIDA_FASE2](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md) | Grid Infrastructure, ASM, Database | 4-5h |
 | 3 | **RAC Standby** | [GUIDA_FASE3](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP | 3-4h |
 | 4 | **Data Guard** | [GUIDA_FASE4](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Protection Mode, FASTSYNC | 2-3h |
+| 4B | **Observer FSFO** | [GUIDA_FASE4B](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Observer dedicato, wallet SEPS, failover automatico | 1-2h |
 | 5 | **RMAN Backup** | [GUIDA_FASE5](./docs/02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup, cron, BCT, restore | 2h |
 | 6 | **Enterprise Manager** | [GUIDA_FASE6](./docs/02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md) | OEM Cloud Control 24ai + Agent | 4-5h |
 | 7 | **GoldenGate** | [GUIDA_FASE7](./docs/02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | Extract, Pump, Replicat (Oracle + PG) | 3-4h |
 | 8 | **Test Verifica** | [GUIDA_FASE8](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
 
-> **Tempo totale stimato**: ~30 ore di lavoro pratico.
+> **Tempo totale stimato**: ~31-32 ore di lavoro pratico.
 
 ---
 
@@ -378,7 +390,7 @@ Non leggere il repository in ordine alfabetico. Usa questo ordine, altrimenti ri
 | Ordine | Modulo | Quando leggerlo/eseguirlo | Output atteso |
 |---|---|---|---|
 | 0 | [Fondamenti Oracle](./docs/04_governance_learning/01_fondamenti_teorici/README.md) | Prima di creare le VM | Capisci architettura Oracle, redo/undo, memoria, lock, wait event |
-| 1 | [Lab Core Fase 0 -> 4](./docs/03_infra_lab/02_oracle_installation_asm/README.md) | Primo blocco pratico obbligatorio | VM, DNS, OS, Grid, RAC, standby, Data Guard Broker |
+| 1 | [Lab Core Fase 0 -> 4B](./docs/03_infra_lab/02_oracle_installation_asm/README.md) | Primo blocco pratico obbligatorio | VM, DNS, OS, Grid, RAC, standby, Broker, Observer FSFO |
 | 2 | [Backup & Monitoring Fase 5 -> 6](./docs/02_core_dba/02_backup_and_recovery/README.md) | Dopo Data Guard stabile | RMAN, restore, BCT, Enterprise Manager/monitoring |
 | 3 | [GoldenGate prerequisiti e collegamento](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_PREREQUISITI_DB_ARCHITETTURA.md) | Prima della Fase 7 | Logging, GGADMIN, FRA, TNS, credential store, source/target connectivity |
 | 4 | [GoldenGate 19c operativo](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_19C_COMPLETA.md) | Prima o durante Fase 7 | Concetti Extract, trail, Replicat, checkpoint, lag, troubleshooting |
@@ -420,6 +432,7 @@ Regole pratiche:
 |---|---|
 | [Switchover Completo](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
 | [Failover + Reinstate](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) | ⚠️ **NON obbligatorio nel lab** — vedi nota sotto |
+| [Fase 4B — Observer FSFO](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Observer dedicato, wallet SEPS e failover automatico |
 | [Flashback Database](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md) | "Macchina del tempo" Oracle |
 | [MAA Best Practices](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_MAA_BEST_PRACTICES.md) | Oracle Maximum Availability Architecture |
 | [Data Guard Far Sync](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md) | **Nuovo**: Zero Data Loss a distanza geografica con istanza Far Sync |
@@ -437,7 +450,7 @@ Regole pratiche:
 | Guida | Cosa Impari |
 |---|---|
 | [RMAN Completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
-| [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/README.md) | Comandi RMAN, runbook e troubleshooting avanzato |
+| [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/02_core_dba/02_backup_and_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
 | [Cross-Platform XTTS](./docs/02_core_dba/02_backup_and_recovery/GUIDA_MIGRAZIONE_XTTS_RMAN.md) | **Nuovo**: Migrazione cross-endian AIX/Solaris -> Linux con downtime minimo |
 | [Tuning Data Pump Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md) | **Nuovo**: Ottimizzazione Data Pump per database di grandi dimensioni (>10 TB) |
@@ -540,6 +553,7 @@ Regole pratiche:
 
 | Guida | Cosa Impari |
 |---|---|
+| [Dossier Colloquio Oracle DBA Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md) | 260 domande, 15 drill Sev1, piano di studio e mock interview |
 | [Ripasso Concetti DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | 12 sezioni Q&A su architettura, RAC, DG, performance, scenari |
 | [Preparazione Esami](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_ESAME_REVIEW.md) | 1Z0-082 + 1Z0-083 completo |
 | [Da Lab a Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_DA_LAB_A_PRODUZIONE.md) | Sizing, HugePages, security |
@@ -632,6 +646,7 @@ Regole pratiche:
 |---|---|
 | [Catalogo Attività DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CATALOGO_ATTIVITA_DBA.md) | Panorama completo delle attività DBA reali |
 | [Checklist Operativa](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_CHECKLIST_ATTIVITA_DBA.md) | Runbook giornaliero/settimanale/mensile |
+| [Dossier Colloquio Oracle DBA Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md) | 260 domande tecniche e 15 drill Sev1 per colloqui senior |
 | [Domande Tecniche DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Domande e risposte per esami e certificazioni |
 
 ---
@@ -664,6 +679,10 @@ Regole pratiche:
 | racstby1 | 192.168.56.111 | 192.168.2.111 | .56.113 | Standby N.1 |
 | racstby2 | 192.168.56.112 | 192.168.2.112 | .56.114 | Standby N.2 |
 | racstby-scan | .56.115-117 | — | — | SCAN Standby |
+| observer1 | 192.168.56.121 | — | — | FSFO Observer dedicato |
+| observer2 | 192.168.56.122 | — | — | FSFO backup Observer opzionale |
+
+> Le VM Observer sono create manualmente e non fanno parte dello schema Vagrant del laboratorio.
 
 ---
 
@@ -674,6 +693,7 @@ Regole pratiche:
 | Oracle Linux | 7.9 | [Oracle Linux ISOs](https://yum.oracle.com/oracle-linux-isos.html) |
 | Grid Infrastructure | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle Database | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
+| Oracle Client Administrator | 19c | [eDelivery](https://edelivery.oracle.com) |
 | Oracle GoldenGate | 19c core lab / 26ai upgrade awareness | [eDelivery](https://edelivery.oracle.com) |
 | Enterprise Manager | 13.5 | [eDelivery](https://edelivery.oracle.com) |
 | VirtualBox | 7.x | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |

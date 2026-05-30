@@ -1,5 +1,22 @@
 # FASE 6: Oracle Enterprise Manager Cloud Control 24ai (Single OMS Lab)
 
+## Obiettivo operativo
+
+Installare OMS e repository di laboratorio e ottenere alert verificabili sui target Oracle.
+
+## Procedura operativa
+
+Completa preflight, installazione, onboarding dei target e configurazione delle soglie; prova gli
+alert con eventi controllati e documenta il rollback.
+
+## Validazione finale
+
+Verifica OMS, agent, upload, target availability e ricezione degli alert attesi.
+
+## Troubleshooting rapido
+
+Se un target risulta down, separa reachability, agent, listener e credenziali prima del rediscovery.
+
 Aggiornata: 27 aprile 2026
 Target lab: Oracle Linux 7.9/8.x, Oracle DB 19c, RAC + Data Guard già operativi.
 
@@ -21,7 +38,7 @@ Questa fase aggiunge una console centralizzata per monitorare e governare tutto 
 Prima di installare EM, verifica che il lab Oracle sia stabile:
 
 ```bash
-dgmgrl sys/<password>@RACDB "show configuration;"
+dgmgrl /@RACDB "show configuration;"
 ```
 
 ```sql
@@ -293,9 +310,11 @@ dbca -silent -createDatabase \
   -datafileDestination /home/oracle/app/oradata \
   -totalMemory 2048 \
   -characterset AL32UTF8 \
-  -sysPassword <tua_password> \
-  -systemPassword <tua_password>
+  -responseFile /secure/dbca-emrep-secrets.rsp
 ```
+
+Il response file contiene i secret DBCA: crealo fuori dal repository,
+proteggilo con `chmod 600` e rimuovilo dopo l'uso.
 
 Output atteso:
 

@@ -1,5 +1,22 @@
 # Guida Produzione: Single Instance Primary + Physical Standby Data Guard 19c Non-CDB
 
+## Obiettivo operativo
+
+Gestire un Data Guard single-instance non-CDB con redo transport, apply e recovery documentati.
+
+## Procedura operativa
+
+Completa preflight, configura Broker, misura lag e prova switchover con una finestra controllata.
+
+## Validazione finale
+
+Conferma ruoli, transport, apply, alert log e connessioni applicative.
+
+## Troubleshooting rapido
+
+Se MRP non avanza, controlla gap sullo standby, destinazioni redo e connettivita' Oracle Net.
+
+
 > [!NOTE]
 > **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Procedure di Produzione (Non-CDB)**:
@@ -1072,7 +1089,7 @@ Di seguito viene descritta la procedura standard per l'applicazione pulita di **
 1. **Verifica dello stato iniziale:**
    Assicurarsi che la configurazione Data Guard sia in salute e che il Broker indichi `SUCCESS`:
    ```bash
-   dgmgrl sys/pass@SOLE_DG "show configuration"
+   dgmgrl /@SOLE_DG "show configuration"
    ```
 2. **Disattivazione temporanea del Redo Apply:**
    ```text

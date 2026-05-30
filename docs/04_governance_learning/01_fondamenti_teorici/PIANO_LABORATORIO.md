@@ -41,7 +41,8 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 | **3.2** | **Gestire lo Storage Pieno** | [Aggiunta/Rimozione Dischi ASM](../../02_core_dba/01_administration_and_security/GUIDA_AGGIUNTA_DISCHI_ASM.md) | Espandi il cluster a caldo aggiungendo dischi ad ASM senza `downtime`. |
 | **3.3** | **Lo Standby Fisico** | [Fase 3: Standby Database](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) | Usando *RMAN Active Duplicate*, duplichi un cluster intero via rete su un datacenter secondario. |
 | **3.4** | **Data Guard Broker** | [Fase 4: Configurare Data Guard](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Installi il Broker (`dgmgrl`) per gestire la sincronizzazione in tempo reale e fare Switchover. |
-| **3.5** | **Servizi Infrangibili** | [Servizi Applicativi RAC](../../02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | Impari Load Balancing (CLB/RLB) e Application Continuity (le query non cadono se un nodo muore). |
+| **3.5** | **Observer FSFO** | [Fase 4B: Observer Server](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Attivi il failover automatico con un Observer dedicato e credenziali wallet-backed. |
+| **3.6** | **Servizi Infrangibili** | [Servizi Applicativi RAC](../../02_core_dba/01_administration_and_security/GUIDA_SERVIZI_APPLICATIVI_RAC.md) | Impari Load Balancing (CLB/RLB) e Application Continuity (le query non cadono se un nodo muore). |
 
 ---
 
@@ -63,8 +64,8 @@ Se segui questo percorso passo passo, investirai circa **8 settimane (3 ore al g
 
 | Step | Nome Missione | Link alla Guida | Cosa Sblocchi |
 |:---:|---|---|---|
-| **5.1** | **Vagrant (Infrastruttura Come Codice)** | (../../../README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. **Nota**: Richiede binari in `./software/`. |
-| **5.2** | **Automation via Ansible** | (../../../README.md) | Impari perché Ansible ha sostituito Jenkins per le patch Oracle. Esegui patching rolling e check mattutini con playbook pronti. |
+| **5.1** | **Vagrant (Infrastruttura Come Codice)** | [README.md](../../../README.md) | Smetti di usare la GUI di VirtualBox. Lanci `vagrant up` e lui costruisce l'intero DataCenter (Macchine, IP, Storage) da solo. **Nota**: Richiede binari in `./software/`. |
+| **5.2** | **Automation via Ansible** | [README.md](../../../README.md) | Impari perché Ansible ha sostituito Jenkins per le patch Oracle. Esegui patching rolling e check mattutini con playbook pronti. |
 | **5.3** | **Templates (Jinja2)** | [Ansible Templates Guide](../../02_core_dba/01_administration_and_security/GUIDA_ANSIBLE_TEMPLATES.md) | Il segreto delle Enterprise: esegui le installazioni (Grid, RDBMS, DBCA) in modalità `silent` al 100% nascondendo le password nel Vault. |
 | **5.4** | **Runbook Giornaliero** | [Procedure Operative Standard](../../01_operations/02_runbooks_incidenti/README.md) | Impari i processi da DBA turnista. Cosa guardare alle 8:30 del mattino (Health Check), come reagire ai ticket P1. |
 | **BOSS** | **L'Intervista Tecnica** | [Ripasso Concetti DBA (Colloquio)](../../04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md) | Metti alla prova tutto. Domande trappola su architettura (Split Brain, Node Eviction, Hard Parse, Multiplexing) scritte da un vero CTO. |

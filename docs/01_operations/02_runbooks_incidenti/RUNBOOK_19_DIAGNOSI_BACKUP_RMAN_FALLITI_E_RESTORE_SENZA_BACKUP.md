@@ -57,7 +57,7 @@ Fornire un framework completo per la diagnosi della root cause (RCA) dei fallime
 
 ---
 
-## PARTE I — CLASSIFICAZIONE E TRIAGE
+## PARTE I CLASSIFICAZIONE E TRIAGE
 
 ---
 
@@ -202,13 +202,13 @@ ORA-27072: File I/O error                    <-- QUESTO E IL ROOT CAUSE
 
 ---
 
-## PARTE II — ROOT CAUSE ANALYSIS PER CATEGORIA
+## PARTE II ROOT CAUSE ANALYSIS PER CATEGORIA
 
 ---
 
 ## 3. CATEGORIA: Errori di Spazio (Storage)
 
-### 3.1 ORA-19809 / ORA-19804: FRA Limit Exceeded
+### 3.1 ORA-19809 ORA-19804: FRA Limit Exceeded
 
 **Sintomo**: `ORA-19809: limit exceeded for recovery files`
 
@@ -255,7 +255,7 @@ Come ORA-19809 ma e un warning. Intervieni PRIMA che diventi critico.
 
 ---
 
-### 3.3 ORA-00257: Archiver Error / Archiver Stuck
+### 3.3 ORA-00257: Archiver Error Archiver Stuck
 
 **Sintomo**: `ORA-00257: archiver error. Connect internal only, until freed.`
 
@@ -273,7 +273,13 @@ SELECT * FROM v$recovery_file_dest;
 df -h $(dirname $(sqlplus -s / as sysdba <<< "SELECT value FROM v\$parameter WHERE name='log_archive_dest_1';"))
 ```
 
-**Remediation**: Libera spazio FRA o nella destinazione archivelog. L'archiver riparte automaticamente.
+**Remediation**: Libera spazio FRA o nella destinazione archivelog. L'archiver
+riparte automaticamente. Prima di eliminare archivelog verifica deletion policy,
+backup disponibili e stato Data Guard. Se lo standby e' in lag o irraggiungibile,
+usa il caso
+[DG-061](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag):
+evita purge per eta' e `rm` diretto; `DELETE FORCE` e' solo l'ultima scelta Sev1
+autorizzata dopo aver registrato le sequenze a rischio.
 
 ---
 
@@ -391,7 +397,7 @@ ALTER DATABASE OPEN RESETLOGS;
 ```bash
 tnsping CATDB
 lsnrctl status
-sqlplus rman_admin/pwd@CATDB
+sqlplus /@CATDB
 ```
 
 **Remediation**: Fix TNS/listener del catalog. Dopo: `RESYNC CATALOG;`
@@ -428,7 +434,7 @@ SHOW PARAMETER db_recovery_file_dest_size;
 
 ## 5. CATEGORIA: Errori di Corruzione
 
-### 5.1 ORA-01578 / RMAN-08120: Block Corruption
+### 5.1 ORA-01578 RMAN-08120: Block Corruption
 
 **Sintomo**: `ORA-01578: ORACLE data block corrupted (file # x, block # y)`
 
@@ -496,11 +502,11 @@ FROM v$encryption_wallet;
 **Remediation**:
 ```sql
 -- Apri wallet manualmente
-ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "wallet_password";
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN IDENTIFIED BY "<WALLET_PASSWORD>";
 
 -- Per auto-login (consigliato per backup schedulati):
 ADMINISTER KEY MANAGEMENT CREATE AUTO_LOGIN KEYSTORE 
-  FROM KEYSTORE '/path/to/wallet' IDENTIFIED BY "wallet_password";
+  FROM KEYSTORE '/path/to/wallet' IDENTIFIED BY "<WALLET_PASSWORD>";
 ```
 
 ---
@@ -525,7 +531,7 @@ cat $ORACLE_HOME/network/admin/sqlnet.ora | grep -i wallet
 
 **Remediation** (workaround con password):
 ```rman
-SET ENCRYPTION ON IDENTIFIED BY 'backup_password' ONLY;
+SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>' ONLY;
 BACKUP DATABASE;
 ```
 
@@ -620,7 +626,7 @@ restorecon -Rv /backup
 ```sql
 GRANT SYSBACKUP TO backup_user;
 -- Connessione corretta:
--- rman target '"backup_user/pwd@PROD as sysbackup"'
+-- rman target '"backup_user@PROD as sysbackup"'
 ```
 
 ---
@@ -728,7 +734,7 @@ RESTORE CONTROLFILE FROM AUTOBACKUP
   DB_RECOVERY_FILE_DEST='/backup/fra';
 
 -- 5. Verifica Recovery Catalog (se esiste)
--- rman target / catalog rman/pwd@CATDB
+-- rman target / catalog /@CATDB
 -- LIST BACKUP SUMMARY;
 
 -- 6. Cerca backup su tape/cloud
@@ -745,7 +751,7 @@ Se esiste un database fisico standby — OPZIONE MIGLIORE.
 
 ```bash
 # Con DGMGRL (raccomandato)
-dgmgrl sys/pwd@STBY
+dgmgrl /@STBY
 DGMGRL> SHOW CONFIGURATION;
 DGMGRL> FAILOVER TO 'stby_db' IMMEDIATE;
 ```
@@ -834,7 +840,7 @@ Ultimo resort se NESSUNA altra opzione.
 4. Verifica completezza dati con application team
 
 ```bash
-impdp system/pwd@NEWDB \
+impdp /@NEWDB \
   DIRECTORY=dpump_dir \
   DUMPFILE=full_export_%U.dmp \
   FULL=YES \

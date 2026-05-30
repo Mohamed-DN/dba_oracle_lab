@@ -132,15 +132,19 @@ dbca -silent -createDatabase \
   -datafileDestination +DATA \
   -recoveryAreaDestination +FRA \
   -recoveryAreaSize 102400 \
-  -sysPassword '<SYS_PASSWORD>' \
-  -systemPassword '<SYSTEM_PASSWORD>'
+  -responseFile /secure/dbca-secrets.rsp
 ```
+
+Il response file contiene i secret richiesti da DBCA: crealo fuori dal repository,
+proteggilo con `chmod 600` e rimuovilo al termine.
 
 Eliminazione database, alto impatto:
 
 ```bash
-dbca -silent -deleteDatabase -sourceDB SOLE -sysDBAUserName sys -sysDBAPassword '<SYS_PASSWORD>'
+dbca -deleteDatabase -sourceDB SOLE
 ```
+
+Senza `-silent`, DBCA chiede interattivamente le credenziali necessarie.
 
 ## DBCA: cosa verificare prima
 

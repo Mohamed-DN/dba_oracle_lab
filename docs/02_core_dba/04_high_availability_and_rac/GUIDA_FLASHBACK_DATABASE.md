@@ -4,6 +4,23 @@
 
 ---
 
+## Obiettivo operativo
+
+Usare Flashback Database come opzione di recupero rapido e come supporto al reinstate Data Guard.
+
+## Procedura operativa
+
+Verifica FRA, retention e flashback attivo; crea restore point quando previsto dal change e prova
+il ritorno temporale solo con una procedura di rollback approvata.
+
+## Validazione finale
+
+Controlla open mode, SCN, alert log e applicazione dopo il flashback.
+
+## Troubleshooting rapido
+
+Se mancano flashback log sufficienti, passa al runbook RMAN invece di forzare il recupero.
+
 ## 1. Teoria: Cos'è il Flashback Database
 
 ### 1.1 Il Problema che Risolve
@@ -257,7 +274,7 @@ STARTUP MOUNT;
 Oppure, più semplicemente con DGMGRL:
 
 ```bash
-dgmgrl sys/<password>@RACDB_STBY
+dgmgrl /@RACDB_STBY
 REINSTATE DATABASE RACDB;
 -- ^^^ Il Broker fa tutto automaticamente:
 --     flashback, conversione a standby, avvio apply.

@@ -5,11 +5,30 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (questa guida - impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari operativi comuni).
-> - **Cheat Sheet Veloce**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi rapidi quotidiani).
-> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
+
+## Obiettivi didattici
+
+- Configurare una strategia RMAN verificabile per primary e standby.
+- Eseguire backup, restore drill e recovery logici come `RECOVER TABLE`.
+- Collegare retention, archivelog e FRA agli obiettivi RPO/RTO.
+
+## Procedura operativa
+
+Segui i gate e i test della guida in ordine. Prima di ogni comando distruttivo
+verifica target, backup disponibili, archivelog continui e spazio reale.
+
+## Validazione finale
+
+Completa i test RMAN previsti, incluso almeno un restore validate e un recovery
+logico controllato, conservando output e tempi osservati.
+
+## Troubleshooting rapido
+
+Per errori RMAN, FRA piena o Data Guard in lag usa i runbook collegati e non
+cancellare archivelog con `rm` o con purge per eta' non verificati.
 
 ### Cos'è RMAN?
 
@@ -44,7 +63,7 @@ Prima di impostare la strategia RMAN, il sistema deve essere stabile. Se il Data
 # Questo comando si connette al Broker tramite il TNS alias "RACDB"
 # e chiede lo stato globale della configurazione.
 # DEVI vedere "SUCCESS" — se vedi WARNING o ERROR, torna alla Fase 4.
-dgmgrl sys/<password>@RACDB "show configuration;"
+dgmgrl /@RACDB "show configuration;"
 ```
 
 ```sql
@@ -153,7 +172,7 @@ Devi essere loggato come utente `oracle` ed avere le variabili d'ambiente (`ORAC
 rman TARGET /
 
 # Se vuoi connetterti a un database remoto via TNS:
-rman TARGET sys/oracle@RACDB
+rman TARGET /@RACDB
 ```
 
 ### Configurazione Iniziale (esegui su ogni DB)
@@ -384,8 +403,8 @@ RUN {
     -- a connettersi alle specifiche istanze del cluster (RACDB1_STBY e RACDB2_STBY).
     -- In questo modo, il lavoro di lettura/compressione viene distribuito
     -- su tutti i nodi, dimezzando l'impatto CPU e I/O sul singolo server.
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
     # ^^^ Apre 2 "lavoratori" paralleli distribuiti sui 2 nodi.
     #     ch1 lavorerà su racstby1, ch2 lavorerà su racstby2.
 
@@ -489,8 +508,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC: un canale per nodo
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
 
     -- Backup Incrementale Level 1
     BACKUP AS COMPRESSED BACKUPSET
@@ -624,8 +643,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC sul primario
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB1';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<password>@RACDB2';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2';
 
     -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
     BACKUP AS COMPRESSED BACKUPSET
@@ -1115,14 +1134,30 @@ rman TARGET /
 RECOVER TABLE HR.TEST_PITR
     UNTIL TIME "TO_DATE('07-APR-2026 06:50:30','DD-MON-YYYY HH24:MI:SS')"
     AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
-    REMAP TABLE HR.TEST_PITR:HR.TEST_PITR_RECOVERED;
+    REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED';
 ```
 
 > **Spiegazione del comando:**
 > - `RECOVER TABLE HR.TEST_PITR`: recupera questa specifica tabella
 > - `UNTIL TIME "..."`: torna indietro al momento PRIMA del DROP
 > - `AUXILIARY DESTINATION '/tmp/rman_pitr_aux'`: dove creare il DB temporaneo (serve ~2x lo spazio del tablespace)
-> - `REMAP TABLE ... :HR.TEST_PITR_RECOVERED`: rinomina la tabella recuperata (per sicurezza, non sovrascrive l'originale se esistesse ancora)
+> - `REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED'`: rinomina la tabella recuperata nello stesso schema (per sicurezza, non sovrascrive l'originale se esistesse ancora)
+
+Varianti utili:
+
+```rman
+-- Tabella in una PDB: collegati localmente alla root CDB.
+RECOVER TABLE HR.TEST_PITR OF PLUGGABLE DATABASE RACDBPDB
+    UNTIL TIME 'SYSDATE-1'
+    AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
+    REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED';
+
+-- Import in uno schema differente gia' esistente (Oracle 12.2+).
+RECOVER TABLE HR.TEST_PITR
+    UNTIL TIME 'SYSDATE-1'
+    AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
+    REMAP TABLE 'HR'.'TEST_PITR':'RECOVERY_USER'.'TEST_PITR_RECOVERED';
+```
 
 ```sql
 -- 6. Verifica il recupero!
@@ -1148,6 +1183,8 @@ rm -rf /tmp/rman_pitr_aux
 > - Gli archivelog continui dal backup fino al timestamp di recovery
 > - Spazio sufficiente nella AUXILIARY DESTINATION (~dimensione tablespace)
 > - Che il database sia in ARCHIVELOG mode (che noi abbiamo attivato in Fase 3)
+> - Connessione RMAN locale al target; il target deve essere aperto read-write
+> - Verifica preventiva dei limiti Oracle: oggetti `SYS`, tablespace `SYSTEM`/`SYSAUX`, standby fisici e alcuni vincoli nominati non sono recuperabili con questa procedura
 >
 > Se non hai un backup o gli archivelog sono stati cancellati, il recovery è IMPOSSIBILE.
 

@@ -162,7 +162,7 @@ usage: $basename
 
   --database      target instance
   --username      target instance account name
-  --password      target instance account password
+  --password      legacy option: prefer --local-sysdba to avoid process-list exposure
   --sysdba        logon as sysdba
   --sysoper       logon as sysoper
   --sqlid-file    file containing SQL_ID values
@@ -180,7 +180,7 @@ usage: $basename
 
   mkdir -p logs
 
-  $basename --database orcl --username scott --password <password> --sqlid-file sqlids.txt > logs/sql-exe-times-awr-rpt_$(date +%Y-%m-%d_%H-%M-%S).log
+  $basename --local-sysdba --sqlid-file sqlids.txt > logs/sql-exe-times-awr-rpt_$(date +%Y-%m-%d_%H-%M-%S).log
 
   $basename --local-sysdba ...
 

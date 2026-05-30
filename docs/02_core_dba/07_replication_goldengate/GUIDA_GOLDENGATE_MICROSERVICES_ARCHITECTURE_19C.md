@@ -325,8 +325,8 @@ SELECT current_scn FROM v$database;
 ```
 
 ```bash
-expdp system/<PASSWORD> schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_%U.dmp logfile=hr_exp.log flashback_scn=123456789 parallel=4
-impdp system/<PASSWORD> schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_%U.dmp logfile=hr_imp.log parallel=4
+expdp system schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_%U.dmp logfile=hr_exp.log flashback_scn=123456789 parallel=4
+impdp system schemas=HR directory=DATA_PUMP_DIR dumpfile=hr_%U.dmp logfile=hr_imp.log parallel=4
 ```
 
 Start Replicat:
