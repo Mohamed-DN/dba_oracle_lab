@@ -45,6 +45,7 @@ Guide per l'installazione e la creazione dell'infrastruttura di laboratorio o pr
 | [`03_infra_lab/01_proxmox_hardware`](./03_infra_lab/01_proxmox_hardware/) | Setup server bare-metal, Proxmox VE, storage condiviso (TrueNAS/iSCSI). |
 | [`03_infra_lab/02_oracle_installation_asm`](./03_infra_lab/02_oracle_installation_asm/) | Installazione Oracle Linux, Grid Infrastructure, ASM, Database Binaries. |
 | [`03_infra_lab/03_cloud_oci`](./03_infra_lab/03_cloud_oci/) | Setup lab su Oracle Cloud Infrastructure (OCI), GoldenGate on OCI. |
+| [`03_infra_lab/04_containerization`](./03_infra_lab/04_containerization/) | Guida Podman/Docker per Oracle Database 26ai Free. |
 
 ### 🧭 4. GOVERNANCE & LEARNING (Standard, Esami, Percorsi)
 Materiale didattico, concetti teorici, roadmap professionali e standard aziendali.
