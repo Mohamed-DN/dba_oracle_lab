@@ -6,13 +6,14 @@
 
 - Produzione non-CDB single instance: [Produzione Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md)
 - Produzione non-CDB RAC: [Produzione RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md)
-- Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) e [Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)
 - Operativita dopo setup: [Switchover](./GUIDA_SWITCHOVER_COMPLETO.md), [Failover/Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md), [Flashback](./GUIDA_FLASHBACK_DATABASE.md)
 
 | Guida | Cosa impari |
 | --- | --- |
 | [Fase 3: RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md) | Standby cluster setup |
 | [Fase 4: Data Guard Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) | Broker, validazioni e operatività |
+| [Fase 4B: Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md) | Observer dedicato e failover automatico |
 | [Switchover Completo](./GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + switchback passo-passo |
 | [Failover + Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md) | Scenario distruttivo e recovery |
 | [Flashback Database](./GUIDA_FLASHBACK_DATABASE.md) | Ripristino temporale database |

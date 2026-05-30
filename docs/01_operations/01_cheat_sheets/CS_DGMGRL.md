@@ -3,6 +3,7 @@
 > [!NOTE]
 > **DOCUMENTI DATA GUARD CORRELATI:**
 > - **Guida Lab (Fase 4)**: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+> - **Observer FSFO (Fase 4B)**: [GUIDA_FASE4B_FSFO_OBSERVER.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md)
 > - **Switchover Completo**: [GUIDA_SWITCHOVER_COMPLETO.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md)
 > - **Failover & Reinstate**: [GUIDA_FAILOVER_E_REINSTATE.md](../../02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md)
 > - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](./CS_MASTER_DBA.md)
@@ -159,26 +160,33 @@ SHOW CONFIGURATION;
 ```
 
 ### 4.3 Fast-Start Failover (FSFO — Automatico)
-```dgmgrl
--- Abilitare il failover automatico (richiede Observer)
-ENABLE FAST_START FAILOVER;
 
+Configura prima il wallet SEPS seguendo la
+[Fase 4B](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
+
+```dgmgrl
 -- Configurare threshold (secondi prima del failover automatico)
 EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold = 30;
 
--- Avviare l'Observer (da un terzo host!)
-START OBSERVER;
--- oppure in background
-START OBSERVER IN BACKGROUND FILE IS '/opt/oracle/admin/observer.log';
+-- Abilitare inizialmente il monitoraggio senza promozione automatica
+ENABLE FAST_START FAILOVER OBSERVE ONLY;
+VALIDATE FAST_START FAILOVER;
+
+-- Avviare l'Observer da observer1
+START OBSERVER observer1 IN BACKGROUND
+  CONNECT IDENTIFIER IS RACDB
+  FILE IS '/home/oracle/admin/fsfo/observer1.dat'
+  LOGFILE IS '/home/oracle/admin/fsfo/observer1.log';
 
 -- Verificare stato FSFO
 SHOW FAST_START FAILOVER;
+SHOW OBSERVER;
 
 -- Disabilitare
 DISABLE FAST_START FAILOVER;
 
 -- Stop Observer
-STOP OBSERVER;
+STOP OBSERVER observer1;
 ```
 
 ---
@@ -290,7 +298,7 @@ SELECT dest_id, status, error FROM V$ARCHIVE_DEST WHERE dest_id IN (1,2);
 | Failover                  | FAILOVER TO 'STANDBY';                       |
 | Reinstate post-failover   | REINSTATE DATABASE 'OLD_PRIMARY';            |
 | Validate                  | VALIDATE DATABASE 'DB';                      |
-| Start FSFO Observer       | START OBSERVER IN BACKGROUND FILE IS '...';  |
+| Start FSFO Observer       | START OBSERVER observer1 IN BACKGROUND ...;  |
 | Disable standby           | DISABLE DATABASE 'DB';                       |
 | Enable standby            | ENABLE DATABASE 'DB';                        |
 | Cambia protection mode    | EDIT CONFIG SET PROTECTION MODE AS MAX...;   |

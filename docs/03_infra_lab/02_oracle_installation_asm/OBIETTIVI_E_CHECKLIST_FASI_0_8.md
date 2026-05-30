@@ -60,6 +60,18 @@
 - [ ] apply lag entro soglia lab
 - [ ] switchover testato e rollback eseguito
 
+## Fase 4B - Observer Server e FSFO
+
+**Obiettivi**
+- Installare Oracle Client Administrator su un host Observer dedicato.
+- Configurare wallet SEPS e FSFO in zero data loss mode.
+- Validare Observer master e backup opzionale.
+
+**Done checklist**
+- [ ] `VALIDATE FAST_START FAILOVER` senza blocchi
+- [ ] `SHOW FAST_START FAILOVER` = enabled in zero data loss mode
+- [ ] `observer1` registrato e raggiungibile
+
 ## Fase 5 - RMAN Backup
 
 **Obiettivi**

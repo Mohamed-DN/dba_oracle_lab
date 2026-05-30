@@ -2,6 +2,17 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Added
+
+- **Fase 4B Observer FSFO**: guida operativa per Observer dedicato, wallet SEPS,
+  attivazione graduale e backup Observer opzionale.
+
+### Changed
+
+- **Data Guard FSFO**: consolidati setup, rollback e drill nella nuova fase core.
+
 ## [2.0.0] - 2026-05-14
 ### Added
 - **Governance Framework**: Introdotta la directory `docs/04_governance_learning/02_enterprise_standards/` con MAA Scorecard, SRE Framework e GitOps Policy.

@@ -52,6 +52,7 @@ Scegli il caso:
 | RAC primary + RAC standby non-CDB | [Produzione RAC Data Guard Non-CDB](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) |
 | Lab RAC standby | [Fase 3 RAC Standby](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) |
 | Broker DGMGRL | [Fase 4 Data Guard Broker](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) |
+| Observer FSFO | [Fase 4B Observer Server](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) |
 | Switchover | [Switchover Completo](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) |
 | Failover e reinstate | [Failover + Reinstate](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) |
 | Flashback database | [Flashback Database](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md) |
