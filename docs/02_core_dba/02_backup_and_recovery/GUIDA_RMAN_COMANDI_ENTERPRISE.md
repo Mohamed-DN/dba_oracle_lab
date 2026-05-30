@@ -17,6 +17,27 @@
 
 ---
 
+## Obiettivi didattici
+
+- Consultare rapidamente sintassi e guardrail RMAN per operazioni enterprise.
+- Distinguere backup, restore, recover, duplicate e manutenzione metadata.
+- Validare ogni procedura con output osservabili prima di applicarla in produzione.
+
+## Procedura operativa
+
+Individua lo scenario, verifica target e prerequisiti, esegui prima i comandi di
+diagnostica e applica la procedura in ambiente di test prima del change produttivo.
+
+## Validazione finale
+
+Conserva log RMAN, exit code, output di `LIST` o `REPORT` e risultato del test di
+restore o recovery pertinente allo scenario.
+
+## Troubleshooting rapido
+
+Se il comando coinvolge FRA o archivelog in Data Guard, controlla deletion
+policy e lag standby prima di cancellare file. Non usare `rm` sui file Oracle.
+
 ## PARTE I — FONDAMENTI E ARCHITETTURA
 
 ---
@@ -754,6 +775,30 @@ RECOVER TABLESPACE users
   AUXILIARY DESTINATION '/u01/aux';
 ```
 
+### 6.7.1 Recover Table (DROP o DELETE accidentale)
+
+```rman
+-- Target aperto read-write, ARCHIVELOG attivo, connessione RMAN locale.
+RECOVER TABLE HR.ORDERS
+  UNTIL TIME 'SYSDATE-1'
+  AUXILIARY DESTINATION '/u01/rman_table_aux'
+  REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';
+
+-- Variante PDB dalla root CDB. NOTABLEIMPORT crea il dump senza import automatico.
+RECOVER TABLE HR.ORDERS OF PLUGGABLE DATABASE APPPDB
+  UNTIL SCN 123456789
+  AUXILIARY DESTINATION '/u01/rman_table_aux'
+  DATAPUMP DESTINATION '/u01/rman_table_dump'
+  DUMP FILE 'orders_recovered.dmp'
+  NOTABLEIMPORT;
+```
+
+RMAN crea un auxiliary database temporaneo e usa Data Pump per importare la
+tabella recuperata. Prima del comando verifica backup e archivelog continui,
+spazio auxiliary e limiti Oracle. Per importare in uno schema differente gia'
+esistente usa, da Oracle 12.2, una destinazione come
+`REMAP TABLE 'HR'.'ORDERS':'RECOVERY_USER'.'ORDERS_RECOVERED'`.
+
 ### 6.8 Block Media Recovery (BMR)
 
 ```rman
@@ -1044,7 +1089,10 @@ DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
 
 -- Cancella per data
 DELETE BACKUP COMPLETED BEFORE 'SYSDATE-30';
-DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+
+-- Archivelog: applica la deletion policy, soprattutto in Data Guard.
+SHOW ARCHIVELOG DELETION POLICY;
+DELETE NOPROMPT ARCHIVELOG ALL;
 
 -- Cancella per tag
 DELETE BACKUP TAG 'OLD_TEST';

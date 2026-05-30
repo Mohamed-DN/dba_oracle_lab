@@ -2,6 +2,14 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+### Added
+- **Dossier Colloquio Oracle DBA Produzione**: 260 domande tecniche, 15 drill Severity 1, piano di ripasso e mock interview.
+
+### Changed
+- **RMAN Recover Table**: Resa visibile la procedura di recupero tabella nei riferimenti rapidi e corretta la sintassi didattica.
+- **FRA e Data Guard**: Rafforzati i guardrail operativi per ORA-00257 quando lo standby e' in lag o irraggiungibile.
+
 ## [2.0.0] - 2026-05-14
 ### Added
 - **Governance Framework**: Introdotta la directory `docs/04_governance_learning/02_enterprise_standards/` con MAA Scorecard, SRE Framework e GitOps Policy.

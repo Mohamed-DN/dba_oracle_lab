@@ -11,6 +11,27 @@
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 
+## Obiettivi didattici
+
+- Configurare una strategia RMAN verificabile per primary e standby.
+- Eseguire backup, restore drill e recovery logici come `RECOVER TABLE`.
+- Collegare retention, archivelog e FRA agli obiettivi RPO/RTO.
+
+## Procedura operativa
+
+Segui i gate e i test della guida in ordine. Prima di ogni comando distruttivo
+verifica target, backup disponibili, archivelog continui e spazio reale.
+
+## Validazione finale
+
+Completa i test RMAN previsti, incluso almeno un restore validate e un recovery
+logico controllato, conservando output e tempi osservati.
+
+## Troubleshooting rapido
+
+Per errori RMAN, FRA piena o Data Guard in lag usa i runbook collegati e non
+cancellare archivelog con `rm` o con purge per eta' non verificati.
+
 ### Cos'è RMAN?
 
 RMAN (Recovery Manager) è lo strumento nativo di Oracle per effettuare backup e ripristini del database. Non è un semplice "copia file": RMAN parla direttamente con il kernel del database, conosce quali blocchi sono usati, quali sono cambiati, e può comprimere, validare e ripristinare intelligentemente.
@@ -1115,14 +1136,30 @@ rman TARGET /
 RECOVER TABLE HR.TEST_PITR
     UNTIL TIME "TO_DATE('07-APR-2026 06:50:30','DD-MON-YYYY HH24:MI:SS')"
     AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
-    REMAP TABLE HR.TEST_PITR:HR.TEST_PITR_RECOVERED;
+    REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED';
 ```
 
 > **Spiegazione del comando:**
 > - `RECOVER TABLE HR.TEST_PITR`: recupera questa specifica tabella
 > - `UNTIL TIME "..."`: torna indietro al momento PRIMA del DROP
 > - `AUXILIARY DESTINATION '/tmp/rman_pitr_aux'`: dove creare il DB temporaneo (serve ~2x lo spazio del tablespace)
-> - `REMAP TABLE ... :HR.TEST_PITR_RECOVERED`: rinomina la tabella recuperata (per sicurezza, non sovrascrive l'originale se esistesse ancora)
+> - `REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED'`: rinomina la tabella recuperata nello stesso schema (per sicurezza, non sovrascrive l'originale se esistesse ancora)
+
+Varianti utili:
+
+```rman
+-- Tabella in una PDB: collegati localmente alla root CDB.
+RECOVER TABLE HR.TEST_PITR OF PLUGGABLE DATABASE RACDBPDB
+    UNTIL TIME 'SYSDATE-1'
+    AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
+    REMAP TABLE 'HR'.'TEST_PITR':'TEST_PITR_RECOVERED';
+
+-- Import in uno schema differente gia' esistente (Oracle 12.2+).
+RECOVER TABLE HR.TEST_PITR
+    UNTIL TIME 'SYSDATE-1'
+    AUXILIARY DESTINATION '/tmp/rman_pitr_aux'
+    REMAP TABLE 'HR'.'TEST_PITR':'RECOVERY_USER'.'TEST_PITR_RECOVERED';
+```
 
 ```sql
 -- 6. Verifica il recupero!
@@ -1148,6 +1185,8 @@ rm -rf /tmp/rman_pitr_aux
 > - Gli archivelog continui dal backup fino al timestamp di recovery
 > - Spazio sufficiente nella AUXILIARY DESTINATION (~dimensione tablespace)
 > - Che il database sia in ARCHIVELOG mode (che noi abbiamo attivato in Fase 3)
+> - Connessione RMAN locale al target; il target deve essere aperto read-write
+> - Verifica preventiva dei limiti Oracle: oggetti `SYS`, tablespace `SYSTEM`/`SYSAUX`, standby fisici e alcuni vincoli nominati non sono recuperabili con questa procedura
 >
 > Se non hai un backup o gli archivelog sono stati cancellati, il recovery è IMPOSSIBILE.
 

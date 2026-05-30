@@ -349,7 +349,11 @@ DELETE NOPROMPT OBSOLETE;
 -- Elimina backup specifici
 DELETE BACKUP TAG 'OLD_FULL_20260101';
 DELETE BACKUPSET 456;
-DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+
+-- Elimina solo archivelog eleggibili secondo la deletion policy configurata.
+-- In Data Guard verifica prima transport/apply lag.
+SHOW ARCHIVELOG DELETION POLICY;
+DELETE NOPROMPT ARCHIVELOG ALL;
 ```
 
 ### 5.4 Report
@@ -451,6 +455,31 @@ RECOVER TABLESPACE users
 -- Verifica post-TSPITR
 ALTER TABLESPACE users ONLINE;
 ```
+
+---
+
+## 7A. Recover Table (Errore Umano: DROP o DELETE)
+
+```rman
+-- Esegui RMAN localmente sul target aperto read-write e in ARCHIVELOG mode.
+RECOVER TABLE HR.ORDERS
+  UNTIL TIME 'SYSDATE-1'
+  AUXILIARY DESTINATION '/tmp/rman_table_aux'
+  REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';
+
+-- Variante PDB: collegati localmente alla root CDB.
+RECOVER TABLE HR.ORDERS OF PLUGGABLE DATABASE APPPDB
+  UNTIL SCN 123456789
+  AUXILIARY DESTINATION '/tmp/rman_table_aux'
+  DATAPUMP DESTINATION '/tmp/rman_table_dump'
+  DUMP FILE 'orders_recovered.dmp'
+  NOTABLEIMPORT;
+```
+
+RMAN crea un auxiliary database temporaneo, recupera l'oggetto al PITR richiesto
+e usa Data Pump. Verifica backup e archivelog continui, spazio auxiliary e limiti
+Oracle prima del comando. Approfondimento:
+[Fase 5 RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md).
 
 ---
 

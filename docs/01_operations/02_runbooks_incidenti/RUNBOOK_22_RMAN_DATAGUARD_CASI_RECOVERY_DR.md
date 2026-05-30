@@ -18,6 +18,7 @@
 - [Standby apply lag crescente](#dg-026---standby-apply-lag-crescente)
 - [MRP0 non parte](#dg-032---mrp0-non-parte)
 - [Roll-forward standby con incremental from SCN](#dg-036---roll-forward-standby-con-incremental-from-scn)
+- [Primary FRA piena per standby lag](#dg-061---primary-fra-piena-per-standby-lag)
 
 ### Macro-aree
 - [Spiegazione didattica](#spiegazione-didattica-come-raccontare-rman-e-data-guard)
@@ -43,6 +44,28 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 > Documento operativo per DBA Oracle 19c in ambienti critici. Copre scenari RMAN, Flashback, Data Guard, Broker, RAC, CDB/PDB, incidenti logici, crash fisici, errori umani, gap redo, failover e switchover. Il focus e' decisionale: quale tecnologia usare, quando usarla, quali comandi lanciare, come validare e quali rischi evitare.
 
 ---
+
+## Obiettivi
+
+- Scegliere il recovery path con blast radius minimo compatibile con RPO e RTO.
+- Preservare redo e backup necessari prima delle mitigazioni di emergenza.
+- Validare database e Data Guard dopo restore, recovery o role transition.
+
+## Procedura operativa
+
+Parti dal pre-check universale, individua lo scenario RMAN o Data Guard e applica
+la sequenza documentata. Nei Sev1 registra evidenze, autorizzazioni e rischio
+residuo prima di ogni comando irreversibile.
+
+## Validazione finale
+
+Chiudi lo scenario solo dopo aver verificato ruolo database, alert log, workload,
+backup recuperabili e stato Data Guard coerente con il livello di protezione.
+
+## Troubleshooting rapido
+
+Se mancano redo o backup, non improvvisare cancellazioni o role transition:
+ferma il change, conserva output e usa escalation e fallback documentati.
 
 ## Spiegazione didattica: come raccontare RMAN e Data Guard
 
@@ -759,17 +782,33 @@ RMAN> DELETE NOPROMPT OBSOLETE;
 
 ## RMAN-038 - FRA piena con database bloccato
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT * FROM v$recovery_area_usage;
-SQL> ALTER SYSTEM SET db_recovery_file_dest_size=<new_size> SCOPE=BOTH;
+### Diagnostica e ripristino controllato
 
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> BACKUP ARCHIVELOG ALL DELETE INPUT;
-RMAN> DELETE NOPROMPT OBSOLETE;
+```sql
+sqlplus / as sysdba
+
+SELECT name,
+       ROUND(space_limit/1024/1024/1024, 2) AS limit_gb,
+       ROUND(space_used/1024/1024/1024, 2) AS used_gb,
+       ROUND(space_reclaimable/1024/1024/1024, 2) AS reclaimable_gb
+FROM v$recovery_file_dest;
+
+SELECT file_type, percent_space_used, percent_space_reclaimable
+FROM v$recovery_area_usage;
 ```
+
+```rman
+rman target /
+
+SHOW ARCHIVELOG DELETION POLICY;
+CROSSCHECK ARCHIVELOG ALL;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT OBSOLETE;
+```
+
+Se esiste spazio reale sul filesystem o diskgroup, aumenta temporaneamente
+`db_recovery_file_dest_size`. Se la pressione deriva da Data Guard in lag, usa
+DG-061 prima di eseguire purge degli archivelog.
 
 ## RMAN-039 - Backup piece mancante o expired
 
@@ -1531,6 +1570,8 @@ RMAN> RESTORE DATABASE VALIDATE;
 RMAN> RECOVER DATABASE;
 ```
 
+## Parte 2 - Scenari Data Guard, Broker, Standby e Disaster Recovery
+
 ## DG-001 - Creazione physical standby da active duplicate
 
 ### Comandi base
@@ -2271,25 +2312,118 @@ DGMGRL> SHOW CONFIGURATION;
 
 ## DG-061 - Primary FRA piena per standby lag
 
-### Comandi base
-```bash
-sqlplus / as sysdba
-SQL> SELECT name, value, unit FROM v$dataguard_stats;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> SELECT dest_id, status, error FROM v$archive_dest_status ORDER BY dest_id;
+### Scenario Severity 1
 
-DGMGRL> SHOW DATABASE <db_unique_name>;
+Il primary restituisce `ORA-00257`, la FRA e' al 100% e lo standby non e'
+raggiungibile. Gli archivelog accumulati potrebbero essere indispensabili per
+colmare il gap quando la rete tornera' disponibile.
+
+### Procedura operativa
+
+1. Verifica alert log, spazio reale e destinazioni obbligatorie.
+2. Registra thread e sequence non ancora shipped/applied.
+3. Preferisci aumento temporaneo della FRA o backup su storage alternativo.
+4. Elimina solo file eleggibili secondo deletion policy.
+5. Se il business autorizza il degrado DR e non esiste capacita' aggiuntiva,
+   usa `DELETE FORCE` solo per le sequenze strettamente necessarie e registra
+   l'intervallo eliminato nel ticket Sev1.
+
+```sql
+sqlplus / as sysdba
+
+SELECT name,
+       ROUND(space_limit/1024/1024/1024, 2) AS limit_gb,
+       ROUND(space_used/1024/1024/1024, 2) AS used_gb,
+       ROUND(space_reclaimable/1024/1024/1024, 2) AS reclaimable_gb
+FROM v$recovery_file_dest;
+
+SELECT dest_id, status, target, error, destination
+FROM v$archive_dest_status
+ORDER BY dest_id;
+
+SELECT thread#, sequence#, applied, first_time, next_time
+FROM v$archived_log
+ORDER BY thread#, sequence#;
 ```
+
+```rman
+rman target /
+
+SHOW ARCHIVELOG DELETION POLICY;
+CROSSCHECK ARCHIVELOG ALL;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT OBSOLETE;
+
+-- Ultima scelta autorizzata: ignora la deletion policy.
+DELETE FORCE NOPROMPT ARCHIVELOG FROM SEQUENCE <seq_iniziale>
+  UNTIL SEQUENCE <seq_finale> THREAD <thread>;
+```
+
+### Validazione finale
+
+- Il primary accetta nuovamente transazioni.
+- Alert log senza nuovi `ORA-00257`.
+- Ticket Sev1 con sequenze preservate ed eventualmente eliminate.
+- Piano esplicito di riallineamento standby tramite DG-062.
 
 ## DG-062 - RMAN archivelog deletion policy in Data Guard
 
-### Comandi base
-```bash
+### Prevenzione
+
+La deletion policy evita purge ordinari di redo ancora necessari allo standby.
+`DELETE FORCE` la ignora: non usarlo in manutenzione periodica.
+
+```rman
+rman target /
+
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+SHOW ARCHIVELOG DELETION POLICY;
+```
+
+### Riallineamento dopo il ripristino rete
+
+Se i log mancanti sono stati preservati, copiali sullo standby, registrali e
+riavvia MRP. Interroga `v$archive_gap` sullo standby, non sul primary.
+
+```sql
 sqlplus / as sysdba
-SQL> SELECT * FROM v$archive_gap;
-SQL> SELECT process, status, thread#, sequence# FROM v$managed_standby;
-SQL> ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
-SQL> ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
+SELECT process, status, thread#, sequence# FROM v$managed_standby;
+ALTER DATABASE REGISTER PHYSICAL LOGFILE '<archivelog_path>';
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+```
+
+Se i redo sono stati eliminati senza una copia recuperabile, usa Oracle 19c
+per il roll-forward dalla rete. MRP deve essere fermato manualmente prima del
+sync:
+
+```sql
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+```
+
+```rman
+rman target /
+
+RECOVER STANDBY DATABASE FROM SERVICE <primary_service>;
+```
+
+Se la rete non consente il roll-forward diretto, applica il fallback classico:
+crea sul primary un `BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE`,
+trasferiscilo, catalogalo sullo standby e completa il recover. Ricostruisci lo
+standby da zero solo se il riallineamento incrementale non e' praticabile.
+
+### Validazione finale
+
+```sql
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
+SELECT name, value, unit FROM v$dataguard_stats;
+SELECT process, status, thread#, sequence# FROM v$managed_standby;
+```
+
+```text
+DGMGRL> SHOW CONFIGURATION;
+DGMGRL> SHOW DATABASE <standby_db_unique_name>;
 ```
 
 ## DG-063 - Backup su standby
