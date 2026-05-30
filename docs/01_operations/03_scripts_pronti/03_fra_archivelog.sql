@@ -138,12 +138,14 @@ PROMPT ====================================================================
 
 -- ---- SITUAZIONE: FRA > 95% → il DB rischia il SUSPEND! ----
 --
--- FIX 1: Pulizia con RMAN (più sicuro)
+-- FIX 1: Triage e pulizia RMAN solo dei file eleggibili
 -- rman target /
+-- RMAN> SHOW ARCHIVELOG DELETION POLICY;
 -- RMAN> CROSSCHECK ARCHIVELOG ALL;
 -- RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
--- RMAN> DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';
 -- RMAN> DELETE NOPROMPT OBSOLETE;
+-- Prima di eliminare archivelog verifica backup e, con Data Guard, shipped/applied.
+-- Non usare purge per eta' o rm diretto: potresti creare un gap non recuperabile.
 --
 -- FIX 2: Aumenta FRA (se hai spazio disco)
 -- ALTER SYSTEM SET db_recovery_file_dest_size = 100G SCOPE=BOTH;
@@ -152,7 +154,12 @@ PROMPT ====================================================================
 -- ALTER SYSTEM SET log_archive_dest_1 = 'LOCATION=/u01/archive' SCOPE=BOTH;
 -- ⚠️ Piano B, solo se i backup non usano la FRA.
 --
--- FIX 4: Cancella flashback log (se non serve)
+-- FIX 4: Ultima scelta Sev1 autorizzata
+-- Preserva prima gli archivelog su storage alternativo e registra thread/sequence.
+-- RMAN> DELETE FORCE NOPROMPT ARCHIVELOG FROM SEQUENCE <seq> UNTIL SEQUENCE <seq>;
+-- DELETE FORCE ignora la deletion policy e degrada temporaneamente la protezione DR.
+--
+-- FIX 5: Cancella flashback log (se non serve e con change autorizzato)
 -- ALTER DATABASE FLASHBACK OFF;
 -- ALTER DATABASE FLASHBACK ON;
 
