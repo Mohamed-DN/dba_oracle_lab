@@ -234,7 +234,7 @@ tnsping ORCL
 tnsping ORCL 5    # 5 tentativi
 
 # Easy Connect (senza tnsnames.ora)
-sqlplus user/pass@//hostname:1521/service_name
+sqlplus user@//hostname:1521/service_name
 ```
 
 ### 5.2 Troubleshooting Errori Comuni
@@ -274,7 +274,7 @@ TRACE_LEVEL_CLIENT = OFF
 | Reload config             | lsnrctl reload                               |
 | Servizi registrati        | lsnrctl services                             |
 | Test TNS alias            | tnsping ORCL                                 |
-| Easy Connect              | sqlplus user/pass@//host:1521/svc            |
+| Easy Connect              | sqlplus user@//host:1521/svc            |
 | Trace listener ON         | lsnrctl set trc_level ADMIN                  |
 | Trace listener OFF        | lsnrctl set trc_level OFF                    |
 | Admin restrictions        | ADMIN_RESTRICTIONS_LISTENER = ON             |

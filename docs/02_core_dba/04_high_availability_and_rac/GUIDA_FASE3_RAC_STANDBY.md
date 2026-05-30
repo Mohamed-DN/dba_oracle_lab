@@ -981,10 +981,10 @@ tnsping RACDB_DG
 
 ```bash
 # Test SQL reale (piu affidabile di tnsping)
-sqlplus 'sys/<password>@RACDB_STBY as sysdba'
-sqlplus 'sys/<password>@RACDB_STBY_DG as sysdba'
-sqlplus 'sys/<password>@RACDB as sysdba'
-sqlplus 'sys/<password>@RACDB_DG as sysdba'
+sqlplus '/@RACDB_STBY as sysdba'
+sqlplus '/@RACDB_STBY_DG as sysdba'
+sqlplus '/@RACDB as sysdba'
+sqlplus '/@RACDB_DG as sysdba'
 ```
 
 ### Riferimenti Oracle ufficiali (best practice rete/redo transport)
@@ -1783,7 +1783,7 @@ EOF
 
 lsnrctl status | grep -Ei "RACDB1|RACDB_STBY|UNKNOWN|READY"
 
-sqlplus 'sys/<password>@RACDB1_STBY as sysdba'
+sqlplus '/@RACDB1_STBY as sysdba'
 ```
 
 Atteso:
@@ -1854,34 +1854,27 @@ La sequenza corretta e':
 ```bash
 # Da racstby1 come oracle
 # Qui l'auxiliary e' solo la prima istanza standby
-rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB1_STBY
+rman TARGET /@RACDB AUXILIARY /@RACDB1_STBY
 ```
 
-Nota importante:
-
-- `<password>` e' un placeholder documentale
-- NON devi scrivere i caratteri `<` e `>` nel comando reale
-- Bash interpreta `<password>` come redirezione input e prova ad aprire un file chiamato `password`
-- la password Oracle e' case-sensitive, quindi `Password_A` e `password_a` NON sono la stessa cosa
-
-Esempio operativo senza password scritta in chiaro nella guida:
+Nota importante: per automazioni e processi in background configura un wallet SEPS.
+Gli alias `/@RACDB` e `/@RACDB1_STBY` non espongono segreti nella command line.
 
 ```bash
-read -s SYS_PASSWORD
-rman TARGET "sys/${SYS_PASSWORD}@RACDB" AUXILIARY "sys/${SYS_PASSWORD}@RACDB1_STBY"
+rman TARGET "/@RACDB" AUXILIARY "/@RACDB1_STBY"
 ```
 
 Se vuoi evitare di lasciare la password nella command history, entra prima in RMAN e poi fai le connect:
 
 ```bash
 rman
-RMAN> CONNECT TARGET sys/<password>@RACDB;
-RMAN> CONNECT AUXILIARY sys/<password>@RACDB1_STBY;
+RMAN> CONNECT TARGET /@RACDB;
+RMAN> CONNECT AUXILIARY /@RACDB1_STBY;
 ```
 
 > **Per database grandi (>50 GB)**, lancia con `nohup` o in un `screen`/`tmux` per evitare che un timeout SSH interrompa l'operazione:
 > ```bash
-> nohup rman TARGET sys/<password>@RACDB AUXILIARY sys/<password>@RACDB1_STBY <<EOF > /tmp/duplicate.log 2>&1 &
+> nohup rman TARGET /@RACDB AUXILIARY /@RACDB1_STBY <<EOF > /tmp/duplicate.log 2>&1 &
 > DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE DORECOVER ...
 > EOF
 > tail -f /tmp/duplicate.log   # Per monitorare il progresso
@@ -2422,7 +2415,7 @@ lsnrctl status | grep -Ei "RACDB_STBY|RACDB_STBY_DGMGRL|READY|UNKNOWN"
 
 ```bash
 # 3) Dal primario testa il service standby usato dal transport
-sqlplus 'sys/<password>@RACDB_STBY_DG as sysdba'
+sqlplus '/@RACDB_STBY_DG as sysdba'
 ```
 
 Se il test SQL fallisce:

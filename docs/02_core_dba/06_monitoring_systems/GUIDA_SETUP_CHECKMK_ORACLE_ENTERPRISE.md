@@ -1,5 +1,22 @@
 # Guida Setup CheckMK per Oracle Database — Enterprise
 
+## Obiettivo operativo
+
+Monitorare host, istanze, ASM, Data Guard e backup con alert azionabili.
+
+## Procedura operativa
+
+Distribuisci agent e plugin, configura accessi minimi, esegui discovery e imposta soglie coerenti
+con SLA e capacità del laboratorio.
+
+## Validazione finale
+
+Prova almeno un alert controllato e verifica stato servizi, perfdata e notifica.
+
+## Troubleshooting rapido
+
+Se un check resta stale, controlla agent, plugin, cache, permessi e reachability dal server CheckMK.
+
 > Guida completa per configurare il monitoring Oracle Database con CheckMK.
 > Copre installazione agent, plugin mk_oracle, configurazione Single Instance,
 > RAC, Data Guard, ASM, Tablespace, RMAN, Performance, Alerting.
@@ -16,7 +33,7 @@
 
 ```
 +------------------+       +------------------+
-|  CheckMK Server  |&amp;lt;-----&gt;|  CheckMK Agent   |
+|  CheckMK Server  |<-----&gt;|  CheckMK Agent   |
 |  (Central Site)  | TCP   |  + mk_oracle     |
 |                  | 6556  |  plugin           |
 |  +------------+  |       |                   |
@@ -94,7 +111,8 @@ tnsping PROD
 -- ============================================
 
 -- Crea utente dedicato (NEVER expire password, read-only)
-CREATE USER checkmk_monitor IDENTIFIED BY "StrongP@ss2026!"
+-- <PASSWORD_MONITOR> e' un placeholder: sceglilo fuori dal repository.
+CREATE USER checkmk_monitor IDENTIFIED BY "<PASSWORD_MONITOR>"
   DEFAULT TABLESPACE users
   TEMPORARY TABLESPACE temp
   PROFILE DEFAULT
@@ -149,7 +167,7 @@ GRANT SELECT ON sys.dba_scheduler_job_run_details TO checkmk_monitor;
 
 ```bash
 # Test connessione
-sqlplus checkmk_monitor/StrongP@ss2026!@PROD
+sqlplus /@PROD
 
 # Test query base
 SELECT instance_name, status, database_status FROM v$instance;
@@ -176,7 +194,7 @@ check_mk_agent | head -20
 cmk-agent-ctl register --hostname oracledb01 \
   --server checkmk-server:443 \
   --site mysite \
-  --user cmkadmin --password "pwd"
+  --user cmkadmin
 ```
 
 ### 3.2 Configurazione Firewall
@@ -196,7 +214,7 @@ firewall-cmd --list-ports
 # Registra con TLS
 cmk-agent-ctl register --hostname oracledb01 \
   --server checkmk-server --site mysite \
-  --user cmkadmin --password "pwd" \
+  --user cmkadmin \
   --trust-cert
 ```
 
@@ -210,7 +228,7 @@ cmk-agent-ctl register --hostname oracledb01 \
 1. CheckMK Web UI → Setup → Agents → Agent rules
 2. Cerca "Oracle databases"
 3. Add rule:
-   - Login: checkmk_monitor / password
+   - Login: wallet SEPS alias PROD
    - Instances: PROD (hostname:1521)
    - Sections: Instance, Tablespaces, Dataguard, ASM, Recovery Area, 
                RMAN, Jobs, Locks, Long Active Sessions, Performance
@@ -238,13 +256,12 @@ cat > /etc/check_mk/mk_oracle.cfg <<'EOF'
 # ============================================
 
 # Credenziali
-DBUSER="checkmk_monitor:StrongP@ss2026!::oracledb01:1521:PROD"
+DBUSER="/:@PROD"
 
-# Oppure con wallet (piu sicuro):
-# DBUSER="/:@PROD"
+# Il wallet SEPS e' obbligatorio per non salvare password nel file.
 # In questo caso configura il wallet TNS:
 # mkstore -wrl /etc/check_mk/oracle_wallet -create
-# mkstore -wrl /etc/check_mk/oracle_wallet -createCredential PROD checkmk_monitor "StrongP@ss2026!"
+# mkstore -wrl /etc/check_mk/oracle_wallet -createCredential PROD checkmk_monitor
 
 # ORACLE_HOME (se non e gia impostato)
 ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
@@ -298,7 +315,7 @@ file /usr/lib/check_mk_agent/plugins/300/mk_oracle
 # Se dice "with CRLF line terminators": dos2unix mk_oracle
 
 # Test sqlplus con l'utente monitoring
-su - oracle -c "sqlplus checkmk_monitor/pwd@PROD"
+su - oracle -c "sqlplus /@PROD"
 ```
 
 ---
@@ -313,7 +330,7 @@ Verifica i tentativi di accesso non autorizzati ai Realm protetti:
 ```bash
 #!/bin/bash
 # check_oracle_vault_violations.sh
-VIOLATIONS=$(sqlplus -s checkmk_monitor/StrongP@ss2026!@PROD <<EOF
+VIOLATIONS=$(sqlplus -s /@PROD <<EOF
 set heading off feedback off pagesize 0
 SELECT count(*) FROM DVSYS.AUDIT_TRAIL$ WHERE ACTION_NAME='VIOLATION' AND TIMESTAMP > SYSDATE-1/24;
 EOF
@@ -330,7 +347,7 @@ Verifica che i profili e le baseline vengano utilizzati e non ci siano regressio
 ```bash
 #!/bin/bash
 # check_oracle_spm.sh
-UNACCEPTED=$(sqlplus -s checkmk_monitor/StrongP@ss2026!@PROD <<EOF
+UNACCEPTED=$(sqlplus -s /@PROD <<EOF
 set heading off feedback off pagesize 0
 SELECT count(*) FROM dba_sql_plan_baselines WHERE accepted='NO';
 EOF
@@ -580,17 +597,17 @@ EOF
 #   SID       - nome istanza
 
 # Esempio: utente locale, porta default
-DBUSER="checkmk_monitor:StrongP@ss::"
+DBUSER="/:@PROD"
 
 # Esempio: utente con connessione remota
-DBUSER="checkmk_monitor:StrongP@ss::dbserver01:1521:PROD"
+DBUSER="/:@PROD"
 
 # Esempio: istanza specifica
-DBUSER_PROD="checkmk_monitor:StrongP@ss::dbserver01:1521:PROD"
-DBUSER_TEST="checkmk_monitor:TestPwd::dbserver01:1521:TEST"
+DBUSER_PROD="/:@PROD"
+DBUSER_TEST="/:@TEST"
 
 # Esempio: con SYSDBA (se necessario)
-DBUSER_PROD="checkmk_monitor:StrongP@ss:SYSDBA:dbserver01:1521:PROD"
+DBUSER_PROD="/::SYSDBA:dbserver01:1521:PROD"
 
 # Esempio: con wallet (no password nel config!)
 DBUSER="/::"
@@ -601,7 +618,7 @@ DBUSER="/::"
 
 ```bash
 # Per monitorare ASM diskgroups
-ASMUSER="asmsnmp:AsmP@ss:SYSASM:localhost:1521:+ASM"
+ASMUSER="/::SYSASM:localhost:1521:+ASM"
 
 # Se ASM ha un ORACLE_HOME diverso
 ASM_ORACLE_HOME=/u01/app/19.0.0/grid
@@ -641,9 +658,9 @@ EXCLUDE_SID="dbtest1 dbdev2"
 # Monitorare database remoti da un host proxy
 # Formato: REMOTE_INSTANCE_<N>="user:pwd:syspriv:host:port:piggyback_host:SID:version"
 
-REMOTE_INSTANCE_1="checkmk_monitor:pwd::remote-db01:1521:remote-db01:PROD:19.0"
-REMOTE_INSTANCE_2="checkmk_monitor:pwd::remote-db02:1521:remote-db02:TEST:19.0"
-REMOTE_INSTANCE_3="checkmk_monitor:pwd::cloud-rds:1521:cloud-rds:RDS01:19.0"
+REMOTE_INSTANCE_1="/::remote-db01:1521:remote-db01:PROD:19.0"
+REMOTE_INSTANCE_2="/::remote-db02:1521:remote-db02:TEST:19.0"
+REMOTE_INSTANCE_3="/::cloud-rds:1521:cloud-rds:RDS01:19.0"
 
 # piggyback_host = hostname come appare in CheckMK
 # version = versione Oracle (opzionale, aiuta il plugin)
@@ -714,7 +731,7 @@ msiexec /i check_mk_agent.msi /qn
 & "C:\Program Files (x86)\checkmk\service\cmk-agent-ctl.exe" register `
   --hostname oracledb-win `
   --server checkmk-server --site mysite `
-  --user cmkadmin --password "pwd" --trust-cert
+  --user cmkadmin --trust-cert
 ```
 
 ---
@@ -774,7 +791,7 @@ mkstore -wrl /etc/check_mk/oracle_wallet -create
 
 # 2. Aggiungi credenziali
 mkstore -wrl /etc/check_mk/oracle_wallet \
-  -createCredential PROD checkmk_monitor "StrongP@ss"
+  -createCredential PROD checkmk_monitor
 
 # 3. Configura sqlnet.ora per il plugin
 cat > /etc/check_mk/sqlnet.ora <<'EOF'
@@ -843,7 +860,7 @@ chown root:root /etc/check_mk/mk_oracle.cfg
 [ ] Plugin mk_oracle in directory asincrona (60/ o 300/)
 [ ] DBUSER configurato con wallet (no password in chiaro)
 [ ] Utente monitoring creato con grant minimi
-[ ] Connessione testata: sqlplus checkmk_monitor/pwd@SID
+[ ] Connessione testata: sqlplus /@SID
 [ ] Plugin testato: /usr/lib/check_mk_agent/plugins/300/mk_oracle
 [ ] Service Discovery eseguita in CheckMK
 [ ] Soglie personalizzate per tablespace, RMAN, DG
@@ -1108,7 +1125,7 @@ Clicca "Add rule"
 Configurazione:
   Login:
     - Username: checkmk_monitor
-    - Password: StrongP@ss
+    - Credential store: alias PROD
     - (oppure: Use credential store)
   
   Instance:
@@ -1520,8 +1537,6 @@ In un ambiente Enterprise con 50+ database, non puoi installare l'agente a mano.
   vars:
     cmk_server: "checkmk-server"
     cmk_site: "mysite"
-    cmk_user: "cmkadmin"
-    cmk_pwd: "StrongPassword"
     oracle_home: "/u01/app/oracle/product/19.0.0/dbhome_1"
 
   tasks:
@@ -1531,13 +1546,9 @@ In un ambiente Enterprise con 50+ database, non puoi installare l'agente a mano.
         state: present
         disable_gpg_check: yes
 
-    - name: Register Agent with TLS
-      command: >
-        cmk-agent-ctl register --hostname {{ inventory_hostname }}
-        --server {{ cmk_server }} --site {{ cmk_site }}
-        --user {{ cmk_user }} --password {{ cmk_pwd }} --trust-cert
-      args:
-        creates: /var/lib/cmk-agent/registered
+    - name: Explain secure TLS registration
+      debug:
+        msg: "Registra l'agent tramite Agent Bakery o prompt interattivo; non passare secret con --password."
 
     - name: Deploy mk_oracle plugin
       get_url:

@@ -5,9 +5,7 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (questa guida - riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet Veloce**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi rapidi quotidiani).
-> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari operativi comuni).
-> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
 
 > Guida operativa completa per Oracle RMAN 19c/21c/23ai.
 > Copre OGNI aspetto: configurazione, backup, restore, recovery, duplicate, catalog,
@@ -59,7 +57,7 @@ policy e lag standby prima di cancellare file. Non usare `rm` sui file Oracle.
     +------+------+        +-------------+
            |
     +------v------+        +-------------+
-    | Controlfile |&amp;lt;------&gt;|  Recovery   |
+    | Controlfile |<------&gt;|  Recovery   |
     | (metadata   |        |  Catalog    |
     |  backup)    |        | (opzionale) |
     +------+------+        +-------------+
@@ -214,16 +212,16 @@ chronyc tracking
 rman target /
 
 # 2. Connessione con password
-rman target sys/password@PROD
+rman target /@PROD
 
 # 3. Connessione con SYSBACKUP (best practice — duty separation)
-rman target '"backup_admin/pwd@PROD as sysbackup"'
+rman target '"/@PROD as sysbackup"'
 
 # 4. Con Recovery Catalog
-rman target / catalog rman_user/pwd@CATDB
+rman target / catalog rman_user@CATDB
 
 # 5. Target + Catalog + Auxiliary (per DUPLICATE)
-rman target sys/pwd@PROD auxiliary sys/pwd@CLONE catalog rman/pwd@CATDB
+rman target /@PROD auxiliary /@CLONE catalog /@CATDB
 
 # 6. NOCATALOG esplicito (usa solo controlfile)
 rman target / nocatalog
@@ -332,16 +330,16 @@ SHOW ALL;
 -- Canali dedicati per nodo: distribuisce I/O backup tra i nodi
 CONFIGURE DEVICE TYPE DISK PARALLELISM 4;
 CONFIGURE CHANNEL 1 DEVICE TYPE DISK 
-  CONNECT 'SYSBACKUP/pwd@PROD1' 
+  CONNECT '/@PROD1'
   FORMAT '+RECO/%d/%T/%U';
 CONFIGURE CHANNEL 2 DEVICE TYPE DISK 
-  CONNECT 'SYSBACKUP/pwd@PROD2' 
+  CONNECT '/@PROD2'
   FORMAT '+RECO/%d/%T/%U';
 CONFIGURE CHANNEL 3 DEVICE TYPE DISK 
-  CONNECT 'SYSBACKUP/pwd@PROD1' 
+  CONNECT '/@PROD1'
   FORMAT '+RECO/%d/%T/%U';
 CONFIGURE CHANNEL 4 DEVICE TYPE DISK 
-  CONNECT 'SYSBACKUP/pwd@PROD2' 
+  CONNECT '/@PROD2'
   FORMAT '+RECO/%d/%T/%U';
 
 -- Snapshot controlfile su shared storage (ASM obbligatorio in RAC)
@@ -375,7 +373,7 @@ CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME ALL;
 **Backup Offloading su Standby (Active Data Guard):**
 ```rman
 -- Connettiti alla STANDBY come target
-rman target sys/pwd@STBY
+rman target /@STBY
 
 -- Backup dalla standby (riduce carico I/O sul primary)
 BACKUP AS COMPRESSED BACKUPSET 
@@ -400,10 +398,10 @@ CONFIGURE ENCRYPTION ALGORITHM 'AES256';  -- Default in 23ai
 
 -- METODO 2: Password-based Encryption (se wallet non disponibile)
 -- Usalo in sessione RUN{}, non persistente
-SET ENCRYPTION ON IDENTIFIED BY 'MyBackupPwd' ONLY;
+SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>' ONLY;
 
 -- METODO 3: Dual-mode (decrypt con wallet O password — piu flessibile)
-SET ENCRYPTION IDENTIFIED BY 'MyBackupPwd';
+SET ENCRYPTION IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>';
 -- Questo permette di ripristinare usando wallet OPPURE password
 
 -- METODO 4: Encryption per tablespace specifici
@@ -675,7 +673,7 @@ BACKUP INCREMENTAL LEVEL 1
 -- Vantaggio: zero impatto I/O sul primary
 
 -- 1. Connettiti alla standby
-rman target sys/pwd@STBY
+rman target /@STBY
 
 -- 2. Backup completo dalla standby
 BACKUP AS COMPRESSED BACKUPSET 
@@ -956,7 +954,7 @@ DUPLICATE TARGET DATABASE TO CLONE
 ```sql
 -- 1. Nel database del catalog, crea schema dedicato
 CREATE TABLESPACE rman_ts DATAFILE SIZE 500M AUTOEXTEND ON MAXSIZE 5G;
-CREATE USER rman_admin IDENTIFIED BY pwd
+CREATE USER rman_admin IDENTIFIED BY "<PASSWORD_CATALOGO>"
   DEFAULT TABLESPACE rman_ts
   QUOTA UNLIMITED ON rman_ts;
 GRANT RECOVERY_CATALOG_OWNER TO rman_admin;
@@ -965,11 +963,11 @@ GRANT CREATE SESSION TO rman_admin;
 
 ```rman
 -- 2. In RMAN: crea il catalog
-RMAN CATALOG rman_admin/pwd@CATDB
+RMAN CATALOG /@CATDB
 CREATE CATALOG;
 
 -- 3. Registra i database
-RMAN TARGET / CATALOG rman_admin/pwd@CATDB
+RMAN TARGET / CATALOG /@CATDB
 REGISTER DATABASE;
 
 -- 4. Sincronizza
@@ -981,14 +979,14 @@ RESYNC CATALOG FROM DB_UNIQUE_NAME ALL;
 
 ```sql
 -- Crea utente VPC per ogni team/database
-CREATE USER vpc_team_a IDENTIFIED BY pwd
+CREATE USER vpc_team_a IDENTIFIED BY "<PASSWORD_VPC>"
   DEFAULT TABLESPACE rman_ts QUOTA UNLIMITED ON rman_ts;
 GRANT RECOVERY_CATALOG_OWNER TO vpc_team_a;
 ```
 
 ```rman
 -- Grant accesso solo a database specifici
-RMAN CATALOG rman_admin/pwd@CATDB
+RMAN CATALOG /@CATDB
 GRANT CATALOG FOR DATABASE prod_a TO vpc_team_a;
 GRANT CATALOG FOR DATABASE prod_b TO vpc_team_a;
 -- REVOKE: REVOKE CATALOG FOR DATABASE prod_b FROM vpc_team_a;

@@ -174,7 +174,7 @@ SELECT current_scn FROM v$database;
 Export Oracle:
 
 ```bash
-expdp system/<PASSWORD> schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_exp.log flashback_scn=123456789 parallel=4
+expdp system schemas=APP directory=DATA_PUMP_DIR dumpfile=app_%U.dmp logfile=app_exp.log flashback_scn=123456789 parallel=4
 ```
 
 Per PostgreSQL potresti usare strumenti intermedi:

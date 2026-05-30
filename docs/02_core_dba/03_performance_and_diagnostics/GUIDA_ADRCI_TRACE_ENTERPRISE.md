@@ -1,5 +1,22 @@
 # Guida ADRCI & Diagnostica Oracle Enterprise — Il Riferimento Definitivo
 
+## Obiettivo operativo
+
+Raccogliere diagnostica ADR e trace minimizzando impatto e perdita di evidenze.
+
+## Procedura operativa
+
+Identifica ADR home, finestra temporale e incidente; abilita trace mirato e disabilitalo appena raccolto.
+
+## Validazione finale
+
+Conserva alert log, incident package, trace e timeline nel ticket.
+
+## Troubleshooting rapido
+
+Se manca il trace atteso, controlla ADR home, privilegi, sessione target e finestra di raccolta.
+
+
 > Guida operativa completa per ADRCI, Alert Log, Trace File, SQL Trace, TKPROF,
 > Oradebug, Hanganalyze, Incident Management e IPS in ambienti Oracle 19c/21c/23ai.
 >
@@ -348,7 +365,7 @@ tkprof input.trc output.txt
 # Con ordinamento per elapsed time (RACCOMANDATO)
 tkprof prod1_ora_12345.trc /tmp/report.txt \
   sort=exeela,fchela,prsela \
-  explain=sys/pwd@PROD \
+  explain=/@PROD \
   sys=no \
   aggregate=yes \
   waits=yes

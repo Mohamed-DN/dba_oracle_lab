@@ -1,5 +1,22 @@
 # GUIDA: Attività DBA Essenziali — Batch, AWR, Patching, Data Pump, Security
 
+## Obiettivo operativo
+
+Collegare le attivita' DBA quotidiane a controlli, runbook e prove nel laboratorio.
+
+## Procedura operativa
+
+Seleziona il dominio, esegui il controllo con evidenze e apri il runbook quando emerge un'anomalia.
+
+## Validazione finale
+
+Ogni attivita' critica deve avere owner, frequenza, output atteso e percorso di escalation.
+
+## Troubleshooting rapido
+
+Se una procedura e' incompleta, registra il gap e usa la guida specialistica prima di operare.
+
+
 > **Obiettivo**: Questa guida copre le attività DBA quotidiane che mancavano nel lab: job batch, performance analysis (AWR/ADDM/ASH), patching, Data Pump import/export, security hardening e tablespace management.
 >
 > Ogni sezione include comandi pronti per il lab e note per la produzione.
@@ -480,7 +497,7 @@ mkdir -p /u01/app/oracle/dpump
 # -------------------------------------------------------
 # EXPORT FULL DATABASE
 # -------------------------------------------------------
-expdp system/<password> \
+expdp system \
     full=y \
     directory=DPUMP_DIR \
     dumpfile=fulldb_%U.dmp \
@@ -493,7 +510,7 @@ expdp system/<password> \
 # -------------------------------------------------------
 # EXPORT SCHEMA (più comune)
 # -------------------------------------------------------
-expdp system/<password> \
+expdp system \
     schemas=HR,OE \
     directory=DPUMP_DIR \
     dumpfile=schemas_hr_oe.dmp \
@@ -503,7 +520,7 @@ expdp system/<password> \
 # -------------------------------------------------------
 # EXPORT TABELLE SPECIFICHE
 # -------------------------------------------------------
-expdp hr/<password> \
+expdp hr \
     tables=HR.EMPLOYEES,HR.DEPARTMENTS \
     directory=DPUMP_DIR \
     dumpfile=tables_emp_dept.dmp \
@@ -512,7 +529,7 @@ expdp hr/<password> \
 # -------------------------------------------------------
 # EXPORT CON FILTRO (solo dati recenti)
 # -------------------------------------------------------
-expdp hr/<password> \
+expdp hr \
     tables=HR.EMPLOYEES \
     directory=DPUMP_DIR \
     dumpfile=emp_recent.dmp \
@@ -525,7 +542,7 @@ expdp hr/<password> \
 # -------------------------------------------------------
 # IMPORT SCHEMA SUL TARGET
 # -------------------------------------------------------
-impdp system/<password>@CLOUDDB \
+impdp /@CLOUDDB \
     schemas=HR \
     directory=DPUMP_DIR \
     dumpfile=schemas_hr_oe.dmp \
@@ -535,7 +552,7 @@ impdp system/<password>@CLOUDDB \
 # -------------------------------------------------------
 # IMPORT CON REMAP (cambia schema/tablespace)
 # -------------------------------------------------------
-impdp system/<password>@CLOUDDB \
+impdp /@CLOUDDB \
     schemas=HR \
     remap_schema=HR:HR_CLOUD \
     remap_tablespace=USERS:CLOUD_DATA \
@@ -555,7 +572,7 @@ impdp system/<password>@CLOUDDB \
 # Import diretto via DB Link (senza file .dmp!)
 # Utile quando non hai spazio per il dump
 
-impdp system/<password>@CLOUDDB \
+impdp /@CLOUDDB \
     network_link=RACDB_STBY_LINK \
     schemas=HR \
     logfile=network_import.log \

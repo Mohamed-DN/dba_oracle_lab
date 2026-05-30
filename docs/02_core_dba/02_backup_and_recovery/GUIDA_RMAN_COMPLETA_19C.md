@@ -1,13 +1,28 @@
 # GUIDA LAB RMAN ORACLE 19C - COMPLETA (RAC + DATA GUARD + CDB/PDB)
 
+## Obiettivo operativo
+
+Costruire backup ripristinabili e provare recovery fisici e logici rispetto a RPO e RTO.
+
+## Procedura operativa
+
+Configura retention e autobackup, esegui backup e `RESTORE ... VALIDATE`, quindi prova i runbook
+su un target di laboratorio prima di considerarli pronti per produzione.
+
+## Validazione finale
+
+Conserva evidenze dell'ultimo restore drill, della copertura archivelog e dei test `RECOVER TABLE`.
+
+## Troubleshooting rapido
+
+Se un restore non parte, controlla catalogo, piece disponibili, archivelog e spazio auxiliary.
+
 > [!NOTE]
 > **DOCUMENTI RMAN CORRELATI (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (questa guida - riferimento storico).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
-> - **Cheat Sheet Veloce**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi rapidi quotidiani).
-> - **Cheat Sheet Operativo**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari operativi comuni).
-> - **Cheat Sheet Enterprise**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (scenari complessi, TDE, BMR e tuning).
+> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
 
 > [!WARNING]
 > **Questa guida è stata sostituita dalla versione molto più dettagliata nella Fase 5.**
@@ -298,7 +313,8 @@ ORDER BY file_type;
 ### 9.1 Creazione owner catalog
 
 ```sql
-CREATE USER rman IDENTIFIED BY "StrongPwd#1"
+-- <PASSWORD_CATALOGO> e' un placeholder: scegli il valore fuori dal repository.
+CREATE USER rman IDENTIFIED BY "<PASSWORD_CATALOGO>"
   DEFAULT TABLESPACE users
   TEMPORARY TABLESPACE temp
   QUOTA UNLIMITED ON users;
@@ -309,10 +325,10 @@ GRANT RECOVERY_CATALOG_OWNER TO rman;
 ### 9.2 Creazione catalog e registrazione DB
 
 ```rman
-RMAN CATALOG rman/StrongPwd#1@CATDB;
+RMAN CATALOG /@CATDB;
 CREATE CATALOG;
 
-RMAN TARGET / CATALOG rman/StrongPwd#1@CATDB;
+RMAN TARGET / CATALOG /@CATDB;
 REGISTER DATABASE;
 RESYNC CATALOG;
 ```

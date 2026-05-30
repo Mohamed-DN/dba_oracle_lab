@@ -1,5 +1,23 @@
 # GUIDA COMPLETA: Listener, Services e DBA Monitoring Toolkit
 
+## Obiettivo operativo
+
+Diagnosticare connettivita', registrazione dinamica e service placement senza confondere listener
+attivo e servizio realmente disponibile.
+
+## Procedura operativa
+
+Controlla DNS, `tnsping`, `lsnrctl services`, stato istanza e configurazione `srvctl`; modifica
+`LOCAL_LISTENER` o `REMOTE_LISTENER` solo dopo aver isolato la causa.
+
+## Validazione finale
+
+Esegui una connessione applicativa al service e verifica istanza e servizio della sessione.
+
+## Troubleshooting rapido
+
+Per `ORA-12514`, verifica prima registrazione e service name; `tnsping` da solo non prova il login.
+
 > **Obiettivo**: Questa guida copre tutto ciò che serve per gestire Listener, Services, e monitorare un RAC Oracle in modo professionale. Include diagrammi, spiegazioni dettagliate e script pronti all'uso estratti dal repo [oraclebase/dba](https://github.com/oraclebase/dba).
 >
 > ⚠️ **Questa guida è pensata per essere eseguita nel lab E in produzione.**
@@ -289,7 +307,7 @@ GROUP BY service_name
 ORDER BY 2 DESC;
 
 -- Connessione tramite un servizio specifico
--- sqlplus user/pass@rac-scan:1521/ORCL_OLTP
+-- sqlplus user@rac-scan:1521/ORCL_OLTP
 ```
 
 ---
@@ -611,10 +629,10 @@ srvctl status scan_listener
 tnsping rac-scan
 
 # 5. Connettiti via SCAN
-sqlplus sys/<password>@rac-scan:1521/ORCL as sysdba
+sqlplus /@rac-scan:1521/ORCL as sysdba
 
 # 6. Connettiti direttamente al nodo 1
-sqlplus sys/<password>@rac1-vip:1521/ORCL1 as sysdba
+sqlplus /@rac1-vip:1521/ORCL1 as sysdba
 
 # 7. Verifica sessione e servizio
 SELECT instance_name, host_name, status FROM v$instance;
@@ -635,7 +653,7 @@ srvctl start service -db ORCL -service ORCL_OLTP
 srvctl status service -db ORCL
 
 # 4. Connettiti TRAMITE il servizio
-sqlplus hr/hr@rac-scan:1521/ORCL_OLTP
+sqlplus hr@rac-scan:1521/ORCL_OLTP
 
 # 5. Verifica in SQL*Plus
 SELECT service_name, COUNT(*)
@@ -675,7 +693,7 @@ sqlplus / as sysdba
 
 ```bash
 # Sessione 1 — Crea un lock
-sqlplus hr/hr@ORCL
+sqlplus hr@ORCL
 UPDATE employees SET salary = salary * 1.1 WHERE employee_id = 100;
 -- NON dare COMMIT!
 
@@ -705,7 +723,7 @@ ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 | 7 | Entry statica per DG | Controlla `listener.ora` | ☐ |
 | 8 | `tnsping` funziona | `tnsping ORCL` | ☐ |
 | 9 | Servizi custom creati | `srvctl status service -db ORCL` | ☐ |
-| 10 | Connessione via SCAN OK | `sqlplus user/pass@rac-scan/ORCL` | ☐ |
+| 10 | Connessione via SCAN OK | `sqlplus user@rac-scan/ORCL` | ☐ |
 
 ---
 

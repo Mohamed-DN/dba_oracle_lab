@@ -1,5 +1,21 @@
 # Ripasso Esami Oracle — Argomenti Completi
 
+## Obiettivo operativo
+
+Ripassare i concetti Oracle e collegarli a esercizi eseguibili nel laboratorio.
+
+## Procedura operativa
+
+Studia un dominio, prova i comandi nel lab e annota le risposte che non riesci ancora a esporre.
+
+## Validazione finale
+
+Completa una simulazione cronometrata e ripeti i temi deboli con il runbook correlato.
+
+## Troubleshooting rapido
+
+Se una risposta resta teorica, aggiungi evidenza, comando, rischio e validazione osservabile.
+
 > **Esami coperti**: 1Z0-082 (DB Administration I + SQL), 1Z0-083 (DB Administration II / DBA Professional 2)
 > **Dove praticare**: Ogni sezione ha un riferimento alla guida del lab dove puoi esercitarti.
 
@@ -175,7 +191,7 @@ CREATE PFILE='/tmp/init_backup.ora' FROM SPFILE;
 
 ```sql
 -- Crea utente con quota
-CREATE USER app_user IDENTIFIED BY "SecurePass123!"
+CREATE USER app_user IDENTIFIED BY "<PASSWORD_DA_SCEGLIERE>"
   DEFAULT TABLESPACE users
   TEMPORARY TABLESPACE temp
   QUOTA 500M ON users
@@ -329,16 +345,16 @@ SELECT * FROM ext_employees;  -- Legge direttamente il CSV!
 
 ```bash
 # Export schema
-expdp system/password SCHEMAS=hr DIRECTORY=dp_dir DUMPFILE=hr_export.dmp LOGFILE=hr_export.log
+expdp system SCHEMAS=hr DIRECTORY=dp_dir DUMPFILE=hr_export.dmp LOGFILE=hr_export.log
 
 # Import schema
-impdp system/password SCHEMAS=hr DIRECTORY=dp_dir DUMPFILE=hr_export.dmp LOGFILE=hr_import.log
+impdp system SCHEMAS=hr DIRECTORY=dp_dir DUMPFILE=hr_export.dmp LOGFILE=hr_import.log
 
 # Export full database
-expdp system/password FULL=y DIRECTORY=dp_dir DUMPFILE=full_%U.dmp PARALLEL=4
+expdp system FULL=y DIRECTORY=dp_dir DUMPFILE=full_%U.dmp PARALLEL=4
 
 # Export solo metadati (senza dati)
-expdp system/password SCHEMAS=hr CONTENT=METADATA_ONLY DIRECTORY=dp_dir DUMPFILE=hr_ddl.dmp
+expdp system SCHEMAS=hr CONTENT=METADATA_ONLY DIRECTORY=dp_dir DUMPFILE=hr_ddl.dmp
 ```
 
 ### 5.3 SQL*Loader
@@ -420,7 +436,7 @@ RACDB =
 |---|---|---|
 | **Local Naming** | `tnsnames.ora` | Client → DB specifico |
 | **Directory Naming** | LDAP/OID | Enterprise |
-| **Easy Connect** | Nessun file | `sqlplus user/pass@host:port/service` |
+| **Easy Connect** | Nessun file | `sqlplus user@host:port/service` |
 
 ---
 
@@ -734,7 +750,7 @@ srvctl config database -d RACDB       # Configurazione
 srvctl relocate service -d RACDB -s svc1 -i RACDB1 -t RACDB2  # Sposta servizio
 
 # Data Guard — DGMGRL
-dgmgrl sys/<password>
+dgmgrl /
 > show configuration;
 > show database 'RACDB';
 > switchover to 'RACDB_STBY';
@@ -768,7 +784,7 @@ RMAN> BACKUP AS COMPRESSED BACKUPSET DATABASE;
 
 # Encryption
 RMAN> CONFIGURE ENCRYPTION FOR DATABASE ON;
-RMAN> SET ENCRYPTION ON IDENTIFIED BY 'backup_password' ONLY;
+RMAN> SET ENCRYPTION ON IDENTIFIED BY '<BACKUP_ENCRYPTION_PASSWORD>' ONLY;
 
 # Multi-section backup (parallelo per file grandi)
 RMAN> BACKUP SECTION SIZE 2G DATABASE;
@@ -785,7 +801,7 @@ ALTER DATABASE OPEN RESETLOGS;
 
 ```sql
 -- Crea PDB
-CREATE PLUGGABLE DATABASE pdb2 ADMIN USER pdb2admin IDENTIFIED BY "Pass123!"
+CREATE PLUGGABLE DATABASE pdb2 ADMIN USER pdb2admin IDENTIFIED BY "<PASSWORD_DA_SCEGLIERE>"
   STORAGE (MAXSIZE 10G)
   FILE_NAME_CONVERT = ('+DATA/RACDB/pdbseed/', '+DATA/RACDB/pdb2/');
 
@@ -922,7 +938,7 @@ SELECT con_id, name, open_mode FROM v$pdbs;
 
 -- Crea PDB da seed
 CREATE PLUGGABLE DATABASE pdb_app
-  ADMIN USER pdbadmin IDENTIFIED BY "PdbApp123!"
+  ADMIN USER pdbadmin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
   STORAGE (MAXSIZE 10G MAX_SHARED_TEMP_SIZE 512M)
   DEFAULT TABLESPACE app_data
     DATAFILE '+DATA' SIZE 500M AUTOEXTEND ON
@@ -935,7 +951,7 @@ ALTER PLUGGABLE DATABASE pdb_app SAVE STATE;
 -- Connettiti alla PDB
 ALTER SESSION SET CONTAINER = pdb_app;
 -- oppure
-CONNECT pdbadmin/PdbApp123!@rac-scan:1521/pdb_app
+CONNECT pdbadmin@rac-scan:1521/pdb_app
 ```
 
 > **Perché SAVE STATE?** Senza SAVE STATE, dopo un riavvio del CDB le PDB restano in stato MOUNTED. Il DBA deve aprirle a mano ogni volta. SAVE STATE automatizza l'apertura.
@@ -1018,12 +1034,12 @@ STARTUP;
 
 ```sql
 -- Common User (utente nel CDB$ROOT, visibile in tutte le PDB)
-CREATE USER C##admin IDENTIFIED BY "Admin123!" CONTAINER=ALL;
+CREATE USER C##admin IDENTIFIED BY "<PASSWORD_COMMON_ADMIN>" CONTAINER=ALL;
 GRANT DBA TO C##admin CONTAINER=ALL;
 
 -- Local User (utente solo in una PDB specifica)
 ALTER SESSION SET CONTAINER = pdb_app;
-CREATE USER app_user IDENTIFIED BY "App123!";
+CREATE USER app_user IDENTIFIED BY "<PASSWORD_APP>";
 
 -- PDB Lockdown Profiles (limita cosa possono fare le PDB)
 CREATE LOCKDOWN PROFILE prod_lockdown;
@@ -1164,7 +1180,7 @@ RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 4;  # Parallelismo
 RMAN> CONFIGURE CHANNEL DEVICE TYPE DISK MAXPIECESIZE 2G;
 
 # Recovery catalog
-RMAN> CONNECT CATALOG rman_user/password@catdb
+RMAN> CONNECT CATALOG /@catdb
 RMAN> REGISTER DATABASE;
 RMAN> RESYNC CATALOG;
 ```
@@ -1220,8 +1236,7 @@ dbca -silent -createDatabase \
   -memoryPercentage 40 \
   -storageType ASM -diskGroupName +DATA \
   -recoveryGroupName +RECO \
-  -sysPassword "SysPass123!" -systemPassword "SysPass123!" \
-  -pdbAdminPassword "PdbPass123!"
+  -responseFile /secure/dbca-mydb-secrets.rsp
 
 # Deleta database
 dbca -silent -deleteDatabase -sourceDB MYDB
@@ -1230,6 +1245,9 @@ dbca -silent -deleteDatabase -sourceDB MYDB
 dbca -silent -configureDatabase -sourceDB MYDB \
   -registerWithDirService false
 ```
+
+Il response file DBCA contiene i secret richiesti: crealo fuori dal repository,
+proteggilo con `chmod 600` e rimuovilo dopo l'uso.
 
 #### 11.10.4 Upgrade Oracle Database
 

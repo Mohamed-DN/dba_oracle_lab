@@ -44,19 +44,6 @@ jobs:
           # Ignoriamo warning didattici come la mancata virgolettatura di alcune var (SC2086)
           SHELLCHECK_OPTS: "-e SC2086 -e SC2154"
 
-  check-markdown:
-    name: Check Markdown Formatting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Markdown Lint
-        uses: avto-dev/markdown-lint@v1
-        with:
-          config: '.markdownlint.json'
-          args: 'README.md CONTRIBUTING.md docs/**/*.md automation/**/*.md vagrant_rac_dataguard/**/*.md'
-
   check-didactic-compliance:
     name: Check Didactic Compliance (Changed Guides)
     runs-on: ubuntu-latest

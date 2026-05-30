@@ -9,7 +9,7 @@ banner () {
 	echo
 }
 
-: "${SQLPLUS_CONNECT:?Set SQLPLUS_CONNECT, example scott/<password>@orcl}"
+: "${SQLPLUS_CONNECT:?Set SQLPLUS_CONNECT, example /@orcl}"
 
 for sqlid in $(grep -Eo '^[[:alnum:]]{13}' logs/sql-buffer-ratios-awr_2024-03-05_14-22-10.log)
 do

@@ -67,8 +67,8 @@ Devi modificare gli script di backup (`rman_full_backup.sh` e `rman_incr_backup.
 
 ```rman
     -- Bilanciamento RAC: un canale lavora sul nodo 1, l'altro sul nodo 2
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT 'sys/<tua_password>@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT 'sys/<tua_password>@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
 ```
 
 **Cosa succede ora dietro le quinte?**

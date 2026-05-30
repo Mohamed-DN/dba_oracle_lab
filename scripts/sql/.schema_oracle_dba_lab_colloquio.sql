@@ -16,7 +16,7 @@
 --
 -- Esempio come SYS/SYSTEM:
 --
---   CREATE USER dba_lab IDENTIFIED BY "Lab_Oracle_2026"
+--   CREATE USER dba_lab IDENTIFIED BY "<PASSWORD_LAB_DBA>"
 --     DEFAULT TABLESPACE users
 --     TEMPORARY TABLESPACE temp
 --     QUOTA UNLIMITED ON users;
@@ -24,7 +24,7 @@
 --   GRANT create session, create table, create view, create sequence,
 --         create procedure, create job TO dba_lab;
 --
---   CONNECT dba_lab/"Lab_Oracle_2026"
+--   CONNECT dba_lab
 --   @.schema_oracle_dba_lab_colloquio.sql
 --------------------------------------------------------------------------------
 

@@ -305,7 +305,7 @@ Esegui l'import via Network Link (senza creare file fisici):
 
 ```bash
 # Su dbtarget
-impdp c##ggadmin/<password> \
+impdp c##ggadmin \
   NETWORK_LINK=source_db_link \
   SCHEMAS=HR,APP \
   FLASHBACK_SCN=3847291 \

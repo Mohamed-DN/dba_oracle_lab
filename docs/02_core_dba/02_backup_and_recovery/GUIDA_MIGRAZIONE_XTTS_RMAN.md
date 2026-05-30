@@ -1,5 +1,22 @@
 # GUIDA MONUMENTALE: Cross-Platform Transportable Tablespaces (XTTS) con RMAN Incremental Backups
 
+## Obiettivo operativo
+
+Migrare tablespace di grandi dimensioni riducendo downtime con incrementali RMAN verificati.
+
+## Procedura operativa
+
+Esegui preflight piattaforma, baseline, roll-forward incrementali e cutover con rollback documentato.
+
+## Validazione finale
+
+Conferma file, endian conversion, metadata importati e smoke test applicativi.
+
+## Troubleshooting rapido
+
+Se il roll-forward diverge, ferma il cutover e verifica SCN, backup piece e mapping dei file.
+
+
 
 ## [ARCHITETTURA VISIVA] XTTS RMAN Migration
 ```text
@@ -94,8 +111,8 @@ platformid=6
 
 # 3. Stringhe di connessione TNS per gli utenti amministrativi.
 # Devono puntare alle istanze corrette ed usare utenze dotate di privilegi SYSDBA.
-src_conn_str=sys/SecureEnterprisePassword123#@AIX_CRM_SORGENTE
-dest_conn_str=sys/SecureEnterprisePassword123#@LINUX_CRM_TARGET
+src_conn_str=/@AIX_CRM_SORGENTE
+dest_conn_str=/@LINUX_CRM_TARGET
 
 # 4. Directory di staging sul server SORGENTE.
 # Deve risiedere su un filesystem veloce dotato di spazio sufficiente per ospitare
@@ -262,7 +279,7 @@ Data Pump esporterà solo la struttura logica (sinonimi, grant, dizionario, vist
 
 ```bash
 # SUL SERVER SORGENTE
-expdp system/SecureEnterprisePassword123# \
+expdp system \
   transport_tablespaces=TS_CRM_DATA,TS_CRM_INDEX,TS_CRM_LOB,TS_CRM_ARCHIVE \
   transport_full_check=y \
   directory=DPUMP_DIR \
@@ -275,7 +292,7 @@ Trasferisci il file dump `xtts_metadata_plug.dmp` sul target. Colleghiamo fisica
 
 ```bash
 # SUL SERVER TARGET
-impdp system/SecureEnterprisePassword123# \
+impdp system \
   directory=DPUMP_DIR \
   dumpfile=xtts_metadata_plug.dmp \
   logfile=xtts_import_metadata.log \

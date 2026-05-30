@@ -335,7 +335,7 @@ MAP hr.jobs, TARGET hr.jobs;
 
 ```bash
 # Su Oracle — esporta i dati
-expdp ggadmin/<PASSWORD_SICURA> SCHEMAS=hr DIRECTORY=dp_dir \
+expdp ggadmin SCHEMAS=hr DIRECTORY=dp_dir \
   DUMPFILE=hr_initial.dmp LOGFILE=hr_initial.log
 
 # Converti e carica su PostgreSQL con ora2pg
@@ -385,7 +385,7 @@ psql -U ggadmin -d app_db -f /tmp/data.sql
 
 # Conta righe su entrambi i lati
 # Oracle
-sqlplus ggadmin/<PASSWORD_SICURA>
+sqlplus ggadmin
 SELECT COUNT(*) FROM hr.employees;
 
 # PostgreSQL

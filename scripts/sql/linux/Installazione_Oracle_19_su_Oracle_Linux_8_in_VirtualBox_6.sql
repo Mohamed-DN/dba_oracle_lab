@@ -242,7 +242,7 @@ oracle   19049 18860  0 06:05 pts/0    00:00:00 grep --color=auto pmon
 root        46     2  0 04:08 ?        00:00:00 [netns]
 oracle    5584     1  0 05:33 ?        00:00:00 /u01/app/oracle/product/19.0.0/dbhome_1/bin/tnslsnr LISTENER_DBTEST -inherit
 oracle   19081 18860  0 06:05 pts/0    00:00:00 grep --color=auto tns
-[oracle@oraclelx ~]$ sqlplus system/Ciao10@DBTEST
+[oracle@oraclelx ~]$ sqlplus /@DBTEST
 
 SQL*Plus: Release 19.0.0.0.0 - Production on Sat Nov 9 06:05:32 2019
 Version 19.3.0.0.0
@@ -264,7 +264,7 @@ oracle   19049 18860  0 06:05 pts/0    00:00:00 grep --color=auto pmon
 root        46     2  0 04:08 ?        00:00:00 [netns]
 oracle    5584     1  0 05:33 ?        00:00:00 /u01/app/oracle/product/19.0.0/dbhome_1/bin/tnslsnr LISTENER_DBTEST -inherit
 oracle   19081 18860  0 06:05 pts/0    00:00:00 grep --color=auto tns
-[oracle@oraclelx ~]$ sqlplus system/Ciao10@DBTEST
+[oracle@oraclelx ~]$ sqlplus /@DBTEST
 
 SQL*Plus: Release 19.0.0.0.0 - Production on Sat Nov 9 06:05:32 2019
 Version 19.3.0.0.0

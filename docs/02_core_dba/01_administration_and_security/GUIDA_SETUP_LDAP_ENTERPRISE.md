@@ -1,5 +1,22 @@
 # Guida Setup LDAP per Oracle Database — Enterprise
 
+## Obiettivo operativo
+
+Integrare autenticazione LDAP mantenendo separati secret, wallet e configurazione Oracle Net.
+
+## Procedura operativa
+
+Prepara directory, certificati e wallet; prova prima un account pilota e conserva un accesso locale break-glass.
+
+## Validazione finale
+
+Verifica login, TLS, audit e comportamento in caso di directory non raggiungibile.
+
+## Troubleshooting rapido
+
+Se il login fallisce, separa DNS, TLS, bind LDAP, mapping utente e configurazione Oracle.
+
+
 > Guida completa per configurare l'autenticazione centralizzata degli utenti
 > Oracle Database tramite LDAP. Copre Enterprise User Security (EUS),
 > Centrally Managed Users (CMU) per Active Directory, Oracle Internet Directory (OID),
@@ -111,7 +128,7 @@ dbca -silent -configureDatabase \
   -registerWithDirService true \
   -dirServiceUserName "cn=orcladmin" \
   -dirServicePassword "ldap_password" \
-  -walletPassword "wallet_password"
+  -walletPassword "<WALLET_PASSWORD>"
 
 # Opzione B: Usa NetCA
 netca /responsefile /home/oracle/netca_ldap.rsp
@@ -205,7 +222,7 @@ NAMES.DIRECTORY_PATH = (LDAP, TNSNAMES)
 
 ```bash
 # Connessione con utente LDAP
-sqlplus mario.rossi/ldap_password@PROD
+sqlplus mario.rossi@PROD
 
 # Verifica identita nella sessione
 SELECT SYS_CONTEXT('USERENV','ENTERPRISE_IDENTITY') AS enterprise_dn,
@@ -254,7 +271,7 @@ mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
   -createEntry ORACLE.SECURITY.USERNAME "svc_oracle_ad@company.com"
 
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
-  -createEntry ORACLE.SECURITY.PASSWORD "AD_Service_Password"
+  -createEntry ORACLE.SECURITY.PASSWORD "<NON_COPIARE_PASSWORD_SERVIZIO>"
 
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
   -createEntry ORACLE.SECURITY.DN "CN=svc_oracle_ad,OU=ServiceAccounts,DC=company,DC=com"
@@ -306,7 +323,7 @@ GRANT CONNECT, RESOURCE TO "APP_SERVICE";
 
 ```bash
 # Connessione con credenziali AD
-sqlplus "mario.rossi/AD_Password@PROD"
+sqlplus "mario.rossi@PROD"
 
 # Verifica
 SELECT SYS_CONTEXT('USERENV','AUTHENTICATED_IDENTITY') FROM dual;
@@ -411,7 +428,7 @@ EOF
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
   -createEntry oracle.security.client.username "cn=orcladmin"
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
-  -createEntry oracle.security.client.password "ldap_admin_pwd"
+  -createEntry oracle.security.client.password "<NON_COPIARE_PASSWORD_LDAP_ADMIN>"
 
 # 3. Verifica
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet -listEntries
@@ -586,7 +603,7 @@ mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
   "CN=svc_oracle_cmu,OU=ServiceAccounts,DC=company,DC=com"
 
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
-  -createEntry ORACLE.SECURITY.PASSWORD "ServiceAccountPwd"
+  -createEntry ORACLE.SECURITY.PASSWORD "<NON_COPIARE_PASSWORD_SERVIZIO>"
 
 mkstore -wrl /u01/app/oracle/admin/PROD/wallet \
   -createEntry ORACLE.SECURITY.USERNAME "svc_oracle_cmu@company.com"
@@ -646,7 +663,7 @@ telnet ad.company.com 636
 
 ```bash
 # Connessione con utente LDAP/AD
-sqlplus mario.rossi/ldap_password@PROD
+sqlplus mario.rossi@PROD
 
 # Una volta connesso, verifica identita
 SELECT USER FROM dual;
@@ -736,7 +753,7 @@ ORDER BY event_timestamp DESC;
 -- SEMPRE mantenere almeno 1 utente DBA locale per emergenza
 -- In caso di LDAP down, questo utente permette l'accesso
 
-CREATE USER dba_emergency IDENTIFIED BY "EmergP@ss!" 
+CREATE USER dba_emergency IDENTIFIED BY "<PASSWORD_BREAK_GLASS>"
   PROFILE DEFAULT ACCOUNT UNLOCK;
 GRANT DBA TO dba_emergency;
 GRANT SYSDBA TO dba_emergency;
@@ -886,7 +903,7 @@ Consente a un'applicazione di connettersi con un utente "proxy" e assumere l'ide
 ALTER USER app_schema GRANT CONNECT THROUGH enterprise_proxy_user;
 
 -- Connessione proxy
--- sqlplus enterprise_proxy_user[end_user]/proxy_pwd@PROD
+-- sqlplus enterprise_proxy_user[end_user]@PROD
 -- La sessione opera come end_user ma si connette come proxy
 ```
 

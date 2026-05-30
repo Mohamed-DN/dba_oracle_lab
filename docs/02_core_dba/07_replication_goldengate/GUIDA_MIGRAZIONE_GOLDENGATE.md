@@ -140,7 +140,7 @@ Grant dettagliati e alternative per CDB/PDB: [GUIDA_GOLDENGATE_GRANTS_PRIVILEGI_
 
 ```bash
 # Su SOURCE: Export completo dello schema
-expdp ggadmin/<password> \
+expdp ggadmin \
     SCHEMAS=HR,FINANCE,INVENTORY \
     DIRECTORY=DATA_PUMP_DIR \
     DUMPFILE=migration_%U.dmp \
@@ -160,7 +160,7 @@ expdp ggadmin/<password> \
 scp migration_*.dmp oracle@target:/u01/app/oracle/datapump/
 
 # Su TARGET: Import
-impdp ggadmin/<password> \
+impdp ggadmin \
     SCHEMAS=HR,FINANCE,INVENTORY \
     DIRECTORY=DATA_PUMP_DIR \
     DUMPFILE=migration_%U.dmp \
@@ -336,7 +336,7 @@ Per avere un piano di rollback, configura GoldenGate anche al contrario:
 
 ```
 Source --Extract--&gt; Target    (migrazione)
-Source &amp;lt;--Replicat-- Target    (fallback)
+Source <--Replicat-- Target    (fallback)
 ```
 
 Se qualcosa va storto dopo il cutover, puoi riportare il traffico sul Source senza perdere i dati inseriti sul Target.
