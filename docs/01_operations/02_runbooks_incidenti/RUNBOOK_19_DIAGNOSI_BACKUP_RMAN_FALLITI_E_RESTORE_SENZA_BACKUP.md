@@ -57,7 +57,7 @@ Fornire un framework completo per la diagnosi della root cause (RCA) dei fallime
 
 ---
 
-## PARTE I — CLASSIFICAZIONE E TRIAGE
+## PARTE I CLASSIFICAZIONE E TRIAGE
 
 ---
 
@@ -202,13 +202,13 @@ ORA-27072: File I/O error                    <-- QUESTO E IL ROOT CAUSE
 
 ---
 
-## PARTE II — ROOT CAUSE ANALYSIS PER CATEGORIA
+## PARTE II ROOT CAUSE ANALYSIS PER CATEGORIA
 
 ---
 
 ## 3. CATEGORIA: Errori di Spazio (Storage)
 
-### 3.1 ORA-19809 / ORA-19804: FRA Limit Exceeded
+### 3.1 ORA-19809 ORA-19804: FRA Limit Exceeded
 
 **Sintomo**: `ORA-19809: limit exceeded for recovery files`
 
@@ -255,7 +255,7 @@ Come ORA-19809 ma e un warning. Intervieni PRIMA che diventi critico.
 
 ---
 
-### 3.3 ORA-00257: Archiver Error / Archiver Stuck
+### 3.3 ORA-00257: Archiver Error Archiver Stuck
 
 **Sintomo**: `ORA-00257: archiver error. Connect internal only, until freed.`
 
@@ -273,7 +273,13 @@ SELECT * FROM v$recovery_file_dest;
 df -h $(dirname $(sqlplus -s / as sysdba <<< "SELECT value FROM v\$parameter WHERE name='log_archive_dest_1';"))
 ```
 
-**Remediation**: Libera spazio FRA o nella destinazione archivelog. L'archiver riparte automaticamente.
+**Remediation**: Libera spazio FRA o nella destinazione archivelog. L'archiver
+riparte automaticamente. Prima di eliminare archivelog verifica deletion policy,
+backup disponibili e stato Data Guard. Se lo standby e' in lag o irraggiungibile,
+usa il caso
+[DG-061](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag):
+evita purge per eta' e `rm` diretto; `DELETE FORCE` e' solo l'ultima scelta Sev1
+autorizzata dopo aver registrato le sequenze a rischio.
 
 ---
 
@@ -428,7 +434,7 @@ SHOW PARAMETER db_recovery_file_dest_size;
 
 ## 5. CATEGORIA: Errori di Corruzione
 
-### 5.1 ORA-01578 / RMAN-08120: Block Corruption
+### 5.1 ORA-01578 RMAN-08120: Block Corruption
 
 **Sintomo**: `ORA-01578: ORACLE data block corrupted (file # x, block # y)`
 

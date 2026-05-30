@@ -4,6 +4,26 @@
 
 ---
 
+## Obiettivi didattici
+
+- Diagnosticare con evidenze Oracle e Linux prima di modificare lo stato.
+- Separare workaround, root cause, validazione e prevenzione.
+
+## Procedura operativa
+
+Applica il metodo osserva, misura, ipotizza, verifica e documenta. Negli incidenti
+critici raccogli prima timeline e output non distruttivi.
+
+## Validazione finale
+
+Confronta metriche before e after, verifica il workload applicativo e registra
+il rischio residuo.
+
+## Troubleshooting rapido
+
+Se la causa non e' dimostrata, non applicare tuning casuale: amplia le evidenze
+e usa il runbook specifico per il sintomo.
+
 ## PARTE 1: IL METODO — Come Pensa un DBA
 
 ### 1.1 La Regola d'Oro: Non Indovinare Mai
@@ -711,8 +731,9 @@ ORDER BY percent_space_used DESC;
 -- Se FRA è piena (>90%):
 -- 1. Cancella backup obsoleti:
 --    rman TARGET / <<< "DELETE NOPROMPT OBSOLETE;"
--- 2. Cancella archivelog già applicati allo standby:
---    rman TARGET / <<< "DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';"
+-- 2. Verifica deletion policy ed elimina solo archivelog eleggibili:
+--    rman TARGET / <<< "SHOW ARCHIVELOG DELETION POLICY; DELETE NOPROMPT ARCHIVELOG ALL;"
+--    Con Data Guard controlla prima transport/apply lag.
 -- 3. Se non basta, aumenta la FRA:
 --    ALTER SYSTEM SET db_recovery_file_dest_size = 25G SCOPE=BOTH SID='*';
 ```
@@ -1158,9 +1179,9 @@ tail -100 /u01/app/19.0.0/grid/log/$(hostname)/crsd/crsd.log
 
 ### Documentazione Oracle 19c
 - **Performance Tuning Guide** (LA bibbia del tuning): https://docs.oracle.com/en/database/oracle/oracle-database/19/tgdba/
-- **Wait Events Reference** (tutti i wait events spiegati): https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/database-wait-events-statistics.html
+- **Wait Events Reference** (tutti i wait events spiegati): https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/descriptions-of-wait-events.html
 - **AWR & ADDM**: https://docs.oracle.com/en/database/oracle/oracle-database/19/tgdba/automatic-performance-diagnostics.html
-- **ASH**: https://docs.oracle.com/en/database/oracle/oracle-database/19/tgdba/active-session-history.html
+- **ASH**: https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/V-ACTIVE_SESSION_HISTORY.html
 - **SQL Tuning Guide**: https://docs.oracle.com/en/database/oracle/oracle-database/19/tgsql/
 - **RAC Performance Tuning**: https://docs.oracle.com/en/database/oracle/oracle-database/19/racad/configuring-recovery-manager-and-archiving.html
 

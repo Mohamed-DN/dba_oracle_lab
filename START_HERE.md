@@ -67,6 +67,15 @@ Apri:
 - [Diagnosi RMAN e DR](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
 - [RMAN + Data Guard Recovery/DR](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
 
+## Se Devi Preparare Un Colloquio Oracle DBA
+
+Apri:
+
+1. [Dossier Colloquio Oracle DBA Produzione](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_COLLOQUIO_ORACLE_DBA_PRODUZIONE.md)
+2. [Ripasso Concetti DBA](./docs/04_governance_learning/03_esami_e_carriera/GUIDA_RIPASSO_CONCETTI_DBA.md)
+3. [RMAN Completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
+4. [RMAN + Data Guard Recovery/DR](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
+
 ## Se Devi Gestire Operativita Enterprise
 
 Apri:
@@ -113,6 +122,7 @@ Apri:
 | SQL lento | [Query Lenta](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_05_QUERY_LENTA.md) |
 | Spazio pieno | [Tablespace Pieno](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_06_TABLESPACE_PIENO.md) |
 | FRA piena | [Purge Log Oracle](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_17_PURGE_LOG_ORACLE.md) |
+| FRA piena con standby in lag o irraggiungibile | [RMAN + Data Guard Recovery/DR, DG-061](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |
 | ASM diskgroup pieno o dischi offline | [ASM Storage Incidenti](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_25_ASM_STORAGE_INCIDENTI_ENTERPRISE.md) |
 | ORA-12514/12541 o service non registrato | [Listener/SCAN/Services RAC](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_26_LISTENER_SCAN_SERVICES_RAC.md) |
 | Wallet TDE chiuso o restore cifrato | [TDE Wallet/Keystore](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_27_TDE_WALLET_KEYSTORE_RUNBOOK.md) |

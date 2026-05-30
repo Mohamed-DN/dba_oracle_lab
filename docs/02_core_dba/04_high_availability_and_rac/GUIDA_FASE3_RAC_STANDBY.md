@@ -2264,7 +2264,7 @@ sqlplus -s / as sysdba <<< "SELECT name, value, unit FROM v\$dataguard_stats WHE
 | `ORA-12528: TNS:listener: all ... blocked` | DB in NOMOUNT senza `UR=A` | Aggiungi `(UR=A)` nel TNS dello standby |
 | `ORA-16055: FAL request rejected` | `log_archive_dest` errato | Correggi su ENTRAMBI i lati (vedi sotto) |
 | RMAN Duplicate timeout/hang | Rete lenta o sessione SSH caduta | Usa `nohup` o `screen`, verifica rete |
-| MRP non parte: `ORA-00270` | FRA piena sullo standby | Pulisci archivelog: `DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';` |
+| MRP non parte: `ORA-00270` | FRA piena sullo standby | Verifica deletion policy e apply lag; elimina solo archivelog eleggibili con RMAN. Non usare purge cieco per eta'. |
 | `v$archive_gap` mostra gap | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB_DG' SCOPE=BOTH;` → FAL recupera automaticamente |
 
 ### Valutazione `ARCn: Archiving not possible: error count exceeded`

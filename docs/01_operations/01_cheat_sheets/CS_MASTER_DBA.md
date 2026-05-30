@@ -633,9 +633,13 @@ REPORT OBSOLETE;
 DELETE OBSOLETE;
 DELETE NOPROMPT OBSOLETE;
 
--- Elimina i backup e gli archivelog più vecchi di una settimana
+-- Elimina i backup più vecchi di una settimana.
 DELETE BACKUP COMPLETED BEFORE 'SYSDATE-7';
-DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-7';
+
+-- Per gli archivelog applica la deletion policy configurata.
+-- In Data Guard verifica prima transport/apply lag.
+SHOW ARCHIVELOG DELETION POLICY;
+DELETE NOPROMPT ARCHIVELOG ALL;
 ```
 
 ### 5) Configurazione Globale RMAN (Best Practices)

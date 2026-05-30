@@ -8,10 +8,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - **Fase 4B Observer FSFO**: guida operativa per Observer dedicato, wallet SEPS,
   attivazione graduale e backup Observer opzionale.
+- **Dossier Colloquio Oracle DBA Produzione**: 260 domande tecniche, 15 drill
+  Severity 1, piano di ripasso e mock interview.
 
 ### Changed
 
 - **Data Guard FSFO**: consolidati setup, rollback e drill nella nuova fase core.
+- **RMAN Recover Table**: resa visibile la procedura di recupero tabella nei
+  riferimenti rapidi e corretta la sintassi didattica.
+- **FRA e Data Guard**: rafforzati i guardrail operativi per `ORA-00257`
+  quando lo standby e' in lag o irraggiungibile.
 
 ## [2.0.0] - 2026-05-14
 ### Added
