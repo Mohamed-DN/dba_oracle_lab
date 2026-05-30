@@ -96,9 +96,13 @@ Ogni database di produzione deve essere classificato. L'audit deve verificare la
 - **Check 14**: Gli Standby Redo Logs (SRL) sono presenti e correttamente dimensionati (n+1 rispetto agli Online Redo Logs)?
 
 ### 5.2. Automazione Failover (FSFO)
-- **Check 15**: L'Observer è in esecuzione in una location geograficamente distinta da Primary e Standby?
+- **Guida operativa**: [Fase 4B: Observer Server e FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md)
+- **Check 15**: L'Observer è in esecuzione su un host dedicato e in un dominio di guasto distinto da Primary e Standby?
 - **Check 16**: `FastStartFailoverThreshold` è impostato in base alla stabilità della rete (Default 30s)?
 - **Check 17**: La configurazione DGMGRL è priva di errori o avvisi (`show configuration`)?
+- **Check 18**: `VALIDATE FAST_START FAILOVER` non segnala blocchi?
+- **Check 19**: `SHOW OBSERVER` identifica `observer1` e l'eventuale backup Observer?
+- **Check 20**: Le credenziali Observer sono archiviate in wallet SEPS senza secret hardcoded?
 
 ---
 
