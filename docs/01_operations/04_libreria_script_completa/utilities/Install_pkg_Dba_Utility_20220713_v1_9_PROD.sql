@@ -5,7 +5,7 @@
 -- 28052022  Modificato Script per drop e creazione automatica job temp e undo usage
 
 -- 28052022  Esecuzione su tutti i PDB di un CDB:
---               $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/catcon.pl -d /tmp -l /tmp -C 'CDB$ROOT PDB$SEED NEXI_PDB_TEMPLATE' -b pkgdba /tmp/Install_pkg_Dba_Utility_20220531.sql
+--               $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/rdbms/admin/catcon.pl -d /tmp -l /tmp -C 'CDB$ROOT PDB$SEED PEYTECH_PDB_TEMPLATE' -b pkgdba /tmp/Install_pkg_Dba_Utility_20220531.sql
 
 -- 31052022  Modificato timing dei job scelto randomicamente per evitare che partano allo stesso orario sui PDB
 
@@ -271,9 +271,9 @@ BEGIN
           insert into dba_op.PURGE_TABLE_AM_USERS values ('ICTEAM_OBJ'      );
           insert into dba_op.PURGE_TABLE_AM_USERS values ('SOPRA_OBJ'       );
           insert into dba_op.PURGE_TABLE_AM_USERS values ('REPLY_OBJ'       );
-          insert into dba_op.PURGE_TABLE_AM_USERS values ('NEXI_DIGITAL_OBJ');
-          insert into dba_op.PURGE_TABLE_AM_USERS values ('NEXI_OBJ');
-          insert into dba_op.PURGE_TABLE_AM_USERS values ('NEXI_DST_OBJ');
+          insert into dba_op.PURGE_TABLE_AM_USERS values ('PEYTECH_DIGITAL_OBJ');
+          insert into dba_op.PURGE_TABLE_AM_USERS values ('PEYTECH_OBJ');
+          insert into dba_op.PURGE_TABLE_AM_USERS values ('PEYTECH_DST_OBJ');
 
         ELSE
           DBMS_OUTPUT.PUT_LINE('Table PURGE_TABLE_AM_USERS already exists , it will not be populated again. Continue');
@@ -1699,9 +1699,9 @@ is
 --  - ICTEIM_OBJ
 --  - REPLAY_OBJ          -- inserita il 13-4-2018
 --  - SOPRA_OBJ           -- inserita il 13-4-2018
---  - NEXI_DIGITAL_OBJ    -- inserita il 20-4-2018
---  - NEXI_OBJ            -- inserita il 13-9-2019
---  - NEXI_DST_OBJ        -- inserita il 05-5-2021
+--  - PEYTECH_DIGITAL_OBJ    -- inserita il 20-4-2018
+--  - PEYTECH_OBJ            -- inserita il 13-9-2019
+--  - PEYTECH_DST_OBJ        -- inserita il 05-5-2021
 --
 --  !!!!!! Tali utenze sono inserite nella clausola descritta in basso
 --
@@ -1749,7 +1749,7 @@ select owner,object_name,created from dba_objects
 ----in ('<UTENTE_OBJ','........') ----------------------------------
 --------------------------------------------------------------------
 ---!!!!! ATTENZIONE NON COMMENTARE QUESTA CLAUSOLA !!!! ------------
- ) where owner in ('ICTEAM_OBJ','SOPRA_OBJ','REPLY_OBJ','NEXI_DIGITAL_OBJ','NEXI_OBJ','NEXI_DST_OBJ')
+ ) where owner in ('ICTEAM_OBJ','SOPRA_OBJ','REPLY_OBJ','PEYTECH_DIGITAL_OBJ','PEYTECH_OBJ','PEYTECH_DST_OBJ')
      and owner in ( select username from dba_op.purge_table_am_users )
    )
   loop

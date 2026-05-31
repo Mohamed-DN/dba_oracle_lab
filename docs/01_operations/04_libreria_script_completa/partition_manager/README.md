@@ -1,7 +1,7 @@
 # 10 — Partition Manager
 
 > Package PL/SQL per la gestione automatica delle partizioni Oracle.
-> Versioni dalla v2.31 alla v2.36, sviluppate e mantenute dal team DBA Nexi.
+> Versioni dalla v2.31 alla v2.36, sviluppate e mantenute dal team DBA Peytech.
 
 ---
 

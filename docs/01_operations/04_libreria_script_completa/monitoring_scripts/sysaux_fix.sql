@@ -114,7 +114,7 @@ https://mikedietrichde.com/2020/05/28/do-you-love-unexpected-surprises-sys_auto_
 -- STATISTICS ADVISOR
 -- SYSAUX Tablespace Grows Rapidly After Upgrading Database to 12.2.0.1 or Above Due To Statistics Advisor (Doc ID 2305512.1)
 -- How To Purge Optimizer Statistics Advisor Old Records From 12.2 Onwards (Doc ID 2660128.1)
--- NEXI: GBWEB(P1AVP, P1SECP, P1RSKP, P1WCBP) pulite 07 maggio 25
+-- PEYTECH: GBWEB(P1AVP, P1SECP, P1RSKP, P1WCBP) pulite 07 maggio 25
 -- SIA: RABNLP,RAMPSP,RAEDKP,RACSIP / GTATMGEP / MIRP / FALCON / T2SMTX / pwcdbpep/sep
 
 OWNER                  SEGMENT_NAME                      SEGMENT_TYPE               MB   COUNT(1)
