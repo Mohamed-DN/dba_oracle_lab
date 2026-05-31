@@ -10,6 +10,7 @@ $artifactDir = Join-Path $RepositoryRoot "artifacts\shams_project"
 
 $fullSources = @(
     (Join-Path $projectDir "GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md"),
+    (Join-Path $projectDir "GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md"),
     (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md")
 )
 $runSources = @(
@@ -23,7 +24,8 @@ $portfolioSources = @(
     (Join-Path $projectDir "GUIDA_04_M24SHAMS_RAC_CDB_DATAGUARD_OBSERVER.md"),
     (Join-Path $projectDir "GUIDA_05_OBSERVER_FSFO_PEYTECH.md"),
     (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md"),
-    (Join-Path $projectDir "GUIDA_07_HOST_RAC_GRID_ASM_19C.md")
+    (Join-Path $projectDir "GUIDA_07_HOST_RAC_GRID_ASM_19C.md"),
+    (Join-Path $projectDir "GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md")
 )
 $variantRunSources = @(
     (Join-Path $projectDir "RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md")

@@ -277,7 +277,11 @@ In DBCA seleziona:
 `M24SHAMS` e' il nome base condiviso dalla coppia Data Guard.
 `M24SHAMSPEC` identifica invece primary, datacenter `PE` e collaudo `C`.
 Lo standby non viene creato con un secondo wizard DBCA: usa
-`DB_UNIQUE_NAME=M24SHAMSSEC` e SID `M24SHAMSSEC` durante il duplicate RMAN.
+`DB_UNIQUE_NAME=M24SHAMSSEC` e SID locale auxiliary `M24SHAMSSEC` durante il
+duplicate RMAN.
+
+Per verificare ogni scelta GUI usa la
+[matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md).
 
 Revisiona gli script generati. Verifica almeno:
 

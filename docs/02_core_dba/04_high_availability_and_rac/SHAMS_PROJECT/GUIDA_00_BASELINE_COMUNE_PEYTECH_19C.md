@@ -45,8 +45,9 @@ database preferire CDB/PDB salvo vincoli applicativi documentati.
 | Primary `DB_UNIQUE_NAME` | `M24SHAMSPEC` |
 | Standby `DB_UNIQUE_NAME` | `M24SHAMSSEC` |
 | DBCA Global Database Name primary | `M24SHAMSPEC` oppure `M24SHAMSPEC.<DB_DOMAIN>` |
-| DBCA SID o SID prefix primary | `M24SHAMSPEC` |
-| SID single instance standby | `M24SHAMSSEC` |
+| DBCA SID primary single instance | `M24SHAMSPEC` |
+| DBCA SID prefix primary RAC | `M24SHAMSPEC` |
+| SID locale auxiliary standby single instance | `M24SHAMSSEC` |
 | PDB applicativo, solo CDB | `M24SHAMSC_APP` |
 | Service read-write | `M24SHAMSC_PRY` |
 | Service Active Data Guard | `M24SHAMSC_RO` |
@@ -122,18 +123,23 @@ Regole comuni:
 
 1. primary e physical standby condividono `DB_NAME` e DBID;
 2. `DB_UNIQUE_NAME` deve essere diverso;
-3. in DBCA sul primary inserire prima Global Database Name e SID prefix
-   site-specific, quindi aprire `All Initialization Parameters` e verificare
+3. in DBCA sul primary inserire Global Database Name site-specific
+   `M24SHAMSPEC[.<DB_DOMAIN>]`; usare SID `M24SHAMSPEC` per single instance
+   oppure SID prefix `M24SHAMSPEC` per RAC;
+4. aprire `All Initialization Parameters` e verificare
    `DB_NAME=M24SHAMS`, `DB_UNIQUE_NAME=M24SHAMSPEC` e inclusione nello SPFILE;
-4. lo standby si crea con RMAN duplicate o metodo fisico approvato, non con
+5. lo standby si crea con RMAN duplicate o metodo fisico approvato, non con
    DBCA indipendente;
-5. sullo standby usare SID site-specific `M24SHAMSSEC` oppure
-   `M24SHAMSSEC1/2` per RAC;
-6. abilitare `ARCHIVELOG`, `FORCE LOGGING`, OMF, FRA e
+6. sullo standby usare il SID locale auxiliary `M24SHAMSSEC` oppure
+   `M24SHAMSSEC1/2` per RAC, secondo la SOP scelta;
+7. abilitare `ARCHIVELOG`, `FORCE LOGGING`, OMF, FRA e
    `STANDBY_FILE_MANAGEMENT=AUTO`;
-7. creare SRL su entrambi i ruoli prima di uno switchover;
-8. usare password file coerenti, prompt interattivo o wallet SEPS;
-9. non scrivere password negli argomenti shell.
+8. creare SRL su entrambi i ruoli prima di uno switchover;
+9. usare password file coerenti, prompt interattivo o wallet SEPS;
+10. non scrivere password negli argomenti shell.
+
+Per la compilazione puntuale del wizard usare la
+[matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md).
 
 ### 2. Redo e SRL
 
