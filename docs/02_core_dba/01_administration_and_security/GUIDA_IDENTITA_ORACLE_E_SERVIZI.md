@@ -6,6 +6,29 @@
 
 ---
 
+## Obiettivo operativo
+
+Distinguere correttamente `DB_NAME`, `DB_UNIQUE_NAME`, `ORACLE_SID`,
+`INSTANCE_NAME` e `SERVICE_NAME` prima di configurare listener, servizi
+applicativi o Data Guard.
+
+## Procedura operativa
+
+Raccogli le identita' del database con le query della guida, confrontale con
+listener e servizi registrati, quindi applica il modello role-based appropriato
+all'architettura.
+
+## Validazione finale
+
+Verifica che primary e standby condividano `DB_NAME`, usino `DB_UNIQUE_NAME`
+distinti e pubblichino solo i servizi coerenti con il ruolo corrente.
+
+## Troubleshooting rapido
+
+Se un client non raggiunge il servizio atteso, controlla prima identita',
+registrazione listener, ruolo Data Guard e configurazione `srvctl` o
+`DBMS_SERVICE`.
+
 ## 📑 Indice
 
 1. [La Mappa delle Identità Oracle](#-1-la-mappa-delle-identità-oracle)
