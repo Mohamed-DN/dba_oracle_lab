@@ -10,6 +10,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
   attivazione graduale e backup Observer opzionale.
 - **Dossier Colloquio Oracle DBA Produzione**: 260 domande tecniche, 15 drill
   Severity 1, piano di ripasso e mock interview.
+- **SOP Enterprise M24SHAMS Staging Data Guard**: documentazione specifica per
+  single instance non-CDB 19c su Oracle Restart, allegato host, run sheet e
+  artifact DOCX/PDF per il change operativo.
 
 ### Changed
 
