@@ -192,6 +192,45 @@ DISABLE FAST_START FAILOVER;
 STOP OBSERVER observer1;
 ```
 
+### 4.4 Snapshot Standby (Test su dati reali senza rischi)
+
+Lo Snapshot Standby converte temporaneamente uno standby fisico in un database
+aperto READ WRITE per test, validazione deploy, UAT. Tutte le modifiche locali
+vengono annullate con Flashback Database al ritorno.
+
+```dgmgrl
+-- Convertire physical standby → snapshot standby (apre in R/W)
+CONVERT DATABASE 'STANDBY_DB' TO SNAPSHOT STANDBY;
+
+-- Verifica stato
+SHOW CONFIGURATION;
+SHOW DATABASE 'STANDBY_DB';
+-- Role:  SNAPSHOT STANDBY
+-- Stato: READ WRITE (testabile dall'applicazione)
+
+-- ... esegui test, deploy, UAT ...
+
+-- Convertire snapshot standby → physical standby (annulla tutto)
+CONVERT DATABASE 'STANDBY_DB' TO PHYSICAL STANDBY;
+
+-- Verifica ritorno
+SHOW CONFIGURATION;
+-- Role:  PHYSICAL STANDBY
+-- MRP riprende automaticamente e recupera il redo accumulato
+```
+
+**Prerequisiti**: Flashback Database abilitato sullo standby, FRA con spazio
+sufficiente per i flashback log durante il periodo snapshot.
+
+**Limitazioni**:
+- Lo snapshot standby **non può** essere target di switchover/failover.
+- Non usarlo come unico standby in MaxProtection.
+- Il redo dal primary viene ricevuto e archiviato ma **non applicato** — il lag cresce.
+- Limitare la durata per contenere il lag di riallineamento.
+
+> **Ref**: Oracle 19c Data Guard Broker — CONVERT DATABASE command.
+> https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/
+
 ---
 
 ## 5. Proprietà della Configurazione

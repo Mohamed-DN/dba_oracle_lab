@@ -321,9 +321,44 @@ srvctl modify database -d STANDBY_DB -r PHYSICAL_STANDBY -s MOUNT
 srvctl config database -d STANDBY_DB | grep -i "start\|role\|policy"
 ```
 
+## 8. OPatch & Patching RAC (Rolling Patching)
+
+In ambiente RAC 19c, l'utility `opatchauto` orchestra in modo automatico lo stop/start
+dello stack Grid Infrastructure (GI) e del Database per permettere il **Rolling Patching**
+(zero downtime applicativo). Va eseguito come utente `root`.
+
+```bash
+# 1. Prerequisiti: eseguire sempre come root
+export PATH=$GRID_HOME/OPatch:$PATH
+
+# 2. Analyze (Dry-run, verifica conflitti senza installare)
+opatchauto apply /u01/stage/35042068 -analyze
+
+# 3. Applica la patch sul nodo corrente (eseguire nodo per nodo per Zero Downtime)
+opatchauto apply /u01/stage/35042068
+
+# 4. Applica patch solo a un Oracle Home specifico (es. solo DB Home)
+opatchauto apply /u01/stage/35042068 -oh $ORACLE_HOME
+
+# 5. Rollback di una patch (sempre come root)
+opatchauto rollback -id 35042068
+
+# 6. Riprendere un'installazione fallita dopo aver risolto l'errore
+opatchauto resume
+```
+
+### 8.1 Verifiche OPatch (utente oracle/grid)
+```bash
+# Mostra l'inventario delle patch installate
+$ORACLE_HOME/OPatch/opatch lsinventory
+
+# Cerca una patch specifica
+$ORACLE_HOME/OPatch/opatch lsinventory | grep 35042068
+```
+
 ---
 
-## 8. Troubleshooting Rapido
+## 9. Troubleshooting Rapido
 
 | Sintomo | Diagnostica | Fix |
 |---|---|---|
@@ -334,6 +369,7 @@ srvctl config database -d STANDBY_DB | grep -i "start\|role\|policy"
 | Servizio non parte | `srvctl config service -d DB -s SVC` | Verificare preferred/available, `srvctl start service` |
 | Risorsa UNKNOWN | `crsctl stat res -t` | `crsctl stop/start resource <name>` |
 | OCR corrotto | `ocrcheck` | `ocrconfig -restore` da backup |
+| Patching fallito | `$GRID_HOME/cfgtoollogs/opatchauto` | `opatchauto resume` post fix |
 
 ### Log importanti
 ```bash
@@ -353,7 +389,7 @@ $GRID_HOME/log/diag/tnslsnr/<hostname>/listener_scan*/
 
 ---
 
-## 9. Quick Reference
+## 10. Quick Reference
 
 ```text
 +-------------------------------+----------------------------------------------+

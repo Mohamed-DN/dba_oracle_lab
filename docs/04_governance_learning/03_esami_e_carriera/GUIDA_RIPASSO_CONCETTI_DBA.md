@@ -591,14 +591,26 @@ graph TD
 ### Q73: Quando usi AWR e quando ASH?
 *   **Definizione**: Usi **AWR** per capire problemi avvenuti ieri o trend di crescita (es. perché il DB è lento ogni lunedì mattina?). Usi **ASH** quando il problema è successo 5 minuti fa e vuoi sapere esattamente quale utente e quale SQL stava bloccando il sistema in quel micro-istante.
 
-### Q74: In un AWR Report, quali sono le prime cose da guardare?
-*   **Definizione**:
-    1.  **DB Time vs Elapsed Time**: Se il DB Time è molto più alto del tempo trascorso, il database è sotto carico.
-    2.  **Top 10 Foreground Wait Events**: Qui leggi la causa del dolore (es. `direct path read` = mancano indici; `enq: TX - row lock` = utenti che si bloccano a vicenda).
+### Q74: Metodo infallibile per leggere un AWR Report (Sezione per Sezione)
+*   **Definizione**: Un AWR non si legge dall'inizio alla fine. Si analizzano 4 sezioni chiave nell'ordine corretto:
+    1.  **Load Profile**: Indica il carico globale. Confronto i `Logical reads` e `Physical reads` (per sec) con una baseline nota. Se esplodono, un piano di esecuzione è degradato.
+    2.  **Top 10 Foreground Events**: È il "referto medico". Se il top event è I/O, indago i dischi o le query senza indici. Se è CPU, indago il parsing o algoritmi pesanti.
+    3.  **SQL ordered by...**: Vado su `Elapsed Time` o `CPU Time` per trovare l'SQL_ID esatto responsabile dell'evento predominante trovato sopra.
+    4.  **Advisory Sections**: (SGA, PGA, Buffer Pool). Mostrano se aggiungere memoria darebbe un reale beneficio o sarebbe solo spreco.
+*   **Operatività**: Usa `awrddrpt.sql` (AWR Compare Period) per trovare le differenze al volo.
+
+### Q74B: Mappatura Wait Events (Il dizionario del DBA)
+*   **Diagnostica Pratica**:
+    - `db file sequential read`: I/O a singolo blocco. Spesso indica un Index Scan su un indice non ottimale o dischi molto lenti.
+    - `db file scattered read`: I/O multi-blocco. Indica un **Full Table Scan** o Fast Full Index Scan. Se inaspettato, manca un indice.
+    - `log file sync`: Il commit è lento. L'utente aspetta che LGWR scriva fisicamente su disco. Dischi redo lenti o CPU overload.
+    - `enq: TX - row lock contention`: Lock applicativo. Due sessioni tentano l'UPDATE della stessa identica riga. Parlare con gli sviluppatori.
+    - `cursor: pin S wait on X`: Forte contesa sulla Shared Pool (Hard parsing massivo). Mancano le bind variables.
+    - `gc buffer busy acquire`: Contesa in ambiente RAC. Due nodi vogliono modificare lo stesso blocco contemporaneamente. Indagare data partioning/application routing.
 
 ### Q75: Se vedi la CPU del server al 100%, cosa indaghi?
-*   **Definizione**: Cerco prima di tutto se c'è un eccesso di **Parsing** (troppe query diverse senza bind variables) o se ci sono SQL che stanno leggendo milioni di righe senza indici (Full Table Scan).
-*   **Operatività**: Controlla in AWR la sezione "SQL ordered by CPU Time".
+*   **Definizione**: Mai aggiungere CPU alla cieca. Cerco prima di tutto se c'è un eccesso di **Parsing** (troppe query diverse senza bind variables, `Soft Parse %` basso) o se ci sono SQL che stanno leggendo milioni di righe in memoria (Logical Reads esplosi) causando loop CPU-bound.
+*   **Operatività**: Controlla in AWR la sezione "SQL ordered by CPU Time" o usa SQL Monitor per le query in esecuzione in tempo reale.
 
 ### Q76: Come identifichi una Blocking Session?
 *   **Definizione**: Una sessione è bloccata quando aspetta una risorsa tenuta da un altro.
