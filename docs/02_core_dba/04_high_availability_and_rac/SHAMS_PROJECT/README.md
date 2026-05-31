@@ -8,12 +8,21 @@ alternative architetturali: prima del change scegli un solo blueprint.
 
 ## Matrice dei blueprint
 
-| ID | Architettura | Guida | Quando usarla |
-| --- | --- | --- | --- |
-| `S1` | Single instance non-CDB | [M24SHAMS single non-CDB](./GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md) | Compatibilita' applicativa legacy |
-| `S2` | Single instance CDB/PDB | [M24SHAMS single CDB](./GUIDA_02_M24SHAMS_SINGLE_CDB_DATAGUARD_OBSERVER.md) | Nuove installazioni senza HA locale RAC |
-| `S3` | RAC non-CDB | [M24SHAMS RAC non-CDB](./GUIDA_03_M24SHAMS_RAC_NON_CDB_DATAGUARD_OBSERVER.md) | HA locale RAC con compatibilita' legacy |
-| `S4` | RAC CDB/PDB | [M24SHAMS RAC CDB](./GUIDA_04_M24SHAMS_RAC_CDB_DATAGUARD_OBSERVER.md) | Target preferito per nuovi database enterprise |
+| ID | Primary e standby | Container | HA locale | Guida | Quando usarla |
+| --- | --- | --- | --- | --- | --- |
+| `S1` | Single instance | non-CDB | Oracle Restart/HAS | [M24SHAMS single non-CDB](./GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md) | Compatibilita' applicativa legacy |
+| `S2` | Single instance | CDB con PDB | Oracle Restart/HAS | [M24SHAMS single CDB](./GUIDA_02_M24SHAMS_SINGLE_CDB_DATAGUARD_OBSERVER.md) | Nuove installazioni senza HA locale RAC |
+| `S3` | RAC | non-CDB | RAC e Clusterware | [M24SHAMS RAC non-CDB](./GUIDA_03_M24SHAMS_RAC_NON_CDB_DATAGUARD_OBSERVER.md) | HA locale RAC con compatibilita' legacy |
+| `S4` | RAC | CDB con PDB | RAC e Clusterware | [M24SHAMS RAC CDB](./GUIDA_04_M24SHAMS_RAC_CDB_DATAGUARD_OBSERVER.md) | Target preferito per nuovi database enterprise |
+
+Ogni riga descrive una coppia Data Guard: un primary sul sito principale e un
+physical standby sul sito secondario. `CDB con PDB` significa che il database
+applicativo vive in un pluggable database. `non-CDB` indica il modello legacy
+senza PDB. `RAC` protegge dai guasti locali di un nodo; Data Guard protegge
+invece dalla perdita del database o del sito primario.
+
+Non combinare le righe: per esempio, non aggiungere comandi PDB a `S1` e non
+usare procedure RAC per `S2`.
 
 Il prefisso di esempio e' `M24SHAMS`. Prima dell'uso reale sostituiscilo con il
 prefisso approvato mantenendo la stessa convenzione di naming.
