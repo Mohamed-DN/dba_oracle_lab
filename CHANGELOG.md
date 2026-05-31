@@ -43,6 +43,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Data Guard Oracle 19c**: rimossa la sintassi operativa legacy
   `USING CURRENT LOGFILE`, separati controlli primary/standby e aggiunti
   fencing obbligatorio e rollback consistenti per i drill.
+- **Core Lab Fasi 0→8**: dichiarati `RACDB` CDB, `RACDBPDB`, standby RAC e
+  Observer manuali; aggiunto il percorso Oracle Linux 8/ASMLib v3 e rimossi
+  snapshot incoerenti su VM attive.
+- **Operations core**: resi Data Guard-aware i job RMAN, rimossi segreti da
+  esempi OEM, impostato GoldenGate MA TLS/WSS come default e riallineati i
+  test end-to-end a servizi PDB role-based e fencing.
 
 ## [2.0.0] - 2026-05-14
 ### Added

@@ -10,6 +10,29 @@
 > - `rac1`: 192.168.56.101
 > - `rac2`: 192.168.56.102
 
+## Obiettivo operativo
+
+Installare Grid Infrastructure e Oracle Database 19c sul RAC primary, creare il
+CDB `RACDB` con PDB `RACDBPDB` e arrivare a un cluster validato per il duplicate
+Data Guard della Fase 3.
+
+## Procedura operativa
+
+Esegui storage, preflight, Grid, ASM, patching, Database Home e DBCA in ordine.
+Il track principale usa OL7.9; su nuove VM OL8 applica prima
+[l'appendice dedicata](./GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md).
+
+## Validazione finale
+
+Conferma CRS, ASM, istanze `RACDB1`/`RACDB2`, CDB, PDB, `ARCHIVELOG` e
+`FORCE LOGGING` prima di passare allo standby.
+
+## Troubleshooting rapido
+
+Se un passaggio fallisce, conserva log e output, identifica il livello
+interessato e correggi solo quello: OS/rete, Grid/ASM, Database Home, patch o
+DBCA. Non applicare workaround OL7 a OL8 senza un errore verificato.
+
 ### 📸 Riferimenti Visivi
 
 ![ASM Disk Groups Layout](../../../images/asm_diskgroups_layout.png)
@@ -644,11 +667,13 @@ CRS-4533: Event Manager is online
 
 ---
 
-## 2.6b 📸 Snapshot di Sicurezza (MILESTONE: SNAP-05)
+## 2.6b Checkpoint Freddo Pre-Database
 
-Questo è il momento perfetto per "congelare" la macchina. Hai un cluster Oracle 19c formattato e funzionante, ma ancora senza database. Se fai un errore nella creazione dei disk group dati o del database, potrai tornare qui e riprovare senza dover reinstallare tutto il Grid.
+Grid è installato ma il database non esiste ancora. Se vuoi un punto di
+ripristino, crea un backup freddo coerente dell'intero cluster e dei dischi
+condivisi. Non usare snapshot VirtualBox indipendenti dei nodi RAC.
 
-**Procedura per lo Snapshot a caldo/freddo:**
+**Procedura:**
 
 1. **Spegni il cluster in modo pulito (su `rac1` come root):**
    ```bash
@@ -664,9 +689,8 @@ Questo è il momento perfetto per "congelare" la macchina. Hai un cluster Oracle
    shutdown -h now
    ```
 
-3. **In VirtualBox, crea lo snapshot per ENTRAMBE le VM:**
-   - Nome: `SNAP-05: Grid_Install_OK`
-   - Descrizione: "Grid Infrastructure 19c installato con successo. CRS attivo su 3 dischi. Nessun database creato."
+3. **Copia insieme configurazioni VM e VDI condivisi** in una directory di
+   backup identificata, ad esempio `COLD-01_Grid_Install_OK`.
 
 4. **Riaccendi le macchine** e attendi qualche minuto che il cluster riparta in automatico al boot.
 
@@ -674,7 +698,8 @@ Questo è il momento perfetto per "congelare" la macchina. Hai un cluster Oracle
 
 ## 2.7 Creazione Disk Group DATA e RECO
 
-Ora che il cluster è attivo (e protetto da snapshot), creiamo i disk group per ospitare i dati veri e propri del database:
+Ora che il cluster è attivo e hai un checkpoint coerente, creiamo i disk group
+per ospitare i dati veri e propri del database:
 
 ```bash
 # Come utente grid (puoi farlo da un nodo qualsiasi, es. rac1)
@@ -732,7 +757,11 @@ I patch che ti servono (già presenti nei tuoi download):
 | Patch | Descrizione | Dove si Applica |
 |---|---|---|
 | **p6880880** | **OPatch** (utility per applicare patch) | Sostituisci in ogni ORACLE_HOME |
-| **p38658588** | **Combo Patch (GI RU + OJVM RU)** — Jan 2026 | Grid Home + DB Home |
+| **p`<COMBO_PATCH_ID>`** | **Combo Patch (GI RU + OJVM RU)** approvata | Grid Home + DB Home |
+
+Compila prima l'inventario patch della Fase 0. Negli esempi seguenti sostituisci
+`<COMBO_PATCH_ID>`, `<RU_PATCH_ID>` e `<OJVM_PATCH_ID>` con gli ID verificati
+nella README MOS della RU approvata.
 
 ### Step 1: Aggiorna OPatch nella Grid Home
 
@@ -754,12 +783,14 @@ chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 # Verifica la versione (torna a grid)
 su - grid
 $ORACLE_HOME/OPatch/opatch version
-# Deve mostrare: OPatch Version: 12.2.0.1.48 (o superiore per patch Gennaio 2026)
+# Deve rispettare la versione minima indicata nella README MOS della RU scelta.
 ```
 
 > **Perché come root?** Dopo l'installazione di Grid Infrastructure, lo script `root.sh` cambia l'ownership di alcune directory della Grid Home a `root`. La directory `OPatch` è tra queste, quindi il `mv` come utente `grid` fallirà con "Permission denied".
 
-> **⚠️ ATTENZIONE (Patch Gennaio 2026)**: Se stai applicando la Release Update di Gennaio 2026 (o successive), l'utility `opatch` **deve** essere almeno versione **12.2.0.1.48**. Se usi una versione precedente (es. .43 o .47), `opatchauto` fallirà con errore `CheckMinimumOPatchVersion`.
+> **⚠️ ATTENZIONE**: la versione minima di OPatch dipende dalla RU selezionata.
+> Se la versione installata non soddisfa la README MOS, `opatchauto` può fallire
+> con `CheckMinimumOPatchVersion`.
 
 > **Come scaricare da MOS**: Vai su [support.oracle.com](https://support.oracle.com) → Patches & Updates → cerca **6880880** → seleziona la piattaforma (`Linux x86-64`) e la versione **19.0.0.0**. Il numero `190000` nel nome file indica la versione del database (19c). Non confondere con p6880880_**230000** che è per Oracle **23c**!
 
@@ -778,24 +809,36 @@ $ORACLE_HOME/OPatch/opatch version
 
 > ⚠️ **ATTENZIONE**: NON scompattare la patch in `/tmp`! Nelle nostre VM, `/tmp` è un disco RAM (tmpfs) di soli 4GB. La patch estratta occupa più di 3GB, riempendo `/tmp` al 100% e bloccando il nodo. Usa sempre `/u01` che ha 50GB di spazio!
 
+Prima di eseguire i comandi, valorizza l'inventario approvato in ogni nuova
+shell che esegue patching, anche dopo ogni accesso SSH o `su -`:
+
+```bash
+export COMBO_PATCH_ID=__FROM_CHANGE__
+export RU_PATCH_ID=__FROM_CHANGE__
+export OJVM_PATCH_ID=__FROM_CHANGE__
+test "$COMBO_PATCH_ID" != "__FROM_CHANGE__" || {
+  echo "Valorizza gli ID patch registrati nel change."
+  exit 1
+}
+```
+
 ```bash
 # Scompatta su rac1 (come root)
 mkdir -p /u01/app/patch
 cd /u01/app/patch
-unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
+unzip -q /tmp/p${COMBO_PATCH_ID}_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 
 # Identifica gli ID delle RU all'interno della Combo Patch:
-ls -l /u01/app/patch/38658588
-# Vedrai due cartelle numeriche: una per OJVM (38523609) e una per la vera e propria RU (38629535).
-# Useremo il path 38629535 per opatchauto! 
+ls -l /u01/app/patch/${COMBO_PATCH_ID}
+# Identifica e registra le sottocartelle RU e OJVM dalla README MOS.
 
 # Ripeti l'estrazione su rac2!
 # (La cartella /u01 non è condivisa, quindi la patch deve esistere fisicamente su entrambi i nodi)
 ssh rac2
 mkdir -p /u01/app/patch
 cd /u01/app/patch
-unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
+unzip -q /tmp/p${COMBO_PATCH_ID}_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 exit
 ```
@@ -819,15 +862,14 @@ df -h /u01
 tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
 
 # --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
-# Sostituisci 38629535 con l'ID reale della RU che hai trovato nello step 2!
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME -analyze
 # Se mostra errori di conflitto, risolvili PRIMA di applicare!
 # Se mostra "Patch analysis is complete" → puoi proseguire.
 
 # --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 > **Perché opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
@@ -850,9 +892,9 @@ $ORACLE_HOME/OPatch/opatch lspatches
 ```bash
 # Ripeti su rac2 come root
 ssh rac2
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 
 # Verifica
 crsctl check crs
@@ -860,12 +902,9 @@ su - grid
 $ORACLE_HOME/OPatch/opatch lspatches
 ```
 
-> 📸 **SNAPSHOT — "SNAP-04: Grid_Installato_e_Patchato" ⭐ MILESTONE**
-> Il cluster è attivo e aggiornato all'ultima Release Update. Reinstallarlo richiederebbe ore. Se l'installazione del Database RDBMS fallisce, puoi tornare qui.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-04: Grid_Installato_e_Patchato"
-> VBoxManage snapshot "rac2" take "SNAP-04: Grid_Installato_e_Patchato"
-> ```
+> [!NOTE]
+> Se vuoi conservare questo stato, ripeti il checkpoint freddo coerente della
+> sezione `2.6b`. Non creare snapshot distinti dei nodi con storage condiviso.
 
 ---
 
@@ -883,7 +922,7 @@ usermod -g oinstall -G dba,asmdba,backupdba,dgdba,kmdba,racdba,oper oracle
 id oracle
 # Avvia l'installer
 cd $ORACLE_HOME
-export DISPLAY=<IP_del_tuo_PC>:0.0
+export DISPLAY=${WINDOWS_HOST_IP}:0.0
 ./runInstaller
 ```
 
@@ -936,7 +975,9 @@ export DISPLAY=<IP_del_tuo_PC>:0.0
 ## 2.11 Patching Database Home (Release Update + OJVM)
 
 > [!IMPORTANT]
-> **ORDINE DELLE OPERAZIONI**: Devi aggiornare l'utility OPatch **PRIMA** di lanciare `opatchauto apply`. Se provi ad applicare la RU di Gennaio 2026 con un OPatch vecchio (versione < 12.2.0.1.48), l'operazione fallirà.
+> **ORDINE DELLE OPERAZIONI**: aggiorna OPatch **PRIMA** di lanciare
+> `opatchauto apply` e verifica la versione minima nella README MOS della RU
+> approvata.
 
 ### Step 1: Aggiorna OPatch nella DB Home
 
@@ -980,12 +1021,12 @@ chown -R oracle:oinstall /u01/app/patch
 tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
 
 # Pre-check (dry run)
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME -analyze
 
 # Se analyze OK → applica
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 > **Nota**: `opatchauto` riconosce automaticamente che è una DB Home in un cluster RAC e gestisce il patching di conseguenza.
@@ -994,19 +1035,20 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 # Ripeti su rac2
 ssh rac2 "chown -R oracle:oinstall /u01/app/patch"
 ssh rac2
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 ### Step 3: Applica il Patch OJVM
 
-Il patch OJVM è raggruppato all'interno della Combo Patch. Abbiamo già scompattato tutto allo Step 2 di Grid, quindi i file sono già pronti in `/u01/app/patch/38658588/`. Si applica con `opatch apply` standard puntando alla sottocartella OJVM.
+Il patch OJVM è raggruppato all'interno della Combo Patch. Se il change lo
+prevede, applicalo dalla sottocartella registrata nell'inventario.
 
 ```bash
 # Come utente oracle su rac1
 su - oracle
-cd /u01/app/patch/38658588/38523609   # Usa l'ID reale della cartella OJVM trovato prima
+cd /u01/app/patch/${COMBO_PATCH_ID}/${OJVM_PATCH_ID}
 $ORACLE_HOME/OPatch/opatch apply
 
 # Quando chiede "Is the local system ready for patching?" rispondi: y
@@ -1014,7 +1056,7 @@ $ORACLE_HOME/OPatch/opatch apply
 # Ripeti su rac2
 ssh rac2
 su - oracle
-cd /u01/app/patch/38658588/38523609
+cd /u01/app/patch/${COMBO_PATCH_ID}/${OJVM_PATCH_ID}
 $ORACLE_HOME/OPatch/opatch apply
 ```
 
@@ -1029,14 +1071,16 @@ $ORACLE_HOME/OPatch/opatch lspatches
 
 Output atteso:
 ```
-38629535;Database Release Update : 19.x.0.0.xxxxxx 
-38523609;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx 
+<RU_PATCH_ID>;Database Release Update : 19.x.0.0.xxxxxx
+<OJVM_PATCH_ID>;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx
 ```
 
 Una volta terminato, ricordati di liberare spazio su disco eliminando la patch scompattata come `root`:
 ```bash
 su - root
-rm -rf /u01/app/patch/*
+PATCH_DIR=/u01/app/patch
+test "$(readlink -f "$PATCH_DIR")" = "/u01/app/patch" &&
+rm -rf -- "$PATCH_DIR"/*
 rm -f /tmp/p*.zip
 # Ripeti su rac2
 ```
@@ -1062,12 +1106,9 @@ ORDER BY action_time DESC;
 -- Deve mostrare SUCCESS per entrambi i patch
 ```
 
-> 📸 **SNAPSHOT — "SNAP-05: DB_Software_Installato"**
-> I binari del database sono installati e completamente patchati con RU + OJVM. Pronto per DBCA.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-05: DB_Software_Installato"
-> VBoxManage snapshot "rac2" take "SNAP-05: DB_Software_Installato"
-> ```
+> [!NOTE]
+> Prima di DBCA puoi creare un nuovo checkpoint freddo coerente, includendo VM
+> spente e dischi condivisi. Non usare snapshot distinti dei nodi RAC.
 
 ---
 
@@ -1098,11 +1139,17 @@ dbca
 **Step 5**: Database Identification:
 - Global Database Name: `RACDB`
 - SID Prefix: `RACDB` (diventerà RACDB1 su rac1, RACDB2 su rac2)
+- ✅ **Create as Container Database**
+- ✅ **Use Local Undo tablespace for PDBs**
+- Create a Container Database with one PDB
+- PDB Name: `RACDBPDB`
 <img width="795" height="587" alt="image" src="https://github.com/user-attachments/assets/6abf8a34-a666-45cf-b121-e5d580e27e75" />
 
 **Step 6**: Storage:
 - Use following for the database storage: **Automatic Storage Management (ASM)**
 - Database Area: `+DATA`
+- Mantieni OMF e verifica nel riepilogo la ridondanza dei control file tra i
+  diskgroup approvati (`+DATA`, `+RECO`)
 <img width="790" height="619" alt="image" src="https://github.com/user-attachments/assets/d5138491-8638-41fc-bb84-88a4145d5fdf" />
 
 **Step 7**: Fast Recovery Area:
@@ -1130,7 +1177,8 @@ dbca
 - Deseleziona EM Express per semplicità
 
 **Step 12**: Password:
-- Imposta password per SYS, SYSTEM, etc.
+- Imposta password forti e distinte per SYS, SYSTEM e PDBADMIN.
+- Non usare il nome dell'account e non salvare password nella shell history.
 
 **Step 13**: Creation Options:
 - ✅ Create Database
@@ -1176,12 +1224,33 @@ srvctl status scan_listener
 srvctl config database -d RACDB
 ```
 
-> 📸 **SNAPSHOT — "SNAP-06: Database_RAC_Creato" ⭐ MILESTONE**
-> Il tuo RAC primario è completamente operativo! Questo è lo snapshot più importante per non dover ripetere MAI PIÙ l'installazione del cluster.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-06: Database_RAC_Creato"
-> VBoxManage snapshot "rac2" take "SNAP-06: Database_RAC_Creato"
-> ```
+```sql
+-- Verifica baseline multitenant
+SELECT name, cdb, log_mode, force_logging FROM v$database;
+SHOW PDBS
+
+-- Data Guard richiede redo anche per le operazioni che chiedono NOLOGGING
+ALTER DATABASE FORCE LOGGING;
+
+-- Se RACDBPDB non è già aperta READ WRITE su entrambe le istanze:
+ALTER PLUGGABLE DATABASE RACDBPDB OPEN INSTANCES=ALL;
+ALTER PLUGGABLE DATABASE RACDBPDB SAVE STATE INSTANCES=ALL;
+
+-- Verifica OMF, FRA e control file ridondati in ASM
+SHOW PARAMETER db_create_file_dest
+SHOW PARAMETER db_recovery_file_dest
+SHOW PARAMETER control_files
+```
+
+Output atteso:
+- `RACDB` con `CDB=YES`;
+- `ARCHIVELOG` e `FORCE_LOGGING=YES`;
+- `RACDBPDB` in `READ WRITE`;
+- istanze `RACDB1` e `RACDB2` online.
+
+> [!IMPORTANT]
+> Dopo DBCA usa RMAN per creare una baseline verificabile. Uno snapshot
+> VirtualBox dei singoli nodi con database RAC attivo non è un backup coerente.
 
 ### Abilitare Force Logging (necessario per Data Guard)
 
@@ -1204,11 +1273,13 @@ I file delle patch che abbiamo scompattato in `/u01/app/patch` e `/tmp` occupano
 
 ```bash
 # Come root su rac1
-rm -rf /u01/app/patch
+PATCH_DIR=/u01/app/patch
+test "$(readlink -f "$PATCH_DIR")" = "/u01/app/patch" &&
+rm -rf -- "$PATCH_DIR"
 rm -f /tmp/p*.zip
 
 # Come root su rac2
-ssh rac2 "rm -rf /u01/app/patch && rm -f /tmp/p*.zip"
+ssh rac2 'PATCH_DIR=/u01/app/patch; test "$(readlink -f "$PATCH_DIR")" = "/u01/app/patch" && rm -rf -- "$PATCH_DIR"; rm -f /tmp/p*.zip'
 ```
 
 > **Nota sui backup**: NON cancellare invece i backup dell'ORACLE_HOME (`/u01/app/*_backup_*.tar.gz`) che hai creato come best practice. Quelli ti serviranno se in futuro dovessi fare un rollback di una patch difettosa!
@@ -1238,15 +1309,3 @@ su - oracle -c "sqlplus -s / as sysdba <<< \"SELECT force_logging FROM v\\\$data
 ---
 
 **← [FASE 1: Preparazione OS](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE1_PREPARAZIONE_OS.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 3: RAC Standby](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md)**
-
-## Obiettivo
-Concludere la Fase 2 con un cluster RAC primario installato, patchato e validato in modo ripetibile.
-
-## Procedura operativa
-Seguire i passi della guida in ordine, senza saltare prerequisiti di rete, storage ASM, pre-check cluvfy e patching.
-
-## Validazione finale
-Confermare esito positivo con verifiche cluster, ASM e database indicate nella guida prima di passare alla fase successiva.
-
-## Troubleshooting rapido
-In caso di errore, rieseguire i controlli su prerequisiti (rete, SSH, tempo, ASM), leggere il messaggio specifico e applicare il fix nella sezione corrispondente.

@@ -459,11 +459,17 @@ export PATH=$ORACLE_HOME/bin:$PATH
 case "$1" in
   start)
     su - oracle -c "$ORACLE_HOME/bin/lsnrctl start"
-    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'STARTUP;'"
-    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'ALTER SYSTEM REGISTER;'"
+    su - oracle -c "$ORACLE_HOME/bin/sqlplus -s / as sysdba" <<'SQL'
+STARTUP;
+ALTER SYSTEM REGISTER;
+EXIT;
+SQL
     ;;
   stop)
-    su - oracle -c "$ORACLE_HOME/bin/sqlplus / as sysdba <<< 'SHUTDOWN IMMEDIATE;'"
+    su - oracle -c "$ORACLE_HOME/bin/sqlplus -s / as sysdba" <<'SQL'
+SHUTDOWN IMMEDIATE;
+EXIT;
+SQL
     su - oracle -c "$ORACLE_HOME/bin/lsnrctl stop"
     ;;
 esac
@@ -526,7 +532,7 @@ echo "=== Stack Oracle OK ==="
 
 ### 6.5.12 Risoluzione Errore "19.3.0.0 is not supported" (Patching a 19.x)
 
-Se durante l'installazione di OEM 24ai ricevi l'errore `Oracle Database version 19.3.0.0 is not supported`, significa che devi patchare la Oracle Home e il database EMREP ad almeno la versione 19.22. Ecco la procedura rapida adattata per il **singolo nodo non-RAC**, usando i file della Combo Patch (es. Jan 2026 `p38658588...` e OPatch `p6880880...`) che hai già scaricato nelle fasi precedenti.
+Se durante l'installazione di OEM 24ai ricevi l'errore `Oracle Database version 19.3.0.0 is not supported`, verifica nella matrice certificata OEM quale RU minima è richiesta. La procedura seguente è adattata al repository **single instance non-RAC**. Usa esclusivamente gli identificativi registrati nel change e nella README MOS della patch approvata.
 
 #### Step 1: Ferma il Database e il Listener
 
@@ -534,7 +540,10 @@ Se durante l'installazione di OEM 24ai ricevi l'errore `Oracle Database version 
 # Come utente oracle
 source /home/oracle/.bash_profile
 lsnrctl stop
-sqlplus / as sysdba <<< 'SHUTDOWN IMMEDIATE;'
+sqlplus -s / as sysdba <<'SQL'
+SHUTDOWN IMMEDIATE;
+EXIT;
+SQL
 ```
 
 #### Step 2: Aggiorna OPatch
@@ -543,8 +552,9 @@ sqlplus / as sysdba <<< 'SHUTDOWN IMMEDIATE;'
 # Come utente oracle
 cd /home/oracle/app/product/19.3.0/dbhome_1
 mv OPatch OPatch.bkp
-# Sostituisci il percorso con dove si trova il tuo zip di OPatch
-unzip -q /home/oracle/Scaricati/p6880880_190000_Linux-x86-64.zip -d /home/oracle/app/product/19.3.0/dbhome_1/
+# Inserisci il file OPatch approvato dal change
+read -r -p "Nome ZIP OPatch approvato: " OPATCH_ZIP
+unzip -q "/home/oracle/Scaricati/${OPATCH_ZIP}" -d /home/oracle/app/product/19.3.0/dbhome_1/
 
 # Verifica la versione (deve essere 12.2.0.1.37 o superiore, es. .48)
 /home/oracle/app/product/19.3.0/dbhome_1/OPatch/opatch version
@@ -556,12 +566,12 @@ unzip -q /home/oracle/Scaricati/p6880880_190000_Linux-x86-64.zip -d /home/oracle
 # Come utente oracle
 mkdir -p /home/oracle/app/patch
 cd /home/oracle/app/patch
-# Sostituisci con il nome esatto del tuo zip della patch
-unzip -q /home/oracle/Scaricati/p38658588_190000_Linux-x86-64.zip
-
-# Entra nella cartella della RU (sostituisci i numeri con quelli della tua patch)
-# Esempio per la Jan 2026: 38658588/38629535
-cd /home/oracle/app/patch/38658588/38629535
+# Inserisci gli ID verificati nella README MOS della patch approvata
+read -r -p "Combo Patch ID: " COMBO_PATCH_ID
+read -r -p "RU Patch ID: " RU_PATCH_ID
+read -r -p "Nome ZIP Combo Patch: " COMBO_ZIP
+unzip -q "/home/oracle/Scaricati/${COMBO_ZIP}"
+cd "/home/oracle/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}"
 
 # Applica la patch ai binari della ORACLE_HOME
 $ORACLE_HOME/OPatch/opatch apply -silent
@@ -570,8 +580,9 @@ $ORACLE_HOME/OPatch/opatch apply -silent
 #### Step 4: Applica la patch OJVM (Opzionale ma raccomandata)
 
 ```bash
-# Entra nella cartella OJVM (l'altra sottocartella, es. 38523609)
-cd /home/oracle/app/patch/38658588/38523609
+# Esegui solo se OJVM è inclusa nel change approvato
+read -r -p "OJVM Patch ID: " OJVM_PATCH_ID
+cd "/home/oracle/app/patch/${COMBO_PATCH_ID}/${OJVM_PATCH_ID}"
 $ORACLE_HOME/OPatch/opatch apply -silent
 ```
 
@@ -582,14 +593,20 @@ Ora che i binari sono aggiornati, devi avviare il database e aggiornare gli sche
 ```bash
 # Avvia DB e Listener
 lsnrctl start
-sqlplus / as sysdba <<< 'STARTUP;'
+sqlplus -s / as sysdba <<'SQL'
+STARTUP;
+EXIT;
+SQL
 
 # Esegui datapatch (potrebbe impiegare 10-15 minuti)
 cd $ORACLE_HOME/OPatch
 ./datapatch -verbose
 
 # Al termine, verifica che l'installazione sia andata a buon fine
-sqlplus / as sysdba <<< "SELECT patch_id, status, description FROM dba_registry_sqlpatch;"
+sqlplus -s / as sysdba <<'SQL'
+SELECT patch_id, status, description FROM dba_registry_sqlpatch;
+EXIT;
+SQL
 # Deve restituire SUCCESS per la nuova patch
 ```
 
@@ -649,7 +666,7 @@ Nel wizard grafico:
    - **Nome host database**: `oem.localdomain` (o il nome host che hai impostato)
    - **Porta**: `1521`
    - **Servizio/SID**: `EMREP`
-   - **Password SYS**: la password dell'utente SYS (es. `root`)
+   - **Password SYS**: inseriscila nel prompt del wizard; non riutilizzare password di sistema
    - **Dimensione distribuzione**: `SMALL` (adatta al nostro lab)
    *(Non spuntare le opzioni SSL a meno che non le hai esplicitamente configurate sul DB)*
 4. **Tablespace**: lascia i default (verranno creati automaticamente)
@@ -667,22 +684,25 @@ Nel wizard grafico:
 Per automazione e ripetibilità, usa il response file:
 
 ```bash
-# Crea il response file per installazione silente
+# Crea un file temporaneo locale con permessi restrittivi.
+# I token __INJECT_FROM_VAULT_AT_RUNTIME__ non sono valori utilizzabili:
+# sostituiscili da vault o tramite editing interattivo prima dell'installazione.
+umask 077
 cat > /tmp/em_install.rsp <<'EOF'
 RESPONSEFILE_VERSION=2.2.1.0.0
 INSTALL_TYPE="TYPICAL"
 
 # Percorsi (tutto sotto /home per sfruttare lo spazio)
 ORACLE_MIDDLEWARE_HOME_LOCATION="/home/oracle/app/emcc/middleware"
-ORACLE_HOSTNAME=<tuo_hostname>
+ORACLE_HOSTNAME=__FROM_INVENTORY__
 AGENT_BASE_DIR="/home/oracle/app/emcc/agent"
 
 # Repository DB
 DATABASE_HOSTNAME=localhost
 LISTENER_PORT=1521
 SERVICENAME_OR_SID=EMREP
-SYS_PASSWORD=<sys_password>
-SYSMAN_PASSWORD=<sysman_password>
+SYS_PASSWORD=__INJECT_FROM_VAULT_AT_RUNTIME__
+SYSMAN_PASSWORD=__INJECT_FROM_VAULT_AT_RUNTIME__
 
 # Tablespace su filesystem
 MANAGEMENT_TABLESPACE_LOCATION=/home/oracle/app/oradata/EMREP/mgmt.dbf
@@ -691,13 +711,14 @@ JVM_DIAGNOSTICS_TABLESPACE_LOCATION=/home/oracle/app/oradata/EMREP/mgmt_deepdive
 
 # Security
 WLS_ADMIN_SERVER_USERNAME=weblogic
-WLS_ADMIN_SERVER_PASSWORD=<wls_password>
-WLS_ADMIN_SERVER_CONFIRM_PASSWORD=<wls_password>
+WLS_ADMIN_SERVER_PASSWORD=__INJECT_FROM_VAULT_AT_RUNTIME__
+WLS_ADMIN_SERVER_CONFIRM_PASSWORD=__INJECT_FROM_VAULT_AT_RUNTIME__
 
 # Porte (default)
 EM_UPLOAD_PORT=4903
 EM_CENTRAL_CONSOLE_PORT=7803
 EOF
+chmod 600 /tmp/em_install.rsp
 ```
 
 ```bash
@@ -709,9 +730,12 @@ cd /home/oracle/Scaricati/em24ai
 
 # Post-install root scripts
 sudo /home/oracle/app/emcc/middleware/allroot.sh
+
+# Elimina il file temporaneo appena non serve più
+shred -u /tmp/em_install.rsp
 ```
 
-> **Best Practice**: In produzione, salva il response file (senza password) nel repository per riproducibilità. Le password vanno gestite via vault o variabili d'ambiente.
+> **Best Practice**: versiona solo un template privo di segreti. Il response file valorizzato resta temporaneo, `0600`, fuori dal repository e viene eliminato subito dopo l'uso. Non passare password negli argomenti shell.
 
 ### 6.6.5 Comandi post-install obbligatori
 
@@ -728,7 +752,7 @@ sudo /home/oracle/app/emcc/middleware/allroot.sh
 
 Login console:
 
-- URL: `https://<tuo_hostname>:7803/em`
+- URL: `https://${OMS_HOSTNAME}:7803/em`
 - user: `SYSMAN`
 
 ---
@@ -952,8 +976,11 @@ Fix rapido:
 ```bash
 source /home/oracle/.bash_profile
 lsnrctl start
-sqlplus / as sysdba <<< 'STARTUP;'
-sqlplus / as sysdba <<< 'ALTER SYSTEM REGISTER;'
+sqlplus -s / as sysdba <<'SQL'
+STARTUP;
+ALTER SYSTEM REGISTER;
+EXIT;
+SQL
 lsnrctl status
 ```
 
@@ -977,7 +1004,10 @@ source /home/oracle/.bash_profile
 echo $ORACLE_SID    # Deve mostrare EMREP
 echo $ORACLE_HOME   # Deve mostrare /home/oracle/app/product/19.3.0/dbhome_1
 
-sqlplus / as sysdba <<< 'STARTUP;'
+sqlplus -s / as sysdba <<'SQL'
+STARTUP;
+EXIT;
+SQL
 ```
 
 > Se `ORACLE_SID` o `ORACLE_HOME` sono vuoti, le variabili non sono nel `.bash_profile`. Vedi sezione **6.5.5**.
@@ -1042,15 +1072,22 @@ Azioni:
 
 ```bash
 # Configura emcli
-$OMS_HOME/bin/emcli setup \
-  -url=https://<hostname>:7803/em \
-  -username=SYSMAN \
-  -password=<password> \
-  -trustall
+export OMS_HOSTNAME=__FROM_INVENTORY__
+test "$OMS_HOSTNAME" != "__FROM_INVENTORY__" || {
+  echo "Valorizza OMS_HOSTNAME dall'inventario."
+  exit 1
+}
 
-# Login (sessione)
-$OMS_HOME/bin/emcli login -username=SYSMAN -password=<password>
+$OMS_HOME/bin/emcli setup \
+  -url="https://${OMS_HOSTNAME}:7803/em" \
+  -username=SYSMAN
+
+# Login interattivo: emcli richiede la password senza esporla nella command line
+$OMS_HOME/bin/emcli login -username=SYSMAN
 ```
+
+Importa nel trust store il certificato HTTPS dell'OMS prima del setup. Non usare
+`-trustall` come scorciatoia nel percorso predefinito.
 
 ### Comandi Essenziali
 
@@ -1091,7 +1128,12 @@ emcli submit_job \
 # /home/oracle/scripts/em_health_check.sh
 # Verifica rapida via EMCLI
 
-$OMS_HOME/bin/emcli login -username=SYSMAN -password=$(cat /home/oracle/.em_pwd)
+# Esegui prima: emcli login -username=SYSMAN
+# Il login è interattivo e la sessione viene riutilizzata dallo script.
+$OMS_HOME/bin/emcli get_version >/dev/null 2>&1 || {
+  echo "Sessione EMCLI assente o scaduta: esegui il login interattivo."
+  exit 1
+}
 
 echo "=== TARGET STATUS ==="
 $OMS_HOME/bin/emcli get_targets -targets="oracle_database" -format="name:pretty" \
@@ -1160,7 +1202,7 @@ WHERE name IN ('transport lag', 'apply lag');
 
 - password policy forte per SYSMAN e named credentials
 - backup periodico repository DB
-- snapshot VM pre-change
+- backup RMAN del repository e export della configurazione prima del change
 - audit delle modifiche di soglie/rules/job
 
 ---

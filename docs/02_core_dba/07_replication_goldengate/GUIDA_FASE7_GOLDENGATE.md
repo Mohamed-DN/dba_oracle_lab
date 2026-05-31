@@ -15,6 +15,28 @@
 > - [Classic Architecture 19c](./GUIDA_GOLDENGATE_CLASSIC_ARCHITECTURE_19C.md)
 
 ---
+## Obiettivo operativo
+
+Configurare un percorso GoldenGate 19c MA cifrato dal CDB RAC `RACDB`, con
+PDB applicativa `RACDBPDB`, verso il target Oracle del lab.
+
+## Procedura operativa
+
+Prepara logging e privilegi minimi, crea i deployment TLS, registra le
+credenziali nel credential store e valida Extract, Distribution Path e Replicat.
+
+## Validazione finale
+
+Conferma che una transazione applicativa attraversi `EXT_RAC`, il Distribution
+Path WSS e `REP_TGT`, senza password in script o argomenti shell.
+
+## Troubleshooting rapido
+
+Se la replica non avanza, separa capture, trail locale, Distribution Path,
+Receiver Server e apply. Usa `adminclient` o la UI MA; `ggsci` resta solo per
+ambienti Classic legacy.
+
+---
 ## 7.0 Teoria Profonda: L'Architettura a Microservizi
 
 Prima di configurare, è essenziale comprendere come i componenti interagiscono nella MA rispetto alla Classic Architecture.
@@ -45,7 +67,7 @@ In GoldenGate MA, i processi classici (Manager, Extract, Pump, Replicat) sono st
              |                                                |
              v                                                |
   +------------------------+                       +----------+-------------+
-  | Distribution Server    |-- Rete (HTTPS/WSS) --&gt;| Receiver Server        |
+  | Distribution Server    |-- Rete (HTTPS/WSS) -->| Receiver Server        |
   | Porta: 9013            |                       | Porta: 9014            |
   | - Invia i Trail files  |                       | - Riceve i Trail files |
   +------------------------+                       +------------------------+
@@ -82,26 +104,25 @@ ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 SELECT force_logging, supplemental_log_data_min FROM v$database;
 ```
 
-### 7.1.2 Creazione Utente GoldenGate (Su ENTRAMBI i DB)
+### 7.1.2 Utenti GoldenGate e privilegi minimi
+
+Sul source CDB usa un common user per capture. La password viene inserita in
+modo interattivo in SQL*Plus o recuperata dal vault: il token seguente è solo
+un promemoria e non va salvato in script.
 
 ```sql
--- Su rac1 (Source) e dbtarget (Target) come sysdba
+-- Su rac1, CDB root di RACDB, come sysdba
 sqlplus / as sysdba
 
-CREATE USER c##ggadmin IDENTIFIED BY "<PASSWORD_SICURA>" CONTAINER=ALL;
--- Nota: In architetture CDB/PDB si usa un utente comune c## per l'Extract.
+CREATE USER c##ggadmin IDENTIFIED BY "<INSERIRE_DA_VAULT_NEL_PROMPT_SQLPLUS>" CONTAINER=ALL;
 
 GRANT CREATE SESSION TO c##ggadmin CONTAINER=ALL;
-GRANT CREATE VIEW TO c##ggadmin CONTAINER=ALL;
-GRANT ALTER SYSTEM TO c##ggadmin CONTAINER=ALL;
-GRANT ALTER USER TO c##ggadmin CONTAINER=ALL;
-ALTER USER c##ggadmin QUOTA UNLIMITED ON USERS CONTAINER=ALL;
 ALTER USER c##ggadmin SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
 
 BEGIN
   DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE(
     grantee                 => 'C##GGADMIN',
-    privilege_type          => '*',
+    privilege_type          => 'CAPTURE',
     grant_select_privileges => TRUE,
     do_grants               => TRUE,
     container               => 'ALL');
@@ -109,18 +130,22 @@ END;
 /
 ```
 
-Sul target, Replicat deve avere anche i grant DML sugli oggetti applicativi. Per il lab puoi usare grant sullo schema replicato; in produzione bancaria preferisci grant oggetto per oggetto o un ruolo approvato.
+Sul target crea un account apply dedicato nel container che ospita gli oggetti
+applicativi. Concedi solo i privilegi richiesti dal mapping e usa
+`DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE` con `privilege_type => 'APPLY'`.
+Se il target è CDB, connettiti al relativo servizio PDB. Non concedere
+`ALTER SYSTEM`, `ALTER USER` o quote illimitate come default.
 
 ```sql
--- Esempio target Oracle
-GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO c##ggadmin;
-GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO c##ggadmin;
+-- Esempio target Oracle: sostituisci GGAPPLY con l'account approvato
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.CUSTOMERS TO ggapply;
+GRANT SELECT, INSERT, UPDATE, DELETE ON APP.ORDERS TO ggapply;
 ```
 
 Se usi schema intero e devi generare i grant:
 
 ```sql
-SELECT 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || owner || '.' || table_name || ' TO C##GGADMIN;'
+SELECT 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || owner || '.' || table_name || ' TO GGAPPLY;'
 FROM   dba_tables
 WHERE  owner = 'APP'
 ORDER  BY table_name;
@@ -170,50 +195,47 @@ Il **Deployment** è un gruppo logico di servizi (Admin, Dist, Recv).
 
 ### 7.3.1 Deployment sul Source (rac1)
 
-Usiamo il tool `oggca.sh` (Oracle GoldenGate Configuration Assistant) per creare il deployment.
+Usa `oggca.sh` (Oracle GoldenGate Configuration Assistant) per generare e
+revisionare un response file locale. Il file valorizzato contiene segreti:
+mantienilo `0600`, fuori dal repository, e cancellalo appena terminata la
+configurazione.
 
 ```bash
 # Su rac1 come oracle
 export OGG_HOME=/u01/app/oracle/product/ogg_ma
+umask 077
+install -d -m 700 /home/oracle/secure
 
+# Genera e revisiona /home/oracle/secure/oggca_SourceDeploy.rsp con oggca.sh.
+# Inserisci la password da vault nel file temporaneo, non nella command line.
 $OGG_HOME/bin/oggca.sh -silent \
-  -responseFile $OGG_HOME/response/oggca.rsp \
-  deploymentName=SourceDeploy \
-  deploymentHome=/u01/app/oracle/gg_deploy/SourceDeploy \
-  serviceManagerPort=9011 \
-  adminServerPort=9012 \
-  distributionServerPort=9013 \
-  receiverServerPort=9014 \
-  administrator=oggadmin \
-  password=<password_sicura> \
-  securityEnabled=false # In lab disabilitiamo TLS per semplicità, MAI in produzione!
+  -responseFile /home/oracle/secure/oggca_SourceDeploy.rsp
+
+shred -u /home/oracle/secure/oggca_SourceDeploy.rsp
 ```
 
-> [!CAUTION]
-> **Sicurezza TLS:** Nel lab stiamo usando `securityEnabled=false` (HTTP). In produzione DEVE essere `true` (HTTPS) generando certificati o usando wallet.
+Nel response file imposta `SourceDeploy`, le porte `9011`-`9014`, l'utente
+amministrativo e `securityEnabled=true`. Configura certificati e wallet secondo
+la PKI del laboratorio. La variante non cifrata non è il default del percorso.
 
 ### 7.3.2 Deployment sul Target (dbtarget)
 
 ```bash
 # Su dbtarget come oracle
 export OGG_HOME=/u01/app/oracle/product/ogg_ma
+umask 077
+install -d -m 700 /home/oracle/secure
 
+# Genera e revisiona /home/oracle/secure/oggca_TargetDeploy.rsp con oggca.sh.
 $OGG_HOME/bin/oggca.sh -silent \
-  -responseFile $OGG_HOME/response/oggca.rsp \
-  deploymentName=TargetDeploy \
-  deploymentHome=/u01/app/oracle/gg_deploy/TargetDeploy \
-  serviceManagerPort=9011 \
-  adminServerPort=9012 \
-  distributionServerPort=9013 \
-  receiverServerPort=9014 \
-  administrator=oggadmin \
-  password=<password_sicura> \
-  securityEnabled=false
+  -responseFile /home/oracle/secure/oggca_TargetDeploy.rsp
+
+shred -u /home/oracle/secure/oggca_TargetDeploy.rsp
 ```
 
 Una volta terminato, puoi accedere all'interfaccia web:
-- **Source SM**: `http://192.168.56.101:9011`
-- **Target SM**: `http://192.168.56.120:9011`
+- **Source SM**: `https://rac1.localdomain:9011`
+- **Target SM**: `https://dbtarget.localdomain:9011`
 
 ---
 
@@ -225,7 +247,7 @@ Da qui in poi, il lavoro si svolge interamente nel browser (Administration Serve
 
 Prima di configurare Extract/Replicat, OGG deve potersi connettere al DB.
 
-1. Apri **Administration Server** del Source (`http://192.168.56.101:9012`).
+1. Apri **Administration Server** del Source (`https://rac1.localdomain:9012`).
 2. Login come `oggadmin`.
 3. Vai nel menu a sinistra -> **Configuration**.
 4. Clicca su **+** nella sezione **Database**.
@@ -233,9 +255,9 @@ Prima di configurare Extract/Replicat, OGG deve potersi connettere al DB.
    - **Domain**: `OracleDB`
    - **Alias**: `RACDB`
    - **User ID**: `c##ggadmin`
-   - **Password**: `<password>`
-   - **Connect String**: `//rac1-scan.localdomain:1521/RACDB.localdomain` (Usa lo SCAN alias!)
-6. Ripeti sul Target (`http://192.168.56.120:9012`) usando la stringa TNS del dbtarget.
+   - **Password**: inseriscila nel form HTTPS; viene salvata nel credential store
+   - **Connect String**: `//rac1-scan.localdomain:1521/RACDBPDB.localdomain` (usa lo SCAN e il servizio PDB)
+6. Ripeti sul Target (`https://dbtarget.localdomain:9012`) usando il servizio applicativo del target.
 
 ### 7.4.2 Creazione dell'Integrated Extract (Source)
 
@@ -254,8 +276,8 @@ Prima di configurare Extract/Replicat, OGG deve potersi connettere al DB.
    LOGALLSUPCOLS
    UPDATERECORDFORMAT COMPACT
    -- Tabelle da estrarre
-   TABLE HR.*;
-   TABLE APP.*;
+   TABLE RACDBPDB.HR.*;
+   TABLE RACDBPDB.APP.*;
    ```
 6. Clicca **Create and Run**.
 7. L'Extract ora è verde (Running) e sta scrivendo il Trail File locale (`er000000001`).
@@ -264,15 +286,15 @@ Prima di configurare Extract/Replicat, OGG deve potersi connettere al DB.
 
 Il Distribution Path è la freccia che collega il Source al Target. Sostituisce il vecchio `Data Pump`.
 
-1. Apri il **Distribution Server** sul Source (`http://192.168.56.101:9013`).
+1. Apri il **Distribution Server** sul Source (`https://rac1.localdomain:9013`).
 2. Clicca **+** sotto **Paths**.
 3. **Path Name**: `RAC_TO_TGT`
 4. **Source**:
    - **Extract Name**: `EXT_RAC`
    - **Trail Name**: `er`
 5. **Target**:
-   - **Protocol**: `wss` (o `ws` se HTTP)
-   - **Host**: `192.168.56.120` (IP del dbtarget)
+   - **Protocol**: `wss`
+   - **Host**: `dbtarget.localdomain`
    - **Port**: `9014` (Porta del Receiver Server target)
    - **Trail Name**: `rt`
    - **Domain**: `OracleDB`
@@ -282,38 +304,38 @@ Il Distribution Path è la freccia che collega il Source al Target. Sostituisce 
 
 ---
 
-## 7.5 Initial Load via DBMS_DATAPUMP (Zero Downtime)
+## 7.5 Initial Load con Data Pump e SCN controllato
 
 > [!IMPORTANT]
-> Prima di avviare il Replicat, i dati sul target devono essere instanziati partendo da un SCN specifico (Point-In-Time). Invece del vecchio expdp/impdp manuale, useremo Data Pump via Network Link per un caricamento diretto (Zero Downtime).
+> Prima di avviare il Replicat, i dati sul target devono essere istanziati
+> partendo da uno SCN registrato. Il percorso base usa Data Pump con parfile
+> temporanei: riduce la superficie di rischio e non lascia password nella
+> command line.
 
 ```sql
--- Su dbtarget come sysdba
+-- Sul source RACDB come sysdba
 sqlplus / as sysdba
 
--- 1. Crea un database link verso il Source (rac1)
-CREATE DATABASE LINK source_db_link 
-CONNECT TO c##ggadmin IDENTIFIED BY <password> 
-USING '192.168.56.101:1521/RACDB.localdomain';
-
--- 2. Trova l'SCN corrente del Source per instanziare i dati a questo esatto istante
-SELECT current_scn FROM v$database@source_db_link;
--- Supponiamo restituisca: 3847291
+SELECT current_scn FROM v$database;
+-- Registra lo SCN nel change, ad esempio 3847291.
 ```
 
-Esegui l'import via Network Link (senza creare file fisici):
+Prepara i parfile `0600` con directory Oracle approvate e lo SCN registrato.
+Avvia `expdp` e `impdp` senza credenziali negli argomenti: Data Pump richiede
+utente e password nel prompt interattivo.
 
 ```bash
-# Su dbtarget
-impdp c##ggadmin \
-  NETWORK_LINK=source_db_link \
-  SCHEMAS=HR,APP \
-  FLASHBACK_SCN=3847291 \
-  TABLE_EXISTS_ACTION=REPLACE \
-  PARALLEL=4
+# Sul source: il parfile include SCHEMAS=HR,APP e FLASHBACK_SCN=<SCN_REGISTRATO>
+umask 077
+expdp parfile=/home/oracle/secure/expdp_initial_load.par
+
+# Trasferisci il dump con il canale approvato, poi sul target:
+impdp parfile=/home/oracle/secure/impdp_initial_load.par
 ```
 
-> I dati target ora sono un'esatta copia al SCN `3847291`.
+Elimina i parfile temporanei dopo la verifica. Per un caricamento via network
+link usa un account dedicato e un secret store approvato: non creare database
+link con password in script o cronologia.
 
 ---
 
@@ -321,7 +343,7 @@ impdp c##ggadmin \
 
 Ora che i dati base ci sono, diciamo a GoldenGate di applicare le transazioni partendo dall'SCN catturato durante l'Initial Load.
 
-1. Apri l'**Administration Server** del Target (`http://192.168.56.120:9012`).
+1. Apri l'**Administration Server** del Target (`https://dbtarget.localdomain:9012`).
 2. Clicca **+** sotto **Replicats**.
 3. Seleziona **Integrated Replicat**.
 4. **Process Name**: `REP_TGT`
@@ -348,8 +370,9 @@ $OGG_HOME/bin/adminclient
 ```
 
 ```
-OGG (https://192.168.56.120:9012 TargetDeploy) 1> CONNECT http://192.168.56.120:9012 as oggadmin PASSWORD <password>
-OGG (https://192.168.56.120:9012 TargetDeploy) 2> START REPLICAT REP_TGT, AFTERCSN 3847291
+OGG (https://dbtarget.localdomain:9012 TargetDeploy) 1> CONNECT https://dbtarget.localdomain:9012 AS oggadmin
+Password:
+OGG (https://dbtarget.localdomain:9012 TargetDeploy) 2> START REPLICAT REP_TGT, AFTERCSN 3847291
 ```
 > L'opzione `AFTERCSN` (Commit Sequence Number = SCN in Oracle) assicura che il Replicat applichi solo le transazioni committate *dopo* il momento in cui hai effettuato l'export via Data Pump.
 
@@ -357,7 +380,8 @@ OGG (https://192.168.56.120:9012 TargetDeploy) 2> START REPLICAT REP_TGT, AFTERC
 
 ## 7.7 Verifica e Monitoraggio (Web Dashboard)
 
-GoldenGate MA rende obsoleto il comando `info all`. Tutto è visualizzabile tramite dashboard e API REST.
+Nel percorso MA usa dashboard, API REST e `adminclient`. `INFO ALL` tramite
+`ggsci` resta utile solo per installazioni Classic legacy.
 
 1. Torna sulla **Overview** del Target Administration Server.
 2. Controlla che `REP_TGT` sia verde. Clicca sul processo per vedere i dettagli.
@@ -373,20 +397,8 @@ GoldenGate MA rende obsoleto il comando `info all`. Tutto è visualizzabile tram
    SELECT * FROM hr.employees WHERE employee_id = 999;
    ```
 
-Se la riga compare, la tua **Microservices Architecture** è perfettamente configurata e operativa in conformità alle Oracle Best Practices moderne.
+Se la riga compare, registra evidenza del test, checkpoint e lag osservato.
 
 ---
 
 **← [FASE 6: Enterprise Manager](../../02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 8: Test e Verifica End-to-End](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md)**
-
-## Obiettivo
-Raggiungere gli obiettivi della Fase 7 del lab implementando GoldenGate in modo guidato e verificabile.
-
-## Procedura operativa
-Completare attività di fase in sequenza: preparazione ambiente, configurazione processi, test replica e verifica checkpoint.
-
-## Validazione finale
-Confermare i risultati didattici della fase: replica funzionante, comprensione dei componenti e troubleshooting di base superato.
-
-## Troubleshooting rapido
-Se la fase non va a buon fine, ripartire dai prerequisiti del lab, controllare log OGG e ripetere i test previsti dalla checklist.

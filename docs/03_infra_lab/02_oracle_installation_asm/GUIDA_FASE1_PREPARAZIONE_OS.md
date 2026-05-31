@@ -407,9 +407,13 @@ Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal brows
 
 ---
 
-## 1.5 Disabilitare Firewall e SELinux
+## 1.5 Firewall e SELinux: Eccezione Solo per Lab Isolato
 
-> **Perché?** In un ambiente di laboratorio, firewall e SELinux aggiungono complessità non necessaria e spesso bloccano le porte necessarie all'interconnect del RAC o i processi di Grid Infrastructure. In produzione useresti policy e regole di rete certosine, ma per imparare l'architettura è imperativo eliminarli per evitare falsi positivi.
+> [!WARNING]
+> I comandi seguenti sono una scorciatoia ammessa solo sulle VM domestiche
+> isolate del Core Lab. Non sono una baseline enterprise. In produzione mantieni
+> firewall e SELinux secondo policy, apri soltanto i flussi approvati e applica
+> il [profilo di produzione](../../04_governance_learning/02_enterprise_standards/PRODUCTION_PROFILE.md).
 
 ### Step 1: Disabilitare il Firewall (firewalld)
 Esegui questi due comandi da root per fermare il firewall adesso e impedirne l'avvio al prossimo reboot:
@@ -418,8 +422,9 @@ systemctl stop firewalld
 systemctl disable firewalld
 ```
 
-### Step 2: Disabilitare SELinux (Modifica Manuale)
-SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando il suo file di configurazione.
+### Step 2: Impostare SELinux permissive nel Lab (Modifica Manuale)
+Nel lab isolato usa `permissive`: conserva gli eventi AVC senza bloccare
+l'installazione.
 
 1. Apri il file con l'editor testuale `vi`:
    ```bash
@@ -427,8 +432,8 @@ SELinux è una sicurezza del kernel. Disabilitiamolo permanentemente modificando
    ```
 2. Cerca la riga che dice `SELINUX=enforcing` (usa le frecce della tastiera per muoverti).
 3. Premi il tasto `i` per entrare in modalità INSERIMENTO.
-4. Cancella `enforcing` e scrivi `disabled`. La riga deve risultare esattamente:
-   `SELINUX=disabled`
+4. Cancella `enforcing` e scrivi `permissive`. La riga deve risultare esattamente:
+   `SELINUX=permissive`
 5. Premi `Esc` per uscire dall'inserimento, poi scrivi `:wq` e premi `Invio` per salvare e uscire.
 6. Per non dover riavviare subito la macchina, abbassa le difese di SELinux in RAM per la sessione corrente in questo modo:
    ```bash
@@ -613,16 +618,15 @@ Creiamo l'utente `grid`, che avrà come gruppo principale `oinstall` e farà par
 useradd -u 54331 -g oinstall -G dba,asmdba,asmadmin,asmoper,racdba grid
 ```
 
-### Step 4: Imposta le password (Manualmente)
-Siamo in un laboratorio, diamo la stessa password facile a entrambi.
-Esegui questi comandi. Linux ti chiederà di digitare la nuova password (non vedrai i caratteri mentre digiti per sicurezza). Scrivi `oracle` per il primo e `grid` per il secondo, dando sempre Invio.
+### Step 4: Imposta password distinte (Manualmente)
+Usa password forti e diverse per `oracle` e `grid`, conservate nel password
+manager del lab. Non usare il nome dell'account come password e non inserire
+password negli script o nella cronologia shell.
 
 ```bash
 passwd oracle
-# (Digita: oracle -> Invio -> oracle -> Invio)
 
 passwd grid
-# (Digita: grid -> Invio -> grid -> Invio)
 ```
 
 ---
@@ -902,10 +906,6 @@ chronyc sources
 ---
 
 ## 1.13 Inventory Location (Golden Image)
-> **Nodo: rac1** | **Utente: root**
-
-```bash
-## 1.13 Inventory Location (Golden Image)
 
 > 💡 **Nodo: rac1** | **Utente: root**
 
@@ -922,9 +922,6 @@ EOF
 
 chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
-```
-
----
 ```
 
 ---
@@ -958,7 +955,7 @@ poweroff
 
 #### Step 2: Crea i Cloni (rac2, racstby1, racstby2)
 1. In VirtualBox, seleziona `rac1` -> Sezione **Istantanee**.
-2. Tasto destro su `SNAP-04` -> **Clona**.
+2. Tasto destro su `SNAP-02: Golden_Image_Pronta` -> **Clona**.
 3. **POLICY MAC**: Seleziona **Genera nuovi indirizzi MAC** (FONDAMENTALE).
 4. **TIPO CLONE**: Clonazione completa.
 5. Ripeti per creare: `rac2`, `racstby1`, `racstby2`.
@@ -1300,20 +1297,21 @@ ping -c 1 rac1 && ping -c 1 rac2 && ping -c 1 rac1-priv && ping -c 1 rac2-priv
 # 3. DNS SCAN funzionante (Deve tornare 3 IP)
 nslookup rac-scan.localdomain
 
-# 4. SSH senza password (grid, oracle e root)
+# 4. SSH senza password (grid e oracle)
 # Su rac1 prova a entrare in rac2
 su - grid -c "ssh rac2 hostname"
 su - oracle -c "ssh rac2 hostname"
-su - root -c "ssh rac2 hostname"
 
-# 5. Firewall e SELinux (Devono essere disabled/Permissive)
+# 5. Eccezione del lab isolato: firewall fermo e SELinux permissive
 systemctl is-active firewalld || echo "Firewall OK (Disabled)"
 getenforce
 ```
 
-> 📸 **SNAPSHOT FINALE — "SNAP-03: Cloni_In_Rete_Dischi_ASM_OK"**
-> Questo è il tuo punto di ripristino d'oro per l'intero cluster. Se l'installazione Grid fallisce, torna qui scartando la Fase 2 fallita.
-> **Fallo su TUTTI i nodi accesi in questo momento (`rac1` e `rac2`, più eventuali standby se li hai già configurati in rete).**
+> [!IMPORTANT]
+> **Checkpoint freddo pre-Grid**: spegni tutte le VM collegate allo storage
+> condiviso e conserva insieme configurazioni VM e dischi VDI condivisi. Non
+> creare snapshot indipendenti dei nodi dopo aver collegato i dischi RAC:
+> potrebbero rappresentare istanti diversi dello stesso storage.
 
 ---
 

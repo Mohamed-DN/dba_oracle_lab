@@ -17,6 +17,30 @@
 >   - **Master DBA Cheat Sheet**: [CS_MASTER_DBA.md](../../01_operations/01_cheat_sheets/CS_MASTER_DBA.md) (tutti i comandi consolidati).
 
 > Questa fase copre la preparazione dei nodi standby (`racstby1`, `racstby2`) e la creazione del database standby fisico usando RMAN Duplicate from Active Database.
+> Il duplicate replica il CDB `RACDB` e la PDB `RACDBPDB`; il database standby
+> usa `DB_UNIQUE_NAME=RACDB_STBY`.
+
+## Obiettivo operativo
+
+Costruire il cluster standby, eseguire il duplicate RMAN del CDB primary e
+attivare Redo Apply con listener, SRL, deletion policy e controlli coerenti.
+
+## Procedura operativa
+
+Segui in ordine Golden Image, rete, Grid/ASM, patch alignment, Oracle Net,
+duplicate RMAN, registrazione OCR e MRP. Mantieni la stessa RU approvata su
+primary e standby.
+
+## Validazione finale
+
+Conferma standby `PHYSICAL STANDBY`, MRP attivo, gap assenti, CDB/PDB replicate,
+SPFILE in ASM e deletion policy Data Guard-aware.
+
+## Troubleshooting rapido
+
+Isola il livello dell'errore: rete/listener, patch, auxiliary `NOMOUNT`,
+duplicate RMAN, OCR oppure apply. Non modificare parametri o cancellare
+archivelog senza aver raccolto le evidenze.
 
 > 🛑 **PRIMA DI CONTINUARE: CONNETTITI VIA MOBAXTERM!**
 > Questa fase, come la Fase 2, richiede uso continuo di shell + GUI Oracle (`gridSetup.sh`, `runInstaller`) e copia/incolla preciso dei comandi.
@@ -120,7 +144,9 @@ Questo è il percorso principale della Fase 3. Prima di poter configurare Data G
 
 ### Step 1: Clona le Macchine dalla Golden Image
 1. Assicurati che `rac1` sia spento.
-2. Apri **VirtualBox Manager**, fai clic sulla VM `rac1`, vai nella sezione "Istantanee" (Snapshots), seleziona `SNAP-04_Prerequisiti_Cloni_Pronti` e clicca su **Clona**. *(Devi partire da questo esatto snapshot, NON dallo stato attuale o da snapshot successivi!)*
+2. Apri **VirtualBox Manager**, fai clic sulla VM `rac1`, vai nella sezione
+   "Istantanee" e seleziona `SNAP-02: Golden_Image_Pronta`. Clona sempre questa
+   immagine pre-Grid, non lo stato corrente del primary.
 3. Nome: `racstby1` -> Seleziona **Genera nuovi indirizzi MAC** -> Clonazione completa.
 4. Ripeti l'operazione per creare `racstby2` (clonando sempre da `rac1`).
 5. Assegna a `racstby1` e `racstby2` i 5 dischi condivisi fittizi creati per lo standby (`asm-stby-crs1`, `asm-stby-crs2`, ecc.).
@@ -492,7 +518,10 @@ I patch che ti servono (già presenti nei tuoi download):
 | Patch | Descrizione | Dove si Applica |
 |---|---|---|
 | **p6880880** | **OPatch** (utility per applicare patch) | Sostituisci in ogni ORACLE_HOME |
-| **p38658588** | **Combo Patch (GI RU + OJVM RU)** — Jan 2026 | Grid Home + DB Home |
+| **p`<COMBO_PATCH_ID>`** | **Combo Patch (GI RU + OJVM RU)** approvata | Grid Home + DB Home |
+
+Usa gli stessi valori inventariati nella Fase 0 e applicati al primary. Non
+proseguire se `opatch lspatches` differisce tra i due siti.
 
 ### Step 1: Aggiorna OPatch nella Grid Home
 
@@ -514,7 +543,7 @@ chown -R grid:oinstall /u01/app/19.0.0/grid/OPatch
 # Verifica la versione (torna a grid)
 su - grid
 $ORACLE_HOME/OPatch/opatch version
-# Deve mostrare: OPatch Version: 12.2.0.1.48 (o superiore per patch Gennaio 2026)
+# Deve mostrare: OPatch Version: <OPATCH_VERSION> o superiore secondo README MOS
 ```
 
 ```bash
@@ -532,23 +561,36 @@ $ORACLE_HOME/OPatch/opatch version
 
 > ⚠️ **ATTENZIONE**: NON scompattare la patch in `/tmp`! Nelle nostre VM, `/tmp` è un disco RAM (tmpfs) di soli 4GB. La patch estratta occupa più di 3GB, riempendo `/tmp` al 100% e bloccando il nodo. Usa sempre `/u01` che ha 50GB di spazio!
 
+Prima di eseguire i comandi, valorizza l'inventario approvato in ogni nuova
+shell che esegue patching, anche dopo ogni accesso SSH o `su -`:
+
+```bash
+export COMBO_PATCH_ID=__FROM_CHANGE__
+export RU_PATCH_ID=__FROM_CHANGE__
+export OJVM_PATCH_ID=__FROM_CHANGE__
+test "$COMBO_PATCH_ID" != "__FROM_CHANGE__" || {
+  echo "Valorizza gli ID patch registrati nel change."
+  exit 1
+}
+```
+
 ```bash
 # Scompatta su racstby1 (come root)
 mkdir -p /u01/app/patch
 cd /u01/app/patch
-unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
+unzip -q /tmp/p${COMBO_PATCH_ID}_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 
 # Identifica gli ID delle RU all'interno della Combo Patch:
-ls -l /u01/app/patch/38658588
-# Vedrai due cartelle numeriche: una per OJVM (38523609) e una per la vera e propria RU (38629535).
-# Useremo il path 38629535 per opatchauto!
+ls -l /u01/app/patch/${COMBO_PATCH_ID}
+# Vedrai due cartelle numeriche: una per OJVM (`<OJVM_PATCH_ID>`) e una per la RU (`<RU_PATCH_ID>`).
+# Useremo il path `<RU_PATCH_ID>` validato nella README MOS.
 
 # Ripeti l'estrazione su racstby2!
 ssh racstby2
 mkdir -p /u01/app/patch
 cd /u01/app/patch
-unzip -q /tmp/p38658588_190000_Linux-x86-64.zip
+unzip -q /tmp/p${COMBO_PATCH_ID}_190000_Linux-x86-64.zip
 chown -R grid:oinstall /u01/app/patch
 exit
 ```
@@ -572,15 +614,15 @@ df -h /u01
 tar czf /u01/app/grid_home_backup_$(date +%Y%m%d).tar.gz -C /u01/app/19.0.0 grid --exclude='*.log'
 
 # --- BEST PRACTICE 3: Pre-check con opatchauto analyze (dry run senza applicare!) ---
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
-# Sostituisci 38629535 con l'ID reale della RU che hai trovato nello step 2!
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME -analyze
+# Sostituisci i placeholder con gli ID registrati nell'inventario patch.
 # Se mostra errori di conflitto, risolvili PRIMA di applicare!
 # Se mostra "Patch analysis is complete" -> puoi proseguire.
 
 # --- APPLICAZIONE VERA (solo dopo che analyze è OK) ---
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 > **Perché opatchauto?** Per la Grid Infrastructure, non puoi usare il semplice `opatch apply`. Devi usare `opatchauto` (come root), che:
@@ -603,9 +645,9 @@ $ORACLE_HOME/OPatch/opatch lspatches
 ```bash
 # Ripeti su racstby2 come root
 ssh racstby2
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/19.0.0/grid
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 
 # Verifica
 crsctl check crs
@@ -629,7 +671,7 @@ Ignora gli script root automatici. Alla fine, esegui il `root.sh` proposto su `r
 #### 4.6 Patching Database Home (Combo Patch) sullo Standby
 
 > [!IMPORTANT]
-> **ORDINE DELLE OPERAZIONI**: Devi aggiornare l'utility OPatch **PRIMA** di lanciare `opatchauto apply`. Se provi ad applicare la RU di Gennaio 2026 con un OPatch vecchio (versione < 12.2.0.1.48), l'operazione fallirà.
+> **ORDINE DELLE OPERAZIONI**: Devi aggiornare l'utility OPatch **PRIMA** di lanciare `opatchauto apply`. Verifica nella README MOS della RU scelta che la versione OPatch installata soddisfi il requisito minimo.
 
 ### Step 1: Aggiorna OPatch nella DB Home
 
@@ -673,12 +715,12 @@ chown -R oracle:oinstall /u01/app/patch
 tar czf /u01/app/dbhome_backup_$(date +%Y%m%d).tar.gz -C /u01/app/oracle/product/19.0.0 dbhome_1 --exclude='*.log'
 
 # Pre-check (dry run)
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME -analyze
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME -analyze
 
 # Se analyze OK -> applica
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 > **Nota**: `opatchauto` riconosce automaticamente che è una DB Home in un cluster RAC e gestisce il patching di conseguenza.
@@ -687,19 +729,19 @@ $ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACL
 # Ripeti su racstby2
 ssh racstby2 "chown -R oracle:oinstall /u01/app/patch"
 ssh racstby2
-cd /u01/app/patch/38658588/38629535
+cd /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID}
 export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/38658588/38629535 -oh $ORACLE_HOME
+$ORACLE_HOME/OPatch/opatchauto apply /u01/app/patch/${COMBO_PATCH_ID}/${RU_PATCH_ID} -oh $ORACLE_HOME
 ```
 
 ### Step 3: Applica il Patch OJVM
 
-Il patch OJVM è raggruppato all'interno della Combo Patch. Abbiamo già scompattato tutto allo Step 2 di Grid, quindi i file sono già pronti in `/u01/app/patch/38658588/`. Si applica con `opatch apply` standard puntando alla sottocartella OJVM.
+Il patch OJVM è raggruppato all'interno della Combo Patch. Abbiamo già scompattato tutto allo Step 2 di Grid, quindi i file sono già pronti in `/u01/app/patch/${COMBO_PATCH_ID}/`. Si applica con `opatch apply` standard puntando alla sottocartella OJVM.
 
 ```bash
 # Come utente oracle su racstby1
 su - oracle
-cd /u01/app/patch/38658588/38523609   # Usa l'ID reale della cartella OJVM trovato prima
+cd /u01/app/patch/${COMBO_PATCH_ID}/${OJVM_PATCH_ID}   # Usa l'ID reale della cartella OJVM trovato prima
 $ORACLE_HOME/OPatch/opatch apply
 
 # Quando chiede "Is the local system ready for patching?" rispondi: y
@@ -707,7 +749,7 @@ $ORACLE_HOME/OPatch/opatch apply
 # Ripeti su racstby2
 ssh racstby2
 su - oracle
-cd /u01/app/patch/38658588/38523609
+cd /u01/app/patch/${COMBO_PATCH_ID}/${OJVM_PATCH_ID}
 $ORACLE_HOME/OPatch/opatch apply
 ```
 
@@ -720,8 +762,8 @@ $ORACLE_HOME/OPatch/opatch lspatches
 
 Output atteso:
 ```
-38629535;Database Release Update : 19.x.0.0.xxxxxx
-38523609;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx
+<RU_PATCH_ID>;Database Release Update : 19.x.0.0.xxxxxx
+<OJVM_PATCH_ID>;OJVM RELEASE UPDATE: 19.x.0.0.xxxxxx
 ```
 
 ```bash
@@ -736,11 +778,13 @@ Pulizia file patch:
 
 ```bash
 # Come root su racstby1
-rm -rf /u01/app/patch/*
+PATCH_DIR=/u01/app/patch
+test "$(readlink -f "$PATCH_DIR")" = "/u01/app/patch" &&
+rm -rf -- "$PATCH_DIR"/*
 rm -f /tmp/p*.zip
 
 # Come root su racstby2
-ssh racstby2 "rm -rf /u01/app/patch/* && rm -f /tmp/p*.zip"
+ssh racstby2 'PATCH_DIR=/u01/app/patch; test "$(readlink -f "$PATCH_DIR")" = "/u01/app/patch" && rm -rf -- "$PATCH_DIR"/*; rm -f /tmp/p*.zip'
 ```
 
 A questo punto, l'infrastruttura Standby (motore Grid + RDBMS patchato) è identica al cluster Primario. Siamo pronti a connettere il database.
@@ -995,8 +1039,8 @@ sqlplus '/@RACDB_DG as sysdba'
   https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/data-guard-broker.pdf
 - Oracle RAC (SCAN per connessioni client):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/about-the-scan.html
-- Oracle RAC (connessioni via SCAN):
-  https://docs.oracle.com/en/database/oracle/oracle-database/21/rilin/about-connecting-to-an-oracle-rac-database-using-scans.html
+- Oracle RAC 19c (connessioni via SCAN):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/about-connecting-to-an-oracle-rac-database-using-scans.html
 - Oracle MAA 19c (configure/deploy Data Guard):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/configure-and-deploy-oracle-data-guard.html
 - Oracle Data Guard 19c (creazione Physical Standby con RMAN duplicate):
@@ -1058,7 +1102,7 @@ ALTER SYSTEM SET fal_client='RACDB' SCOPE=BOTH SID='*';
 ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET db_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/' SCOPE=SPFILE SID='*';
-ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/RACDB_STBY/','+FRA/RACDB/' SCOPE=SPFILE SID='*';
+ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+RECO/RACDB_STBY/','+RECO/RACDB/' SCOPE=SPFILE SID='*';
 ```
 
 ```sql
@@ -1155,7 +1199,7 @@ Questa e la spina dorsale di Data Guard: stai dicendo al primario chi e lo stand
    - Comandi:
    ```sql
    ALTER SYSTEM SET db_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/' SCOPE=SPFILE SID='*';
-   ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+FRA/RACDB_STBY/','+FRA/RACDB/' SCOPE=SPFILE SID='*';
+   ALTER SYSTEM SET log_file_name_convert='+DATA/RACDB_STBY/','+DATA/RACDB/','+RECO/RACDB_STBY/','+RECO/RACDB/' SCOPE=SPFILE SID='*';
    ```
    - Cosa fa: mappa i path ASM tra primario e standby per datafile/redofile quando cambia il ruolo.
    - Perche `SCOPE=SPFILE`: questi parametri sono statici e richiedono restart istanza per entrare in vigore.
@@ -1390,7 +1434,8 @@ Se invece devi crearne uno nuovo sul filesystem:
 su - oracle
 . ~/.db_env
 cd /u01/app/oracle/product/19.0.0/dbhome_1/dbs
-orapwd file=orapwRACDB1 password=<tua_password_sys> entries=10 force=y
+# orapwd richiede la password nel prompt interattivo
+orapwd file=orapwRACDB1 entries=10 force=y
 ```
 
 ### Passo 4 - Copiare il file sui nodi standby
@@ -1841,15 +1886,11 @@ La sequenza corretta e':
 3. registri il database standby in OCR
 4. avvii anche `RACDB2` su `racstby2`
 
-> 📸 **SNAPSHOT — "SNAP-07: Standby_Grid_e_OS_Pronti" 🔴 CRITICO**
-> L'RMAN Duplicate è l'operazione più delicata. Se fallisce (e succede spesso la prima volta), torni qui e risparmi MOLTO tempo.
-> **Fai snapshot su TUTTE le VM (rac1, rac2, racstby1, racstby2)!**
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-07: Standby_Grid_e_OS_Pronti"
-> VBoxManage snapshot "rac2" take "SNAP-07: Standby_Grid_e_OS_Pronti"
-> VBoxManage snapshot "racstby1" take "SNAP-07: Standby_Grid_e_OS_Pronti"
-> VBoxManage snapshot "racstby2" take "SNAP-07: Standby_Grid_e_OS_Pronti"
-> ```
+> [!IMPORTANT]
+> **Checkpoint freddo pre-duplicate**: se vuoi un rollback rapido, arresta in
+> modo pulito entrambi i cluster e spegni tutte le VM. Conserva insieme file VM
+> e dischi VDI condivisi dei due siti. Snapshot indipendenti con ASM attivo non
+> costituiscono un rollback coerente.
 
 ```bash
 # Da racstby1 come oracle
@@ -2124,6 +2165,20 @@ crsctl stat res -t | grep -A2 RACDB_STBY
 -- Su racstby1 come sysdba
 sqlplus / as sysdba
 
+-- Prima dell'apply verifica SRL per ogni thread.
+-- Servono almeno online redo group + 1, con la stessa dimensione degli ORL.
+SELECT thread#, COUNT(*) AS online_groups, MIN(bytes)/1024/1024 AS min_mb,
+       MAX(bytes)/1024/1024 AS max_mb
+FROM   v$log
+GROUP  BY thread#
+ORDER  BY thread#;
+
+SELECT thread#, COUNT(*) AS srl_groups, MIN(bytes)/1024/1024 AS min_mb,
+       MAX(bytes)/1024/1024 AS max_mb
+FROM   v$standby_log
+GROUP  BY thread#
+ORDER  BY thread#;
+
 -- Prima verifica se MRP e' gia' attivo
 SELECT process, status, thread#, sequence#
 FROM   v$managed_standby
@@ -2141,6 +2196,8 @@ WHERE  process IN ('MRP0','RFS');
 
 Regola pratica:
 
+- non avviare apply finché quantità e dimensione SRL non rispettano la regola
+  `online redo group + 1` per ogni thread;
 - se `MRP0` e' gia' presente, non rilanciare il comando
 - se `MRP0` non c'e', lancialo una volta su `racstby1`
 - il fatto che le istanze risultino `Mounted (Closed)` non prova che il redo apply sia attivo: prova solo che lo standby e' su e registrato nel cluster
@@ -2162,7 +2219,7 @@ SELECT process, status, thread#, sequence# FROM v$managed_standby WHERE process 
 ## 3.14 Configura Archivelog Deletion Policy
 
 ```bash
-# Sullo standby come oracle
+# Esegui sul primary e sullo standby, come oracle con ambiente locale corretto.
 rman target /
 
 RMAN> SHOW ARCHIVELOG DELETION POLICY;
@@ -2174,7 +2231,9 @@ RMAN> SHOW ARCHIVELOG DELETION POLICY;
 # CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
 ```
 
-> **Perché?** Senza questa policy, gli archivelog si accumulano nella FRA fino a riempirla (ORA-19502). Con questa policy, RMAN elimina automaticamente gli archivelog che sono già stati applicati sullo standby.
+> **Perché?** La policy impedisce ai comandi RMAN di considerare eliminabili log
+> ancora necessari allo standby. Non esegue da sola una cancellazione: retention,
+> spazio FRA, backup archivelog e comandi `DELETE` vanno gestiti nella Fase 5.
 
 ---
 
@@ -2212,6 +2271,13 @@ WHERE  process IN ('MRP0','RFS');
 ```
 
 ```sql
+-- Sullo STANDBY: il duplicate del CDB deve includere la PDB applicativa
+SELECT name, open_mode
+FROM   v$pdbs
+WHERE  name = 'RACDBPDB';
+```
+
+```sql
 -- Sullo STANDBY (racstby1): confronto corretto tra ultimo log ricevuto e ultimo log applicato
 SELECT thread#,
        MAX(sequence#) AS last_received,
@@ -2226,6 +2292,8 @@ Come leggere correttamente questi risultati:
 - `database_role` deve essere `PHYSICAL STANDBY`
 - `open_mode` deve essere `MOUNTED`
 - `MRP0` deve essere presente su `racstby1`, con stato `APPLYING_LOG` oppure `WAIT_FOR_LOG`
+- `RACDBPDB` deve essere presente nel CDB standby; la lettura applicativa resta
+  opzionale e richiede il gate Active Data Guard
 - `DEST_ID=2` sul primario deve risultare `VALID` e senza errore
 - `transport lag` e `apply lag` devono essere nulli o molto bassi
 
@@ -2607,14 +2675,11 @@ set homepath diag/tnslsnr/racstby1/listener
 show alert -tail 50
 ```
 
-> 📸 **SNAPSHOT — "SNAP-08: RMAN_Duplicate_Finito" ⭐ MILESTONE**
-> Lo standby è operativo con MRP attivo e 0 gap! Questo è probabilmente lo snapshot più importante dopo la creazione del primario.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-08: RMAN_Duplicate_Finito"
-> VBoxManage snapshot "rac2" take "SNAP-08: RMAN_Duplicate_Finito"
-> VBoxManage snapshot "racstby1" take "SNAP-08: RMAN_Duplicate_Finito"
-> VBoxManage snapshot "racstby2" take "SNAP-08: RMAN_Duplicate_Finito"
-> ```
+> [!IMPORTANT]
+> **Milestone Data Guard**: conserva output dei controlli, configurazione
+> Oracle Net e una baseline RMAN verificata. Se vuoi una copia a livello VM,
+> arresta prima MRP e database, ferma i cluster e copia insieme tutti i VDI.
+> Non creare snapshot di VM attive come backup Data Guard.
 
 ---
 
@@ -2641,15 +2706,3 @@ WHERE name IN ('db_name','db_unique_name','log_archive_config',
 ---
 
 **← [FASE 2: Grid + RAC](../../03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 4: Data Guard](./GUIDA_FASE4_DATAGUARD_DGMGRL.md)**
-
-## Obiettivo
-Completare la creazione dello standby RAC e attivare una replica Data Guard stabile e verificabile.
-
-## Procedura operativa
-Eseguire i blocchi della guida in sequenza, dalla preparazione nodi standby fino a duplicate RMAN e avvio apply.
-
-## Validazione finale
-Verificare che lo standby sia registrato, sincronizzato e in apply continuo con i test previsti nella guida.
-
-## Troubleshooting rapido
-Se una fase fallisce, isolare il punto di errore (rete, listener, RMAN, apply) e applicare il recupero indicato nella sezione dedicata.

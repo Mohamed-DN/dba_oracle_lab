@@ -234,6 +234,7 @@ docs/
 |   |   +-- GUIDA_FASE1_PREPARAZIONE_OS.md
 |   |   +-- GUIDA_FASE2_GRID_E_RAC.md
 |   |   +-- GUIDA_FASE8_TEST_VERIFICA.md
+|   |   +-- GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md
 |   |   +-- GUIDA_PERCORSO_LITE_SINGLE_NODE.md
 |   |   +-- GUIDA_SSH_KEYS_RAC.md
 |   |   +-- OBIETTIVI_E_CHECKLIST_FASI_0_8.md
@@ -301,8 +302,8 @@ flowchart TD
             rac1[("rac1\n192.168.56.101\n8G/4CPU")]
             rac2[("rac2\n192.168.56.102\n8G/4CPU")]
             
-            rac1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> rac2
-            db1>"RAC PRIMARY (RACDB)\nASM: +CRS, +DATA, +RECO"]
+            rac1 <== "Private Network\n(Cache Fusion)\n192.168.1.0/24" ==> rac2
+            db1>"RAC PRIMARY CDB (RACDB)\nPDB: RACDBPDB\nASM: +CRS, +DATA, +RECO"]
             rac1 --- db1
             rac2 --- db1
         end
@@ -311,8 +312,8 @@ flowchart TD
             racstby1[("racstby1\n192.168.56.111\n8G/4CPU")]
             racstby2[("racstby2\n192.168.56.112\n8G/4CPU")]
             
-            racstby1 <== "Private Network 1 & 2\n(Cache Fusion)\n192.168.1.0/24, 192.168.2.0/24" ==> racstby2
-            db2>"RAC STANDBY (RACDB_DG)\nASM: +CRS, +DATA, +RECO"]
+            racstby1 <== "Private Network\n(Cache Fusion)\n192.168.2.0/24" ==> racstby2
+            db2>"RAC PHYSICAL STANDBY (RACDB_STBY)\nReplica CDB + PDB\nASM: +CRS, +DATA, +RECO"]
             racstby1 --- db2
             racstby2 --- db2
         end
@@ -337,6 +338,22 @@ flowchart TD
     end
 ```
 
+### Contratto del Core Lab
+
+| Elemento | Baseline |
+|---|---|
+| Database primary | CDB RAC `RACDB`, istanze `RACDB1` e `RACDB2` |
+| PDB applicativa | `RACDBPDB` |
+| Standby | physical standby RAC `RACDB_STBY` |
+| Observer | `observer1` manuale, `observer2` opzionale |
+| OS | OL7.9 track legacy; OL8 raccomandato per nuove VM |
+
+Per nuove VM consulta l'[appendice Oracle Linux 8 e ASMLib v3](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md).
+
+Feature opzionali soggette a gate licenza in produzione: Active Data Guard
+`READ ONLY WITH APPLY`, algoritmi RMAN `LOW`/`MEDIUM`/`HIGH`, Management Pack e
+altre opzioni richiamate dalle guide specialistiche.
+
 ---
 
 ## 📖 Esegui il Lab (Fase 0 → 8)
@@ -349,13 +366,13 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 |---|---|---|---|---|
 | 0 | **Setup Macchine** | [GUIDA_FASE0](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE0_SETUP_MACCHINE.md) | Crea VM VirtualBox, DNS, dischi ASM | 3-4h |
 | 1 | **Preparazione OS** | [GUIDA_FASE1](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE1_PREPARAZIONE_OS.md) | Rete, DNS, utenti, SSH, kernel | 2-3h |
-| 2 | **Grid + RAC** | [GUIDA_FASE2](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md) | Grid Infrastructure, ASM, Database | 4-5h |
+| 2 | **Grid + RAC** | [GUIDA_FASE2](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE2_GRID_E_RAC.md) | Grid, ASM, CDB `RACDB`, PDB `RACDBPDB` | 4-5h |
 | 3 | **RAC Standby** | [GUIDA_FASE3](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) | RMAN Duplicate, Listener statico, MRP | 3-4h |
 | 4 | **Data Guard** | [GUIDA_FASE4](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md) | DGMGRL Broker, Protection Mode, FASTSYNC | 2-3h |
 | 4B | **Observer FSFO** | [GUIDA_FASE4B](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Observer dedicato, wallet SEPS, failover automatico | 1-2h |
 | 5 | **RMAN Backup** | [GUIDA_FASE5](./docs/02_core_dba/02_backup_and_recovery/GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup, cron, BCT, restore | 2h |
 | 6 | **Enterprise Manager** | [GUIDA_FASE6](./docs/02_core_dba/06_monitoring_systems/GUIDA_FASE6_ENTERPRISE_MANAGER.md) | OEM Cloud Control 24ai + Agent | 4-5h |
-| 7 | **GoldenGate** | [GUIDA_FASE7](./docs/02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | Extract, Pump, Replicat (Oracle + PG) | 3-4h |
+| 7 | **GoldenGate** | [GUIDA_FASE7](./docs/02_core_dba/07_replication_goldengate/GUIDA_FASE7_GOLDENGATE.md) | MA TLS: Extract, Distribution Path, Replicat | 3-4h |
 | 8 | **Test Verifica** | [GUIDA_FASE8](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
 
 > **Tempo totale stimato**: ~31-32 ore di lavoro pratico.
@@ -370,7 +387,7 @@ Oltre alle 10 Guide Monumentali, ecco i link diretti agli strumenti più utili p
 1. 🩺 [Triage e Caccia all'Incidente](./docs/01_operations/01_cheat_sheets/CS_MASTER_DBA.md): Il punto di partenza per ogni disastro.
 2. 💾 [RMAN Rapido](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md): Backup e Restore al volo.
 3. 🛡️ [Data Guard (DGMGRL)](./docs/01_operations/01_cheat_sheets/CS_DGMGRL.md): Gestione standby e failover.
-4. 🔄 [GoldenGate (GGSCI)](./docs/01_operations/01_cheat_sheets/CS_GOLDENGATE.md): Check stato estrattori e replicat.
+4. 🔄 [GoldenGate](./docs/01_operations/01_cheat_sheets/CS_GOLDENGATE.md): AdminClient MA e GGSCI Classic legacy.
 5. 💽 [Storage ASM (ASMCMD)](./docs/01_operations/01_cheat_sheets/CS_ASMCMD.md): Gestione dischi e spazio esaurito.
 
 ### 🚨 Top 5 Runbooks (Risoluzione Incidenti)
@@ -705,12 +722,12 @@ Regole pratiche:
 
 | Software | Versione | Download |
 |---|---|---|
-| Oracle Linux | 7.9 | [Oracle Linux ISOs](https://yum.oracle.com/oracle-linux-isos.html) |
+| Oracle Linux | 7.9 track legacy / 8 raccomandato | [Oracle Linux ISOs](https://yum.oracle.com/oracle-linux-isos.html) |
 | Grid Infrastructure | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle Database | 19c (19.3) | [eDelivery](https://edelivery.oracle.com) |
 | Oracle Client Administrator | 19c | [eDelivery](https://edelivery.oracle.com) |
 | Oracle GoldenGate | 19c core lab / 26ai upgrade awareness | [eDelivery](https://edelivery.oracle.com) |
-| Enterprise Manager | 13.5 | [eDelivery](https://edelivery.oracle.com) |
+| Enterprise Manager | 24ai per la Fase 6 del lab | [eDelivery](https://edelivery.oracle.com) |
 | VirtualBox | 7.x | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) |
 
 > 💡 Scarica TUTTO prima di iniziare! Lista completa in [Fase 0](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE0_SETUP_MACCHINE.md).
