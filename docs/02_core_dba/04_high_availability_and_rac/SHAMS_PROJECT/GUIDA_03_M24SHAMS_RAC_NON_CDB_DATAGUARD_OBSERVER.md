@@ -17,7 +17,7 @@ supportato in 19c ma deprecato.
 ```text
 PE RAC primary                            SE RAC physical standby
 M24SHAMSPEC                               M24SHAMSSEC
-M24SHAMS1  M24SHAMS2                      M24SHAMS1  M24SHAMS2
+M24SHAMSPEC1  M24SHAMSPEC2                M24SHAMSSEC1  M24SHAMSSEC2
 THREAD 1    THREAD 2                      SRL T1      SRL T2
 SCAN + ASM                                SCAN + ASM
 ```
@@ -43,11 +43,20 @@ Con DBCA dal DB Home:
 1. `Create Database`;
 2. `Advanced Configuration`;
 3. Oracle RAC administrator-managed a due nodi;
-4. `DB_NAME=M24SHAMS`;
-5. non selezionare CDB;
-6. ASM OMF `+M24SHAMS_DATA`, FRA `+M24SHAMS_FRA`;
-7. `ARCHIVELOG`;
-8. `Generate Database Creation Scripts`, review ed esecuzione.
+4. Global Database Name `M24SHAMSPEC` oppure
+   `M24SHAMSPEC.<DB_DOMAIN>` se previsto;
+5. SID prefix `M24SHAMSPEC`: DBCA crea `M24SHAMSPEC1` e `M24SHAMSPEC2`;
+6. in `All Initialization Parameters` verifica o imposta
+   `DB_NAME=M24SHAMS` e `DB_UNIQUE_NAME=M24SHAMSPEC`, includendoli nello
+   SPFILE;
+7. non selezionare CDB;
+8. ASM OMF `+M24SHAMS_DATA`, FRA `+M24SHAMS_FRA`;
+9. `ARCHIVELOG`;
+10. `Generate Database Creation Scripts`, review ed esecuzione.
+
+Il cluster standby non nasce da un secondo DBCA. Durante il duplicate usa
+`DB_UNIQUE_NAME=M24SHAMSSEC`, SID prefix `M24SHAMSSEC` e istanze
+`M24SHAMSSEC1`, `M24SHAMSSEC2`.
 
 Verifica:
 
@@ -121,6 +130,7 @@ avvia una sola auxiliary instance in `NOMOUNT` con
 `cluster_database=FALSE`.
 
 ```bash
+export ORACLE_SID=M24SHAMSSEC1
 rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
 ```
 
@@ -132,6 +142,7 @@ RUN {
     DORECOVER
     SPFILE
       SET db_unique_name='M24SHAMSSEC'
+      SET instance_name='M24SHAMSSEC1'
       SET cluster_database='FALSE'
       SET db_create_file_dest='+M24SHAMS_DATA'
       SET db_recovery_file_dest='+M24SHAMS_FRA'

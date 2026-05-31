@@ -33,6 +33,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
   i 36 runbook disponibili e il percorso opzionale di containerizzazione.
 - **Anonymizzazione riferimenti**: sostituiti i riferimenti organizzativi
   residui con il nome `PEYTECH` nelle guide e negli esempi SQL versionati.
+- **Naming DBCA SHAMS PROJECT**: chiarita la sequenza Global Database Name,
+  SID prefix site-specific, `DB_NAME` condiviso e `DB_UNIQUE_NAME` PE/SE;
+  corretti anche i SID RAC per nodo.
 
 ## [2.0.0] - 2026-05-14
 ### Added

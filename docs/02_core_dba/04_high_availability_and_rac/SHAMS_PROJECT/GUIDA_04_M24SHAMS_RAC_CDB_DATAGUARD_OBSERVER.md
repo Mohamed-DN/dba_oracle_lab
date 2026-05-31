@@ -17,7 +17,7 @@ PE RAC primary                              SE RAC physical standby
 M24SHAMSPEC                                 M24SHAMSSEC
 CDB M24SHAMS                               CDB M24SHAMS
 PDB M24SHAMSC_APP                          PDB M24SHAMSC_APP
-M24SHAMS1  M24SHAMS2                       M24SHAMS1  M24SHAMS2
+M24SHAMSPEC1  M24SHAMSPEC2                 M24SHAMSSEC1  M24SHAMSSEC2
 THREAD 1    THREAD 2                       SRL T1      SRL T2
 SCAN + ASM                                 SCAN + ASM
 service M24SHAMSC_PRY                      service M24SHAMSC_RO
@@ -47,13 +47,22 @@ Con DBCA:
 1. `Create Database`;
 2. `Advanced Configuration`;
 3. RAC administrator-managed, due nodi;
-4. `DB_NAME=M24SHAMS`;
-5. seleziona `Create as Container database`;
-6. crea PDB `M24SHAMSC_APP`;
-7. seleziona local undo se richiesto dallo standard;
-8. ASM OMF `+M24SHAMS_DATA`, FRA `+M24SHAMS_FRA`;
-9. `ARCHIVELOG`;
-10. genera script, esegui review e avvia la creazione controllata.
+4. Global Database Name `M24SHAMSPEC` oppure
+   `M24SHAMSPEC.<DB_DOMAIN>` se previsto;
+5. SID prefix `M24SHAMSPEC`: DBCA crea `M24SHAMSPEC1` e `M24SHAMSPEC2`;
+6. in `All Initialization Parameters` verifica o imposta
+   `DB_NAME=M24SHAMS` e `DB_UNIQUE_NAME=M24SHAMSPEC`, includendoli nello
+   SPFILE;
+7. seleziona `Create as Container database`;
+8. crea PDB `M24SHAMSC_APP`;
+9. seleziona local undo se richiesto dallo standard;
+10. ASM OMF `+M24SHAMS_DATA`, FRA `+M24SHAMS_FRA`;
+11. `ARCHIVELOG`;
+12. genera script, esegui review e avvia la creazione controllata.
+
+Il cluster standby non nasce da un secondo DBCA. Durante il duplicate usa
+`DB_UNIQUE_NAME=M24SHAMSSEC`, SID prefix `M24SHAMSSEC` e istanze
+`M24SHAMSSEC1`, `M24SHAMSSEC2`.
 
 Verifica:
 
@@ -90,9 +99,14 @@ prima del duplicate.
 
 Avvia una sola auxiliary instance sul cluster SE:
 
+```bash
+export ORACLE_SID=M24SHAMSSEC1
+```
+
 ```text
 db_name='M24SHAMS'
 db_unique_name='M24SHAMSSEC'
+instance_name='M24SHAMSSEC1'
 cluster_database=FALSE
 db_create_file_dest='+M24SHAMS_DATA'
 db_recovery_file_dest='+M24SHAMS_FRA'

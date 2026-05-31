@@ -82,6 +82,15 @@ Scegli e registra uno dei percorsi:
 | DBCA `Generate Database Creation Scripts`, review, esecuzione | `<OK/KO>` |
 | Golden template RMAN vuoto approvato | `<OK/KO>` |
 
+Se usi DBCA GUI, inserisci prima:
+
+| Campo DBCA primary PE | Valore |
+| --- | --- |
+| Global Database Name | `M24SHAMSPEC` oppure `M24SHAMSPEC.<DB_DOMAIN>` |
+| SID | `M24SHAMSPEC` |
+| `All Initialization Parameters`: `DB_NAME` | `M24SHAMS` |
+| `All Initialization Parameters`: `DB_UNIQUE_NAME` | `M24SHAMSPEC` |
+
 Chiudi i controlli:
 
 ```sql
@@ -101,6 +110,8 @@ Conferma:
 | --- | --- |
 | `DB_NAME=M24SHAMS` | `<OK/KO>` |
 | primary `DB_UNIQUE_NAME=M24SHAMSPEC` | `<OK/KO>` |
+| primary SID `M24SHAMSPEC` | `<OK/KO>` |
+| standby SID `M24SHAMSSEC` | `<OK/KO>` |
 | `ARCHIVELOG` e `FORCE LOGGING` | `<OK/KO>` |
 | OMF DATA/FRA | `<OK/KO>` |
 | password file trasferito in modo sicuro | `<OK/KO>` |

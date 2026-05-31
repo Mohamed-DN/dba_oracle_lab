@@ -21,6 +21,11 @@ database. `non-CDB` indica il modello legacy senza PDB. `RAC` aggiunge alta
 affidabilita' locale con piu' istanze; Data Guard mantiene invece la copia
 standby sul sito secondario.
 
+Naming DBCA del primary PE in collaudo `C`: Global Database Name
+`M24SHAMSPEC[.<DB_DOMAIN>]`; SID `M24SHAMSPEC` per single instance oppure SID
+prefix `M24SHAMSPEC` per RAC. Nei parametri imposta `DB_NAME=M24SHAMS` e
+`DB_UNIQUE_NAME=M24SHAMSPEC`. Lo standby SE usa `M24SHAMSSEC`.
+
 Per una nuova installazione enterprise, il target preferito e' `S4`. Usa `S1`
 o `S3` solo quando esiste un requisito applicativo legacy non-CDB. Usa `S2`
 quando serve il modello CDB/PDB ma non e' richiesta HA locale RAC.

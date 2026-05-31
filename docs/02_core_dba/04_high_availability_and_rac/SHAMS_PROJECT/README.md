@@ -24,6 +24,22 @@ invece dalla perdita del database o del sito primario.
 Non combinare le righe: per esempio, non aggiungere comandi PDB a `S1` e non
 usare procedure RAC per `S2`.
 
+## Naming DBCA
+
+Per il collaudo `C`, la creazione DBCA del primary PE parte da:
+
+| Campo | Single instance | RAC |
+| --- | --- | --- |
+| Global Database Name | `M24SHAMSPEC[.<DB_DOMAIN>]` | `M24SHAMSPEC[.<DB_DOMAIN>]` |
+| SID o SID prefix | `M24SHAMSPEC` | `M24SHAMSPEC` |
+| SID risultanti | `M24SHAMSPEC` | `M24SHAMSPEC1`, `M24SHAMSPEC2` |
+| `DB_NAME` nei parametri | `M24SHAMS` | `M24SHAMS` |
+| `DB_UNIQUE_NAME` nei parametri | `M24SHAMSPEC` | `M24SHAMSPEC` |
+
+Lo standby SE non viene creato con DBCA: deriva dal duplicate RMAN e usa
+`DB_UNIQUE_NAME=M24SHAMSSEC`, SID `M24SHAMSSEC` per single instance oppure
+`M24SHAMSSEC1`, `M24SHAMSSEC2` per RAC.
+
 Il prefisso di esempio e' `M24SHAMS`. Prima dell'uso reale sostituiscilo con il
 prefisso approvato mantenendo la stessa convenzione di naming.
 
