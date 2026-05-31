@@ -8,7 +8,7 @@ ASM, Oracle Restart, Broker, Active Data Guard e backup RMAN sullo standby.
 
 Usare questo run sheet durante il change. Per motivazioni, comandi completi e
 troubleshooting consultare la
-[SOP Enterprise M24SHAMS](./GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md).
+[SOP Enterprise M24SHAMS](./GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md).
 
 ## Architettura
 
@@ -61,7 +61,7 @@ PRIMARY                                 PHYSICAL STANDBY
 
 ### 1. Preparazione host
 
-Apri l'[Allegato Host](./GUIDA_M24SHAMS_HOST_ORACLE_RESTART_ASM_19C.md) e
+Apri l'[Allegato Host](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md) e
 chiudi la checklist:
 
 ```bash
@@ -202,7 +202,7 @@ SHOW CONFIGURATION;
 ```
 
 FSFO resta fuori dal change. Pianifica la
-[Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md) dopo stabilizzazione.
+[Observer FSFO PEYTECH](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md) dopo stabilizzazione.
 
 ## Validazione finale
 
@@ -252,4 +252,4 @@ improvvisare un failover.
 | Apply lag | `V$DATAGUARD_STATS`, `V$MANAGED_STANDBY`, alert log |
 | Wallet chiuso | runbook TDE e copia keystore approvata |
 | Commit lenti | rollback a `MaxPerformance ASYNC` |
-| FRA piena | [DG-061](../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |
+| FRA piena | [DG-061](../../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |

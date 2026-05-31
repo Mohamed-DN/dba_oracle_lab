@@ -13,6 +13,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **SOP Enterprise M24SHAMS Staging Data Guard**: documentazione specifica per
   single instance non-CDB 19c su Oracle Restart, allegato host, run sheet e
   artifact DOCX/PDF per il change operativo.
+- **SHAMS PROJECT**: raccolti sotto un unico pacchetto i blueprint PEYTECH
+  single/RAC e CDB/non-CDB, la baseline comune, l'allegato host RAC, la run
+  sheet comparativa e la procedura Observer FSFO wallet-backed.
 
 ### Changed
 

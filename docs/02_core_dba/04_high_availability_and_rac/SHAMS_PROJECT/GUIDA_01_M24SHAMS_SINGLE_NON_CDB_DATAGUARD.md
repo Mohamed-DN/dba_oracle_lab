@@ -10,10 +10,10 @@ Files (OMF).
 La configurazione target include Data Guard Broker, Active Data Guard e backup
 RMAN eseguito sullo standby con recovery catalog. Fast-Start Failover (FSFO) non
 fa parte di questo change: viene attivato successivamente seguendo
-[Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md).
+[Observer FSFO PEYTECH](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md).
 
 Questa SOP e' specifica per `M24SHAMS`. Per il modello riutilizzabile consulta
-[Produzione Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md).
+[Produzione Single Instance Data Guard Non-CDB](../GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md).
 
 ## Principi e fonti
 
@@ -92,7 +92,7 @@ Prima dell'esecuzione assegna un owner per ciascuna area:
 | Backup | `<NOME>` | Recovery catalog, destinazione e restore test |
 
 La preparazione host e software e' descritta in
-[Allegato Host Oracle Restart ASM 19c](./GUIDA_M24SHAMS_HOST_ORACLE_RESTART_ASM_19C.md).
+[Allegato Host Oracle Restart ASM 19c](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md).
 
 ## Scheda inventario preflight
 
@@ -476,7 +476,7 @@ Se TDE e' richiesto:
 6. ripeti distribuzione e validazione dopo ogni rekey.
 
 Il runbook operativo di riferimento e'
-[TDE Wallet/Keystore](../../01_operations/02_runbooks_incidenti/RUNBOOK_27_TDE_WALLET_KEYSTORE_RUNBOOK.md).
+[TDE Wallet/Keystore](../../../01_operations/02_runbooks_incidenti/RUNBOOK_27_TDE_WALLET_KEYSTORE_RUNBOOK.md).
 
 ### 9. Avvio auxiliary e RMAN duplicate dello standby
 
@@ -775,7 +775,7 @@ SHOW CONFIGURATION;
 ```
 
 Non abilitare FSFO durante questo change. Dopo un periodo di stabilita', usa la
-[Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md).
+[Observer FSFO PEYTECH](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md).
 
 ## Validazione finale
 
@@ -864,7 +864,7 @@ Se lo standby deve essere ricostruito:
 | Apply lag cresce | Gap, rete, I/O standby o MRP | Controlla `V$DATAGUARD_STATS`, `V$MANAGED_STANDBY`, alert log |
 | Commit rallentano | `SYNC` incompatibile con latenza | Applica rollback documentato a `MaxPerformance ASYNC` |
 | Backup standby invisibile dal primary | Recovery catalog o connect identifier errato | Verifica catalogo e `LIST DB_UNIQUE_NAME OF DATABASE` |
-| FRA piena con standby in lag | Purge cieco pericoloso | Usa [DG-061](../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |
+| FRA piena con standby in lag | Purge cieco pericoloso | Usa [DG-061](../../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |
 
 ## Adattamenti rispetto allo standard PEYTECH 0.5
 
