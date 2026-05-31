@@ -11,6 +11,8 @@
 - [ ] VM create secondo piano IP
 - [ ] DNS operativo
 - [ ] storage base pronto
+- [ ] track OS registrato: OL7.9 legacy oppure OL8 raccomandato
+- [ ] Observer manuali censiti: `observer1`, `observer2` opzionale
 
 ## Fase 1 - Preparazione OS
 
@@ -35,6 +37,8 @@
 - [ ] CRS online
 - [ ] ASM diskgroup disponibili
 - [ ] istanze DB in stato OPEN
+- [ ] `RACDB` verificato come `CDB=YES`
+- [ ] `RACDBPDB` aperta `READ WRITE` su entrambe le istanze
 
 ## Fase 3 - RAC Standby
 
@@ -47,6 +51,7 @@
 - [ ] standby mount/read-only secondo fase
 - [ ] redo/apply allineati
 - [ ] listener statico valido
+- [ ] PDB `RACDBPDB` replicata nel physical standby
 
 ## Fase 4 - Data Guard Broker
 
@@ -83,6 +88,8 @@
 - [ ] job backup completati
 - [ ] catalogo/backuppiece verificati
 - [ ] restore test con esito PASS
+- [ ] deletion policy Data Guard-aware verificata
+- [ ] backup durevole esterno alla sola FRA disponibile
 
 ## Fase 6 - Enterprise Monitoring
 
@@ -100,7 +107,7 @@
 
 **Obiettivi**
 - Comprendere flusso CDC.
-- Configurare extract/pump/replicat.
+- Configurare MA TLS: Extract, Distribution Path WSS e Replicat.
 - Validare latenza replica.
 
 **Done checklist**

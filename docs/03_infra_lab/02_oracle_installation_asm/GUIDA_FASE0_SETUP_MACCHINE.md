@@ -3,6 +3,31 @@
 > **Questa fase va completata PRIMA di tutto il resto.** Qui creiamo le VM in VirtualBox per il DNS, il RAC primario e il RAC standby.
 > **Basato su**: [Oracle Base RAC 19c Guide](https://oracle-base.com/articles/19c/oracle-db-19c-rac-installation-on-oracle-linux-7-using-virtualbox) — adattato per installazione manuale passo per passo.
 
+## Obiettivo operativo
+
+Preparare un laboratorio VirtualBox riproducibile per un CDB RAC primary
+`RACDB`, una PDB applicativa `RACDBPDB`, uno standby fisico RAC `RACDB_STBY` e
+gli Observer FSFO opzionali. Questa guida usa Oracle Linux 7.9 come track
+legacy del lab; per una nuova installazione consulta anche
+[Percorso Oracle Linux 8 e ASMLib v3](./GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md).
+
+## Procedura operativa
+
+Completa in ordine DNS, reti host-only, VM `rac1`, storage `/u01`, dischi ASM e
+Golden Image. In questa fase gli snapshot sono ammessi solo per VM spente e
+prima della creazione di Grid Infrastructure o database.
+
+## Validazione finale
+
+Prima di passare alla Fase 1 verifica DNS, piano IP, mount `/u01`, mappa dei
+dischi ASM e presenza della Golden Image pre-Grid.
+
+## Troubleshooting rapido
+
+Se un device o un nome DNS non coincide con la guida, fermati e correggi
+l'inventario prima di clonare le VM. Non tentare fix sui dischi ASM finché non
+hai identificato con certezza device, dimensione e VM proprietaria.
+
 ### Vista d'Insieme del Lab VirtualBox
 
 ```
@@ -58,6 +83,8 @@
 | `rac2` | VM (clone di rac1) | **8 GB** | **4 vCPU** | 50 GB | 100 GB | stessi di rac1 |
 | `racstby1` | VM VirtualBox | **8 GB** | **4 vCPU** | 50 GB | 100 GB | 5 condivisi (propri) |
 | `racstby2` | VM (clone di racstby1) | **8 GB** | **4 vCPU** | 50 GB | 100 GB | stessi di racstby1 |
+| `observer1` | VM Linux leggera manuale | **2 GB** | **1 vCPU** | 20 GB | — | — |
+| `observer2` | VM Linux leggera manuale, opzionale | **2 GB** | **1 vCPU** | 20 GB | — | — |
 
 > **Perché un DNS separato?** Oracle Base consiglia una VM DNS dedicata con **Dnsmasq** (alternativa leggera a BIND). Così il DNS non si ferma quando riavvii i nodi RAC, e SCAN funziona sempre. Costa solo 1 GB.
 >
@@ -80,6 +107,8 @@
 | `racstby1-vip` | VIP Standby N.1 | 192.168.56.113 | — | Gestito dal CRS |
 | `racstby2-vip` | VIP Standby N.2 | 192.168.56.114 | — | Gestito dal CRS |
 | `racstby-scan` | SCAN Standby | 192.168.56.115-117 | — | Round-Robin DNS |
+| `observer1` | FSFO Observer dedicato | 192.168.56.121 | — | Creato manualmente in Fase 4B |
+| `observer2` | FSFO Observer backup | 192.168.56.122 | — | Opzionale, creato manualmente |
 
 ### Software da Scaricare PRIMA di Iniziare
 
@@ -91,12 +120,30 @@
 | GoldenGate 19c/21c | `fbo_ggs_Linux_x64_Oracle_shiphome.zip` | [edelivery.oracle.com](https://edelivery.oracle.com) | ~500 MB |
 | VirtualBox | Ultimo | [virtualbox.org](https://www.virtualbox.org/wiki/Downloads) | ~100 MB |
 
+> [!NOTE]
+> Oracle Linux 7.9 resta qui per riprodurre il lab esistente. Per nuove VM usa
+> preferibilmente Oracle Linux 8 e applica le differenze documentate
+> nell'[appendice OL8](./GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md). Non
+> mescolare pacchetti ASMLib OL7 e OL8.
+
 ### 🔧 Patch Oracle — Come Trovarli (My Oracle Support)
 
-| Patch | MOS Patch ID | Come Trovarlo | Note |
-|---|---|---|---|
-| **OPatch** (utility) | **6880880** | [Scarica qui](https://updates.oracle.com/Orion/PatchDetails/process_form?patch_num=6880880) | Aggiorna SEMPRE prima di ogni RU. **Nota**: Per patch Gennaio 2026 serve v12.2.0.1.48+ |
-| **Combo Patch (GI/DB RU + OJVM)** | Cambia ogni trimestre (es. **38658588**) | MOS → Patches & Updates → cerca `"Combo of OJVM Component Release Update 19... + Grid Infrastructure ..."` | Un singolo file .zip che include sia la RU per il motore Grid/DB sia la RU per Java (OJVM) |
+Compila l'inventario con la RU approvata prima di iniziare. Gli ID cambiano ogni
+trimestre: non copiare ID patch da una vecchia esecuzione.
+
+| Campo | Valore approvato |
+|---|---|
+| Versione OPatch minima richiesta dalla README MOS | `<OPATCH_VERSION>` |
+| Combo patch GI/DB RU + OJVM | `<COMBO_PATCH_ID>` |
+| Grid/Database RU | `<RU_PATCH_ID>` |
+| OJVM RU, se prevista dal change | `<OJVM_PATCH_ID>` |
+| Data approvazione e change | `<CHANGE_ID> - <YYYY-MM-DD>` |
+
+> [!NOTE]
+> Esempio storico non eseguibile: nel lab di gennaio 2026 erano stati usati
+> combo patch `38658588`, RU `38629535` e OJVM `38523609`. Verifica sempre la
+> README MOS della RU scelta e aggiorna OPatch patch `6880880` alla versione
+> richiesta da quella README.
 
 > **Come trovare l'ultima RU**: Vai su MOS (Doc ID **2118136.2**) → tabella con TUTTE le Release Update per ogni versione.
 >
@@ -226,6 +273,10 @@ cat >> /etc/hosts <<EOF
 192.168.56.115   racstby-scan.localdomain  racstby-scan
 192.168.56.116   racstby-scan.localdomain  racstby-scan
 192.168.56.117   racstby-scan.localdomain  racstby-scan
+
+# === FSFO OBSERVER (creati manualmente in Fase 4B) ===
+192.168.56.121   observer1.localdomain      observer1
+192.168.56.122   observer2.localdomain      observer2
 EOF
 
 # 3. Installa Dnsmasq e tools di rete (nslookup)
@@ -616,7 +667,7 @@ A questo punto il pannello di sinistra deve mostrare **esattamente 3 partizioni*
 > |  PERCHÉ SEPARARE?                                                   |
 > |  1. Se il SO si corrompe → reinstalli l'OS senza perdere Oracle    |
 > |  2. Se /u01 si riempie → il SO continua a funzionare              |
-> |  3. Backup/snapshot indipendenti: salvi lo storage Oracle senza    |
+> |  3. Backup indipendenti: salvi lo storage software Oracle senza    |
 > |     portarti dietro 50 GB di OS                                    |
 > |  4. Oracle Base raccomanda esplicitamente questa separazione       |
 > +---------------------------------------------------------------------+
@@ -712,14 +763,12 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 ## 0.8 Configurare ASMLib (oracleasm) per i Dischi ASM
 
-> **ASMLib v3 vs UDEV (La caduta di ASMFD)**:  
-> Hai assolutamente ragione! Fino a poco tempo fa Oracle spingeva per l'uso di **ASMFD** (ASM Filter Driver) per rimpiazzare ASMLib. Tuttavia, con un clamoroso dietrofront sulle versioni recenti (19c e l'imminente 23ai su kernel Linux 5.14+ come OEL 8/9), **Oracle ha ufficialmente DEPRECATO ASMFD**.
-> 
-> *Qual è lo standard Enterprise attuale (2026+)?*
-> 1. **UDEV Rules**: Rimane lo standard open-source Linux universally raccomandato per configurazioni pure.
-> 2. **Il ritorno di ASMLib**: Oracle ha rilasciato **ASMLib v3**, che ora supporta nativamente le moderne API del kernel (io_uring) e fornisce le feature di filtering di ASMFD senza i suoi problemi di compatibilità kernel.
-> 
-> Quindi, la nostra scelta didattica di usare ASMLib (`oracleasm`) nel laboratorio non solo facilita enormemente l'insegnamento rispetto a UDEV, ma si allinea perfettamente all'attuale "ritorno di fiamma" di Oracle verso questo componente!
+> [!IMPORTANT]
+> Questa sezione descrive ASMLib per il track legacy Oracle Linux 7.9 del lab.
+> In produzione la scelta tra ASMLib, UDEV e le alternative supportate va
+> registrata nel design storage e verificata sulla matrice di certificazione
+> della piattaforma. Per Oracle Linux 8 usa
+> [l'appendice ASMLib v3](./GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md).
 
 ### 1. Partizionamento dei dischi (== ESEGUI SOLO SU rac1 ==)
 
@@ -768,7 +817,10 @@ done
 *(L'output confermerà che per ogni disco è stata creata una nuova partizione Linux `sdX1` e la tabella delle partizioni è stata sincronizzata).*
 
 > 💡 **Tip da DBA: Perché NON formattiamo questi dischi in XFS né li mettiamo in fstab?**
-> A differenza di `/u01` (che è un filesystem gestito da Linux per contenere cartelle e file), i dischi ASM devono rimanere "grezzi" (raw block devices). Oracle ASM è un file system a sé stante (volume manager + file system combinati). Se provassi a montarli in `fstab`, Linux cercherebbe una struttura di cartelle ext4/xfs che non esiste, mandando in kernel panic la macchina all'avvio! Sarà ASMLib a riconoscerli al boot e a passarli ad Oracle.
+> A differenza di `/u01`, i dischi ASM restano block device dedicati ad ASM.
+> Non formattarli e non montarli in `/etc/fstab`: ASM ne gestisce discovery,
+> ridondanza e allocazione. Un mount Linux errato causa errori di boot o
+> indisponibilità dello storage, non è una procedura di recovery.
 
 #### Step 3: Rileggi la tabella
 Diciamo al kernel di aggiornare la sua mappa dischi (altrimenti ASMLib non li vedrà).
@@ -817,10 +869,9 @@ oracleasm init
 > **Verifica**: Il comando `oracleasm status` dovrebbe mostrare che il driver è caricato e montato. Non creeremo i dischi ora, lo faremo nella Fase 2.
 
 > 🛠️ **Troubleshooting: Errore "Mounting ASMlib driver filesystem: failed"**
-> Se `oracleasm init` fallisce con questo errore, è colpa di **SELinux** che sta bloccando il driver in memoria. Anche se l'hai disabilitato in `/etc/selinux/config` nella Fase 1, devi riavviare la macchina per disattivarlo. 
-> Per risolvere **al volo senza riavviare**, lancia come root:
-> `setenforce 0`
-> E poi ripeti il comando `oracleasm init`.
+> Se `oracleasm init` fallisce, verifica versione kernel, pacchetti ASMLib,
+> ownership e log di sistema. Nel track domestico isolato controlla anche che
+> l'eventuale eccezione SELinux della Fase 1 sia stata applicata dopo reboot.
 
 > 📸 **NOTA SNAPSHOT:**
 > *Il vecchio "SNAP-02" qui è stato rimosso per ottimizzare lo spazio. Prenderemo l'importante snapshot "SNAP-02: Golden_Image_Pronta" alla fine della Fase 1, quando rac1 avrà tutto (utenti, rete, pacchetti).*
@@ -898,12 +949,14 @@ Ripeti questo processo per creare le sessioni salvate per `dnsnode`, `rac1`, `ra
 
 ---
 
-> 📸 **Riepilogo Snapshot Fondamentali (Fase 0)**:
-> - **SNAP-DNS**: VM `dnsnode` configurata e funzionante.
-> - **SNAP-01_OS_Installato**: Solo OS e partizioni base su `rac1`.
-> - **SNAP-02_Base_VM_Ready**: ASMLib e dischi configurati su `rac1`. 
-> 
-> *Nota: Non creare snapshot per lo standby ora. Lo standby sarà un clone di `rac1` dopo la Fase 1 (`SNAP-04`).*
+> 📸 **Snapshot ammessi prima del database**:
+> - **SNAP-DNS**: VM `dnsnode` configurata e spenta.
+> - **SNAP-01: OS_Base_Installato**: solo OS e partizioni base su `rac1` spenta.
+> - **SNAP-02: Golden_Image_Pronta**: creato a fine Fase 1 con `rac1` spenta.
+>
+> Dopo il collegamento dello storage RAC condiviso non usare snapshot
+> VirtualBox come rollback. Usa backup freddi coerenti di tutte le VM e dei
+> dischi condivisi oppure backup RMAN, in base al checkpoint.
 
 ---
 

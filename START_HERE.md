@@ -22,11 +22,13 @@ Sintomo -> impatto -> evidenze -> diagnosi -> fix -> validazione -> prevenzione
 Percorso principale:
 
 1. [Fondamenti teorici](./docs/04_governance_learning/01_fondamenti_teorici/README.md)
-2. [Core Lab 0-8](./docs/03_infra_lab/02_oracle_installation_asm/README.md)
+2. [Core Lab 0-8: CDB RAC, PDB, standby e Observer](./docs/03_infra_lab/02_oracle_installation_asm/README.md)
 3. [Vagrant RAC + Data Guard](./vagrant_rac_dataguard/README.md)
 4. [Backup & Recovery](./docs/02_core_dba/02_backup_and_recovery/README.md)
 5. [High Availability](./docs/02_core_dba/04_high_availability_and_rac/README.md)
 6. [Monitoring](./docs/02_core_dba/06_monitoring_systems/README.md)
+
+Per nuove VM usa l'[appendice Oracle Linux 8 e ASMLib v3](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md).
 
 Non partire da GoldenGate, upgrade o patching se non hai prima RAC/Data Guard stabile.
 

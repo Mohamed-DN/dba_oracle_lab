@@ -483,7 +483,7 @@ Output atteso:
 - Data Guard Broker 19c PDF (Managing Data Protection Modes):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/data-guard-broker.pdf
 - Data Guard Broker command reference (`EDIT CONFIGURATION ... PROTECTION MODE`):
-  https://docs.oracle.com/en/database/oracle/oracle-database/21/dgbkr/oracle-data-guard-broker-commands.html
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/oracle-data-guard-broker-commands.html
 - Data Guard Concepts and Administration 19c (Redo Transport Services):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-data-guard-redo-transport-services.html
 - MAA Best Practices for Oracle Database 19c (Data Guard):
@@ -546,7 +546,11 @@ DGMGRL> SHOW CONFIGURATION;
 
 Il failover è un'operazione **NON pianificata** usata quando il primario è irraggiungibile. Può comportare perdita di dati (se non in MaxProtection).
 
-> **⚠️ ATTENZIONE**: Non eseguire un failover in un lab se non sei pronto a reinstanziare lo standby dopo. Dopo un failover, il vecchio primario NON può ridiventare standby automaticamente (serve un "reinstate" o una ricreazione).
+> [!CAUTION]
+> Prima di ogni failover conferma il fencing del vecchio primary: istanze
+> arrestate o host isolati da rete e storage applicativo. Senza fencing puoi
+> creare due primary concorrenti. Nel lab conserva prima una baseline RMAN e
+> segui il [runbook Failover e Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md).
 
 ```
 -- Solo se il primario è davvero down!
@@ -566,7 +570,11 @@ DGMGRL> REINSTATE DATABASE RACDB;
 
 ## 4.7 Abilitare Active Data Guard (Read-Only sullo Standby)
 
-Active Data Guard (ADG) permette di aprire lo standby in **READ ONLY** mentre continua ad applicare i redo. Fondamentale per GoldenGate nella Fase 5.
+Active Data Guard (ADG) permette di aprire lo standby in **READ ONLY** mentre
+continua ad applicare i redo. È opzionale: Data Guard base e backup RMAN dello
+standby funzionano anche in `MOUNT`. In produzione usa `READ ONLY WITH APPLY`
+solo dopo approvazione del gate licenza Active Data Guard. Il percorso
+GoldenGate del lab cattura dal primary e non richiede ADG.
 
 ```sql
 -- Sullo standby come sysdba
@@ -590,7 +598,9 @@ srvctl stop database -d RACDB_STBY
 srvctl start database -d RACDB_STBY
 ```
 
-> **Perché ADG?** Senza ADG, lo standby è in MOUNT (inaccessibile ai client). Con ADG, puoi eseguire query sullo standby per scaricare il carico dal primario. Inoltre, GoldenGate può fare fetch dei dati supplementari direttamente dallo standby.
+Dopo ogni restart verifica `READ ONLY WITH APPLY`; la sola start option non
+sostituisce il controllo MRP. Per servizi role-based e variante CDB/PDB usa la
+[guida SHAMS Active Data Guard](./SHAMS_PROJECT/GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md).
 
 ---
 

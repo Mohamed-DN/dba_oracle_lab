@@ -86,37 +86,43 @@ Nota:
 - in RAC standby e' normale vedere `MRP0` su una sola istanza;
 - non aspettarti `MRP0` su `racstby2` come requisito di successo.
 
-## 2. Test base: crea un PDB dal seed con replica sullo standby
+## 2. Test base: verifica il PDB creato da DBCA
 
-Per il primo test usa il caso piu semplice:
-
-- `CREATE PLUGGABLE DATABASE ... FROM PDB$SEED`
-- `STANDBYS=ALL`
-
-Non usare ancora:
-
-- clone da altro PDB
-- XML unplug/plug
-- clone remoto
-- TDE
-
-Sul primary, da `CDB$ROOT`:
+La baseline della Fase 2 crea già `RACDBPDB` con DBCA. Verifica prima che sia
+presente e aperto su tutte le istanze:
 
 ```sql
 sqlplus / as sysdba
 
-SHOW CON_NAME;
+SELECT name, open_mode
+FROM   v$pdbs
+WHERE  name = 'RACDBPDB';
 
-CREATE PLUGGABLE DATABASE LABPDB1
-  ADMIN USER pdbadmin IDENTIFIED BY "<PASSWORD_PDB_ADMIN>"
+ALTER PLUGGABLE DATABASE RACDBPDB OPEN INSTANCES=ALL;
+ALTER PLUGGABLE DATABASE RACDBPDB SAVE STATE INSTANCES=ALL;
+```
+
+Solo su un ambiente costruito prima dell'allineamento DBCA, se `RACDBPDB` non
+esiste, crealo dal seed con `STANDBYS=ALL`. Inserisci la password nel prompt
+SQL*Plus e non salvarla nello script:
+
+```sql
+sqlplus / as sysdba
+
+SHOW CON_NAME
+ACCEPT pdb_admin_password CHAR PROMPT 'Password PDBADMIN: ' HIDE
+
+CREATE PLUGGABLE DATABASE RACDBPDB
+  ADMIN USER pdbadmin IDENTIFIED BY "&pdb_admin_password"
   STANDBYS=ALL;
 
-ALTER PLUGGABLE DATABASE LABPDB1 OPEN INSTANCES=ALL;
-ALTER PLUGGABLE DATABASE LABPDB1 SAVE STATE INSTANCES=ALL;
+ALTER PLUGGABLE DATABASE RACDBPDB OPEN INSTANCES=ALL;
+ALTER PLUGGABLE DATABASE RACDBPDB SAVE STATE INSTANCES=ALL;
+UNDEFINE pdb_admin_password
 
 SELECT name, open_mode
 FROM   v$pdbs
-WHERE  name = 'LABPDB1';
+WHERE  name = 'RACDBPDB';
 ```
 
 Perche' questo caso e' corretto nel tuo lab:
@@ -145,12 +151,12 @@ WHERE  process IN ('MRP0','RFS');
 
 SELECT con_id, name, open_mode
 FROM   v$pdbs
-WHERE  name = 'LABPDB1';
+WHERE  name = 'RACDBPDB';
 ```
 
 Atteso:
 
-- `LABPDB1` esiste sullo standby;
+- `RACDBPDB` esiste sullo standby;
 - lo standby resta `MOUNTED`;
 - `MRP0` continua in `APPLYING_LOG` oppure `WAIT_FOR_LOG`.
 
@@ -161,18 +167,20 @@ Regola pratica:
 
 ## 4. Test di propagazione oggetti dentro il PDB
 
-Quando `LABPDB1` esiste su entrambi i lati, testa una modifica reale.
+Quando `RACDBPDB` esiste su entrambi i lati, testa una modifica reale.
 
 Sul primary:
 
 ```sql
 sqlplus / as sysdba
 
-ALTER SESSION SET CONTAINER=LABPDB1;
+ALTER SESSION SET CONTAINER=RACDBPDB;
 
-CREATE TABLESPACE labpdb1_ts DATAFILE SIZE 100M AUTOEXTEND ON NEXT 50M;
+CREATE TABLESPACE racdbpdb_ts DATAFILE SIZE 100M AUTOEXTEND ON NEXT 50M;
 
-CREATE USER app1 IDENTIFIED BY "<PASSWORD_APP>";
+ACCEPT app1_password CHAR PROMPT 'Password APP1: ' HIDE
+CREATE USER app1 IDENTIFIED BY "&app1_password";
+UNDEFINE app1_password
 GRANT CONNECT, RESOURCE TO app1;
 
 CREATE TABLE app1.t1 (id NUMBER PRIMARY KEY, note VARCHAR2(100));
@@ -204,20 +212,20 @@ Sul primary, come `oracle`:
 . ~/.db_env
 
 srvctl add service -d RACDB \
-  -s labpdb1_rw \
-  -pdb LABPDB1 \
+  -s racdbpdb_pry \
+  -pdb RACDBPDB \
   -preferred RACDB1,RACDB2 \
   -role PRIMARY \
   -policy AUTOMATIC
 
-srvctl start service -d RACDB -s labpdb1_rw
-srvctl status service -d RACDB -s labpdb1_rw
-srvctl config service -d RACDB -s labpdb1_rw
+srvctl start service -d RACDB -s racdbpdb_pry
+srvctl status service -d RACDB -s racdbpdb_pry
+srvctl config service -d RACDB -s racdbpdb_pry
 ```
 
 Perche' cosi':
 
-- `-pdb LABPDB1` lega il service al PDB corretto;
+- `-pdb RACDBPDB` lega il service al PDB corretto;
 - `-role PRIMARY` evita che il service si presenti sullo standby;
 - `-preferred RACDB1,RACDB2` lo rende disponibile su entrambe le istanze RAC del primary.
 
@@ -227,18 +235,18 @@ Sul primary:
 
 ```bash
 lsnrctl status
-srvctl status service -d RACDB -s labpdb1_rw
+srvctl status service -d RACDB -s racdbpdb_pry
 ```
 
 Se vuoi anche il test TNS, aggiungi nel `tnsnames.ora`:
 
 ```ini
-LABPDB1_RW =
+RACDBPDB_PRY =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = rac-scan.localdomain)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = labpdb1_rw)
+      (SERVICE_NAME = racdbpdb_pry)
     )
   )
 ```
@@ -246,8 +254,8 @@ LABPDB1_RW =
 Poi prova:
 
 ```bash
-tnsping LABPDB1_RW
-sqlplus pdbadmin@LABPDB1_RW
+tnsping RACDBPDB_PRY
+sqlplus pdbadmin@RACDBPDB_PRY
 ```
 
 ## 7. Servizio lato standby: farlo solo se usi Active Data Guard
@@ -258,25 +266,25 @@ Quando avrai lo standby in `READ ONLY WITH APPLY`, potrai creare un service dedi
 
 ```bash
 srvctl add service -d RACDB_STBY \
-  -s labpdb1_ro \
-  -pdb LABPDB1 \
+  -s racdbpdb_ro \
+  -pdb RACDBPDB \
   -preferred RACDB1,RACDB2 \
   -role PHYSICAL_STANDBY \
   -policy AUTOMATIC
 
-srvctl start service -d RACDB_STBY -s labpdb1_ro
-srvctl status service -d RACDB_STBY -s labpdb1_ro
+srvctl start service -d RACDB_STBY -s racdbpdb_ro
+srvctl status service -d RACDB_STBY -s racdbpdb_ro
 ```
 
 Alias TNS di esempio:
 
 ```ini
-LABPDB1_RO =
+RACDBPDB_RO =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = racstby-scan.localdomain)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SERVICE_NAME = labpdb1_ro)
+      (SERVICE_NAME = racdbpdb_ro)
     )
   )
 ```
@@ -321,8 +329,8 @@ Cause tipiche:
 Controlla:
 
 ```bash
-srvctl config service -d RACDB -s labpdb1_rw
-srvctl status service -d RACDB -s labpdb1_rw
+srvctl config service -d RACDB -s racdbpdb_pry
+srvctl status service -d RACDB -s racdbpdb_pry
 lsnrctl status
 ```
 
@@ -346,9 +354,9 @@ Cause tipiche:
 
 Considera il test riuscito se:
 
-1. `LABPDB1` esiste sul primary e sullo standby;
+1. `RACDBPDB` esiste sul primary e sullo standby;
 2. `MRP0` continua a lavorare su `racstby1`;
-3. il service `labpdb1_rw` risulta registrato e raggiungibile sul primary;
+3. il service `racdbpdb_pry` risulta registrato e raggiungibile sul primary;
 4. dopo log switch, il redo apply continua senza errori;
 5. il listener mostra il service corretto.
 

@@ -46,7 +46,8 @@ RMAN (Recovery Manager) è lo strumento nativo di Oracle per effettuare backup e
 | **Level 1** | Backup INCREMENTALE: copia SOLO i blocchi cambiati dal Level 0 (o dal Level 1 precedente). Velocissimo con BCT. | Solo le foto nuove aggiunte dopo l'ultima volta |
 | **Level 1 Cumulative** | Copia TUTTI i blocchi cambiati dal Level 0 (non dal Level 1 precedente). Il restore è più veloce perché ti basta il Level 0 + l'ultimo Cumulative. | Tutte le foto nuove dalla foto completa, non dall'ultimo aggiornamento |
 | **Archivelog** | Copia dei redo log "archiviati" (già pieni). Servono per il Point-In-Time Recovery. | Il diario giornaliero delle modifiche |
-| **FRA** | Fast Recovery Area: disco ASM (+FRA o +RECO) dove Oracle salva backup, archivelog, flashback log. | Il magazzino dei backup |
+| **FRA** | Fast Recovery Area: area di recovery per archivelog, flashback log e copie gestite da Oracle. | Area operativa, non unica copia durevole |
+| **Repository backup** | Destinazione separata e durevole per backup RMAN, preferibilmente off-host o su media manager. | Copia recuperabile anche se perdi il sito |
 | **Retention Policy** | Regola che dice ad RMAN quanto a lungo tenere i backup. Quelli fuori finestra diventano "obsoleti" e possono essere cancellati. | La data di scadenza dei backup |
 | **Channel** | Un "lavoratore" RMAN. Ogni channel legge/scrive in parallelo. 2 channel = 2 letture contemporanee = backup 2x più veloce. | Una corsia autostradale: più corsie = più traffico contemporaneo |
 | **Tag** | Un'etichetta leggibile che appiccichiamo al backup (es. `FULL_WEEKLY`). Serve per trovarlo poi facilmente con `LIST BACKUP`. | Il post-it sul backup |
@@ -99,15 +100,16 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
                          +----------------------+
                          |   RAC PRIMARY         |
                          |   (RACDB)             |
-                         |   → Archivelog backup |---→ 🗄️ +FRA
+                         |   → Archivelog backup |---→ 🗄️ repository durevole
                          |   → Level 1 leggero   |     (ogni 2h + giornaliero)
                          +----------+-------------+
                                     | Redo Shipping
                                     v
                          +----------------------+
-                         |   RAC STANDBY (ADG)   |
+                         | RAC STANDBY (MOUNT o  |
+                         | ADG opzionale)        |
                          |   (RACDB_STBY)        |
-                         |   → BACKUP PRINCIPALE |---→ 🗄️ +FRA
+                         |   → BACKUP PRINCIPALE |---→ 🗄️ repository durevole
                          |   Level 0 + Level 1   |     (full + incr + arch)
                          +----------+-------------+
                                     | GoldenGate
@@ -119,7 +121,11 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
                          +----------------------+
 ```
 
-> **Perché il backup PRINCIPALE sullo standby?** Il backup Level 0 (full) è un'operazione estremamente pesante: RMAN deve leggere fisicamente OGNI blocco del database (su un DB da 50 GB, legge tutti i 50 GB dal disco). Questo genera un carico enorme di I/O e CPU. Sullo standby, queste risorse non servono ai client perché nessun utente ci lavora sopra (a meno di Active Data Guard). Ecco perché il consiglio MAA è: **fai i backup pesanti sullo standby**, così il primario resta libero di servire le applicazioni.
+> **Perché il backup PRINCIPALE sullo standby?** Il backup Level 0 legge molti
+> blocchi e genera I/O. Su un physical standby puoi eseguire RMAN anche in
+> `MOUNT`: Active Data Guard non è un requisito. L'offload riduce l'impatto sul
+> primary, ma devi verificare che i backup siano accessibili durante il restore
+> e copiarli su una destinazione durevole esterna alla sola FRA.
 >
 > Il backup fatto sullo standby è **identico** a quello fatto sul primario perché il database standby è una copia fisica bit-per-bit del primario (grazie al Redo Apply di Data Guard).
 >
@@ -206,6 +212,10 @@ SHOW ALL;
 --   La RECOVERY WINDOW è preferita perché è basata sul tempo, non sul conteggio.
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
 
+-- In Data Guard un log non deve diventare eliminabile prima dell'apply.
+-- Esegui questa policy sul primary e sullo standby.
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+
 -- ============================================================
 -- CONTROLFILE AUTOBACKUP: rete di sicurezza automatica
 -- ============================================================
@@ -219,7 +229,7 @@ CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
 -- Il formato '%F' genera un nome univoco basato su DBID e timestamp.
 -- Esempio: c-1225375887-20260406-00 (c-DBID-DATA-SEQUENZA)
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+FRA/%F';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '<RMAN_BACKUP_DEST>/RACDB/%F';
 
 -- ============================================================
 -- PARALLELISMO E COMPRESSIONE
@@ -239,21 +249,21 @@ CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
 --   LOW    → velocissima, poca compressione (richiede ACO - Advanced Compression Option)
 --   MEDIUM → bilanciata (richiede ACO)
 --   HIGH   → lentissima, massima compressione (richiede ACO)
--- In laboratorio usiamo MEDIUM. In produzione senza licenza ACO, usa BASIC.
-CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
+-- Default sicuro: BASIC è incluso. LOW/MEDIUM/HIGH richiedono gate licenza ACO.
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 
 -- ============================================================
 -- FORMATO FILE DI BACKUP
 -- ============================================================
 -- Dove RMAN salverà fisicamente i file di backup.
--- '+FRA/RACDB/%U' significa:
---   +FRA    → disco ASM della Fast Recovery Area
+-- '<RMAN_BACKUP_DEST>/RACDB/%U' significa:
+--   <RMAN_BACKUP_DEST> → repository durevole approvato, non la sola FRA
 --   RACDB   → sottodirectory per questo database
 --   %U      → nome univoco generato automaticamente
 --             (esempio: 0a2s3k4l_1_1)
 -- Su ASM, Oracle gestisce automaticamente i file: non devi
 -- preoccuparti di path, permessi o spazio su singoli dischi.
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+FRA/RACDB/%U';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '<RMAN_BACKUP_DEST>/RACDB/%U';
 
 -- ============================================================
 -- BACKUP OPTIMIZATION
@@ -273,8 +283,8 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 > | Retention | 7 giorni | Puoi ripristinare il DB a qualsiasi punto della settimana scorsa |
 > | Autobackup | ON | Se perdi il control file, RMAN può ritrovare i backup |
 > | Parallelismo | 2 canali | Backup ~2x più veloce rispetto a 1 canale |
-> | Compressione | MEDIUM | Backup ~3x più piccoli |
-> | Formato | +FRA/RACDB/%U | Tutto salvato su ASM, gestione automatica |
+> | Compressione | BASIC | Inclusa; algoritmi avanzati solo con gate licenza |
+> | Formato | `<RMAN_BACKUP_DEST>/RACDB/%U` | Repository durevole approvato |
 > | Optimization | ON | Salta file non modificati = backup più veloce |
 
 ---
@@ -371,9 +381,9 @@ cat > /home/oracle/scripts/rman_full_backup.sh <<'SCRIPT'
 # 1. Si connette ad RMAN come SYSDBA
 # 2. Apre 2 canali paralleli verso il disco
 # 3. Copia TUTTI i blocchi del database (Level 0 = base completa)
-# 4. Backuppa gli archivelog e li cancella per liberare spazio
+# 4. Include gli archivelog necessari senza cancellazioni implicite
 # 5. Crea copie di sicurezza del Control File e dello SPFILE
-# 6. Cancella i backup obsoleti (> 7 giorni) e quelli corrotti
+# 6. Rimuove i backup obsoleti secondo la retention policy
 
 source /home/oracle/.db_env
 # ^^^ carica le variabili: ORACLE_HOME, ORACLE_SID, LD_LIBRARY_PATH
@@ -398,21 +408,18 @@ RUN {
     # Tutti i comandi dentro RUN vengono eseguiti come un'unità.
     # Se uno fallisce, gli altri si fermano.
 
-    -- Best Practice RAC: Bilanciamento del carico
-    -- Anziché allocare canali solo sull'istanza locale, forziamo i canali
-    -- a connettersi alle specifiche istanze del cluster (RACDB1_STBY e RACDB2_STBY).
-    -- In questo modo, il lavoro di lettura/compressione viene distribuito
-    -- su tutti i nodi, dimezzando l'impatto CPU e I/O sul singolo server.
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
-    # ^^^ Apre 2 "lavoratori" paralleli distribuiti sui 2 nodi.
-    #     ch1 lavorerà su racstby1, ch2 lavorerà su racstby2.
+    -- Due canali locali: il parallelismo riduce la durata del job.
+    -- La distribuzione su più istanze RAC è un tuning separato: richiede
+    -- servizi dedicati, test di carico e repository raggiungibile da ogni nodo.
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
+    # ^^^ Apre 2 processi RMAN locali in parallelo.
 
     -- Backup Full Database (Level 0)
     BACKUP AS COMPRESSED BACKUPSET
     -- ^^^ AS COMPRESSED BACKUPSET: crea un file proprietario RMAN
-    --     contenente solo i blocchi usati, compressi con l'algoritmo MEDIUM.
-    --     Un DB da 50 GB diventa ~15-20 GB nel backup.
+    --     contenente solo i blocchi usati. Il default documentato è BASIC:
+    --     gli algoritmi LOW/MEDIUM/HIGH richiedono il gate licenza previsto.
         INCREMENTAL LEVEL 0
     -- ^^^ LEVEL 0 = copia TUTTI i blocchi usati nel database.
     --     Questo è il "punto zero" per gli incrementali della settimana.
@@ -428,11 +435,9 @@ RUN {
     --     Perché prima E dopo? Perché durante il backup, il database
     --     continua a generare redo. RMAN deve catturare anche i redo
     --     generati durante il backup stesso per garantire consistenza.
-            TAG 'ARCH_WITH_FULL'
-            DELETE INPUT;
-    -- ^^^ DELETE INPUT: dopo aver backuppato gli archivelog, CANCELLALI
-    --     dal disco. Questo è FONDAMENTALE per liberare spazio nella FRA.
-    --     Senza questo, la FRA si riempie e il database si ferma.
+            TAG 'ARCH_WITH_FULL';
+    -- ^^^ Nessun DELETE INPUT: la pulizia degli archivelog è una procedura
+    --     separata e Data Guard-aware, descritta più avanti.
 
     -- Backup del Controlfile e SPFILE
     BACKUP CURRENT CONTROLFILE TAG 'CTL_WEEKLY';
@@ -487,8 +492,8 @@ chmod +x /home/oracle/scripts/rman_full_backup.sh
 > 1. RMAN si connette al database standby
 > 2. Apre 2 canali paralleli (due processi che leggono contemporaneamente)
 > 3. Legge OGNI blocco di OGNI datafile (ecco perché è lento: legge tutto!)
-> 4. Comprime i blocchi e li scrive nel backupset su +FRA
-> 5. Backuppa anche gli archivelog e li cancella dalla FRA
+> 4. Comprime i blocchi e li scrive nel repository durevole approvato
+> 5. Backuppa anche gli archivelog senza cancellazioni implicite
 > 6. Fa pulizia: cancella backup vecchi e verifica che tutto sia integro
 
 ### Backup Level 1 (Incrementale) — Tutti i giorni
@@ -508,8 +513,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC: un canale per nodo
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1_STBY';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2_STBY';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
 
     -- Backup Incrementale Level 1
     BACKUP AS COMPRESSED BACKUPSET
@@ -517,8 +522,7 @@ RUN {
         DATABASE
         TAG 'INCR_DAILY'
         PLUS ARCHIVELOG
-            TAG 'ARCH_WITH_INCR'
-            DELETE INPUT;
+            TAG 'ARCH_WITH_INCR';
 
     RELEASE CHANNEL ch1;
     RELEASE CHANNEL ch2;
@@ -558,15 +562,42 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 BACKUP AS COMPRESSED BACKUPSET
     ARCHIVELOG ALL NOT BACKED UP 1 TIMES
-    TAG 'ARCH_HOURLY'
-    DELETE INPUT;
+    TAG 'ARCH_HOURLY';
 EOF
 SCRIPT
 
 chmod +x /home/oracle/scripts/rman_arch_backup.sh
 ```
 
-> **Perché ogni 2 ore?** Gli archivelog si accumulano nella FRA. Se non li backuppi e cancelli regolarmente, la FRA si riempie e il database si ferma (non può più scrivere redo). `NOT BACKED UP 1 TIMES` assicura che vengano backuppati almeno una volta prima di essere cancellati.
+> **Perché ogni 2 ore?** Gli archivelog si accumulano nella FRA. `NOT BACKED UP 1 TIMES` assicura che ogni log venga copiato almeno una volta nel repository durevole. L'eventuale cancellazione è separata: prima verifica la deletion policy, il trasporto e l'apply Data Guard.
+
+### Pulizia archivelog separata e Data Guard-aware
+
+Non incorporare `DELETE INPUT` nei job di backup. Prima della pulizia verifica che il Data Guard non sia in lag e che la policy sia quella approvata:
+
+```sql
+-- Sul primary: stato delle destinazioni redo
+SELECT dest_id, status, target, error
+FROM v$archive_dest_status
+WHERE status <> 'INACTIVE'
+ORDER BY dest_id;
+
+-- Sullo standby: eventuali gap e ultime sequenze applicate
+SELECT * FROM v$archive_gap;
+SELECT thread#, MAX(sequence#) AS last_applied
+FROM v$archived_log
+WHERE applied = 'YES'
+GROUP BY thread#
+ORDER BY thread#;
+```
+
+```rman
+SHOW ARCHIVELOG DELETION POLICY;
+LIST ARCHIVELOG ALL;
+DELETE NOPROMPT ARCHIVELOG ALL BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+```
+
+Con `CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY`, RMAN elimina solo i log eleggibili. Se lo standby è irraggiungibile o in lag, fermati e usa il runbook [DG-061: primary FRA piena per standby lag](../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag).
 
 ---
 
@@ -597,8 +628,7 @@ RUN {
         DATABASE
         TAG 'TARGET_DAILY'
         PLUS ARCHIVELOG
-            TAG 'TARGET_ARCH'
-            DELETE INPUT;
+            TAG 'TARGET_ARCH';
 
     BACKUP CURRENT CONTROLFILE TAG 'TARGET_CTL';
 }
@@ -643,8 +673,8 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 RUN {
     -- Bilanciamento RAC sul primario
-    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK CONNECT '/@RACDB1';
-    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK CONNECT '/@RACDB2';
+    ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
+    ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
 
     -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
     BACKUP AS COMPRESSED BACKUPSET
@@ -652,8 +682,7 @@ RUN {
         DATABASE
         TAG 'PRIMARY_INCR_DAILY'
         PLUS ARCHIVELOG
-            TAG 'PRIMARY_ARCH'
-            DELETE INPUT;
+            TAG 'PRIMARY_ARCH';
 
     -- Backup Controlfile + SPFILE
     BACKUP CURRENT CONTROLFILE TAG 'PRIMARY_CTL';
@@ -679,7 +708,7 @@ chmod +x /home/oracle/scripts/rman_primary_backup.sh
 > **Perché solo Level 1 sul primario?** Il Level 0 (full) è pesante e lo fa già lo standby la domenica. Il primario fa solo il Level 1, che è leggero e veloce grazie al BCT. Se lo standby crasha, hai comunque un backup recente dal primario.
 
 ### 5.5c Backup Archivelog sul Primario (Sicurezza Extra)
-Questo script è fondamentale per liberare spazio nella FRA del primario ogni 2 ore.
+Questo script copia nel repository durevole gli archivelog del primario ogni 2 ore. La pulizia della FRA resta separata e governata dalla deletion policy.
 
 ```bash
 cat > /home/oracle/scripts/rman_arch_backup.sh <<'SCRIPT'
@@ -694,8 +723,7 @@ mkdir -p $LOG_DIR
 rman TARGET / LOG=$LOG_FILE <<EOF
 BACKUP AS COMPRESSED BACKUPSET
     ARCHIVELOG ALL NOT BACKED UP 1 TIMES
-    TAG 'PRIMARY_ARCH_HOURLY'
-    DELETE INPUT;
+    TAG 'PRIMARY_ARCH_HOURLY';
 EOF
 SCRIPT
 
@@ -746,9 +774,8 @@ crontab -e
 0 4 * * * /home/oracle/scripts/rman_primary_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
 # === BACKUP ARCHIVELOG OGNI 2 ORE ===
-# Svuota gli archivelog accumulati nella FRA del primario.
-# Perché ogni 2 ore? Il primario genera continuamente redo log.
-# Senza questo job, la FRA si riempie e il DB si blocca.
+# Copia gli archivelog accumulati nella FRA del primario.
+# La pulizia è un job separato con verifica Data Guard-aware.
 # Il >> appende al log (non lo sovrascrive).
 # Il 2>&1 redirige anche gli errori stderr nello stesso file.
 0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
@@ -770,8 +797,8 @@ crontab -e
 0 2 * * 1-6 /home/oracle/scripts/rman_incr_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 
 # === BACKUP ARCHIVELOG OGNI 2 ORE ===
-# Anche sullo standby si accumulano archivelog (ricevuti dal primario).
-# Li backuppiamo e cancelliamo ogni 2 ore per tenere la FRA pulita.
+# Anche sullo standby si accumulano archivelog ricevuti dal primario.
+# Li copiamo ogni 2 ore; l'eventuale pulizia resta separata.
 0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
 ```
 
@@ -927,10 +954,10 @@ Prima di testare il ripristino, devi avere un backup fresco. Lancia gli script a
 rman TARGET / <<EOF
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+FRA/%F';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '<RMAN_BACKUP_DEST>/RACDB/%F';
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
-CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+FRA/RACDB/%U';
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '<RMAN_BACKUP_DEST>/RACDB/%U';
 CONFIGURE BACKUP OPTIMIZATION ON;
 EOF
 # ^^^ Questi 7 comandi vengono salvati nel Control File.
@@ -948,8 +975,7 @@ RUN {
         DATABASE
         TAG 'MANUAL_FULL_TEST'
         PLUS ARCHIVELOG
-            TAG 'MANUAL_ARCH_TEST'
-            DELETE INPUT;
+            TAG 'MANUAL_ARCH_TEST';
 
     BACKUP CURRENT CONTROLFILE TAG 'MANUAL_CTL';
     BACKUP SPFILE TAG 'MANUAL_SPFILE';
@@ -1174,7 +1200,10 @@ ALTER TABLE HR.TEST_PITR_RECOVERED RENAME TO TEST_PITR;
 ```
 
 ```bash
-rm -rf /tmp/rman_pitr_aux
+AUX_DIR=/tmp/rman_pitr_aux
+test "$AUX_DIR" = "/tmp/rman_pitr_aux" &&
+test -d "$AUX_DIR" &&
+rm -rf -- "$AUX_DIR"
 ```
 
 > [!WARNING]
@@ -1369,11 +1398,11 @@ RESTORE DATABASE PREVIEW;
 
 | Database | Tipo Backup | Frequenza | Retention | Dove |
 |---|---|---|---|---|
-| **RACDB (Primary)** | Level 1 Incremental | Ogni giorno 04:00 | 7 giorni | +FRA |
-| **RACDB (Primary)** | Archivelog | Ogni 2 ore | — | +FRA |
-| **RACDB_STBY (Standby)** | Level 0 Full | Domenica 02:00 | 7 giorni | +FRA |
-| **RACDB_STBY (Standby)** | Level 1 Incr | Lun-Sab 02:00 | 7 giorni | +FRA |
-| **RACDB_STBY (Standby)** | Archivelog | Ogni 2 ore | — | +FRA |
+| **RACDB (Primary)** | Level 1 Incremental | Ogni giorno 04:00 | 7 giorni | Repository durevole approvato |
+| **RACDB (Primary)** | Archivelog | Ogni 2 ore | — | Repository durevole approvato |
+| **RACDB_STBY (Standby)** | Level 0 Full | Domenica 02:00 | 7 giorni | Repository durevole approvato |
+| **RACDB_STBY (Standby)** | Level 1 Incr | Lun-Sab 02:00 | 7 giorni | Repository durevole approvato |
+| **RACDB_STBY (Standby)** | Archivelog | Ogni 2 ore | — | Repository durevole approvato |
 | **dbtarget (Target GG)** | Level 1 Cumulative | Ogni giorno 03:00 | 3 giorni | /u01/backup |
 
 ---
