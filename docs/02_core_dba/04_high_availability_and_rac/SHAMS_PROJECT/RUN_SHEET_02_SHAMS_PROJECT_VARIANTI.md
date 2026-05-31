@@ -26,6 +26,8 @@ compila:
 | Gate | Esito |
 | --- | --- |
 | naming PE/SE e ambiente `C` | `<OK/KO>` |
+| Global Database Name primary `M24SHAMSPEC[.<DB_DOMAIN>]` | `<OK/KO>` |
+| `DB_NAME=M24SHAMS`, `DB_UNIQUE_NAME=M24SHAMSPEC` | `<OK/KO>` |
 | RPO, RTO e latenza | `<OK/KO>` |
 | storage DATA/FRA | `<OK/KO>` |
 | RU Grid e DB Home | `<OK/KO>` |
@@ -49,6 +51,8 @@ compila:
 | SRL | online group + 1 | online group + 1 per thread |
 | gestione | Oracle Restart | Clusterware RAC |
 | endpoint client | listener | SCAN |
+| SID primary PE | `M24SHAMSPEC` | `M24SHAMSPEC1`, `M24SHAMSPEC2` |
+| SID standby SE | `M24SHAMSSEC` | `M24SHAMSSEC1`, `M24SHAMSSEC2` |
 
 | Check | non-CDB | CDB |
 | --- | --- | --- |

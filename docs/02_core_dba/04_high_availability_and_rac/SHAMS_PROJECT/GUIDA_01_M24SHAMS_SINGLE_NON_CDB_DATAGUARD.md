@@ -260,20 +260,32 @@ In DBCA seleziona:
 2. `Advanced configuration`;
 3. `Custom Database`;
 4. single instance;
-5. `DB_NAME=M24SHAMS`;
-6. non selezionare `Create as Container database`;
-7. storage ASM e OMF su `+M24SHAMS_DATA`;
-8. FRA su `+M24SHAMS_FRA` con dimensione approvata;
-9. `ARCHIVELOG`;
-10. charset `AL32UTF8`, national charset `AL16UTF16`;
-11. solo i componenti richiesti dall'applicazione;
-12. `Generate Database Creation Scripts`.
+5. Global Database Name `M24SHAMSPEC` oppure
+   `M24SHAMSPEC.<DB_DOMAIN>` se il dominio aziendale e' previsto;
+6. SID `M24SHAMSPEC`;
+7. in `All Initialization Parameters` verifica o imposta
+   `DB_NAME=M24SHAMS` e `DB_UNIQUE_NAME=M24SHAMSPEC`, includendoli nello
+   SPFILE;
+8. non selezionare `Create as Container database`;
+9. storage ASM e OMF su `+M24SHAMS_DATA`;
+10. FRA su `+M24SHAMS_FRA` con dimensione approvata;
+11. `ARCHIVELOG`;
+12. charset `AL32UTF8`, national charset `AL16UTF16`;
+13. solo i componenti richiesti dall'applicazione;
+14. `Generate Database Creation Scripts`.
+
+`M24SHAMS` e' il nome base condiviso dalla coppia Data Guard.
+`M24SHAMSPEC` identifica invece primary, datacenter `PE` e collaudo `C`.
+Lo standby non viene creato con un secondo wizard DBCA: usa
+`DB_UNIQUE_NAME=M24SHAMSSEC` e SID `M24SHAMSSEC` durante il duplicate RMAN.
 
 Revisiona gli script generati. Verifica almeno:
 
 - assenza di path filesystem non approvati;
 - assenza di componenti non richiesti, incluso OJVM se non necessario;
 - `DB_NAME=M24SHAMS`;
+- `DB_UNIQUE_NAME=M24SHAMSPEC`;
+- SID primary `M24SHAMSPEC`;
 - storage ASM/OMF;
 - control file ridondati tra DATA e FRA;
 - nessuna password lasciata in file leggibili da altri utenti;

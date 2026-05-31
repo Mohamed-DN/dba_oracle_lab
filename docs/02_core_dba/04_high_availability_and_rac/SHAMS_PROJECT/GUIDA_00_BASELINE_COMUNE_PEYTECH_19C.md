@@ -41,9 +41,12 @@ database preferire CDB/PDB salvo vincoli applicativi documentati.
 | Ambiente | `C` |
 | Sito primary | `PE` |
 | Sito standby | `SE` |
-| `DB_NAME` / CDB name | `M24SHAMS` |
+| `DB_NAME` condiviso / CDB name | `M24SHAMS` |
 | Primary `DB_UNIQUE_NAME` | `M24SHAMSPEC` |
 | Standby `DB_UNIQUE_NAME` | `M24SHAMSSEC` |
+| DBCA Global Database Name primary | `M24SHAMSPEC` oppure `M24SHAMSPEC.<DB_DOMAIN>` |
+| DBCA SID o SID prefix primary | `M24SHAMSPEC` |
+| SID single instance standby | `M24SHAMSSEC` |
 | PDB applicativo, solo CDB | `M24SHAMSC_APP` |
 | Service read-write | `M24SHAMSC_PRY` |
 | Service Active Data Guard | `M24SHAMSC_RO` |
@@ -53,17 +56,34 @@ database preferire CDB/PDB salvo vincoli applicativi documentati.
 | ASM DATA | `+M24SHAMS_DATA` |
 | ASM FRA | `+M24SHAMS_FRA` |
 
+Il nome si costruisce come:
+
+```text
+DB_UNIQUE_NAME = <NOME_BASE><DATACENTER><AMBIENTE>
+```
+
+Per `M24SHAMS`:
+
+| Ambiente | Primary PE | Standby SE |
+| --- | --- | --- |
+| Collaudo `C` | `M24SHAMSPEC` | `M24SHAMSSEC` |
+| Produzione `P` | `M24SHAMSPEP` | `M24SHAMSSEP` |
+
+Questo pacchetto implementa il collaudo `C`. La riga produzione serve solo a
+rendere esplicita la regola di naming: non sostituire automaticamente
+l'ambiente senza un change approvato.
+
 Per RAC:
 
 | Oggetto | Primary PE | Standby SE |
 | --- | --- | --- |
-| Istanza nodo 1 | `M24SHAMS1` | `M24SHAMS1` |
-| Istanza nodo 2 | `M24SHAMS2` | `M24SHAMS2` |
+| SID prefix | `M24SHAMSPEC` | `M24SHAMSSEC` |
+| Istanza nodo 1 | `M24SHAMSPEC1` | `M24SHAMSSEC1` |
+| Istanza nodo 2 | `M24SHAMSPEC2` | `M24SHAMSSEC2` |
 | SCAN | `<PRIMARY_SCAN>` | `<STANDBY_SCAN>` |
 
-I SID uguali tra siti sono ammessi perche' i cluster sono distinti. Se lo
-standard locale richiede SID site-specific, registralo nell'inventario prima
-della creazione.
+Il SID prefix deve richiamare `DB_UNIQUE_NAME` e includere datacenter e
+ambiente. Per RAC DBCA aggiunge il numero dell'istanza al prefix.
 
 ## Scheda inventario
 
@@ -102,13 +122,18 @@ Regole comuni:
 
 1. primary e physical standby condividono `DB_NAME` e DBID;
 2. `DB_UNIQUE_NAME` deve essere diverso;
-3. lo standby si crea con RMAN duplicate o metodo fisico approvato, non con
+3. in DBCA sul primary inserire prima Global Database Name e SID prefix
+   site-specific, quindi aprire `All Initialization Parameters` e verificare
+   `DB_NAME=M24SHAMS`, `DB_UNIQUE_NAME=M24SHAMSPEC` e inclusione nello SPFILE;
+4. lo standby si crea con RMAN duplicate o metodo fisico approvato, non con
    DBCA indipendente;
-4. abilitare `ARCHIVELOG`, `FORCE LOGGING`, OMF, FRA e
+5. sullo standby usare SID site-specific `M24SHAMSSEC` oppure
+   `M24SHAMSSEC1/2` per RAC;
+6. abilitare `ARCHIVELOG`, `FORCE LOGGING`, OMF, FRA e
    `STANDBY_FILE_MANAGEMENT=AUTO`;
-5. creare SRL su entrambi i ruoli prima di uno switchover;
-6. usare password file coerenti, prompt interattivo o wallet SEPS;
-7. non scrivere password negli argomenti shell.
+7. creare SRL su entrambi i ruoli prima di uno switchover;
+8. usare password file coerenti, prompt interattivo o wallet SEPS;
+9. non scrivere password negli argomenti shell.
 
 ### 2. Redo e SRL
 

@@ -45,13 +45,22 @@ Con DBCA scegli:
 1. `Create a database`;
 2. `Advanced configuration`;
 3. single instance;
-4. `DB_NAME=M24SHAMS`;
-5. `Create as Container database`;
-6. una PDB iniziale `M24SHAMSC_APP`;
-7. ASM OMF su `+M24SHAMS_DATA`;
-8. FRA su `+M24SHAMS_FRA`;
-9. `ARCHIVELOG`;
-10. `Generate Database Creation Scripts`, review ed esecuzione controllata.
+4. Global Database Name `M24SHAMSPEC` oppure
+   `M24SHAMSPEC.<DB_DOMAIN>` se previsto;
+5. SID `M24SHAMSPEC`;
+6. in `All Initialization Parameters` verifica o imposta
+   `DB_NAME=M24SHAMS` e `DB_UNIQUE_NAME=M24SHAMSPEC`, includendoli nello
+   SPFILE;
+7. `Create as Container database`;
+8. una PDB iniziale `M24SHAMSC_APP`;
+9. ASM OMF su `+M24SHAMS_DATA`;
+10. FRA su `+M24SHAMS_FRA`;
+11. `ARCHIVELOG`;
+12. `Generate Database Creation Scripts`, review ed esecuzione controllata.
+
+DBCA crea solo il primary PE. Il physical standby SE mantiene
+`DB_NAME=M24SHAMS`, ma usa `DB_UNIQUE_NAME=M24SHAMSSEC` e SID
+`M24SHAMSSEC` durante il duplicate RMAN.
 
 Verifica:
 
@@ -64,8 +73,8 @@ FROM v$pdbs
 ORDER BY con_id;
 ```
 
-Atteso: `CDB=YES`, `DB_UNIQUE_NAME=M24SHAMSPEC`, PDB
-`M24SHAMSC_APP` aperta `READ WRITE`.
+Atteso: `NAME=M24SHAMS`, `CDB=YES`, `DB_UNIQUE_NAME=M24SHAMSPEC`, SID
+`M24SHAMSPEC` e PDB `M24SHAMSC_APP` aperta `READ WRITE`.
 
 ### 2. Parametri e logging
 
