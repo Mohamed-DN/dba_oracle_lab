@@ -508,7 +508,7 @@ deve cambiare ruolo. Se hai configurato `observer2`, verifica che diventi master
 | Problema | Causa Probabile | Soluzione |
 |---|---|---|
 | Transport Lag cresce | Rete lenta o listener standby down | `lsnrctl status` su standby, controlla banda |
-| Apply Lag cresce | Standby in "no apply" state | `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;` |
+| Apply Lag cresce | Standby in "no apply" state | `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;` |
 | ORA-16191: Primary log shipping disabled | `log_archive_dest_state_2` = DEFER | `ALTER SYSTEM SET log_archive_dest_state_2=ENABLE;` |
 | GAP rilevato nel DGMGRL | Archivelog mancante | `ALTER SYSTEM SET fal_server='RACDB'` su standby, il FAL richiederà i log |
 | DGMGRL mostra WARNING | Stale redo log detected | `ALTER SYSTEM SWITCH LOGFILE;` + verifica FAL |

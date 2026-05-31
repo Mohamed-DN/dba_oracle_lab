@@ -7,9 +7,10 @@ collaudo/staging `C`, con primary single instance nel sito PE e physical standby
 nel sito SE. Entrambi i server usano Oracle Restart/HAS, ASM e Oracle Managed
 Files (OMF).
 
-La configurazione target include Data Guard Broker, Active Data Guard e backup
-RMAN eseguito sullo standby con recovery catalog. Fast-Start Failover (FSFO) non
-fa parte di questo change: viene attivato successivamente seguendo
+La configurazione target include Data Guard Broker e backup RMAN eseguito
+sullo standby con recovery catalog. Active Data Guard e il servizio `_RO` sono
+opzionali e richiedono il gate licenza. Fast-Start Failover (FSFO) non fa parte
+di questo change: viene attivato successivamente seguendo
 [Observer FSFO PEYTECH](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md).
 
 Questa SOP e' specifica per `M24SHAMS`. Per il modello riutilizzabile consulta
@@ -57,7 +58,7 @@ Fonti Oracle:
                   +------ SYNC gate / redo ---------+
                                                     |
                                            service M24SHAMSC_RO
-                                           Active Data Guard
+                                           Active Data Guard opzionale
                                            RMAN backup offload
 ```
 
@@ -88,7 +89,7 @@ Prima dell'esecuzione assegna un owner per ciascuna area:
 | Sistemista Linux | `<NOME>` | Verifica host, mount, multipath e spazio |
 | Storage | `<NOME>` | LUN, ridondanza e crescita FRA |
 | Networking | `<NOME>` | DNS, porte e latenza PE-SE |
-| Security | `<NOME>` | Licenza Active Data Guard e decisione TDE |
+| Security | `<NOME>` | Gate Active Data Guard e decisione TDE |
 | Backup | `<NOME>` | Recovery catalog, destinazione e restore test |
 
 La preparazione host e software e' descritta in
@@ -124,7 +125,7 @@ Registra anche:
 | RTO richiesto | `<RTO>` |
 | Latenza PE-SE misurata | `<LATENZA_MS>` |
 | Redo medio e picco | `<MB_SEC>` |
-| Licenza Active Data Guard verificata | `<SI/NO - riferimento evidenza>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | TDE richiesto | `<SI/NO - riferimento approvazione>` |
 | Percorso creazione primary | `<DBCA_SCRIPT_REVIEW/GOLDEN_RMAN>` |
 | Trasporto scelto | `<SYNC_AFFIRM/FASTSYNC_NOAFFIRM>` |

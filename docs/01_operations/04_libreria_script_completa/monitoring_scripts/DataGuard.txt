@@ -28,8 +28,7 @@ alter system set log_archive_dest_state_3='enable';
 
 -- stopping and starting managed recovery on standby
 alter database recover managed standby database cancel;
-alter database recover managed standby database disconnect;
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE disconnect;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 
 
 -- Manually register an archive log on standby

@@ -12,9 +12,9 @@ riga della tabella seguente.
 | ID | Primary e standby | Container | Data Guard | Observer FSFO | Documento da leggere |
 | --- | --- | --- | --- | --- | --- |
 | `S1` | Single instance | non-CDB | Si | Change separato | SOP `M24SHAMS_*_NON_CDB` |
-| `S2` | Single instance | CDB con PDB | Si | Si, dopo stabilizzazione | Portfolio SHAMS PROJECT |
-| `S3` | RAC | non-CDB | Si | Si, dopo stabilizzazione | Portfolio SHAMS PROJECT |
-| `S4` | RAC | CDB con PDB | Si | Si, dopo stabilizzazione | Portfolio SHAMS PROJECT |
+| `S2` | Single instance | CDB con PDB | Si | Change separato | Portfolio SHAMS PROJECT |
+| `S3` | RAC | non-CDB | Si | Change separato | Portfolio SHAMS PROJECT |
+| `S4` | RAC | CDB con PDB | Si | Change separato | Portfolio SHAMS PROJECT |
 
 `CDB con PDB` significa che il database applicativo vive in un pluggable
 database. `non-CDB` indica il modello legacy senza PDB. `RAC` aggiunge alta
@@ -29,6 +29,11 @@ prefix `M24SHAMSPEC` per RAC. Nei parametri imposta `DB_NAME=M24SHAMS` e
 Per una nuova installazione enterprise, il target preferito e' `S4`. Usa `S1`
 o `S3` solo quando esiste un requisito applicativo legacy non-CDB. Usa `S2`
 quando serve il modello CDB/PDB ma non e' richiesta HA locale RAC.
+
+Il percorso Data Guard base usa standby `MOUNTED` con Redo Apply. Active Data
+Guard (`READ ONLY WITH APPLY`) e il servizio `_RO` sono opzionali: in
+produzione richiedono evidenza licenza; nel laboratorio personale devono essere
+marcati come esercitazione.
 
 ## Mappa dei file
 
@@ -83,5 +88,8 @@ I file sorgente Markdown sono:
 - [Allegato Host single](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md)
 - [Allegato Host RAC](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_07_HOST_RAC_GRID_ASM_19C.md)
 - [Matrice campi DBCA](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md)
+- [Network e Broker](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md)
+- [Active Data Guard e servizi](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md)
+- [Evidence e drill test book](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md)
 - [Run Sheet M24SHAMS](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/RUN_SHEET_01_M24SHAMS_SINGLE_NON_CDB.md)
 - [Run Sheet scelta varianti](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md)

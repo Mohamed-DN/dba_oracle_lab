@@ -49,6 +49,9 @@ Scegli il caso:
 | Caso | Guida |
 | --- | --- |
 | SHAMS PROJECT staging/collaudo | [Matrice blueprint PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md) |
+| SHAMS setup rete, duplicate e Broker | [Network e Broker PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) |
+| SHAMS Active Data Guard opzionale | [ADG e servizi role-based](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) |
+| SHAMS evidenze e drill | [Data Guard test book](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md) |
 | Single instance primary + standby non-CDB | [Produzione Single Instance Data Guard Non-CDB](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) |
 | RAC primary + RAC standby non-CDB | [Produzione RAC Data Guard Non-CDB](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) |
 | Lab RAC standby | [Fase 3 RAC Standby](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) |
@@ -119,6 +122,7 @@ Apri:
 | DB non parte | [Morning Health Check](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_01_MORNING_HEALTH_CHECK.md) |
 | Backup fallito | [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_02_VERIFICA_BACKUP.md) |
 | Standby in lag | [Check Data Guard](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_03_CHECK_DATAGUARD.md) |
+| Gap Data Guard persistente | [RMAN + Data Guard Recovery/DR, DG-062](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-062---riallineamento-standby-dopo-gap) |
 | Applicazione bloccata | [Lock Sessioni Bloccate](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_04_LOCK_SESSIONI_BLOCCATE.md) |
 | SQL lento | [Query Lenta](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_05_QUERY_LENTA.md) |
 | Spazio pieno | [Tablespace Pieno](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_06_TABLESPACE_PIENO.md) |

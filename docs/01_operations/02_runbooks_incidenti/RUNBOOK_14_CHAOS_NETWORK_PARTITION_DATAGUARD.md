@@ -1,75 +1,101 @@
-# 14 — Chaos Engineering: Network Partition su Data Guard
+# 14 - Chaos Engineering: Network Partition su Data Guard
 
-<!-- RUNBOOK_NAV_START -->
-## Casi piu frequenti da aprire prima
-- Drill di resilienza rete Data Guard in laboratorio.
-- Simulare latenza, jitter o packet loss.
-- Verificare comportamento transport/apply lag.
-- Testare alerting e runbook di recovery gap.
-- Rimuovere sempre le regole chaos a fine test.
-
-## Indice rapido
-- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
-- [Obiettivi](#obiettivi)
-- [Procedura Operativa](#procedura-operativa)
-  - [Esempio di Simulazione](#esempio-di-simulazione)
-- [Validazione Finale](#validazione-finale)
-- [Troubleshooting](#troubleshooting)
-<!-- RUNBOOK_NAV_END -->
-
-<!-- READY_SCRIPTS_START -->
-## Script pronti collegati
-
-Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
-
-- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
-<!-- READY_SCRIPTS_END -->
 ## Obiettivi
 
-Simulare scenari di instabilità di rete (latenza e perdita pacchetti) tra i nodi Primary e Standby per testare la resilienza della configurazione Data Guard e la capacità di riallineamento automatico.
+Simulare in laboratorio latenza o perdita pacchetti sulla sola rete Data Guard,
+verificare alerting e misurare il riallineamento dopo il rollback. Non usare
+questa procedura in produzione senza change specifico.
 
-## Procedura Operativa
+## Procedura operativa
 
-### Esempio di Simulazione
+### 1. Preflight
 
-Su nodo primary (test lab):
+Registra:
+
+| Campo | Valore |
+| --- | --- |
+| Ambiente non produttivo | `<OK/KO>` |
+| Host e interfaccia DG | `<HOST>` / `<DG_INTERFACE>` |
+| Regola `tc` iniziale | `<NESSUNA oppure OUTPUT>` |
+| Broker prima del test | `<SUCCESS/WARNING>` |
+| FSFO | `<DISABLED/OBSERVE_ONLY>` |
+| Lag iniziale | `<TRANSPORT>` / `<APPLY>` |
+| Owner rollback | `<NOME>` |
+
+Per un drill di solo trasporto lascia FSFO disabilitato oppure in observe-only.
+La promozione automatica richiede un drill separato.
+
+### 2. Introduci latenza
+
+Sul nodo e sull'interfaccia approvati:
 
 ```bash
-# aggiunge latenza artificiale 250ms + jitter 50ms
-sudo tc qdisc add dev eth0 root netem delay 250ms 50ms
-
-# opzionale: perdita pacchetti 5%
-sudo tc qdisc change dev eth0 root netem delay 250ms 50ms loss 5%
+sudo tc qdisc show dev <DG_INTERFACE>
+sudo tc qdisc add dev <DG_INTERFACE> root netem delay 250ms 50ms
 ```
 
-Su standby, osserva:
+Opzionale:
+
+```bash
+sudo tc qdisc change dev <DG_INTERFACE> root netem delay 250ms 50ms loss 5%
+```
+
+Osserva sullo standby:
 
 ```sql
-SELECT name, value, unit FROM v$dataguard_stats
-WHERE name IN ('transport lag','apply lag');
+SELECT name, value, unit
+FROM v$dataguard_stats
+WHERE name IN ('transport lag', 'apply lag');
+
+SELECT process, status, thread#, sequence#
+FROM v$managed_standby;
 ```
 
-Ripristino rete:
+### 3. Rollback rete
+
+Esegui sempre, anche se il test fallisce:
 
 ```bash
-sudo tc qdisc del dev eth0 root
+sudo tc qdisc del dev <DG_INTERFACE> root
+sudo tc qdisc show dev <DG_INTERFACE>
 ```
 
-## Validazione Finale
+### 4. Verifica riallineamento
+
+Sullo standby:
+
+```sql
+SELECT thread#, low_sequence#, high_sequence#
+FROM v$archive_gap;
+
+SELECT name, value, unit
+FROM v$dataguard_stats
+WHERE name IN ('transport lag', 'apply lag');
+```
+
+## Validazione finale
 
 Pass criteria:
 
-- [ ] broker resta `SUCCESS` o `WARNING` non critico
-- [ ] `apply lag` torna sotto soglia target entro 15 minuti dal rollback
-- [ ] nessun gap permanente dopo ripristino rete
+- regola `tc` rimossa;
+- primary rimasto disponibile;
+- lag rientrato entro soglia;
+- nessun gap permanente;
+- Broker tornato `SUCCESS`.
 
 Fail criteria:
 
-- broker in `ERROR` persistente
-- apply fermo > 15 minuti post-ripristino
+- regola rete ancora attiva;
+- apply fermo dopo rollback;
+- gap persistente;
+- role transition inattesa.
 
-## Troubleshooting
+## Troubleshooting rapido
 
-- **tc command non disponibile**: installare `iproute-tc`.
-- **lag non rientra**: verificare MRP, archive shipping e rete host-only.
-- **errore broker**: usare `show database verbose` e correggere connect identifier/listener.
+| Sintomo | Azione |
+| --- | --- |
+| `tc` assente | installa `iproute-tc` nel lab |
+| interfaccia errata | rimuovi subito regola e ripeti assessment |
+| lag non rientra | usa [Check Data Guard](./RUNBOOK_03_CHECK_DATAGUARD.md) |
+| gap persistente | usa DG-062 nel runbook RMAN/Data Guard |
+| FSFO scatta | ferma drill, verifica fencing e separazione test |

@@ -1,213 +1,148 @@
-# 03 — Check Data Guard
-
-<!-- RUNBOOK_NAV_START -->
-## Casi piu frequenti da aprire prima
-- Apply lag o transport lag sopra soglia.
-- `DEST_ID=2` in `ERROR` sul primary.
-- `MRP0` non attivo o in `WAIT_FOR_GAP`.
-- Broker non `SUCCESS` o database role incoerente.
-- Archive gap manuale da verificare prima di failover/switchover.
-
-## Indice rapido
-- [Casi piu frequenti da aprire prima](#casi-piu-frequenti-da-aprire-prima)
-- [Obiettivi](#obiettivi)
-- [Procedura Operativa](#procedura-operativa)
-  - [Step 1: Stato Trasporto dal PRIMARY](#step-1-stato-trasporto-dal-primary)
-  - [Step 2: Stato Apply sullo STANDBY](#step-2-stato-apply-sullo-standby)
-  - [Step 3: Gap Archive](#step-3-gap-archive)
-  - [Step 4: Stato Database Standby](#step-4-stato-database-standby)
-  - [Step 5: Data Guard Broker (se attivo)](#step-5-data-guard-broker-se-attivo)
-- [Troubleshooting](#troubleshooting)
-  - [MRP0 non attivo (apply fermo)](#mrp0-non-attivo-apply-fermo)
-  - [Gap di archivelog](#gap-di-archivelog)
-  - [DEST_ID=2 in ERROR](#dest_id2-in-error)
-  - [Lag alto ma nessun errore](#lag-alto-ma-nessun-errore)
-- [Validazione Finale](#validazione-finale)
-<!-- RUNBOOK_NAV_END -->
-
-<!-- READY_SCRIPTS_START -->
-## Script pronti collegati
-
-Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
-
-- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) - ruolo DB, transport/apply lag, gap, MRP, switchover readiness.
-<!-- READY_SCRIPTS_END -->
-> ⏱️ Tempo: 5 minuti | 📅 Frequenza: Ogni mattina + su incidente | 👤 Chi: DBA on-call
-
----
+# 03 - Check Data Guard
 
 ## Obiettivi
 
-Verificare che Data Guard funzioni correttamente: redo trasportato, redo applicato, nessun gap.
+Separare rapidamente problemi di trasporto, apply, gap, spazio e Broker senza
+eseguire correzioni distruttive. Usa questo runbook per morning check,
+pre-switchover e incidenti di lag.
 
----
+## Script pronti collegati
 
-## Procedura Operativa
+- [09_dataguard_status.sql](../03_scripts_pronti/09_dataguard_status.sql) -
+  ruolo, lag, gap, MRP e readiness.
+- [03_fra_archivelog.sql](../03_scripts_pronti/03_fra_archivelog.sql) -
+  FRA, archivelog e deletion policy.
 
-### Step 1: Stato Trasporto dal PRIMARY
+## Procedura operativa
+
+### 1. Identifica i ruoli
+
+Esegui sui due siti:
 
 ```sql
--- Connettiti al PRIMARY
-sqlplus / as sysdba
+SELECT name, db_unique_name, database_role, open_mode,
+       protection_mode, switchover_status
+FROM v$database;
+```
 
--- 1A. Destinazione standby
-SELECT dest_id, status, error,
-       archived_thread#, archived_seq#
+Atteso:
+
+- un solo `PRIMARY`;
+- un solo `PHYSICAL STANDBY`;
+- standby `MOUNTED` oppure `READ ONLY WITH APPLY` se ADG e' autorizzato.
+
+### 2. Controlla il trasporto sul primary
+
+```sql
+SELECT dest_id, status, target, destination, error
 FROM v$archive_dest
-WHERE dest_id = 2;
+WHERE status <> 'INACTIVE'
+ORDER BY dest_id;
 
--- ATTESO: STATUS = VALID, ERROR vuoto
--- 🔴 Se STATUS = ERROR → rete, listener, o standby giù
+SELECT dest_id, status, type, database_mode, recovery_mode, gap_status
+FROM v$archive_dest_status
+WHERE status <> 'INACTIVE'
+ORDER BY dest_id;
 ```
 
-```sql
--- 1B. Ultimo archivelog spedito per thread
-SELECT thread#,
-       MAX(sequence#) AS last_archived,
-       MAX(next_time) AS last_time
-FROM v$archived_log
-WHERE dest_id = 1
-GROUP BY thread#
-ORDER BY thread#;
-```
+Se la destinazione remota e' in errore, salva l'errore prima di modificare
+stato o parametri.
 
-### Step 2: Stato Apply sullo STANDBY
+### 3. Controlla apply e lag sullo standby
 
 ```sql
--- Connettiti allo STANDBY
-sqlplus / as sysdba
-
--- 2A. Lag di trasporto e apply
-SELECT name, value, datum_time, time_computed
+SELECT name, value, unit, datum_time, time_computed
 FROM v$dataguard_stats
 WHERE name IN ('transport lag', 'apply lag', 'apply finish time');
 
--- ATTESO:
--- transport lag = +00 00:00:00 (o pochi secondi)
--- apply lag     = +00 00:00:00 (o pochi secondi)
-```
-
-```sql
--- 2B. Processi managed recovery
-SELECT process, pid, status, thread#, sequence#, block#
+SELECT process, status, thread#, sequence#, block#
 FROM v$managed_standby
 WHERE process IN ('MRP0', 'RFS', 'ARCH')
 ORDER BY process;
-
--- ATTESO: MRP0 in APPLYING_LOG o WAIT_FOR_LOG
--- ⚠️ Se MRP0 assente → apply fermo!
 ```
+
+`MRP0` deve essere attivo. Distingui:
+
+- transport lag: rete, listener, primary o FRA;
+- apply lag: MRP, I/O standby, SRL o carico reporting ADG.
+
+### 4. Controlla il gap sullo standby
 
 ```sql
--- 2C. Ultimo archivelog applicato
-SELECT thread#,
-       MAX(sequence#) AS last_applied,
-       MAX(next_time) AS last_time
-FROM v$archived_log
-WHERE applied = 'YES'
-GROUP BY thread#
-ORDER BY thread#;
+SELECT thread#, low_sequence#, high_sequence#
+FROM v$archive_gap;
 ```
 
-### Step 3: Gap Archive
+Zero righe significa nessun gap noto. Se esistono righe, registra thread e
+sequence prima di agire.
+
+### 5. Controlla Broker
+
+```text
+SHOW CONFIGURATION;
+SHOW DATABASE VERBOSE <PRIMARY_DB_UNIQUE_NAME>;
+SHOW DATABASE VERBOSE <STANDBY_DB_UNIQUE_NAME>;
+VALIDATE DATABASE <PRIMARY_DB_UNIQUE_NAME>;
+VALIDATE DATABASE <STANDBY_DB_UNIQUE_NAME>;
+```
+
+## Troubleshooting rapido
+
+### MRP fermo
+
+Sullo standby, dopo aver letto alert log e gap:
 
 ```sql
--- Sullo STANDBY
-SELECT * FROM v$archive_gap;
-
--- ATTESO: 0 righe = nessun gap
--- 🔴 Se ci sono gap → redo mancante!
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
-### Step 4: Stato Database Standby
+### Gap redo
+
+Segui una escalation progressiva:
+
+1. verifica rete, listener, FRA, FAL e MRP;
+2. attendi FAL se i log esistono;
+3. copia e registra gli archivelog mancanti:
 
 ```sql
-SELECT name, db_unique_name, open_mode, database_role,
-       protection_mode, switchover_status
-FROM v$database;
-
--- ATTESO:
--- DATABASE_ROLE = PHYSICAL STANDBY
--- OPEN_MODE    = MOUNTED (o READ ONLY WITH APPLY se Active DG)
--- SWITCHOVER_STATUS = NOT ALLOWED o TO PRIMARY (se pronto)
+ALTER DATABASE REGISTER PHYSICAL LOGFILE '<ARCHIVELOG_PATH>';
 ```
 
-### Step 5: Data Guard Broker (se attivo)
+4. se i redo sono persi, usa RMAN sullo standby:
 
-```bash
-dgmgrl /
-
-DGMGRL> SHOW CONFIGURATION;
-# ATTESO: SUCCESS
-
-DGMGRL> SHOW DATABASE 'RACDB';
-DGMGRL> SHOW DATABASE 'RACDB_STBY';
-# ATTESO: entrambi SUCCESS, transport/apply ON
-
-DGMGRL> SHOW DATABASE 'RACDB_STBY' 'StatusReport';
-# Dettaglio errori se presenti
+```rman
+RECOVER STANDBY DATABASE FROM SERVICE <PRIMARY_TNS_ALIAS>;
 ```
 
----
+5. usa incremental `FROM SCN` o rebuild solo come fallback approvato.
 
-## Troubleshooting
+### Destinazione redo in errore
 
-### MRP0 non attivo (apply fermo)
+Cause comuni:
 
-```sql
--- Sullo standby, riavvia recovery
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;
-```
+| Errore | Controllo |
+| --- | --- |
+| `ORA-12514`, `ORA-12541` | listener, alias, firewall |
+| `ORA-01017` | password file coerente |
+| timeout | route, rete DG, MTU, latenza |
+| FRA piena | spazio reale e deletion policy |
 
-### Gap di archivelog
+Non azzerare `LOCAL_LISTENER`, `REMOTE_LISTENER`, `LISTENER_NETWORKS` o
+`LOG_ARCHIVE_DEST_n` alla cieca.
 
-```sql
--- Sul PRIMARY: forza archiviazione
-ALTER SYSTEM ARCHIVE LOG CURRENT;
-ALTER SYSTEM SWITCH LOGFILE;  -- per ogni thread
+## Validazione finale
 
--- Sullo STANDBY: verifica se il gap si chiude
-SELECT * FROM v$archive_gap;
-```
+| Check | Atteso |
+| --- | --- |
+| Ruoli | un primary e un physical standby |
+| Destinazione redo | nessun errore bloccante |
+| Transport lag | entro soglia approvata |
+| Apply lag | entro soglia approvata |
+| `MRP0` | attivo |
+| `V$ARCHIVE_GAP` sullo standby | zero righe |
+| Broker | `SUCCESS` |
 
-### DEST_ID=2 in ERROR
+## Approfondimenti
 
-```sql
--- Sul PRIMARY: leggi l'errore
-SELECT dest_id, status, error FROM v$archive_dest WHERE dest_id = 2;
-
--- Cause comuni:
--- ORA-12514: listener standby giù o service sbagliato
--- ORA-01017: password file non allineato
--- Network timeout: rete tra primary e standby
-
--- Prova a ri-abilitare:
-ALTER SYSTEM SET log_archive_dest_state_2 = 'DEFER';
-ALTER SYSTEM SET log_archive_dest_state_2 = 'ENABLE';
-```
-
-### Lag alto ma nessun errore
-
-```sql
--- Sullo STANDBY: verifica apply rate
-SELECT SOFAR, ELAPSED_SECONDS,
-       ROUND(SOFAR/ELAPSED_SECONDS, 1) AS blocks_per_sec
-FROM v$recovery_progress
-WHERE item = 'Active Apply Rate';
-
--- Se apply lento: potrebbe essere I/O, redo size alto,
--- o parametri recovery sottodimensionati
-```
-
----
-
-## Validazione Finale
-
-| Controllo | Atteso |
-|---|---|
-| DEST_ID=2 | STATUS = VALID |
-| transport lag | < 30 secondi |
-| apply lag | < 1 minuto |
-| MRP0 | APPLYING_LOG |
-| v$archive_gap | 0 righe |
-| Broker | SUCCESS |
+- [RMAN e Data Guard Recovery/DR](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)
+- [SHAMS PROJECT: Evidence e drill](../../02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md)

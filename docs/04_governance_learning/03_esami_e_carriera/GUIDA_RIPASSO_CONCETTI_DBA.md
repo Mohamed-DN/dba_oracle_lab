@@ -658,7 +658,7 @@ graph TD
 
 ### Q87: Lo Standby Database non riceve o non applica i log.
 *   **Analisi**: Possibile problema di rete o processo MRP spento.
-*   **Azione**: Controlla `v$archive_gap` e `v$managed_standby` sullo standby. Sul primario verifica `v$archive_dest_status`. Se l'apply è fermo e non ci sono errori bloccanti, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;`.
+*   **Azione**: Controlla `v$archive_gap` e `v$managed_standby` sullo standby. Sul primario verifica `v$archive_dest_status`. Se l'apply è fermo e non ci sono errori bloccanti, riavvialo con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;`.
 
 ### Q88: FRA (Flash Recovery Area) Piena al 100%.
 *   **Analisi**: Il database si blocca ("hangs") perché non può scrivere gli archivelog.

@@ -87,8 +87,8 @@ SHOW DATABASE RACDB_STBY;
 ### 2. Verifica che la sincronizzazione sia completa
 
 ```sql
--- Sul Primario
-SELECT thread#, MAX(sequence#) FROM v$archived_log WHERE applied='YES' 
+-- Sul Primary: ultimo redo archiviato
+SELECT thread#, MAX(sequence#) FROM v$archived_log
 GROUP BY thread# ORDER BY thread#;
 
 -- Sullo Standby
@@ -115,15 +115,12 @@ Output atteso:
 
 > ⚠️ Se mostra "Ready for Switchover: No", controlla i "Warnings" nel report e risolvili.
 
-### 4. Snapshot VirtualBox (CRITICO!)
+### 4. Rollback del laboratorio
 
-```bash
-# Su TUTTE le macchine
-VBoxManage snapshot "rac1" take "PRE-SWITCHOVER"
-VBoxManage snapshot "rac2" take "PRE-SWITCHOVER"
-VBoxManage snapshot "racstby1" take "PRE-SWITCHOVER"
-VBoxManage snapshot "racstby2" take "PRE-SWITCHOVER"
-```
+Non usare snapshot VM come rollback quando la topologia include dischi ASM
+condivisi: il ripristino parziale puo' disallineare OS, Clusterware e storage.
+Per un test distruttivo usa un backup fisico consistente a VM spente oppure
+ricostruisci il lab con la procedura documentata.
 
 ---
 

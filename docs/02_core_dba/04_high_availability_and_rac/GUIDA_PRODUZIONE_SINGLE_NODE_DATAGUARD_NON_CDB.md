@@ -762,7 +762,7 @@ Sul standby:
 SELECT name, open_mode, database_role, db_unique_name
 FROM v$database;
 
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
 Controlli:
@@ -777,6 +777,7 @@ SELECT name, value, datum_time, time_computed
 FROM v$dataguard_stats
 WHERE name IN ('transport lag','apply lag','apply finish time');
 
+-- Eseguire sullo standby
 SELECT * FROM v$archive_gap;
 ```
 

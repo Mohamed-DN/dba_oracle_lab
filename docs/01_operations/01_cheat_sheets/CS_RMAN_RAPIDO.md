@@ -534,7 +534,7 @@ RECOVER STANDBY DATABASE FROM SERVICE primary_tns_alias;
 -- Se usi Broker:
 -- DGMGRL> EDIT DATABASE 'STANDBY_DB' SET STATE = 'APPLY-ON';
 -- Se non usi Broker:
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
 ### Post-recovery checks
@@ -543,7 +543,7 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT
 SELECT name, value, datum_time FROM v$dataguard_stats
 WHERE name IN ('transport lag','apply lag');
 
--- Verificare che non ci siano gap residui
+-- Sullo STANDBY: verificare che non ci siano gap residui
 SELECT * FROM v$archive_gap;
 
 -- Verificare che MRP sia attivo

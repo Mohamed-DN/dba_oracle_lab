@@ -1,71 +1,55 @@
-# Recovery Data Guard Post-Reboot
+# Recovery Data Guard post-reboot
 
-> **Problema**: Dopo un riavvio improvviso del server (es. crash, manutenzione HW), spesso il Data Guard Broker perde la sincronizzazione e il MRP (Managed Recovery Process) non riparte automaticamente.
-
----
+Dopo un reboot verifica prima stato risorse, Broker, rete e MRP. Non assumere
+che il Broker sia corrotto: spesso apply e' solo fermo o la rete non e' pronta.
 
 ## Sintomi
 
-- Lo standby è in stato `MOUNT` ma il MRP non è attivo
-- Il Broker mostra `ORA-16766: Redo Apply is stopped`
-- GAP crescente tra primary e standby
-- I log archivi non vengono spediti
+- Standby `MOUNTED`, ma MRP non attivo.
+- Broker `ORA-16766: Redo Apply is stopped`.
+- Gap crescente o trasporto in errore.
 
----
+## Procedura
 
-## Procedura di Recovery
+### 1. Broker e risorse
 
-### 1. Verifica lo stato del Broker
-
-```sql
--- Sul PRIMARY o STANDBY
-dgmgrl /
-
-DGMGRL> show configuration;
-
--- Se mostra errore, verifica lo stato del database
-DGMGRL> show database 'NOME_DB_STANDBY';
+```text
+SHOW CONFIGURATION;
+SHOW DATABASE VERBOSE <STANDBY_DB_UNIQUE_NAME>;
 ```
 
-### 2. Verifica i log e il GAP
-
-```sql
--- Sullo STANDBY
-SELECT * FROM v$standby_log;
-SELECT * FROM v$archive_gap;
-SELECT THREAD#, MAX(SEQUENCE#) FROM v$archived_log WHERE APPLIED = 'YES' GROUP BY THREAD#;
+```bash
+srvctl status database -db <DB_UNIQUE_NAME>
+lsnrctl services LISTENER_DG
 ```
 
-### 3. Riavvia il MRP (Apply)
+### 2. Gap sullo standby
 
 ```sql
--- Sullo STANDBY come SYS
+SELECT thread#, low_sequence#, high_sequence#
+FROM v$archive_gap;
+
+SELECT thread#, MAX(sequence#)
+FROM v$archived_log
+WHERE applied = 'YES'
+GROUP BY thread#;
+```
+
+### 3. Riavvia MRP
+
+```sql
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
-### 4. Se il Broker è corrotto, ricrealo
+### 4. Riavvia Broker solo se necessario
+
+Salva evidence e verifica prima rete, listener e processi. Se il change lo
+autorizza:
 
 ```sql
--- Disabilita e poi riabilita il Broker su entrambi i lati
--- SUL PRIMARY
-ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
--- Attendi 30 secondi
-ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
-
--- SULLO STANDBY (stessa cosa)
 ALTER SYSTEM SET dg_broker_start=FALSE SCOPE=BOTH SID='*';
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 ```
 
-### 5. Riedita la configurazione nel Broker (se necessario)
-
-```sql
-dgmgrl /
-
--- Esempio: edit database con il connect identifier corretto
-DGMGRL> edit database 'NOME_DB' SET PROPERTY StaticConnectIdentifier='(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=hostname)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=NOME_DB_DGMGRL)(INSTANCE_NAME=NOME_DB1)(SERVER=DEDICATED)))';
-```
-
-> [!WARNING]
-> In RAC, il `StaticConnectIdentifier` deve puntare al **static listener** dedicato al Data Guard, NON al SCAN listener!
+Non ricreare la configurazione Broker come prima risposta a un reboot.

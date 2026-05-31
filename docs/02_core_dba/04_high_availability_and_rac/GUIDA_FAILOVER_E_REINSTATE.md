@@ -40,9 +40,11 @@ automatico usa la [Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER
 > Se vuoi "salvare" lo stato dell'intero scenario per poter tornare indietro senza impazzire col comando REINSTATE, devi fare un **backup fisico a freddo**:
 > 1. Fallo come useresti una chiavetta USB: **Spegni completamente** le 4 VM (rac1, rac2, racstby1, racstby2).
 > 2. Vai nella cartella di Windows dove tieni le macchine virtuali e in quella dei dischi virtuali (`.vdi`).
-> 3. Clicca col tasto destro e **zippa/copia-incolla** l'intera cartella delle VM e l'intera cartella con tutti i dischi ASM in una directory di backup (es. `Backup_RAC_PreFailover`).
-> 4. Accendi le VM, devasta tutto col failover, fai i tuoi test.
-> 5. Quando hai finito, spegni le VM, **cancella** i file correnti e unzippa il tuo backup fisico al loro posto. Tornerai magicamente a 10 minuti prima.
+> 3. Copia l'intera cartella delle VM e tutti i dischi ASM in una directory di backup verificata.
+> 4. Accendi le VM, esegui il drill di failover e raccogli evidenze.
+> 5. Per il rollback spegni tutte le VM e ripristina l'intero set in modo
+>    consistente, seguendo una checklist e conservando una copia dello stato
+>    post-test fino alla validazione.
 
 ---
 
@@ -96,6 +98,11 @@ automatico usa la [Fase 4B: Observer Server e FSFO](./GUIDA_FASE4B_FSFO_OBSERVER
 
 > **NON fare failover se il Primary è ancora vivo!** Se entrambi sono aperti in R/W, ottieni uno **split brain** con corruzione dati irreversibile.
 
+Prima della promozione registra nel ticket il fencing applicato al vecchio
+primary: isolamento rete, storage o alimentazione secondo la topologia del lab.
+Un timeout SSH non basta. Il failover e' autorizzabile solo quando il vecchio
+primary non puo' accettare traffico o tornare online senza controllo.
+
 ```bash
 # Prova a connetterti al Primary
 sqlplus /@RACDB as sysdba
@@ -115,6 +122,9 @@ SHOW CONFIGURATION;
 ---
 
 ## Fase 2: Esecuzione del Failover
+
+Gate obbligatorio: allega evidenza del fencing e dichiara l'RPO osservato dal
+lag dello standby. Senza fencing non eseguire `FAILOVER TO`.
 
 ### Con DGMGRL (consigliato)
 
@@ -225,7 +235,8 @@ SHOW CONFIGURATION;
 > Se Flashback non era abilitato o il vecchio Primary è troppo divergente.
 
 ```bash
-# 1. Cancella il vecchio database
+# 1. Solo con change distruttivo approvato: ricrea il vecchio database.
+#    Non eseguire DROP DATABASE come primo tentativo di reinstate.
 sqlplus / as sysdba
 STARTUP MOUNT RESTRICT;
 DROP DATABASE;

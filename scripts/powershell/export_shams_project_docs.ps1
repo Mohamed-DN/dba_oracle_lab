@@ -9,9 +9,13 @@ $projectDir = Join-Path $haDir "SHAMS_PROJECT"
 $artifactDir = Join-Path $RepositoryRoot "artifacts\shams_project"
 
 $fullSources = @(
+    (Join-Path $projectDir "GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md"),
     (Join-Path $projectDir "GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md"),
+    (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md"),
     (Join-Path $projectDir "GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md"),
-    (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md")
+    (Join-Path $projectDir "GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md")
 )
 $runSources = @(
     (Join-Path $projectDir "RUN_SHEET_01_M24SHAMS_SINGLE_NON_CDB.md")
@@ -25,7 +29,10 @@ $portfolioSources = @(
     (Join-Path $projectDir "GUIDA_05_OBSERVER_FSFO_PEYTECH.md"),
     (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md"),
     (Join-Path $projectDir "GUIDA_07_HOST_RAC_GRID_ASM_19C.md"),
-    (Join-Path $projectDir "GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md")
+    (Join-Path $projectDir "GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md")
 )
 $variantRunSources = @(
     (Join-Path $projectDir "RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md")
@@ -48,12 +55,19 @@ function Add-Paragraph {
     param(
         $Document,
         [string]$Text,
-        [string]$Style = "Normal"
+        [string]$Style = "Normal",
+        [string]$ListKind = ""
     )
 
     $paragraph = $Document.Paragraphs.Add()
     $paragraph.Range.Text = (Get-CleanText $Text)
     $paragraph.Range.Style = $Style
+    if ($ListKind -eq "Bullet") {
+        $paragraph.Range.ListFormat.ApplyBulletDefault()
+    }
+    elseif ($ListKind -eq "Number") {
+        $paragraph.Range.ListFormat.ApplyNumberDefault()
+    }
     $paragraph.Range.InsertParagraphAfter()
 }
 
@@ -114,8 +128,18 @@ function Add-MarkdownTable {
     $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
     $table = $Document.Tables.Add($range, $dataRows.Count, $columns)
     $table.Style = "Table Grid"
-    $table.AllowAutoFit = $true
-    $table.AutoFitBehavior(2)
+    $table.AllowAutoFit = $false
+    $table.AutoFitBehavior(0)
+    $table.PreferredWidthType = 3
+    $table.PreferredWidth = 468
+    $table.TopPadding = 4
+    $table.BottomPadding = 4
+    $table.LeftPadding = 6
+    $table.RightPadding = 6
+    $columnWidth = 468 / $columns
+    for ($column = 1; $column -le $columns; $column++) {
+        $table.Columns.Item($column).SetWidth([single]$columnWidth, 0)
+    }
 
     for ($row = 0; $row -lt $dataRows.Count; $row++) {
         for ($column = 0; $column -lt $columns; $column++) {
@@ -129,6 +153,7 @@ function Add-MarkdownTable {
             }
         }
     }
+    $table.Rows.Item(1).HeadingFormat = -1
 
     $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
     $range.InsertParagraphAfter()
@@ -140,40 +165,73 @@ function Set-DocumentStyle {
         [string]$HeaderText
     )
 
-    $Document.PageSetup.TopMargin = 42
-    $Document.PageSetup.BottomMargin = 42
-    $Document.PageSetup.LeftMargin = 48
-    $Document.PageSetup.RightMargin = 48
+    $Document.PageSetup.TopMargin = 72
+    $Document.PageSetup.BottomMargin = 72
+    $Document.PageSetup.LeftMargin = 72
+    $Document.PageSetup.RightMargin = 72
+    $Document.PageSetup.PageWidth = 612
+    $Document.PageSetup.PageHeight = 792
+    $Document.PageSetup.HeaderDistance = 35
+    $Document.PageSetup.FooterDistance = 35
 
     $normal = $Document.Styles.Item("Normal")
-    $normal.Font.Name = "Aptos"
-    $normal.Font.Size = 9
-    $normal.ParagraphFormat.SpaceAfter = 3
+    $normal.Font.Name = "Calibri"
+    $normal.Font.Size = 11
+    $normal.ParagraphFormat.SpaceAfter = 6
+    $normal.ParagraphFormat.LineSpacingRule = 5
+    $normal.ParagraphFormat.LineSpacing = 15
 
     foreach ($name in @("Title", "Heading 1", "Heading 2", "Heading 3")) {
         $style = $Document.Styles.Item($name)
-        $style.Font.Name = "Aptos Display"
-        $style.Font.Color = 0x753B00
-        $style.ParagraphFormat.SpaceBefore = 6
-        $style.ParagraphFormat.SpaceAfter = 3
+        $style.Font.Name = "Calibri"
+        $style.Font.Color = 0xB5742E
     }
 
-    $Document.Styles.Item("Title").Font.Size = 20
-    $Document.Styles.Item("Heading 1").Font.Size = 15
-    $Document.Styles.Item("Heading 2").Font.Size = 12
-    $Document.Styles.Item("Heading 3").Font.Size = 10
+    $Document.Styles.Item("Title").Font.Size = 23
+    $Document.Styles.Item("Title").ParagraphFormat.SpaceAfter = 12
+    $Document.Styles.Item("Heading 1").Font.Size = 16
+    $Document.Styles.Item("Heading 1").ParagraphFormat.SpaceBefore = 18
+    $Document.Styles.Item("Heading 1").ParagraphFormat.SpaceAfter = 10
+    $Document.Styles.Item("Heading 2").Font.Size = 13
+    $Document.Styles.Item("Heading 2").ParagraphFormat.SpaceBefore = 14
+    $Document.Styles.Item("Heading 2").ParagraphFormat.SpaceAfter = 7
+    $Document.Styles.Item("Heading 3").Font.Size = 12
+    $Document.Styles.Item("Heading 3").ParagraphFormat.SpaceBefore = 10
+    $Document.Styles.Item("Heading 3").ParagraphFormat.SpaceAfter = 5
 
     $header = $Document.Sections.Item(1).Headers.Item(1).Range
     $header.Text = $HeaderText
-    $header.Font.Name = "Aptos"
+    $header.Font.Name = "Calibri"
     $header.Font.Size = 8
     $header.ParagraphFormat.Alignment = 1
 
     $footer = $Document.Sections.Item(1).Footers.Item(1).Range
-    $footer.Text = "SHAMS PROJECT | Oracle 19c Data Guard | Documento operativo"
-    $footer.Font.Name = "Aptos"
+    $footer.Text = "SHAMS PROJECT | Oracle 19c Data Guard | Documento operativo | Pagina "
+    $footer.Collapse(0)
+    $Document.Fields.Add($footer, -1) | Out-Null
+    $footer.Font.Name = "Calibri"
     $footer.Font.Size = 8
     $footer.ParagraphFormat.Alignment = 1
+}
+
+function Add-Cover {
+    param(
+        $Document,
+        [string]$Title
+    )
+
+    $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
+    $range.InsertParagraphAfter()
+    $range.InsertParagraphAfter()
+    $range.InsertParagraphAfter()
+
+    Add-Paragraph -Document $Document -Text "SHAMS PROJECT" -Style "Heading 2"
+    Add-Paragraph -Document $Document -Text $Title -Style "Title"
+    Add-Paragraph -Document $Document -Text "Oracle Database 19c | Data Guard Enterprise Blueprint" -Style "Heading 2"
+    Add-Paragraph -Document $Document -Text "Documento operativo PEYTECH - verificare sempre blueprint, ambiente, licenze e placeholder prima dell'esecuzione."
+
+    $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
+    $range.InsertBreak(7)
 }
 
 function Add-Markdown {
@@ -229,6 +287,7 @@ function Add-Markdown {
 
         $text = $line
         $style = "Normal"
+        $listKind = ""
 
         if ($line -match "^# (.+)$") {
             $text = $Matches[1]
@@ -247,10 +306,15 @@ function Add-Markdown {
             $style = "Heading 3"
         }
         elseif ($line -match "^[*-] (.+)$") {
-            $text = [char]0x2022 + " " + $Matches[1]
+            $text = $Matches[1]
+            $listKind = "Bullet"
+        }
+        elseif ($line -match "^\d+\. (.+)$") {
+            $text = $Matches[1]
+            $listKind = "Number"
         }
 
-        Add-Paragraph -Document $Document -Text $text -Style $style
+        Add-Paragraph -Document $Document -Text $text -Style $style -ListKind $listKind
         $index++
     }
 
@@ -275,6 +339,7 @@ function Export-Package {
     try {
         $document = $word.Documents.Add()
         Set-DocumentStyle -Document $document -HeaderText $HeaderText
+        Add-Cover -Document $document -Title $Title
 
         $first = $true
         foreach ($source in $Sources) {

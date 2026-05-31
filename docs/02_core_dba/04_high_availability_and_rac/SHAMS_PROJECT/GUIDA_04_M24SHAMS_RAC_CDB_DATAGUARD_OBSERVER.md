@@ -4,7 +4,7 @@
 
 Creare il blueprint enterprise preferito per nuovi database: RAC Oracle 19c a
 due nodi, CDB con PDB applicativo, physical standby RAC, Broker, Active Data
-Guard, servizi PDB role-based e Observer FSFO.
+Guard opzionale, servizi PDB role-based e Observer FSFO.
 
 Usa la [baseline comune](./GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md),
 l'[allegato host RAC](./GUIDA_07_HOST_RAC_GRID_ASM_19C.md) e la guida
@@ -35,7 +35,7 @@ indipendente.
 | SCAN | `<PRIMARY_SCAN>` / `<STANDBY_SCAN>` |
 | PDB applicativo | `M24SHAMSC_APP` |
 | Local undo PDB | `<SI/NO - decisione>` |
-| Active Data Guard | `<EVIDENZA LICENZA>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | TDE | `<SI/NO - decisione Security>` |
 
 ## Procedura operativa
@@ -165,6 +165,10 @@ separata: possono servire `ENABLED_PDBS_ON_STANDBY`,
 
 ### 5. Active Data Guard e servizi PDB RAC
 
+Esegui questa sezione solo dopo il gate della guida
+[Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md).
+Senza ADG mantieni standby `MOUNTED` con Redo Apply e non pubblicare `_RO`.
+
 Apri standby `READ ONLY WITH APPLY`, poi verifica:
 
 ```sql
@@ -216,8 +220,8 @@ Dopo stabilizzazione attiva FSFO seguendo
 | RAC due nodi nei due siti | `<OK/KO>` |
 | CDB `M24SHAMS`, PDB `M24SHAMSC_APP` | `<OK/KO>` |
 | thread 1 e 2 con SRL completi | `<OK/KO>` |
-| standby `READ ONLY WITH APPLY` | `<OK/KO>` |
-| service PDB `_PRY` e `_RO` | `<OK/KO>` |
+| standby `MOUNTED` oppure `READ ONLY WITH APPLY` autorizzato | `<OK/KO>` |
+| service PDB `_PRY`; `_RO` solo se ADG autorizzato | `<OK/KO/N.A.>` |
 | Broker `SUCCESS` | `<OK/KO>` |
 | switchover CDB e switchback | `<OK/KO>` |
 | RMAN standby nel catalogo | `<OK/KO>` |

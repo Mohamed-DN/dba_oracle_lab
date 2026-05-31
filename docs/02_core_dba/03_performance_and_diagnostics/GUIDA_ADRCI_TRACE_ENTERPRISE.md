@@ -881,7 +881,7 @@ adrci> show alert -p "message_text like '%MRP0%' or message_text like '%RFS%' or
 ### 10.3 Query Diagnostiche Data Guard
 
 ```sql
--- Gap detection
+-- Gap detection: eseguire sullo standby
 SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
 
 -- Transport/Apply lag

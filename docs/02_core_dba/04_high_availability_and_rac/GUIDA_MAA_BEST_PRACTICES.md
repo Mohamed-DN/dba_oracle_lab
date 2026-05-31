@@ -67,7 +67,7 @@ documentati senza confondere una guida disponibile con evidenza runtime.
 | # | Requisito MAA | Il Nostro Lab | Status | Come Fixare |
 |---|---|---|---|---|
 | 8 | Standby Redo Logs | ✅ Configurato in Fase 3 | ✅ | — |
-| 9 | Real-Time Apply | ✅ MRP con USING CURRENT LOGFILE | ✅ | — |
+| 9 | Real-Time Apply | ✅ MRP con SRL e `DISCONNECT FROM SESSION` | ✅ | — |
 | 10 | DG Broker (DGMGRL) | ✅ Configurato in Fase 4 | ✅ | — |
 | 11 | Active Data Guard | ✅ Read-Only con Apply | ✅ | — |
 | 12 | FSFO (automatic failover) | ⚠️ Descritto ma non configurato | ⚠️ | Vedi 3.4 |

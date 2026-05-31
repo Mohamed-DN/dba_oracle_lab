@@ -21,6 +21,9 @@
 | [Flashback Database](./GUIDA_FLASHBACK_DATABASE.md) | Ripristino temporale database |
 | [MAA Best Practices](./GUIDA_MAA_BEST_PRACTICES.md) | Linee guida Oracle MAA |
 | [SHAMS PROJECT](./SHAMS_PROJECT/README.md) | PEYTECH: single/RAC, CDB/non-CDB, Broker, Active Data Guard e Observer FSFO |
+| [SHAMS: Network e Broker](./SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) | Rete DG single/RAC, listener, duplicate RMAN, apply e Broker |
+| [SHAMS: ADG e servizi](./SHAMS_PROJECT/GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) | Gate licenza, `READ ONLY WITH APPLY` e servizi role-based |
+| [SHAMS: Evidence e drill](./SHAMS_PROJECT/GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md) | Test book operativo con gap, switchover, servizi e FSFO |
 | [Produzione: Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) | Primary single instance + standby fisico 19c non-CDB |
 | [Produzione: RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | RAC primary + standby fisico 19c non-CDB |
 | [Data Guard Far Sync](./GUIDA_FAR_SYNC_DATAGUARD.md) | Zero Data Loss a distanza geografica con istanza Far Sync |

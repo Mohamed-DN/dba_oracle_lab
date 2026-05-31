@@ -318,7 +318,7 @@ SELECT thread#, max(sequence#) FROM V$ARCHIVED_LOG WHERE applied='YES' GROUP BY 
 -- Stato MRP (Managed Recovery Process)
 SELECT process, status, thread#, sequence#, block# FROM V$MANAGED_STANDBY WHERE process LIKE 'MRP%';
 
--- GAP detection
+-- GAP detection: eseguire sullo STANDBY
 SELECT * FROM V$ARCHIVE_GAP;
 
 -- Redo transport errors

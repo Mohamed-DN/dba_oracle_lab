@@ -4,7 +4,8 @@
 
 Fornire la sequenza breve per il change `M24SHAMS`: primary PE
 `M24SHAMSPEC`, standby SE `M24SHAMSSEC`, single instance non-CDB Oracle 19c,
-ASM, Oracle Restart, Broker, Active Data Guard e backup RMAN sullo standby.
+ASM, Oracle Restart, Broker, Active Data Guard opzionale e backup RMAN sullo
+standby.
 
 Usare questo run sheet durante il change. Per motivazioni, comandi completi e
 troubleshooting consultare la
@@ -40,7 +41,7 @@ PRIMARY                                 PHYSICAL STANDBY
 | Latenza PE-SE | `<LATENZA_MS>` |
 | Recovery catalog | `<RMAN_CATALOG_TNS>` |
 | Destinazione backup | `<BACKUP_DEST>` |
-| Evidenza licenza Active Data Guard | `<RIFERIMENTO>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | Decisione TDE | `<SI/NO - RIFERIMENTO>` |
 | Metodo creazione primary | `<DBCA_SCRIPT_REVIEW/GOLDEN_RMAN>` |
 | Trasporto approvato | `<SYNC_AFFIRM/FASTSYNC_NOAFFIRM>` |
@@ -52,7 +53,7 @@ PRIMARY                                 PHYSICAL STANDBY
 | Host | Oracle Restart, ASM, DNS, NTP e listener DG validi | `<GO/NO-GO>` |
 | Patch | Grid e DB Home PE/SE hanno stessa RU | `<GO/NO-GO>` |
 | Storage | DATA e FRA dimensionati con crescita disponibile | `<GO/NO-GO>` |
-| Licensing | Active Data Guard formalmente verificato | `<GO/NO-GO>` |
+| Licensing | ADG disattivo oppure evidenza formale; lab personale marcato | `<GO/NO-GO>` |
 | TDE | decisione Security registrata e keystore distribuito se necessario | `<GO/NO-GO>` |
 | RMAN | catalogo e destinazione backup raggiungibili dallo standby | `<GO/NO-GO>` |
 | Rete | test latenza e stabilita' compatibili con il profilo scelto | `<GO/NO-GO>` |
@@ -132,7 +133,13 @@ approvato nella SOP. Non inserire password nella command line.
 
 ### 5. Apply, Active Data Guard e SRL
 
-Sullo standby crea gli SRL approvati e abilita:
+Sullo standby crea gli SRL approvati e abilita il Redo Apply base:
+
+```sql
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+```
+
+Solo se ADG e' autorizzato, applica la sequenza:
 
 ```sql
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
@@ -222,9 +229,9 @@ FSFO resta fuori dal change. Pianifica la
 | `SHOW CONFIGURATION` senza errori bloccanti | `<OK/KO>` |
 | `VALIDATE DATABASE` primary e standby | `<OK/KO>` |
 | transport lag e apply lag entro soglia | `<OK/KO>` |
-| standby `READ ONLY WITH APPLY` | `<OK/KO>` |
+| standby `MOUNTED` oppure `READ ONLY WITH APPLY` autorizzato | `<OK/KO>` |
 | servizio `M24SHAMSC_PRY` sul primary | `<OK/KO>` |
-| servizio `M24SHAMSC_RO` sullo standby | `<OK/KO>` |
+| servizio `M24SHAMSC_RO` sullo standby se ADG autorizzato | `<OK/KO/N.A.>` |
 | backup RMAN standby visibile nel catalogo | `<OK/KO>` |
 | backup SPFILE locale PE e SE | `<OK/KO>` |
 | restore test registrato | `<OK/KO>` |

@@ -305,14 +305,11 @@ SUCCESS
 > - **Apply Rate**: La velocità di applicazione.
 > - In RAC standby e normale che il Broker mostri una sola `apply instance` attiva.
 
-> 📸 **SNAPSHOT — "SNAP-09: DGMGRL_Configurato" ⭐ MILESTONE**
-> Data Guard Broker è operativo con STATUS = SUCCESS. Hai un vero sito di Disaster Recovery.
-> ```bash
-> VBoxManage snapshot "rac1" take "SNAP-09: DGMGRL_Configurato"
-> VBoxManage snapshot "rac2" take "SNAP-09: DGMGRL_Configurato"
-> VBoxManage snapshot "racstby1" take "SNAP-09: DGMGRL_Configurato"
-> VBoxManage snapshot "racstby2" take "SNAP-09: DGMGRL_Configurato"
-> ```
+> **MILESTONE - Broker configurato**
+> Data Guard Broker e' operativo con `STATUS=SUCCESS`. Salva output DGMGRL,
+> parametri e log nel pacchetto di evidenze. Non usare snapshot VM come
+> rollback quando esistono dischi ASM condivisi: usa un backup consistente a
+> VM spente oppure ricostruzione documentata.
 
 ---
 
@@ -578,7 +575,7 @@ sqlplus / as sysdba
 -- Sequenza sicura: cancel apply -> open read only -> riabilita apply realtime
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
 ALTER DATABASE OPEN READ ONLY;
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 
 -- Verifica
 SELECT open_mode FROM v$database;
