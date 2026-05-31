@@ -20,7 +20,7 @@ Questa SOP e' specifica per `M24SHAMS`. Per il modello riutilizzabile consulta
 Ordine di precedenza usato nel documento:
 
 1. documentazione ufficiale Oracle Database 19c;
-2. standard NEXI `NEXI_Database_Install_Configure_BestPractice_0.5`;
+2. standard PEYTECH `PEYTECH_Database_Install_Configure_BestPractice_0.5`;
 3. convenzioni operative approvate nel change;
 4. esempi della chat di raccolta requisiti, usati solo come materiale di lavoro.
 
@@ -352,7 +352,7 @@ sono pronti.
 
 ### 5. Online redo log e standby redo log
 
-Lo standard NEXI di partenza e' quattro online redo log group da `4G` per
+Lo standard PEYTECH di partenza e' quattro online redo log group da `4G` per
 thread. Conferma la scelta con il carico misurato: la frequenza di log switch
 non deve essere governata da una copia cieca dello standard.
 
@@ -866,7 +866,7 @@ Se lo standby deve essere ricostruito:
 | Backup standby invisibile dal primary | Recovery catalog o connect identifier errato | Verifica catalogo e `LIST DB_UNIQUE_NAME OF DATABASE` |
 | FRA piena con standby in lag | Purge cieco pericoloso | Usa [DG-061](../../01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md#dg-061---primary-fra-piena-per-standby-lag) |
 
-## Adattamenti rispetto allo standard NEXI 0.5
+## Adattamenti rispetto allo standard PEYTECH 0.5
 
 | Tema | Decisione M24SHAMS |
 | --- | --- |
@@ -875,7 +875,7 @@ Se lo standby deve essere ricostruito:
 | HAS | Oracle Restart standalone confermato |
 | Profili `C##...` | Non usare come default: il database e' non-CDB |
 | OJVM e componenti DBCA | Installare solo se richiesti |
-| Redo | Baseline NEXI quattro gruppi da `4G`, con gate sul carico reale |
+| Redo | Baseline PEYTECH quattro gruppi da `4G`, con gate sul carico reale |
 | SRL | Su entrambi i ruoli, online group + 1 |
 | Active Data Guard | Obbligatorio nel target, previa evidenza licenza |
 | TDE | Assessment obbligatorio; attivazione solo approvata |

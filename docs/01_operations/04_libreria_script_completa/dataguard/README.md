@@ -7,7 +7,7 @@
 
 ## Panoramica
 
-Data Guard è il pilastro della Disaster Recovery in Oracle. In un ambiente Enterprise come Nexi,
+Data Guard è il pilastro della Disaster Recovery in Oracle. In un ambiente Enterprise come Peytech,
 la configurazione tipica prevede:
 - **Primary RAC** (2 nodi) → **Standby RAC** (2 nodi)
 - Trasporto LOG: **LGWR ASYNC** (per performance) o **LGWR SYNC** (per zero data loss)

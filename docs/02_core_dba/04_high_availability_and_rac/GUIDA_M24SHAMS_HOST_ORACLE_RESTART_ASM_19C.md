@@ -100,7 +100,7 @@ Le directory devono seguire lo standard locale. Esempio:
 <ORA_INVENTORY>
 ```
 
-Non copiare path storici NEXI senza confrontarli con l'inventario del server.
+Non copiare path storici PEYTECH senza confrontarli con l'inventario del server.
 
 ### 3. Kernel, limits e sicurezza host
 

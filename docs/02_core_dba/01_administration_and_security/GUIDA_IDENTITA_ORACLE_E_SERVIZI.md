@@ -584,7 +584,7 @@ END;
 
 ### 9.1 Best Practice: Backup Offload sullo Standby
 
-In un ambiente Data Guard (come quello che hai visto in Nexi), la strategia migliore è:
+In un ambiente Data Guard (come quello che hai visto in Peytech), la strategia migliore è:
 
 | Tipo Backup | Dove Gira | Frequenza | Perché |
 |---|---|---|---|
@@ -617,9 +617,9 @@ e viceversa. L'unico requisito è che usino lo stesso Recovery Catalog.
 > CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 > ```
 
-### 9.3 Architettura Nexi (Quello Che Hai Osservato)
+### 9.3 Architettura Peytech (Quello Che Hai Osservato)
 
-Quello che hai visto nei database Nexi è esattamente il pattern MAA Gold:
+Quello che hai visto nei database Peytech è esattamente il pattern MAA Gold:
 
 ```
 +-----------------------------+

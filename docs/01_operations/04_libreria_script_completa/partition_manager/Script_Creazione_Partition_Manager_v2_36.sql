@@ -354,7 +354,7 @@ CREATE TABLE DBA_OP.MAINT_PARTITIONS
   LAST_RUN_RESULT                 VARCHAR2(10 BYTE),
   NEXT_RUN_DATE                   DATE,
   SCHEDULE                        VARCHAR2(300 BYTE),
-  SEND_EMAIL_TO                   VARCHAR2(4000 BYTE) DEFAULT 'dbadmin_allarmi@nexi.it'
+  SEND_EMAIL_TO                   VARCHAR2(4000 BYTE) DEFAULT 'dbadmin_allarmi@peytech.it'
 )
 TABLESPACE DBA_OP_DATA
 LOGGING 
@@ -475,27 +475,27 @@ BEGIN
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
-			   ('N', '10.10.122.21', 25, 'dbanexi', 'SMTP Gateway Giotto');
+			   ('N', '10.10.122.21', 25, 'dbapeytech', 'SMTP Gateway Giotto');
 			
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
-			   ('N', '10.11.7.224', 25, 'dbanexi', 'SMTP GTATM');
+			   ('N', '10.11.7.224', 25, 'dbapeytech', 'SMTP GTATM');
 			
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
-			   ('N', '192.168.36.62', 25, 'dbanexi', 'SMTP Gateway FM2008');
+			   ('N', '192.168.36.62', 25, 'dbapeytech', 'SMTP Gateway FM2008');
 			
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
-			   ('N', '10.105.12.35', 25, 'dbanexi', 'SMTP Gateway GTPOS Pero');
+			   ('N', '10.105.12.35', 25, 'dbapeytech', 'SMTP Gateway GTPOS Pero');
 			   
 			Insert into DBA_OP.MAINT_PARTITIONS_EMAIL
 			   (ENABLED, SMTP_HOST, SMTP_PORT, EMAIL_FROM, CONTENT_INFO)
 			 Values
-			   ('N', '10.205.12.35', 25, 'dbanexi', 'SMTP Gateway GTPOS Settimo');
+			   ('N', '10.205.12.35', 25, 'dbapeytech', 'SMTP Gateway GTPOS Settimo');
 		
 		END IF ;
 		
@@ -1834,7 +1834,7 @@ IS
                          1000);
       UTL_FILE.put_line (
          log_handle,
-            '=== NEXI === start: '
+            '=== PEYTECH === start: '
          || TO_CHAR (inizio, 'YYYY-MM-DD HH24:MI:SS')
          || ' end: '
          || TO_CHAR (fine, 'YYYY-MM-DD HH24:MI:SS')
@@ -4517,7 +4517,7 @@ IS
             || CanBeOnline ('MOVE');
          ExecSqlCommand (vStmt, pTable);
 
-         -- Nelle versioni al momento presenti su Nexi, possiamo permetterci il rebuild online degli indici
+         -- Nelle versioni al momento presenti su Peytech, possiamo permetterci il rebuild online degli indici
          FOR rCurIndex
             IN (SELECT    'ALTER INDEX '
                        || OWNER
@@ -6248,7 +6248,7 @@ IS
                   'From: ' || rwEmailConfig.email_from || UTL_TCP.crlf);
                UTL_SMTP.write_data (
                   l_mail_conn,
-                     'Subject: NEXI - PARTITIONS MANAGER : Errors occurred  on database '
+                     'Subject: PEYTECH - PARTITIONS MANAGER : Errors occurred  on database '
                   || vDbName
                   || ' for TableName : '
                   || rTableStatus.Table_Name
@@ -6267,7 +6267,7 @@ IS
 
                UTL_SMTP.write_data (
                   l_mail_conn,
-                     '<h1 style="color: #5e9ca0;">NEXI Partition Manager</h1>
+                     '<h1 style="color: #5e9ca0;">PEYTECH Partition Manager</h1>
 <p><strong>&nbsp;Errors occurred in RunId : '
                   || pRunId
                   || ' on Table : '
@@ -6370,7 +6370,7 @@ IS
                'From: ' || rwEmailConfig.email_from || UTL_TCP.crlf);
             UTL_SMTP.write_data (
                l_mail_conn,
-                  'Subject: NEXI - PARTITIONS MANAGER : Test Message on database '
+                  'Subject: PEYTECH - PARTITIONS MANAGER : Test Message on database '
                || UTL_TCP.crlf);
             UTL_SMTP.write_data (
                l_mail_conn,
@@ -6384,7 +6384,7 @@ IS
                || UTL_TCP.crlf);
             UTL_SMTP.write_data (
                l_mail_conn,
-               '<h1 style="color: #5e9ca0;">NEXI Partition Manager</h1>
+               '<h1 style="color: #5e9ca0;">PEYTECH Partition Manager</h1>
                       <p><strong>&nbsp;This is just a test Message</strong></p>');
 
             UTL_SMTP.close_data (l_mail_conn);
