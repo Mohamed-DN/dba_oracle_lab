@@ -486,6 +486,88 @@ Oracle prima del comando. Approfondimento:
 
 ---
 
+## 7B. Recover Standby Database FROM SERVICE (19c — Riallineamento Standby)
+
+Quando uno standby Data Guard ha un gap irrecuperabile (archivelog persi, FRA
+piena, standby rimasto spento a lungo), il metodo moderno Oracle 19c per
+riallinearlo **senza rebuild completo** è `RECOVER STANDBY DATABASE FROM SERVICE`.
+
+RMAN contatta il primary via rete, identifica la divergenza SCN ed esegue un
+backup incrementale automatico, applicandolo direttamente allo standby.
+
+### Prerequisiti
+```text
+1. Connettività TNS dallo standby verso il primary (net service name funzionante)
+2. Password file identico su primary e standby
+3. COMPATIBLE >= 12.0 su entrambi i database
+4. MRP (Managed Recovery Process) FERMO sullo standby
+5. Standby in stato MOUNT (in RAC: una sola istanza attiva)
+```
+
+### Procedura operativa
+```sql
+-- Step 1: Fermare MRP sullo standby
+-- Se usi Broker:
+-- DGMGRL> EDIT DATABASE 'STANDBY_DB' SET STATE = 'APPLY-OFF';
+-- Se non usi Broker:
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+```
+
+```rman
+-- Step 2: Connetti RMAN allo standby
+rman target /
+
+-- Step 3: Esegui il recovery dalla rete (il primary service è l'alias TNS)
+RECOVER STANDBY DATABASE FROM SERVICE primary_tns_alias;
+
+-- RMAN automaticamente:
+--   a) Ripristina il controlfile dal primary
+--   b) Monta il database
+--   c) Identifica il gap SCN
+--   d) Esegue un backup incrementale via rete
+--   e) Applica l'incrementale allo standby
+--   f) Rinomina datafile/tempfile se necessario
+```
+
+```sql
+-- Step 4: Riattivare MRP dopo il completamento
+-- Se usi Broker:
+-- DGMGRL> EDIT DATABASE 'STANDBY_DB' SET STATE = 'APPLY-ON';
+-- Se non usi Broker:
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+```
+
+### Post-recovery checks
+```sql
+-- Verificare che il lag torni a zero
+SELECT name, value, datum_time FROM v$dataguard_stats
+WHERE name IN ('transport lag','apply lag');
+
+-- Verificare che non ci siano gap residui
+SELECT * FROM v$archive_gap;
+
+-- Verificare che MRP sia attivo
+SELECT process, status, thread#, sequence# FROM v$managed_standby WHERE process='MRP0';
+```
+
+### Fallback: Incremental FROM SCN (se FROM SERVICE non è possibile)
+```rman
+-- Sul PRIMARY: genera un backup incrementale dalla SCN dello standby
+-- (ottieni la SCN dallo standby con: SELECT CURRENT_SCN FROM V$DATABASE)
+BACKUP INCREMENTAL FROM SCN <standby_scn> DATABASE
+  FORMAT '/backup/standby_resync_%U.bkp';
+
+-- Trasferisci i file sullo standby, poi:
+-- Sullo STANDBY:
+CATALOG START WITH '/backup/standby_resync_';
+RECOVER DATABASE NOREDO;
+```
+
+> **Ref**: Oracle 19c RMAN Reference — RECOVER command, FROM SERVICE clause.
+> https://docs.oracle.com/en/database/oracle/oracle-database/19/rcmrf/
+
+---
+
 ## 8. Flashback Database (Complemento RMAN)
 
 ```sql

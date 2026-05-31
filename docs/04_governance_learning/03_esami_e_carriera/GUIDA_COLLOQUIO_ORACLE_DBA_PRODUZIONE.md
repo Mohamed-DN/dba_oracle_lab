@@ -733,19 +733,25 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q103 [P0] Qual e' l'architettura minima RMAN?
 
-**Risposta orale**: RMAN client orchestra operazioni sul target usando metadata nel controlfile e opzionalmente nel recovery catalog, con channel verso storage.
+**Risposta orale**: RMAN e' un client che si connette al database target e orchestra backup, restore e recovery. I metadata — cosa e' stato backuppato, quando, dove — vivono nel controlfile del target. In aggiunta puoi avere un recovery catalog su un database separato, che conserva storico piu' lungo, supporta script centralizzati e gestisce Data Guard con piu' robustezza. I channel sono le sessioni server che eseguono l'I/O fisico verso disco o tape: il numero di channel e il device type determinano parallelismo e throughput. In produzione verifico tutto con `SHOW ALL` e `LIST BACKUP SUMMARY`.
+
+**In produzione**: Uso sempre catalog in ambienti enterprise con piu' database o Data Guard. Il controlfile da solo ha retention limitata da `CONTROL_FILE_RECORD_KEEP_TIME`.
 
 **Trappola / follow-up**: Quando il catalog diventa importante?
 
 ### Q104 [P0] Full backup e incremental level 0 sono uguali?
 
-**Risposta orale**: Entrambi leggono tutti i blocchi usati, ma solo level 0 e' baseline per successivi level 1.
+**Risposta orale**: Fisicamente fanno la stessa cosa: leggono tutti i blocchi usati del database. La differenza e' che il full backup non puo' essere usato come base per successivi incrementali level 1: e' un backup standalone. Il level 0 invece e' riconosciuto da RMAN come baseline e i successivi level 1 calcoleranno i blocchi cambiati a partire da quel punto. Quindi in una strategia incrementale il primo backup della settimana deve essere level 0, non full. In produzione uso `BACKUP INCREMENTAL LEVEL 0 DATABASE TAG 'WK_L0'`.
+
+**In produzione**: Piantifico L0 la domenica e L1 lun-sab. Con Block Change Tracking abilitato, i L1 sono molto piu' veloci.
 
 **Trappola / follow-up**: Perche' la differenza conta nel piano incrementale?
 
 ### Q105 [P0] Level 1 differential e cumulative: differenze?
 
-**Risposta orale**: Differential prende blocchi cambiati dall'ultimo L0 o L1; cumulative dall'ultimo L0, con backup piu' grande ma restore piu' semplice.
+**Risposta orale**: Il differential (default) cattura i blocchi cambiati dall'ultimo backup di livello uguale o inferiore — cioe' dall'ultimo L0 o L1. Il cumulative cattura tutti i blocchi cambiati dall'ultimo L0, quindi e' piu' grande ma al restore ne serve solo uno. Il trade-off e': differential riduce finestra backup ma al restore servono tutti i L1 in sequenza; cumulative allarga il backup ma semplifica e velocizza il restore. Per ridurre MTTR scelgo cumulative, per ridurre finestra backup scelgo differential. Esempio: `BACKUP INCREMENTAL LEVEL 1 CUMULATIVE DATABASE`.
+
+**In produzione**: Scelgo in base all'RTO richiesto. Con RTO stretto preferisco cumulative o strategie incrementally updated con image copy.
 
 **Trappola / follow-up**: Quale riduce MTTR?
 
@@ -799,7 +805,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q114 [P0] Cosa fa CROSSCHECK?
 
-**Risposta orale**: Confronta repository RMAN e disponibilita' fisica dei file aggiornando lo stato; non valida il contenuto del backup.
+**Risposta orale**: CROSSCHECK confronta i metadata nel repository RMAN (controlfile o catalog) con la disponibilita' fisica dei file su storage. Se un backup piece non e' piu' raggiungibile, viene marcato EXPIRED. Attenzione: non valida il contenuto del backup — per quello serve `RESTORE VALIDATE` o `BACKUP VALIDATE CHECK LOGICAL`. Lo uso sempre prima di `DELETE EXPIRED` per evitare di cancellare metadata di file ancora utili, e prima di un restore critico per sapere cosa e' realmente disponibile. Comandi: `CROSSCHECK BACKUP; CROSSCHECK ARCHIVELOG ALL;`.
+
+**In produzione**: Schedulo crosscheck giornaliero nel maintenance job. Dopo un cambio storage o migrazione NFS, crosscheck e' obbligatorio.
 
 **Trappola / follow-up**: Perche' serve prima della pulizia?
 
@@ -835,7 +843,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q120 [P0] Qual e' la sequenza restore e recover database?
 
-**Risposta orale**: Monto il database, ripristino file dal backup, applico redo e apro normalmente o RESETLOGS secondo completezza recovery.
+**Risposta orale**: La sequenza e': 1) `SHUTDOWN IMMEDIATE` se il database e' ancora aperto; 2) `STARTUP MOUNT` per rendere accessibili i metadata nel controlfile; 3) `RESTORE DATABASE` per ripristinare i datafile dal backup; 4) `RECOVER DATABASE` per applicare redo (archivelog e online redo) e portare i file al punto desiderato; 5) `ALTER DATABASE OPEN` se il recovery e' completo, oppure `ALTER DATABASE OPEN RESETLOGS` se e' incompleto. RESETLOGS crea una nuova incarnation e richiede backup immediato dopo l'apertura. Per un recovery puntuale uso `SET UNTIL TIME` o `UNTIL SCN` prima del restore. In produzione verifico sempre con `RESTORE DATABASE PREVIEW SUMMARY` prima di partire.
+
+**In produzione**: Prima del restore faccio sempre preview per confermare che tutti i piece e archivelog siano disponibili. Dopo RESETLOGS aggiorno subito Data Guard e backup.
 
 **Trappola / follow-up**: Quando serve RESETLOGS?
 
@@ -847,7 +857,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q122 [P0] Come recuperi un controlfile?
 
-**Risposta orale**: Avvio NOMOUNT, imposto DBID se necessario, ripristino da autobackup, monto e proseguo con recovery.
+**Risposta orale**: Senza controlfile non puoi montare il database perche' il controlfile contiene la struttura fisica — nomi file, checkpoint SCN, incarnation. La procedura e': 1) `STARTUP NOMOUNT` con PFILE minimo o bootstrap; 2) `SET DBID <dbid>` — il DBID deve essere conservato fuori dal database, nel CMDB o nella documentazione operativa; 3) `RESTORE CONTROLFILE FROM AUTOBACKUP` — RMAN cerca nella FRA con naming convention standard; 4) `ALTER DATABASE MOUNT`; 5) `CATALOG START WITH` per registrare backup se necessario; 6) `RECOVER DATABASE` e poi `OPEN RESETLOGS`. Se non hai autobackup, puoi ripristinare dal catalog se disponibile. Per questo `CONTROLFILE AUTOBACKUP ON` e' obbligatorio.
+
+**In produzione**: Conservo DBID nel CMDB e in un file separato. Testo questo scenario almeno una volta all'anno nel DR drill.
 
 **Trappola / follow-up**: Perche' non puoi mount senza controlfile?
 
@@ -883,9 +895,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q128 [P0] Come recuperi una tabella cancellata?
 
-**Risposta orale**: Uso RECOVER TABLE con PITR, AUXILIARY DESTINATION e REMAP TABLE; RMAN crea auxiliary e usa Data Pump.
+**Risposta orale**: Dopo un `DROP TABLE ... PURGE`, il recycle bin non aiuta. La soluzione e' `RECOVER TABLE`: RMAN crea un'istanza auxiliary temporanea, esegue un restore e PITR fino al momento prima del DROP, poi estrae la tabella con Data Pump e la importa nel database target. Uso `REMAP TABLE` per importare con nome diverso ed evitare conflitti, poi valido i dati e faccio il cutover applicativo. Prerequisiti: database target aperto READ WRITE in ARCHIVELOG, backup e redo continui fino al punto desiderato, spazio per auxiliary destination. Non funziona per oggetti SYS, SYSTEM, SYSAUX. In CDB mi collego alla root e specifico `OF PLUGGABLE DATABASE`. Esempio: `RECOVER TABLE HR.ORDERS UNTIL TIME "TO_DATE(...)" AUXILIARY DESTINATION '/u01/aux' REMAP TABLE 'HR'.'ORDERS':'ORDERS_RECOVERED';`.
 
-**Verifica utile**: `RECOVER TABLE ... AUXILIARY DESTINATION ... REMAP TABLE ...;`.
+**In produzione**: Prima di ogni RECOVER TABLE verifico lo spazio auxiliary, i backup disponibili e la continuita' degli archivelog. Importo sempre con REMAP e valido prima di sostituire.
 
 **Trappola / follow-up**: Perche' rinomini l'oggetto recuperato?
 
@@ -939,7 +951,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q137 [P0] Come funziona DUPLICATE FROM ACTIVE DATABASE?
 
-**Risposta orale**: Trasferisce blocchi dal target verso auxiliary senza backup pre-staged; richiede rete, password file e configurazione attenta.
+**Risposta orale**: DUPLICATE FROM ACTIVE DATABASE trasferisce blocchi direttamente dal database sorgente all'auxiliary via rete, senza bisogno di backup pre-staged su storage condiviso. RMAN apre channel sul target e sull'auxiliary, trasferisce datafile, controlfile, SPFILE e applica redo. Prerequisiti: password file coerente sull'auxiliary, connettivita' TNS bidirezionale, spazio sufficiente. E' il metodo piu' rapido per creare clone o standby se la rete lo permette. Lo uso per creare standby Data Guard con `DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE DORECOVER NOFILENAMECHECK`. Preferisco da backup se la rete e' lenta, il target e' sotto carico o se devo fare PITR durante il duplicate.
+
+**In produzione**: Uso wallet per l'autenticazione, mai password sulla command line. Misuro throughput rete prima di partire.
 
 **Trappola / follow-up**: Quando preferisci duplicate da backup?
 
@@ -951,7 +965,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q139 [P0] Come crei uno standby con RMAN?
 
-**Risposta orale**: Uso DUPLICATE TARGET DATABASE FOR STANDBY, parametri DB_UNIQUE_NAME, connettivita' e redo transport corretti.
+**Risposta orale**: La creazione di uno standby con RMAN prevede: 1) preparare l'host standby con Oracle Home compatibile, networking e parametri; 2) creare PFILE/SPFILE standby con `DB_UNIQUE_NAME`, `FAL_SERVER`, `LOG_ARCHIVE_DEST_n` coerenti; 3) creare password file identico o copiarlo dal primary; 4) avviare l'auxiliary in NOMOUNT; 5) connettere RMAN con `CONNECT TARGET ... AUXILIARY ...`; 6) eseguire `DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE DORECOVER NOFILENAMECHECK`. Dopo il duplicate, aggiungo standby redo log (n+1 gruppi per thread) per abilitare real-time apply, configuro redo transport e avvio il managed recovery con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT`. Valido con `v$dataguard_stats` e `v$managed_standby`.
+
+**In produzione**: Uso Broker DGMGRL per gestire la configurazione dopo il setup iniziale. Gli SRL devono avere la stessa dimensione degli online redo log.
 
 **Trappola / follow-up**: Perche' servono standby redo log?
 
@@ -1053,9 +1069,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q156 [P1] Come riallinei standby con FROM SERVICE?
 
-**Risposta orale**: Fermo MRP e lancio RECOVER STANDBY DATABASE FROM SERVICE primary_service sullo standby 19c, poi riattivo apply e valido lag.
+**Risposta orale**: Quando lo standby ha un gap e gli archivelog originali sono persi, in Oracle 19c posso usare `RECOVER STANDBY DATABASE FROM SERVICE <primary_service>`. La procedura e': 1) fermo MRP sullo standby con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL`; 2) da RMAN connesso al solo standby, lancio `RECOVER STANDBY DATABASE FROM SERVICE <primary_tns_alias>` — RMAN contatta il primary via rete e trasferisce i blocchi necessari, come un incremental intelligente; 3) riattivo MRP con `ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT`; 4) valido con `v$archive_gap`, `v$dataguard_stats` e `SHOW DATABASE` nel Broker. Prerequisiti: password file coerente, connettivita' TNS, primary accessibile. Se la rete non lo permette, il fallback e' `BACKUP INCREMENTAL FROM SCN` sul primary, trasferimento fisico e applicazione sullo standby.
 
-**Verifica utile**: `RECOVER STANDBY DATABASE FROM SERVICE <primary_service>;` sullo standby con MRP fermo.
+**In produzione**: E' il metodo preferito in 19c per riallineare senza rebuild completo. Molto piu' veloce del duplicate.
 
 **Trappola / follow-up**: Quale prerequisito password file serve?
 
@@ -1104,15 +1120,19 @@ FROM   table(dbms_xplan.display_cursor('<SQL_ID>', NULL, 'ALLSTATS LAST'));
 [AWR, ASH e ADDM](../../02_core_dba/03_performance_and_diagnostics/GUIDA_AWR_ASH_ADDM.md)
 e [runbook SQL tuning](../../01_operations/02_runbooks_incidenti/RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md).
 
-### Q161 [P1] Qual e' il metodo corretto per un incidente performance?
+### Q161 [P0] Qual e' il metodo corretto per un incidente performance?
 
-**Risposta orale**: Definisco finestra, impatto e baseline, raccolgo DB e OS evidence, identifico bottleneck dominante, applico una modifica misurabile e valido.
+**Risposta orale**: Il metodo e' evidence-first: 1) definisco impatto e finestra temporale del problema; 2) misuro DB Time e confronto con una baseline (periodo buono); 3) identifico il bottleneck dominante tramite wait class e top event; 4) trovo i top SQL responsabili per elapsed, CPU, buffer gets o physical reads; 5) confronto piano attuale con piano storico cercando cambio plan hash; 6) applico UNA sola modifica misurabile e valido with before/after. Non aumento mai risorse alla cieca: se la CPU e' alta, prima mappo i processi ai SQL responsabili. Strumenti: AWR report, ASH real-time, `v$system_event`, `v$sql`, `DBMS_XPLAN.DISPLAY_CURSOR`.
+
+**In produzione**: Nei Sev1 separo sempre workaround reversibile (baseline, SQL Patch) dal fix strutturale (indice, rewrite SQL).
 
 **Trappola / follow-up**: Perche' non inizi aumentando memoria?
 
-### Q162 [P1] AWR, ASH e ADDM: cosa fanno?
+### Q162 [P0] AWR, ASH e ADDM: cosa fanno?
 
-**Risposta orale**: AWR conserva snapshot, ASH campiona sessioni attive, ADDM interpreta alcune evidenze; verifico licenze prima dell'uso in produzione.
+**Risposta orale**: AWR (Automatic Workload Repository) scatta snapshot periodici delle metriche del database e li conserva su disco. Un AWR report e' un'analisi differenziale tra due snapshot che mostra DB Time, load profile, top wait e top SQL. ASH (Active Session History) campiona le sessioni attive ogni secondo in memoria (`v$active_session_history`) e ogni 10 secondi su disco (`dba_hist_active_sess_history`): e' fondamentale per isolare picchi transitori che AWR diluisce nella media. ADDM (Automatic Database Diagnostic Monitor) e' un motore di regole che analizza gli snapshot AWR e produce raccomandazioni automatiche con impact percentage. Attenzione: AWR e ASH richiedono licenza Diagnostics Pack (o Tuning Pack per SQL Tuning Advisor). Senza licenza, uso Statspack come alternativa AWR.
+
+**In produzione**: Configuro AWR a 30 min interval e 30+ giorni retention. Uso AWR per analisi aggregata e ASH per drill-down sul minuto esatto.
 
 **Trappola / follow-up**: Statspack quando serve?
 
@@ -1128,9 +1148,11 @@ e [runbook SQL tuning](../../01_operations/02_runbooks_incidenti/RUNBOOK_23_SQL_
 
 **Trappola / follow-up**: Come lo confronti tra due finestre?
 
-### Q165 [P1] Come trovi Top SQL per elapsed time?
+### Q165 [P0] Come trovi Top SQL per elapsed time?
 
-**Risposta orale**: Ordino statistiche SQL o AWR per elapsed e executions, distinguendo query lenta singola e carico cumulativo.
+**Risposta orale**: Il primo passo e' ordinare i SQL per elapsed time nella finestra dell'incidente. In real-time uso `v$sql` ordinando per `elapsed_time DESC` o per `elapsed_time/executions` se voglio il costo per esecuzione. Nello storico AWR uso `dba_hist_sqlstat` oppure la sezione 'SQL ordered by Elapsed Time' del report AWR. Distinguo tra query singola lenta (una esecuzione con elapsed alto) e query leggera eseguita milioni di volte (elapsed cumulativo alto). Poi per ogni candidato confronto `SQL_ID`, `PLAN_HASH_VALUE`, `BUFFER_GETS`, `DISK_READS` e `ROWS_PROCESSED`. Uso `DBMS_XPLAN.DISPLAY_CURSOR('<SQL_ID>', NULL, 'ALLSTATS LAST')` per il piano reale con righe effettive.
+
+**In produzione**: Non guardo mai solo elapsed: guardo anche buffer gets/execution per capire il costo logico. Un SQL con 10M buffer gets per esecuzione e' un problema anche se l'elapsed e' basso.
 
 **Verifica utile**: `v$sql`, `DBMS_XPLAN.DISPLAY_CURSOR` e storico AWR se licenziato.
 
@@ -1148,9 +1170,11 @@ e [runbook SQL tuning](../../01_operations/02_runbooks_incidenti/RUNBOOK_23_SQL_
 
 **Trappola / follow-up**: Perche' controlli VERSION_COUNT?
 
-### Q168 [P1] EXPLAIN PLAN e DISPLAY_CURSOR: differenze?
+### Q168 [P0] EXPLAIN PLAN e DISPLAY_CURSOR: differenze?
 
-**Risposta orale**: EXPLAIN stima un piano senza esecuzione reale; DISPLAY_CURSOR mostra piano effettivo e statistiche se raccolte.
+**Risposta orale**: `EXPLAIN PLAN` genera un piano stimato senza eseguire realmente la query: ti dice cosa l'optimizer PENSA di fare, ma i valori E-Rows sono solo stime basate su statistiche. `DBMS_XPLAN.DISPLAY_CURSOR` mostra il piano REALE usato durante l'ultima esecuzione, con statistiche effettive come A-Rows (righe reali per step), Starts (quante volte ogni step e' stato eseguito), buffer gets e reads reali. Per il tuning devo SEMPRE usare DISPLAY_CURSOR perche' mi permette di confrontare E-Rows vs A-Rows e trovare dove l'optimizer stima male. La chiamata completa e': `SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('<SQL_ID>', NULL, 'ALLSTATS LAST +PEEKED_BINDS +OUTLINE'))`. Se il SQL non e' piu' in cache, uso `DBMS_XPLAN.DISPLAY_AWR` per lo storico.
+
+**In produzione**: Per una regressione reale uso sempre DISPLAY_CURSOR, mai EXPLAIN PLAN. EXPLAIN puo' mostrare un piano diverso da quello effettivo.
 
 **Trappola / follow-up**: Quale usi per regressione reale?
 
@@ -1160,9 +1184,11 @@ e [runbook SQL tuning](../../01_operations/02_runbooks_incidenti/RUNBOOK_23_SQL_
 
 **Trappola / follow-up**: Due piani con stesso hash sono sempre identici?
 
-### Q170 [P1] Perche' le statistiche contano?
+### Q170 [P0] Perche' le statistiche contano?
 
-**Risposta orale**: Il CBO stima cardinalita' e costo usando statistiche; stale o assenti possono produrre scelte inefficienti.
+**Risposta orale**: L'optimizer Oracle (CBO) basa tutte le decisioni di piano su stime di cardinalita' derivate dalle statistiche degli oggetti: num_rows, num_distinct, density, histogram, extended statistics. Se le statistiche sono stale, mancanti o non rappresentative, l'optimizer puo' stimare 10 righe quando in realta' ce ne sono 10 milioni, producendo un piano disastroso (es. nested loop invece di hash join). Oracle raccoglie statistiche automaticamente con il maintenance window, ma in caso di bulk load, partition exchange o deploy applicativo devo verificare e raccogliere miratamente con `DBMS_STATS.GATHER_TABLE_STATS` usando `AUTO_SAMPLE_SIZE` e `NO_INVALIDATE => DBMS_STATS.AUTO_INVALIDATE`.
+
+**In produzione**: Non raccolgo statistiche sull'intero database durante un incidente. Raccolgo solo sulla tabella sospettata e poi valido il piano.
 
 **Trappola / follow-up**: Raccogli sempre con cascade?
 
@@ -1316,9 +1342,11 @@ e [runbook SQL tuning](../../01_operations/02_runbooks_incidenti/RUNBOOK_23_SQL_
 
 **Trappola / follow-up**: Accetti automaticamente un profile?
 
-### Q196 [P1] SQL Profile, Baseline e Patch: differenze?
+### Q196 [P0] SQL Profile, Baseline e Patch: differenze?
 
-**Risposta orale**: Profile corregge stime, baseline governa piani accettati, SQL Patch applica hint mirati; scelgo con controllo e rollback.
+**Risposta orale**: Sono tre meccanismi per controllare i piani SQL senza modificare il codice applicativo, ma funzionano in modo molto diverso. **SQL Profile** corregge le stime di cardinalita' dell'optimizer: Oracle inserisce 'coefficienti correttivi' che aiutano l'optimizer a scegliere il piano giusto, ma l'optimizer resta libero di calcolare piani nuovi. Richiede licenza Tuning Pack. **SQL Plan Baseline (SPM)** controlla esattamente quali piani sono permessi: solo i piani 'accepted' possono essere usati. E' prescrittivo e molto stabile. Incluso in Enterprise Edition. **SQL Patch** applica hint specifici a un SQL_ID senza toccare il codice: utile come workaround emergenziale in Sev1 quando non puoi modificare l'applicazione. Per stabilizzare un piano noto buono la scelta migliore e' SPM Baseline.
+
+**In produzione**: In emergenza Sev1 uso SQL Patch per workaround immediato. Per stabilita' uso SPM Baseline. SQL Profile lo uso quando le stime sono sistematicamente sbagliate.
 
 **Trappola / follow-up**: Quale e' il piu' adatto a stabilizzare piano noto?
 
@@ -1550,21 +1578,27 @@ dgmgrl /@RACDB
 [Alta affidabilita e RAC](../../02_core_dba/04_high_availability_and_rac/README.md)
 e [Observer FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md).
 
-### Q229 [P2] RAC e Data Guard risolvono lo stesso problema?
+### Q229 [P1] RAC e Data Guard risolvono lo stesso problema?
 
-**Risposta orale**: No: RAC protegge disponibilita' locale e scala istanze su storage condiviso; Data Guard protegge sito e database con replica redo.
+**Risposta orale**: No, sono complementari. RAC protegge dalla perdita di un nodo o di un'istanza: piu' istanze accedono allo stesso storage condiviso, se un nodo cade gli altri servono i client. Ma se perdi lo storage condiviso — la SAN, il diskgroup ASM — RAC non ti salva. Data Guard protegge dalla perdita dell'intero sito o del database: mantiene una copia fisica su storage separato, anche remoto, sincronizzata tramite redo. In un'architettura MAA (Maximum Availability Architecture) usi entrambi: RAC per HA locale, Data Guard per DR e zero/near-zero data loss. La combinazione RAC + Data Guard e' lo standard enterprise.
+
+**In produzione**: La domanda chiave e': "da cosa ti proteggi?". Nodo down = RAC. Sito down/storage corrotto = Data Guard. Errore logico = nessuno dei due, serve RMAN/Flashback.
 
 **Trappola / follow-up**: Quale protegge da perdita storage condiviso?
 
-### Q230 [P2] Che cos'e' ASM?
+### Q230 [P1] Che cos'e' ASM?
 
-**Risposta orale**: ASM gestisce storage Oracle in diskgroup, distribuendo extent e offrendo ridondanza secondo configurazione.
+**Risposta orale**: ASM (Automatic Storage Management) e' il volume manager e filesystem di Oracle progettato per gestire lo storage del database. Organizza i dischi in diskgroup, distribuisce automaticamente gli extent tra i dischi per bilanciare I/O (striping) e puo' fornire mirroring (ridondanza). Non e' un filesystem generico: non ci metti file applicativi, solo file Oracle (datafile, redo, controlfile, SPFILE, FRA). I comandi principali sono `asmcmd` per navigare e `ALTER DISKGROUP` per operazioni. Si gestisce tramite l'istanza ASM che gira sotto Grid Infrastructure. In RAC, ASM e' condiviso tra tutti i nodi.
+
+**In produzione**: Verifico spazio con `v$asm_diskgroup` (TOTAL_MB, FREE_MB, USABLE_FILE_MB). USABLE_FILE_MB tiene conto della ridondanza ed e' il valore reale da monitorare.
 
 **Trappola / follow-up**: E' un filesystem generico?
 
-### Q231 [P2] External, normal e high redundancy ASM: differenze?
+### Q231 [P1] External, normal e high redundancy ASM: differenze?
 
-**Risposta orale**: Definiscono responsabilita' e numero di copie ASM; external delega resilienza allo storage sottostante.
+**Risposta orale**: External redundancy non fa mirroring: un solo extent per blocco. La resilienza e' delegata allo storage sottostante (SAN, RAID). Normal redundancy mantiene 2 copie degli extent su failure group diversi: tollera la perdita di un failure group. High redundancy mantiene 3 copie: tollera la perdita di 2 failure group. Con SAN gia' ridondata, external e' la scelta piu' comune per evitare doppio mirroring (ASM + SAN). Con storage locale o non ridondato, uso normal o high. La scelta si fa alla creazione del diskgroup e non si cambia facilmente.
+
+**In produzione**: Con SAN enterprise ridondato uso external per DATA e RECO. Con storage locale nel lab uso normal. Monitoro `v$asm_disk` per stato di ogni disco.
 
 **Trappola / follow-up**: Quale scegli con SAN ridondata?
 
@@ -1598,15 +1632,19 @@ e [Observer FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FS
 
 **Trappola / follow-up**: Quale usi per un database?
 
-### Q237 [P2] SCAN, VIP, listener e service: relazione?
+### Q237 [P1] SCAN, VIP, listener e service: relazione?
 
-**Risposta orale**: SCAN offre endpoint client, VIP facilita failover rete, listener accetta connessioni, service indirizza workload.
+**Risposta orale**: SCAN (Single Client Access Name) e' un unico hostname DNS che risolve a 1-3 IP: il client si connette a SCAN senza conoscere i nodi individuali. VIP (Virtual IP) e' un IP assegnato a ogni nodo che migra su un altro nodo in caso di failure, permettendo al client di ricevere un errore rapido invece di un timeout TCP. Il SCAN listener ascolta sulle SCAN VIP e instrada le connessioni verso il listener locale del nodo appropriato in base al servizio richiesto. Il service e' il contratto applicativo: definisce quale workload gira su quale istanza (preferred/available) e gestisce failover e draining. In un colloquio dico: "il client conosce solo SCAN e service, non i nodi".
+
+**In produzione**: Uso un service per ogni applicazione/workload. Mai connettere direttamente al SID o al VIP di un nodo specifico.
 
 **Trappola / follow-up**: Perche' il service e' il contratto applicativo?
 
-### Q238 [P2] Che cos'e' Cache Fusion?
+### Q238 [P1] Che cos'e' Cache Fusion?
 
-**Risposta orale**: RAC trasferisce blocchi tra buffer cache delle istanze tramite interconnect per mantenere coerenza globale.
+**Risposta orale**: Cache Fusion e' il meccanismo che permette alle istanze RAC di condividere blocchi dati tramite l'interconnect privato ad alta velocita'. Quando un'istanza ha bisogno di un blocco modificato da un'altra, il Global Cache Service (GCS) coordina il trasferimento diretto memoria-a-memoria via interconnect, senza passare dal disco. I wait event `gc buffer busy`, `gc cr request`, `gc current request` indicano trasferimenti tra istanze. Se questi wait sono alti, non colpevolizzo subito la rete: prima verifico se ci sono hot block, SQL inefficienti o service mal distribuiti che causano contesa cross-instance.
+
+**In produzione**: Monitoro interconnect con `v$cluster_interconnects` e correlo con `gv$system_event` per le wait gc. La latenza dell'interconnect deve essere sub-millisecondo.
 
 **Trappola / follow-up**: Quali wait indicano blocchi hot?
 
@@ -1634,51 +1672,67 @@ e [Observer FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FS
 
 **Trappola / follow-up**: Basta configurare il DB?
 
-### Q243 [P2] Che cos'e' una physical standby?
+### Q243 [P1] Che cos'e' una physical standby?
 
-**Risposta orale**: Replica block-for-block che riceve e applica redo; e' base comune per DR e role transition.
+**Risposta orale**: Una physical standby e' una copia block-for-block del primary mantenuta sincronizzata applicando redo. Il primary genera redo, lo spedisce via rete (tramite LNS) allo standby dove RFS lo riceve e MRP lo applica ai datafile. Il risultato e' un database identico al primary dal punto di vista fisico. Puo' essere aperto in READ ONLY per query (Active Data Guard, richiede licenza) oppure rimanere in MOUNT. Lo switchover inverte i ruoli senza perdita dati; il failover promuove lo standby in emergenza. Una physical standby NON protegge da errori logici: un `DROP TABLE` sul primary viene replicato sullo standby.
+
+**In produzione**: Uso lo standby per offload backup (RMAN sullo standby), query di reportistica (ADG) e come target DR. Verifico lag con `v$dataguard_stats` quotidianamente.
 
 **Trappola / follow-up**: Protegge da DROP TABLE?
 
-### Q244 [P2] SYNC e ASYNC redo transport: trade-off?
+### Q244 [P1] SYNC e ASYNC redo transport: trade-off?
 
-**Risposta orale**: SYNC riduce data loss pagando latenza commit; ASYNC favorisce performance con possibile perdita redo in failover.
+**Risposta orale**: Con ASYNC il primary scrive redo e conferma il commit immediatamente; il redo viene spedito allo standby in parallelo. Vantaggio: zero impatto sulla latenza commit. Svantaggio: in caso di failover si possono perdere le transazioni non ancora arrivate allo standby. Con SYNC il primary aspetta la conferma dallo standby prima di confermare il commit. Vantaggio: zero data loss (se AFFIRM). Svantaggio: ogni commit paga la latenza di rete andata e ritorno. FASTSYNC (19c) e' un compromesso: trasporto sincrono ma senza attendere la scrittura fisica su disco dello standby (NOAFFIRM). La scelta dipende dall'RPO concordato con il business e dalla latenza di rete.
+
+**In produzione**: Misuro RTT di rete prima di scegliere SYNC. Con RTT > 5-10ms su WAN, valuto FASTSYNC o ASYNC. Configuro via Broker con `EDIT DATABASE SET PROPERTY LogXptMode`.
 
 **Trappola / follow-up**: Come colleghi scelta a RPO?
 
-### Q245 [P2] Perche' servono standby redo log?
+### Q245 [P1] Perche' servono standby redo log?
 
-**Risposta orale**: Ricevono redo sullo standby e supportano real-time apply e role transition; numero e size devono essere coerenti.
+**Risposta orale**: Gli standby redo log (SRL) sullo standby ricevono il redo dal primary in tempo reale. Senza SRL, il redo viene scritto negli archivelog e MRP deve aspettare che l'archivelog sia completo prima di applicarlo — questo introduce lag. Con SRL, il real-time apply puo' leggere il redo appena arriva, riducendo l'apply lag quasi a zero. Inoltre gli SRL sono necessari per il switchover: quando lo standby diventa primary, gli SRL diventano i suoi online redo log temporanei. La regola Oracle e': crea SRL anche sul primary (n+1 gruppi per thread, dove n e' il numero di online redo log group per thread), stessa dimensione degli online redo log.
+
+**In produzione**: Verifico SRL con `SELECT GROUP#, THREAD#, BYTES/1024/1024 MB FROM v$standby_log`. Se mancano, li creo prima di configurare Broker.
 
 **Trappola / follow-up**: Quanti ne crei per thread?
 
-### Q246 [P2] LNS, RFS e MRP: ruoli?
+### Q246 [P1] LNS, RFS e MRP: ruoli?
 
-**Risposta orale**: LNS spedisce redo dal primary, RFS riceve sullo standby, MRP applica ai datafile physical standby.
+**Risposta orale**: LNS (Log Network Server) e' il processo sul primary che legge il redo log buffer o gli online redo log e li spedisce allo standby via rete. RFS (Remote File Server) e' il processo sullo standby che riceve il redo da LNS e lo scrive negli standby redo log o negli archivelog. MRP0 (Managed Recovery Process) e' il processo sullo standby che applica il redo ai datafile — e' il cuore del recovery continuo. Per diagnosticare problemi uso: `v$archive_dest_status` sul primary per controllare LNS; `v$managed_standby` sullo standby per controllare RFS e MRP; `v$dataguard_stats` per transport lag e apply lag.
+
+**In produzione**: Se transport lag cresce, il problema e' tra LNS e RFS (rete, destinazione). Se apply lag cresce ma transport lag e' zero, il problema e' MRP (I/O standby, carico ADG).
 
 **Trappola / follow-up**: Dove cerchi lag transport e apply?
 
-### Q247 [P2] A cosa serve Data Guard Broker?
+### Q247 [P1] A cosa serve Data Guard Broker?
 
-**Risposta orale**: Centralizza configurazione, validazione e role transition con DGMGRL; riduce errori manuali ma richiede preflight.
+**Risposta orale**: Il Broker (DGMGRL) e' il pannello di controllo centralizzato di Data Guard. Invece di gestire parametri `LOG_ARCHIVE_DEST_n` manualmente su ogni istanza, il Broker mantiene una configurazione coerente e offre comandi semplificati per switchover, failover, validazione e monitoraggio. Il processo DMON gira su ogni istanza e coordina la configurazione. I comandi chiave sono: `SHOW CONFIGURATION` per stato generale; `VALIDATE DATABASE <name>` per verificare readiness switchover; `SWITCHOVER TO <standby>` per role transition; `FAILOVER TO <standby>` per emergenza. Prerequisito: `DG_BROKER_START=TRUE` e file Broker in ASM condiviso in ambiente RAC.
+
+**In produzione**: Uso sempre Broker in produzione. Non modifico mai `LOG_ARCHIVE_DEST_n` a mano se Broker e' attivo — il Broker ha il controllo esclusivo.
 
 **Trappola / follow-up**: Quali comandi usi prima di switchover?
 
-### Q248 [P2] Switchover e failover: differenze?
+### Q248 [P1] Switchover e failover: differenze?
 
-**Risposta orale**: Switchover e' role transition pianificata senza perdita prevista; failover e' risposta a indisponibilita' primary con rischio dati secondo protezione.
+**Risposta orale**: Lo switchover e' una role transition pianificata: il primary fa flush di tutti i redo pendenti verso lo standby, poi si converte in standby, e lo standby si promuove a primary. Zero data loss, reversibile, tipicamente ~30 secondi con Broker. Lo uso per manutenzione programmata, patching standby-first o DR drill. Il failover e' una promozione emergenziale: il primary e' down o irraggiungibile, lo standby viene promosso unilateralmente. Possibile perdita dati secondo il protection mode (in ASYNC si perdono le transazioni non ancora trasportate). Dopo failover il vecchio primary richiede reinstate (se Flashback Database era attivo) o rebuild completo. Il failover e' una decisione formale con owner applicativo.
+
+**In produzione**: Prima di ogni switchover eseguo `VALIDATE DATABASE <standby>` e verifico lag. Per failover dichiaro RPO osservato al management.
 
 **Trappola / follow-up**: Quando fai reinstate?
 
-### Q249 [P2] Perche' Flashback aiuta reinstate?
+### Q249 [P1] Perche' Flashback aiuta reinstate?
 
-**Risposta orale**: Permette di riportare il vecchio primary a un punto coerente e reinserirlo come standby senza rebuild completo quando condizioni lo consentono.
+**Risposta orale**: Dopo un failover, il vecchio primary ha diverged dalla nuova timeline del nuovo primary. Per reinserirlo come standby senza ricostruirlo da zero, Oracle usa Flashback Database per riportarlo a un punto coerente prima della divergenza, poi lo converte in standby e inizia ad applicare i redo del nuovo primary. Senza Flashback Database abilitato, l'unica opzione e' il rebuild completo con RMAN Duplicate. Per questo abilito Flashback Database su tutti i membri Data Guard. Verifica: `SELECT FLASHBACK_ON FROM v$database`. Broker: `REINSTATE DATABASE <old_primary>`.
+
+**In produzione**: Abilito Flashback Database su primary e standby. Dimensiono `DB_FLASHBACK_RETENTION_TARGET` e verifico FRA sufficientemente grande per i flashback log.
 
 **Trappola / follow-up**: E' requisito assoluto per ogni Data Guard?
 
-### Q250 [P2] Come colmi un archive gap?
+### Q250 [P1] Come colmi un archive gap?
 
-**Risposta orale**: FAL spesso recupera automaticamente; altrimenti copio archivelog, registro con ALTER DATABASE REGISTER PHYSICAL LOGFILE e valido v$archive_gap sullo standby.
+**Risposta orale**: Un gap si verifica quando lo standby non ha ricevuto uno o piu' archivelog dal primary — tipicamente dopo interruzione rete o restart. Prima verifico il gap con `SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap` sullo standby e `v$archive_dest_status` sul primary. Nella maggior parte dei casi, FAL (Fetch Archive Log) recupera automaticamente i log mancanti quando la connettivita' riprende. Se FAL non risolve, copio manualmente gli archivelog e li registro con `ALTER DATABASE REGISTER PHYSICAL LOGFILE '<path>'`. Se gli archivelog originali sono persi (es. cancellati dalla FRA), uso `RECOVER STANDBY DATABASE FROM SERVICE` in 19c o `BACKUP INCREMENTAL FROM SCN` come fallback. Solo in ultima istanza ricostruisco lo standby.
+
+**In produzione**: `v$archive_gap` va interrogato sullo standby, non sul primary. Dopo la risoluzione verifico che MRP avanzi e che lag torni a zero.
 
 **Verifica utile**: `v$archive_gap` sullo standby e `v$archive_dest_status` sul primary.
 
@@ -1697,6 +1751,138 @@ e [Observer FSFO](../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FS
 **Risposta orale**: Fermo MRP e uso RECOVER STANDBY DATABASE FROM SERVICE sullo standby 19c; incremental FROM SCN e' fallback.
 
 **Trappola / follow-up**: Quando fai rebuild completo?
+
+### Q253 [P1] MaxPerformance, MaxAvailability e MaxProtection: differenze pratiche?
+
+**Risposta orale**: Sono i tre protection mode di Data Guard, determinano il trade-off tra performance e protezione dati. **MaxPerformance** (default): redo spedito ASYNC, commit immediato, possibile perdita di secondi di dati in caso di failover. Impatto zero sul primary. **MaxAvailability**: redo spedito SYNC, zero data loss quando lo standby e' raggiungibile; se lo standby cade, il primary continua in modalita' degradata (equivalente MaxPerformance). **MaxProtection**: zero data loss assoluto — se lo standby non puo' confermare la ricezione del redo, il primary si BLOCCA. Non si passa direttamente da MaxPerformance a MaxProtection: serve il passaggio intermedio a MaxAvailability. Via Broker: `EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY`. La scelta dipende dall'RPO concordato con il business e dalla latenza di rete.
+
+**In produzione**: La maggior parte degli ambienti usa MaxAvailability con FASTSYNC come buon compromesso. MaxProtection solo con almeno 2 standby.
+
+**Trappola / follow-up**: Puoi passare direttamente da MaxPerformance a MaxProtection?
+
+### Q254 [P1] Cosa succede con NOLOGGING sul primary?
+
+**Risposta orale**: Le operazioni NOLOGGING (Direct Path Load, CTAS con NOLOGGING, `ALTER TABLE NOLOGGING`) non generano redo completo — scrivono un marker 'invalidation redo' nel redo stream. Lo standby riceve il marker e marca i blocchi come 'logically corrupt': una query su quei blocchi restituira' `ORA-01578` e `ORA-26040`. Per individuare il problema: `v$nonlogged_block` sullo standby lista i blocchi non protetti. Per risolvere: `RECOVER STANDBY DATABASE FROM SERVICE <primary>` o backup incrementale e applicazione. La prevenzione: `ALTER DATABASE FORCE LOGGING` sul primary che forza il logging completo indipendentemente dalla clausola NOLOGGING sugli oggetti. E' un prerequisito obbligatorio per Data Guard in produzione.
+
+**In produzione**: `FORCE LOGGING` deve essere ON sempre. Lo verifico con `SELECT FORCE_LOGGING FROM v$database`. Lo imposto come parametro obbligatorio nel setup Data Guard.
+
+**Trappola / follow-up**: Come trovi i blocchi corrotti?
+
+### Q255 [P1] Active Data Guard: cos'e' e quando lo usi?
+
+**Risposta orale**: Active Data Guard (ADG) permette di aprire lo standby in READ ONLY mentre MRP continua ad applicare redo in real-time. Lo stato e' `READ ONLY WITH APPLY`. Senza ADG lo standby e' in MOUNT (inaccessibile). Use case: offload query di reportistica, offload backup RMAN, validazione dati. Richiede licenza ADG separata (non inclusa in EE base). Attivazione: `ALTER DATABASE OPEN READ ONLY; ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT`. Un DBA deve conoscere il licensing: in un colloquio cito sempre che ADG richiede licenza aggiuntiva.
+
+**In produzione**: Uso ADG per backup sullo standby (riduco finestra backup sul primary) e per reportistica non critica. Attento al carico sullo standby che puo' rallentare MRP.
+
+**Trappola / follow-up**: E' incluso nella licenza Enterprise Edition base?
+
+### Q256 [P1] Snapshot standby: quando e come?
+
+**Risposta orale**: Lo snapshot standby converte temporaneamente uno standby fisico in un database aperto READ WRITE per test, UAT o validazione prima di un deploy. L'MRP viene fermato e un punto di ripristino Flashback viene creato automaticamente. Posso fare qualsiasi modifica (DML, DDL) e poi riconvertire a physical standby: Oracle usa Flashback Database per annullare tutte le modifiche e ricomincia ad applicare redo dal primary. Requisito: Flashback Database abilitato. Via Broker: `CONVERT DATABASE <name> TO SNAPSHOT STANDBY; ... test ... CONVERT DATABASE <name> TO PHYSICAL STANDBY`. Attenzione: durante il periodo snapshot, i redo dal primary si accumulano ma NON vengono applicati — il lag cresce.
+
+**In produzione**: Lo uso per validare patch o deploy prima del rilascio in produzione. Durata limitata per contenere il lag.
+
+**Trappola / follow-up**: Cosa succede al redo durante snapshot?
+
+### Q257 [P1] Far Sync: cos'e' e quando serve?
+
+**Risposta orale**: Far Sync e' un'istanza Oracle leggera (non contiene datafile) che funge da relay per il redo transport. Si posiziona geograficamente vicino al primary per ricevere redo in SYNC (zero data loss, bassa latenza) e poi lo inoltra ASYNC allo standby remoto su WAN. Questo permette zero data loss senza pagare la latenza WAN sul commit del primary. Architettura: Primary -> (SYNC) -> Far Sync (vicino) -> (ASYNC) -> Standby (remoto). Requisito: licenza Active Data Guard. Non ha datafile, non serve per query. E' gestito dal Broker come membro della configurazione.
+
+**In produzione**: Valuto Far Sync quando la latenza verso lo standby DR e' troppo alta per SYNC diretto ma l'RPO richiede zero data loss.
+
+**Trappola / follow-up**: Contiene datafile?
+
+### Q258 [P1] Come verifichi la readiness dello standby per switchover?
+
+**Risposta orale**: Prima di ogni switchover eseguo la checklist: 1) `DGMGRL> SHOW CONFIGURATION` deve restituire SUCCESS; 2) `DGMGRL> VALIDATE DATABASE <standby>` deve dire 'Ready for Switchover: Yes' e mostrare tutti i check verdi; 3) verifico transport lag e apply lag vicini a zero; 4) verifico che non ci siano gap redo; 5) controllo che SRL esistano su entrambi i membri; 6) verifico connettivita' TNS bidirezionale; 7) notifico gli stakeholder applicativi. Solo dopo tutti i check eseguo `SWITCHOVER TO <standby>`. Dopo lo switchover: verifico `SHOW CONFIGURATION`, testo connessioni applicative, verifico che il vecchio primary sia in `PHYSICAL STANDBY` e che MRP sia attivo.
+
+**In produzione**: Lo switchover e' una procedura con Change Request. Non lo faccio senza validazione e comunicazione preventiva.
+
+**Trappola / follow-up**: Cosa fai se VALIDATE dice 'Not Ready'?
+
+---
+
+### Q259 [P1] Come verifichi interconnect RAC e cosa fai se degrada?
+
+**Risposta orale**: L'interconnect e' il backbone di RAC: tutti i trasferimenti Cache Fusion e la comunicazione Clusterware passano da li'. Lo verifico con `SELECT name, ip_address, is_public FROM v$cluster_interconnects` e verifico che sia la rete privata dedicata (non la pubblica). Monitoro latenza e throughput con `oifcfg getif`. Per diagnosticare degradazione: guardo wait event `gc cr request`, `gc current request`, `gc buffer busy` in AWR e ASH. Se le latenze gc superano 1-2ms, indago rete, switch, configurazione MTU (consiglio jumbo frames 9000). Uso `AWR global report` per comparare i nodi. Se un nodo genera troppi trasferimenti, verifico se i service sono mal distribuiti o se ci sono hot block.
+
+**In produzione**: Interconnect deve essere rete dedicata, separata dal traffico applicativo. Configuro jumbo frames e monitoro con tool OS come `ping -s 8972`.
+
+**Trappola / follow-up**: Basta aumentare la banda?
+
+### Q260 [P1] Grid Infrastructure stack: come parte e come diagnostichi?
+
+**Risposta orale**: La sequenza di avvio GI e': 1) OHASD (Oracle High Availability Services Daemon) parte per primo tramite init/systemd; 2) OHASD avvia i sotto-processi: CSSD (Cluster Synchronization Services, heartbeat e membership), CRSD (Cluster Ready Services, gestione risorse); 3) CRSD avvia le risorse registrate: ASM, listener, database, servizi. Per diagnosticare: `crsctl stat res -t` per stato risorse; `crsctl check cluster` per stato nodi; log in `$GRID_HOME/log/<hostname>/` — `alertHOSTNAME.log` per CRS, `cssd/ocssd.log` per membership, `crsd/crsd.log` per risorse. Se un nodo non joina il cluster, guardo CSSD log per split-brain detection o voting disk issues.
+
+**In produzione**: I log GI sono la prima fonte di verita' per qualsiasi problema cluster. `crsctl stat res -t` e' il comando che uso 10 volte al giorno.
+
+**Trappola / follow-up**: Come diagnostichi un nodo che non joina?
+
+### Q261 [P1] Rolling patching in RAC: come funziona?
+
+**Risposta orale**: Il rolling patching permette di applicare patch Oracle a un nodo RAC alla volta, senza downtime del database. La procedura e': 1) verifico che la patch sia 'rolling applicable' (non tutte lo sono — alcune richiedono downtime completo); 2) fermo le istanze sul nodo1 con `srvctl stop instance`; 3) applico la patch con OPatch sul nodo1; 4) riavvio le istanze sul nodo1; 5) ripeto per il nodo2. Durante il patching il database e' accessibile tramite le istanze attive sugli altri nodi. Per patch GI uso `opatchauto` che orchestra fermata e riavvio del GI stack. Le patch RU (Release Update) trimestrali di Oracle sono generalmente rolling applicable.
+
+**In produzione**: Applico prima sullo standby Data Guard, poi rolling sul RAC primary. Sempre in finestra di manutenzione anche se rolling.
+
+**Trappola / follow-up**: Tutte le patch sono rolling?
+
+### Q262 [P1] Come aggiungi/rimuovi dischi ad ASM?
+
+**Risposta orale**: Per aggiungere dischi: 1) presento i nuovi LUN/dischi all'OS; 2) configuro ownership e permessi (oracle:oinstall, o con ASMLib/udev rules); 3) `ALTER DISKGROUP DATA ADD DISK '/dev/sdd1', '/dev/sde1'`. ASM avvia automaticamente il rebalance per distribuire i dati sui nuovi dischi. Per rimuovere: `ALTER DISKGROUP DATA DROP DISK disk_name`. Il rebalance si monitora con `v$asm_operation` (est_minutes mostra il tempo stimato). Il `POWER` del rebalance (1-1024) controlla la velocita': valori alti accelerano ma impattano l'I/O applicativo. In produzione uso `POWER 4` o meno durante le ore di punta.
+
+**In produzione**: Verifico sempre `v$asm_disk` per stato dei dischi e `v$asm_diskgroup` per spazio. Mai rimuovere dischi se lo spazio rimanente non e' sufficiente.
+
+**Trappola / follow-up**: Come controlli il rebalance?
+
+---
+
+### Q263 [P0] Come leggi un AWR report sezione per sezione?
+
+**Risposta orale**: Non leggo l'AWR dall'inizio alla fine — vado diritto alle sezioni critiche: 1) **Load Profile**: controllo logical reads, physical reads, redo size e parse count. Se logical reads esplodono rispetto alla baseline, un piano e' degrato. 2) **Top 10 Foreground Events**: e' il riassunto dell'incidente. 'db file sequential read' = I/O random (indici mancanti?), 'log file sync' = commit lenti, 'enq: TX' = lock applicativi, 'gc buffer busy' = contesa RAC. 3) **SQL ordered by Elapsed Time/CPU/Gets**: qui trovo i colpevoli — SQL_ID con il maggior consumo. 4) **Instance Efficiency**: buffer hit ratio (deve essere >98%), library cache hit ratio. 5) **Tablespace I/O**: quale tablespace e' sotto stress. Confronto sempre con un AWR di periodo buono usando `awrddrpt.sql`.
+
+**In produzione**: Il compare period report (`awrddrpt.sql`) e' lo strumento piu' potente per isolare regressioni post-deploy.
+
+**Trappola / follow-up**: Quale sezione guardi per prima?
+
+### Q264 [P1] SQL Monitor: quando e come lo usi?
+
+**Risposta orale**: SQL Monitor cattura automaticamente le query che durano piu' di 5 secondi, usano parallelismo, o sono marcate con hint `/*+ MONITOR */`. Mostra il piano di esecuzione in tempo reale con metriche per ogni step: righe prodotte, wait, I/O, tempo CPU. E' superiore a DISPLAY_CURSOR perche' mostra lo stato live della query durante l'esecuzione. Lo uso per: diagnosi di query long-running in esecuzione, verificare dove la query sta spendendo tempo, identificare parallelismo sub-ottimale. Comandi: `SELECT * FROM v$sql_monitor WHERE status = 'EXECUTING'`; per il report dettagliato: `SELECT DBMS_SQLTUNE.REPORT_SQL_MONITOR(sql_id => '<sql_id>', type => 'HTML') FROM dual`. In Enterprise Manager e' accessibile visualmente.
+
+**In produzione**: E' il primo strumento che uso per query in esecuzione troppo lunghe. Richiede licenza Tuning Pack.
+
+**Trappola / follow-up**: Qual e' la soglia di cattura automatica?
+
+### Q265 [P1] Come dimensioni SGA e PGA in produzione?
+
+**Risposta orale**: Il metodo evidence-based parte dal carico reale. Per SGA: uso `MEMORY_TARGET` o preferibilmente gestione separata con `SGA_TARGET` e `PGA_AGGREGATE_TARGET`. SGA si dimensiona in base a: buffer cache hit ratio (target >98%), shared pool free memory (non deve essere quasi zero), redo log buffer. Verifico con AWR advisory sections: 'Buffer Pool Advisory', 'PGA Memory Advisory', 'SGA Target Advisory'. Questi advisory mostrano il beneficio stimato per ogni incremento di memoria. Per PGA: guardo 'PGA Memory Advisory' e `v$pga_target_advice`. Se vedo molti multi-pass workarea executions (sort/hash join che spillano su disco), aumento PGA. Regola pratica iniziale: 75-80% della RAM a Oracle (SGA + PGA), con SGA 60-70% di quella quota.
+
+**In produzione**: Non dimensiono alla cieca — uso gli advisory dell'AWR per decisioni basate su evidenze. In container, attenzione ai limiti cgroup.
+
+**Trappola / follow-up**: Perche' non dai tutta la RAM alla SGA?
+
+### Q266 [P1] Optimizer hints: quando li usi e quando no?
+
+**Risposta orale**: Gli hint sono direttive che forzano l'optimizer a usare un comportamento specifico: join method, access path, parallelismo. Li uso SOLO come workaround temporaneo quando non posso modificare il codice applicativo e il piano e' urgentemente sbagliato. Non li uso come pratica standard perche': 1) l'optimizer ha piu' informazioni di me sulle statistiche future; 2) un hint che funziona oggi puo' essere disastroso dopo un cambio di volumi; 3) sono fragili — un cambio di alias o di struttura della query li invalida silenziosamente. Alternative migliori: SQL Plan Baseline per stabilizzare, SQL Profile per correggere stime, raccolta statistiche per dare all'optimizer dati corretti. Se devo usare un hint in emergenza, lo implemento via SQL Patch (`DBMS_SQLDIAG.CREATE_SQL_PATCH`) cosi' non tocco il codice applicativo.
+
+**In produzione**: Hint solo come workaround in Sev1 con SQL Patch. Mai nel codice applicativo permanente.
+
+**Trappola / follow-up**: Perche' sono pericolosi a lungo termine?
+
+### Q267 [P1] Come gestisci un patching Oracle in produzione?
+
+**Risposta orale**: Il patching Oracle segue un flusso strutturato: 1) scarico la Release Update (RU) trimestrale da My Oracle Support; 2) leggo il README e il Known Issues; 3) applico prima in ambiente di test; 4) applico sullo standby Data Guard (primo punto di validazione senza rischio); 5) faccio switchover per promuovere lo standby patchato a primary; 6) patcho il vecchio primary (ora standby); 7) verifico applicazioni. Se RAC, uso rolling patching nodo per nodo. Pre-patching: backup RMAN completo, snapshot VM se possibile. Strumenti: `opatch apply` per patch singole, `opatchauto` per GI stack, `datapatch` per SQL changes post-patch. Verifico con `opatch lsinventory`.
+
+**In produzione**: La sequenza standby-first + switchover e' lo standard MAA. Riduce il rischio e il downtime quasi a zero.
+
+**Trappola / follow-up**: Cos'e' datapatch e quando serve?
+
+### Q268 [P1] FORCE LOGGING, ARCHIVELOG e FLASHBACK: perche' tutti e tre?
+
+**Risposta orale**: Sono tre meccanismi indipendenti che proteggono livelli diversi. **ARCHIVELOG mode**: conserva i redo log archiviati necessari per point-in-time recovery e per alimentare Data Guard. Senza ARCHIVELOG non puoi fare recovery a un punto specifico. **FORCE LOGGING**: forza Oracle a generare redo completo anche per operazioni NOLOGGING (Direct Path, CTAS). Senza FORCE LOGGING, lo standby Data Guard avra' blocchi corrotti. **FLASHBACK DATABASE**: permette di riportare il database a un punto precedente nel tempo senza restore, usando i flashback log nella FRA. Necessario per reinstate dopo failover DG. I tre sono complementari: ARCHIVELOG per PITR, FORCE LOGGING per protezione standby, FLASHBACK per agilita' operativa. Tutti e tre devono essere ON in un ambiente enterprise con Data Guard.
+
+**In produzione**: Verifico i tre con: `SELECT LOG_MODE, FORCE_LOGGING, FLASHBACK_ON FROM v$database`. Se uno manca, lo correggo prima di procedere.
+
+**Trappola / follow-up**: Quale protegge da operazioni NOLOGGING?
 
 ## Security, multitenant e change management
 ### Scheda di capitolo
@@ -1969,6 +2155,46 @@ comunicazione del rischio residuo.
 **Trappola**: Rollback binari e rollback SQL sono passi distinti e dipendono dalla patch.
 
 **Leggi nel repo**: `docs/01_operations/02_runbooks_incidenti/RUNBOOK_29_PATCHING_ORACLE_RAC_DATAGUARD.md`
+
+---
+
+## Linux & OS Troubleshooting (P1)
+
+Questa sezione risponde direttamente al requisito: *"Troubleshooting avanzato e ottimizzazione dei DB operanti su sistemi operativi Linux."*
+
+### Q269 [P1] Il database muore improvvisamente, niente nell'alert log. Cosa guardi su Linux?
+
+**Risposta orale**: Se l'alert log di Oracle tace, il problema è del sistema operativo. Guardo immediatamente `/var/log/messages` (o `dmesg -T` / `journalctl`) per cercare l'intervento dell'**OOM Killer** (Out Of Memory). Se la RAM e la Swap del server finiscono, il kernel Linux "spara" ai processi più grandi per non morire, uccidendo tipicamente `PMON` o `smon` e causando il crash silenzioso del database.
+
+**In produzione**: Controllo chi ha saturato la RAM (un altro processo, uno script di backup o una PGA impazzita di Oracle).
+
+**Trappola / follow-up**: Perché l'OOM Killer uccide PMON e non un processo minore? Perché colpisce chi alloca più risorse o la memoria condivisa.
+
+### Q270 [P1] Quali comandi Linux usi per fare un primo triage delle performance?
+
+**Risposta orale**: Inizio con `top` o `htop` per identificare l'utilizzo CPU e se c'è un processo zombie. Uso `free -m` per vedere la memoria disponibile e lo stato dello swapping. Uso `iostat -x 1` o `sar -d` per monitorare la latenza e l'utilizzazione dei dischi (cercando un `%util` al 100% o alti `await`). Infine uso `vmstat 1` per vedere colli di bottiglia su run queue della CPU, paging o block I/O.
+
+**In produzione**: Se vedo molta IO wait (wa% in top), il problema quasi certamente si rifletterà su AWR come `db file sequential read` o `log file sync`.
+
+**Trappola / follow-up**: Cosa indica un alto valore di Load Average?
+
+### Q271 [P1] Che cosa sono le HugePages e perché sono vitali per Oracle?
+
+**Risposta orale**: Di default Linux gestisce la memoria in blocchi (pages) da 4KB. Per un database con 100GB di SGA, questo significa gestire milioni di piccoli puntatori nella Page Table (consumando tantissima CPU in TLB miss). Le **HugePages** pre-allocano blocchi grandi (tipicamente 2MB o 1GB). Benefici: la SGA non può mai andare in swap, il consumo CPU del sistema operativo crolla, e l'accesso alla memoria diventa molto più veloce. 
+
+**In produzione**: Uso lo script Oracle `hugepages_settings.sh` per calcolare il valore esatto da mettere in `sysctl.conf` (`vm.nr_hugepages`).
+
+**Trappola / follow-up**: Si usano le Transparent Huge Pages (THP)? NO. Vanno sempre disabilitate (`never`) per Oracle, pena crolli di performance improvvisi.
+
+### Q272 [P1] Come fai troubleshooting di un processo Oracle bloccato "appeso" su Linux?
+
+**Risposta orale**: Se un processo server Oracle (es. `LOCAL=NO`) è in "hang" e non riesco a killarlo da dentro SQL*Plus, scendo a livello Linux. Trovo l'SPID del processo (dal `v$process` o con `ps -ef`). Uso **`strace -p <PID>`** per tracciare le system call del processo in tempo reale: questo mi dice esattamente su quale chiamata il processo è bloccato (es. un read() in rete o un read() su disco o un lock semaphore).
+
+**In produzione**: Se lo devo "uccidere" brutalmente, uso `kill -9 <PID>` solo se so esattamente cosa fa, perché killare un processo background critico (LGWR, PMON) spegne l'intera istanza.
+
+**Trappola / follow-up**: Cosa succede se killi PMON? Il database va in crash immediato (Instance Abort).
+
+---
 
 ## Mock Interview 1 - Core, Linux e RMAN (45 minuti)
 
