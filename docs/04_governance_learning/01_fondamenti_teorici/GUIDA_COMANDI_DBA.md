@@ -333,7 +333,7 @@ ORDER BY process;
 ```
 
 ```sql
--- Gap di archivelog (deve restituire 0 righe = nessun gap)
+-- Sullo standby: gap di archivelog (0 righe = nessun gap)
 SELECT * FROM v$archive_gap;
 ```
 
@@ -611,7 +611,7 @@ WHERE ROUND((used_space/tablespace_size)*100) > 80;
 -- 4. Oggetti invalidi?
 SELECT COUNT(*) AS invalid_count FROM dba_objects WHERE status = 'INVALID';
 
--- 5. Data Guard sincronizzato?
+-- 5. Data Guard sincronizzato? Eseguire sullo standby.
 SELECT * FROM v$archive_gap;  -- 0 righe = OK
 
 -- 6. RMAN backup recente?

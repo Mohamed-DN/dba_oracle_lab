@@ -1,5 +1,24 @@
 # Guida Produzione: RAC Primary + Physical Standby Data Guard 19c Non-CDB
 
+## Obiettivo operativo
+
+Gestire un Data Guard RAC non-CDB con rete, Broker, redo transport e apply
+validati per ogni thread.
+
+## Procedura operativa
+
+Completa assessment, creazione, duplicate, registrazione Grid Infrastructure e
+drill di switchover seguendo le fasi della guida.
+
+## Validazione finale
+
+Conferma ruoli, SRL per thread, lag, stato Broker e servizi role-based.
+
+## Troubleshooting rapido
+
+Se apply o servizi non avanzano, raccogli evidenze da Broker, listener, CRS e
+viste Data Guard prima di modificare la configurazione.
+
 > [!NOTE]
 > **DOCUMENTI CORRELATI - ALTA AFFIDABILITÀ, RAC E DATA GUARD (SCEGLI QUELLO PIÙ ADATTO):**
 > - **Procedure di Produzione (Non-CDB)**:
@@ -714,7 +733,7 @@ Per zero data loss si valuta `SYNC/AFFIRM` solo con rete e latenza compatibili.
 Se non usi broker:
 
 ```sql
-ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
 Con broker, l'apply viene governato dal broker:
@@ -735,6 +754,7 @@ SELECT name, value, datum_time, time_computed
 FROM v$dataguard_stats
 WHERE name IN ('transport lag','apply lag','apply finish time');
 
+-- Eseguire sullo standby
 SELECT * FROM v$archive_gap;
 ```
 
@@ -1200,11 +1220,9 @@ Una volta che tutti i nodi di entrambi i cluster (sito primario e sito standby) 
    DGMGRL> SWITCHOVER TO 'SOLE';
    ```
 3. **Riattivazione FSFO:**
-   Se precedentemente configurato, riabilita il Fast-Start Failover:
-   ```text
-   DGMGRL> ENABLE FAST_START FAILOVER;
-   ```
-   ```
+   Se FSFO era configurato, trattalo come change separato. Segui la
+   [Fase 4B Observer](./GUIDA_FASE4B_FSFO_OBSERVER.md), valida Observer e
+   condizioni di failover, poi raccogli evidenze Broker.
 
 ## Troubleshooting RAC Data Guard
 

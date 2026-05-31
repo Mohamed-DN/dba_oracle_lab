@@ -53,6 +53,9 @@ prefisso approvato mantenendo la stessa convenzione di naming.
 | [Host single instance](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md) | Linux, Oracle Restart/HAS, ASM e Database Home |
 | [Host RAC](./GUIDA_07_HOST_RAC_GRID_ASM_19C.md) | Linux, Grid Infrastructure Clusterware, ASM, SCAN e Database Home |
 | [Matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md) | Checklist schermata-per-schermata, naming single/RAC e audit delle scelte GUI |
+| [Network e Broker](./GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) | Setup comune: rete DG, listener, duplicate RMAN, apply e Broker |
+| [Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) | Percorso opzionale licenza-gated per `READ ONLY WITH APPLY`, `_PRY` e `_RO` |
+| [Evidence e drill test book](./GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md) | Evidenze, switchover, gap, servizi, Observer e rollback |
 | [Run sheet varianti](./RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md) | Checklist breve per scegliere ed eseguire il blueprint corretto |
 | [Artifact DOCX/PDF](../../../../artifacts/shams_project/README.md) | Export versionati del pacchetto |
 
@@ -61,10 +64,11 @@ prefisso approvato mantenendo la stessa convenzione di naming.
 1. compila la baseline comune;
 2. scegli `S1`, `S2`, `S3` oppure `S4`;
 3. prepara gli host con l'allegato single o RAC;
-4. crea primary e standby seguendo la guida specifica;
-5. valida Broker e switchover;
-6. stabilizza il servizio;
-7. attiva FSFO tramite la guida Observer condivisa.
+4. crea primary e standby seguendo la guida specifica e il setup comune DG;
+5. valida Broker e switchover compilando il test book;
+6. attiva Active Data Guard solo se il gate licenza lo consente;
+7. stabilizza i servizi;
+8. attiva FSFO tramite la guida Observer condivisa.
 
 ## Validazione finale
 
@@ -74,6 +78,7 @@ Il blueprint e' pronto quando:
 - `DB_NAME`, `DB_UNIQUE_NAME`, servizi e PDB sono coerenti;
 - Broker restituisce `SUCCESS`;
 - switchover e switchback sono stati provati;
+- Active Data Guard e `_RO` sono attivi solo con evidenza licenza o in lab personale;
 - Observer e FSFO sono attivati solo dopo il periodo di stabilita';
 - il pacchetto di evidenze non contiene password.
 

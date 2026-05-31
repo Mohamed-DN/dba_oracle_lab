@@ -3,8 +3,8 @@
 ## Obiettivo operativo
 
 Creare un RAC Oracle 19c non-CDB a due nodi in PE e un physical standby RAC a
-due nodi in SE, con ASM, Broker, Active Data Guard, servizi role-based e
-Observer FSFO.
+due nodi in SE, con ASM, Broker, Active Data Guard opzionale, servizi
+role-based e Observer FSFO.
 
 Usa la [baseline comune](./GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md) e
 l'[allegato host RAC](./GUIDA_07_HOST_RAC_GRID_ASM_19C.md). Per nuove
@@ -31,7 +31,7 @@ SCAN + ASM                                SCAN + ASM
 | Nodi per sito | `2` |
 | SCAN PE / SE | `<PRIMARY_SCAN>` / `<STANDBY_SCAN>` |
 | RU allineata | `<RU_APPROVATA>` |
-| Active Data Guard | `<EVIDENZA LICENZA>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | TDE | `<SI/NO - decisione Security>` |
 
 ## Procedura operativa
@@ -168,7 +168,7 @@ Dopo duplicate:
 
 ```text
 M24SHAMSC_PRY -> role PRIMARY, preferred instances del cluster primary
-M24SHAMSC_RO  -> role PHYSICAL_STANDBY, preferred instances standby ADG
+M24SHAMSC_RO  -> role PHYSICAL_STANDBY, solo con ADG autorizzato
 ```
 
 Verifica:
@@ -201,7 +201,7 @@ Dopo stabilizzazione usa
 | thread 1 e 2 online | `<OK/KO>` |
 | cinque SRL per thread o sizing approvato | `<OK/KO>` |
 | apply su una sola istanza standby | `<OK/KO>` |
-| SCAN e servizi role-based | `<OK/KO>` |
+| SCAN e servizi role-based; `_RO` solo se autorizzato | `<OK/KO/N.A.>` |
 | Broker `SUCCESS` | `<OK/KO>` |
 | switchover e switchback | `<OK/KO>` |
 | failover nodo singolo senza DG failover | `<OK/KO>` |

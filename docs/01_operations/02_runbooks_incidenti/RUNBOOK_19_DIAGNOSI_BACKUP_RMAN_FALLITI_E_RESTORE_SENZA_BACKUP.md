@@ -374,6 +374,7 @@ BACKUP INCREMENTAL LEVEL 0 DATABASE TAG 'POST_GAP_L0';
 LIST ARCHIVELOG ALL;
 ```
 ```sql
+-- Eseguire sullo standby
 SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
 ```
 
@@ -677,6 +678,7 @@ ALTER SYSTEM SET sqlnet.send_timeout=300 SCOPE=SPFILE;
 
 **Diagnostica**:
 ```sql
+-- Eseguire sullo standby
 SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
 ```
 

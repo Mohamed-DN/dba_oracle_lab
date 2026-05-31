@@ -16,6 +16,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **SHAMS PROJECT**: raccolti sotto un unico pacchetto i blueprint PEYTECH
   single/RAC e CDB/non-CDB, la baseline comune, l'allegato host RAC, la run
   sheet comparativa e la procedura Observer FSFO wallet-backed.
+- **SHAMS PROJECT Data Guard enterprise**: aggiunte le SOP comuni per rete DG,
+  duplicate RMAN e Broker, Active Data Guard licenza-gated con servizi
+  role-based e test book per evidenze, gap, switchover e Observer.
 
 ### Changed
 
@@ -37,6 +40,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
   SID single, SID prefix RAC, `DB_NAME` condiviso e `DB_UNIQUE_NAME` PE/SE;
   aggiunta la checklist GUI basata sull'audit delle schermate DBCA e corretti
   i SID RAC per nodo.
+- **Data Guard Oracle 19c**: rimossa la sintassi operativa legacy
+  `USING CURRENT LOGFILE`, separati controlli primary/standby e aggiunti
+  fencing obbligatorio e rollback consistenti per i drill.
 
 ## [2.0.0] - 2026-05-14
 ### Added

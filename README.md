@@ -18,6 +18,7 @@
 - 🟢 **Fondamenti:** [Indice area](./docs/04_governance_learning/01_fondamenti_teorici/README.md)
 - 🏛️ **Core Lab 0→8:** [Indice area](./docs/03_infra_lab/02_oracle_installation_asm/README.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
 - 🔵 **High Availability:** [Indice area](./docs/02_core_dba/04_high_availability_and_rac/README.md)
+- **SHAMS PROJECT Data Guard:** [blueprint S1-S4 e SOP PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md)
 - 🟡 **Backup & Recovery:** [Indice area](./docs/02_core_dba/02_backup_and_recovery/README.md)
 - 🟠 **Amministrazione:** [Indice area](./docs/02_core_dba/01_administration_and_security/README.md)
 - 🔴 **Performance & Diagnostica:** [Indice area](./docs/02_core_dba/03_performance_and_diagnostics/README.md)

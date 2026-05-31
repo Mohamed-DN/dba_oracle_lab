@@ -32,7 +32,7 @@ compila:
 | RPO, RTO e latenza | `<OK/KO>` |
 | storage DATA/FRA | `<OK/KO>` |
 | RU Grid e DB Home | `<OK/KO>` |
-| licenza Active Data Guard | `<OK/KO>` |
+| ADG disattivo oppure gate licenza/lab personale | `<OK/KO>` |
 | decisione TDE | `<OK/KO>` |
 | recovery catalog RMAN | `<OK/KO>` |
 
@@ -77,7 +77,7 @@ Verifica:
 - lag;
 - SRL;
 - TDE;
-- servizi role-based;
+- servizi role-based; `_RO` solo se ADG autorizzato;
 - backup RMAN standby;
 - switchover e switchback.
 

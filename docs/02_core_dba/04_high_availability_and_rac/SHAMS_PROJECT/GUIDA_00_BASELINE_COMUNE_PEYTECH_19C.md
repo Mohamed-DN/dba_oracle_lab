@@ -17,6 +17,8 @@ non devono essere duplicati nelle procedure specifiche.
 - [Creazione RAC con DBCA](https://docs.oracle.com/en/database/oracle/oracle-database/19/racpd/create-oracle-rac-database-dbca.html)
 - [CDB physical standby e PDB](https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/using-data-guard-with-a-cdb.html)
 - [Observer FSFO](https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/using-data-guard-broker-to-manage-switchovers-failovers.html)
+- [Licensing Oracle Database 19c](https://docs.oracle.com/en/database/oracle/oracle-database/19/dblic/Licensing-Information.html)
+- [Oracle Developer Downloads](https://www.oracle.com/downloads/)
 
 ## Decisione architetturale
 
@@ -110,7 +112,7 @@ Gate business e Security:
 | RPO / RTO | `<RPO>` / `<RTO>` |
 | Latenza PE-SE | `<LATENZA_MS>` |
 | Redo medio e picco | `<MB_SEC>` |
-| Active Data Guard richiesto e licenziato | `<SI/NO - evidenza>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | TDE richiesto | `<SI/NO - evidenza>` |
 | FSFO richiesto | `<SI/NO - evidenza>` |
 | Trasporto approvato | `<SYNC_AFFIRM/FASTSYNC_NOAFFIRM/ASYNC>` |
@@ -175,12 +177,22 @@ Configurare Broker e scegliere il profilo dopo test di latenza:
 
 ### 4. Active Data Guard, RMAN e TDE
 
-- Active Data Guard `READ ONLY WITH APPLY` richiede licenza verificata.
+- Il setup Data Guard base resta valido con standby `MOUNTED` e Redo Apply.
+- Active Data Guard `READ ONLY WITH APPLY` e' opzionale. In produzione
+  richiede evidenza formale; nel lab personale e' esercitabile nei limiti dei
+  termini developer accettati al download.
 - RMAN offload sul physical standby usa recovery catalog e deletion policy
   Data Guard-aware.
 - TDE richiede assessment; se attivo, distribuire keystore e validare apertura
   sullo standby prima del duplicate e dopo ogni rekey.
 - In CDB, valutare keystore root e PDB, query `CDB_*` e servizi PDB dedicati.
+
+Per rete, duplicate e Broker usa
+[Network e Broker](./GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md).
+Per la variante read-only usa
+[Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md).
+Per evidenze e drill usa
+[Evidence e drill test book](./GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md).
 
 ### 5. FSFO
 
@@ -202,7 +214,7 @@ Verificare inoltre:
 
 - lag entro soglia;
 - SRL completi per ogni thread;
-- servizi presenti solo sul ruolo previsto;
+- servizi presenti solo sul ruolo previsto; `_RO` solo se ADG e' autorizzato;
 - PDB aperta e propagata sullo standby per `S2` e `S4`;
 - backup RMAN standby visibile nel catalogo;
 - switchover e switchback riusciti;

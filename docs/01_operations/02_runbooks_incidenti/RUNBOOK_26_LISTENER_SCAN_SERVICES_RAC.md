@@ -1,5 +1,11 @@
 # 26 - Listener, SCAN e Services RAC
 
+## Obiettivi
+
+Diagnosticare errori di connessione e registrazione servizi in ambienti RAC,
+Oracle Restart e Data Guard senza modificare alla cieca la configurazione di
+rete gestita da Grid Infrastructure.
+
 ## Casi piu frequenti
 
 - Applicazione riceve `ORA-12514`, `ORA-12541`, `ORA-12154`, `ORA-12516`.
@@ -13,7 +19,9 @@
 
 Se il database e `OPEN` ma l'applicazione non entra, non e automaticamente un problema database. Verifica listener, service name, registrazione dinamica, SCAN, TNS e firewall.
 
-## Triage rapido
+## Procedura operativa
+
+### Triage rapido
 
 Come `grid` o `oracle` secondo standard:
 
@@ -157,6 +165,31 @@ lsnrctl reload LISTENER_DG
 lsnrctl services LISTENER_DG
 ```
 
+La registrazione statica temporanea dell'auxiliary RMAN e la registrazione
+necessaria al Broker non sono la stessa cosa. Dopo il duplicate rimuovi la
+registrazione temporanea se non serve piu; prima di modificare una
+configurazione Broker verifica quanto gestito da Oracle Restart o Clusterware.
+
+## Rete Data Guard dedicata
+
+Single instance con Oracle Restart/HAS:
+
+- listener `LISTENER_DG` su `1531/TCP`;
+- nessuna seconda risorsa CRS network o VIP RAC;
+- endpoint DNS/IP approvato e raggiungibile dai due siti.
+
+RAC:
+
+- rete DG dedicata solo dopo approvazione networking;
+- VIP DG per nodo e DG SCAN per sito;
+- listener DG locale e SCAN listener DG su `1531/TCP`;
+- `LOCAL_LISTENER`, `REMOTE_LISTENER` e `LISTENER_NETWORKS` validati, non
+  copiati da un altro cluster.
+
+Approfondimento:
+
+- [SHAMS PROJECT: Network e Broker](../../02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md)
+
 ## Validazione finale
 
 ```bash
@@ -172,6 +205,8 @@ RAC:
 srvctl status service -d <DB_UNIQUE_NAME>
 crsctl stat res -t
 ```
+
+## Troubleshooting rapido
 
 ## Cosa non fare
 

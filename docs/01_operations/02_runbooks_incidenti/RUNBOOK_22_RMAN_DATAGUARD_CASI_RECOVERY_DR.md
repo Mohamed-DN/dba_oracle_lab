@@ -587,6 +587,8 @@ Valida ruolo database, servizi applicativi e redo transport nel verso opposto.
 
 Il failover e' una scelta di emergenza: dichiara perdita dati potenziale secondo
 protection mode e lag osservato. Non usarlo per correggere errori logici.
+Prima della promozione applica fencing al vecchio primary e allega evidenza:
+un timeout di rete non basta a prevenire split-brain.
 
 ```text
 dgmgrl /@RACDB_STBY

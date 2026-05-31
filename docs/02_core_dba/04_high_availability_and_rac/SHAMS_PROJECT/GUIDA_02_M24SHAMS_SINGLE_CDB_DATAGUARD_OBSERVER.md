@@ -3,7 +3,8 @@
 ## Obiettivo operativo
 
 Creare un database Oracle 19c CDB single instance con PDB applicativo,
-physical standby, Data Guard Broker, Active Data Guard e Observer FSFO.
+physical standby, Data Guard Broker, Active Data Guard opzionale e Observer
+FSFO.
 
 Usa prima la [baseline comune](./GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md) e
 l'[allegato host single](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md).
@@ -30,7 +31,7 @@ della CDB, non di una singola PDB.
 | --- | --- |
 | Blueprint | `S2` |
 | Host guide completata | `<OK/KO>` |
-| Licenza Active Data Guard | `<EVIDENZA>` |
+| Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | PDB name | `M24SHAMSC_APP` |
 | Local undo | `<SI/NO - decisione>` |
 | TDE | `<SI/NO - decisione Security>` |
@@ -142,6 +143,10 @@ Usa `NOFILENAMECHECK` solo su storage realmente separato.
 
 ### 5. PDB e Active Data Guard
 
+Esegui questa sezione solo dopo il gate della guida
+[Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md).
+Senza ADG mantieni standby `MOUNTED` con Redo Apply.
+
 Apri lo standby:
 
 ```sql
@@ -211,8 +216,8 @@ l'[Observer FSFO](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md).
 | --- | --- |
 | primary e standby `CDB=YES` | `<OK/KO>` |
 | PDB `M24SHAMSC_APP` presente nei due siti | `<OK/KO>` |
-| standby `READ ONLY WITH APPLY` | `<OK/KO>` |
-| service `_PRY` e `_RO` role-based | `<OK/KO>` |
+| standby `MOUNTED` oppure `READ ONLY WITH APPLY` autorizzato | `<OK/KO>` |
+| service `_PRY`; `_RO` solo se ADG autorizzato | `<OK/KO/N.A.>` |
 | SRL completi su entrambi i ruoli | `<OK/KO>` |
 | Broker `SUCCESS` | `<OK/KO>` |
 | switchover CDB e switchback | `<OK/KO>` |

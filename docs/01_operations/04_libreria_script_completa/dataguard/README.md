@@ -1,38 +1,30 @@
-# 02 — Data Guard Management
+# Data Guard Management
 
-> Procedure operative per la gestione di Oracle Data Guard in ambiente RAC Enterprise.
-> Include configurazione, Active Data Guard, verifica GAP, e recovery post-reboot.
+Riferimenti rapidi per Oracle Data Guard 19c. Le pagine valgono per single
+instance e RAC: prima di eseguire un comando identifica ruolo database,
+topologia, protection mode e ownership Broker.
 
----
+## Percorso rapido
 
-## Panoramica
+| Esigenza | Documento |
+| --- | --- |
+| Setup e Broker | [Configurazione Data Guard](./configurazione_dataguard.md) |
+| Standby aperto in lettura | [Active Data Guard](./active_dataguard.md) |
+| Gap e lag | [Verifica gap](./verifica_gap.md) |
+| Reporting read-only | [Servizio role-based](./service_read_only.md) |
+| Apply fermo dopo reboot | [Recovery post-reboot](./recovery_post_reboot.md) |
 
-Data Guard è il pilastro della Disaster Recovery in Oracle. In un ambiente Enterprise come Peytech,
-la configurazione tipica prevede:
-- **Primary RAC** (2 nodi) → **Standby RAC** (2 nodi)
-- Trasporto LOG: **LGWR ASYNC** (per performance) o **LGWR SYNC** (per zero data loss)
-- **Active Data Guard** per utilizzare lo standby in modalità READ ONLY con APPLY attivo
+## Regole operative
 
----
+- Il percorso Data Guard base usa standby `MOUNTED` con Redo Apply.
+- `READ ONLY WITH APPLY` richiede Active Data Guard autorizzato.
+- In 19c avvia apply con `DISCONNECT FROM SESSION`; non usare la clausola
+  storica `USING CURRENT LOGFILE`.
+- Interroga `V$ARCHIVE_GAP` sullo standby.
+- Non inserire password negli argomenti shell.
 
-## File Contenuti
+## Approfondimenti
 
-### [configurazione_dataguard.md](./configurazione_dataguard.md)
-Procedura step-by-step per configurare Data Guard con DGMGRL Broker.
-
-### [active_dataguard.md](./active_dataguard.md)
-Configurazione Active Data Guard: aprire lo standby in READ ONLY con real-time apply.
-
-### [verifica_gap.md](./verifica_gap.md)
-Query SQL per verificare se ci sono GAP tra primary e standby (log non applicati).
-
-### [service_read_only.md](./service_read_only.md)
-Configurazione di un servizio dedicato per connessioni READ ONLY allo standby.
-
-### [recovery_post_reboot.md](./recovery_post_reboot.md)
-Procedura di recovery quando il Data Guard si rompe dopo un reboot del server.
-
----
-
-## 🔗 Collegamento
-Vedi anche: [GUIDA_FASE4_DATAGUARD_DGMGRL.md](../../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [Fase 4: Data Guard Broker](../../../02_core_dba/04_high_availability_and_rac/GUIDA_FASE4_DATAGUARD_DGMGRL.md)
+- [SHAMS PROJECT: Network e Broker](../../../02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md)
+- [Runbook Check Data Guard](../../02_runbooks_incidenti/RUNBOOK_03_CHECK_DATAGUARD.md)
