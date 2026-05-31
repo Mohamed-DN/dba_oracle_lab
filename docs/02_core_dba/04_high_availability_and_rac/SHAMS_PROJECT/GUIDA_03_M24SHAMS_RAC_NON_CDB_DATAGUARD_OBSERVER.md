@@ -54,6 +54,9 @@ Con DBCA dal DB Home:
 9. `ARCHIVELOG`;
 10. `Generate Database Creation Scripts`, review ed esecuzione.
 
+Per verificare ogni scelta GUI usa la
+[matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md).
+
 Il cluster standby non nasce da un secondo DBCA. Durante il duplicate usa
 `DB_UNIQUE_NAME=M24SHAMSSEC`, SID prefix `M24SHAMSSEC` e istanze
 `M24SHAMSSEC1`, `M24SHAMSSEC2`.

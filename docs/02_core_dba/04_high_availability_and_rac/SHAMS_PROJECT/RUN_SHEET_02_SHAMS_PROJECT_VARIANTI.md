@@ -20,7 +20,8 @@ Deve esistere un solo `SI`.
 
 ### 1. Gate comune
 
-Apri la [baseline PEYTECH](./GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md) e
+Apri la [baseline PEYTECH](./GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md) e la
+[matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md), quindi
 compila:
 
 | Gate | Esito |

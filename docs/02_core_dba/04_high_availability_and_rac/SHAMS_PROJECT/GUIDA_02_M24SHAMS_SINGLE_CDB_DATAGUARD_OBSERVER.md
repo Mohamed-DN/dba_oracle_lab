@@ -60,7 +60,9 @@ Con DBCA scegli:
 
 DBCA crea solo il primary PE. Il physical standby SE mantiene
 `DB_NAME=M24SHAMS`, ma usa `DB_UNIQUE_NAME=M24SHAMSSEC` e SID
-`M24SHAMSSEC` durante il duplicate RMAN.
+locale auxiliary `M24SHAMSSEC` durante il duplicate RMAN. Per verificare ogni
+scelta GUI usa la
+[matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md).
 
 Verifica:
 

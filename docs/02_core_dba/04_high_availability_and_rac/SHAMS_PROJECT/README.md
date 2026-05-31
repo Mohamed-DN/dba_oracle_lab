@@ -31,14 +31,15 @@ Per il collaudo `C`, la creazione DBCA del primary PE parte da:
 | Campo | Single instance | RAC |
 | --- | --- | --- |
 | Global Database Name | `M24SHAMSPEC[.<DB_DOMAIN>]` | `M24SHAMSPEC[.<DB_DOMAIN>]` |
-| SID o SID prefix | `M24SHAMSPEC` | `M24SHAMSPEC` |
+| SID o SID prefix | SID `M24SHAMSPEC` | SID prefix `M24SHAMSPEC` |
 | SID risultanti | `M24SHAMSPEC` | `M24SHAMSPEC1`, `M24SHAMSPEC2` |
 | `DB_NAME` nei parametri | `M24SHAMS` | `M24SHAMS` |
 | `DB_UNIQUE_NAME` nei parametri | `M24SHAMSPEC` | `M24SHAMSPEC` |
 
 Lo standby SE non viene creato con DBCA: deriva dal duplicate RMAN e usa
-`DB_UNIQUE_NAME=M24SHAMSSEC`, SID `M24SHAMSSEC` per single instance oppure
-`M24SHAMSSEC1`, `M24SHAMSSEC2` per RAC.
+`DB_UNIQUE_NAME=M24SHAMSSEC`. Le SOP usano SID locali auxiliary
+`M24SHAMSSEC` per single instance oppure `M24SHAMSSEC1`, `M24SHAMSSEC2` per
+RAC.
 
 Il prefisso di esempio e' `M24SHAMS`. Prima dell'uso reale sostituiscilo con il
 prefisso approvato mantenendo la stessa convenzione di naming.
@@ -51,6 +52,7 @@ prefisso approvato mantenendo la stessa convenzione di naming.
 | [Observer FSFO](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md) | Installazione Observer, wallet SEPS, observe-only, attivazione e rollback |
 | [Host single instance](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md) | Linux, Oracle Restart/HAS, ASM e Database Home |
 | [Host RAC](./GUIDA_07_HOST_RAC_GRID_ASM_19C.md) | Linux, Grid Infrastructure Clusterware, ASM, SCAN e Database Home |
+| [Matrice campi DBCA](./GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md) | Checklist schermata-per-schermata, naming single/RAC e audit delle scelte GUI |
 | [Run sheet varianti](./RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md) | Checklist breve per scegliere ed eseguire il blueprint corretto |
 | [Artifact DOCX/PDF](../../../../artifacts/shams_project/README.md) | Export versionati del pacchetto |
 

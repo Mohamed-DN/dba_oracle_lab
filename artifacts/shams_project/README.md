@@ -82,5 +82,6 @@ I file sorgente Markdown sono:
 - [Observer FSFO condiviso](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_05_OBSERVER_FSFO_PEYTECH.md)
 - [Allegato Host single](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md)
 - [Allegato Host RAC](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_07_HOST_RAC_GRID_ASM_19C.md)
+- [Matrice campi DBCA](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/GUIDA_08_DBCA_GUI_FIELD_MATRIX_PEYTECH_19C.md)
 - [Run Sheet M24SHAMS](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/RUN_SHEET_01_M24SHAMS_SINGLE_NON_CDB.md)
 - [Run Sheet scelta varianti](../../docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md)
