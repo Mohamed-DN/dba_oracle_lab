@@ -48,7 +48,7 @@ Scegli il caso:
 
 | Caso | Guida |
 | --- | --- |
-| Progetto M24SHAMS staging/collaudo | [SOP Enterprise M24SHAMS Staging Data Guard](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md) |
+| SHAMS PROJECT staging/collaudo | [Matrice blueprint PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md) |
 | Single instance primary + standby non-CDB | [Produzione Single Instance Data Guard Non-CDB](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) |
 | RAC primary + RAC standby non-CDB | [Produzione RAC Data Guard Non-CDB](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) |
 | Lab RAC standby | [Fase 3 RAC Standby](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE3_RAC_STANDBY.md) |
@@ -130,7 +130,7 @@ Apri:
 | Job scheduler fallito | [Scheduler Jobs e AutoTask](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_28_SCHEDULER_JOBS_AUTOTASKS_RUNBOOK.md) |
 | Alert OEM/EM | [Enterprise Manager Alert Handling](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_32_ENTERPRISE_MANAGER_ALERT_RUNBOOK.md) |
 | Connessione TCPS/certificato | [TCPS Wallet e Certificati](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_34_TCPS_WALLET_CERTIFICATI.md) |
-| Creare standby fisico M24SHAMS staging | [SOP Enterprise M24SHAMS](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md) |
+| Creare standby SHAMS PROJECT | [Matrice blueprint PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md) |
 | Creare standby fisico generico | [Produzione Single Instance DG](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) |
 | Creare standby RAC | [Produzione RAC DG](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) |
 

@@ -186,6 +186,7 @@ docs/
 |   |   +-- GUIDA_PDB_DATAGUARD_SERVICES.md
 |   |   +-- GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md
 |   |   +-- GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md
+|   |   +-- SHAMS_PROJECT/
 |   |   +-- GUIDA_SWITCHOVER_COMPLETO.md
 |   +-- 05_patching_and_upgrades
 |   |   +-- GUIDA_AUTOUPGRADE_12C_TO_19C.md
@@ -444,7 +445,7 @@ Regole pratiche:
 | [Switchover Completo](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_SWITCHOVER_COMPLETO.md) | Switchover + Switchback passo-passo |
 | [Failover + Reinstate](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) | ⚠️ **NON obbligatorio nel lab** — vedi nota sotto |
 | [Fase 4B — Observer FSFO](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FASE4B_FSFO_OBSERVER.md) | Observer dedicato, wallet SEPS e failover automatico |
-| [SOP Enterprise M24SHAMS Staging Data Guard](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md) | Single instance non-CDB 19c, Oracle Restart, Active Data Guard e RMAN standby |
+| [SHAMS PROJECT: Blueprint Data Guard](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md) | PEYTECH: single/RAC, CDB/non-CDB, Broker, Active Data Guard e Observer FSFO |
 | [Flashback Database](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md) | "Macchina del tempo" Oracle |
 | [MAA Best Practices](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_MAA_BEST_PRACTICES.md) | Oracle Maximum Availability Architecture |
 | [Data Guard Far Sync](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAR_SYNC_DATAGUARD.md) | **Nuovo**: Zero Data Loss a distanza geografica con istanza Far Sync |

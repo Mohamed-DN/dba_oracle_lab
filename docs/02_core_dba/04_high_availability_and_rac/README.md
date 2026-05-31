@@ -5,8 +5,8 @@
 ## Percorso rapido
 
 - Produzione non-CDB single instance: [Produzione Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md)
-- Progetto M24SHAMS staging: [SOP Enterprise M24SHAMS](./GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md), [Allegato Host](./GUIDA_M24SHAMS_HOST_ORACLE_RESTART_ASM_19C.md) e [Run Sheet](./RUN_SHEET_M24SHAMS_STAGING_DATAGUARD.md)
-- Artifact M24SHAMS: [DOCX/PDF versionati](../../../artifacts/m24shams/README.md)
+- SHAMS PROJECT staging: [matrice blueprint PEYTECH](./SHAMS_PROJECT/README.md)
+- Artifact SHAMS PROJECT: [DOCX/PDF versionati](../../../artifacts/shams_project/README.md)
 - Produzione non-CDB RAC: [Produzione RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md)
 - Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) e [Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)
 - Operativita dopo setup: [Switchover](./GUIDA_SWITCHOVER_COMPLETO.md), [Failover/Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md), [Flashback](./GUIDA_FLASHBACK_DATABASE.md)
@@ -20,9 +20,7 @@
 | [Failover + Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md) | Scenario distruttivo e recovery |
 | [Flashback Database](./GUIDA_FLASHBACK_DATABASE.md) | Ripristino temporale database |
 | [MAA Best Practices](./GUIDA_MAA_BEST_PRACTICES.md) | Linee guida Oracle MAA |
-| [SOP Enterprise M24SHAMS Staging Data Guard](./GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md) | Single instance non-CDB 19c, Oracle Restart, Active Data Guard e RMAN standby |
-| [Allegato Host M24SHAMS](./GUIDA_M24SHAMS_HOST_ORACLE_RESTART_ASM_19C.md) | Linux, Grid Infrastructure standalone, ASM e Database Home |
-| [Run Sheet M24SHAMS](./RUN_SHEET_M24SHAMS_STAGING_DATAGUARD.md) | Sequenza change sintetica con gate e rollback |
+| [SHAMS PROJECT](./SHAMS_PROJECT/README.md) | PEYTECH: single/RAC, CDB/non-CDB, Broker, Active Data Guard e Observer FSFO |
 | [Produzione: Single Instance Data Guard Non-CDB](./GUIDA_PRODUZIONE_SINGLE_NODE_DATAGUARD_NON_CDB.md) | Primary single instance + standby fisico 19c non-CDB |
 | [Produzione: RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | RAC primary + standby fisico 19c non-CDB |
 | [Data Guard Far Sync](./GUIDA_FAR_SYNC_DATAGUARD.md) | Zero Data Loss a distanza geografica con istanza Far Sync |

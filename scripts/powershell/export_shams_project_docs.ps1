@@ -5,14 +5,28 @@ param(
 $ErrorActionPreference = "Stop"
 
 $haDir = Join-Path $RepositoryRoot "docs\02_core_dba\04_high_availability_and_rac"
-$artifactDir = Join-Path $RepositoryRoot "artifacts\m24shams"
+$projectDir = Join-Path $haDir "SHAMS_PROJECT"
+$artifactDir = Join-Path $RepositoryRoot "artifacts\shams_project"
 
 $fullSources = @(
-    (Join-Path $haDir "GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md"),
-    (Join-Path $haDir "GUIDA_M24SHAMS_HOST_ORACLE_RESTART_ASM_19C.md")
+    (Join-Path $projectDir "GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md"),
+    (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md")
 )
 $runSources = @(
-    (Join-Path $haDir "RUN_SHEET_M24SHAMS_STAGING_DATAGUARD.md")
+    (Join-Path $projectDir "RUN_SHEET_01_M24SHAMS_SINGLE_NON_CDB.md")
+)
+$portfolioSources = @(
+    (Join-Path $projectDir "GUIDA_00_BASELINE_COMUNE_PEYTECH_19C.md"),
+    (Join-Path $projectDir "GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md"),
+    (Join-Path $projectDir "GUIDA_02_M24SHAMS_SINGLE_CDB_DATAGUARD_OBSERVER.md"),
+    (Join-Path $projectDir "GUIDA_03_M24SHAMS_RAC_NON_CDB_DATAGUARD_OBSERVER.md"),
+    (Join-Path $projectDir "GUIDA_04_M24SHAMS_RAC_CDB_DATAGUARD_OBSERVER.md"),
+    (Join-Path $projectDir "GUIDA_05_OBSERVER_FSFO_PEYTECH.md"),
+    (Join-Path $projectDir "GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md"),
+    (Join-Path $projectDir "GUIDA_07_HOST_RAC_GRID_ASM_19C.md")
+)
+$variantRunSources = @(
+    (Join-Path $projectDir "RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md")
 )
 
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
@@ -154,7 +168,7 @@ function Set-DocumentStyle {
     $header.ParagraphFormat.Alignment = 1
 
     $footer = $Document.Sections.Item(1).Footers.Item(1).Range
-    $footer.Text = "M24SHAMS | Oracle 19c Data Guard | Documento operativo"
+    $footer.Text = "SHAMS PROJECT | Oracle 19c Data Guard | Documento operativo"
     $footer.Font.Name = "Aptos"
     $footer.Font.Size = 8
     $footer.ParagraphFormat.Alignment = 1
@@ -293,5 +307,19 @@ Export-Package `
     -PdfPath (Join-Path $artifactDir "M24SHAMS_RUN_SHEET_STAGING_DATAGUARD.pdf") `
     -Title "M24SHAMS - Run Sheet Staging Data Guard" `
     -HeaderText "M24SHAMS | Run Sheet Staging Data Guard"
+
+Export-Package `
+    -Sources $portfolioSources `
+    -DocxPath (Join-Path $artifactDir "SHAMS_PROJECT_PORTFOLIO_ENTERPRISE_19C.docx") `
+    -PdfPath (Join-Path $artifactDir "SHAMS_PROJECT_PORTFOLIO_ENTERPRISE_19C.pdf") `
+    -Title "SHAMS PROJECT - Portfolio Enterprise Oracle 19c Data Guard" `
+    -HeaderText "SHAMS PROJECT | Portfolio Enterprise Oracle 19c Data Guard"
+
+Export-Package `
+    -Sources $variantRunSources `
+    -DocxPath (Join-Path $artifactDir "SHAMS_PROJECT_RUN_SHEET_VARIANTI.docx") `
+    -PdfPath (Join-Path $artifactDir "SHAMS_PROJECT_RUN_SHEET_VARIANTI.pdf") `
+    -Title "SHAMS PROJECT - Run Sheet Scelta Blueprint" `
+    -HeaderText "SHAMS PROJECT | Run Sheet Scelta Blueprint"
 
 Write-Host "Artifact generati in $artifactDir"

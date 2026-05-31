@@ -7,7 +7,7 @@ Preparare i due host Linux che ospiteranno `M24SHAMSPEC` nel sito PE e
 Oracle Restart/HAS, ASM, Database Home 19c e listener Data Guard.
 
 La creazione database e la configurazione Data Guard sono descritte nella
-[SOP Enterprise M24SHAMS](./GUIDA_ENTERPRISE_M24SHAMS_STAGING_DATAGUARD_NON_CDB.md).
+[SOP Enterprise M24SHAMS](./GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md).
 
 ## Ambito
 
