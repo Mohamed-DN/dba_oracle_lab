@@ -17,6 +17,7 @@ durante il change: non e' una checklist da completare a memoria dopo il test.
 | Ambiente | `C` |
 | Primary iniziale | `M24SHAMSPEC` |
 | Standby iniziale | `M24SHAMSSEC` |
+| Broker configuration | `DR_M24SHAMSC_CONF` |
 | Data e finestra | `<TIMESTAMP>` |
 | DBA owner | `<NOME>` |
 | Application owner | `<NOME>` |
@@ -34,7 +35,10 @@ SHOW DATABASE VERBOSE M24SHAMSPEC;
 SHOW DATABASE VERBOSE M24SHAMSSEC;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
 VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
 Sullo standby:
@@ -76,7 +80,7 @@ primary.
 1. abilita Broker;
 2. esegui `SHOW CONFIGURATION`;
 3. valida i due database;
-4. valida rete e static connect;
+4. valida SPFILE, rete e static connect;
 5. allega output prima e dopo eventuali correzioni.
 
 Pass criteria:

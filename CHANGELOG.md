@@ -25,6 +25,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Changed
 
+- **Data Guard core e SHAMS**: riordinate Fase 3 e Fase 4 con consegna
+  esplicita, alias `_DG`, `_AUX` e `_DGMGRL` distinti, handoff controllato al
+  Broker e SOP SHAMS `S1`-`S4` complete fino a switchover, rollback ed evidence.
+- **Naming Broker**: adottata la convenzione stabile `DR_<DB_NAME><ENV>_CONF`;
+  il core lab usa `DR_RACDB_CONF`, SHAMS collaudo usa `DR_M24SHAMSC_CONF`.
 - **Automazione RMAN**: separati backup e cleanup, aggiunti formati espliciti,
   cron sfalsati PE/SE, evidence e blocchi preventivi prima delle cancellazioni.
 - **Data Guard FSFO**: consolidati setup, rollback e drill nella nuova fase core.

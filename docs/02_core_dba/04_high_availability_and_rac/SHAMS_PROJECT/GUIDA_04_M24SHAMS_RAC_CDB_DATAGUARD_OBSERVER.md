@@ -38,7 +38,27 @@ indipendente.
 | Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | TDE | `<SI/NO - decisione Security>` |
 
+### Scheda sostituzioni per riuso
+
+| Oggetto | Esempio collaudo | Valore approvato |
+| --- | --- | --- |
+| `DB_NAME` | `M24SHAMS` | `<DB_NAME>` |
+| Ambiente | `C` | `<ENV>` |
+| Primary / standby `DB_UNIQUE_NAME` | `M24SHAMSPEC` / `M24SHAMSSEC` | `<PRIMARY_UNIQUE_NAME>` / `<STANDBY_UNIQUE_NAME>` |
+| Broker configuration | `DR_M24SHAMSC_CONF` | `DR_<DB_NAME><ENV>_CONF` |
+| SID prefix | `M24SHAMSPEC` / `M24SHAMSSEC` | `<PRIMARY_SID_PREFIX>` / `<STANDBY_SID_PREFIX>` |
+| PDB | `M24SHAMSC_APP` | `<PDB_NAME>` |
+| Servizi PDB | `M24SHAMSC_PRY` / `M24SHAMSC_RO` | `<PRIMARY_SERVICE>` / `<STANDBY_RO_SERVICE>` |
+| ASM | `+M24SHAMS_DATA` / `+M24SHAMS_FRA` | `<ASM_DATA>` / `<ASM_FRA>` |
+
 ## Procedura operativa
+
+### 0. Prepara i cluster e l'inventario
+
+Completa l'[allegato host RAC](./GUIDA_07_HOST_RAC_GRID_ASM_19C.md) su PE e
+SE. Registra public IP, private interconnect, VIP, SCAN, rete DG, RU Grid/DB,
+diskgroups, FRA, keystore e recovery catalog. Verifica `cluvfy`, `olsnodes`,
+`crsctl stat res -t`, `asmcmd lsdg` e allineamento RU.
 
 ### 1. Creazione RAC CDB primary
 
@@ -95,12 +115,24 @@ Applica la baseline PEYTECH:
 
 Non copiare sizing senza misurare redo e log switch.
 
+Se riallinei redo esistenti, aggiungi prima i nuovi gruppi OMF per thread,
+forza switch controllati e rimuovi soltanto i vecchi gruppi `INACTIVE`.
+Riallinea gli SRL sui due ruoli prima dello switchover.
+
 ### 3. Standby RAC CDB
 
 Configura Net, password file e TDE. Se TDE e' attivo, distribuisci il keystore
-prima del duplicate.
+prima del duplicate. Mantieni distinti:
 
-Avvia una sola auxiliary instance sul cluster SE:
+```text
+M24SHAMSPEC_DG  -> redo, FAL e DGConnectIdentifier su PE
+M24SHAMSSEC_DG  -> redo, FAL e DGConnectIdentifier su SE
+M24SHAMSSEC_AUX -> static listener temporaneo su un solo nodo SE
+*_DGMGRL        -> restart Broker, da validare separatamente
+```
+
+Sul nodo 1 SE crea `<ORACLE_BASE>/admin/M24SHAMSSEC/adump`, trasferisci il
+password file con permessi minimi e avvia una sola auxiliary instance:
 
 ```bash
 export ORACLE_SID=M24SHAMSSEC1
@@ -118,7 +150,7 @@ db_recovery_file_dest='+M24SHAMS_FRA'
 Esegui:
 
 ```bash
-rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
+rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
 ```
 
 ```rman
@@ -139,8 +171,9 @@ RUN {
 }
 ```
 
-Dopo duplicate abilita `cluster_database=TRUE`, registra entrambe le istanze
-SE e valida SRL per thread 1 e 2.
+Dopo duplicate crea SPFILE condiviso ASM e pointer file locali, abilita
+`cluster_database=TRUE`, registra entrambe le istanze SE con `srvctl`, prova
+stop/start Clusterware e valida SRL per thread 1 e 2.
 
 ### 4. PDB su Data Guard
 
@@ -194,13 +227,33 @@ Non usare il service di default della CDB per l'applicazione.
 
 ### 6. Broker, switchover e Observer
 
-Configura Broker e valida entrambi i database:
+Prima del Broker salva parametri e rollback SQL. Rimuovi sul primary le
+destinazioni remote incompatibili prima di `CREATE CONFIGURATION` e sullo
+standby prima di `ADD DATABASE`. Posiziona i file Broker in ASM su ciascun
+cluster.
+
+Configura e valida entrambi i database:
 
 ```text
+CREATE CONFIGURATION 'DR_M24SHAMSC_CONF' AS
+  PRIMARY DATABASE IS M24SHAMSPEC
+  CONNECT IDENTIFIER IS M24SHAMSPEC_DG;
+
+ADD DATABASE M24SHAMSSEC AS
+  CONNECT IDENTIFIER IS M24SHAMSSEC_DG
+  MAINTAINED AS PHYSICAL;
+
+ENABLE CONFIGURATION;
 SHOW CONFIGURATION;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
+
+`DR_M24SHAMSC_CONF` resta stabile dopo switchover.
 
 Durante switchover verifica:
 

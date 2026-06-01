@@ -35,7 +35,7 @@ echo "**************************************************************************
 sleep 30
 
 cat > /tmp/broker_setup.dgmgrl <<EOF
-CREATE CONFIGURATION 'rac_dg_config' AS PRIMARY DATABASE IS 'RACDB' CONNECT IDENTIFIER IS 'RACDB';
+CREATE CONFIGURATION 'DR_RACDB_CONF' AS PRIMARY DATABASE IS 'RACDB' CONNECT IDENTIFIER IS 'RACDB';
 ADD DATABASE 'RACDB_STBY' AS CONNECT IDENTIFIER IS 'RACDB_STBY' MAINTAINED AS PHYSICAL;
 ENABLE CONFIGURATION;
 EDIT DATABASE 'RACDB' SET PROPERTY 'LogXptMode'='ASYNC';
@@ -43,7 +43,9 @@ EDIT DATABASE 'RACDB_STBY' SET PROPERTY 'LogXptMode'='ASYNC';
 SHOW CONFIGURATION;
 EOF
 
-dgmgrl sys/${SYS_PASSWORD} @/tmp/broker_setup.dgmgrl
+# Local OS authentication avoids exposing the lab SYS credential in ps output.
+# Broker uses the configured password files for member communication.
+dgmgrl / @/tmp/broker_setup.dgmgrl
 
 echo "******************************************************************************"
 echo "Broker configuration enabled! Use 'dgmgrl /' and 'show configuration' to monitor."

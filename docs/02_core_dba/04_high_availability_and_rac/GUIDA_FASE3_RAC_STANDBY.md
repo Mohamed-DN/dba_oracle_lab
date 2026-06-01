@@ -100,6 +100,18 @@ Passo 10: OCR registration + MRP apply      -------------------▶ standby sincr
 ### Percorso da seguire in pratica
 
 1. **Percorso consigliato (default):** esegui la sezione `3.0B` (Golden Image) e poi continua da `3.1`.
+
+Per non perdere il filo, tratta il documento come due blocchi:
+
+| Blocco | Sezioni | Risultato |
+| --- | --- | --- |
+| Build standby | `3.0A` oppure `3.0B` | cluster SE con Grid, ASM e DB Home allineati |
+| Commissioning Data Guard | `3.1` - `3.15` | physical standby con MRP, SRL, lag e gap verificati |
+
+La sezione `3.16` e la reference ADRCI sono appendici di troubleshooting: non
+fanno parte dell'happy path. La Fase 3 termina solo con il pacchetto di
+consegna descritto nella checklist finale; la Fase 4 prende in carico quel
+pacchetto e abilita Broker.
 2. **Percorso alternativo:** usa `3.0A` solo se lo standby era già stato preparato in Fase 2 e devi fare solo smoke-check.
 
 ---
@@ -808,9 +820,19 @@ Per verificare di essere pronto per proseguire con Data Guard, fai questa check-
 
 ---
 
-## 3.2 Configurazione Listener Statico sul Primario
+## 3.2 Registrazione Statica `_DGMGRL` sul Primario
 
-Il Listener dinamico (registrato da PMON) non è sufficiente per Data Guard. Dobbiamo aggiungere un'entry **statica** perché il database standby deve potersi connettere anche quando l'istanza primaria non è completamente aperta.
+Non confondere registrazione dinamica e statica:
+
+- il trasporto redo e `DGConnectIdentifier` usano alias `_DG` raggiungibili da
+  tutti i nodi e, a regime, servizi registrati dinamicamente;
+- il servizio `_AUX` statico serve solo per raggiungere l'auxiliary RMAN in
+  `NOMOUNT`;
+- il servizio `_DGMGRL` statico abilita il restart Broker quando richiesto.
+
+Sul primary predisponi `_DGMGRL`. L'auxiliary si trova sullo standby, quindi
+qui non serve `_AUX`.
+
 
 ### Sul Primario (`rac1`, come utente `grid`)
 
@@ -829,11 +851,6 @@ SID_LIST_LISTENER =
       (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
       (SID_NAME = RACDB1)
     )
-    (SID_DESC =
-      (GLOBAL_DBNAME = RACDB)
-      (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
-      (SID_NAME = RACDB1)
-    )
   )
 ```
 
@@ -849,11 +866,12 @@ lsnrctl status
 # Deve mostrare le entry statiche
 ```
 
-> **Perché il Listener Statico?** Quando il database è in mount (non aperto), il servizio PMON non fa la registrazione dinamica con il listener. Ma Data Guard ha bisogno di connettersi al database in mount per applicare i redo. Il listener statico risolve questo problema.
+Verifica `_DGMGRL` separatamente nella Fase 4 con
+`VALIDATE STATIC CONNECT IDENTIFIER FOR ALL`.
 
 ---
 
-## 3.3 Configurazione Listener Statico sullo Standby
+## 3.3 Registrazioni Statiche `_AUX` e `_DGMGRL` sullo Standby
 
 ### Su `racstby1` (come utente `grid`)
 
@@ -873,14 +891,16 @@ SID_LIST_LISTENER =
       (SID_NAME = RACDB1)
     )
     (SID_DESC =
-      (GLOBAL_DBNAME = RACDB_STBY)
+      (GLOBAL_DBNAME = RACDB_STBY_AUX)
       (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
       (SID_NAME = RACDB1)
     )
   )
 ```
 
-Stesso su `racstby2` con `SID_NAME = RACDB2`.
+Su `racstby2` configura `_DGMGRL` con `SID_NAME = RACDB2`. Non replicare
+`RACDB_STBY_AUX`: durante il duplicate usi una sola auxiliary instance su
+`racstby1`.
 
 ```bash
 srvctl stop listener
@@ -949,6 +969,16 @@ RACDB_STBY_DG =
     )
   )
 
+RACDB_STBY_AUX =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = racstby1.localdomain)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = RACDB_STBY_AUX)
+      (UR=A)
+    )
+  )
+
 RACDB1 =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = rac1.localdomain)(PORT = 1521))
@@ -1003,6 +1033,7 @@ EOF
 
 - `RACDB`, `RACDB_STBY`: connessioni client/app e amministrazione generale (SCAN).
 - `RACDB_DG`, `RACDB_STBY_DG`: redo transport (`LOG_ARCHIVE_DEST_n`) e gap resolution (`FAL_SERVER`).
+- `RACDB_STBY_AUX`: servizio statico temporaneo per RMAN auxiliary `NOMOUNT` sul solo `racstby1`.
 - `RACDB1`, `RACDB2`, `RACDB1_STBY`, `RACDB2_STBY`: connessioni istanza-specifiche (RMAN duplicate, troubleshooting mirato).
 
 > **Perché tnsnames.ora identico ovunque?** Data Guard usa questi alias TNS per comunicare tra primario e standby. Se manca un'entry su un nodo, il redo shipping fallisce.
@@ -1016,6 +1047,7 @@ EOF
 tnsping RACDB1_STBY
 tnsping RACDB_STBY
 tnsping RACDB_STBY_DG
+tnsping RACDB_STBY_AUX
 
 # Da racstby1 verso il primario
 tnsping RACDB1
@@ -1027,6 +1059,7 @@ tnsping RACDB_DG
 # Test SQL reale (piu affidabile di tnsping)
 sqlplus '/@RACDB_STBY as sysdba'
 sqlplus '/@RACDB_STBY_DG as sysdba'
+sqlplus '/@RACDB_STBY_AUX as sysdba'
 sqlplus '/@RACDB as sysdba'
 sqlplus '/@RACDB_DG as sysdba'
 ```
@@ -1826,16 +1859,16 @@ show parameter cluster_database;
 exit
 EOF
 
-lsnrctl status | grep -Ei "RACDB1|RACDB_STBY|UNKNOWN|READY"
+lsnrctl status | grep -Ei "RACDB_STBY_AUX|RACDB_STBY_DGMGRL|UNKNOWN|READY"
 
-sqlplus '/@RACDB1_STBY as sysdba'
+sqlplus '/@RACDB_STBY_AUX as sysdba'
 ```
 
 Atteso:
 
 - `v$instance.status = STARTED`
 - `cluster_database = FALSE` durante la fase di duplicate
-- login remoto su `RACDB1_STBY` riuscito
+- login remoto su `RACDB_STBY_AUX` riuscito
 
 Se il login remoto fallisce con:
 
@@ -1852,16 +1885,16 @@ Se il login remoto fallisce con:
 
 1. **Sui Nodi Standby**: Crea le cartelle.
 ```bash
-# Su entrmabi i nodi standby (m24-stby01 e m24-stby02)
-mkdir -p /opt/oracle/admin/M24/wallet/tde
-chmod 700 /opt/oracle/admin/M24/wallet/tde
+# Su entrambi i nodi standby
+mkdir -p <KEYSTORE_DIR>
+chmod 700 <KEYSTORE_DIR>
 ```
 
 2. **Copia dal Primario**:
 ```bash
-# Dal nodo 1 del primary
-scp /opt/oracle/admin/SOLE/wallet/tde/* oracle@m24-stby01:/opt/oracle/admin/M24/wallet/tde/
-scp /opt/oracle/admin/SOLE/wallet/tde/* oracle@m24-stby02:/opt/oracle/admin/M24/wallet/tde/
+# Dal nodo 1 del primary, usando il canale sicuro approvato
+scp <PRIMARY_KEYSTORE_DIR>/* oracle@racstby1:<KEYSTORE_DIR>/
+scp <PRIMARY_KEYSTORE_DIR>/* oracle@racstby2:<KEYSTORE_DIR>/
 ```
 
 3. **Configurazione (sqlnet.ora o WALLET_ROOT)**: Assicurati che su tutti i nodi standby la configurazione punti a questa cartella, altrimenti il database non si aprirà per l'apply dei redo.
@@ -1895,27 +1928,28 @@ La sequenza corretta e':
 ```bash
 # Da racstby1 come oracle
 # Qui l'auxiliary e' solo la prima istanza standby
-rman TARGET /@RACDB AUXILIARY /@RACDB1_STBY
+rman TARGET /@RACDB_DG AUXILIARY /@RACDB_STBY_AUX
 ```
 
 Nota importante: per automazioni e processi in background configura un wallet SEPS.
-Gli alias `/@RACDB` e `/@RACDB1_STBY` non espongono segreti nella command line.
+Gli alias `/@RACDB_DG` e `/@RACDB_STBY_AUX` non espongono segreti nella
+command line.
 
 ```bash
-rman TARGET "/@RACDB" AUXILIARY "/@RACDB1_STBY"
+rman TARGET "/@RACDB_DG" AUXILIARY "/@RACDB_STBY_AUX"
 ```
 
 Se vuoi evitare di lasciare la password nella command history, entra prima in RMAN e poi fai le connect:
 
 ```bash
 rman
-RMAN> CONNECT TARGET /@RACDB;
-RMAN> CONNECT AUXILIARY /@RACDB1_STBY;
+RMAN> CONNECT TARGET /@RACDB_DG;
+RMAN> CONNECT AUXILIARY /@RACDB_STBY_AUX;
 ```
 
 > **Per database grandi (>50 GB)**, lancia con `nohup` o in un `screen`/`tmux` per evitare che un timeout SSH interrompa l'operazione:
 > ```bash
-> nohup rman TARGET /@RACDB AUXILIARY /@RACDB1_STBY <<EOF > /tmp/duplicate.log 2>&1 &
+> nohup rman TARGET /@RACDB_DG AUXILIARY /@RACDB_STBY_AUX <<EOF > /tmp/duplicate.log 2>&1 &
 > DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE DORECOVER ...
 > EOF
 > tail -f /tmp/duplicate.log   # Per monitorare il progresso
@@ -2312,6 +2346,39 @@ sqlplus -s / as sysdba <<< "SELECT thread#, MAX(sequence#) AS last_received, MAX
 sqlplus -s / as sysdba <<< "SELECT name, value, unit FROM v\$dataguard_stats WHERE name IN ('transport lag','apply lag','apply finish time');"
 ```
 
+### 3.15.1 Pacchetto di Consegna alla Fase 4
+
+La Fase 3 e' chiusa solo quando il trasporto manuale e il Redo Apply sono
+operativi. Salva questi output nell'evidence pack:
+
+```text
+srvctl status database -d RACDB_STBY -v
+srvctl config database -d RACDB_STBY
+asmcmd lsdg
+tnsping RACDB_DG
+tnsping RACDB_STBY_DG
+```
+
+```sql
+SELECT name, db_unique_name, database_role, open_mode FROM v$database;
+SELECT thread#, group#, bytes / 1024 / 1024 AS mb, status FROM v$standby_log;
+SELECT name, value, unit FROM v$dataguard_stats
+WHERE name IN ('transport lag', 'apply lag', 'apply finish time');
+SELECT thread#, low_sequence#, high_sequence# FROM v$archive_gap;
+SHOW PARAMETER spfile
+SHOW PARAMETER log_archive_dest
+SHOW PARAMETER fal_server
+```
+
+Prima di passare alla Fase 4:
+
+- conserva il valore manuale dei `LOG_ARCHIVE_DEST_n` remoti per il rollback;
+- verifica che `_DG` funzioni da entrambi i siti;
+- rimuovi il servizio statico temporaneo `RACDB_STBY_AUX` se il duplicate e'
+  concluso e non prevedi un nuovo duplicate;
+- conserva `_DGMGRL` e validalo separatamente durante il commissioning Broker;
+- non abilitare FSFO: appartiene alla Fase 4B.
+
 ---
 
 ## 3.16 Troubleshooting Fase 3
@@ -2488,7 +2555,8 @@ sqlplus '/@RACDB_STBY_DG as sysdba'
 
 Se il test SQL fallisce:
 1. ricontrolla `tnsnames.ora` con `ADDRESS_LIST` su `racstby1` + `racstby2`;
-2. verifica `listener.ora` statico su entrambi gli standby (`GLOBAL_DBNAME = RACDB_STBY`);
+2. verifica `listener.ora`: `_AUX` statico su `racstby1` durante il duplicate e
+   `_DGMGRL` statico sui nodi che devono supportare restart Broker;
 3. riavvia listener standby:
 
 ```bash

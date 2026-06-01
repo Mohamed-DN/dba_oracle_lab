@@ -45,6 +45,7 @@ PRIMARY                                 PHYSICAL STANDBY
 | Decisione TDE | `<SI/NO - RIFERIMENTO>` |
 | Metodo creazione primary | `<DBCA_SCRIPT_REVIEW/GOLDEN_RMAN>` |
 | Trasporto approvato | `<SYNC_AFFIRM/FASTSYNC_NOAFFIRM>` |
+| Broker configuration name | `DR_M24SHAMSC_CONF` |
 
 ## Gate Go/No-Go
 
@@ -116,8 +117,9 @@ Conferma:
 | `ARCHIVELOG` e `FORCE LOGGING` | `<OK/KO>` |
 | OMF DATA/FRA | `<OK/KO>` |
 | password file trasferito in modo sicuro | `<OK/KO>` |
-| TNS `M24SHAMSPEC_DG`, `M24SHAMSSEC_DG` | `<OK/KO>` |
-| static listener su `1531/TCP` | `<OK/KO>` |
+| TNS dinamici `M24SHAMSPEC_DG`, `M24SHAMSSEC_DG` | `<OK/KO>` |
+| TNS auxiliary temporaneo `M24SHAMSSEC_AUX` | `<OK/KO>` |
+| listener `1531/TCP`, static `_AUX` e `_DGMGRL` distinti | `<OK/KO>` |
 | cinque SRL da `4G` o sizing approvato sul primary | `<OK/KO>` |
 
 ### 4. Duplicate standby
@@ -125,7 +127,7 @@ Conferma:
 Avvia auxiliary `M24SHAMSSEC` in `NOMOUNT`, quindi:
 
 ```bash
-rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
+rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
 ```
 
 Esegui lo script `DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE`
@@ -147,25 +149,52 @@ ALTER DATABASE OPEN READ ONLY;
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ```
 
-Atteso:
+Atteso nel percorso Data Guard base:
 
 ```sql
 SELECT open_mode, database_role FROM v$database;
 ```
 
 ```text
-READ ONLY WITH APPLY | PHYSICAL STANDBY
+MOUNTED | PHYSICAL STANDBY
 ```
 
+Con Active Data Guard autorizzato l'atteso diventa
+`READ ONLY WITH APPLY | PHYSICAL STANDBY`.
+
 ### 6. Broker e protection mode
+
+Prima salva l'inventario `LOG_ARCHIVE_DEST_n` e il relativo rollback SQL.
+Rimuovi in modo mirato le sole destinazioni redo remote manuali incompatibili:
+sul primary prima di `CREATE CONFIGURATION`, sullo standby prima di
+`ADD DATABASE`. Non azzerare FRA, `local_listener`, `remote_listener` o
+`listener_networks`.
 
 Da `dgmgrl`, con autenticazione interattiva o wallet:
 
 ```text
+CREATE CONFIGURATION 'DR_M24SHAMSC_CONF' AS
+  PRIMARY DATABASE IS 'M24SHAMSPEC'
+  CONNECT IDENTIFIER IS 'M24SHAMSPEC_DG';
+
+ADD DATABASE 'M24SHAMSSEC' AS
+  CONNECT IDENTIFIER IS 'M24SHAMSSEC_DG'
+  MAINTAINED AS PHYSICAL;
+
+ENABLE CONFIGURATION;
 SHOW CONFIGURATION;
-VALIDATE DATABASE M24SHAMSPEC;
-VALIDATE DATABASE M24SHAMSSEC;
+SHOW DATABASE VERBOSE 'M24SHAMSPEC';
+SHOW DATABASE VERBOSE 'M24SHAMSSEC';
+VALIDATE DATABASE 'M24SHAMSPEC';
+VALIDATE DATABASE 'M24SHAMSSEC';
+VALIDATE DATABASE 'M24SHAMSPEC' SPFILE;
+VALIDATE DATABASE 'M24SHAMSSEC' SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
+
+`DR_M24SHAMSC_CONF` deriva dal `DB_NAME=M24SHAMS` e dall'ambiente `C`:
+non contiene il sito PE o SE e resta invariato dopo lo switchover.
 
 Applica il profilo approvato:
 
@@ -228,6 +257,8 @@ FSFO resta fuori dal change. Pianifica la
 | --- | --- |
 | `SHOW CONFIGURATION` senza errori bloccanti | `<OK/KO>` |
 | `VALIDATE DATABASE` primary e standby | `<OK/KO>` |
+| `VALIDATE DATABASE ... SPFILE` primary e standby | `<OK/KO>` |
+| network e static connect identifier validati | `<OK/KO>` |
 | transport lag e apply lag entro soglia | `<OK/KO>` |
 | standby `MOUNTED` oppure `READ ONLY WITH APPLY` autorizzato | `<OK/KO>` |
 | servizio `M24SHAMSC_PRY` sul primary | `<OK/KO>` |
@@ -265,7 +296,7 @@ improvvisare un failover.
 
 | Sintomo | Azione iniziale |
 | --- | --- |
-| Auxiliary irraggiungibile | `lsnrctl status LISTENER_DG`, `tnsping M24SHAMSSEC_DG` |
+| Auxiliary irraggiungibile | `lsnrctl status LISTENER_DG`, `tnsping M24SHAMSSEC_AUX` |
 | RMAN duplicate fallisce | alert log, password file, NOMOUNT, ASM, rete |
 | Apply lag | `V$DATAGUARD_STATS`, `V$MANAGED_STANDBY`, alert log |
 | Wallet chiuso | runbook TDE e copia keystore approvata |

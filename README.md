@@ -32,6 +32,10 @@
 - 🤖 **Automazione/IaC:** [Ansible](./automation/README.md)
 - 🧭 **Indice totale unico:** [docs/README.md](./docs/README.md)
 
+Convenzione Data Guard Broker: usa `DR_<DB_NAME><ENV>_CONF`, stabile dopo
+switchover e senza sito PE o SE nel nome. Esempi: `DR_RACDB_CONF` per il core
+lab e `DR_M24SHAMSC_CONF` per SHAMS collaudo.
+
 ---
 
 ## 🗺️ Mappa del Repository (Ecosistema Enterprise)

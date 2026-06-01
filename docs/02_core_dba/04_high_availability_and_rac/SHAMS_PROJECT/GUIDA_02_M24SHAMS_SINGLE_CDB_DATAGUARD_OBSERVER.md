@@ -37,7 +37,26 @@ della CDB, non di una singola PDB.
 | TDE | `<SI/NO - decisione Security>` |
 | RMAN catalog | `<RMAN_CATALOG_TNS>` |
 
+### Scheda sostituzioni per riuso
+
+| Oggetto | Esempio collaudo | Valore approvato |
+| --- | --- | --- |
+| `DB_NAME` | `M24SHAMS` | `<DB_NAME>` |
+| Ambiente | `C` | `<ENV>` |
+| Primary / standby `DB_UNIQUE_NAME` | `M24SHAMSPEC` / `M24SHAMSSEC` | `<PRIMARY_UNIQUE_NAME>` / `<STANDBY_UNIQUE_NAME>` |
+| Broker configuration | `DR_M24SHAMSC_CONF` | `DR_<DB_NAME><ENV>_CONF` |
+| PDB | `M24SHAMSC_APP` | `<PDB_NAME>` |
+| Servizi | `M24SHAMSC_PRY` / `M24SHAMSC_RO` | `<PRIMARY_SERVICE>` / `<STANDBY_RO_SERVICE>` |
+| ASM | `+M24SHAMS_DATA` / `+M24SHAMS_FRA` | `<ASM_DATA>` / `<ASM_FRA>` |
+
 ## Procedura operativa
+
+### 0. Prepara host e inventario
+
+Completa l'[allegato host single](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md)
+su PE e SE. Registra host, IP DG, DNS, NTP, RU Grid/DB, diskgroups, FRA,
+`ORACLE_HOME`, `GRID_HOME`, keystore e recovery catalog. Non procedere se RU,
+rete o storage non sono allineati.
 
 ### 1. Creazione primary CDB
 
@@ -103,11 +122,17 @@ Per single instance usa solo `THREAD 1`. Applica sizing e query della baseline.
 Con quattro online redo group da `4G`, predisponi almeno cinque SRL da `4G` su
 primary e standby.
 
-Configura alias e static listener:
+Se sostituisci redo esistenti, aggiungi prima i nuovi gruppi OMF, esegui log
+switch controllati e rimuovi soltanto i gruppi precedenti `INACTIVE`. Non
+eliminare gruppi `CURRENT` o `ACTIVE`.
+
+Configura responsabilità distinte:
 
 ```text
-M24SHAMSPEC_DG -> <PRIMARY_DG_FQDN>:1531
-M24SHAMSSEC_DG -> <STANDBY_DG_FQDN>:1531
+M24SHAMSPEC_DG  -> redo, FAL e DGConnectIdentifier
+M24SHAMSSEC_DG  -> redo, FAL e DGConnectIdentifier
+M24SHAMSSEC_AUX -> static listener temporaneo per RMAN NOMOUNT
+*_DGMGRL        -> restart Broker quando richiesto
 ```
 
 Se TDE e' richiesto, distribuisci il keystore allo standby prima del duplicate
@@ -115,10 +140,14 @@ e verifica root e PDB.
 
 ### 4. RMAN duplicate dello standby
 
-Avvia auxiliary `M24SHAMSSEC` in `NOMOUNT`, quindi usa prompt interattivo:
+Sul server SE crea `<ORACLE_BASE>/admin/M24SHAMSSEC/adump`, prepara un PFILE
+minimo con `DB_NAME`, `DB_UNIQUE_NAME`, destinazioni ASM, FRA e
+`AUDIT_FILE_DEST`, quindi avvia auxiliary `M24SHAMSSEC` in `NOMOUNT`.
+
+Usa prompt interattivo:
 
 ```bash
-rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
+rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
 ```
 
 ```rman
@@ -140,6 +169,11 @@ RUN {
 ```
 
 Usa `NOFILENAMECHECK` solo su storage realmente separato.
+
+Dopo il duplicate crea lo SPFILE in ASM, lascia nel DB Home il pointer file,
+registra primary e standby con `srvctl add database` su Oracle Restart e
+prova `srvctl stop database` / `srvctl start database`. Non usare
+`srvctl add instance`: appartiene a RAC.
 
 ### 5. PDB e Active Data Guard
 
@@ -191,10 +225,15 @@ ORDER BY con_id, name;
 
 ### 7. Broker, switchover e Observer
 
+Prima del Broker salva parametri e rollback SQL. Rimuovi in modo mirato le
+destinazioni redo remote manuali incompatibili: sul primary prima di
+`CREATE CONFIGURATION`, sullo standby prima di `ADD DATABASE`. Non azzerare
+parametri di rete o destinazioni FRA.
+
 Configura Broker:
 
 ```text
-CREATE CONFIGURATION M24SHAMS_DG AS
+CREATE CONFIGURATION 'DR_M24SHAMSC_CONF' AS
   PRIMARY DATABASE IS M24SHAMSPEC
   CONNECT IDENTIFIER IS M24SHAMSPEC_DG;
 
@@ -205,9 +244,15 @@ ADD DATABASE M24SHAMSSEC AS
 ENABLE CONFIGURATION;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
-Esegui switchover e switchback. Dopo stabilizzazione completa
+`DR_M24SHAMSC_CONF` usa il `DB_NAME` condiviso e l'ambiente `C`, quindi resta
+stabile dopo switchover. Esegui switchover e switchback, verificando CDB, PDB,
+servizio `_PRY`, eventuale `_RO`, lag e apply. Dopo stabilizzazione completa
 l'[Observer FSFO](./GUIDA_05_OBSERVER_FSFO_PEYTECH.md).
 
 ## Validazione finale

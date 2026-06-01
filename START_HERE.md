@@ -63,6 +63,10 @@ Scegli il caso:
 | Failover e reinstate | [Failover + Reinstate](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FAILOVER_E_REINSTATE.md) |
 | Flashback database | [Flashback Database](./docs/02_core_dba/04_high_availability_and_rac/GUIDA_FLASHBACK_DATABASE.md) |
 
+Convenzione Broker: usa `DR_<DB_NAME><ENV>_CONF`, derivato dal `DB_NAME`
+condiviso e stabile dopo switchover. Nel core lab e' `DR_RACDB_CONF`; nel
+collaudo SHAMS e' `DR_M24SHAMSC_CONF`.
+
 ## Se Devi Fare Backup, Restore O Clone
 
 Apri:

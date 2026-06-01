@@ -158,7 +158,7 @@ DGMGRL> SHOW CONFIGURATION;
 ```
 
 ```
-Configuration - dg_config
+Configuration - DR_RACDB_CONF
   Protection Mode: MaxPerformance
   Members:
   RACDB_STBY - Primary database     ← ORA È IL PRIMARY!

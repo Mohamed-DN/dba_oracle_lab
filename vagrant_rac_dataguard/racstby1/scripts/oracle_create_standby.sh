@@ -50,7 +50,12 @@ echo "**************************************************************************
 echo "Executing RMAN Duplicate For Standby from Active Database."
 echo "******************************************************************************"
 
-rman target sys/${SYS_PASSWORD}@${PRIMARY_UNIQUE_NAME} auxiliary sys/${SYS_PASSWORD} <<EOF
+# Keep the lab credential out of the operating-system process list. This
+# legacy Vagrant automation still reads it from the private lab env file and
+# passes it to RMAN over stdin; enterprise procedures use prompt or wallet.
+rman <<EOF
+connect target sys/${SYS_PASSWORD}@${PRIMARY_UNIQUE_NAME};
+connect auxiliary sys/${SYS_PASSWORD};
 run {
   allocate channel prmy1 type disk;
   allocate channel prmy2 type disk;

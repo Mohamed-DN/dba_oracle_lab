@@ -8,10 +8,10 @@
 2. Check log listeners per bombardamento da parte di Microservizi / Application 
 
    -- vedere in generale quale servizio bombarda di piu' e capire perche non viene utilizzato un ConnPOol o perche si ritrova a aprire e chiudere conn in continuazione
-   tail -1000 /u01/app/orabase/diag/tnslsnr/poddb01-sec-01/listener/trace/listener.log | grep SERVICE_NAME | cut -f 7 -d '=' | cut -f 1 -d ")"  | sort -n | uniq -c
+   tail -1000 /u01/app/orabase/diag/tnslsnr/<STANDBY_DB_HOST>/listener/trace/listener.log | grep SERVICE_NAME | cut -f 7 -d '=' | cut -f 1 -d ")"  | sort -n | uniq -c
 
      11 oracle
-      7 poddb01-sec-01.dcse.cartasi.local
+      7 <STANDBY_DB_HOST>
       9 PVAS1SEC
      12 root
     295 YAPP_RO

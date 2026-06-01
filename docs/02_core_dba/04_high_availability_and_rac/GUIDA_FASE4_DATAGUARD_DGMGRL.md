@@ -172,85 +172,134 @@ Questa normalizzazione e coerente con la Fase 3:
 
 ---
 
-## 4.2 Creazione della Configurazione Broker
+## 4.2 Presa in Carico Controllata da Parte del Broker
 
-Se in passato hai gia creato una configurazione Broker (test precedenti), pulisci prima di ricreare:
+La Fase 3 ha configurato temporaneamente il trasporto redo manuale per
+dimostrare che standby e apply funzionano prima di introdurre il Broker. Ora
+trasferisci la gestione al Broker senza cancellare parametri alla cieca.
+
+### 4.2.1 Naming obbligatorio della configurazione
+
+Usa sempre:
+
+```text
+DR_<DB_NAME><ENV_OPZIONALE>_CONF
+```
+
+Il nome deriva dal `DB_NAME` condiviso, non dal `DB_UNIQUE_NAME` del sito
+primary. In questo lab il nome e' `DR_RACDB_CONF`. Resta stabile dopo
+switchover e deve rispettare il limite Oracle di 30 byte.
+
+### 4.2.2 Salva evidenze e rollback SQL
+
+Prima del passaggio di ownership esegui su primary e standby:
+
+```sql
+SET LINES 240 PAGES 200
+COL name FORMAT A28
+COL value FORMAT A180
+
+SELECT name, value
+FROM v$parameter
+WHERE name LIKE 'log_archive_dest_%'
+   OR name IN ('log_archive_config', 'fal_server', 'fal_client')
+ORDER BY name;
+```
+
+Conserva l'output nell'evidence pack. Registra separatamente i comandi SQL
+necessari per ripristinare i valori manuali se il commissioning Broker deve
+essere annullato.
+
+### 4.2.3 Rimuovi solo le destinazioni remote incompatibili
+
+Secondo la reference Oracle 19c:
+
+- prima di `CREATE CONFIGURATION`, sul primary devono essere rimosse le
+  destinazioni remote redo transport prive di `NOREGISTER`;
+- prima di `ADD DATABASE`, sullo standby devono essere rimosse le
+  destinazioni remote redo transport;
+- la destinazione locale FRA non deve essere rimossa;
+- non devi resettare `LOCAL_LISTENER`, `REMOTE_LISTENER`,
+  `LISTENER_NETWORKS` o altri parametri di rete.
+
+Individua il parametro remoto con la query precedente. Nel lab e'
+normalmente `LOG_ARCHIVE_DEST_2`, ma verifica sempre prima di eseguire:
+
+```sql
+-- Esegui sul membro corretto solo dopo aver salvato il valore precedente.
+-- Sostituisci <DEST_N> con il parametro remoto verificato.
+ALTER SYSTEM RESET <DEST_N> SCOPE=BOTH SID='*';
+```
+
+> [!WARNING]
+> Non copiare un reset indiscriminato su entrambi i siti. La rimozione e'
+> mirata al parametro remoto incompatibile e avviene nel momento corretto:
+> primary prima di `CREATE CONFIGURATION`, standby prima di `ADD DATABASE`.
+
+### 4.2.4 Crea e abilita la configurazione
+
+Connettiti localmente dal nodo primary come utente `oracle`:
 
 ```bash
-dgmgrl /@RACDB
-SHOW CONFIGURATION;
--- Se esiste una configurazione precedente:
+dgmgrl /
+```
+
+Se esiste una configurazione di test precedente, raccogli prima
+`SHOW CONFIGURATION VERBOSE`, poi rimuovila solo se il change lo prevede:
+
+```text
 DISABLE CONFIGURATION;
 REMOVE CONFIGURATION;
 ```
 
-Connettiti a `dgmgrl` dal **nodo primario**:
+Crea la configurazione usando gli alias `_DG`, gia' testati da tutti i nodi:
 
-```bash
-# Come oracle su rac1
-dgmgrl /@RACDB
-```
+```text
+CREATE CONFIGURATION 'DR_RACDB_CONF' AS
+  PRIMARY DATABASE IS 'RACDB'
+  CONNECT IDENTIFIER IS 'RACDB_DG';
 
-```
--- Crea la configurazione
-CREATE CONFIGURATION dg_config AS
-  PRIMARY DATABASE IS RACDB
-  CONNECT IDENTIFIER IS RACDB;
-
--- Aggiungi il database standby
-ADD DATABASE RACDB_STBY AS
-  CONNECT IDENTIFIER IS RACDB_STBY
+ADD DATABASE 'RACDB_STBY' AS
+  CONNECT IDENTIFIER IS 'RACDB_STBY_DG'
   MAINTAINED AS PHYSICAL;
 
--- Abilita la configurazione
 ENABLE CONFIGURATION;
 ```
 
-> [!WARNING] 
-> **Troubleshooting ORA-16698**
-> Se quando esegui `ENABLE CONFIGURATION` ricevi l'errore:
-> `Error: ORA-16698: member has a LOG_ARCHIVE_DEST_n parameter with SERVICE attribute set`
-> **Significa che avevi configurato manualmente la spedizione dei log in Fase 3!** Il Broker pretende di avere il controllo esclusivo su questi parametri. Per risolvere, esci da dgmgrl, entra in SQL*Plus come sysdba (sia su primario che su standby) e azzera il parametro di destinazione (solitamente il 2):
-> ```sql
-> ALTER SYSTEM SET log_archive_dest_2='' SCOPE=BOTH;
-> ```
-> Fatto questo, rientra in `dgmgrl` e lancia di nuovo `ENABLE CONFIGURATION;`.
+`PRIMARY DATABASE IS` e `ADD DATABASE` usano i rispettivi
+`DB_UNIQUE_NAME`. Il nome `DR_RACDB_CONF` identifica invece l'intera
+configurazione.
 
+### 4.2.5 Verifica proprietà di connessione
 
+I tre concetti non sono intercambiabili:
 
-> **Spiegazione:**
-> - `CREATE CONFIGURATION`: Definisce il nome della configurazione DG.
-> - `PRIMARY DATABASE IS RACDB`: Dice al Broker quale è il primario.
-> - `CONNECT IDENTIFIER IS RACDB`: Usa l'alias TNS `RACDB` per connettersi.
-> - `ADD DATABASE ... MAINTAINED AS PHYSICAL`: Aggiunge lo standby come Physical Standby (non Logical).
-> - `ENABLE CONFIGURATION`: Attiva tutto. Da questo momento, Broker gestisce il redo shipping.
+| Oggetto | Uso |
+| --- | --- |
+| alias `_DG` | redo transport, FAL e `DGConnectIdentifier` raggiungibile da tutti i membri |
+| servizio `_AUX` | registrazione statica temporanea per RMAN auxiliary `NOMOUNT` |
+| servizio `_DGMGRL` | restart Broker quando richiesto; validare separatamente |
 
-### 4.2a Best practice Broker: DGConnectIdentifier esplicito
+Verifica e, se necessario, normalizza `DGConnectIdentifier`:
 
-In RAC, e buona pratica usare alias dedicati al trasporto redo anche nel Broker.
+```text
+SHOW DATABASE VERBOSE 'RACDB';
+SHOW DATABASE VERBOSE 'RACDB_STBY';
 
-```bash
-dgmgrl /@RACDB
+EDIT DATABASE 'RACDB' SET PROPERTY DGConnectIdentifier='RACDB_DG';
+EDIT DATABASE 'RACDB_STBY' SET PROPERTY DGConnectIdentifier='RACDB_STBY_DG';
+
+VALIDATE DATABASE 'RACDB';
+VALIDATE DATABASE 'RACDB_STBY';
+VALIDATE DATABASE 'RACDB' SPFILE;
+VALIDATE DATABASE 'RACDB_STBY' SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
-```
-DGMGRL> SHOW DATABASE VERBOSE RACDB;
-DGMGRL> SHOW DATABASE VERBOSE RACDB_STBY;
-```
-
-Verifica il valore di `DGConnectIdentifier`. Se non e coerente con gli alias `_DG`, impostalo esplicitamente:
-
-```
-DGMGRL> EDIT DATABASE RACDB SET PROPERTY DGConnectIdentifier='RACDB_DG';
-DGMGRL> EDIT DATABASE RACDB_STBY SET PROPERTY DGConnectIdentifier='RACDB_STBY_DG';
-```
-
-Poi riesegui:
-
-```
-DGMGRL> VALIDATE DATABASE RACDB;
-DGMGRL> VALIDATE DATABASE RACDB_STBY;
-```
+Da questo punto modifica trasporto redo e protection mode tramite DGMGRL.
+Non tornare a editare direttamente `LOG_ARCHIVE_DEST_n` durante la gestione
+ordinaria del Broker.
 
 ---
 
@@ -262,7 +311,7 @@ DGMGRL> SHOW CONFIGURATION;
 
 Output atteso:
 ```
-Configuration - dg_config
+Configuration - DR_RACDB_CONF
 
   Protection Mode: MaxPerformance
   Members:
@@ -520,7 +569,7 @@ DGMGRL> SHOW CONFIGURATION;
 ```
 
 ```
-Configuration - dg_config
+Configuration - DR_RACDB_CONF
   Members:
   RACDB_STBY  - Primary database    <-- Ora è lui il primario!
     RACDB       - Physical standby database
@@ -656,7 +705,17 @@ DGMGRL> SHOW DATABASE RACDB_STBY;
 -- Transport Lag: 0 seconds
 -- Apply Lag: 0 seconds o pochi secondi
 -- Database Status: SUCCESS
+
+DGMGRL> VALIDATE DATABASE RACDB;
+DGMGRL> VALIDATE DATABASE RACDB_STBY;
+DGMGRL> VALIDATE DATABASE RACDB SPFILE;
+DGMGRL> VALIDATE DATABASE RACDB_STBY SPFILE;
+DGMGRL> VALIDATE NETWORK CONFIGURATION FOR ALL;
+DGMGRL> VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
+
+Conserva output, proprietà Broker e rollback SQL nel pacchetto di evidenze.
+La consegna alla Fase 4B avviene solo dopo switchover e switchback riusciti.
 
 ## Troubleshooting Rapido
 
