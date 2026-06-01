@@ -47,7 +47,7 @@ Usare questa guida come ripasso tecnico strutturato per colloqui, supporto opera
    - [Runbook operativi](../../01_operations/02_runbooks_incidenti/README.md)
    - [Script SQL pronti](../../01_operations/03_scripts_pronti/README.md)
 3. Per comandi veloci usa cheat sheet:
-   - [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
+   - [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md)
    - [CS_DGMGRL.md](../../01_operations/01_cheat_sheets/CS_DGMGRL.md)
    - [CS_GOLDENGATE.md](../../01_operations/01_cheat_sheets/CS_GOLDENGATE.md)
 

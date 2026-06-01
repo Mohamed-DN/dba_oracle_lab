@@ -216,6 +216,7 @@ allocate channel ch1 device type 'sbt' PARMS="SBT_LIBRARY=oracle.disksbt,BLKSIZE
 allocate channel ch2 device type 'sbt' PARMS="SBT_LIBRARY=oracle.disksbt,BLKSIZE=131072,ENV=(BACKUP_DIR=/mnt/lestrade/nfs1/ts10_backups)";
 allocate channel ch3 device type 'sbt' PARMS="SBT_LIBRARY=oracle.disksbt,BLKSIZE=131072,ENV=(BACKUP_DIR=/mnt/lestrade/nfs1/ts10_backups)";
 backup incremental level=1 format '%d_T%T_db_s%s_p%p_t%t' database filesperset 4 TAG LVL_1_BCT_2008_02_25_21_52;
+-- Esempio community storico, non copiabile in produzione: incorpora cleanup.
 backup format '%d_T%T_arch_s%s_p%p_t%t' archivelog all filesperset 4 TAG LVL_1_BCT_2008_02_25_21_52 delete input;
 }
 

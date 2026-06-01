@@ -22,7 +22,7 @@ Se un restore non parte, controlla catalogo, piece disponibili, archivelog e spa
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (questa guida - riferimento storico).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
-> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
+> - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
 
 > [!WARNING]
 > **Questa guida è stata sostituita dalla versione molto più dettagliata nella Fase 5.**
@@ -38,7 +38,8 @@ Questa guida e pensata per uso laboratorio: include configurazione, automazione,
 ## 0) Regole di sicurezza del lab
 
 - Esegui i test distruttivi prima su `dbtarget` o su clone.
-- Prima di ogni test importante crea snapshot VM VirtualBox.
+- Prima di ogni test distruttivo crea un backup RMAN verificato o un backup
+  freddo coerente. Non usare snapshot di VM attive con dischi ASM condivisi.
 - Mantieni un diario test (`data, scenario, risultato, tempo recovery`).
 - Se fai test su RAC primary/standby, isola una finestra lab dedicata.
 
@@ -109,7 +110,7 @@ CONFIGURE CONTROLFILE AUTOBACKUP ON;
 CONFIGURE BACKUP OPTIMIZATION ON;
 
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
-CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 
 CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U';
 CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+RECO/%F';
@@ -183,10 +184,9 @@ rman target / log="$LOGFILE" <<'RMAN'
 RUN {
   SQL "ALTER SYSTEM ARCHIVE LOG CURRENT";
   BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 DATABASE TAG 'WK_L0_STBY';
-  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES DELETE INPUT TAG 'ARCH_1H';
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES TAG 'ARCH_1H';
   BACKUP CURRENT CONTROLFILE TAG 'CTRL_SPFILE_DAILY';
   BACKUP SPFILE TAG 'CTRL_SPFILE_DAILY';
-  DELETE NOPROMPT OBSOLETE;
 }
 RMAN
 ```
@@ -208,7 +208,7 @@ rman target / log="$LOGFILE" <<'RMAN'
 RUN {
   SQL "ALTER SYSTEM ARCHIVE LOG CURRENT";
   BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE TAG 'DY_L1_STBY';
-  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES DELETE INPUT TAG 'ARCH_1H';
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES TAG 'ARCH_1H';
   BACKUP CURRENT CONTROLFILE TAG 'CTRL_SPFILE_DAILY';
   BACKUP SPFILE TAG 'CTRL_SPFILE_DAILY';
 }
@@ -231,12 +231,12 @@ LOGFILE="$LOGDIR/rman_arch_$(date +%F_%H%M).log"
 rman target / log="$LOGFILE" <<'RMAN'
 RUN {
   SQL "ALTER SYSTEM ARCHIVE LOG CURRENT";
-  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES DELETE INPUT TAG 'ARCH_1H';
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES TAG 'ARCH_1H';
 }
 RMAN
 ```
 
-### 7.4 Maintenance + validate
+### 7.4 Diagnostica metadata + validate
 
 ```bash
 #!/bin/bash
@@ -252,14 +252,18 @@ LOGFILE="$LOGDIR/rman_maint_$(date +%F_%H%M).log"
 rman target / log="$LOGFILE" <<'RMAN'
 CROSSCHECK BACKUP;
 CROSSCHECK ARCHIVELOG ALL;
-DELETE NOPROMPT EXPIRED BACKUP;
-DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-DELETE NOPROMPT OBSOLETE;
+LIST EXPIRED BACKUP;
+LIST EXPIRED ARCHIVELOG ALL;
+REPORT OBSOLETE;
 RESTORE DATABASE PREVIEW SUMMARY;
 RESTORE DATABASE VALIDATE;
 BACKUP VALIDATE CHECK LOGICAL DATABASE;
 RMAN
 ```
+
+Il cleanup fisico e' una fase separata: prima verifica deletion policy, spazio,
+transport lag, apply lag e `V$ARCHIVE_GAP` sullo standby. Non incorporare
+cancellazioni nel job di backup o validate.
 
 ### 7.5 Cron esempio
 
@@ -469,8 +473,8 @@ ALTER DATABASE OPEN RESETLOGS;
 ### 11.1 Duplicate per clone/test
 
 ```rman
-CONNECT TARGET sys@RACDB;
-CONNECT AUXILIARY sys@CLONEDB;
+CONNECT TARGET /@RACDB;
+CONNECT AUXILIARY /@CLONEDB;
 
 DUPLICATE TARGET DATABASE TO CLONEDB
   FROM ACTIVE DATABASE
@@ -483,8 +487,8 @@ DUPLICATE TARGET DATABASE TO CLONEDB
 ### 11.2 Duplicate for standby
 
 ```rman
-CONNECT TARGET sys@RACDB;
-CONNECT AUXILIARY sys@RACDB_STBY;
+CONNECT TARGET /@RACDB;
+CONNECT AUXILIARY /@RACDB_STBY;
 
 DUPLICATE TARGET DATABASE FOR STANDBY
   FROM ACTIVE DATABASE
@@ -646,7 +650,8 @@ Esito atteso: backup corretti anche con ruoli invertiti.
 ## 15) Troubleshooting rapido
 
 - `ORA-19809: limit exceeded for recovery files`
-  - aumenta FRA o esegui cleanup (`DELETE OBSOLETE`, `DELETE EXPIRED`).
+  - aumenta FRA se lo storage lo consente oppure applica cleanup autorizzato
+    dopo il gate Data Guard.
 - `RMAN-06059: expected archived log not found`
   - `CROSSCHECK ARCHIVELOG ALL` + `DELETE EXPIRED ARCHIVELOG ALL`.
 - archivelog non cancellati

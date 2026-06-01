@@ -729,7 +729,7 @@ RESTORE DATABASE VALIDATE;
 **Leggi nel repo**:
 [RMAN completa 19c](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md),
 [comandi RMAN enterprise](../../02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md)
-e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
+e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN.md).
 
 ### Q103 [P0] Qual e' l'architettura minima RMAN?
 
@@ -817,9 +817,9 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 **Trappola / follow-up**: DELETE FORCE la rispetta?
 
-### Q116 [P0] Come usi BACKUP ARCHIVELOG ALL DELETE INPUT?
+### Q116 [P0] Quando useresti BACKUP ARCHIVELOG ALL DELETE INPUT?
 
-**Risposta orale**: Backup e cancellazione input possono liberare spazio, ma devono rispettare policy e accessibilita' delle copie.
+**Risposta orale**: `DELETE INPUT` e' sintassi valida, ma non la incorporo nei job predefiniti. Prima eseguo un backup controllato degli archivelog; poi, in una fase separata, verifico deletion policy, spazio, lag Data Guard, sequenze shipped/applied e `V$ARCHIVE_GAP` sullo standby. Solo dopo autorizzazione elimino gli archivelog eleggibili.
 
 **Trappola / follow-up**: DELETE ALL INPUT cosa cambia?
 
@@ -889,7 +889,7 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 ### Q127 [P0] Come usi block media recovery?
 
-**Risposta orale**: BLOCKRECOVER o RECOVER BLOCK ripara pochi blocchi corrotti riducendo impatto rispetto a restore file completo.
+**Risposta orale**: In 19c uso `RECOVER DATAFILE ... BLOCK` oppure `RECOVER CORRUPTION LIST` per riparare pochi blocchi corrotti, riducendo impatto rispetto al restore del file completo. `BLOCKRECOVER` e' sintassi storica.
 
 **Trappola / follow-up**: Quando non basta?
 
@@ -1053,7 +1053,7 @@ e [cheat sheet RMAN](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md).
 
 **Risposta orale**: Interrogo v$database_block_corruption e correlo file e blocchi con validate e alert log.
 
-**Trappola / follow-up**: Come scegli BLOCKRECOVER?
+**Trappola / follow-up**: Quando basta `RECOVER ... BLOCK` e quando ripristini il datafile?
 
 ### Q154 [P1] Come affronti perdita totale server?
 

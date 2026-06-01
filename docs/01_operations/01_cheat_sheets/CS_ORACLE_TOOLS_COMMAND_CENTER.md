@@ -16,7 +16,7 @@ Questa pagina è il punto unico "veloce" per scegliere il tool Oracle corretto d
 | Guardare o copiare file ASM, diskgroup, password file | `asmcmd` | [ASMCMD](./CS_ASMCMD.md) |
 | Leggere alert log, incidenti, trace, IPS package | `adrci` | [ADRCI](./CS_ADRCI.md) |
 | Gestire Data Guard Broker | `dgmgrl` | [DGMGRL](./CS_DGMGRL.md) |
-| Backup, restore, duplicate, validate | `rman` | [RMAN Full](./CS_RMAN_RAPIDO.md) |
+| Backup, restore, duplicate, validate | `rman` | [RMAN 19c](./CS_RMAN.md) |
 | Listener, TNS, Easy Connect, connessioni | `lsnrctl`, `tnsping` | [LSNRCTL/Oracle Net](./CS_LSNRCTL_NET.md) |
 | Patch Grid/DB home e SQL patch registry | `opatch`, `opatchauto`, `datapatch` | [OPatch/datapatch](./CS_OPATCH_DATAPATCH.md) |
 | SQL amministrativo, startup/shutdown, spool | `sqlplus`, `sqlcl` | [SQLPlus/SQLcl/DBCA/NETCA](./CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |

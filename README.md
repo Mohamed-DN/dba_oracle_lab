@@ -98,7 +98,7 @@ docs/
 |   |   +-- CS_MASTER_DBA.md
 |   |   +-- CS_OPATCH_DATAPATCH.md
 |   |   +-- CS_ORACLE_TOOLS_COMMAND_CENTER.md
-|   |   +-- CS_RMAN_RAPIDO.md
+|   |   +-- CS_RMAN.md
 |   |   +-- CS_SQLPLUS_SQLCL_DBCA_NETCA.md
 |   |   +-- CS_SQL_ASSESSMENT.md
 |   |   +-- CS_SRVCTL_CRSCTL.md
@@ -385,7 +385,7 @@ Oltre alle 10 Guide Monumentali, ecco i link diretti agli strumenti più utili p
 
 ### 🔥 Top 5 Cheat Sheets (Comandi Rapidi)
 1. 🩺 [Triage e Caccia all'Incidente](./docs/01_operations/01_cheat_sheets/CS_MASTER_DBA.md): Il punto di partenza per ogni disastro.
-2. 💾 [RMAN Rapido](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md): Backup e Restore al volo.
+2. 💾 [RMAN 19c](./docs/01_operations/01_cheat_sheets/CS_RMAN.md): comandi, casi d'uso e recovery al volo.
 3. 🛡️ [Data Guard (DGMGRL)](./docs/01_operations/01_cheat_sheets/CS_DGMGRL.md): Gestione standby e failover.
 4. 🔄 [GoldenGate](./docs/01_operations/01_cheat_sheets/CS_GOLDENGATE.md): AdminClient MA e GGSCI Classic legacy.
 5. 💽 [Storage ASM (ASMCMD)](./docs/01_operations/01_cheat_sheets/CS_ASMCMD.md): Gestione dischi e spazio esaurito.

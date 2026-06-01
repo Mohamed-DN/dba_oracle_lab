@@ -3,7 +3,7 @@
 # Playbook: Daily Health Check
 # Equivalente Ansible della procedura operativa 01_MORNING_HEALTH_CHECK.md
 # Produce un report strutturato via STDOUT.
-# Uso: ansible-playbook -i inventory/production.ini playbooks/04_daily_health_check.yml
+# Uso: ansible-playbook -i inventory/production.ini playbooks/daily_health_check.yml
 # Schedulare con cron ogni mattina alle 07:00.
 # ============================================================================
 

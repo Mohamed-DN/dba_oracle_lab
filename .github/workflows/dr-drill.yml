@@ -25,11 +25,11 @@ jobs:
           {
             echo "DR drill timestamp: ${ts}"
             echo "Step 1: show Data Guard configuration"
-            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/04_daily_health_check.yml
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/daily_health_check.yml
             echo "Step 2: execute controlled switchover"
-            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/06_dataguard_switchover.yml
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/dataguard_switchover.yml
             echo "Step 3: capture post-check"
-            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/04_daily_health_check.yml
+            ansible-playbook -i automation/inventory/lab.ini automation/playbooks/daily_health_check.yml
             echo "Step 4: failover/reinstate must be executed using approved runbook"
           } | tee "${out}"
 

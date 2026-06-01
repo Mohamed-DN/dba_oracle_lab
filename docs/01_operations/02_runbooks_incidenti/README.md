@@ -26,8 +26,7 @@ Runbook pronti per uso quotidiano e incidenti. Ogni procedura deve essere letta 
 
 ## Cheat Sheet specialistiche
 
-- [RMAN Full Cheatsheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md)
-- [RMAN Essentials](../01_cheat_sheets/CS_RMAN_RAPIDO.md)
+- [RMAN 19c Cheatsheet](../01_cheat_sheets/CS_RMAN.md)
 - [DGMGRL](../01_cheat_sheets/CS_DGMGRL.md)
 - [GoldenGate](../01_cheat_sheets/CS_GOLDENGATE.md)
 - [ADRCI + Diagnostica Oracle](../../02_core_dba/03_performance_and_diagnostics/GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md)

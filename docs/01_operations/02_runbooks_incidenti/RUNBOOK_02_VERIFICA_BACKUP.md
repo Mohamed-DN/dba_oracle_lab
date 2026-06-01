@@ -168,8 +168,12 @@ cat /home/oracle/scripts/logs/rman_*.log | tail -100
 
 # 5. Rilancia backup manualmente
 RMAN> BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE
-      PLUS ARCHIVELOG DELETE INPUT;
+      PLUS ARCHIVELOG;
 ```
+
+Il backup manuale non incorpora il cleanup. Se la FRA richiede intervento,
+apri il runbook FRA/Data Guard e verifica lag, gap e deletion policy prima di
+eliminare file.
 
 ---
 

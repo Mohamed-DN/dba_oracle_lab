@@ -234,18 +234,23 @@ ALTER SYSTEM SET db_recovery_file_dest_size = 200G SCOPE=BOTH;
 ```
 
 ```rman
--- Opzione B: Libera spazio via RMAN
+-- Opzione B: preserva gli archivelog con un backup controllato.
+BACKUP ARCHIVELOG ALL;
+
+-- Opzione C: diagnostica cosa sarebbe eleggibile per cleanup.
 CROSSCHECK BACKUP;
 CROSSCHECK ARCHIVELOG ALL;
-DELETE NOPROMPT OBSOLETE;
-DELETE NOPROMPT EXPIRED BACKUP;
-DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-
--- Opzione C: Backup archivelog e poi cancella
-BACKUP ARCHIVELOG ALL DELETE INPUT;
+LIST EXPIRED BACKUP;
+LIST EXPIRED ARCHIVELOG ALL;
+REPORT OBSOLETE;
 ```
 
-**Prevenzione**: Alert su FRA > 80%. Dimensiona FRA >= 2x DB size.
+Prima di cancellare file apri `DG-061` nel runbook RMAN/Data Guard: verifica
+policy, lag, gap e sequenze shipped/applied. `DELETE FORCE` resta l'ultima
+scelta Sev1 autorizzata.
+
+**Prevenzione**: Alert su FRA > 80%. Dimensiona la FRA sul redo rate e sulla
+finestra di indisponibilita' DR prevista.
 
 ---
 
@@ -458,7 +463,7 @@ WHERE file_id = &file_id
 **Remediation**:
 ```rman
 -- Opzione A: Block Media Recovery (zero downtime)
-BLOCKRECOVER DATAFILE <file#> BLOCK <block#>;
+RECOVER DATAFILE <file#> BLOCK <block#>;
 
 -- Opzione B: Se molti blocchi, restore intero datafile
 SQL "ALTER DATABASE DATAFILE <file#> OFFLINE";
@@ -475,7 +480,7 @@ RUN {
 }
 ```
 
-**Prevenzione**: `VALIDATE DATABASE CHECK LOGICAL;` schedulato settimanalmente.
+**Prevenzione**: `VALIDATE CHECK LOGICAL DATABASE;` schedulato settimanalmente.
 
 ---
 
@@ -932,7 +937,7 @@ Approvazione         :
 [ ] FRA monitorata con alert su > 80%
 [ ] CROSSCHECK + DELETE OBSOLETE schedulati (settimanale)
 [ ] RESTORE VALIDATE schedulato (settimanale)
-[ ] VALIDATE DATABASE CHECK LOGICAL schedulato (settimanale)
+[ ] VALIDATE CHECK LOGICAL DATABASE schedulato (settimanale)
 [ ] Backup wallet/keystore separato e verificato
 [ ] Test di restore completo (trimestrale)
 [ ] Alert su v$rman_backup_job_details.status = 'FAILED'
@@ -1025,7 +1030,7 @@ ORDER BY start_time DESC;
 | 9 | RMAN-06169 | Metadata | Catalog connection | Fix TNS, RESYNC |
 | 10 | RMAN-20242 | Metadata | No matching backup | CATALOG START WITH |
 | 11 | RMAN-06004 | Metadata | Recovery area error | Fix FRA config |
-| 12 | ORA-01578 | Corruption | Block corruption | BLOCKRECOVER |
+| 12 | ORA-01578 | Corruption | Block corruption | RECOVER ... BLOCK |
 | 13 | ORA-19566 | Corruption | Troppi corrotti | SET MAXCORRUPT |
 | 14 | RMAN-08120 | Corruption | Piece corrotto | Rigenera backup |
 | 15 | ORA-28365 | Encryption | Wallet non aperto | Apri keystore |
@@ -1063,7 +1068,7 @@ ORDER BY start_time DESC;
 1. Output completo del log RMAN
 2. Alert log dell'intervallo errore
 3. Output di `SHOW ALL` da RMAN
-4. Output di `LIST FAILURE ALL`
+4. Output di `VALIDATE CHECK LOGICAL DATABASE` e `V$DATABASE_BLOCK_CORRUPTION`
 5. IPS Package (da ADRCI)
 6. AWR report dell'intervallo
 7. OS info: `uname -a`, `df -h`, `free -m`, `uptime`
@@ -1132,18 +1137,16 @@ FROM v$asm_diskgroup;
 # 1. Libera spazio immediato: comprimi log vecchi
 gzip /backup/logs/*.log
 
-# 2. Cancella backup RMAN obsoleti (SEMPRE via RMAN, mai rm!)
+# 2. Dopo REPORT e approvazione, cancella backup RMAN obsoleti via RMAN
 rman target / <<EOF
 CROSSCHECK BACKUP;
+REPORT OBSOLETE;
 DELETE NOPROMPT OBSOLETE;
 DELETE NOPROMPT EXPIRED BACKUP;
 EXIT;
 EOF
 
-# 3. Se DEVI usare rm (emergenza assoluta):
-# PRIMA cataloga, poi cancella, poi crosscheck
-# rm /backup/rman/old_file.bkp
-# rman target / -e "CROSSCHECK BACKUP;"
+# 3. Non usare rm sui file gestiti da RMAN.
 
 # 4. Estendi filesystem (LVM)
 # lvextend -L +50G /dev/vg_backup/lv_backup
@@ -1206,7 +1209,7 @@ RESYNC CATALOG;
 BACKUP INCREMENTAL LEVEL 0 
   AS COMPRESSED BACKUPSET 
   DATABASE TAG 'POST_SWITCHOVER_L0'
-  PLUS ARCHIVELOG DELETE INPUT;
+  PLUS ARCHIVELOG;
 
 -- 4. Verifica che la configurazione DG sia aggiornata
 SHOW ALL;
@@ -1229,7 +1232,7 @@ CATALOG START WITH '/backup/';
 
 -- 3. Nuovo Full L0 obbligatorio (la catena incrementale e rotta)
 BACKUP INCREMENTAL LEVEL 0 DATABASE TAG 'POST_FAILOVER_L0'
-  PLUS ARCHIVELOG DELETE INPUT;
+  PLUS ARCHIVELOG;
 
 -- 4. Reinstanzia la vecchia primary come standby
 -- (vedi guida Data Guard per REINSTATE)
@@ -1306,7 +1309,7 @@ DELETE NOPROMPT EXPIRED BACKUP;
 -- 4. Rilancia il backup
 BACKUP AS COMPRESSED BACKUPSET 
   DATABASE TAG 'POST_KILL_RETRY'
-  PLUS ARCHIVELOG DELETE INPUT;
+  PLUS ARCHIVELOG;
 ```
 
 ### 21.4 Prevenzione
@@ -1371,8 +1374,9 @@ CONFIGURE DEVICE TYPE DISK PARALLELISM 8;
 -- Usa SECTION SIZE per parallelizzare singoli datafile grandi
 BACKUP SECTION SIZE 4G DATABASE;
 
--- Usa compressione LOW se CPU e il bottleneck
-CONFIGURE COMPRESSION ALGORITHM 'LOW';
+-- Baseline senza opzioni aggiuntive
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+-- LOW, MEDIUM e HIGH richiedono gate licenza Advanced Compression.
 
 -- Aumenta buffer size dei canali
 RUN {

@@ -5,7 +5,7 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (questa guida - riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
+> - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
 
 > Guida operativa completa per Oracle RMAN 19c/21c/23ai.
 > Copre OGNI aspetto: configurazione, backup, restore, recovery, duplicate, catalog,
@@ -292,12 +292,9 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 -- Parallelismo e compressione
 CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO COMPRESSED BACKUPSET;
 
--- Algoritmo compressione (BASIC=free, MEDIUM/HIGH=ACO license)
-CONFIGURE COMPRESSION ALGORITHM 'MEDIUM';
--- BASIC: nessuna licenza, rapporto basso
--- LOW: veloce, compressione minima (buono per CPU-bound)
--- MEDIUM: bilanciato CPU/compressione (raccomandato)
--- HIGH: massima compressione, alto CPU (buono per tape/WAN)
+-- Algoritmo compressione baseline senza opzioni aggiuntive
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+-- LOW, MEDIUM e HIGH richiedono gate licenza Advanced Compression.
 
 -- Format path organizzato per data e database
 CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U';
@@ -370,7 +367,7 @@ CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U' FOR DB_UNIQUE_NAME 'S
 CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME ALL;
 ```
 
-**Backup Offloading su Standby (Active Data Guard):**
+**Backup Offloading su Physical Standby:**
 ```rman
 -- Connettiti alla STANDBY come target
 rman target /@STBY
@@ -378,10 +375,12 @@ rman target /@STBY
 -- Backup dalla standby (riduce carico I/O sul primary)
 BACKUP AS COMPRESSED BACKUPSET 
   DATABASE TAG 'STBY_FULL'
-  PLUS ARCHIVELOG DELETE INPUT TAG 'STBY_ARCH';
+  PLUS ARCHIVELOG TAG 'STBY_ARCH';
 
 -- NOTA: I backup fatti dalla standby sono utilizzabili per restore sia
 -- sulla standby che sul primary (stessi DBID).
+-- Il backup e' possibile anche con standby mounted. Active Data Guard serve
+-- solo se lo standby deve restare OPEN READ ONLY WITH APPLY.
 ```
 
 ### 4.4 Encryption Completa (TDE Integration)
@@ -542,7 +541,7 @@ RUN {
   SQL "ALTER SYSTEM ARCHIVE LOG CURRENT";
   BACKUP AS COMPRESSED BACKUPSET 
     DATABASE TAG 'FULL_DAILY'
-    PLUS ARCHIVELOG NOT BACKED UP 1 TIMES DELETE INPUT TAG 'ARCH_DAILY';
+    PLUS ARCHIVELOG NOT BACKED UP 1 TIMES TAG 'ARCH_DAILY';
   BACKUP CURRENT CONTROLFILE TAG 'CTRL_DAILY';
   BACKUP SPFILE TAG 'SPFILE_DAILY';
 }
@@ -556,12 +555,12 @@ La strategia piu comune in produzione. Riduce finestra di backup.
 -- DOMENICA: Level 0 (baseline completa)
 BACKUP INCREMENTAL LEVEL 0 AS COMPRESSED BACKUPSET 
   DATABASE TAG 'WEEKLY_L0'
-  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES DELETE INPUT;
+  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES;
 
 -- LUN-SAB: Level 1 Differential
 BACKUP INCREMENTAL LEVEL 1 AS COMPRESSED BACKUPSET 
   DATABASE TAG 'DAILY_L1'
-  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES DELETE INPUT;
+  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES;
 
 -- Oppure Level 1 Cumulative (piu sicuro, piu grande)
 -- BACKUP INCREMENTAL LEVEL 1 CUMULATIVE AS COMPRESSED BACKUPSET
@@ -618,7 +617,7 @@ BACKUP DATAFILE 15 TAG 'PDB_DF15';  -- datafile# del PDB
 BACKUP DATABASE ROOT TAG 'CDB_ROOT_ONLY';
 
 -- Backup archivelog
-BACKUP ARCHIVELOG ALL DELETE INPUT TAG 'ARCH_CDB';
+BACKUP ARCHIVELOG ALL TAG 'ARCH_CDB';
 ```
 
 ### 5.5 Backup per Componenti Specifici
@@ -643,7 +642,7 @@ BACKUP SPFILE TAG 'SPFILE_MANUAL';
 -- Archivelog per range
 BACKUP ARCHIVELOG FROM SEQUENCE 100 UNTIL SEQUENCE 200 THREAD 1;
 BACKUP ARCHIVELOG FROM TIME 'SYSDATE-1';
-BACKUP ARCHIVELOG ALL NOT BACKED UP 2 TIMES DELETE INPUT;
+BACKUP ARCHIVELOG ALL NOT BACKED UP 2 TIMES;
 ```
 
 ### 5.6 SECTION SIZE per Database Grandi
@@ -664,7 +663,7 @@ BACKUP INCREMENTAL LEVEL 1
 -- NOTA: Max 256 sezioni per datafile (RMAN aggiusta automaticamente)
 ```
 
-### 5.7 Backup da Standby (Active Data Guard)
+### 5.7 Backup da Physical Standby
 
 ```rman
 -- ============================================
@@ -678,16 +677,17 @@ rman target /@STBY
 -- 2. Backup completo dalla standby
 BACKUP AS COMPRESSED BACKUPSET 
   DATABASE TAG 'STBY_FULL'
-  PLUS ARCHIVELOG DELETE INPUT;
+  PLUS ARCHIVELOG;
 
 -- 3. Backup incrementale dalla standby
 BACKUP INCREMENTAL LEVEL 1 
   DATABASE TAG 'STBY_L1'
-  PLUS ARCHIVELOG DELETE INPUT;
+  PLUS ARCHIVELOG;
 
 -- NOTA: I backup della standby hanno lo stesso DBID del primary
 -- e possono essere usati per restore su entrambi.
--- Prerequisito: Active Data Guard license.
+-- Lo standby puo' restare mounted. Il gate Active Data Guard e' necessario
+-- solo per OPEN READ ONLY WITH APPLY.
 ```
 
 
@@ -801,9 +801,9 @@ esistente usa, da Oracle 12.2, una destinazione come
 
 ```rman
 -- Ripara blocchi corrotti senza restore completo
-BLOCKRECOVER DATAFILE 7 BLOCK 12345;
-BLOCKRECOVER DATAFILE 7 BLOCK 12345, 12346, 12347;
-BLOCKRECOVER DATAFILE 7 BLOCK 12345 FROM BACKUPSET;
+RECOVER DATAFILE 7 BLOCK 12345;
+RECOVER DATAFILE 7 BLOCK 12345, 12346, 12347;
+RECOVER DATAFILE 7 BLOCK 12345 FROM BACKUPSET;
 
 -- Trova blocchi corrotti
 -- SELECT file#, block#, blocks, corruption_type
@@ -998,22 +998,21 @@ GRANT CATALOG FOR DATABASE prod_b TO vpc_team_a;
 -- Creare script locale (associato al target)
 CREATE SCRIPT daily_full {
   BACKUP AS COMPRESSED BACKUPSET DATABASE
-    PLUS ARCHIVELOG DELETE INPUT;
+    PLUS ARCHIVELOG;
   BACKUP CURRENT CONTROLFILE;
   BACKUP SPFILE;
-  DELETE NOPROMPT OBSOLETE;
 }
 
--- Creare script globale (tutti i DB nel catalog)
-CREATE GLOBAL SCRIPT global_arch_cleanup {
-  CROSSCHECK ARCHIVELOG ALL;
-  DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-  BACKUP ARCHIVELOG ALL NOT BACKED UP 1 TIMES DELETE INPUT;
+-- Creare script globale di diagnostica (tutti i DB nel catalog)
+CREATE GLOBAL SCRIPT global_arch_report {
+  SHOW ARCHIVELOG DELETION POLICY;
+  LIST EXPIRED ARCHIVELOG ALL;
+  REPORT OBSOLETE;
 }
 
 -- Eseguire
 RUN { EXECUTE SCRIPT daily_full; }
-RUN { EXECUTE GLOBAL SCRIPT global_arch_cleanup; }
+RUN { EXECUTE GLOBAL SCRIPT global_arch_report; }
 
 -- Gestione
 LIST SCRIPT NAMES;
@@ -1038,7 +1037,7 @@ DELETE GLOBAL SCRIPT global_arch_cleanup;
 RESTORE DATABASE VALIDATE;
 RESTORE DATABASE VALIDATE CHECK LOGICAL;
 VALIDATE DATABASE;
-VALIDATE DATABASE CHECK LOGICAL;
+VALIDATE CHECK LOGICAL DATABASE;
 VALIDATE BACKUPSET 123;
 
 -- Preview restore (mostra cosa RMAN userebbe)
@@ -1066,9 +1065,6 @@ LIST BACKUP BY FILE;
 LIST BACKUP TAG 'WEEKLY_L0';
 LIST EXPIRED BACKUP;
 LIST INCARNATION;
-LIST FAILURE;
-LIST FAILURE ALL;
-LIST FAILURE 420 DETAIL;
 LIST RESTORE POINT ALL;
 LIST COPY OF DATABASE;
 LIST ARCHIVELOG ALL;
@@ -1077,6 +1073,12 @@ LIST ARCHIVELOG ALL;
 ---
 
 ## 10. Manutenzione e Pulizia
+
+Questa sezione non appartiene al job automatico di backup. Prima di cancellare
+archivelog verifica spazio reale, deletion policy, transport lag, apply lag,
+sequenze shipped/applied e `V$ARCHIVE_GAP` sullo standby. Registra change,
+approvazione ed evidenze. Non usare `DELETE FORCE` salvo ultima scelta
+autorizzata con degrado DR dichiarato.
 
 ```rman
 -- Cancella backup obsoleti
@@ -1140,10 +1142,9 @@ case $BACKUP_TYPE in
 BACKUP AS COMPRESSED BACKUPSET
   INCREMENTAL LEVEL 0
   DATABASE TAG 'FULL_$(date +%Y%m%d)'
-  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES DELETE INPUT;
+  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES;
 BACKUP CURRENT CONTROLFILE TAG 'CTRL_$(date +%Y%m%d)';
 BACKUP SPFILE TAG 'SPFILE_$(date +%Y%m%d)';
-DELETE NOPROMPT OBSOLETE;
 EXIT;
 EOF
     ;;
@@ -1152,14 +1153,14 @@ EOF
 BACKUP AS COMPRESSED BACKUPSET
   INCREMENTAL LEVEL 1
   DATABASE TAG 'INCR_$(date +%Y%m%d)'
-  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES DELETE INPUT;
+  PLUS ARCHIVELOG NOT BACKED UP 1 TIMES;
 EXIT;
 EOF
     ;;
   ARCH)
     rman target / log=$LOG_FILE <<EOF
 BACKUP AS COMPRESSED BACKUPSET
-  ARCHIVELOG ALL NOT BACKED UP 1 TIMES DELETE INPUT
+  ARCHIVELOG ALL NOT BACKED UP 1 TIMES
   TAG 'ARCH_$(date +%Y%m%d_%H%M)';
 EXIT;
 EOF
@@ -1185,8 +1186,9 @@ exit 0
 0 1 * * 1-6 oracle /home/oracle/scripts/rman_backup.sh INCR
 # Archivelog ogni 30 minuti
 */30 * * * * oracle /home/oracle/scripts/rman_backup.sh ARCH
-# Pulizia ogni sabato 06:00
-0 6 * * 6 oracle /home/oracle/scripts/rman_cleanup.sh
+# Cleanup separato: schedulalo solo se lo script implementa i gate Data Guard,
+# produce evidenze e l'automazione e' stata formalmente approvata.
+# 0 6 * * 6 oracle /home/oracle/scripts/rman_cleanup_authorized.sh
 # Validate ogni domenica 06:00
 0 6 * * 0 oracle /home/oracle/scripts/rman_validate.sh
 ```
@@ -1323,7 +1325,7 @@ WHERE opname LIKE 'RMAN%' AND sofar < totalwork;
 [x] Retention policy allineata a RPO/RTO
 [x] CROSSCHECK + DELETE OBSOLETE schedulati settimanalmente
 [x] RESTORE VALIDATE schedulato settimanalmente
-[x] VALIDATE DATABASE CHECK LOGICAL schedulato mensilmente
+[x] VALIDATE CHECK LOGICAL DATABASE schedulato mensilmente
 [x] Encryption attiva se dati sensibili o backup off-site
 [x] Wallet/Keystore backup separato e verificato
 [x] Log RMAN centralizzati con alert su FAILED via email
@@ -1353,8 +1355,8 @@ Il root cause e sempre l'ULTIMO errore nello stack.
 | 4 | ORA-19502 | Write error disco | df -h, dmesg | Libera spazio, fix permessi |
 | 5 | ORA-27072 | File I/O OS | dmesg, messages | Check hardware/mount |
 | 6 | ORA-15041 | ASM DG pieno | asmcmd lsdg | Aggiungi dischi |
-| 7 | ORA-19566 | Troppi blocchi corrotti | v$database_block_corruption | SET MAXCORRUPT o BLOCKRECOVER |
-| 8 | ORA-01578 | Block corruption | v$database_block_corruption | BLOCKRECOVER |
+| 7 | ORA-19566 | Troppi blocchi corrotti | v$database_block_corruption | SET MAXCORRUPT o RECOVER ... BLOCK |
+| 8 | ORA-01578 | Block corruption | v$database_block_corruption | RECOVER ... BLOCK |
 | 9 | ORA-19511 | Media manager error | sbtio.log | Check MML vendor |
 | 10 | ORA-27211 | SBT library fail | ls -la libobk | Fix path/permessi SBT |
 | 11 | ORA-28365 | Wallet non aperto | v$encryption_wallet | Apri keystore |
@@ -1394,6 +1396,19 @@ Il root cause e sempre l'ULTIMO errore nello stack.
 - MOS: RMAN Troubleshooting (Doc ID 360416.1)
 - MOS: BCT Best Practices (Doc ID 1472374.1)
 - MOS: Backup Performance Tuning (Doc ID 1072545.1)
+
+---
+
+## Appendice Legacy
+
+Le clausole `DELETE INPUT` e `DELETE ALL INPUT` sono sintassi valide, ma non
+vanno incorporate nei job predefiniti: esegui il cleanup come fase separata.
+`BLOCKRECOVER` e' una sintassi storica: negli esempi 19c usa
+`RECOVER DATAFILE ... BLOCK` o `RECOVER CORRUPTION LIST`.
+
+Il Data Recovery Advisor (`LIST FAILURE`, `ADVISE FAILURE`, `REPAIR FAILURE`,
+`CHANGE FAILURE`) e' deprecato in Oracle Database 19c. Mantienilo solo come
+conoscenza legacy; usa runbook diagnostici espliciti.
 
 ---
 

@@ -24,13 +24,13 @@ common_args=(
 
 cd "${AUTOMATION_DIR}"
 
-ansible-playbook "${common_args[@]}" playbooks/04_daily_health_check.yml \
-  | tee "${LOG_DIR}/04_daily_health_check.log"
+ansible-playbook "${common_args[@]}" playbooks/daily_health_check.yml \
+  | tee "${LOG_DIR}/daily_health_check.log"
 
-ansible-playbook "${common_args[@]}" playbooks/05_rman_backup.yml \
-  | tee "${LOG_DIR}/05_rman_backup.log"
+ansible-playbook "${common_args[@]}" playbooks/rman_backup.yml \
+  | tee "${LOG_DIR}/rman_backup.log"
 
-ansible-playbook "${common_args[@]}" -e switchover_non_interactive=true playbooks/06_dataguard_switchover.yml \
-  | tee "${LOG_DIR}/06_dataguard_switchover.log"
+ansible-playbook "${common_args[@]}" -e switchover_non_interactive=true playbooks/dataguard_switchover.yml \
+  | tee "${LOG_DIR}/dataguard_switchover.log"
 
 echo "Functional E2E completed successfully"
