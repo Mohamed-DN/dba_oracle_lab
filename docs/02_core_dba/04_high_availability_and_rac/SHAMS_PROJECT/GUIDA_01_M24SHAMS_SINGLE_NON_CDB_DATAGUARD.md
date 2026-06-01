@@ -368,7 +368,7 @@ Non impostare ancora il trasporto remoto finche' listener, standby e SRL non
 sono pronti.
 
 ### 5. Online redo log e standby redo log
-
+(aggiungere i nuovoi da 4 droppare i vecchi e aggiungere i redo pure )
 Lo standard PEYTECH di partenza e' quattro online redo log group da `4G` per
 thread. Conferma la scelta con il carico misurato: la frequenza di log switch
 non deve essere governata da una copia cieca dello standard.
