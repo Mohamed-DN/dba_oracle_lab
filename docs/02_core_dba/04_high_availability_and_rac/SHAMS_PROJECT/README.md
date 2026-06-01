@@ -44,6 +44,19 @@ RAC.
 Il prefisso di esempio e' `M24SHAMS`. Prima dell'uso reale sostituiscilo con il
 prefisso approvato mantenendo la stessa convenzione di naming.
 
+La configurazione Broker usa il `DB_NAME` condiviso e il codice ambiente:
+
+```text
+DR_<DB_NAME><ENV>_CONF
+```
+
+Per il collaudo SHAMS il nome e' `DR_M24SHAMSC_CONF`; per produzione sarebbe
+`DR_M24SHAMSP_CONF`. Non usare `DB_UNIQUE_NAME` nel nome Broker: il nome deve
+restare stabile dopo switchover. Verifica sempre il limite Oracle di 30 byte.
+
+Ogni SOP contiene una scheda iniziale di sostituzione. Compilala prima di
+riusare il blueprint per un prefisso diverso da `M24SHAMS`.
+
 ## Documenti comuni
 
 | Documento | Uso |

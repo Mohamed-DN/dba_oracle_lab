@@ -35,6 +35,11 @@ Guard (`READ ONLY WITH APPLY`) e il servizio `_RO` sono opzionali: in
 produzione richiedono evidenza licenza; nel laboratorio personale devono essere
 marcati come esercitazione.
 
+La configurazione Broker usa il nome stabile `DR_<DB_NAME><ENV>_CONF`. Per il
+collaudo SHAMS e' `DR_M24SHAMSC_CONF`; per produzione e'
+`DR_M24SHAMSP_CONF`. Il nome non contiene PE o SE, quindi non cambia durante
+switchover e switchback.
+
 ## Mappa dei file
 
 | File | Contenuto | Quando aprirlo |

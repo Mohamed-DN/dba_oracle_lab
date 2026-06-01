@@ -53,6 +53,8 @@ database preferire CDB/PDB salvo vincoli applicativi documentati.
 | PDB applicativo, solo CDB | `M24SHAMSC_APP` |
 | Service read-write | `M24SHAMSC_PRY` |
 | Service Active Data Guard | `M24SHAMSC_RO` |
+| Broker configuration name collaudo | `DR_M24SHAMSC_CONF` |
+| Broker configuration name produzione | `DR_M24SHAMSP_CONF` |
 | TNS primary DG | `M24SHAMSPEC_DG` |
 | TNS standby DG | `M24SHAMSSEC_DG` |
 | Listener DG | `1531/TCP` |
@@ -75,6 +77,37 @@ Per `M24SHAMS`:
 Questo pacchetto implementa il collaudo `C`. La riga produzione serve solo a
 rendere esplicita la regola di naming: non sostituire automaticamente
 l'ambiente senza un change approvato.
+
+Il nome Broker segue una convenzione distinta:
+
+```text
+DR_<DB_NAME><AMBIENTE>_CONF
+```
+
+Usa il `DB_NAME` condiviso e il codice ambiente, mai il `DB_UNIQUE_NAME` del
+sito. Il nome deve restare stabile dopo switchover e non superare 30 byte.
+
+| Ambiente | Broker configuration name |
+| --- | --- |
+| Collaudo `C` | `DR_M24SHAMSC_CONF` |
+| Produzione `P` | `DR_M24SHAMSP_CONF` |
+
+### Scheda sostituzioni per riuso
+
+Prima di riusare le SOP per un altro database, compila questa matrice e
+sostituisci gli esempi in modo coerente. Non usare una sostituzione cieca.
+
+| Oggetto | Esempio SHAMS | Valore approvato |
+| --- | --- | --- |
+| Prefisso progetto | `M24SHAMS` | `<DB_NAME>` |
+| Ambiente | `C` | `<ENV>` |
+| Sito primary / standby | `PE` / `SE` | `<PRIMARY_SITE>` / `<STANDBY_SITE>` |
+| `DB_UNIQUE_NAME` | `M24SHAMSPEC` / `M24SHAMSSEC` | `<PRIMARY_UNIQUE_NAME>` / `<STANDBY_UNIQUE_NAME>` |
+| Broker configuration | `DR_M24SHAMSC_CONF` | `DR_<DB_NAME><ENV>_CONF` |
+| Servizi | `M24SHAMSC_PRY` / `M24SHAMSC_RO` | `<PRIMARY_SERVICE>` / `<STANDBY_RO_SERVICE>` |
+| PDB, se applicabile | `M24SHAMSC_APP` | `<PDB_NAME>` |
+| ASM | `+M24SHAMS_DATA` / `+M24SHAMS_FRA` | `<ASM_DATA>` / `<ASM_FRA>` |
+| Endpoint DG | `<PRIMARY_DG_ENDPOINT>` / `<STANDBY_DG_ENDPOINT>` | `<VALORI_APPROVATI>` |
 
 Per RAC:
 

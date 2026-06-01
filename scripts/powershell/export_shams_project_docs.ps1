@@ -4,6 +4,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Documents skill preset: compact_reference_guide.
+# Word COM uses points for layout geometry: 468pt = 9360 DXA, 6pt = 120 DXA.
+$DesignPreset = "compact_reference_guide"
+
 $haDir = Join-Path $RepositoryRoot "docs\02_core_dba\04_high_availability_and_rac"
 $projectDir = Join-Path $haDir "SHAMS_PROJECT"
 $artifactDir = Join-Path $RepositoryRoot "artifacts\shams_project"
@@ -56,12 +60,16 @@ function Add-Paragraph {
         $Document,
         [string]$Text,
         [string]$Style = "Normal",
-        [string]$ListKind = ""
+        [string]$ListKind = "",
+        [bool]$PageBreakBefore = $false
     )
 
     $paragraph = $Document.Paragraphs.Add()
     $paragraph.Range.Text = (Get-CleanText $Text)
     $paragraph.Range.Style = $Style
+    if ($PageBreakBefore) {
+        $paragraph.Range.ParagraphFormat.PageBreakBefore = -1
+    }
     if ($ListKind -eq "Bullet") {
         $paragraph.Range.ListFormat.ApplyBulletDefault()
     }
@@ -82,7 +90,9 @@ function Add-CodeBlock {
     }
 
     $paragraph = $Document.Paragraphs.Add()
-    $paragraph.Range.Text = ($Lines -join "`r")
+    # Use manual line breaks inside one paragraph so code formatting and
+    # shading remain stable across Word and LibreOffice renderers.
+    $paragraph.Range.Text = ($Lines -join "`v")
     $paragraph.Range.Font.Name = "Consolas"
     $paragraph.Range.Font.Size = 7
     $paragraph.Range.Shading.BackgroundPatternColor = 0xF2F2F2
@@ -102,7 +112,8 @@ function ConvertTo-TableCells {
 function Add-MarkdownTable {
     param(
         $Document,
-        [System.Collections.Generic.List[string]]$Lines
+        [System.Collections.Generic.List[string]]$Lines,
+        [bool]$AppendSeparator = $true
     )
 
     if ($Lines.Count -lt 2) {
@@ -136,9 +147,18 @@ function Add-MarkdownTable {
     $table.BottomPadding = 4
     $table.LeftPadding = 6
     $table.RightPadding = 6
-    $columnWidth = 468 / $columns
+    $columnWidths = switch ($columns) {
+        1 { @(468) }
+        2 { @(135, 333) }
+        3 { @(108, 252, 108) }
+        4 { @(72, 180, 126, 90) }
+        default {
+            $equalWidth = 468 / $columns
+            @(1..$columns | ForEach-Object { $equalWidth })
+        }
+    }
     for ($column = 1; $column -le $columns; $column++) {
-        $table.Columns.Item($column).SetWidth([single]$columnWidth, 0)
+        $table.Columns.Item($column).SetWidth([single]$columnWidths[$column - 1], 0)
     }
 
     for ($row = 0; $row -lt $dataRows.Count; $row++) {
@@ -149,14 +169,20 @@ function Add-MarkdownTable {
             $cell.Range.Font.Size = 7.5
             if ($row -eq 0) {
                 $cell.Range.Font.Bold = $true
-                $cell.Shading.BackgroundPatternColor = 0xE6E6E6
+                $cell.Shading.BackgroundPatternColor = 0xF5EEE8
             }
         }
     }
-    $table.Rows.Item(1).HeadingFormat = -1
+    if ($dataRows.Count -ge 12) {
+        $table.Rows.Item(1).HeadingFormat = -1
+    }
 
-    $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
-    $range.InsertParagraphAfter()
+    if ($AppendSeparator) {
+        # Insert the separator at the terminal document marker. Appending to
+        # the whole document can extend the last table with an empty row.
+        $separator = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
+        $separator.InsertAfter("`r")
+    }
 }
 
 function Set-DocumentStyle {
@@ -179,25 +205,31 @@ function Set-DocumentStyle {
     $normal.Font.Size = 11
     $normal.ParagraphFormat.SpaceAfter = 6
     $normal.ParagraphFormat.LineSpacingRule = 5
-    $normal.ParagraphFormat.LineSpacing = 15
+    $normal.ParagraphFormat.LineSpacing = 13.75
 
-    foreach ($name in @("Title", "Heading 1", "Heading 2", "Heading 3")) {
+    foreach ($name in @("Title", "Heading 1", "Heading 2")) {
         $style = $Document.Styles.Item($name)
         $style.Font.Name = "Calibri"
         $style.Font.Color = 0xB5742E
     }
+    $Document.Styles.Item("Heading 3").Font.Name = "Calibri"
+    $Document.Styles.Item("Heading 3").Font.Color = 0x784D1F
 
     $Document.Styles.Item("Title").Font.Size = 23
     $Document.Styles.Item("Title").ParagraphFormat.SpaceAfter = 12
+    $Document.Styles.Item("Title").ParagraphFormat.KeepWithNext = -1
     $Document.Styles.Item("Heading 1").Font.Size = 16
     $Document.Styles.Item("Heading 1").ParagraphFormat.SpaceBefore = 18
     $Document.Styles.Item("Heading 1").ParagraphFormat.SpaceAfter = 10
+    $Document.Styles.Item("Heading 1").ParagraphFormat.KeepWithNext = -1
     $Document.Styles.Item("Heading 2").Font.Size = 13
     $Document.Styles.Item("Heading 2").ParagraphFormat.SpaceBefore = 14
     $Document.Styles.Item("Heading 2").ParagraphFormat.SpaceAfter = 7
+    $Document.Styles.Item("Heading 2").ParagraphFormat.KeepWithNext = -1
     $Document.Styles.Item("Heading 3").Font.Size = 12
     $Document.Styles.Item("Heading 3").ParagraphFormat.SpaceBefore = 10
     $Document.Styles.Item("Heading 3").ParagraphFormat.SpaceAfter = 5
+    $Document.Styles.Item("Heading 3").ParagraphFormat.KeepWithNext = -1
 
     $header = $Document.Sections.Item(1).Headers.Item(1).Range
     $header.Text = $HeaderText
@@ -208,7 +240,7 @@ function Set-DocumentStyle {
     $footer = $Document.Sections.Item(1).Footers.Item(1).Range
     $footer.Text = "SHAMS PROJECT | Oracle 19c Data Guard | Documento operativo | Pagina "
     $footer.Collapse(0)
-    $Document.Fields.Add($footer, -1) | Out-Null
+    $Document.Fields.Add($footer, 33) | Out-Null
     $footer.Font.Name = "Calibri"
     $footer.Font.Size = 8
     $footer.ParagraphFormat.Alignment = 1
@@ -241,14 +273,13 @@ function Add-Markdown {
         [bool]$AddPageBreak
     )
 
-    if ($AddPageBreak) {
-        $range = $Document.Range($Document.Content.End - 1, $Document.Content.End - 1)
-        $range.InsertBreak(7)
-    }
-
     $lines = @(Get-Content -LiteralPath $Path -Encoding UTF8)
     $index = 0
     $inCode = $false
+    # LibreOffice renders a phantom table fragment when PageBreakBefore
+    # immediately follows a table. Keep source chapters flowing naturally;
+    # title styles are configured with KeepWithNext.
+    $pageBreakBefore = $false
     $codeLines = [System.Collections.Generic.List[string]]::new()
 
     while ($index -lt $lines.Count) {
@@ -276,7 +307,14 @@ function Add-Markdown {
                 $tableLines.Add($lines[$index])
                 $index++
             }
-            Add-MarkdownTable -Document $Document -Lines $tableLines
+            $hasMoreContent = $false
+            for ($scan = $index; $scan -lt $lines.Count; $scan++) {
+                if (-not [string]::IsNullOrWhiteSpace($lines[$scan])) {
+                    $hasMoreContent = $true
+                    break
+                }
+            }
+            Add-MarkdownTable -Document $Document -Lines $tableLines -AppendSeparator:$hasMoreContent
             continue
         }
 
@@ -314,7 +352,8 @@ function Add-Markdown {
             $listKind = "Number"
         }
 
-        Add-Paragraph -Document $Document -Text $text -Style $style -ListKind $listKind
+        Add-Paragraph -Document $Document -Text $text -Style $style -ListKind $listKind -PageBreakBefore:$pageBreakBefore
+        $pageBreakBefore = $false
         $index++
     }
 

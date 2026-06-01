@@ -11,6 +11,9 @@
 - Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) e [Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)
 - Operativita dopo setup: [Switchover](./GUIDA_SWITCHOVER_COMPLETO.md), [Failover/Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md), [Flashback](./GUIDA_FLASHBACK_DATABASE.md)
 
+Convenzione Broker: `DR_<DB_NAME><ENV>_CONF`, senza sito PE o SE nel nome.
+Usa `DR_RACDB_CONF` per il core lab e `DR_M24SHAMSC_CONF` per SHAMS collaudo.
+
 | Guida | Cosa impari |
 | --- | --- |
 | [Fase 3: RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md) | Standby cluster setup |

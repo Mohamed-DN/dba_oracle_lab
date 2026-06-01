@@ -78,6 +78,20 @@ Fonti Oracle:
 | Protection mode | `MaxAvailability` dopo gate di latenza |
 | FSFO | Change separato |
 
+### Scheda sostituzioni per riuso
+
+Questa SOP usa `M24SHAMS` come esempio leggibile. Prima di adattarla a un
+altro database compila la matrice e applica le sostituzioni in modo coerente:
+
+| Oggetto | Esempio collaudo | Valore approvato |
+| --- | --- | --- |
+| `DB_NAME` | `M24SHAMS` | `<DB_NAME>` |
+| Ambiente | `C` | `<ENV>` |
+| Primary / standby `DB_UNIQUE_NAME` | `M24SHAMSPEC` / `M24SHAMSSEC` | `<PRIMARY_UNIQUE_NAME>` / `<STANDBY_UNIQUE_NAME>` |
+| Broker configuration | `DR_M24SHAMSC_CONF` | `DR_<DB_NAME><ENV>_CONF` |
+| Servizi | `M24SHAMSC_PRY` / `M24SHAMSC_RO` | `<PRIMARY_SERVICE>` / `<STANDBY_RO_SERVICE>` |
+| ASM | `+M24SHAMS_DATA` / `+M24SHAMS_FRA` | `<ASM_DATA>` / `<ASM_FRA>` |
+
 ## Ruoli e prerequisiti
 
 Prima dell'esecuzione assegna un owner per ciascuna area:
@@ -131,6 +145,13 @@ Registra anche:
 | Trasporto scelto | `<SYNC_AFFIRM/FASTSYNC_NOAFFIRM>` |
 
 ## Procedura operativa
+
+### 0. Prepara host e software
+
+Completa l'[allegato Host Oracle Restart ASM 19c](./GUIDA_06_HOST_SINGLE_ORACLE_RESTART_ASM_19C.md)
+su PE e SE. Registra DNS, NTP, rete DG, multipath, ASM, RU Grid/DB,
+`ORACLE_HOME`, `GRID_HOME`, keystore e recovery catalog. Non creare il
+database se host, storage o RU non sono allineati.
 
 ### 1. Assessment iniziale
 
@@ -368,7 +389,7 @@ Non impostare ancora il trasporto remoto finche' listener, standby e SRL non
 sono pronti.
 
 ### 5. Online redo log e standby redo log
-(aggiungere i nuovoi da 4 droppare i vecchi e aggiungere i redo pure )
+
 Lo standard PEYTECH di partenza e' quattro online redo log group da `4G` per
 thread. Conferma la scelta con il carico misurato: la frequenza di log switch
 non deve essere governata da una copia cieca dello standard.
@@ -401,6 +422,17 @@ ALTER DATABASE ADD STANDBY LOGFILE THREAD 1 GROUP 15 SIZE 4G;
 Non eliminare redo log `CURRENT` o `ACTIVE`. Ogni variazione dei redo online
 richiede query di stato, log switch controllati e validazione separata.
 
+Se il database esistente usa gruppi piu' piccoli, non modificare i file in
+place. Esegui una migrazione controllata:
+
+1. salva inventario e frequenza di log switch;
+2. aggiungi quattro nuovi online redo log group OMF da `4G`;
+3. forza log switch controllati finche' i gruppi precedenti risultano
+   `INACTIVE`;
+4. elimina solo i vecchi gruppi `INACTIVE`, mai `CURRENT` o `ACTIVE`;
+5. crea o riallinea almeno cinque SRL da `4G` su primary e standby;
+6. prova switchover e switchback prima del Go-Live.
+
 ### 6. Oracle Net e listener Data Guard
 
 Usa un listener dedicato su porta `1531`. Integra i file aziendali tramite
@@ -420,23 +452,34 @@ M24SHAMSSEC_DG =
     (ADDRESS = (PROTOCOL = TCP)(HOST = <STANDBY_DG_FQDN>)(PORT = 1531))
     (CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = M24SHAMSSEC_DG))
   )
+
+M24SHAMSSEC_AUX =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = <STANDBY_DG_FQDN>)(PORT = 1531))
+    (CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = M24SHAMSSEC_AUX))
+  )
 ```
 
-Esempio statico da adattare in `listener.ora` sul primary:
+Gli alias `_DG` sono il canale durevole per redo, FAL e
+`DGConnectIdentifier`. La registrazione statica `_AUX` serve invece soltanto
+durante il duplicate in `NOMOUNT`; `_DGMGRL` serve al restart Broker quando
+richiesto.
+
+Esempio statico temporaneo da adattare in `listener.ora` sullo standby:
 
 ```text
 SID_LIST_LISTENER_DG =
   (SID_LIST =
     (SID_DESC =
-      (GLOBAL_DBNAME = M24SHAMSPEC_DG)
+      (GLOBAL_DBNAME = M24SHAMSSEC_AUX)
       (ORACLE_HOME = <ORACLE_HOME>)
-      (SID_NAME = M24SHAMSPEC)
+      (SID_NAME = M24SHAMSSEC)
     )
   )
 ```
 
-Sul server standby usa `GLOBAL_DBNAME=M24SHAMSSEC_DG` e
-`SID_NAME=M24SHAMSSEC`.
+Configura separatamente `_DGMGRL` su entrambi i siti se la gestione restart
+lo richiede. Rimuovi `_AUX` dopo il duplicate se non serve piu'.
 
 Test:
 
@@ -444,6 +487,7 @@ Test:
 lsnrctl status LISTENER_DG
 tnsping M24SHAMSPEC_DG
 tnsping M24SHAMSSEC_DG
+tnsping M24SHAMSSEC_AUX
 ```
 
 ### 7. Password file e autenticazione
@@ -523,7 +567,7 @@ Da una shell amministrativa avvia RMAN. Il comando richiede le password con
 prompt interattivo: non aggiungerle alla command line.
 
 ```bash
-rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
+rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
 ```
 
 ```rman
@@ -547,6 +591,11 @@ RUN {
 `NOFILENAMECHECK` e' ammesso solo dopo aver confermato che primary e standby
 sono su host e storage distinti. Se la rete non regge l'active duplicate, usa
 il percorso backup-based documentato nella guida generica.
+
+Prima del riavvio persistente crea lo SPFILE in ASM, lascia nel DB Home il
+pointer file e verifica successivamente con `srvctl stop database` /
+`srvctl start database`. Non considerare sufficiente uno startup SQL*Plus
+riuscito con il solo PFILE locale.
 
 ### 10. Parametri redo transport simmetrici
 
@@ -584,8 +633,15 @@ dimensione approvati dal gate redo.
 
 ### 11. Apply e Active Data Guard
 
-Prima di aprire lo standby verifica l'evidenza della licenza Active Data Guard.
-Sullo standby:
+Avvia prima il Redo Apply base con standby montato. Questa e' la baseline Data
+Guard e non richiede Active Data Guard:
+
+```sql
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+```
+
+Valida MRP, SRL, lag e gap. Solo dopo, se esiste evidenza licenza Active Data
+Guard, puoi aprire lo standby in lettura:
 
 ```sql
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
@@ -607,7 +663,8 @@ FROM v$dataguard_stats
 WHERE name IN ('transport lag', 'apply lag');
 ```
 
-L'esito atteso e' `READ ONLY WITH APPLY` e ruolo `PHYSICAL STANDBY`.
+L'esito base atteso e' `MOUNTED` con ruolo `PHYSICAL STANDBY`. Se ADG e'
+autorizzato, l'open mode diventa `READ ONLY WITH APPLY`.
 
 ### 12. Registrazione Oracle Restart e servizi
 
@@ -672,10 +729,20 @@ Da un host con Oracle Client e `dgmgrl`:
 dgmgrl
 ```
 
+Prima di creare la configurazione:
+
+1. salva `LOG_ARCHIVE_DEST_n`, `LOG_ARCHIVE_CONFIG` e `FAL_SERVER`;
+2. prepara rollback SQL;
+3. rimuovi sul primary la destinazione remota manuale incompatibile prima di
+   `CREATE CONFIGURATION`;
+4. rimuovi sullo standby la destinazione remota manuale prima di
+   `ADD DATABASE`;
+5. non resettare parametri di rete o destinazioni locali FRA.
+
 Connettiti con prompt interattivo o wallet approvato, quindi:
 
 ```text
-CREATE CONFIGURATION M24SHAMS_DG AS
+CREATE CONFIGURATION 'DR_M24SHAMSC_CONF' AS
   PRIMARY DATABASE IS M24SHAMSPEC
   CONNECT IDENTIFIER IS M24SHAMSPEC_DG;
 
@@ -687,7 +754,14 @@ ENABLE CONFIGURATION;
 SHOW CONFIGURATION;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
+
+`DR_M24SHAMSC_CONF` deriva dal `DB_NAME=M24SHAMS` e dall'ambiente `C`.
+Non contiene `PE` o `SE`, quindi resta stabile dopo switchover.
 
 ### 14. Gate MaxAvailability
 

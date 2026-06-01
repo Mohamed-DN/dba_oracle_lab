@@ -31,6 +31,7 @@ Non eseguire i comandi con placeholder irrisolti.
 | --- | --- | --- |
 | `DB_NAME` | `M24SHAMS` | `M24SHAMS` |
 | `DB_UNIQUE_NAME` | `M24SHAMSPEC` | `M24SHAMSSEC` |
+| Broker configuration | `DR_M24SHAMSC_CONF` | stabile dopo switchover |
 | Endpoint DG | `<PRIMARY_DG_ENDPOINT>` | `<STANDBY_DG_ENDPOINT>` |
 | IP rete DG | `<PRIMARY_DG_IPS>` | `<STANDBY_DG_IPS>` |
 | Listener DG | `1531/TCP` | `1531/TCP` |
@@ -155,17 +156,17 @@ tnsping M24SHAMSPEC_DG
 tnsping M24SHAMSSEC_DG
 ```
 
-### 4. Registrazione statica temporanea per duplicate
+### 4. Registrazioni statiche `_AUX` e `_DGMGRL`
 
 L'auxiliary RMAN parte in `NOMOUNT`, quindi la registrazione dinamica non basta.
 Sul nodo standby scelto per il duplicate aggiungi una registrazione statica
-temporanea a `LISTENER_DG`.
+temporanea `_AUX` a `LISTENER_DG`.
 
 ```text
 SID_LIST_LISTENER_DG =
   (SID_LIST =
     (SID_DESC =
-      (GLOBAL_DBNAME = M24SHAMSSEC_DG)
+      (GLOBAL_DBNAME = M24SHAMSSEC_AUX)
       (ORACLE_HOME = <ORACLE_HOME>)
       (SID_NAME = <M24SHAMSSEC oppure M24SHAMSSEC1>)
     )
@@ -178,8 +179,20 @@ lsnrctl services LISTENER_DG
 ```
 
 Dopo il duplicate, rimuovi la registrazione temporanea se non serve piu.
-La registrazione necessaria al Broker per startup e restart e' una decisione
-separata: prima valida quanto gestito da Oracle Restart o Clusterware.
+La registrazione `_DGMGRL` necessaria al Broker per startup e restart e' una
+responsabilita' separata. Configurala e validala quando richiesta:
+
+```text
+(SID_DESC =
+  (GLOBAL_DBNAME = M24SHAMSSEC_DGMGRL)
+  (ORACLE_HOME = <ORACLE_HOME>)
+  (SID_NAME = <M24SHAMSSEC oppure M24SHAMSSEC1>)
+)
+```
+
+Non usare `_AUX` come `DGConnectIdentifier`. Gli alias `_DG` devono essere
+raggiungibili da tutti i membri e, a regime, usare servizi registrati
+dinamicamente.
 
 ### 5. Password file e TDE
 
@@ -195,15 +208,33 @@ Se TDE e' attivo:
 
 ### 6. Auxiliary e duplicate RMAN
 
-Sul standby avvia una sola auxiliary instance in `NOMOUNT`. Per RAC usa
+Sullo standby crea `<ORACLE_BASE>/admin/M24SHAMSSEC/adump`, prepara un PFILE
+minimo e avvia una sola auxiliary instance in `NOMOUNT`. Per RAC usa
 temporaneamente `cluster_database=FALSE`.
+
+```text
+db_name='M24SHAMS'
+db_unique_name='M24SHAMSSEC'
+db_create_file_dest='+M24SHAMS_DATA'
+db_recovery_file_dest='+M24SHAMS_FRA'
+audit_file_dest='<ORACLE_BASE>/admin/M24SHAMSSEC/adump'
+```
 
 ```bash
 export ORACLE_SID=<M24SHAMSSEC oppure M24SHAMSSEC1>
-rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_DG
+sqlplus / as sysdba
 ```
 
-Le password vengono richieste interattivamente.
+```sql
+STARTUP NOMOUNT PFILE='<PFILE_PATH>';
+```
+
+Da una shell amministrativa connetti RMAN. Le password vengono richieste
+interattivamente:
+
+```bash
+rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
+```
 
 ```rman
 RUN {
@@ -226,7 +257,21 @@ RUN {
 Usa `NOFILENAMECHECK` solo con storage realmente separato. Per RAC, completa
 registrazione Clusterware e parametri per istanza seguendo il blueprint scelto.
 
-### 7. Avvio Redo Apply
+### 7. SPFILE ASM e registrazione Oracle Restart o Clusterware
+
+Dopo il duplicate crea lo SPFILE ASM, lascia nel DB Home solo il pointer file
+e registra il database nel gestore corretto:
+
+- `S1`, `S2`: `srvctl add database` su Oracle Restart, senza
+  `srvctl add instance`;
+- `S3`, `S4`: `srvctl add database` e `srvctl add instance` per entrambi i
+  nodi RAC.
+
+Esegui `srvctl stop database` e `srvctl start database` dopo il cambio SPFILE
+per verificare che il riavvio usi la configurazione persistente. Non
+considerare sufficiente uno startup SQL*Plus riuscito con PFILE locale.
+
+### 8. Avvio Redo Apply
 
 Su standby montato:
 
@@ -237,9 +282,21 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 In Oracle 19c gli SRL permettono il real-time apply senza la clausola storica
 `USING CURRENT LOGFILE`, deprecata da Oracle Database 12c.
 
-### 8. Broker
+### 9. Broker
 
-Attiva Broker su entrambi i siti:
+Prima di attivare Broker:
+
+1. salva `LOG_ARCHIVE_DEST_n`, `LOG_ARCHIVE_CONFIG` e `FAL_SERVER`;
+2. prepara rollback SQL;
+3. rimuovi sul primary le destinazioni remote incompatibili prima di
+   `CREATE CONFIGURATION`;
+4. rimuovi sullo standby le destinazioni remote incompatibili prima di
+   `ADD DATABASE`;
+5. non resettare listener o parametri di rete alla cieca.
+
+Per RAC posiziona `DG_BROKER_CONFIG_FILE1` e `DG_BROKER_CONFIG_FILE2` in ASM
+con path raggiungibili da tutte le istanze del relativo cluster. Attiva quindi
+Broker su entrambi i siti:
 
 ```sql
 ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
@@ -248,7 +305,7 @@ ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH SID='*';
 Da `dgmgrl`, usando prompt interattivo o wallet:
 
 ```text
-CREATE CONFIGURATION M24SHAMS_DG AS
+CREATE CONFIGURATION 'DR_M24SHAMSC_CONF' AS
   PRIMARY DATABASE IS M24SHAMSPEC
   CONNECT IDENTIFIER IS M24SHAMSPEC_DG;
 
@@ -260,11 +317,15 @@ ENABLE CONFIGURATION;
 SHOW CONFIGURATION;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
+VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
-Se erano presenti destinazioni remote manuali incompatibili con la gestione
-Broker, registra il prima/dopo e trasferisci ownership al Broker in modo
-controllato. Non azzerare parametri di rete o archiviazione alla cieca.
+Il nome segue `DR_<DB_NAME><ENV>_CONF`: usa `DR_M24SHAMSC_CONF` in collaudo
+e `DR_M24SHAMSP_CONF` in produzione. Non usare i `DB_UNIQUE_NAME` del sito
+nel nome della configurazione.
 
 ## Validazione finale
 
@@ -274,7 +335,10 @@ SHOW DATABASE VERBOSE M24SHAMSPEC;
 SHOW DATABASE VERBOSE M24SHAMSSEC;
 VALIDATE DATABASE M24SHAMSPEC;
 VALIDATE DATABASE M24SHAMSSEC;
+VALIDATE DATABASE M24SHAMSPEC SPFILE;
+VALIDATE DATABASE M24SHAMSSEC SPFILE;
 VALIDATE NETWORK CONFIGURATION FOR ALL;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
 Sul standby:

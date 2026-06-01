@@ -156,7 +156,7 @@ DGMGRL> SHOW CONFIGURATION;
 
 Output atteso:
 ```
-Configuration - dg_config
+Configuration - DR_RACDB_CONF
   Protection Mode: MaxPerformance
   Members:
   RACDB_STBY - Primary database     ← ERA Standby, ora è Primary!

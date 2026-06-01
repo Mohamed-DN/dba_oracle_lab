@@ -20,9 +20,11 @@ usare `/`; non inserire password nella command line.
 dgmgrl /@PRIMARY
 dgmgrl /
 
-# Connessione in read-only (per check senza rischi)
-dgmgrl -logfile /tmp/dgmgrl.log /@PRIMARY
 ```
+
+L'opzione CLI `-logfile` e' deprecata da Oracle 12.2: per conservare evidenze
+usa lo spool della sessione o il wrapper shell approvato, senza password negli
+argomenti.
 
 ### Status globale
 ```dgmgrl
@@ -55,10 +57,23 @@ SHOW DATABASE 'STANDBY_DB' 'StatusReport';
 
 ## 2. Creazione e Gestione Configurazione
 
+### Convenzione nome Broker
+
+Usa `DR_<DB_NAME><ENV>_CONF`. Il label deriva dal `DB_NAME` condiviso dai
+membri, non dal `DB_UNIQUE_NAME` del primary: il nome deve restare stabile
+dopo lo switchover e non deve contenere il sito PE o SE. Verifica il limite
+Oracle di 30 byte.
+
+| Scenario | Nome configurazione |
+| --- | --- |
+| core lab `RACDB` | `DR_RACDB_CONF` |
+| SHAMS collaudo `C` | `DR_M24SHAMSC_CONF` |
+| SHAMS produzione `P` | `DR_M24SHAMSP_CONF` |
+
 ### 2.1 Creare la configurazione da zero
 ```dgmgrl
 -- Crea configurazione (eseguire dal primary)
-CREATE CONFIGURATION 'DG_CONFIG' AS
+CREATE CONFIGURATION 'DR_<DB_NAME><ENV>_CONF' AS
   PRIMARY DATABASE IS 'PRIMARY_DB'
   CONNECT IDENTIFIER IS PRIMARY;
 
