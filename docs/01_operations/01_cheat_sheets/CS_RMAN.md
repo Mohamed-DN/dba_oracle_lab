@@ -385,6 +385,11 @@ CROSSCHECK BACKUP DEVICE TYPE sbt;
 ```
 
 ### 5.3 Cleanup Backup Scaduti / Obsoleti
+
+Esegui questa sezione solo come cleanup separato e autorizzato. La struttura
+directory, i gate e gli status OEM sono definiti nello
+[standard directory backup RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md).
+
 ```rman
 -- Elimina backup scaduti (non più sul media)
 DELETE EXPIRED BACKUP;
@@ -830,7 +835,7 @@ UPGRADE CATALOG;
 | **Verifica backup ok** | `RESTORE DATABASE PREVIEW SUMMARY;` |
 | **Tablespace perso** | `ALTER TABLESPACE x OFFLINE IMMEDIATE; RESTORE TABLESPACE x; RECOVER TABLESPACE x; ALTER TABLESPACE x ONLINE;` |
 | **Archivelogs mancanti** | `RESTORE ARCHIVELOG FROM SEQUENCE xxx;` |
-| **Pulizia spazio disco** | `CROSSCHECK BACKUP; DELETE EXPIRED BACKUP; DELETE OBSOLETE;` |
+| **Spazio backup in esaurimento** | Raccogli `CROSSCHECK`, `REPORT OBSOLETE`, lag e gap; poi esegui il cleanup gated separato |
 | **Clonare un DB** | `DUPLICATE TARGET DATABASE TO CLONE FROM ACTIVE DATABASE ...;` |
 
 ---

@@ -41,6 +41,8 @@ automation/
 |   +-- oracle_autoupgrade.yml          ← AutoUpgrade (3 fasi CruGlobal-style)
 |   +-- daily_health_check.yml          ← Health Check giornaliero
 |   +-- rman_backup.yml                 ← Backup RMAN con validazione
+|   +-- rman_cleanup.yml                ← Cleanup RMAN separato con gate DG
+|   +-- rman_schedule.yml               ← Wrapper locali e cron sfalsati PE/SE
 |   +-- dataguard_switchover.yml        ← Switchover DG automatizzato
 |   +-- create_users_tablespaces.yml    ← Automazione User/Tablespace
 |   +-- gather_stats.yml                ← Raccolta statistiche schema
@@ -54,6 +56,8 @@ automation/
 |   +-- maa_guardrails/                    ← Ruolo MAA baseline enterprise
 |   +-- oracle_daily_health/               ← Ruolo riusabile health-check
 |   +-- oracle_rman_backup/                ← Ruolo riusabile RMAN backup
+|   +-- oracle_rman_cleanup/               ← Cleanup autorizzato e Data Guard-aware
+|   +-- oracle_rman_schedule/              ← Distribuzione wrapper e cron RMAN
 |   +-- oracle_dataguard_switchover/       ← Ruolo riusabile switchover DG
 +-- templates/
 |   +-- grid_install.rsp.j2                ← Template Silent Install Grid (19c)
@@ -101,6 +105,12 @@ ansible-playbook -i inventory/production.ini playbooks/dataguard_switchover.yml
 ansible-playbook -i inventory/production.ini playbooks/rman_backup.yml
 # Il ruolo esegue backup, crosscheck, validate e report. Non cancella file:
 # il cleanup FRA/archivelog richiede il runbook Data Guard-aware autorizzato.
+
+# ---- CLEANUP RMAN AUTORIZZATO ----
+ansible-playbook -i inventory/production.ini playbooks/rman_cleanup.yml
+
+# ---- DISTRIBUZIONE WRAPPER E CRON RMAN ----
+ansible-playbook -i inventory/production.ini playbooks/rman_schedule.yml
 
 # ---- DATAPUMP EXPORT ----
 ansible-playbook -i inventory/production.ini playbooks/datapump_export.yml

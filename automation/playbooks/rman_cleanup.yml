@@ -1,0 +1,14 @@
+---
+# Cleanup RMAN separato dal backup. Esegue gate recoverability e Data Guard.
+
+- name: Oracle RMAN - Cleanup autorizzato primary e standby
+  hosts: oracle_primary[0]:oracle_standby[0]
+  serial: 1
+  become: true
+  become_user: oracle
+  gather_facts: true
+  tasks:
+    - name: Apply guarded RMAN cleanup role
+      ansible.builtin.include_role:
+        name: oracle_rman_cleanup
+      tags: [cleanup, rman]

@@ -729,12 +729,10 @@ WHERE percent_space_used > 0
 ORDER BY percent_space_used DESC;
 
 -- Se FRA è piena (>90%):
--- 1. Cancella backup obsoleti:
---    rman TARGET / <<< "DELETE NOPROMPT OBSOLETE;"
--- 2. Verifica deletion policy ed elimina solo archivelog eleggibili:
---    rman TARGET / <<< "SHOW ARCHIVELOG DELETION POLICY; DELETE NOPROMPT ARCHIVELOG ALL;"
---    Con Data Guard controlla prima transport/apply lag.
--- 3. Se non basta, aumenta la FRA:
+-- 1. Verifica alert log, spazio reale, deletion policy, lag e gap Data Guard.
+-- 2. Se possibile aggiungi capacità temporanea o preserva gli archivelog.
+-- 3. Esegui il cleanup gated separato solo dopo autorizzazione.
+-- 4. Se lo storage lo consente, aumenta la FRA:
 --    ALTER SYSTEM SET db_recovery_file_dest_size = 25G SCOPE=BOTH SID='*';
 ```
 
@@ -1045,7 +1043,7 @@ EXIT;
 cat > /home/oracle/scripts/run_health_check.sh <<'EOF'
 #!/bin/bash
 source /home/oracle/.db_env
-LOG=/home/oracle/scripts/logs/health_$(date +%Y%m%d).log
+LOG=/backup/manual/health/health_$(date +%Y%m%d).log
 sqlplus -s / as sysdba @/home/oracle/scripts/daily_health_check.sql > $LOG 2>&1
 # Invia email se ci sono errori
 grep -q "ORA-\|CRITICO\|FAILED" $LOG && \

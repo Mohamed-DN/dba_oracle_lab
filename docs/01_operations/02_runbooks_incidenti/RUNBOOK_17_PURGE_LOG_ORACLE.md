@@ -78,6 +78,11 @@ adrci exec="set home diag/rdbms/racdb/RACDB1; purge -age 604800 -type incident"
 
 ### Step 3: Purge archivelog in sicurezza (RMAN)
 
+Questa e' una procedura autorizzata separata dal backup. Prima esegui i gate
+dello [standard directory backup RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md):
+due catene Level 0 recuperabili, controlfile/SPFILE, lag, sequenze applied e
+`V$ARCHIVE_GAP` sullo standby.
+
 ```rman
 rman target /
 

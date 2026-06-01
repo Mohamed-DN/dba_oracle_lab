@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 input="$(cat)"
-if [[ "$input" == *"status || '|' || log_mode"* ]]; then
+if [[ "${ORACLE_SID:-RACDB1}" == "RACDB_STBY1" ]]; then
+  db_unique_name="RACDB_STBY"
+  database_role="PHYSICAL STANDBY"
+  instance_status="MOUNTED"
+else
+  db_unique_name="RACDB"
+  database_role="PRIMARY"
+  instance_status="OPEN"
+fi
+
+if [[ "$input" == *"CLEANUP_GATE"* ]]; then
+  echo "DB_UNIQUE_NAME=${db_unique_name}"
+  echo "DATABASE_ROLE=${database_role}"
+  echo "LEVEL0_COUNT=2"
+  echo "CONTROLFILE_COUNT=2"
+  echo "SPFILE_COUNT=2"
+  echo "ARCHIVELOG_GAP_COUNT=0"
+  echo "APPLY_LAG_OK=YES"
+elif [[ "$input" == *"INSTANCE_STATUS="* ]]; then
+  echo "INSTANCE_STATUS=${instance_status}"
+  echo "LOG_MODE=ARCHIVELOG"
+  echo "DATABASE_ROLE=${database_role}"
+  echo "DB_UNIQUE_NAME=${db_unique_name}"
+elif [[ "$input" == *"status || '|' || log_mode"* ]]; then
   echo "OPEN|ARCHIVELOG"
 elif [[ "$input" == *"v\$recovery_file_dest"* ]]; then
   echo "35"

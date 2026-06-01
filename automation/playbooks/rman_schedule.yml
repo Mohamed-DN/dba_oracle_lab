@@ -1,0 +1,14 @@
+---
+# Distribuisce wrapper locali e cron RMAN sfalsati per primary e standby.
+
+- name: Oracle RMAN - Deploy schedule primary e standby
+  hosts: oracle_primary[0]:oracle_standby[0]
+  serial: 1
+  become: true
+  become_user: oracle
+  gather_facts: true
+  tasks:
+    - name: Apply RMAN schedule role
+      ansible.builtin.include_role:
+        name: oracle_rman_schedule
+      tags: [schedule, rman]

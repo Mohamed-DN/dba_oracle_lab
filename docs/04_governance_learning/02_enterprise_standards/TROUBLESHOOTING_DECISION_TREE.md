@@ -128,13 +128,14 @@ asmcmd lsdg
 
 **Risoluzione Tattica (se +FRA è pieno al 100%)**:
 Il database è fermo. Gli archivelog non possono essere scritti.
-1. Accedere a RMAN, verificare policy e pulire solo file eleggibili:
+1. Accedere a RMAN e raccogliere report. Il cleanup effettivo passa dal job
+   separato gated documentato nello standard directory backup:
 ```bash
 rman target /
 RMAN> SHOW ARCHIVELOG DELETION POLICY;
 RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-RMAN> DELETE NOPROMPT OBSOLETE;
+RMAN> REPORT OBSOLETE;
+RMAN> LIST EXPIRED ARCHIVELOG ALL;
 ```
 Se Data Guard e' in lag o irraggiungibile, preservare prima gli archivelog e
 usare `RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md`, scenario DG-061.
@@ -353,11 +354,7 @@ ALTER SYSTEM SET db_recovery_file_dest_size = 1000G SCOPE=BOTH;
 **Risoluzione (Pulizia RMAN d'Emergenza):**
 Se il disco fisico è pieno e non puoi aumentare il parametro:
 ```bash
-rman target /
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> SHOW ARCHIVELOG DELETION POLICY;
-RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-RMAN> DELETE NOPROMPT OBSOLETE;
+ansible-playbook -i inventory/production.ini playbooks/rman_cleanup.yml
 ```
 *Attenzione: Se Data Guard e' in lag o irraggiungibile, preservare prima i redo.
 `DELETE FORCE` ignora la deletion policy e richiede autorizzazione Sev1 esplicita.*

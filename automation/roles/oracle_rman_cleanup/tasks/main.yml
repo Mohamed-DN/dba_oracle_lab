@@ -1,0 +1,217 @@
+---
+- name: Build RMAN cleanup paths
+  ansible.builtin.set_fact:
+    rman_db_unique_name_effective: "{{ oracle_db_unique_name | default(oracle_db_name) }}"
+    rman_database_role_effective: "{{ oracle_database_role | default('PRIMARY') }}"
+    rman_run_id: "{{ ansible_date_time.iso8601_basic_short }}"
+
+- name: Build RMAN cleanup database root
+  ansible.builtin.set_fact:
+    rman_db_root: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}"
+    rman_cleanup_log: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/logs/cleanup/cleanup_{{ rman_run_id }}.log"
+    rman_cleanup_pre_report: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/reports/cleanup_pre_{{ rman_run_id }}.txt"
+    rman_cleanup_post_report: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/reports/cleanup_post_{{ rman_run_id }}.txt"
+    rman_cleanup_evidence: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/evidence/cleanup_gate_{{ rman_run_id }}.txt"
+
+- name: Assert RMAN cleanup inputs
+  ansible.builtin.assert:
+    that:
+      - not rman_require_catalog or (rman_catalog_connect | length > 0)
+      - "'/' not in (rman_catalog_connect | regex_replace('^/', ''))"
+    fail_msg: "Configura il recovery catalog tramite alias wallet, senza password negli argomenti shell."
+
+- name: Verify mounted backup share
+  ansible.builtin.command: "mountpoint -q {{ rman_repository_root }}"
+  changed_when: false
+  when: rman_require_repository_mount | bool
+
+- name: Create cleanup repository directories
+  ansible.builtin.file:
+    path: "{{ rman_db_root }}/{{ item }}"
+    state: directory
+    owner: "{{ rman_repository_owner }}"
+    group: "{{ rman_repository_group }}"
+    mode: "0750"
+  loop:
+    - logs/cleanup
+    - reports
+    - evidence
+
+- name: Check free space on backup share
+  ansible.builtin.shell: |
+    df -Pk "{{ rman_repository_root }}" | awk 'NR == 2 { print $4 }'
+  args:
+    executable: /bin/bash
+  register: rman_repository_free_kb
+  changed_when: false
+
+- name: Assert backup share has free space
+  ansible.builtin.assert:
+    that:
+      - rman_repository_free_kb.stdout | trim | int > 0
+    fail_msg: "Cleanup bloccato: filesystem backup non leggibile o senza spazio disponibile."
+
+- name: Check that no RMAN backup is running
+  ansible.builtin.shell: |
+    pgrep -f '[r]man.*target' || true
+  args:
+    executable: /bin/bash
+  register: rman_active_processes
+  changed_when: false
+
+- name: Block cleanup while RMAN is running
+  ansible.builtin.assert:
+    that:
+      - rman_active_processes.stdout | trim | length == 0
+    fail_msg: "Cleanup bloccato: esiste gia' un processo RMAN attivo."
+
+- name: Run recoverability and Data Guard cleanup gate
+  ansible.builtin.shell: |
+    export ORACLE_HOME={{ oracle_home }}
+    export ORACLE_SID={{ oracle_sid }}
+    export PATH={{ oracle_home }}/bin:$PATH
+    sqlplus -s / as sysdba <<'EOF_SQL'
+    SET HEAD OFF FEED OFF PAGES 0
+    -- CLEANUP_GATE
+    SELECT 'DB_UNIQUE_NAME=' || db_unique_name FROM v$database;
+    SELECT 'DATABASE_ROLE=' || database_role FROM v$database;
+    SELECT 'LEVEL0_COUNT=' || COUNT(*)
+      FROM v$backup_set
+     WHERE incremental_level = 0
+       AND status = 'A'
+       AND completion_time >= SYSDATE - 21;
+    SELECT 'CONTROLFILE_COUNT=' || COUNT(*)
+      FROM v$backup_set
+     WHERE controlfile_included = 'YES'
+       AND status = 'A'
+       AND completion_time >= SYSDATE - 21;
+    SELECT 'SPFILE_COUNT=' || COUNT(*)
+      FROM v$backup_set
+     WHERE spfile_included = 'YES'
+       AND status = 'A'
+       AND completion_time >= SYSDATE - 21;
+    {% if rman_database_role_effective == 'PHYSICAL STANDBY' %}
+    SELECT 'ARCHIVELOG_GAP_COUNT=' || COUNT(*) FROM v$archive_gap;
+    SELECT 'APPLY_LAG_OK=' ||
+           CASE
+             WHEN NVL(MAX(CASE WHEN name = 'apply lag' THEN value END),
+                      '+00 00:00:00') = '+00 00:00:00'
+             THEN 'YES'
+             ELSE 'NO'
+           END
+      FROM v$dataguard_stats;
+    {% else %}
+    SELECT 'ARCHIVELOG_GAP_COUNT=0' FROM dual;
+    SELECT 'APPLY_LAG_OK=YES' FROM dual;
+    {% endif %}
+    EXIT;
+    EOF_SQL
+  args:
+    executable: /bin/bash
+  register: rman_cleanup_gate
+  changed_when: false
+
+- name: Parse RMAN cleanup gate
+  ansible.builtin.set_fact:
+    cleanup_level0_count: "{{ (rman_cleanup_gate.stdout | regex_findall('LEVEL0_COUNT=([0-9]+)') | first | default('0')) | int }}"
+    cleanup_controlfile_count: "{{ (rman_cleanup_gate.stdout | regex_findall('CONTROLFILE_COUNT=([0-9]+)') | first | default('0')) | int }}"
+    cleanup_spfile_count: "{{ (rman_cleanup_gate.stdout | regex_findall('SPFILE_COUNT=([0-9]+)') | first | default('0')) | int }}"
+
+- name: Assert RMAN cleanup recoverability gate
+  ansible.builtin.assert:
+    that:
+      - "'DB_UNIQUE_NAME=' + rman_db_unique_name_effective in rman_cleanup_gate.stdout"
+      - cleanup_level0_count | int >= rman_cleanup_min_level0_backups | int
+      - cleanup_controlfile_count | int >= rman_cleanup_min_controlfile_backups | int
+      - cleanup_spfile_count | int >= rman_cleanup_min_spfile_backups | int
+      - "'ARCHIVELOG_GAP_COUNT=0' in rman_cleanup_gate.stdout"
+      - "'APPLY_LAG_OK=YES' in rman_cleanup_gate.stdout"
+    fail_msg: >-
+      Cleanup bloccato: servono almeno due Level 0, due copie controlfile/SPFILE,
+      nessun gap e apply lag nullo sullo standby.
+
+- name: Save cleanup gate evidence
+  ansible.builtin.copy:
+    dest: "{{ rman_cleanup_evidence }}"
+    mode: "0640"
+    content: |
+      TIMESTAMP={{ ansible_date_time.iso8601 }}
+      HOST={{ inventory_hostname }}
+      {{ rman_cleanup_gate.stdout }}
+
+- name: Collect RMAN pre-cleanup report
+  ansible.builtin.shell: |
+    export ORACLE_HOME={{ oracle_home }}
+    export ORACLE_SID={{ oracle_sid }}
+    export PATH={{ oracle_home }}/bin:$PATH
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_cleanup_pre_report }}" append <<'EOF_RMAN'
+    SHOW ARCHIVELOG DELETION POLICY;
+    CROSSCHECK BACKUP;
+    CROSSCHECK ARCHIVELOG ALL;
+    REPORT OBSOLETE;
+    LIST EXPIRED BACKUP;
+    LIST EXPIRED ARCHIVELOG ALL;
+    EXIT;
+    EOF_RMAN
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Delete only RMAN-eligible objects after gates
+  ansible.builtin.shell: |
+    export ORACLE_HOME={{ oracle_home }}
+    export ORACLE_SID={{ oracle_sid }}
+    export PATH={{ oracle_home }}/bin:$PATH
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_cleanup_log }}" append <<'EOF_RMAN'
+    DELETE NOPROMPT OBSOLETE;
+    DELETE NOPROMPT EXPIRED BACKUP;
+    DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+    DELETE NOPROMPT ARCHIVELOG ALL;
+    EXIT;
+    EOF_RMAN
+  args:
+    executable: /bin/bash
+  changed_when: true
+  when: rman_cleanup_execute | bool
+
+- name: Collect RMAN post-cleanup report
+  ansible.builtin.shell: |
+    export ORACLE_HOME={{ oracle_home }}
+    export ORACLE_SID={{ oracle_sid }}
+    export PATH={{ oracle_home }}/bin:$PATH
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_cleanup_post_report }}" append <<'EOF_RMAN'
+    SHOW ARCHIVELOG DELETION POLICY;
+    LIST BACKUP SUMMARY;
+    LIST EXPIRED BACKUP;
+    LIST EXPIRED ARCHIVELOG ALL;
+    REPORT OBSOLETE;
+    EXIT;
+    EOF_RMAN
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Publish latest cleanup status
+  ansible.builtin.copy:
+    dest: "{{ rman_db_root }}/reports/latest_cleanup.status"
+    mode: "0640"
+    content: |
+      STATUS={{ 'SUCCESS' if rman_cleanup_execute | bool else 'DRY_RUN' }}
+      TIMESTAMP={{ ansible_date_time.iso8601 }}
+      HOST={{ inventory_hostname }}
+      DB_UNIQUE_NAME={{ rman_db_unique_name_effective }}
+      DATABASE_ROLE={{ rman_database_role_effective }}
+      LOG={{ rman_cleanup_log }}
+      EVIDENCE={{ rman_cleanup_evidence }}
+      PRE_REPORT={{ rman_cleanup_pre_report }}
+      POST_REPORT={{ rman_cleanup_post_report }}
+
+- name: Rotate textual RMAN outputs only
+  ansible.builtin.shell: |
+    find "{{ rman_db_root }}/logs" -type f -name '*.log' -mtime +{{ rman_cleanup_log_compress_days }} -exec gzip -f {} \;
+    find "{{ rman_db_root }}/logs" -type f -name '*.gz' -mtime +{{ rman_cleanup_log_retention_days }} -delete
+    find "{{ rman_db_root }}/reports" -type f -name '*.txt' -mtime +{{ rman_cleanup_log_retention_days }} -delete
+    find "{{ rman_db_root }}/evidence" -type f -name '*.txt' -mtime +{{ rman_cleanup_evidence_retention_days }} -delete
+  args:
+    executable: /bin/bash
+  changed_when: true

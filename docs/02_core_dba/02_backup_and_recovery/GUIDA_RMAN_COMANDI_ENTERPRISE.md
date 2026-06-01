@@ -6,8 +6,9 @@
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (questa guida - riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
 > - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
+> - **Standard Directory Enterprise**: [GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md](./GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) (share `/backup/rman`, catene PE/SE e cleanup gated).
 
-> Guida operativa completa per Oracle RMAN 19c/21c/23ai.
+> Guida operativa completa con baseline Oracle RMAN 19c.
 > Copre OGNI aspetto: configurazione, backup, restore, recovery, duplicate, catalog,
 > encryption, multitenant, Data Guard, RAC, tape, scheduling, monitoring e troubleshooting.
 >
@@ -227,13 +228,13 @@ rman target /@PROD auxiliary /@CLONE catalog /@CATDB
 rman target / nocatalog
 
 # 7. Con logging su file
-rman target / log=/backup/logs/rman_$(date +%Y%m%d_%H%M).log append
+rman target / log=/backup/rman/RACDB/logs/backup/rman_$(date +%Y%m%d_%H%M).log append
 
 # 8. Con command file (scripting)
 rman target / @/home/oracle/scripts/backup_full.rman
 
 # 9. Con pipe per logging
-rman target / | tee /backup/logs/rman_session.log
+rman target / | tee /backup/rman/RACDB/logs/backup/rman_session.log
 
 # 10. Connessione e comando inline
 rman target / <<EOF
@@ -284,7 +285,7 @@ CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
 
 -- Controlfile autobackup: SEMPRE ON (critico per DR)
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+RECO/%F';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/rman/%d/pieces/controlfile/%F';
 
 -- Backup optimization: evita backup ridondanti di file gia backuppati
 CONFIGURE BACKUP OPTIMIZATION ON;
@@ -297,10 +298,10 @@ CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 -- LOW, MEDIUM e HIGH richiedono gate licenza Advanced Compression.
 
 -- Format path organizzato per data e database
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/rman/%d/pieces/database/db_%d_%T_%U.bkp';
 
 -- Snapshot controlfile (path accessibile, shared in RAC)
-CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/%d/snapcf_%d.f';
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/backup/rman/%d/metadata/snapcf_%d.f';
 
 -- Encryption (se richiesto da policy di sicurezza)
 -- CONFIGURE ENCRYPTION FOR DATABASE ON;
@@ -328,19 +329,19 @@ SHOW ALL;
 CONFIGURE DEVICE TYPE DISK PARALLELISM 4;
 CONFIGURE CHANNEL 1 DEVICE TYPE DISK 
   CONNECT '/@PROD1'
-  FORMAT '+RECO/%d/%T/%U';
+  FORMAT '/backup/rman/RACDB/pieces/database/db_%d_%T_%U.bkp';
 CONFIGURE CHANNEL 2 DEVICE TYPE DISK 
   CONNECT '/@PROD2'
-  FORMAT '+RECO/%d/%T/%U';
+  FORMAT '/backup/rman/RACDB/pieces/database/db_%d_%T_%U.bkp';
 CONFIGURE CHANNEL 3 DEVICE TYPE DISK 
   CONNECT '/@PROD1'
-  FORMAT '+RECO/%d/%T/%U';
+  FORMAT '/backup/rman/RACDB/pieces/database/db_%d_%T_%U.bkp';
 CONFIGURE CHANNEL 4 DEVICE TYPE DISK 
   CONNECT '/@PROD2'
-  FORMAT '+RECO/%d/%T/%U';
+  FORMAT '/backup/rman/RACDB/pieces/database/db_%d_%T_%U.bkp';
 
 -- Snapshot controlfile su shared storage (ASM obbligatorio in RAC)
-CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/backup/rman/RACDB/metadata/snapcf_RACDB.f';
 
 -- NOTA: In RAC, RMAN puo fare backup da qualsiasi nodo.
 -- Il load balancing dei canali evita hotspot I/O su un singolo nodo.
@@ -354,14 +355,14 @@ CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
 -- ============================================
 
 -- Sul PRIMARY: non cancellare archivelog finche non applicati su TUTTE le standby
-CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 
 -- Registra la standby nel catalog/controlfile
-CONFIGURE DB_UNIQUE_NAME 'STBY' CONNECT IDENTIFIER 'STBY';
+CONFIGURE DB_UNIQUE_NAME 'RACDB_STBY' CONNECT IDENTIFIER 'RACDB_STBY';
 
 -- Configura default device per la standby
-CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME 'STBY';
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U' FOR DB_UNIQUE_NAME 'STBY';
+CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME 'RACDB_STBY';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/rman/RACDB_STBY/pieces/database/db_%d_%T_%U.bkp' FOR DB_UNIQUE_NAME 'RACDB_STBY';
 
 -- Per backup da ALL (sia primary che standby)
 CONFIGURE DEFAULT DEVICE TYPE TO DISK FOR DB_UNIQUE_NAME ALL;
@@ -1130,7 +1131,7 @@ export PATH=$ORACLE_HOME/bin:$PATH
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 
 BACKUP_TYPE=${1:-INCR}
-LOG_DIR=/backup/logs
+LOG_DIR=/backup/rman/RACDB/logs/backup
 LOG_FILE=${LOG_DIR}/rman_${BACKUP_TYPE}_$(date +%Y%m%d_%H%M).log
 ALERT_EMAIL="dba-team@company.com"
 
@@ -1323,7 +1324,7 @@ WHERE opname LIKE 'RMAN%' AND sofar < totalwork;
 [x] Tag su OGNI backup per audit trail
 [x] Compressione MEDIUM (bilancia CPU/IO)
 [x] Retention policy allineata a RPO/RTO
-[x] CROSSCHECK + DELETE OBSOLETE schedulati settimanalmente
+[x] CROSSCHECK schedulato; cleanup gated separato pianificato settimanalmente
 [x] RESTORE VALIDATE schedulato settimanalmente
 [x] VALIDATE CHECK LOGICAL DATABASE schedulato mensilmente
 [x] Encryption attiva se dati sensibili o backup off-site
@@ -1349,7 +1350,7 @@ Il root cause e sempre l'ULTIMO errore nello stack.
 
 | # | Errore | Causa | Diagnostica | Risoluzione |
 |---|---|---|---|---|
-| 1 | ORA-19809/19804 | FRA piena | v$recovery_file_dest | Aumenta FRA o DELETE OBSOLETE |
+| 1 | ORA-19809/19804 | FRA piena | v$recovery_file_dest | Diagnosi FRA/DG, capacità temporanea o cleanup gated |
 | 2 | ORA-19815 | FRA warning | v$recovery_file_dest | Estendi prima che diventi critico |
 | 3 | ORA-00257 | Archiver stuck | df -h, FRA usage | Libera FRA, backup archivelog |
 | 4 | ORA-19502 | Write error disco | df -h, dmesg | Libera spazio, fix permessi |

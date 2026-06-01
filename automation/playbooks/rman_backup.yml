@@ -1,15 +1,13 @@
 ---
-# ============================================================================
-# Playbook: RMAN Backup con Validazione
-# Esegue backup completo + crosscheck + validate + report
-# Uso: ansible-playbook -i inventory/production.ini playbooks/rman_backup.yml
-# ============================================================================
+# Backup RMAN indipendenti su primo nodo primary e primo nodo standby.
+# Il ruolo non cancella file: usare rman_cleanup.yml dopo i gate.
 
-- name: "Oracle RMAN — Backup Completo + Validate"
-  hosts: oracle_primary[0]
-  become: yes
+- name: Oracle RMAN - Backup indipendente primary e standby
+  hosts: oracle_primary[0]:oracle_standby[0]
+  serial: 1
+  become: true
   become_user: oracle
-  gather_facts: yes
+  gather_facts: true
   tasks:
     - name: Apply RMAN backup role
       ansible.builtin.include_role:

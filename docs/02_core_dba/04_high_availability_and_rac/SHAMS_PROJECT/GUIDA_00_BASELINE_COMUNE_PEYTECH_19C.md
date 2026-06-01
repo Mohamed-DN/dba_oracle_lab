@@ -102,7 +102,7 @@ ambiente. Per RAC DBCA aggiunge il numero dell'istanza al prefix.
 | FRA bytes | `<FRA_BYTES>` | `<FRA_BYTES>` |
 | Keystore | `<KEYSTORE_DIR oppure N/A>` | `<KEYSTORE_DIR oppure N/A>` |
 | Recovery catalog | `<RMAN_CATALOG_TNS>` | `<RMAN_CATALOG_TNS>` |
-| Backup destination | `<BACKUP_DEST>` | `<BACKUP_DEST>` |
+| Backup destination | `/backup/rman/M24SHAMSPEC` | `/backup/rman/M24SHAMSSEC` |
 
 Gate business e Security:
 
@@ -183,6 +183,9 @@ Configurare Broker e scegliere il profilo dopo test di latenza:
   termini developer accettati al download.
 - RMAN offload sul physical standby usa recovery catalog e deletion policy
   Data Guard-aware.
+- Primary e standby mantengono catene complete indipendenti sotto
+  `/backup/rman/<DB_UNIQUE_NAME>`. Segui lo
+  [standard directory backup RMAN](../../02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md).
 - TDE richiede assessment; se attivo, distribuire keystore e validare apertura
   sullo standby prima del duplicate e dopo ogni rekey.
 - In CDB, valutare keystore root e PDB, query `CDB_*` e servizi PDB dedicati.

@@ -1,0 +1,14 @@
+---
+rman_repository_root: /backup/rman
+rman_catalog_connect: /@RMAN_CATALOG
+rman_require_catalog: true
+rman_require_repository_mount: true
+rman_cleanup_execute: true
+rman_cleanup_min_level0_backups: 2
+rman_cleanup_min_controlfile_backups: 2
+rman_cleanup_min_spfile_backups: 2
+rman_cleanup_log_compress_days: 7
+rman_cleanup_log_retention_days: 30
+rman_cleanup_evidence_retention_days: 90
+rman_repository_owner: oracle
+rman_repository_group: oinstall

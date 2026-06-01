@@ -115,7 +115,7 @@ Non eseguire i comandi con placeholder irrisolti.
 | Directory audit | `<AUDIT_DIR>` | `<AUDIT_DIR>` |
 | Keystore TDE | `<KEYSTORE_DIR oppure N/A>` | `<KEYSTORE_DIR oppure N/A>` |
 | Recovery catalog | `<RMAN_CATALOG_TNS>` | `<RMAN_CATALOG_TNS>` |
-| Destinazione backup | `<BACKUP_DEST>` | `<BACKUP_DEST>` |
+| Destinazione backup | `/backup/rman/M24SHAMSPEC` | `/backup/rman/M24SHAMSSEC` |
 
 Registra anche:
 
@@ -737,9 +737,9 @@ Configura:
 ```rman
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
 CONFIGURE BACKUP OPTIMIZATION ON;
-CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 30 DAYS;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY
-  BACKED UP 1 TIMES TO DISK;
+  BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 
 CONFIGURE DB_UNIQUE_NAME M24SHAMSPEC
   CONNECT IDENTIFIER 'M24SHAMSPEC_DG';
@@ -755,9 +755,15 @@ Backup baseline sullo standby:
 ```rman
 RUN {
   BACKUP AS COMPRESSED BACKUPSET DATABASE
+    FORMAT '/backup/rman/M24SHAMSSEC/pieces/database/db_%d_%T_%U.bkp'
     TAG 'M24SHAMS_STBY_BASELINE';
   BACKUP ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    FORMAT '/backup/rman/M24SHAMSSEC/pieces/archivelog/arch_%d_%T_%U.bkp'
     TAG 'M24SHAMS_STBY_ARCH';
+  BACKUP CURRENT CONTROLFILE
+    FORMAT '/backup/rman/M24SHAMSSEC/pieces/controlfile/cf_%d_%T_%U.bkp';
+  BACKUP SPFILE
+    FORMAT '/backup/rman/M24SHAMSSEC/pieces/spfile/spfile_%d_%T_%U.bkp';
 }
 ```
 

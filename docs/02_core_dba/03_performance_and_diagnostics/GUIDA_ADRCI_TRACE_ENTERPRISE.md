@@ -1125,7 +1125,9 @@ ALTER SYSTEM SET max_dump_file_size = '100M' SCOPE=BOTH;
 3. Attendi l'esecuzione
 4. Disabilita: `EXEC DBMS_MONITOR.SESSION_TRACE_DISABLE(&sid, &serial);`
 5. Trova il trace: `SELECT tracefile FROM v$process WHERE addr = (SELECT paddr FROM v$session WHERE sid = &sid);`
-6. TKPROF: `tkprof input.trc output.txt sort=exeela explain=sys/pwd sys=no`
+6. TKPROF: `tkprof input.trc output.txt sort=exeela sys=no`. Se serve
+   `EXPLAIN`, usa un account dedicato e un prompt controllato: non passare
+   password nella command line.
 7. Analizza l'output per SQL con piu elapsed time
 
 ### 14.4 Scenario: Listener Non Accetta Connessioni

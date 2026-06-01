@@ -317,7 +317,6 @@
         export PATH={{ target_home }}/bin:$PATH
         rman target / <<EOF
         BACKUP AS COMPRESSED BACKUPSET DATABASE PLUS ARCHIVELOG;
-        DELETE OBSOLETE;
         EXIT;
         EOF
       tags: [finalize]

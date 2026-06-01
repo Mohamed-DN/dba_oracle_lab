@@ -620,6 +620,10 @@ colmare il gap quando la rete tornera' disponibile.
 
 ### Procedura operativa
 
+Per la routine usa lo
+[standard directory backup RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md).
+In questo scenario Severity 1 registra ogni eccezione nel ticket.
+
 1. Registra alert log, spazio reale, destinazioni `MANDATORY`, deletion policy e
    sequenze non ancora spedite o applicate.
 2. Preferisci aumento temporaneo della FRA solo con storage realmente

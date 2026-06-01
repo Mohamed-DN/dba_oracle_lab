@@ -49,13 +49,13 @@ SELECT directory_name, directory_path FROM dba_directories;
 -- Default: DATA_PUMP_DIR → $ORACLE_BASE/admin/$ORACLE_SID/dpdump/
 
 -- Crea una directory custom (opzionale)
-CREATE OR REPLACE DIRECTORY DPUMP_DIR AS '/u01/backup/datapump';
+CREATE OR REPLACE DIRECTORY DPUMP_DIR AS '/backup/datapump';
 GRANT READ, WRITE ON DIRECTORY DPUMP_DIR TO ggadmin;
 -- ^^^ L'utente che esegue expdp/impdp deve avere READ,WRITE sulla directory.
 
 -- Sul filesystem Linux:
-mkdir -p /u01/backup/datapump
-chown oracle:oinstall /u01/backup/datapump
+mkdir -p /backup/datapump
+chown oracle:oinstall /backup/datapump
 ```
 
 ---
