@@ -6,6 +6,9 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- **Standard directory backup RMAN 19c**: introdotta la share durevole
+  `/backup/rman`, separata dalla FRA `+RECO`, con catene indipendenti per
+  `RACDB` e `RACDB_STBY`, status OEM e cleanup gated.
 - **Fase 4B Observer FSFO**: guida operativa per Observer dedicato, wallet SEPS,
   attivazione graduale e backup Observer opzionale.
 - **Dossier Colloquio Oracle DBA Produzione**: 260 domande tecniche, 15 drill
@@ -22,6 +25,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Changed
 
+- **Automazione RMAN**: separati backup e cleanup, aggiunti formati espliciti,
+  cron sfalsati PE/SE, evidence e blocchi preventivi prima delle cancellazioni.
 - **Data Guard FSFO**: consolidati setup, rollback e drill nella nuova fase core.
 - **RMAN Recover Table**: resa visibile la procedura di recupero tabella nei
   riferimenti rapidi e corretta la sintassi didattica.

@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export ORACLE_HOME="{{ oracle_home }}"
+export ORACLE_SID="{{ oracle_sid }}"
+export PATH="${ORACLE_HOME}/bin:${PATH}"
+
+CATALOG_CONNECT="{{ rman_catalog_connect }}"
+DB_UNIQUE_NAME="{{ rman_db_unique_name_effective }}"
+DATABASE_ROLE="{{ rman_database_role_effective }}"
+ROOT="{{ rman_repository_root }}/${DB_UNIQUE_NAME}"
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+LOG="${ROOT}/logs/cleanup/cleanup_${RUN_ID}.log"
+PRE_REPORT="${ROOT}/reports/cleanup_pre_${RUN_ID}.txt"
+POST_REPORT="${ROOT}/reports/cleanup_post_${RUN_ID}.txt"
+EVIDENCE="${ROOT}/evidence/cleanup_gate_${RUN_ID}.txt"
+LOCK="${ROOT}/tmp/rman.lock"
+
+mountpoint -q "{{ rman_repository_root }}" || {
+  echo "Backup share {{ rman_repository_root }} is not mounted" >&2
+  exit 4
+}
+df -Pk "{{ rman_repository_root }}"
+
+mkdir -p "${ROOT}/logs/cleanup" "${ROOT}/reports" "${ROOT}/evidence" "${ROOT}/tmp"
+exec 9>"${LOCK}"
+flock -n 9 || { echo "RMAN job already running for ${DB_UNIQUE_NAME}" >&2; exit 3; }
+
+sqlplus -s / as sysdba >"${EVIDENCE}" <<'EOF_SQL'
+SET HEAD OFF FEED OFF PAGES 0
+-- CLEANUP_GATE
+SELECT 'DB_UNIQUE_NAME=' || db_unique_name FROM v$database;
+SELECT 'DATABASE_ROLE=' || database_role FROM v$database;
+SELECT 'LEVEL0_COUNT=' || COUNT(*) FROM v$backup_set
+ WHERE incremental_level = 0 AND status = 'A' AND completion_time >= SYSDATE - 21;
+SELECT 'CONTROLFILE_COUNT=' || COUNT(*) FROM v$backup_set
+ WHERE controlfile_included = 'YES' AND status = 'A' AND completion_time >= SYSDATE - 21;
+SELECT 'SPFILE_COUNT=' || COUNT(*) FROM v$backup_set
+ WHERE spfile_included = 'YES' AND status = 'A' AND completion_time >= SYSDATE - 21;
+{% if rman_database_role_effective == 'PHYSICAL STANDBY' %}
+SELECT 'ARCHIVELOG_GAP_COUNT=' || COUNT(*) FROM v$archive_gap;
+SELECT 'APPLY_LAG_OK=' || CASE
+       WHEN NVL(MAX(CASE WHEN name = 'apply lag' THEN value END), '+00 00:00:00') = '+00 00:00:00'
+       THEN 'YES' ELSE 'NO' END
+  FROM v$dataguard_stats;
+{% else %}
+SELECT 'ARCHIVELOG_GAP_COUNT=0' FROM dual;
+SELECT 'APPLY_LAG_OK=YES' FROM dual;
+{% endif %}
+EXIT;
+EOF_SQL
+
+level0_count="$(awk -F= '/^LEVEL0_COUNT=/{print $2}' "${EVIDENCE}")"
+controlfile_count="$(awk -F= '/^CONTROLFILE_COUNT=/{print $2}' "${EVIDENCE}")"
+spfile_count="$(awk -F= '/^SPFILE_COUNT=/{print $2}' "${EVIDENCE}")"
+[[ "${level0_count:-0}" -ge 2 ]]
+[[ "${controlfile_count:-0}" -ge 2 ]]
+[[ "${spfile_count:-0}" -ge 2 ]]
+grep -qx 'ARCHIVELOG_GAP_COUNT=0' "${EVIDENCE}"
+grep -qx 'APPLY_LAG_OK=YES' "${EVIDENCE}"
+
+rman target / catalog "${CATALOG_CONNECT}" log="${PRE_REPORT}" append <<'EOF_RMAN'
+SHOW ARCHIVELOG DELETION POLICY;
+CROSSCHECK BACKUP;
+CROSSCHECK ARCHIVELOG ALL;
+REPORT OBSOLETE;
+LIST EXPIRED BACKUP;
+LIST EXPIRED ARCHIVELOG ALL;
+EXIT;
+EOF_RMAN
+
+rman target / catalog "${CATALOG_CONNECT}" log="${LOG}" append <<'EOF_RMAN'
+DELETE NOPROMPT OBSOLETE;
+DELETE NOPROMPT EXPIRED BACKUP;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT ARCHIVELOG ALL;
+EXIT;
+EOF_RMAN
+
+rman target / catalog "${CATALOG_CONNECT}" log="${POST_REPORT}" append <<'EOF_RMAN'
+SHOW ARCHIVELOG DELETION POLICY;
+LIST BACKUP SUMMARY;
+LIST EXPIRED BACKUP;
+LIST EXPIRED ARCHIVELOG ALL;
+REPORT OBSOLETE;
+EXIT;
+EOF_RMAN
+
+cat >"${ROOT}/reports/latest_cleanup.status" <<EOF_STATUS
+STATUS=SUCCESS
+TIMESTAMP=${RUN_ID}
+HOST=$(hostname -f)
+DB_UNIQUE_NAME=${DB_UNIQUE_NAME}
+DATABASE_ROLE=${DATABASE_ROLE}
+LOG=${LOG}
+EVIDENCE=${EVIDENCE}
+PRE_REPORT=${PRE_REPORT}
+POST_REPORT=${POST_REPORT}
+EOF_STATUS
+
+find "${ROOT}/logs" -type f -name '*.log' -mtime +{{ rman_cleanup_log_compress_days }} -exec gzip -f {} \;
+find "${ROOT}/logs" -type f -name '*.gz' -mtime +{{ rman_cleanup_log_retention_days }} -delete
+find "${ROOT}/reports" -type f -name '*.txt' -mtime +{{ rman_cleanup_log_retention_days }} -delete
+find "${ROOT}/evidence" -type f -name '*.txt' -mtime +{{ rman_cleanup_evidence_retention_days }} -delete

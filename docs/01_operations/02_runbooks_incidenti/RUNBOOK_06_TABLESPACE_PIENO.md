@@ -210,7 +210,7 @@ ALTER TABLESPACE UNDOTBS1 ADD DATAFILE '+DATA' SIZE 2G AUTOEXTEND ON;
 | `ORA-01654` | Indice non può estendersi | Aggiungi datafile |
 | `ORA-01652` | TEMP pieno | Aggiungi tempfile o kill query |
 | `ORA-30036` | UNDO pieno | Aggiungi undo datafile |
-| `ORA-19815` | FRA piena | DELETE OBSOLETE in RMAN |
+| `ORA-19815` | FRA piena | Diagnosi FRA/Data Guard e cleanup gated separato |
 
 ---
 

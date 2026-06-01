@@ -6,6 +6,7 @@
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
 > - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
+> - **Standard directory enterprise**: [GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md](./GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) (share `/backup/rman`, status OEM e cleanup gated).
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 
@@ -69,8 +70,7 @@ dgmgrl /@RACDB "show configuration;"
 
 ```sql
 -- Spazio FRA (Fast Recovery Area) — eseguilo sia sul primario che sullo standby
--- La FRA è il disco condiviso ASM dove vengono salvati:
---   - i backup RMAN
+-- La FRA è il disk group ASM operativo dove vengono salvati:
 --   - gli archivelog (copie dei redo log pieni)
 --   - i flashback log (se usi Flashback Database)
 -- Se la FRA raggiunge il 100%, il database si FERMA perché non può più archiviare.
@@ -100,8 +100,8 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
                          +----------------------+
                          |   RAC PRIMARY         |
                          |   (RACDB)             |
-                         |   → Archivelog backup |---→ 🗄️ repository durevole
-                         |   → Level 1 leggero   |     (ogni 2h + giornaliero)
+                         |   → Level 0 + Level 1 |---→ 🗄️ /backup/rman/RACDB
+                         |   → Archivelog backup |     (catena completa PE)
                          +----------+-------------+
                                     | Redo Shipping
                                     v
@@ -109,7 +109,7 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
                          | RAC STANDBY (MOUNT o  |
                          | ADG opzionale)        |
                          |   (RACDB_STBY)        |
-                         |   → BACKUP PRINCIPALE |---→ 🗄️ repository durevole
+                         |   → Level 0 + Level 1 |---→ 🗄️ /backup/rman/RACDB_STBY
                          |   Level 0 + Level 1   |     (full + incr + arch)
                          +----------+-------------+
                                     | GoldenGate
@@ -129,12 +129,14 @@ Se hai già creato gli script RMAN in test precedenti, non ricrearli: validali e
 >
 > Il backup fatto sullo standby è **identico** a quello fatto sul primario perché il database standby è una copia fisica bit-per-bit del primario (grazie al Redo Apply di Data Guard).
 >
-> **Perché backup ANCHE sul primario?** Per sicurezza aggiuntiva. Immagina questo scenario:
+> **Perché una catena completa ANCHE sul primario?** Per sicurezza aggiuntiva. Immagina questo scenario:
 > - Lo standby è in manutenzione (spento per patching)
 > - Un DBA cancella per sbaglio 10 tabelle sul primario
 > - Senza backup dal primario, hai perso dati!
 >
-> Un Level 1 leggero sul primario (che grazie al BCT dura pochi minuti) + il backup degli archivelog ogni 2 ore ti garantiscono un RPO (Recovery Point Objective — cioè quanti dati puoi perdere al massimo) di sole 2 ore.
+> Primary e standby mantengono ciascuno un Level 0 settimanale, Level 1 negli
+> altri giorni e archivelog ogni 2 ore. Le due catene sono separate per
+> `DB_UNIQUE_NAME`.
 
 ---
 
@@ -200,7 +202,7 @@ SHOW ALL;
 -- RETENTION POLICY: per quanti giorni tenere i backup
 -- ============================================================
 -- Dice ad RMAN: "Devi sempre avere abbastanza backup per poter
--- ripristinare il database a qualsiasi punto negli ultimi 7 giorni."
+-- ripristinare il database a qualsiasi punto negli ultimi 14 giorni."
 -- I backup più vecchi di questo vengono marcati come "obsoleti"
 -- e possono essere cancellati con DELETE OBSOLETE.
 --
@@ -210,11 +212,11 @@ SHOW ALL;
 -- Alternativa: CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
 --   → Tiene sempre almeno 2 copie di backup complete.
 --   La RECOVERY WINDOW è preferita perché è basata sul tempo, non sul conteggio.
-CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
 
 -- In Data Guard un log non deve diventare eliminabile prima dell'apply.
 -- Esegui questa policy sul primary e sullo standby.
-CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 
 -- ============================================================
 -- CONTROLFILE AUTOBACKUP: rete di sicurezza automatica
@@ -229,7 +231,7 @@ CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
 -- Il formato '%F' genera un nome univoco basato su DBID e timestamp.
 -- Esempio: c-1225375887-20260406-00 (c-DBID-DATA-SEQUENZA)
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '<RMAN_BACKUP_DEST>/RACDB/%F';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/rman/RACDB/pieces/controlfile/%F';
 
 -- ============================================================
 -- PARALLELISMO E COMPRESSIONE
@@ -263,7 +265,7 @@ CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 --             (esempio: 0a2s3k4l_1_1)
 -- Su ASM, Oracle gestisce automaticamente i file: non devi
 -- preoccuparti di path, permessi o spazio su singoli dischi.
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '<RMAN_BACKUP_DEST>/RACDB/%U';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/rman/RACDB/pieces/database/db_%d_%T_%U.bkp';
 
 -- ============================================================
 -- BACKUP OPTIMIZATION
@@ -280,11 +282,11 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 > **Riepilogo di cosa hai appena configurato:**
 > | Parametro | Valore | Effetto pratico |
 > |-----------|--------|----------------|
-> | Retention | 7 giorni | Puoi ripristinare il DB a qualsiasi punto della settimana scorsa |
+> | Retention | 14 giorni | Mantieni almeno due cicli settimanali recuperabili |
 > | Autobackup | ON | Se perdi il control file, RMAN può ritrovare i backup |
 > | Parallelismo | 2 canali | Backup ~2x più veloce rispetto a 1 canale |
 > | Compressione | BASIC | Inclusa; algoritmi avanzati solo con gate licenza |
-> | Formato | `<RMAN_BACKUP_DEST>/RACDB/%U` | Repository durevole approvato |
+> | Formato | `/backup/rman/RACDB/pieces/...` | Repository durevole separato dalla FRA |
 > | Optimization | ON | Salta file non modificati = backup più veloce |
 
 ---
@@ -383,7 +385,7 @@ cat > /home/oracle/scripts/rman_full_backup.sh <<'SCRIPT'
 # 3. Copia TUTTI i blocchi del database (Level 0 = base completa)
 # 4. Include gli archivelog necessari senza cancellazioni implicite
 # 5. Crea copie di sicurezza del Control File e dello SPFILE
-# 6. Rimuove i backup obsoleti secondo la retention policy
+# 6. Non cancella file: il cleanup autorizzato è un job separato
 
 source /home/oracle/.db_env
 # ^^^ carica le variabili: ORACLE_HOME, ORACLE_SID, LD_LIBRARY_PATH
@@ -392,7 +394,8 @@ source /home/oracle/.db_env
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 # ^^^ formato data leggibile nei log RMAN (altrimenti mostra formato interno Oracle)
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=RACDB_STBY
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_full_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 # ^^^ crea la cartella dei log se non esiste, e genera un nome file
@@ -453,13 +456,7 @@ RUN {
     -- ^^^ Chiude i canali allocati. Libera le risorse.
 }
 
--- Rimuovi i backup obsoleti secondo la retention policy
-DELETE NOPROMPT OBSOLETE;
--- ^^^ Oracle controlla tutti i backup registrati nel control file.
---     Quelli che cadono fuori dalla finestra di 7 giorni vengono cancellati.
---     NOPROMPT = non chiedere conferma (necessario in script automatici).
-
--- Crosscheck per rimuovere riferimenti a backup cancellati manualmente
+-- Crosscheck dei metadata senza cancellazioni
 CROSSCHECK BACKUP;
 -- ^^^ RMAN va a verificare fisicamente che ogni file di backup esista sul disco.
 --     Se qualcuno ha cancellato un file da ASM o dal filesystem a mano,
@@ -467,10 +464,6 @@ CROSSCHECK BACKUP;
 CROSSCHECK ARCHIVELOG ALL;
 -- ^^^ Stessa cosa ma per gli archivelog.
 
-DELETE NOPROMPT EXPIRED BACKUP;
--- ^^^ Cancella dal catalogo RMAN i riferimenti a backup che non esistono più.
-DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
--- ^^^ Idem per archivelog fantasma.
 EOF
 
 # Controlla se RMAN ha avuto errori
@@ -494,7 +487,7 @@ chmod +x /home/oracle/scripts/rman_full_backup.sh
 > 3. Legge OGNI blocco di OGNI datafile (ecco perché è lento: legge tutto!)
 > 4. Comprime i blocchi e li scrive nel repository durevole approvato
 > 5. Backuppa anche gli archivelog senza cancellazioni implicite
-> 6. Fa pulizia: cancella backup vecchi e verifica che tutto sia integro
+> 6. Lascia la pulizia al job separato con gate di recuperabilità e Data Guard
 
 ### Backup Level 1 (Incrementale) — Tutti i giorni
 
@@ -506,7 +499,8 @@ cat > /home/oracle/scripts/rman_incr_backup.sh <<'SCRIPT'
 source /home/oracle/.db_env
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=RACDB_STBY
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_incr_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 
@@ -528,10 +522,7 @@ RUN {
     RELEASE CHANNEL ch2;
 }
 
--- Pulizia
-DELETE NOPROMPT OBSOLETE;
 CROSSCHECK BACKUP;
-DELETE NOPROMPT EXPIRED BACKUP;
 EOF
 
 if grep -i "RMAN-" $LOG_FILE | grep -v "RMAN-08138" > /dev/null; then
@@ -555,7 +546,8 @@ cat > /home/oracle/scripts/rman_arch_backup.sh <<'SCRIPT'
 
 source /home/oracle/.db_env
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=RACDB_STBY
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_arch_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 
@@ -612,15 +604,16 @@ cat > /home/oracle/scripts/rman_target_backup.sh <<'SCRIPT'
 
 source /home/oracle/.db_env
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=DBTARGET
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_target_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 
 rman TARGET / LOG=$LOG_FILE <<EOF
 CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 3 DAYS;
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u01/backup/dbtarget/%F';
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/u01/backup/dbtarget/%U';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/rman/DBTARGET/pieces/controlfile/%F';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/rman/DBTARGET/pieces/database/db_%d_%T_%U.bkp';
 
 RUN {
     BACKUP AS COMPRESSED BACKUPSET
@@ -633,7 +626,6 @@ RUN {
     BACKUP CURRENT CONTROLFILE TAG 'TARGET_CTL';
 }
 
-DELETE NOPROMPT OBSOLETE;
 EOF
 SCRIPT
 
@@ -644,8 +636,8 @@ chmod +x /home/oracle/scripts/rman_target_backup.sh
 
 ```bash
 # Crea la directory di backup sul Target
-mkdir -p /u01/backup/dbtarget
-chown oracle:oinstall /u01/backup/dbtarget
+mkdir -p /backup/rman/DBTARGET/pieces/{database,archivelog,controlfile,spfile}
+chown -R oracle:oinstall /backup/rman/DBTARGET
 ```
 
 ---
@@ -654,7 +646,9 @@ chown oracle:oinstall /u01/backup/dbtarget
 
 > **🟢 RAC: esegui tutto su UN SOLO nodo (`rac1`).** Stessa logica dello standby: gli script e il cron vanno configurati solo su `rac1`. Non ripetere su `rac2`.
 
-Anche il primario ha il suo backup — leggero ma essenziale come rete di sicurezza.
+Anche il primario mantiene una catena completa. Lo script seguente mostra il
+solo ciclo Level 1 manuale; per Level 0, archivelog e cleanup usa i wrapper
+distribuiti da `automation/playbooks/rman_schedule.yml`.
 
 ```bash
 cat > /home/oracle/scripts/rman_primary_backup.sh <<'SCRIPT'
@@ -666,7 +660,8 @@ cat > /home/oracle/scripts/rman_primary_backup.sh <<'SCRIPT'
 source /home/oracle/.db_env
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=RACDB
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_primary_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 
@@ -676,7 +671,7 @@ RUN {
     ALLOCATE CHANNEL ch1 DEVICE TYPE DISK;
     ALLOCATE CHANNEL ch2 DEVICE TYPE DISK;
 
-    -- Solo Level 1 (NON Level 0 full per non sovraccaricare)
+    -- Ciclo giornaliero Level 1. Il Level 0 domenicale usa il wrapper schedulato.
     BACKUP AS COMPRESSED BACKUPSET
         INCREMENTAL LEVEL 1
         DATABASE
@@ -692,7 +687,6 @@ RUN {
     RELEASE CHANNEL ch2;
 }
 
-DELETE NOPROMPT OBSOLETE;
 EOF
 
 if grep -i "RMAN-" $LOG_FILE | grep -v "RMAN-08138" > /dev/null; then
@@ -705,7 +699,9 @@ SCRIPT
 chmod +x /home/oracle/scripts/rman_primary_backup.sh
 ```
 
-> **Perché solo Level 1 sul primario?** Il Level 0 (full) è pesante e lo fa già lo standby la domenica. Il primario fa solo il Level 1, che è leggero e veloce grazie al BCT. Se lo standby crasha, hai comunque un backup recente dal primario.
+> **Perché sfalsare il Level 0 sul primario?** Il Level 0 e' pesante: eseguilo
+> la domenica alle `04:00`, dopo quello dello standby alle `01:00`. In questo
+> modo le due catene restano indipendenti senza sovrapporre il carico I/O.
 
 ### 5.5c Backup Archivelog sul Primario (Sicurezza Extra)
 Questo script copia nel repository durevole gli archivelog del primario ogni 2 ore. La pulizia della FRA resta separata e governata dalla deletion policy.
@@ -716,7 +712,8 @@ cat > /home/oracle/scripts/rman_arch_backup.sh <<'SCRIPT'
 # rman_arch_backup.sh — Backup Archivelog (Primario)
 source /home/oracle/.db_env
 
-LOG_DIR=/home/oracle/scripts/logs
+DB_UNIQUE_NAME=RACDB
+LOG_DIR=/backup/rman/$DB_UNIQUE_NAME/logs/backup
 LOG_FILE=$LOG_DIR/rman_arch_$(date +%Y%m%d_%H%M%S).log
 mkdir -p $LOG_DIR
 
@@ -767,46 +764,28 @@ crontab -e
 ### Sul Primario (rac1):
 
 ```cron
-# === BACKUP INCREMENTALE GIORNALIERO ===
-# Ogni giorno alle 04:00 (sfalsato dallo standby che gira alle 02:00)
-# Perché alle 04:00? Per non sovrapporre I/O con il backup dello standby.
-# Lo script rman_primary_backup.sh fa un Level 1 + archivelog + controlfile.
-0 4 * * * /home/oracle/scripts/rman_primary_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
-
-# === BACKUP ARCHIVELOG OGNI 2 ORE ===
-# Copia gli archivelog accumulati nella FRA del primario.
-# La pulizia è un job separato con verifica Data Guard-aware.
-# Il >> appende al log (non lo sovrascrive).
-# Il 2>&1 redirige anche gli errori stderr nello stesso file.
-0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
+# Wrapper distribuiti dal ruolo oracle_rman_schedule.
+0 4 * * 0 /home/oracle/scripts/rman/rman_backup_job.sh LEVEL0
+0 4 * * 1-6 /home/oracle/scripts/rman/rman_backup_job.sh LEVEL1
+45 */2 * * * /home/oracle/scripts/rman/rman_backup_job.sh ARCHIVELOG
+0 9 * * 0 /home/oracle/scripts/rman/rman_cleanup_job.sh
 ```
 
 ### Sullo Standby (racstby1):
 
 ```cron
-# === BACKUP FULL SETTIMANALE (DOMENICA) ===
-# Il backup più pesante: Level 0 = copia tutto il database.
-# Gira di domenica alle 02:00 di notte quando nessuno lavora.
-# Questo è il "punto zero" per tutti gli incrementali della settimana.
-0 2 * * 0 /home/oracle/scripts/rman_full_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
-
-# === BACKUP INCREMENTALE (LUN-SAB) ===
-# Dal lunedì al sabato alle 02:00: copia SOLO i blocchi cambiati
-# rispetto al backup precedente (Level 1 differenziale).
-# Grazie al BCT, questo backup dura pochi minuti.
-0 2 * * 1-6 /home/oracle/scripts/rman_incr_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
-
-# === BACKUP ARCHIVELOG OGNI 2 ORE ===
-# Anche sullo standby si accumulano archivelog ricevuti dal primario.
-# Li copiamo ogni 2 ore; l'eventuale pulizia resta separata.
-0 */2 * * * /home/oracle/scripts/rman_arch_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
+# Wrapper distribuiti dal ruolo oracle_rman_schedule.
+0 1 * * 0 /home/oracle/scripts/rman/rman_backup_job.sh LEVEL0
+0 1 * * 1-6 /home/oracle/scripts/rman/rman_backup_job.sh LEVEL1
+15 */2 * * * /home/oracle/scripts/rman/rman_backup_job.sh ARCHIVELOG
+0 8 * * 0 /home/oracle/scripts/rman/rman_cleanup_job.sh
 ```
 
 ### Sul Target (dbtarget):
 
 ```cron
 # Backup Daily — Ogni giorno alle 03:00
-0 3 * * * /home/oracle/scripts/rman_target_backup.sh >> /home/oracle/scripts/logs/cron.log 2>&1
+0 3 * * * /home/oracle/scripts/rman_target_backup.sh >> /backup/rman/DBTARGET/logs/backup/cron.log 2>&1
 ```
 
 ---
@@ -952,7 +931,7 @@ Prima di testare il ripristino, devi avere un backup fresco. Lancia gli script a
 
 # 1. Lancia subito la configurazione RMAN base (se non l'hai ancora fatta)
 rman TARGET / <<EOF
-CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 14 DAYS;
 CONFIGURE CONTROLFILE AUTOBACKUP ON;
 CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '<RMAN_BACKUP_DEST>/RACDB/%F';
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
@@ -1398,12 +1377,13 @@ RESTORE DATABASE PREVIEW;
 
 | Database | Tipo Backup | Frequenza | Retention | Dove |
 |---|---|---|---|---|
-| **RACDB (Primary)** | Level 1 Incremental | Ogni giorno 04:00 | 7 giorni | Repository durevole approvato |
+| **RACDB (Primary)** | Level 0 Full | Domenica 04:00 | 14 giorni | `/backup/rman/RACDB` |
+| **RACDB (Primary)** | Level 1 Incremental | Lun-Sab 04:00 | 14 giorni | `/backup/rman/RACDB` |
 | **RACDB (Primary)** | Archivelog | Ogni 2 ore | — | Repository durevole approvato |
-| **RACDB_STBY (Standby)** | Level 0 Full | Domenica 02:00 | 7 giorni | Repository durevole approvato |
-| **RACDB_STBY (Standby)** | Level 1 Incr | Lun-Sab 02:00 | 7 giorni | Repository durevole approvato |
+| **RACDB_STBY (Standby)** | Level 0 Full | Domenica 01:00 | 14 giorni | `/backup/rman/RACDB_STBY` |
+| **RACDB_STBY (Standby)** | Level 1 Incr | Lun-Sab 01:00 | 14 giorni | `/backup/rman/RACDB_STBY` |
 | **RACDB_STBY (Standby)** | Archivelog | Ogni 2 ore | — | Repository durevole approvato |
-| **dbtarget (Target GG)** | Level 1 Cumulative | Ogni giorno 03:00 | 3 giorni | /u01/backup |
+| **dbtarget (Target GG)** | Level 1 Cumulative | Ogni giorno 03:00 | 3 giorni | `/backup/rman/DBTARGET` |
 
 ---
 
@@ -1522,7 +1502,7 @@ cat > /home/oracle/scripts/daily_health_check.sh <<'SCRIPT'
 # daily_health_check.sh — Report giornaliero del database
 source /home/oracle/.db_env
 
-LOG=/home/oracle/scripts/logs/health_$(date +%Y%m%d).log
+LOG=/backup/manual/health/health_$(date +%Y%m%d).log
 echo "=== DAILY HEALTH CHECK — $(date) ===" > $LOG
 
 sqlplus -s / as sysdba >> $LOG <<SQL
@@ -1565,7 +1545,7 @@ Aggiungi al cron su TUTTI i database:
 
 ```cron
 # Health Check giornaliero — Ogni giorno alle 08:00
-0 8 * * * /home/oracle/scripts/daily_health_check.sh >> /home/oracle/scripts/logs/cron.log 2>&1
+0 8 * * * /home/oracle/scripts/daily_health_check.sh >> /backup/manual/health/cron.log 2>&1
 ```
 
 ---

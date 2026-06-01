@@ -732,7 +732,7 @@ CROSSCHECK COPY;
 -- 3. Cerca backup non catalogati su disco
 CATALOG START WITH '/backup/';
 CATALOG START WITH '+RECO/';
-CATALOG START WITH '/u01/backup/';
+CATALOG START WITH '/backup/rman/RACDB/';
 
 -- 4. Cerca autobackup controlfile
 RESTORE CONTROLFILE FROM AUTOBACKUP;
@@ -935,7 +935,7 @@ Approvazione         :
 
 ```
 [ ] FRA monitorata con alert su > 80%
-[ ] CROSSCHECK + DELETE OBSOLETE schedulati (settimanale)
+[ ] CROSSCHECK schedulato; cleanup gated separato pianificato (settimanale)
 [ ] RESTORE VALIDATE schedulato (settimanale)
 [ ] VALIDATE CHECK LOGICAL DATABASE schedulato (settimanale)
 [ ] Backup wallet/keystore separato e verificato
@@ -1019,13 +1019,13 @@ ORDER BY start_time DESC;
 
 | # | Errore | Categoria | Causa | Risoluzione Rapida |
 |---|---|---|---|---|
-| 1 | ORA-19809/19804 | Storage | FRA piena | Aumenta FRA o DELETE OBSOLETE |
+| 1 | ORA-19809/19804 | Storage | FRA piena | Diagnosi FRA/DG, capacità temporanea o cleanup gated |
 | 2 | ORA-19815 | Storage | FRA warning | Estendi FRA |
 | 3 | ORA-00257 | Storage | Archiver stuck | Libera FRA |
 | 4 | ORA-19502 | Storage | Write error | Libera disco, fix permessi |
 | 5 | ORA-27072 | Storage | I/O OS error | Check hardware |
 | 6 | ORA-15041 | Storage | ASM DG pieno | Aggiungi dischi |
-| 7 | RMAN-06059 | Metadata | Archivelog mancante | CROSSCHECK+DELETE EXPIRED |
+| 7 | RMAN-06059 | Metadata | Archivelog mancante | CROSSCHECK, evidence e cleanup gated se autorizzato |
 | 8 | RMAN-06054 | Metadata | Recovery needs arch | SET UNTIL o restore arch |
 | 9 | RMAN-06169 | Metadata | Catalog connection | Fix TNS, RESYNC |
 | 10 | RMAN-20242 | Metadata | No matching backup | CATALOG START WITH |
@@ -1134,10 +1134,12 @@ FROM v$asm_diskgroup;
 ### 19.3 Remediation
 
 ```bash
-# 1. Libera spazio immediato: comprimi log vecchi
-gzip /backup/logs/*.log
+# 1. Libera spazio immediato: comprimi solo log testuali vecchi
+find /backup/rman/<DB_UNIQUE_NAME>/logs -type f -name '*.log' -mtime +7 -exec gzip -f {} \;
 
-# 2. Dopo REPORT e approvazione, cancella backup RMAN obsoleti via RMAN
+# 2. Dopo gate, REPORT e approvazione, cancella oggetti eleggibili via RMAN.
+#    Usa automation/playbooks/rman_cleanup.yml: non incorporare il blocco
+#    seguente nei job di backup.
 rman target / <<EOF
 CROSSCHECK BACKUP;
 REPORT OBSOLETE;

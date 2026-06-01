@@ -135,13 +135,11 @@ ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA' SIZE 2G AUTOEXTEND ON;
 
 ### ORA-19815 / ORA-19809: FRA piena
 
+Non cancellare subito. Verifica alert log, spazio reale, deletion policy,
+trasporto e apply Data Guard. Se serve pulizia usa il cleanup gated separato:
+
 ```bash
-rman TARGET /
-RMAN> CROSSCHECK BACKUP;
-RMAN> CROSSCHECK ARCHIVELOG ALL;
-RMAN> DELETE OBSOLETE;
-RMAN> DELETE EXPIRED BACKUP;
-RMAN> DELETE EXPIRED ARCHIVELOG ALL;
+ansible-playbook -i inventory/production.ini playbooks/rman_cleanup.yml
 ```
 
 ```sql

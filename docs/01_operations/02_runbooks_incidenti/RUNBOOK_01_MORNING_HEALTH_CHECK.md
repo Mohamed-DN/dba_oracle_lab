@@ -161,7 +161,7 @@ SELECT name,
        ROUND(space_reclaimable/1024/1024/1024, 1) AS reclaimable_gb
 FROM v$recovery_file_dest;
 
--- ⚠️ > 85% = esegui RMAN DELETE OBSOLETE o espandi FRA
+-- > 85% = apri il runbook FRA/Data Guard: niente purge ciechi
 ```
 
 ### Step 5: Backup RMAN — Ultimo Ciclo
@@ -231,7 +231,7 @@ ORDER BY actual_start_date DESC;
 | Alert log | Nessun ORA- critico | Investigare errore specifico |
 | Tablespace | < 85% | Aggiungi datafile |
 | ASM | < 80% | Pianifica aggiunta dischi |
-| FRA | < 85% | `RMAN> DELETE OBSOLETE` |
+| FRA | < 85% | Diagnosi FRA/Data Guard e cleanup gated separato |
 | Backup | COMPLETED | Procedura 02 |
 | Data Guard | Lag < soglia | Procedura 03 |
 | Job falliti | Nessuno | Investigare job specifico |

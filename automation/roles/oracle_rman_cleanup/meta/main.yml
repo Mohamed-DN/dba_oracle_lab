@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  role_name: oracle_rman_cleanup
+  author: dba_oracle_lab
+  description: Guarded RMAN cleanup with recoverability and Data Guard gates.
+  license: MIT
+  min_ansible_version: "2.14"
+dependencies: []

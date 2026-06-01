@@ -2,7 +2,7 @@
 galaxy_info:
   role_name: oracle_rman_backup
   author: dba_oracle_lab
-  description: RMAN backup automation role with pre-check and validation.
+  description: RMAN backup-only role with durable repository paths and validation.
   license: MIT
   min_ansible_version: "2.14"
 dependencies: []

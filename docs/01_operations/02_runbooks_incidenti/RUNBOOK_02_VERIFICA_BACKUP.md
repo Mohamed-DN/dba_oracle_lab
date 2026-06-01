@@ -100,16 +100,15 @@ RMAN> RESTORE ARCHIVELOG ALL VALIDATE;
 
 ### Step 4: Backup Obsoleti e Pulizia
 
+La pulizia non fa parte della verifica ordinaria. Raccogli il report e usa lo
+[standard directory backup RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md):
+il cleanup separato controlla catene Level 0, controlfile/SPFILE, lag e gap
+prima di eseguire cancellazioni RMAN.
+
 ```bash
 RMAN> REPORT OBSOLETE;
-
-# Se ci sono backup obsoleti, pulisci
-RMAN> DELETE OBSOLETE;
-# Conferma con YES
-
-# Verifica expired (file spariti dal disco)
-RMAN> DELETE EXPIRED BACKUP;
-RMAN> DELETE EXPIRED ARCHIVELOG ALL;
+RMAN> LIST EXPIRED BACKUP;
+RMAN> LIST EXPIRED ARCHIVELOG ALL;
 ```
 
 ### Step 5: Controlfile e SPFILE
@@ -153,14 +152,14 @@ FROM v$recovery_file_dest;
 RMAN> LIST BACKUP SUMMARY;
 
 # 2. Controlla il log RMAN
-cat /home/oracle/scripts/logs/rman_*.log | tail -100
+tail -100 /backup/rman/<DB_UNIQUE_NAME>/logs/backup/*.log
 
 # 3. Se hai solo una notifica (es. "DB INCR backup ... status FAILED"),
 #    usa il runbook di diagnosi per mappare la notifica al job e allo stack errori:
 #    docs/01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md
 
 # 4. Cause comuni:
-# - FRA piena → DELETE OBSOLETE, espandi FRA
+# - FRA piena -> diagnosi FRA/Data Guard, capacita' temporanea o cleanup gated
 # - Disco pieno → controlla df -h
 # - Archivelog mancanti → verifica gap DG
 # - Timeout → aumenta RMAN timeout

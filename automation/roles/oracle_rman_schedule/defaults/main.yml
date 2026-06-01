@@ -1,0 +1,13 @@
+---
+rman_repository_root: /backup/rman
+rman_catalog_connect: /@RMAN_CATALOG
+rman_script_dir: /home/oracle/scripts/rman
+rman_schedule_manage_cron: true
+rman_retention_days: 14
+rman_parallel_channels: 4
+rman_section_size: 32G
+rman_cleanup_log_compress_days: 7
+rman_cleanup_log_retention_days: 30
+rman_cleanup_evidence_retention_days: 90
+rman_repository_owner: oracle
+rman_repository_group: oinstall

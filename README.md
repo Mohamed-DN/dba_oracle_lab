@@ -19,7 +19,7 @@
 - 🏛️ **Core Lab 0→8:** [Indice area](./docs/03_infra_lab/02_oracle_installation_asm/README.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
 - 🔵 **High Availability:** [Indice area](./docs/02_core_dba/04_high_availability_and_rac/README.md)
 - **SHAMS PROJECT Data Guard:** [blueprint S1-S4 e SOP PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md)
-- 🟡 **Backup & Recovery:** [Indice area](./docs/02_core_dba/02_backup_and_recovery/README.md)
+- 🟡 **Backup & Recovery:** [Indice area](./docs/02_core_dba/02_backup_and_recovery/README.md) · [Standard `/backup/rman`](./docs/02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md)
 - 🟠 **Amministrazione:** [Indice area](./docs/02_core_dba/01_administration_and_security/README.md)
 - 🔴 **Performance & Diagnostica:** [Indice area](./docs/02_core_dba/03_performance_and_diagnostics/README.md)
 - 🟣 **Patching & Upgrade:** [Indice area](./docs/02_core_dba/05_patching_and_upgrades/README.md) · [Upgrade 19c → 26ai](./docs/02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_19C_TO_26AI.md)
@@ -166,6 +166,7 @@ docs/
 |   |   +-- GUIDA_MIGRAZIONE_XTTS_RMAN.md
 |   |   +-- GUIDA_RMAN_COMANDI_ENTERPRISE.md
 |   |   +-- GUIDA_RMAN_COMPLETA_19C.md
+|   |   +-- GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md
 |   |   +-- GUIDA_TUNING_DATA_PUMP_ENTERPRISE.md
 |   +-- 03_performance_and_diagnostics
 |   |   +-- GUIDA_ADRCI_DIAGNOSTICA_ORACLE.md
@@ -480,6 +481,7 @@ Regole pratiche:
 
 | Guida | Cosa Impari |
 |---|---|
+| [Standard Directory Backup RMAN 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene PE/SE, log, status OEM e cleanup gated |
 | [RMAN Completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog, test pratici |
 | [RMAN Comandi Enterprise](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Comandi RMAN, runbook e troubleshooting avanzato |
 | [Data Pump](./docs/02_core_dba/02_backup_and_recovery/GUIDA_DATA_PUMP.md) | Export/Import con expdp/impdp |
@@ -638,7 +640,7 @@ Regole pratiche:
 
 ### Ansible Automation (`automation/`)
 
-> **14 playbook production-grade** + ruoli modulari — [Indice completo](./automation/README.md)
+> **16 playbook production-grade** + ruoli modulari — [Indice completo](./automation/README.md)
 
 | Playbook | Cosa Fa |
 |---|---|
@@ -647,6 +649,8 @@ Regole pratiche:
 | [03 AutoUpgrade](./automation/playbooks/oracle_autoupgrade.yml) | 3 fasi: pre_upgrade → upgrade → finalize |
 | [04 Health Check](./automation/playbooks/daily_health_check.yml) | Morning check automatizzato |
 | [05 RMAN Backup](./automation/playbooks/rman_backup.yml) | Backup + crosscheck + validate |
+| [05B RMAN Cleanup](./automation/playbooks/rman_cleanup.yml) | Cleanup separato con gate recoverability e Data Guard |
+| [05C RMAN Schedule](./automation/playbooks/rman_schedule.yml) | Wrapper locali e cron sfalsati PE/SE |
 | [06 DG Switchover](./automation/playbooks/dataguard_switchover.yml) | Switchover Data Guard automatizzato |
 | [07 Users & TBS](./automation/playbooks/create_users_tablespaces.yml) | Creazione BIGFILE Tablespace e Utenti |
 | [08 Gather Stats](./automation/playbooks/gather_stats.yml) | DBMS_STATS automatizzato via Ansible |

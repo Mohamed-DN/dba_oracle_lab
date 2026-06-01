@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BACKUP_TYPE="${1:-LEVEL1}"
+case "${BACKUP_TYPE}" in
+  LEVEL0|LEVEL1|ARCHIVELOG) ;;
+  *) echo "Usage: $0 LEVEL0|LEVEL1|ARCHIVELOG" >&2; exit 2 ;;
+esac
+
+export ORACLE_HOME="{{ oracle_home }}"
+export ORACLE_SID="{{ oracle_sid }}"
+export PATH="${ORACLE_HOME}/bin:${PATH}"
+
+CATALOG_CONNECT="{{ rman_catalog_connect }}"
+DB_UNIQUE_NAME="{{ rman_db_unique_name_effective }}"
+DATABASE_ROLE="{{ rman_database_role_effective }}"
+ROOT="{{ rman_repository_root }}/${DB_UNIQUE_NAME}"
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+LOG="${ROOT}/logs/backup/backup_${BACKUP_TYPE,,}_${RUN_ID}.log"
+VALIDATE_LOG="${ROOT}/logs/validate/validate_${BACKUP_TYPE,,}_${RUN_ID}.log"
+EVIDENCE="${ROOT}/evidence/backup_${BACKUP_TYPE,,}_${RUN_ID}.txt"
+LOCK="${ROOT}/tmp/rman.lock"
+
+mountpoint -q "{{ rman_repository_root }}" || {
+  echo "Backup share {{ rman_repository_root }} is not mounted" >&2
+  exit 4
+}
+
+mkdir -p \
+  "${ROOT}/pieces/database" "${ROOT}/pieces/archivelog" \
+  "${ROOT}/pieces/controlfile" "${ROOT}/pieces/spfile" \
+  "${ROOT}/metadata" "${ROOT}/logs/backup" "${ROOT}/logs/validate" \
+  "${ROOT}/logs/cleanup" "${ROOT}/reports" "${ROOT}/evidence" "${ROOT}/tmp"
+
+exec 9>"${LOCK}"
+flock -n 9 || { echo "RMAN job already running for ${DB_UNIQUE_NAME}" >&2; exit 3; }
+
+rman target / catalog "${CATALOG_CONNECT}" <<EOF_RMAN
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF {{ rman_retention_days }} DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '${ROOT}/pieces/controlfile/%F';
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '${ROOT}/metadata/snapcf_${DB_UNIQUE_NAME}.f';
+{% if rman_database_role_effective == 'PRIMARY' %}
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+{% else %}
+CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+{% endif %}
+EXIT;
+EOF_RMAN
+
+rman target / catalog "${CATALOG_CONNECT}" log="${LOG}" append <<EOF_RMAN
+RUN {
+{% for channel_number in range(1, rman_parallel_channels | int + 1) %}
+  ALLOCATE CHANNEL c{{ channel_number }} DEVICE TYPE DISK;
+{% endfor %}
+$(if [[ "${BACKUP_TYPE}" == "LEVEL0" ]]; then
+    echo "  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 SECTION SIZE {{ rman_section_size | default('32G') }} DATABASE TAG 'L0_WEEKLY' FORMAT '${ROOT}/pieces/database/db_l0_%d_%T_%U.bkp';"
+  elif [[ "${BACKUP_TYPE}" == "LEVEL1" ]]; then
+    echo "  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 SECTION SIZE {{ rman_section_size | default('32G') }} DATABASE TAG 'L1_DAILY' FORMAT '${ROOT}/pieces/database/db_l1_%d_%T_%U.bkp';"
+  fi)
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    TAG 'ARCH_2H' FORMAT '${ROOT}/pieces/archivelog/arch_%d_%T_%U.bkp';
+  BACKUP CURRENT CONTROLFILE FORMAT '${ROOT}/pieces/controlfile/cf_%d_%T_%U.bkp';
+  BACKUP SPFILE FORMAT '${ROOT}/pieces/spfile/spfile_%d_%T_%U.bkp';
+}
+EXIT;
+EOF_RMAN
+
+if [[ "${BACKUP_TYPE}" == "ARCHIVELOG" ]]; then
+  VALIDATE_COMMAND="RESTORE ARCHIVELOG FROM TIME 'SYSDATE-1' VALIDATE;"
+else
+  VALIDATE_COMMAND="RESTORE DATABASE VALIDATE;"
+fi
+rman target / catalog "${CATALOG_CONNECT}" log="${VALIDATE_LOG}" append <<EOF_RMAN
+${VALIDATE_COMMAND}
+EXIT;
+EOF_RMAN
+
+cat >"${EVIDENCE}" <<EOF_STATUS
+TIMESTAMP=${RUN_ID}
+HOST=$(hostname -f)
+DB_UNIQUE_NAME=${DB_UNIQUE_NAME}
+DATABASE_ROLE=${DATABASE_ROLE}
+BACKUP_TYPE=${BACKUP_TYPE}
+LOG=${LOG}
+VALIDATE_LOG=${VALIDATE_LOG}
+EOF_STATUS
+
+cat >"${ROOT}/reports/latest_backup.status" <<EOF_STATUS
+STATUS=SUCCESS
+TIMESTAMP=${RUN_ID}
+HOST=$(hostname -f)
+DB_UNIQUE_NAME=${DB_UNIQUE_NAME}
+DATABASE_ROLE=${DATABASE_ROLE}
+BACKUP_TYPE=${BACKUP_TYPE}
+LOG=${LOG}
+EVIDENCE=${EVIDENCE}
+EOF_STATUS
+
+cat >"${ROOT}/reports/latest_validate.status" <<EOF_STATUS
+STATUS=SUCCESS
+TIMESTAMP=${RUN_ID}
+HOST=$(hostname -f)
+DB_UNIQUE_NAME=${DB_UNIQUE_NAME}
+DATABASE_ROLE=${DATABASE_ROLE}
+BACKUP_TYPE=${BACKUP_TYPE}
+LOG=${VALIDATE_LOG}
+EVIDENCE=${EVIDENCE}
+EOF_STATUS

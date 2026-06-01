@@ -67,6 +67,7 @@ Scegli il caso:
 
 Apri:
 
+- [Standard directory backup RMAN 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md)
 - [RMAN completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
 - [RMAN 19c Cheatsheet](./docs/01_operations/01_cheat_sheets/CS_RMAN.md)
 - [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_02_VERIFICA_BACKUP.md)

@@ -622,6 +622,8 @@ RECOVER DATAFILE 4 BLOCK 100,101,102;
 Esegui i comandi di cancellazione solo in una fase separata e autorizzata. In
 Data Guard verifica prima transport lag, apply lag, sequenze shipped/applied e
 `V$ARCHIVE_GAP` sullo standby. Non cancellare per semplice età.
+Per struttura directory e gate usa lo
+[standard directory backup RMAN](../../02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md).
 
 ```rman
 -- Sincronizza il dizionario/catalogo RMAN con i file fisici effettivamente presenti a disco

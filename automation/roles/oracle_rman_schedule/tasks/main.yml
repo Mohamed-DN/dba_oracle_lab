@@ -1,0 +1,71 @@
+---
+- name: Build RMAN schedule facts
+  ansible.builtin.set_fact:
+    rman_db_unique_name_effective: "{{ oracle_db_unique_name | default(oracle_db_name) }}"
+    rman_database_role_effective: "{{ oracle_database_role | default('PRIMARY') }}"
+    rman_level_hour: "{{ '04' if (oracle_database_role | default('PRIMARY')) == 'PRIMARY' else '01' }}"
+    rman_arch_minute: "{{ '45' if (oracle_database_role | default('PRIMARY')) == 'PRIMARY' else '15' }}"
+    rman_cleanup_hour: "{{ '09' if (oracle_database_role | default('PRIMARY')) == 'PRIMARY' else '08' }}"
+
+- name: Create RMAN script directory
+  ansible.builtin.file:
+    path: "{{ rman_script_dir }}"
+    state: directory
+    owner: "{{ rman_repository_owner }}"
+    group: "{{ rman_repository_group }}"
+    mode: "0750"
+
+- name: Deploy RMAN backup wrapper
+  ansible.builtin.template:
+    src: rman_backup_job.sh.j2
+    dest: "{{ rman_script_dir }}/rman_backup_job.sh"
+    owner: "{{ rman_repository_owner }}"
+    group: "{{ rman_repository_group }}"
+    mode: "0750"
+
+- name: Deploy guarded RMAN cleanup wrapper
+  ansible.builtin.template:
+    src: rman_cleanup_job.sh.j2
+    dest: "{{ rman_script_dir }}/rman_cleanup_job.sh"
+    owner: "{{ rman_repository_owner }}"
+    group: "{{ rman_repository_group }}"
+    mode: "0750"
+
+- name: Schedule weekly RMAN Level 0
+  ansible.builtin.cron:
+    name: "RMAN {{ rman_db_unique_name_effective }} weekly Level 0"
+    user: oracle
+    minute: "0"
+    hour: "{{ rman_level_hour }}"
+    weekday: "0"
+    job: "{{ rman_script_dir }}/rman_backup_job.sh LEVEL0"
+  when: rman_schedule_manage_cron | bool
+
+- name: Schedule daily RMAN Level 1
+  ansible.builtin.cron:
+    name: "RMAN {{ rman_db_unique_name_effective }} daily Level 1"
+    user: oracle
+    minute: "0"
+    hour: "{{ rman_level_hour }}"
+    weekday: "1-6"
+    job: "{{ rman_script_dir }}/rman_backup_job.sh LEVEL1"
+  when: rman_schedule_manage_cron | bool
+
+- name: Schedule RMAN archivelog backup every two hours
+  ansible.builtin.cron:
+    name: "RMAN {{ rman_db_unique_name_effective }} archivelog every two hours"
+    user: oracle
+    minute: "{{ rman_arch_minute }}"
+    hour: "*/2"
+    job: "{{ rman_script_dir }}/rman_backup_job.sh ARCHIVELOG"
+  when: rman_schedule_manage_cron | bool
+
+- name: Schedule weekly guarded RMAN cleanup
+  ansible.builtin.cron:
+    name: "RMAN {{ rman_db_unique_name_effective }} guarded cleanup"
+    user: oracle
+    minute: "0"
+    hour: "{{ rman_cleanup_hour }}"
+    weekday: "0"
+    job: "{{ rman_script_dir }}/rman_cleanup_job.sh"
+  when: rman_schedule_manage_cron | bool

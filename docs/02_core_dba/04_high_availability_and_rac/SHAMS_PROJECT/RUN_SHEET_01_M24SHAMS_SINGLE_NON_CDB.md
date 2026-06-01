@@ -40,7 +40,7 @@ PRIMARY                                 PHYSICAL STANDBY
 | FRA PE / SE | `<FRA_BYTES>` / `<FRA_BYTES>` |
 | Latenza PE-SE | `<LATENZA_MS>` |
 | Recovery catalog | `<RMAN_CATALOG_TNS>` |
-| Destinazione backup | `<BACKUP_DEST>` |
+| Destinazione backup | `/backup/rman/M24SHAMSPEC` e `/backup/rman/M24SHAMSSEC` |
 | Active Data Guard | `<PRODUZIONE_CON_EVIDENZA/LAB_PERSONALE/NO>` |
 | Decisione TDE | `<SI/NO - RIFERIMENTO>` |
 | Metodo creazione primary | `<DBCA_SCRIPT_REVIEW/GOLDEN_RMAN>` |

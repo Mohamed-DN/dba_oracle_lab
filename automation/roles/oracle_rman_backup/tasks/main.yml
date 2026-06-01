@@ -1,115 +1,212 @@
 ---
-- name: "Pre-Check — Database OPEN e ARCHIVELOG"
-  shell: |
+- name: Build RMAN repository paths
+  ansible.builtin.set_fact:
+    rman_db_unique_name_effective: "{{ oracle_db_unique_name | default(oracle_db_name) }}"
+    rman_database_role_effective: "{{ oracle_database_role | default('PRIMARY') }}"
+    rman_run_id: "{{ ansible_date_time.iso8601_basic_short }}"
+
+- name: Build RMAN database root
+  ansible.builtin.set_fact:
+    rman_db_root: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}"
+    rman_backup_log: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/logs/backup/backup_{{ rman_backup_type | lower }}_{{ rman_run_id }}.log"
+    rman_validate_log: >-
+      {{ rman_repository_root ~ '/' ~ rman_db_unique_name_effective ~
+      '/logs/validate/validate_' ~ (rman_backup_type | lower) ~ '_' ~
+      rman_run_id ~ '.log' }}
+    rman_report_file: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/reports/backup_report_{{ rman_run_id }}.txt"
+    rman_evidence_file: "{{ rman_repository_root }}/{{ rman_db_unique_name_effective }}/evidence/backup_{{ rman_backup_type | lower }}_{{ rman_run_id }}.txt"
+
+- name: Assert RMAN backup inputs
+  ansible.builtin.assert:
+    that:
+      - rman_backup_type in ['LEVEL0', 'LEVEL1', 'ARCHIVELOG']
+      - not rman_require_catalog or (rman_catalog_connect | length > 0)
+      - "'/' not in (rman_catalog_connect | regex_replace('^/', ''))"
+    fail_msg: >-
+      Usa LEVEL0, LEVEL1 o ARCHIVELOG e un alias wallet del recovery catalog.
+      Le password non devono comparire negli argomenti shell.
+
+- name: Verify mounted backup share
+  ansible.builtin.command: "mountpoint -q {{ rman_repository_root }}"
+  changed_when: false
+  when: rman_require_repository_mount | bool
+
+- name: Create RMAN repository directories
+  ansible.builtin.file:
+    path: "{{ rman_db_root }}/{{ item }}"
+    state: directory
+    owner: "{{ rman_repository_owner }}"
+    group: "{{ rman_repository_group }}"
+    mode: "0750"
+  loop:
+    - pieces/database
+    - pieces/archivelog
+    - pieces/controlfile
+    - pieces/spfile
+    - metadata
+    - logs/backup
+    - logs/validate
+    - logs/cleanup
+    - reports
+    - evidence
+    - tmp
+
+- name: Pre-check database identity and ARCHIVELOG mode
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    sqlplus -s / as sysdba <<EOF_SQL
-    SET HEAD OFF FEED OFF
-    SELECT status || '|' || log_mode FROM v\$instance i, v\$database d;
+    sqlplus -s / as sysdba <<'EOF_SQL'
+    SET HEAD OFF FEED OFF PAGES 0
+    SELECT 'INSTANCE_STATUS=' || status FROM v$instance;
+    SELECT 'LOG_MODE=' || log_mode FROM v$database;
+    SELECT 'DATABASE_ROLE=' || database_role FROM v$database;
+    SELECT 'DB_UNIQUE_NAME=' || db_unique_name FROM v$database;
     EXIT;
     EOF_SQL
-  register: db_mode
+  args:
+    executable: /bin/bash
+  register: rman_db_identity
   changed_when: false
 
-- name: "Assert — DB OPEN e ARCHIVELOG"
-  assert:
+- name: Assert database is backup-ready
+  ansible.builtin.assert:
     that:
-      - "'OPEN' in db_mode.stdout"
-      - "'ARCHIVELOG' in db_mode.stdout"
-    fail_msg: "Il database deve essere OPEN e in ARCHIVELOG mode!"
+      - "'LOG_MODE=ARCHIVELOG' in rman_db_identity.stdout"
+      - "'DB_UNIQUE_NAME=' + rman_db_unique_name_effective in rman_db_identity.stdout"
+      - >-
+        ('INSTANCE_STATUS=OPEN' in rman_db_identity.stdout) or
+        (rman_database_role_effective == 'PHYSICAL STANDBY' and
+        'INSTANCE_STATUS=MOUNTED' in rman_db_identity.stdout)
+    fail_msg: "Database non pronto per il backup RMAN: verifica ruolo, DB_UNIQUE_NAME e ARCHIVELOG."
 
-- name: "Pre-Check — Spazio FRA"
-  shell: |
+- name: Pre-check FRA usage
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    sqlplus -s / as sysdba <<EOF_SQL
-    SET HEAD OFF FEED OFF
-    SELECT ROUND(space_used * 100 / space_limit) FROM v\$recovery_file_dest;
+    sqlplus -s / as sysdba <<'EOF_SQL'
+    SET HEAD OFF FEED OFF PAGES 0
+    SELECT NVL(ROUND(space_used * 100 / NULLIF(space_limit, 0)), 0)
+    FROM v$recovery_file_dest;
     EXIT;
     EOF_SQL
+  args:
+    executable: /bin/bash
   register: fra_usage
   changed_when: false
 
-- name: "Assert — FRA non piena (< {{ fra_alert_pct }}%)"
-  assert:
-    that: fra_usage.stdout | trim | int < fra_alert_pct | int
-    fail_msg: "FRA al {{ fra_usage.stdout | trim }}%! Esegui il runbook FRA/Data Guard prima del backup."
+- name: Assert FRA is below alert threshold
+  ansible.builtin.assert:
+    that:
+      - fra_usage.stdout | trim | int < fra_alert_pct | int
+    fail_msg: >-
+      FRA al {{ fra_usage.stdout | trim }}%. Esegui il runbook FRA/Data Guard:
+      il job backup non effettua cleanup automatici.
 
-- name: "RMAN — Crosscheck metadata senza cancellazioni"
-  shell: |
+- name: Configure RMAN repository policy
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    rman target / <<EOF_RMAN
+    rman target / catalog "{{ rman_catalog_connect }}" <<'EOF_RMAN'
+    CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF {{ rman_retention_days }} DAYS;
+    CONFIGURE CONTROLFILE AUTOBACKUP ON;
+    CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '{{ rman_db_root }}/pieces/controlfile/%F';
+    CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+    CONFIGURE SNAPSHOT CONTROLFILE NAME TO '{{ rman_db_root }}/metadata/snapcf_{{ rman_db_unique_name_effective }}.f';
+    {% if rman_database_role_effective == 'PRIMARY' %}
+    CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+    {% else %}
+    CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+    {% endif %}
+    EXIT;
+    EOF_RMAN
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Crosscheck RMAN metadata without deleting files
+  ansible.builtin.shell: |
+    export ORACLE_HOME={{ oracle_home }}
+    export ORACLE_SID={{ oracle_sid }}
+    export PATH={{ oracle_home }}/bin:$PATH
+    rman target / catalog "{{ rman_catalog_connect }}" <<'EOF_RMAN'
     CROSSCHECK BACKUP;
     CROSSCHECK ARCHIVELOG ALL;
     EXIT;
     EOF_RMAN
-  register: crosscheck
+  args:
+    executable: /bin/bash
+  register: rman_crosscheck
   changed_when: false
 
-- name: "RMAN — Backup Database + Archivelog"
-  shell: |
+- name: Run RMAN backup with explicit formats
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    rman target / <<EOF_RMAN
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_backup_log }}" append <<'EOF_RMAN'
     RUN {
-      ALLOCATE CHANNEL c1 DEVICE TYPE DISK;
-      {% for i in range(2, rman_parallel_channels | int + 1) %}
-      ALLOCATE CHANNEL c{{ i }} DEVICE TYPE DISK;
+      {% for channel_number in range(1, rman_parallel_channels | int + 1) %}
+      ALLOCATE CHANNEL c{{ channel_number }} DEVICE TYPE DISK;
       {% endfor %}
-      BACKUP
-        AS COMPRESSED BACKUPSET
-        SECTION SIZE 32G
-        DATABASE
-        INCLUDE CURRENT CONTROLFILE
-        PLUS ARCHIVELOG;
-      BACKUP CURRENT CONTROLFILE;
-      BACKUP SPFILE;
+      {% if rman_backup_type == 'LEVEL0' %}
+      BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 SECTION SIZE {{ rman_section_size }}
+        DATABASE TAG 'L0_WEEKLY'
+        FORMAT '{{ rman_db_root }}/pieces/database/db_l0_%d_%T_%U.bkp';
+      {% elif rman_backup_type == 'LEVEL1' %}
+      BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 SECTION SIZE {{ rman_section_size }}
+        DATABASE TAG 'L1_DAILY'
+        FORMAT '{{ rman_db_root }}/pieces/database/db_l1_%d_%T_%U.bkp';
+      {% endif %}
+      BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+        TAG 'ARCH_2H'
+        FORMAT '{{ rman_db_root }}/pieces/archivelog/arch_%d_%T_%U.bkp';
+      BACKUP CURRENT CONTROLFILE
+        FORMAT '{{ rman_db_root }}/pieces/controlfile/cf_%d_%T_%U.bkp';
+      BACKUP SPFILE
+        FORMAT '{{ rman_db_root }}/pieces/spfile/spfile_%d_%T_%U.bkp';
     }
     EXIT;
     EOF_RMAN
-  register: backup_result
+  args:
+    executable: /bin/bash
+  register: rman_backup_result
+  changed_when: true
 
-- name: "Verifica Backup — No RMAN errors"
-  assert:
-    that:
-      - "'RMAN-00569' not in backup_result.stdout"
-      - "'ORA-' not in backup_result.stdout"
-    fail_msg: "⚠️ RMAN Backup ha riscontrato errori!"
-    success_msg: "✅ Backup RMAN completato senza errori"
+- name: Verify backup log has no RMAN fatal errors
+  ansible.builtin.shell: |
+    ! grep -E 'RMAN-00569|ORA-[0-9]{5}' "{{ rman_backup_log }}"
+  args:
+    executable: /bin/bash
+  changed_when: false
 
-- name: "RMAN — Validate ultimo backup"
-  shell: |
+- name: Validate RMAN backup
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    rman target / <<EOF_RMAN
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_validate_log }}" append <<'EOF_RMAN'
+    {% if rman_backup_type == 'ARCHIVELOG' %}
+    RESTORE ARCHIVELOG FROM TIME 'SYSDATE-1' VALIDATE;
+    {% else %}
     RESTORE DATABASE VALIDATE;
-    RESTORE ARCHIVELOG ALL VALIDATE;
+    {% endif %}
     EXIT;
     EOF_RMAN
-  register: validate_result
+  args:
+    executable: /bin/bash
+  register: rman_validate_result
+  changed_when: true
+  when: rman_run_restore_validate | bool
 
-- name: "Verifica Validate"
-  debug:
-    msg: |
-      {% if 'media recovery not required' in validate_result.stdout | lower or 'Finished restore' in validate_result.stdout %}
-      ✅ VALIDATE OK — Il backup è utilizzabile per il restore
-      {% else %}
-      ⚠️ VALIDATE ha prodotto output da verificare:
-      {{ validate_result.stdout_lines[-10:] | join('\n') }}
-      {% endif %}
-
-- name: "RMAN — Report backup finale"
-  shell: |
+- name: Write RMAN report
+  ansible.builtin.shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
-    rman target / <<EOF_RMAN
+    rman target / catalog "{{ rman_catalog_connect }}" log="{{ rman_report_file }}" append <<'EOF_RMAN'
     SHOW ARCHIVELOG DELETION POLICY;
     LIST BACKUP SUMMARY;
     LIST EXPIRED BACKUP;
@@ -118,18 +215,49 @@
     REPORT OBSOLETE;
     EXIT;
     EOF_RMAN
-  register: rman_report
+  args:
+    executable: /bin/bash
   changed_when: false
 
-- name: "📋 RMAN BACKUP REPORT"
-  debug:
-    msg: |
-      ============================================================
-       RMAN BACKUP REPORT — {{ ansible_date_time.date }}
-       Host: {{ inventory_hostname }}
-       Database: {{ oracle_db_name }}
-      ============================================================
-      {{ rman_report.stdout }}
-      ============================================================
-      Il ruolo non cancella file. Per liberare spazio applica il runbook
-      FRA/Data Guard, verifica lag e gap sullo standby e registra il cleanup.
+- name: Save backup evidence
+  ansible.builtin.copy:
+    dest: "{{ rman_evidence_file }}"
+    mode: "0640"
+    content: |
+      TIMESTAMP={{ ansible_date_time.iso8601 }}
+      HOST={{ inventory_hostname }}
+      DB_UNIQUE_NAME={{ rman_db_unique_name_effective }}
+      DATABASE_ROLE={{ rman_database_role_effective }}
+      BACKUP_TYPE={{ rman_backup_type }}
+      FRA_PERCENT={{ fra_usage.stdout | trim }}
+      LOG={{ rman_backup_log }}
+      VALIDATE_LOG={{ rman_validate_log }}
+      REPORT={{ rman_report_file }}
+
+- name: Publish latest backup status
+  ansible.builtin.copy:
+    dest: "{{ rman_db_root }}/reports/latest_backup.status"
+    mode: "0640"
+    content: |
+      STATUS=SUCCESS
+      TIMESTAMP={{ ansible_date_time.iso8601 }}
+      HOST={{ inventory_hostname }}
+      DB_UNIQUE_NAME={{ rman_db_unique_name_effective }}
+      DATABASE_ROLE={{ rman_database_role_effective }}
+      BACKUP_TYPE={{ rman_backup_type }}
+      LOG={{ rman_backup_log }}
+      EVIDENCE={{ rman_evidence_file }}
+
+- name: Publish latest validate status
+  ansible.builtin.copy:
+    dest: "{{ rman_db_root }}/reports/latest_validate.status"
+    mode: "0640"
+    content: |
+      STATUS={{ 'SUCCESS' if rman_run_restore_validate | bool else 'SKIPPED' }}
+      TIMESTAMP={{ ansible_date_time.iso8601 }}
+      HOST={{ inventory_hostname }}
+      DB_UNIQUE_NAME={{ rman_db_unique_name_effective }}
+      DATABASE_ROLE={{ rman_database_role_effective }}
+      BACKUP_TYPE={{ rman_backup_type }}
+      LOG={{ rman_validate_log }}
+      EVIDENCE={{ rman_evidence_file }}

@@ -56,6 +56,7 @@ prefisso approvato mantenendo la stessa convenzione di naming.
 | [Network e Broker](./GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) | Setup comune: rete DG, listener, duplicate RMAN, apply e Broker |
 | [Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) | Percorso opzionale licenza-gated per `READ ONLY WITH APPLY`, `_PRY` e `_RO` |
 | [Evidence e drill test book](./GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md) | Evidenze, switchover, gap, servizi, Observer e rollback |
+| [Standard directory backup RMAN](../../02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene indipendenti PE/SE, status OEM e cleanup gated |
 | [Run sheet varianti](./RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md) | Checklist breve per scegliere ed eseguire il blueprint corretto |
 | [Artifact DOCX/PDF](../../../../artifacts/shams_project/README.md) | Export versionati del pacchetto |
 

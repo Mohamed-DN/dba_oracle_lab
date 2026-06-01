@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  role_name: oracle_rman_schedule
+  author: dba_oracle_lab
+  description: Deploy RMAN backup and guarded cleanup wrappers with staggered cron.
+  license: MIT
+  min_ansible_version: "2.14"
+dependencies: []

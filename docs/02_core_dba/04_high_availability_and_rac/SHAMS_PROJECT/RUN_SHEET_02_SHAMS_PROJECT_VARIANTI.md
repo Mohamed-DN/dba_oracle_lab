@@ -35,6 +35,7 @@ compila:
 | ADG disattivo oppure gate licenza/lab personale | `<OK/KO>` |
 | decisione TDE | `<OK/KO>` |
 | recovery catalog RMAN | `<OK/KO>` |
+| share `/backup/rman/<DB_UNIQUE_NAME>` PE/SE | `<OK/KO>` |
 
 ### 2. Gate host
 

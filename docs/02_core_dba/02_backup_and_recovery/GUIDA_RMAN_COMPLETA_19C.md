@@ -23,6 +23,7 @@ Se un restore non parte, controlla catalogo, piece disponibili, archivelog e spa
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (questa guida - riferimento storico).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
+> - **Standard Directory Enterprise**: [GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md](./GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) (share `/backup/rman`, catene PE/SE e cleanup gated).
 
 > [!WARNING]
 > **Questa guida è stata sostituita dalla versione molto più dettagliata nella Fase 5.**
@@ -112,20 +113,20 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
 CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 
-CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '+RECO/%d/%T/%U';
-CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '+RECO/%F';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/rman/%d/pieces/database/db_%d_%T_%U.bkp';
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/rman/%d/pieces/controlfile/%F';
 ```
 
 RAC (da fare su DB RAC):
 
 ```rman
-CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+RECO/RACDB/snapcf_racdb.f';
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/backup/rman/RACDB/metadata/snapcf_RACDB.f';
 ```
 
 Data Guard (sul primary):
 
 ```rman
-CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
 ```
 
 ## 5) Block Change Tracking (BCT)
@@ -653,7 +654,8 @@ Esito atteso: backup corretti anche con ruoli invertiti.
   - aumenta FRA se lo storage lo consente oppure applica cleanup autorizzato
     dopo il gate Data Guard.
 - `RMAN-06059: expected archived log not found`
-  - `CROSSCHECK ARCHIVELOG ALL` + `DELETE EXPIRED ARCHIVELOG ALL`.
+  - raccogli evidenze con `CROSSCHECK ARCHIVELOG ALL`, poi usa il cleanup gated
+    separato se devi rimuovere metadata `EXPIRED`.
 - archivelog non cancellati
   - verifica policy Data Guard e stato apply.
 - backup lenti

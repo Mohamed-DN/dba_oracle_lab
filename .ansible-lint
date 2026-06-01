@@ -10,5 +10,7 @@ skip_list:
   - no-changed-when
   - command-instead-of-shell
   - risky-shell-pipe
+  # Operational inputs are intentionally shared across roles via group_vars.
+  - var-naming[no-role-prefix]
   - yaml[truthy]
   - yaml[trailing-spaces]

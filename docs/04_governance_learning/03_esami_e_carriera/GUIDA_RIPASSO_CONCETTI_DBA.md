@@ -304,8 +304,8 @@ graph TD
 
 ### Q27: Cosa indicano i comandi Crosscheck e Delete Obsolete?
 *   **Definizione**: Il **Crosscheck** serve a Oracle per dire: "Vammi a vedere se i file di backup che ho nel catalogo esistono ancora fisicamente sul disco". Se non li trova, li marca come `EXPIRED`. **Delete Obsolete** invece cancella i backup che sono ancora integri ma che non servono più secondo la logica di conservazione (es. ho backup di 2 mesi fa ma la mia policy è di 30 giorni).
-*   **Impatto**: Fondamentali per la manutenzione automatica. Senza questi comandi, la **FRA** (Flash Recovery Area) si riempirebbe in pochi giorni, bloccando il database.
-*   **Operatività**: `CROSSCHECK BACKUP; DELETE NOPROMPT OBSOLETE;`.
+*   **Impatto**: Fondamentali per la manutenzione, ma il cleanup deve restare separato dal job di backup. In Data Guard controlla lag, gap e deletion policy.
+*   **Operatività**: `CROSSCHECK BACKUP; REPORT OBSOLETE;`, poi cleanup gated autorizzato.
 
 ### Q28: A cosa serve il comando Validate?
 *   **Definizione**: È il comando della "serenità". Legge l'intero backup (o database) simulando un ripristino per verificare che ogni singolo bit sia leggibile e non corrotto.

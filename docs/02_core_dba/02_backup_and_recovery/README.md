@@ -2,6 +2,7 @@
 
 | Guida | Cosa impari |
 | --- | --- |
+| [Standard directory backup RMAN 19c](./GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene PE/SE, status OEM e cleanup gated |
 | [Fase 5: RMAN Backup](./GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup/recovery del lab |
 | [RMAN Completa 19c](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog |
 | [RMAN Comandi Enterprise](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) | Comandi RMAN, runbook e troubleshooting avanzato |
