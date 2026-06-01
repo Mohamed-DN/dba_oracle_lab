@@ -2,7 +2,7 @@
 # ============================================================================
 # Playbook: RMAN Backup con Validazione
 # Esegue backup completo + crosscheck + validate + report
-# Uso: ansible-playbook -i inventory/production.ini playbooks/05_rman_backup.yml
+# Uso: ansible-playbook -i inventory/production.ini playbooks/rman_backup.yml
 # ============================================================================
 
 - name: "Oracle RMAN — Backup Completo + Validate"

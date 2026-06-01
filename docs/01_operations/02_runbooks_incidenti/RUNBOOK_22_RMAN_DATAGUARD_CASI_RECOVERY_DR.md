@@ -427,11 +427,13 @@ file, blocco e oggetto; usa Block Media Recovery quando applicabile.
 ```rman
 rman target /
 
-VALIDATE DATABASE CHECK LOGICAL;
-LIST FAILURE;
-ADVISE FAILURE;
+VALIDATE CHECK LOGICAL DATABASE;
 RECOVER CORRUPTION LIST;
 ```
+
+`LIST FAILURE` e `ADVISE FAILURE` appartengono al Data Recovery Advisor,
+deprecato in 19c. Usa diagnostica esplicita e registra i blocchi da
+`V$DATABASE_BLOCK_CORRUPTION`.
 
 ```sql
 SELECT * FROM v$database_block_corruption;
@@ -516,12 +518,11 @@ rman target /
 
 SHOW ARCHIVELOG DELETION POLICY;
 CROSSCHECK ARCHIVELOG ALL;
-DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-DELETE NOPROMPT OBSOLETE;
+LIST EXPIRED ARCHIVELOG ALL;
+REPORT OBSOLETE;
 ```
 
-Se Data Guard e' in lag o irraggiungibile, passa a DG-061 prima di eliminare
-archivelog.
+Se Data Guard e' configurato, passa a DG-061 prima di eliminare archivelog.
 
 ## Matrice RMAN dei casi secondari
 

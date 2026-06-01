@@ -507,8 +507,8 @@ BACKUP DATABASE;
 -- Backup del database e archivelog correnti
 BACKUP DATABASE PLUS ARCHIVELOG;
 
--- Backup database, archivelog e successiva rimozione dei log fisici dal disco
-BACKUP DATABASE PLUS ARCHIVELOG DELETE INPUT;
+-- Backup database e archivelog. Il cleanup fisico resta una fase separata.
+BACKUP DATABASE PLUS ARCHIVELOG;
 
 -- Backup compresso del database (consigliato per risparmiare spazio)
 BACKUP AS COMPRESSED BACKUPSET DATABASE;
@@ -553,8 +553,8 @@ BACKUP SPFILE;
 -- Esegue il backup di tutti gli archivelog
 BACKUP ARCHIVELOG ALL;
 
--- Esegue il backup e rimuove gli archivelog dal disco (consigliato per liberare FRA)
-BACKUP ARCHIVELOG ALL DELETE INPUT;
+-- Esegue il backup degli archivelog senza cancellazione incorporata
+BACKUP ARCHIVELOG ALL;
 
 -- Backup limitato a una sequenza specifica di log
 BACKUP ARCHIVELOG FROM SEQUENCE 100 UNTIL SEQUENCE 200;
@@ -611,13 +611,18 @@ Consente di riparare blocchi corrotti specifici senza mettere offline il databas
 
 ```rman
 -- Ripara il blocco 100 all'interno del datafile 4
-BLOCKRECOVER DATAFILE 4 BLOCK 100;
+RECOVER DATAFILE 4 BLOCK 100;
 
 -- Ripara un gruppo di blocchi corrotti
-BLOCKRECOVER DATAFILE 4 BLOCK 100,101,102;
+RECOVER DATAFILE 4 BLOCK 100,101,102;
 ```
 
 ### 4) Manutenzione del Catalogo RMAN, Crosscheck e Cleanup
+
+Esegui i comandi di cancellazione solo in una fase separata e autorizzata. In
+Data Guard verifica prima transport lag, apply lag, sequenze shipped/applied e
+`V$ARCHIVE_GAP` sullo standby. Non cancellare per semplice età.
+
 ```rman
 -- Sincronizza il dizionario/catalogo RMAN con i file fisici effettivamente presenti a disco
 CROSSCHECK BACKUP;
@@ -632,9 +637,6 @@ REPORT OBSOLETE;
 -- Elimina i backup obsoleti liberando fisicamente spazio sul disco/FRA
 DELETE OBSOLETE;
 DELETE NOPROMPT OBSOLETE;
-
--- Elimina i backup più vecchi di una settimana.
-DELETE BACKUP COMPLETED BEFORE 'SYSDATE-7';
 
 -- Per gli archivelog applica la deletion policy configurata.
 -- In Data Guard verifica prima transport/apply lag.
@@ -658,6 +660,9 @@ CONFIGURE BACKUP OPTIMIZATION ON;
 
 -- Imposta il parallelismo a 4 canali per velocizzare i processi di backup/restore
 CONFIGURE DEVICE TYPE DISK PARALLELISM 4;
+
+-- Baseline senza opzioni aggiuntive. LOW, MEDIUM e HIGH richiedono gate licenza.
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
 
 -- Ripristina i parametri di fabbrica predefiniti
 CONFIGURE RETENTION POLICY CLEAR;

@@ -60,8 +60,7 @@
 - [ADRCI](../01_cheat_sheets/CS_ADRCI.md)
 - [LSNRCTL / Oracle Net](../01_cheat_sheets/CS_LSNRCTL_NET.md)
 - [OPatch / datapatch](../01_cheat_sheets/CS_OPATCH_DATAPATCH.md)
-- [RMAN Full Cheatsheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR, manuali RMAN.
-- [RMAN Essentials](../01_cheat_sheets/CS_RMAN_RAPIDO.md)
+- [RMAN 19c Cheatsheet](../01_cheat_sheets/CS_RMAN.md) - catalog, RAC/DG, CDB/PDB, validate restore, TSPITR e matrice comandi.
 - [DGMGRL](../01_cheat_sheets/CS_DGMGRL.md)
 - [GoldenGate](../01_cheat_sheets/CS_GOLDENGATE.md)
 

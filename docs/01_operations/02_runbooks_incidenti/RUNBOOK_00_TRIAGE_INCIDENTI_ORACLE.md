@@ -21,12 +21,14 @@ Usali per raccogliere evidenze rapide dopo aver letto lo scenario del runbook.
 
 ## Indice rapido
 - [Obiettivo](#obiettivo)
-- [Regola operativa](#regola-operativa)
+- [Procedura operativa](#procedura-operativa)
 - [Decision tree in 90 secondi](#decision-tree-in-90-secondi)
 - [Matrice alert -> runbook](#matrice-alert---runbook)
 - [Severita e comunicazione](#severita-e-comunicazione)
 - [Checklist minima da allegare al ticket](#checklist-minima-da-allegare-al-ticket)
 - [Cosa non fare in produzione](#cosa-non-fare-in-produzione)
+- [Validazione finale](#validazione-finale)
+- [Troubleshooting rapido](#troubleshooting-rapido)
 - [Fonti Oracle ufficiali utili](#fonti-oracle-ufficiali-utili)
 
 ## Obiettivo
@@ -38,7 +40,7 @@ Questo file e il punto di ingresso per gli incidenti Oracle. Serve a evitare due
 
 In ambiente critico il DBA deve prima classificare il problema, poi scegliere la procedura. La priorita non e "provare comandi", ma ridurre il rischio operativo mantenendo tracciabilita.
 
-## Regola operativa
+## Procedura operativa
 
 Prima di qualunque intervento raccogli sempre:
 
@@ -102,7 +104,7 @@ ALERT / TICKET
 | TEMP piena | [16](./RUNBOOK_16_RESIZE_TEMP.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | sessioni TEMP, SQL_ID, tempfile |
 | FRA piena | [17](./RUNBOOK_17_PURGE_LOG_ORACLE.md) | [19](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | v$recovery_area_usage, archivelog, DG applied |
 | Backup failed | [02](./RUNBOOK_02_VERIFICA_BACKUP.md) | [19](./RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md) | RMAN log, error stack, backup pieces |
-| Drop table / delete errata | [22](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/CS_RMAN_RAPIDO.md) | ora evento, oggetto, backup, flashback |
+| Drop table / delete errata | [22](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | [RMAN cheat sheet](../01_cheat_sheets/CS_RMAN.md) | ora evento, oggetto, backup, flashback |
 | Data Guard lag | [03](./RUNBOOK_03_CHECK_DATAGUARD.md) | [22](./RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md) | transport/apply lag, gap, alert log |
 | DB link lento/rotto | [21](./RUNBOOK_21_GESTIONE_DB_LINK.md) | [23](./RUNBOOK_23_SQL_TUNING_CASI_ENTERPRISE.md) | connect string, ORA, remote SQL, network |
 | Refresh preprod | [20](./RUNBOOK_20_EXPORT_IMPORT_PROD_PREPROD.md) | [13](./RUNBOOK_13_REFRESH_SCHEMA_TEST.md) | dump size, parfile, masking, checksum |
@@ -142,6 +144,18 @@ Prossima azione:
 - Non cambiare parametri optimizer globali per risolvere una singola query.
 - Non fare failover Data Guard se non hai dichiarato RPO/RTO e confermato ruolo/lag.
 - Non usare account con privilegi eccessivi se esiste una procedura least privilege.
+
+## Validazione finale
+
+Prima di chiudere il triage verifica che il ticket contenga database, nodo,
+ruolo, orario, sintomo, evidenze raccolte e runbook scelto. Se hai già eseguito
+un fix, registra anche comando, output di verifica e rischio residuo.
+
+## Troubleshooting rapido
+
+Se il database non risponde, passa subito ai controlli OS e Clusterware. Se il
+sintomo non rientra nella matrice, conserva alert log e timeline e apri il
+decision tree generale prima di provare modifiche.
 
 ## Fonti Oracle ufficiali utili
 

@@ -5,7 +5,7 @@
 > - **Guida di Laboratorio (Fase 5)**: [GUIDA_FASE5_RMAN_BACKUP.md](./GUIDA_FASE5_RMAN_BACKUP.md) (questa guida - impostazione della strategia di backup e cron).
 > - **Manuale Comandi Core**: [GUIDA_RMAN_COMANDI_ENTERPRISE.md](./GUIDA_RMAN_COMANDI_ENTERPRISE.md) (riferimento completo dei parametri RMAN).
 > - **Guida Architetturale Core**: [GUIDA_RMAN_COMPLETA_19C.md](./GUIDA_RMAN_COMPLETA_19C.md) (fondamenti teorici e scenari avanzati).
-> - **Cheat Sheet RMAN**: [CS_RMAN_RAPIDO.md](../../01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md) (comandi quotidiani e scenari operativi).
+> - **Cheat Sheet RMAN**: [CS_RMAN.md](../../01_operations/01_cheat_sheets/CS_RMAN.md) (comandi quotidiani, matrice 19c e scenari operativi).
 
 > Il backup è la tua ultima linea di difesa. Non importa quanto siano sofisticate le tue soluzioni di HA (RAC, Data Guard, GoldenGate): se un errore umano cancella una tabella, solo un backup RMAN può salvarti.
 

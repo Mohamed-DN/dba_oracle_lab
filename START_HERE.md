@@ -68,7 +68,7 @@ Scegli il caso:
 Apri:
 
 - [RMAN completa 19c](./docs/02_core_dba/02_backup_and_recovery/GUIDA_RMAN_COMPLETA_19C.md)
-- [RMAN Full Cheatsheet](./docs/01_operations/01_cheat_sheets/CS_RMAN_RAPIDO.md)
+- [RMAN 19c Cheatsheet](./docs/01_operations/01_cheat_sheets/CS_RMAN.md)
 - [Verifica Backup RMAN](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_02_VERIFICA_BACKUP.md)
 - [Diagnosi RMAN e DR](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_19_DIAGNOSI_BACKUP_RMAN_FALLITI_E_RESTORE_SENZA_BACKUP.md)
 - [RMAN + Data Guard Recovery/DR](./docs/01_operations/02_runbooks_incidenti/RUNBOOK_22_RMAN_DATAGUARD_CASI_RECOVERY_DR.md)

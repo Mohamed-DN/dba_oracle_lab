@@ -49,6 +49,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Operations core**: resi Data Guard-aware i job RMAN, rimossi segreti da
   esempi OEM, impostato GoldenGate MA TLS/WSS come default e riallineati i
   test end-to-end a servizi PDB role-based e fencing.
+- **RMAN 19c reference**: introdotto `CS_RMAN.md` come cheat sheet canonico con
+  matrice comandi e mantenuto il redirect compatibile `CS_RMAN_RAPIDO.md`;
+  separato il cleanup archivelog dai backup automatici e allineate guide,
+  runbook, materiale colloquio e ruolo Ansible ai guardrail Data Guard-aware;
+  corretti anche i riferimenti ai playbook rinominati nei test E2E e nel
+  workflow di regressione critica.
 
 ## [2.0.0] - 2026-05-14
 ### Added

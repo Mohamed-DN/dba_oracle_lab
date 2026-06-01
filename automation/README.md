@@ -99,6 +99,8 @@ ansible-playbook -i inventory/production.ini playbooks/dataguard_switchover.yml
 
 # ---- BACKUP RMAN ----
 ansible-playbook -i inventory/production.ini playbooks/rman_backup.yml
+# Il ruolo esegue backup, crosscheck, validate e report. Non cancella file:
+# il cleanup FRA/archivelog richiede il runbook Data Guard-aware autorizzato.
 
 # ---- DATAPUMP EXPORT ----
 ansible-playbook -i inventory/production.ini playbooks/datapump_export.yml

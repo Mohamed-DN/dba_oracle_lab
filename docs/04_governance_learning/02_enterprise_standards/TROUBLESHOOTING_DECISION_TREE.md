@@ -239,7 +239,7 @@ Se il database è in archivelog mode (OBBLIGATORIO) e hai backup validi, RMAN pu
 ```bash
 rman target /
 -- Esempio errore: Block 12345 file 7
-RMAN> BLOCKRECOVER DATAFILE 7 BLOCK 12345;
+RMAN> RECOVER DATAFILE 7 BLOCK 12345;
 ```
 
 ### 6.2. ORA-00600 / ORA-07445: Internal Error

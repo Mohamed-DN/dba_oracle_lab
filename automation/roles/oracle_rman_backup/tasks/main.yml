@@ -35,9 +35,9 @@
 - name: "Assert — FRA non piena (< {{ fra_alert_pct }}%)"
   assert:
     that: fra_usage.stdout | trim | int < fra_alert_pct | int
-    fail_msg: "FRA al {{ fra_usage.stdout | trim }}%! Pulisci prima con DELETE OBSOLETE."
+    fail_msg: "FRA al {{ fra_usage.stdout | trim }}%! Esegui il runbook FRA/Data Guard prima del backup."
 
-- name: "RMAN — Crosscheck e pulizia"
+- name: "RMAN — Crosscheck metadata senza cancellazioni"
   shell: |
     export ORACLE_HOME={{ oracle_home }}
     export ORACLE_SID={{ oracle_sid }}
@@ -45,13 +45,10 @@
     rman target / <<EOF_RMAN
     CROSSCHECK BACKUP;
     CROSSCHECK ARCHIVELOG ALL;
-    DELETE NOPROMPT EXPIRED BACKUP;
-    DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
-    DELETE NOPROMPT OBSOLETE;
     EXIT;
     EOF_RMAN
   register: crosscheck
-  changed_when: "'deleted' in crosscheck.stdout | lower"
+  changed_when: false
 
 - name: "RMAN — Backup Database + Archivelog"
   shell: |
@@ -69,7 +66,7 @@
         SECTION SIZE 32G
         DATABASE
         INCLUDE CURRENT CONTROLFILE
-        PLUS ARCHIVELOG DELETE ALL INPUT;
+        PLUS ARCHIVELOG;
       BACKUP CURRENT CONTROLFILE;
       BACKUP SPFILE;
     }
@@ -113,8 +110,12 @@
     export ORACLE_SID={{ oracle_sid }}
     export PATH={{ oracle_home }}/bin:$PATH
     rman target / <<EOF_RMAN
+    SHOW ARCHIVELOG DELETION POLICY;
     LIST BACKUP SUMMARY;
+    LIST EXPIRED BACKUP;
+    LIST EXPIRED ARCHIVELOG ALL;
     REPORT NEED BACKUP;
+    REPORT OBSOLETE;
     EXIT;
     EOF_RMAN
   register: rman_report
@@ -130,3 +131,5 @@
       ============================================================
       {{ rman_report.stdout }}
       ============================================================
+      Il ruolo non cancella file. Per liberare spazio applica il runbook
+      FRA/Data Guard, verifica lag e gap sullo standby e registra il cleanup.

@@ -16,8 +16,7 @@
 | **LSNRCTL / Oracle Net** | Listener, SCAN, TNS, Easy Connect, ORA-125xx, static registration | [CS_LSNRCTL_NET.md](CS_LSNRCTL_NET.md) |
 | **OPatch / datapatch** | Inventory, prereq, patch apply, datapatch, rollback, registry SQL patch | [CS_OPATCH_DATAPATCH.md](CS_OPATCH_DATAPATCH.md) |
 | **SQLPlus / SQLcl / DBCA / NETCA** | Connessioni, spool, startup/shutdown, DBCA silent, NETCA | [CS_SQLPLUS_SQLCL_DBCA_NETCA.md](CS_SQLPLUS_SQLCL_DBCA_NETCA.md) |
-| **RMAN** | Comandi RMAN completi (backup, restore, catalog, validate) | [CS_RMAN_RAPIDO.md](CS_RMAN_RAPIDO.md) |
-| **RMAN Essenziale** | I 10 comandi RMAN che usi ogni giorno | [CS_RMAN_RAPIDO.md](CS_RMAN_RAPIDO.md) |
+| **RMAN 19c** | Comandi RMAN completi, casi d'uso, guardrail e scenari recovery | [CS_RMAN.md](CS_RMAN.md) |
 | **Data Guard / DGMGRL** | Switchover, failover, reinstate, show configuration | [CS_DGMGRL.md](CS_DGMGRL.md) |
 | **GoldenGate** | Start/stop replicat, stats, lag, troubleshooting | [CS_GOLDENGATE.md](CS_GOLDENGATE.md) |
 | **SQL Assessment DBA** | PDB/service lookup, dimensione DB, trend crescita, redo rate | [CS_SQL_ASSESSMENT.md](CS_SQL_ASSESSMENT.md) |
@@ -42,7 +41,7 @@ Per guide dettagliate e approfondite, vedi le sezioni dedicate:
 ```bash
 # Dal terminale: cerca un comando rapidamente
 grep -i "switchover" docs/01_operations/01_cheat_sheets/*.md
-grep -i "backup" docs/01_operations/01_cheat_sheets/CHEAT_SHEET_RMAN*.md
+grep -i "backup" docs/01_operations/01_cheat_sheets/CS_RMAN.md
 grep -i "srvctl status service" docs/01_operations/01_cheat_sheets/*.md
 grep -i "show alert" docs/01_operations/01_cheat_sheets/*.md
 ```
