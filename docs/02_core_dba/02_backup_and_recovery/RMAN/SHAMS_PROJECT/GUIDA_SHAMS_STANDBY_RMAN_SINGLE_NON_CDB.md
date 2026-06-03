@@ -38,6 +38,12 @@ Compilare prima di eseguire:
 <KEYSTORE_DIR oppure N/A>
 ```
 
+## Procedura operativa
+
+Eseguire i passi da 0 a 9 senza saltare controlli intermedi. Il duplicate deve
+partire solo quando listener, TNS, password file, parametri Data Guard e
+auxiliary `NOMOUNT` sono gia' coerenti su primary e standby.
+
 ## 0. Precheck obbligatori
 
 Eseguire su primary e standby come `oracle` o `grid` dove indicato.
@@ -433,7 +439,7 @@ VALIDATE NETWORK CONFIGURATION FOR ALL;
 VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
-## 10. Checklist finale
+## Validazione finale
 
 | Check | Query/comando | Atteso |
 | --- | --- | --- |
@@ -445,3 +451,13 @@ VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 | Backup | `LIST BACKUP SUMMARY` | baseline presente nel catalogo |
 
 Non procedere a switchover o FSFO se questa checklist non e' pulita.
+
+## Troubleshooting rapido
+
+| Sintomo | Controllo | Azione |
+| --- | --- | --- |
+| `RMAN-06217` o connessione auxiliary KO | `tnsping M24SHAMSSEC_AUX` e listener statico | correggere `SID_DESC`, porta `1531` e servizio statico |
+| `ORA-01031` durante duplicate | password file e `REMOTE_LOGIN_PASSWORDFILE` | ricopiare password file con permessi corretti e stessa password SYS |
+| File creati fuori ASM atteso | `SHOW PARAMETER db_create_file_dest` | correggere `DB_CREATE_FILE_DEST` e rifare duplicate se necessario |
+| MRP non parte | `V$MANAGED_STANDBY`, alert log | risolvere gap, standby redo log o parametri `LOG_ARCHIVE_CONFIG` |
+| Broker non valida static connect | `VALIDATE STATIC CONNECT IDENTIFIER FOR ALL` | allineare listener statico e `StaticConnectIdentifier` |
