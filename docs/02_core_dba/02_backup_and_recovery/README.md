@@ -2,7 +2,7 @@
 
 | Guida | Cosa impari |
 | --- | --- |
-| [RMAN Procedure Operative](./RMAN/README.md) | Area unica per backup RMAN, standby SHAMS e migrazione produzione -> STG |
+| [RMAN Procedure Operative](./SHAMS_RMAN/README.md) | Area unica per backup RMAN, standby SHAMS e migrazione produzione -> STG |
 | [Standard directory backup RMAN 19c](./GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene PE/SE, status OEM e cleanup gated |
 | [Fase 5: RMAN Backup](./GUIDA_FASE5_RMAN_BACKUP.md) | Strategia backup/recovery del lab |
 | [RMAN Completa 19c](./GUIDA_RMAN_COMPLETA_19C.md) | Backup, restore, recovery, catalog |

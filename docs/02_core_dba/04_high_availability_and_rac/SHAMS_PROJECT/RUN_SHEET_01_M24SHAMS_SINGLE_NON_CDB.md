@@ -11,8 +11,8 @@ Usare questo run sheet durante il change. Per motivazioni, comandi completi e
 troubleshooting consultare la
 [SOP Enterprise M24SHAMS](./GUIDA_01_M24SHAMS_SINGLE_NON_CDB_DATAGUARD.md).
 Per i comandi RMAN completi usare anche
-[Standby SHAMS con RMAN](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md)
-e [RMAN backup SHAMS](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md).
+[Standby SHAMS con RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md)
+e [RMAN backup SHAMS](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md).
 
 ## Architettura
 
@@ -135,7 +135,7 @@ rman target sys@M24SHAMSPEC_DG auxiliary sys@M24SHAMSSEC_AUX
 
 Esegui lo script `DUPLICATE TARGET DATABASE FOR STANDBY FROM ACTIVE DATABASE`
 approvato nella
-[procedura RMAN standby](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md).
+[procedura RMAN standby](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md).
 Non inserire password nella command line.
 
 ### 5. Apply, Active Data Guard e SRL
@@ -219,7 +219,7 @@ SHOW CONFIGURATION;
 ### 7. RMAN sullo standby
 
 Installa prima i template descritti in
-[RMAN backup SHAMS](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md).
+[RMAN backup SHAMS](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md).
 
 Connetti standby e recovery catalog:
 

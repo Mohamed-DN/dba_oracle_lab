@@ -22,9 +22,9 @@ Per l'esecuzione dettagliata dei passi RMAN usare le procedure operative nuove:
 
 | Procedura | Uso |
 | --- | --- |
-| [Standby SHAMS con RMAN](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Active duplicate, Oracle Restart, MRP, Broker e verifiche |
-| [RMAN backup SHAMS](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Repository `/backup/rman`, wrapper, cmdfile, schedule e cleanup |
-| [SHAMS Migration With RMAN](../../02_backup_and_recovery/RMAN/SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG e standby STG |
+| [Standby SHAMS con RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Active duplicate, Oracle Restart, MRP, Broker e verifiche |
+| [RMAN backup SHAMS](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Repository `/backup/rman`, wrapper, cmdfile, schedule e cleanup |
+| [SHAMS Migration With RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG e standby STG |
 
 Queste guide contengono comandi Oracle reali e placeholder compilabili. Non
 usare password in command line e non copiare valori sensibili nei log di change.

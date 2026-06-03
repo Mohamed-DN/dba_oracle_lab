@@ -64,7 +64,7 @@ lsnrctl status LISTENER_DG
 Sul primary:
 
 ```bash
-sqlplus / as sysdba @docs/02_core_dba/02_backup_and_recovery/RMAN/templates/sql/shams_precheck_dataguard.sql
+sqlplus / as sysdba @docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/templates/sql/shams_precheck_dataguard.sql
 ```
 
 Condizioni minime:
@@ -308,7 +308,7 @@ Uscire se RMAN non connette target e auxiliary.
 Usare il template:
 
 ```bash
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/templates/rman/duplicate_standby_from_active.rcv /tmp/duplicate_m24shamssec.rcv
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/templates/rman/duplicate_standby_from_active.rcv /tmp/duplicate_m24shamssec.rcv
 vi /tmp/duplicate_m24shamssec.rcv
 ```
 
@@ -391,7 +391,7 @@ WHERE process = 'MRP0';
 Eseguire i post-check:
 
 ```bash
-sqlplus / as sysdba @docs/02_core_dba/02_backup_and_recovery/RMAN/templates/sql/shams_post_duplicate_checks.sql
+sqlplus / as sysdba @docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/templates/sql/shams_post_duplicate_checks.sql
 ```
 
 Atteso:
