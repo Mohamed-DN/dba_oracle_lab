@@ -1,0 +1,14 @@
+RUN {
+  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 CUMULATIVE SECTION SIZE &5
+    DATABASE
+    TAG 'L1_CUMULATIVE_STANDBY'
+    FORMAT '&1/pieces/database/l1cum_standby_%d_%T_%U.bkp';
+  BACKUP AS COMPRESSED BACKUPSET
+    ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    TAG 'ARCH_STANDBY_AFTER_CUM'
+    FORMAT '&1/pieces/archivelog/arch_standby_%d_%T_%U.bkp';
+  BACKUP CURRENT CONTROLFILE FORMAT '&1/pieces/controlfile/cf_standby_%d_%T_%U.bkp';
+  BACKUP SPFILE FORMAT '&1/pieces/spfile/spfile_standby_%d_%T_%U.bkp';
+}
+LIST BACKUP SUMMARY;
+EXIT;
