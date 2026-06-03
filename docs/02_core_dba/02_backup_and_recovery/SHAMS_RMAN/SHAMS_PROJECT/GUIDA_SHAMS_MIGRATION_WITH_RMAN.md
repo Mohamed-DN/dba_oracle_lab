@@ -314,7 +314,7 @@ Dopo il clone:
 
 ```bash
 mkdir -p /backup/rman/M24STGPEC
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/templates/rman_backup.conf.example \
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/templates/rman_backup.conf.example \
   /opt/oracle/rman_scripts/cfg/rman_backup_M24STGPEC.conf
 vi /opt/oracle/rman_scripts/cfg/rman_backup_M24STGPEC.conf
 ```

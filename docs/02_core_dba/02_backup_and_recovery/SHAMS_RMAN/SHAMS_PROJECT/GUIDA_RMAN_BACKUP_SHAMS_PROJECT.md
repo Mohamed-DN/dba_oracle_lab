@@ -57,10 +57,10 @@ chmod 750 "$SCRIPT_DIR" /backup/rman/M24SHAMSPEC /backup/rman/M24SHAMSSEC
 Copiare dal repository:
 
 ```bash
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/rman_backup.sh "$SCRIPT_DIR/"
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/encrypt_pwd.sh "$SCRIPT_DIR/"
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/rman/*.rcv "$SCRIPT_DIR/rman/"
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/crontab_shams_example "$SCRIPT_DIR/"
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/rman_backup.sh "$SCRIPT_DIR/"
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/encrypt_pwd.sh "$SCRIPT_DIR/"
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/rman/*.rcv "$SCRIPT_DIR/rman/"
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/crontab_shams_example "$SCRIPT_DIR/"
 chmod 750 "$SCRIPT_DIR/rman_backup.sh" "$SCRIPT_DIR/encrypt_pwd.sh"
 chmod 640 "$SCRIPT_DIR/rman/"*.rcv
 ```
@@ -68,9 +68,9 @@ chmod 640 "$SCRIPT_DIR/rman/"*.rcv
 Creare una config per ogni `DB_UNIQUE_NAME`:
 
 ```bash
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/cfg/rman_backup_M24SHAMSSEC.conf.example \
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/cfg/rman_backup_M24SHAMSSEC.conf.example \
   "$SCRIPT_DIR/cfg/rman_backup_M24SHAMSSEC.conf"
-cp docs/02_core_dba/02_backup_and_recovery/RMAN/SHAMS_PROJECT/scripts/cfg/rman_backup_M24SHAMSPEC.conf.example \
+cp docs/02_core_dba/02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/scripts/cfg/rman_backup_M24SHAMSPEC.conf.example \
   "$SCRIPT_DIR/cfg/rman_backup_M24SHAMSPEC.conf"
 vi "$SCRIPT_DIR/cfg/rman_backup_M24SHAMSSEC.conf"
 vi "$SCRIPT_DIR/cfg/rman_backup_M24SHAMSPEC.conf"
