@@ -1,0 +1,15 @@
+# Execute this only after SQL cleanup gates prove recoverability:
+# - at least two valid Level 0 backups
+# - at least two controlfile backups
+# - at least two spfile backups
+# - no Data Guard gap and acceptable apply lag
+CROSSCHECK BACKUP;
+CROSSCHECK ARCHIVELOG ALL;
+REPORT OBSOLETE;
+LIST EXPIRED BACKUP;
+LIST EXPIRED ARCHIVELOG ALL;
+DELETE NOPROMPT OBSOLETE;
+DELETE NOPROMPT EXPIRED BACKUP;
+DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+LIST BACKUP SUMMARY;
+EXIT;

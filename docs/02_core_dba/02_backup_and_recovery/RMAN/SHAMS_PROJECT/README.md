@@ -9,6 +9,18 @@
 3. Per refresh o nuova STG da produzione usa
    [GUIDA_SHAMS_MIGRATION_WITH_RMAN.md](./GUIDA_SHAMS_MIGRATION_WITH_RMAN.md).
 
+## Script RMAN pronti
+
+Gli script operativi SHAMS sono in [scripts/](./scripts/):
+
+| File | Uso |
+| --- | --- |
+| [scripts/rman_backup.sh](./scripts/rman_backup.sh) | wrapper backup RMAN con role detection e lock |
+| [scripts/encrypt_pwd.sh](./scripts/encrypt_pwd.sh) | helper compatibile con il TXT; preferire wallet alias |
+| [scripts/crontab_shams_example](./scripts/crontab_shams_example) | schedule SHAMS full/cumulative/differential/archive |
+| [scripts/cfg/](./scripts/cfg/) | config di esempio per `M24SHAMSPEC` e `M24SHAMSSEC` |
+| [scripts/rman/](./scripts/rman/) | cmdfile RMAN per backup, cleanup e duplicate standby |
+
 ## Naming di default
 
 | Oggetto | Valore |

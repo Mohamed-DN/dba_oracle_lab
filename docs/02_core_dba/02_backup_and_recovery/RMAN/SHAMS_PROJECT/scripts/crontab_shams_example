@@ -1,0 +1,13 @@
+# Backup RMAN SHAMS - policy standard
+# Full level 0: standby, domenica sera
+00 21 * * 0 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC full >/dev/null 2>&1
+
+# Incremental cumulative: standby, mercoledi'
+10 21 * * 3 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC cumulative >/dev/null 2>&1
+
+# Incremental differential: standby, lunedi'/martedi'/giovedi'/venerdi'
+10 21 * * 1,2,4,5 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC differential >/dev/null 2>&1
+
+# Archivelog: primary ogni ora, standby ogni 4 ore
+49 * * * * /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSPEC archive >/dev/null 2>&1
+49 */4 * * * /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC archive >/dev/null 2>&1

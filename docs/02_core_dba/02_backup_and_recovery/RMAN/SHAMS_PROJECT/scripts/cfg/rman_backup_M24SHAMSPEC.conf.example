@@ -1,0 +1,31 @@
+# RMAN backup configuration for SHAMS primary.
+# Copy as: cfg/rman_backup_M24SHAMSPEC.conf
+# Do not store passwords here. Use OS authentication and wallet aliases.
+
+ORACLE_HOME=<ORACLE_HOME>
+ORACLE_BASE=<ORACLE_BASE>
+ORACLE_SID=M24SHAMSPEC
+ORACLE_UNQNAME=M24SHAMSPEC
+
+BCKDIR=/backup/rman/M24SHAMSPEC
+BCKDIR_MOUNTPOINT=/backup/rman
+REQUIRE_BCKDIR_MOUNT=YES
+
+RMAN_CATALOG_CONNECT=/@RMAN_CATALOG
+RMAN_TARGET_CONNECT=/
+
+# Datafile backup policy:
+#   ALWAYS  = run datafile backup on this host regardless of role
+#   PRIMARY = run datafile backup only when database_role is PRIMARY
+#   STANDBY = run datafile backup only when database_role is PHYSICAL STANDBY
+#   NEVER   = do not run full/cumulative/differential; archivelog still runs
+EXEC_DATAFILE_BACKUP_WHEN=STANDBY
+
+PARALLEL_CHANNELS=4
+SECTION_SIZE=32G
+ARCHIVELOG_FROM_TIME="SYSDATE - 4/24"
+LOG_RETENTION_DAYS=30
+IGNORE_RMAN_ERRORS="RMAN-08137"
+
+# Optional mail recipient for failures. Leave empty to disable mail.
+MAIL_TO=
