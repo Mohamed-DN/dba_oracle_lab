@@ -1,0 +1,19 @@
+RUN {
+  SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+  BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 SECTION SIZE &5
+    DATABASE
+    TAG 'L0_FULL_PRIMARY'
+    FORMAT '&1/pieces/database/l0_primary_%d_%T_%U.bkp';
+  BACKUP AS COMPRESSED BACKUPSET
+    ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    TAG 'ARCH_PRIMARY_AFTER_L0'
+    FORMAT '&1/pieces/archivelog/arch_primary_%d_%T_%U.bkp';
+  BACKUP CURRENT CONTROLFILE
+    TAG 'CONTROLFILE_PRIMARY'
+    FORMAT '&1/pieces/controlfile/cf_primary_%d_%T_%U.bkp';
+  BACKUP SPFILE
+    TAG 'SPFILE_PRIMARY'
+    FORMAT '&1/pieces/spfile/spfile_primary_%d_%T_%U.bkp';
+}
+LIST BACKUP SUMMARY;
+EXIT;

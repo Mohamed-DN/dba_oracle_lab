@@ -18,6 +18,13 @@ nessuna password, hostname reale o path sensibile viene riportato nel repository
 | [Standby SHAMS con RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Creazione physical standby single non-CDB con active duplicate |
 | [SHAMS Migration With RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG, rename/NID fallback e standby STG |
 
+## Script SHAMS pronti
+
+Per il progetto SHAMS usare prima la cartella
+[SHAMS_PROJECT/scripts/](./SHAMS_PROJECT/scripts/). Contiene la versione
+sanitizzata degli script del TXT: `rman_backup.sh`, `encrypt_pwd.sh`,
+`crontab_shams_example`, config per `M24SHAMSPEC/M24SHAMSSEC` e cmdfile RMAN.
+
 ## Template
 
 | Template | Uso |
