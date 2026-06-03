@@ -1,0 +1,2 @@
+.gitattributes text eol=lf
+docs/02_core_dba/02_backup_and_recovery/RMAN/** text eol=lf

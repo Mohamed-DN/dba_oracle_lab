@@ -1,0 +1,14 @@
+# Replace <SCRIPT_DIR> and <DB_UNIQUE_NAME>.
+# Run from the database host as oracle.
+
+# RMAN Level 0 / full
+00 21 * * 0 <SCRIPT_DIR>/rman_backup.sh <DB_UNIQUE_NAME> full >/dev/null 2>&1
+
+# RMAN cumulative incremental
+10 21 * * 3 <SCRIPT_DIR>/rman_backup.sh <DB_UNIQUE_NAME> cumulative >/dev/null 2>&1
+
+# RMAN differential incremental
+10 21 * * 1,2,4,5 <SCRIPT_DIR>/rman_backup.sh <DB_UNIQUE_NAME> differential >/dev/null 2>&1
+
+# RMAN archivelog
+49 * * * * <SCRIPT_DIR>/rman_backup.sh <DB_UNIQUE_NAME> archive >/dev/null 2>&1
