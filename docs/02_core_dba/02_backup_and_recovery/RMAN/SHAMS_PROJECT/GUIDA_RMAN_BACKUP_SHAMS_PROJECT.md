@@ -36,6 +36,12 @@ La FRA ASM non e' il repository backup. `+M24SHAMS_FRA` serve per archivelog,
 flashback e file gestiti da Oracle; `/backup/rman` deve essere storage durevole
 e monitorato.
 
+## Procedura operativa
+
+Eseguire i passi da 1 a 5 nell'ordine indicato. Il wrapper deve essere installato
+prima della schedule e il cleanup deve restare separato dal backup, cosi' ogni
+cancellazione passa da RMAN e dalle query di controllo.
+
 ## 1. Installazione template
 
 Sul nodo che esegue i job RMAN:
@@ -237,7 +243,7 @@ rm /backup/rman/M24SHAMSSEC/pieces/*.bkp
 find /backup/rman/M24SHAMSSEC -name '*.bkp' -delete
 ```
 
-## 6. Evidenze minime
+## Validazione finale
 
 Per ogni finestra salvare:
 
@@ -259,3 +265,13 @@ SELECT * FROM v$archive_gap;
 
 La procedura e' accettata solo quando almeno un `RESTORE DATABASE VALIDATE`
 finisce senza errori RMAN/ORA bloccanti.
+
+## Troubleshooting rapido
+
+| Sintomo | Controllo | Azione |
+| --- | --- | --- |
+| Job non parte | `tail -100 /opt/oracle/rman_scripts/logs/rman_*.log` | verificare config, permessi e `ORACLE_HOME` |
+| Catalogo non raggiungibile | `tnsping RMAN_CATALOG` e wallet alias | correggere wallet/TNS senza mettere password in chiaro |
+| Backup concorrente bloccato | status file in `logs/` e `V$RMAN_BACKUP_JOB_DETAILS` | attendere il job attivo o chiudere il lock solo dopo verifica processo |
+| Cleanup non cancella nulla | `REPORT OBSOLETE` | controllare retention e presenza di level 0 valido |
+| `RESTORE VALIDATE` fallisce | log RMAN completo | correggere prima canali, path o piece mancanti, poi ripetere validate |

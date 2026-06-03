@@ -28,6 +28,12 @@ source, quindi non e' un clone applicativo indipendente.
 `nid` resta un fallback se parti da restore/copia che ha ancora lo stesso
 `DB_NAME` o DBID del source. Non usare `nid` su un database standby.
 
+## Procedura operativa
+
+Eseguire i passi da 0 a 8 nell'ordine indicato. La produzione resta solo source
+RMAN: dopo il duplicate, STG deve avere naming, servizi, backup e standby
+indipendenti prima di essere consegnato agli utilizzatori.
+
 ## 0. Precheck source produzione
 
 Sul source:
@@ -395,3 +401,13 @@ RESTORE DATABASE VALIDATE;
 
 La migrazione e' completa solo quando STG primary e STG standby hanno nomi,
 DBID, servizi, backup e Broker indipendenti dalla produzione.
+
+## Troubleshooting rapido
+
+| Sintomo | Controllo | Azione |
+| --- | --- | --- |
+| Duplicate crea nome inatteso | `SELECT name, db_unique_name FROM v$database;` | verificare `DB_NAME`, `DB_UNIQUE_NAME` e file pfile auxiliary prima di ripetere |
+| DBID uguale alla produzione | `SELECT dbid FROM v$database;` | usare duplicate non-standby o fallback `nid` solo sul clone primary |
+| Servizi STG puntano a produzione | `srvctl config service -db M24STGPEC` | rimuovere servizi copiati e ricrearli con nomi STG |
+| Job applicativi partono su STG | `DBA_SCHEDULER_JOBS` | disabilitare job non autorizzati prima di aprire agli utenti |
+| Standby STG non riceve redo | Broker e `V$ARCHIVE_DEST_STATUS` | verificare TNS, listener statico, password file e parametri Data Guard STG |
