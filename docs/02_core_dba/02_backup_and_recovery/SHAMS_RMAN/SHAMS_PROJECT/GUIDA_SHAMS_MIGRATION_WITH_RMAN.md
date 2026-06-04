@@ -30,7 +30,7 @@ source, quindi non e' un clone applicativo indipendente.
 
 ## Procedura operativa
 
-Eseguire i passi da 0 a 9 nell'ordine indicato. La produzione resta solo source
+Eseguire i passi da 0 a 10 nell'ordine indicato. La produzione resta solo source
 RMAN: dopo il duplicate, STG deve avere naming, servizi, backup e standby
 indipendenti prima di essere consegnato agli utilizzatori.
 
@@ -159,6 +159,32 @@ EOF
 Se TDE e' attivo, copiare il keystore source nel path STG approvato prima del
 duplicate e verificare `V$ENCRYPTION_WALLET`.
 
+### 2.1 Password file e wallet
+
+Per RMAN active duplicate, l'auxiliary deve accettare la connessione `SYS`
+remota. Copiare il password file del source con canale sicuro e rinominarlo per
+il SID STG:
+
+```bash
+scp <PROD_PRIMARY_HOST>:$ORACLE_HOME/dbs/orapwM24SHAMSPEP /tmp/orapwM24STGPEC
+mv /tmp/orapwM24STGPEC "$ORACLE_HOME/dbs/orapwM24STGPEC"
+chown oracle:oinstall "$ORACLE_HOME/dbs/orapwM24STGPEC"
+chmod 600 "$ORACLE_HOME/dbs/orapwM24STGPEC"
+```
+
+Dopo il clone, ruotare o riallineare la password `SYS` secondo policy STG se il
+change lo richiede.
+
+Se il source usa TDE, preparare il keystore STG prima del duplicate. In Oracle
+19c preferire parametri espliciti e path STG:
+
+```text
+wallet_root='<STG_WALLET_ROOT>'
+tde_configuration='KEYSTORE_CONFIGURATION=FILE'
+```
+
+Non copiare nel repository wallet, password wallet o file `cwallet.sso`.
+
 ## 3. Duplicate produzione -> STG
 
 Connettere RMAN senza password nella history:
@@ -205,6 +231,14 @@ RUN {
 produzione. Per stesso host o storage condiviso usare nomi OMF/disk group
 distinti e validare con lo storage team.
 
+Se TDE e' attivo e il source non usa gia' parametri compatibili con STG,
+aggiungere nel blocco `SPFILE` del duplicate:
+
+```rman
+      SET wallet_root='<STG_WALLET_ROOT>'
+      SET tde_configuration='KEYSTORE_CONFIGURATION=FILE'
+```
+
 ## 4. Post-clone STG primary
 
 RMAN duplicate non-standby apre il database con `RESETLOGS` e nuovo DBID.
@@ -238,6 +272,30 @@ Se `GLOBAL_NAME` non e' coerente:
 ALTER DATABASE RENAME GLOBAL_NAME TO M24STG.<DB_DOMAIN>;
 ```
 
+Normalizzare lo SPFILE in ASM prima di registrare Oracle Restart:
+
+```sql
+CREATE SPFILE='+M24STG_DATA/M24STGPEC/PARAMETERFILE/spfileM24STGPEC.ora'
+FROM MEMORY;
+```
+
+Pointer file locale:
+
+```bash
+cat > "$ORACLE_HOME/dbs/initM24STGPEC.ora" <<'EOF'
+SPFILE='+M24STG_DATA/M24STGPEC/PARAMETERFILE/spfileM24STGPEC.ora'
+EOF
+```
+
+Riavviare una volta dal pointer file e verificare:
+
+```sql
+SHUTDOWN IMMEDIATE;
+STARTUP;
+SHOW PARAMETER spfile;
+SELECT name, db_unique_name, database_role, open_mode FROM v$database;
+```
+
 Rimuovere o rigenerare:
 
 - database link verso produzione non autorizzati;
@@ -262,7 +320,7 @@ srvctl add database \
   -db M24STGPEC \
   -dbname M24STG \
   -oraclehome <ORACLE_HOME> \
-  -spfile '+M24STG_DATA/M24STGPEC/PARAMETERFILE/<SPFILE_NAME>' \
+  -spfile '+M24STG_DATA/M24STGPEC/PARAMETERFILE/spfileM24STGPEC.ora' \
   -role PRIMARY \
   -startoption OPEN \
   -stopoption IMMEDIATE \
@@ -406,7 +464,38 @@ DUPLICATE TARGET DATABASE
 
 Non usare `nid` sullo standby STG.
 
-## 9. Validazione finale
+## 9. Resync standby STG esistente da service
+
+`RECOVER STANDBY DATABASE FROM SERVICE` non crea lo standby. Serve solo quando
+`M24STGSEC` esiste gia', e' registrato come standby, ma deve essere riallineato
+dal primary STG dopo gap o restore parziale.
+
+Sul standby STG, in mount:
+
+```bash
+export ORACLE_SID=M24STGSEC
+rman target /
+```
+
+```rman
+RECOVER STANDBY DATABASE FROM SERVICE M24STGPEC_DG;
+```
+
+Poi riavviare MRP:
+
+```sql
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+SELECT process, status, sequence#
+FROM v$managed_standby
+WHERE process IN ('MRP0','RFS','ARCH');
+
+SELECT * FROM v$archive_gap;
+```
+
+Usarlo solo dopo aver salvato evidenza di gap, current SCN e stato Broker.
+
+## 10. Validazione finale
 
 Sul STG primary:
 
@@ -450,6 +539,42 @@ RESTORE DATABASE VALIDATE;
 La migrazione e' completa solo quando STG primary e STG standby hanno nomi,
 DBID, servizi, backup, Broker indipendenti dalla produzione e nessuna entry
 `_AUX` rimasta nei file operativi.
+
+## Appendice: decommission opzionale
+
+`DROP DATABASE` non fa parte della creazione STG. Usarlo solo per dismettere un
+clone temporaneo o un vecchio STG, mai sul source produzione, e solo con:
+
+- approval esplicito del change;
+- backup e restore validate disponibili;
+- export/evidence salvati;
+- conferma di `DB_UNIQUE_NAME`, host e storage da cancellare;
+- stop servizi applicativi e job schedulati.
+
+Gate prima del drop:
+
+```sql
+SELECT name, dbid, db_unique_name, database_role, open_mode
+FROM v$database;
+
+SELECT instance_name, host_name FROM v$instance;
+```
+
+Solo dopo approvazione:
+
+```sql
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT EXCLUSIVE RESTRICT
+DROP DATABASE;
+```
+
+Se il database e' registrato in Oracle Restart, rimuovere prima o dopo secondo
+stato effettivo:
+
+```bash
+srvctl stop database -db M24STGPEC -o immediate
+srvctl remove database -db M24STGPEC
+```
 
 ## Troubleshooting rapido
 

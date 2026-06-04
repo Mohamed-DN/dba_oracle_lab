@@ -16,6 +16,7 @@ nessuna password, hostname reale o path sensibile viene riportato nel repository
 | --- | --- |
 | [RMAN Backup SHAMS Project](./SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Setup repository, wrapper, cmdfile, schedule e cleanup separato |
 | [Standby SHAMS con RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Creazione physical standby single non-CDB con active duplicate |
+| [SHAMS Produzione MaxPerformance](./SHAMS_PROJECT/GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md) | Coppia produzione `M24SHAMSPEP/M24SHAMSSEP`, Broker `MAXPERFORMANCE`, catalogo e backup |
 | [SHAMS Migration With RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG, rename/NID fallback e standby STG |
 
 ## Script SHAMS pronti
@@ -23,7 +24,8 @@ nessuna password, hostname reale o path sensibile viene riportato nel repository
 Per il progetto SHAMS usare prima la cartella
 [SHAMS_PROJECT/scripts/](./SHAMS_PROJECT/scripts/). Contiene la versione
 sanitizzata degli script del TXT: `rman_backup.sh`, `encrypt_pwd.sh`,
-`crontab_shams_example`, config per `M24SHAMSPEC/M24SHAMSSEC` e cmdfile RMAN.
+`crontab_shams_example`, `crontab_shams_prod_maxperformance_example`, config
+per `M24SHAMSPEC/M24SHAMSSEC/M24SHAMSPEP/M24SHAMSSEP` e cmdfile RMAN.
 
 ## Template
 

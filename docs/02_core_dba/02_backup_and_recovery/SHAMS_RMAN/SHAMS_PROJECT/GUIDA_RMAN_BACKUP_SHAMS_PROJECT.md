@@ -175,6 +175,22 @@ EXEC_DATAFILE_BACKUP_WHEN=STANDBY
 nel file config dello standby e `EXEC_DATAFILE_BACKUP_WHEN=NEVER` nel config
 del primary, mantenendo pero' il job `archive`.
 
+Per produzione `M24SHAMSPEP/M24SHAMSSEP` puo' essere richiesta la policy
+opposta, cioe' full/incremental sul primary e nessun datafile backup sullo
+standby:
+
+```bash
+# cfg/rman_backup_M24SHAMSPEP.conf
+EXEC_DATAFILE_BACKUP_WHEN=PRIMARY
+
+# cfg/rman_backup_M24SHAMSSEP.conf
+EXEC_DATAFILE_BACKUP_WHEN=NEVER
+```
+
+Questa scelta non e' un errore: e' una policy operativa diversa dall'offload su
+standby. Documentarla nel change, mantenere backup archivelog e verificare che
+`REPORT NEED BACKUP` e `RESTORE DATABASE VALIDATE` restino verdi.
+
 ## 4. Esecuzione manuale
 
 ```bash

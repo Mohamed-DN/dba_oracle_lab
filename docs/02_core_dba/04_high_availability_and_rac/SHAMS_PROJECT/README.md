@@ -72,6 +72,7 @@ riusare il blueprint per un prefisso diverso da `M24SHAMS`.
 | [Standard directory backup RMAN](../../02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene indipendenti PE/SE, status OEM e cleanup gated |
 | [RMAN backup SHAMS](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Wrapper, cmdfile, schedule, catalogo e cleanup sicuro per SHAMS |
 | [Standby SHAMS con RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Procedura active duplicate single non-CDB con comandi reali e placeholder |
+| [SHAMS Produzione MaxPerformance](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md) | Coppia produzione `M24SHAMSPEP/M24SHAMSSEP`, Broker `MAXPERFORMANCE`, catalogo e backup |
 | [SHAMS Migration With RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG, NID fallback e standby STG |
 | [Run sheet varianti](./RUN_SHEET_02_SHAMS_PROJECT_VARIANTI.md) | Checklist breve per scegliere ed eseguire il blueprint corretto |
 | [Artifact DOCX/PDF](../../../../artifacts/shams_project/README.md) | Export versionati del pacchetto |

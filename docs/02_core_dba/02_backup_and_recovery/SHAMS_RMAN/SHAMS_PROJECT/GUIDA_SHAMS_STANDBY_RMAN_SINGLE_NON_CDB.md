@@ -40,7 +40,7 @@ Compilare prima di eseguire:
 
 ## Procedura operativa
 
-Eseguire i passi da 0 a 10 senza saltare controlli intermedi. Il duplicate deve
+Eseguire i passi da 0 a 11 senza saltare controlli intermedi. Il duplicate deve
 partire solo quando listener, TNS, password file, parametri Data Guard e
 auxiliary `NOMOUNT` sono gia' coerenti su primary e standby.
 
@@ -152,6 +152,48 @@ tnsping M24SHAMSPEC_DG
 tnsping M24SHAMSSEC_DG
 tnsping M24SHAMSSEC_AUX
 ```
+
+### 1.1 Registrazione servizio locale per backup
+
+Il listener Data Guard su `1531` serve a redo transport, FAL, Broker e
+duplicate. Se lo standard backup usa anche un alias locale senza suffisso `_DG`
+su `1521`, lo standby deve registrare il servizio locale sul listener
+applicativo. Questo evita il problema operativo visto nella procedura sorgente:
+database montato o aperto, ma servizio non visibile dal listener usato dagli
+script.
+
+Sullo standby salvare prima lo stato:
+
+```sql
+SET LINES 200
+COL name FORMAT A30
+COL value FORMAT A120
+
+SELECT name, value
+FROM v$parameter
+WHERE name IN ('local_listener','remote_listener','service_names');
+```
+
+Se `lsnrctl services LISTENER` non mostra `M24SHAMSSEC`, impostare
+`LOCAL_LISTENER` in modo esplicito:
+
+```sql
+ALTER SYSTEM SET local_listener=
+  '(ADDRESS=(PROTOCOL=TCP)(HOST=<STANDBY_HOST>)(PORT=1521))'
+  SCOPE=BOTH;
+
+ALTER SYSTEM REGISTER;
+```
+
+Verifica:
+
+```bash
+lsnrctl services LISTENER | grep M24SHAMSSEC
+tnsping M24SHAMSSEC
+```
+
+Non usare `M24SHAMSSEC_AUX` per i backup. `_AUX` e' temporaneo per RMAN
+duplicate in `NOMOUNT` e viene rimosso nella pulizia finale.
 
 ## 2. Redo log e standby redo log
 
@@ -439,11 +481,67 @@ VALIDATE NETWORK CONFIGURATION FOR ALL;
 VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
-## 10. Pulizia post-duplicate
+## 10. Catalogo RMAN e backup baseline
+
+Prima della pulizia degli artefatti temporanei, registrare e validare la coppia
+nel recovery catalog. Il catalogo deve conoscere entrambi i `DB_UNIQUE_NAME`,
+altrimenti backup, restore e switchover non sono governabili in modo ordinato.
+
+Dal primary:
+
+```bash
+rman target / catalog /@RMAN_CATALOG
+```
+
+```rman
+REGISTER DATABASE;
+LIST DB_UNIQUE_NAME OF DATABASE;
+CONFIGURE DB_UNIQUE_NAME 'M24SHAMSPEC' CONNECT IDENTIFIER 'M24SHAMSPEC_DG';
+CONFIGURE DB_UNIQUE_NAME 'M24SHAMSSEC' CONNECT IDENTIFIER 'M24SHAMSSEC_DG';
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 30 DAYS;
+CONFIGURE RMAN OUTPUT TO KEEP FOR 21 DAYS;
+SHOW ALL;
+```
+
+Se il database era gia' registrato, proseguire con `RESYNC CATALOG` e
+`LIST DB_UNIQUE_NAME OF DATABASE`.
+
+Dal nodo standby:
+
+```bash
+rman target / catalog /@RMAN_CATALOG
+```
+
+```rman
+RESYNC CATALOG;
+LIST DB_UNIQUE_NAME OF DATABASE;
+LIST BACKUP SUMMARY;
+```
+
+Eseguire una baseline minima prima della pulizia:
+
+```bash
+/opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC full
+/opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEC archive
+```
+
+Validare:
+
+```rman
+LIST BACKUP OF DATABASE COMPLETED AFTER 'SYSDATE-1';
+LIST BACKUP OF ARCHIVELOG FROM TIME 'SYSDATE-1';
+RESTORE DATABASE VALIDATE;
+```
+
+Non mettere credenziali catalogo in command line. Usare wallet alias
+`/@RMAN_CATALOG` o prompt interattivo.
+
+## 11. Pulizia post-duplicate
 
 Dopo duplicate, apply, Broker e backup baseline, togliere gli artefatti usati
 solo per la fase `NOMOUNT`. Non fare questa pulizia prima che `SHOW
-CONFIGURATION`, `VALIDATE DATABASE` e `RESTORE DATABASE VALIDATE` siano verdi.
+CONFIGURATION`, `VALIDATE DATABASE`, `LIST DB_UNIQUE_NAME OF DATABASE` e
+`RESTORE DATABASE VALIDATE` siano verdi.
 
 Conservare:
 
