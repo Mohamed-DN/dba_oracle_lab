@@ -40,7 +40,7 @@ Compilare prima di eseguire:
 
 ## Procedura operativa
 
-Eseguire i passi da 0 a 9 senza saltare controlli intermedi. Il duplicate deve
+Eseguire i passi da 0 a 10 senza saltare controlli intermedi. Il duplicate deve
 partire solo quando listener, TNS, password file, parametri Data Guard e
 auxiliary `NOMOUNT` sono gia' coerenti su primary e standby.
 
@@ -439,6 +439,108 @@ VALIDATE NETWORK CONFIGURATION FOR ALL;
 VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 ```
 
+## 10. Pulizia post-duplicate
+
+Dopo duplicate, apply, Broker e backup baseline, togliere gli artefatti usati
+solo per la fase `NOMOUNT`. Non fare questa pulizia prima che `SHOW
+CONFIGURATION`, `VALIDATE DATABASE` e `RESTORE DATABASE VALIDATE` siano verdi.
+
+Conservare:
+
+- `M24SHAMSPEC_DG` e `M24SHAMSSEC_DG`, usati da redo transport, FAL, RMAN e
+  Broker;
+- `M24SHAMSPEC_DGMGRL` e `M24SHAMSSEC_DGMGRL`, se usati dal Broker per restart
+  statico;
+- password file, wallet/keystore, adump, SPFILE ASM e pointer file locale.
+
+Rimuovere o archiviare:
+
+- alias TNS temporaneo `M24SHAMSSEC_AUX`;
+- blocco statico listener con `GLOBAL_DBNAME=M24SHAMSSEC_AUX`;
+- `/tmp/duplicate_m24shamssec.rcv` dopo aver verificato che non contenga
+  segreti;
+- `/tmp/duplicate_m24shamssec.log` solo dopo copia in evidence;
+- pfile temporanei usati per `STARTUP NOMOUNT`, lasciando solo il pointer file
+  verso lo SPFILE ASM.
+
+Esempio operativo sullo standby:
+
+```bash
+export ORACLE_HOME=<ORACLE_HOME>
+export GRID_HOME=<GRID_HOME>
+export EVIDENCE_DIR=/backup/rman/M24SHAMSSEC/evidence/dataguard_setup
+mkdir -p "$EVIDENCE_DIR"
+
+cp -p "$ORACLE_HOME/network/admin/tnsnames.ora" \
+  "$EVIDENCE_DIR/tnsnames.ora.pre_aux_cleanup.$(date +%Y%m%d_%H%M%S)"
+cp -p "$GRID_HOME/network/admin/listener.ora" \
+  "$EVIDENCE_DIR/listener.ora.pre_aux_cleanup.$(date +%Y%m%d_%H%M%S)"
+
+cp -p /tmp/duplicate_m24shamssec.log \
+  "$EVIDENCE_DIR/duplicate_m24shamssec.$(date +%Y%m%d_%H%M%S).log"
+```
+
+Editare i file, non usare sostituzioni cieche:
+
+```bash
+vi "$ORACLE_HOME/network/admin/tnsnames.ora"
+vi "$GRID_HOME/network/admin/listener.ora"
+```
+
+Nel `tnsnames.ora` togliere solo il blocco `M24SHAMSSEC_AUX`. Nel
+`listener.ora` togliere solo il `SID_DESC` con
+`GLOBAL_DBNAME=M24SHAMSSEC_AUX`. Lasciare intatti `_DG` e `_DGMGRL`.
+
+Ricaricare e validare:
+
+```bash
+lsnrctl reload LISTENER_DG
+lsnrctl status LISTENER_DG
+tnsping M24SHAMSPEC_DG
+tnsping M24SHAMSSEC_DG
+
+if grep -n "M24SHAMSSEC_AUX" "$ORACLE_HOME/network/admin/tnsnames.ora"; then
+  echo "ERRORE: entry TNS AUX ancora presente"
+  exit 1
+fi
+if grep -n "M24SHAMSSEC_AUX" "$GRID_HOME/network/admin/listener.ora"; then
+  echo "ERRORE: static listener AUX ancora presente"
+  exit 1
+fi
+```
+
+Se lo SPFILE e' in ASM, il file locale deve essere solo un pointer file:
+
+```bash
+sqlplus / as sysdba <<'EOF'
+SHOW PARAMETER spfile
+EXIT;
+EOF
+
+cat > "$ORACLE_HOME/dbs/initM24SHAMSSEC.ora" <<'EOF'
+SPFILE='+M24SHAMS_DATA/M24SHAMSSEC/PARAMETERFILE/<SPFILE_NAME>'
+EOF
+chmod 640 "$ORACLE_HOME/dbs/initM24SHAMSSEC.ora"
+rm -f /tmp/duplicate_m24shamssec.rcv /tmp/duplicate_m24shamssec.log
+```
+
+Validare di nuovo Broker e apply:
+
+```dgmgrl
+SHOW CONFIGURATION;
+VALIDATE DATABASE 'M24SHAMSPEC';
+VALIDATE DATABASE 'M24SHAMSSEC';
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
+```
+
+```sql
+SELECT process, status, sequence#
+FROM v$managed_standby
+WHERE process = 'MRP0';
+
+SELECT * FROM v$archive_gap;
+```
+
 ## Validazione finale
 
 | Check | Query/comando | Atteso |
@@ -449,6 +551,7 @@ VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 | Broker | `SHOW CONFIGURATION` | `SUCCESS` |
 | Restart | `srvctl status database -db M24SHAMSSEC` | database gestito da HAS |
 | Backup | `LIST BACKUP SUMMARY` | baseline presente nel catalogo |
+| Pulizia AUX | `grep M24SHAMSSEC_AUX tnsnames.ora listener.ora` | nessun match |
 
 Non procedere a switchover o FSFO se questa checklist non e' pulita.
 
