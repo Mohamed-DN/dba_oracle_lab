@@ -30,7 +30,7 @@ source, quindi non e' un clone applicativo indipendente.
 
 ## Procedura operativa
 
-Eseguire i passi da 0 a 8 nell'ordine indicato. La produzione resta solo source
+Eseguire i passi da 0 a 9 nell'ordine indicato. La produzione resta solo source
 RMAN: dopo il duplicate, STG deve avere naming, servizi, backup e standby
 indipendenti prima di essere consegnato agli utilizzatori.
 
@@ -308,7 +308,55 @@ EOF
 Se serve cambiare solo nome e non DBID, valutare `SETNAME=YES`; comunque
 validare sempre `GLOBAL_NAME`.
 
-## 6. Backup STG
+## 6. Pulizia post-clone STG primary
+
+Dopo il duplicate non-standby e le verifiche applicative iniziali, rimuovere gli
+artefatti temporanei usati solo per creare lo STG primary.
+
+Conservare:
+
+- alias TNS source/target realmente usati da backup, servizi o Data Guard STG;
+- password file, wallet/keystore, adump, SPFILE e registrazione Oracle Restart;
+- log duplicate copiato in evidence.
+
+Rimuovere:
+
+- alias TNS `M24STGPEC_AUX`;
+- blocco statico listener `GLOBAL_DBNAME=M24STGPEC_AUX`;
+- pfile temporaneo di `NOMOUNT`, lasciando solo pointer file verso SPFILE;
+- cmdfile e log temporanei in `/tmp` dopo salvataggio evidenze.
+
+Esempio:
+
+```bash
+export ORACLE_HOME=<ORACLE_HOME>
+export GRID_HOME=<GRID_HOME>
+export EVIDENCE_DIR=/backup/rman/M24STGPEC/evidence/clone_setup
+mkdir -p "$EVIDENCE_DIR"
+
+cp -p "$ORACLE_HOME/network/admin/tnsnames.ora" \
+  "$EVIDENCE_DIR/tnsnames.ora.pre_aux_cleanup.$(date +%Y%m%d_%H%M%S)"
+cp -p "$GRID_HOME/network/admin/listener.ora" \
+  "$EVIDENCE_DIR/listener.ora.pre_aux_cleanup.$(date +%Y%m%d_%H%M%S)"
+cp -p /tmp/duplicate_m24stgpec.log \
+  "$EVIDENCE_DIR/duplicate_m24stgpec.$(date +%Y%m%d_%H%M%S).log"
+
+vi "$ORACLE_HOME/network/admin/tnsnames.ora"
+vi "$GRID_HOME/network/admin/listener.ora"
+lsnrctl reload LISTENER_DG
+
+if grep -n "M24STGPEC_AUX" "$ORACLE_HOME/network/admin/tnsnames.ora"; then
+  echo "ERRORE: entry TNS AUX ancora presente"
+  exit 1
+fi
+if grep -n "M24STGPEC_AUX" "$GRID_HOME/network/admin/listener.ora"; then
+  echo "ERRORE: static listener AUX ancora presente"
+  exit 1
+fi
+rm -f /tmp/duplicate_m24stgpec.rcv /tmp/duplicate_m24stgpec.log
+```
+
+## 7. Backup STG
 
 Dopo il clone:
 
@@ -334,7 +382,7 @@ BACKUP ARCHIVELOG ALL NOT BACKED UP 1 TIMES TAG 'M24STG_ARCH_BASELINE';
 RESTORE DATABASE VALIDATE;
 ```
 
-## 7. Creazione standby STG
+## 8. Creazione standby STG
 
 Usare la procedura standby SHAMS sostituendo:
 
@@ -358,7 +406,7 @@ DUPLICATE TARGET DATABASE
 
 Non usare `nid` sullo standby STG.
 
-## 8. Validazione finale
+## 9. Validazione finale
 
 Sul STG primary:
 
@@ -400,7 +448,8 @@ RESTORE DATABASE VALIDATE;
 ```
 
 La migrazione e' completa solo quando STG primary e STG standby hanno nomi,
-DBID, servizi, backup e Broker indipendenti dalla produzione.
+DBID, servizi, backup, Broker indipendenti dalla produzione e nessuna entry
+`_AUX` rimasta nei file operativi.
 
 ## Troubleshooting rapido
 

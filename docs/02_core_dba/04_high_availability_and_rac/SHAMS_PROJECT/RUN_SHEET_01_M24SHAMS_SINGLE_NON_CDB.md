@@ -239,7 +239,46 @@ LIST BACKUP SUMMARY;
 
 Esegui backup SPFILE locale anche sul primary.
 
-### 8. Drill switchover
+### 8. Pulizia post-duplicate
+
+Dopo Broker e backup baseline, rimuovi solo la spazzatura temporanea:
+
+| Oggetto | Azione |
+| --- | --- |
+| `M24SHAMSSEC_AUX` in `tnsnames.ora` | rimuovere dopo evidenza |
+| `GLOBAL_DBNAME=M24SHAMSSEC_AUX` in `listener.ora` | rimuovere e fare `lsnrctl reload LISTENER_DG` |
+| `/tmp/duplicate_m24shamssec.rcv` | cancellare dopo verifica che non contenga segreti |
+| `/tmp/duplicate_m24shamssec.log` | copiare in evidence, poi cancellare da `/tmp` |
+| pfile temporaneo `NOMOUNT` | sostituire con pointer file allo SPFILE ASM |
+
+Non rimuovere `M24SHAMSPEC_DG`, `M24SHAMSSEC_DG`, `_DGMGRL`, password file,
+wallet/keystore, adump o SPFILE ASM.
+
+Validazione minima:
+
+```bash
+lsnrctl reload LISTENER_DG
+lsnrctl status LISTENER_DG
+tnsping M24SHAMSPEC_DG
+tnsping M24SHAMSSEC_DG
+if grep -n "M24SHAMSSEC_AUX" "$ORACLE_HOME/network/admin/tnsnames.ora"; then
+  echo "ERRORE: entry TNS AUX ancora presente"
+  exit 1
+fi
+if grep -n "M24SHAMSSEC_AUX" "$GRID_HOME/network/admin/listener.ora"; then
+  echo "ERRORE: static listener AUX ancora presente"
+  exit 1
+fi
+```
+
+Ripeti:
+
+```text
+SHOW CONFIGURATION;
+VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
+```
+
+### 9. Drill switchover
 
 Con applicazione drenata:
 
@@ -267,6 +306,7 @@ FSFO resta fuori dal change. Pianifica la
 | `VALIDATE DATABASE` primary e standby | `<OK/KO>` |
 | `VALIDATE DATABASE ... SPFILE` primary e standby | `<OK/KO>` |
 | network e static connect identifier validati | `<OK/KO>` |
+| entry temporanee `_AUX` rimosse da TNS/listener | `<OK/KO>` |
 | transport lag e apply lag entro soglia | `<OK/KO>` |
 | standby `MOUNTED` oppure `READ ONLY WITH APPLY` autorizzato | `<OK/KO>` |
 | servizio `M24SHAMSC_PRY` sul primary | `<OK/KO>` |

@@ -492,7 +492,9 @@ SID_LIST_LISTENER_DG =
 ```
 
 Configura separatamente `_DGMGRL` su entrambi i siti se la gestione restart
-lo richiede. Rimuovi `_AUX` dopo il duplicate se non serve piu'.
+lo richiede. Rimuovi `_AUX` dopo duplicate, Broker e backup baseline: e' una
+entry temporanea per `NOMOUNT`, non deve restare nel profilo operativo.
+Conserva invece `_DG` e `_DGMGRL`.
 
 Test:
 
