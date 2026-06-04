@@ -1,0 +1,13 @@
+# Backup RMAN SHAMS produzione - policy A primary datafile
+# Full level 0: primary, domenica sera
+00 21 * * 0 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSPEP full >/dev/null 2>&1
+
+# Incremental cumulative: primary, mercoledi'
+10 21 * * 3 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSPEP cumulative >/dev/null 2>&1
+
+# Incremental differential: primary, lunedi'/martedi'/giovedi'/venerdi'
+10 21 * * 1,2,4,5 /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSPEP differential >/dev/null 2>&1
+
+# Archivelog: primary ogni ora, standby ogni 4 ore
+49 * * * * /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSPEP archive >/dev/null 2>&1
+49 */4 * * * /opt/oracle/rman_scripts/rman_backup.sh M24SHAMSSEP archive >/dev/null 2>&1
