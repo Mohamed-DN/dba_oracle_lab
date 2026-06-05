@@ -69,6 +69,7 @@ riusare il blueprint per un prefisso diverso da `M24SHAMS`.
 | [Network e Broker](./GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) | Setup comune: rete DG, listener, duplicate RMAN, apply e Broker |
 | [Active Data Guard e servizi](./GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) | Percorso opzionale licenza-gated per `READ ONLY WITH APPLY`, `_PRY` e `_RO` |
 | [Evidence e drill test book](./GUIDA_11_DATAGUARD_EVIDENCE_DRILL_TESTBOOK_PEYTECH_19C.md) | Evidenze, switchover, gap, servizi, Observer e rollback |
+| [CATRMAN recovery catalog](../../02_backup_and_recovery/GUIDA_RMAN_CATALOGO_CATRMAN_19C.md) | Catalogo RMAN centralizzato, wallet/SEPS e `DB_UNIQUE_NAME` per Data Guard |
 | [Standard directory backup RMAN](../../02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md) | Share `/backup/rman`, catene indipendenti PE/SE, status OEM e cleanup gated |
 | [RMAN backup SHAMS](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Wrapper, cmdfile, schedule, catalogo e cleanup sicuro per SHAMS |
 | [Standby SHAMS con RMAN](../../02_backup_and_recovery/SHAMS_RMAN/SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Procedura active duplicate single non-CDB con comandi reali e placeholder |

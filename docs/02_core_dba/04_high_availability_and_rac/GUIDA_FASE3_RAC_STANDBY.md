@@ -70,7 +70,7 @@ archivelog senza aver raccolto le evidenze.
 | rac1  rac2  |                          | rac1  rac2  |
 +-------------+                          +------+------+
                                                 | Redo Shipping
-                                                | (LGWR ASYNC)
+                                                | (ASYNC)
 +-------------+                                 v
 | RAC STANDBY |   RMAN Duplicate     +------------------+
 |  (vuoto)    |  ---------------&gt;    | RAC STANDBY      |
@@ -871,7 +871,20 @@ Verifica `_DGMGRL` separatamente nella Fase 4 con
 
 ---
 
-## 3.3 Registrazioni Statiche `_AUX` e `_DGMGRL` sullo Standby
+## 3.3 Registrazioni Statiche Temporanee `_AUX` e Permanenti `_DGMGRL` sullo Standby
+
+Decisione di naming:
+
+- `RACDB_STBY_AUX` non e' il nome operativo dello standby;
+- `RACDB_STBY_AUX` e' solo un servizio statico temporaneo per RMAN duplicate
+  quando l'istanza auxiliary e' in `NOMOUNT`;
+- il nome operativo dello standby resta `RACDB_STBY`;
+- il servizio statico da conservare per Broker e' `RACDB_STBY_DGMGRL`.
+
+Non sostituire `_AUX` con `RACDB_STBY` nel listener statico: durante il
+duplicate il database non ha ancora control file e non puo' registrarsi in modo
+dinamico come database standby completo. Usare un nome `_AUX` separato rende
+chiaro cosa deve essere rimosso dopo il duplicate.
 
 ### Su `racstby1` (come utente `grid`)
 
@@ -900,7 +913,8 @@ SID_LIST_LISTENER =
 
 Su `racstby2` configura `_DGMGRL` con `SID_NAME = RACDB2`. Non replicare
 `RACDB_STBY_AUX`: durante il duplicate usi una sola auxiliary instance su
-`racstby1`.
+`racstby1`. La rimozione di `_AUX` e' obbligatoria nel passo `3.12.1`, dopo che
+lo standby e' registrato e avviabile con `srvctl`.
 
 ```bash
 srvctl stop listener
@@ -1033,14 +1047,14 @@ EOF
 
 - `RACDB`, `RACDB_STBY`: connessioni client/app e amministrazione generale (SCAN).
 - `RACDB_DG`, `RACDB_STBY_DG`: redo transport (`LOG_ARCHIVE_DEST_n`) e gap resolution (`FAL_SERVER`).
-- `RACDB_STBY_AUX`: servizio statico temporaneo per RMAN auxiliary `NOMOUNT` sul solo `racstby1`.
+- `RACDB_STBY_AUX`: servizio statico temporaneo per RMAN auxiliary `NOMOUNT` sul solo `racstby1`; va rimosso nel passo `3.12.1`.
 - `RACDB1`, `RACDB2`, `RACDB1_STBY`, `RACDB2_STBY`: connessioni istanza-specifiche (RMAN duplicate, troubleshooting mirato).
 
 > **Perché tnsnames.ora identico ovunque?** Data Guard usa questi alias TNS per comunicare tra primario e standby. Se manca un'entry su un nodo, il redo shipping fallisce.
 
 > **Cos'è `(UR=A)`?** "Use Role = Any" — permette la connessione anche quando il database è in stato NOMOUNT o MOUNT (non solo OPEN). Essenziale per lo standby che non è mai in READ WRITE. Senza `UR=A`, `tnsping` funziona ma `sqlplus sys@RACDB_STBY as sysdba` fallisce con timeout.
 
-### Test Connettività TNS
+### Test Connettività TNS pre-duplicate
 
 ```bash
 # Da rac1 verso lo standby
@@ -1064,6 +1078,10 @@ sqlplus '/@RACDB as sysdba'
 sqlplus '/@RACDB_DG as sysdba'
 ```
 
+Dopo il passo `3.12.1`, `RACDB_STBY_AUX` non deve piu' risolvere. A regime
+restano `RACDB_STBY`, `RACDB_STBY_DG` e il servizio statico Broker
+`RACDB_STBY_DGMGRL`.
+
 ### Riferimenti Oracle ufficiali (best practice rete/redo transport)
 
 - Data Guard Concepts and Administration 19c (redo transport services):
@@ -1076,8 +1094,20 @@ sqlplus '/@RACDB_DG as sysdba'
   https://docs.oracle.com/en/database/oracle/oracle-database/19/rilin/about-connecting-to-an-oracle-rac-database-using-scans.html
 - Oracle MAA 19c (configure/deploy Data Guard):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/configure-and-deploy-oracle-data-guard.html
+- Oracle Database 19c Administrator's Guide (multiplexing redo log files):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/admin/managing-the-redo-log.html
+- Oracle Database Reference 19c (`LOG_ARCHIVE_DEST_n`, attributi `ASYNC` e `LGWR` deprecato):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/LOG_ARCHIVE_DEST_n.html
 - Oracle Data Guard 19c (creazione Physical Standby con RMAN duplicate):
   https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/creating-oracle-data-guard-physical-standby.html
+- Oracle RMAN 19c (active duplicate: auxiliary via net service e static listener):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-duplicating-databases.html
+- Oracle Data Guard Broker 19c (`StaticConnectIdentifier` e servizi statici `_DGMGRL`):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/oracle-data-guard-broker-properties.html
+- Oracle Data Guard 19c (`FAL_CLIENT` non piu' richiesto nelle note parametri):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/oracle-initialization-parameters-used-by-oracle-data-guard.html
+- Oracle Database Reference 19c (`FAL_CLIENT` e `FAL_SERVER` sono Oracle Net service names):
+  https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/FAL_CLIENT.html
 
 ---
 
@@ -1098,25 +1128,37 @@ SELECT force_logging FROM v$database;
 SELECT thread#, group#, bytes/1024/1024 size_mb FROM v$log ORDER BY thread#, group#;
 
 -- Crea Standby Redo Logs (esempio: 3 ORL per thread -> 4 SRL per thread)
+-- Ogni SRL group e' multiplexato su +DATA e +RECO.
+-- Se +DATA e' un disk group ASM HIGH REDUNDANCY, puoi valutare un solo membro
+-- secondo policy storage; con NORMAL REDUNDANCY separa i membri.
 -- Thread 1 (rac1)
 ALTER DATABASE ADD STANDBY LOGFILE THREAD 1
-  GROUP 11 ('+DATA') SIZE 200M,
-  GROUP 12 ('+DATA') SIZE 200M,
-  GROUP 13 ('+DATA') SIZE 200M,
-  GROUP 14 ('+DATA') SIZE 200M;
+  GROUP 11 ('+DATA','+RECO') SIZE 200M,
+  GROUP 12 ('+DATA','+RECO') SIZE 200M,
+  GROUP 13 ('+DATA','+RECO') SIZE 200M,
+  GROUP 14 ('+DATA','+RECO') SIZE 200M;
 
 -- Thread 2 (rac2)
 ALTER DATABASE ADD STANDBY LOGFILE THREAD 2
-  GROUP 21 ('+DATA') SIZE 200M,
-  GROUP 22 ('+DATA') SIZE 200M,
-  GROUP 23 ('+DATA') SIZE 200M,
-  GROUP 24 ('+DATA') SIZE 200M;
+  GROUP 21 ('+DATA','+RECO') SIZE 200M,
+  GROUP 22 ('+DATA','+RECO') SIZE 200M,
+  GROUP 23 ('+DATA','+RECO') SIZE 200M,
+  GROUP 24 ('+DATA','+RECO') SIZE 200M;
 
 -- Verifica
 SELECT group#, thread#, bytes/1024/1024 size_mb, status FROM v$standby_log;
+SELECT group#, type, member FROM v$logfile WHERE type = 'STANDBY' ORDER BY group#, member;
 ```
 
 > **Perché i Standby Redo Logs?** Quando i redo log arrivano dal primario, lo standby li scrive prima negli Standby Redo Logs e POI li applica. Senza SRL, usa gli archived redo logs, che sono più lenti. La regola "+1" garantisce che ci sia sempre uno SRL disponibile anche durante un log switch.
+
+> **Perche' multiplex su `+DATA` e `+RECO`?** Oracle raccomanda redo log
+> multiplexati in posizioni separate per evitare un single point of failure sul
+> redo. La guida MAA/Data Guard consiglia di multiplexare gli online redo log
+> salvo disk group ad alta ridondanza; applicare lo stesso criterio agli SRL e'
+> coerente, perche' gli SRL sono il punto di ricezione del redo remoto. Evita il
+> secondo membro solo se `+DATA` e' ASM `HIGH REDUNDANCY` o se la policy storage
+> approvata offre gia' ridondanza equivalente.
 
 ```sql
 -- 3. Imposta i parametri Data Guard
@@ -1124,13 +1166,16 @@ ALTER SYSTEM SET log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)' SCOPE=BOTH SI
 
 ALTER SYSTEM SET log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SCOPE=BOTH SID='*';
 
-ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
+-- Non abilitare ancora la destinazione remota: lo standby non e' ancora registrato.
+ALTER SYSTEM SET log_archive_dest_state_2=DEFER SCOPE=BOTH SID='*';
+
+ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY_DG ASYNC NOAFFIRM REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET log_archive_dest_state_1=ENABLE SCOPE=BOTH SID='*';
-ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
+ALTER SYSTEM SET log_archive_dest_state_2=DEFER SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET fal_server='RACDB_STBY_DG' SCOPE=BOTH SID='*';
-ALTER SYSTEM SET fal_client='RACDB' SCOPE=BOTH SID='*';
+ALTER SYSTEM SET fal_client='RACDB_DG' SCOPE=BOTH SID='*';
 
 ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH SID='*';
 
@@ -1154,12 +1199,17 @@ AND    value IS NOT NULL;
 ```
 
 > **Atteso in questa fase (pre-duplicate):**
-> - se lo standby non e ancora in piedi con istanza disponibile, `DEST_ID=2` puo mostrare `ERROR` con `ORA-01034` oppure `ORA-12514`;
-> - non e un blocco, e normale finche non completi `3.9` (startup standby) e `3.10` (RMAN duplicate).
+> - `DEST_ID=2` deve restare `DEFERRED`/non attivo finche lo standby non e'
+>   stato creato e registrato con `srvctl`;
+> - non forzare `ENABLE` ora: se lo fai prima che `RACDB_STBY_DG` sia
+>   raggiungibile, il primario prova a spedire redo e puoi vedere errori tipo
+>   `ORA-12514` o `ORA-01034`.
 >
 > **Gate corretto:**
-> - **prima** del duplicate: `DEST_ID=1=VALID`, `DEST_ID=2` puo essere `ERROR`;
-> - **dopo** duplicate + apply attivo: `DEST_ID=2` deve diventare `VALID` con `ERROR` nullo.
+> - **prima** del duplicate: `DEST_ID=1=VALID`, `DEST_ID=2` configurato ma
+>   `log_archive_dest_state_2=DEFER`;
+> - **dopo** duplicate + registrazione OCR: abilita `DEST_ID=2` nel passo
+>   `3.13` e verifica `VALID` con `ERROR` nullo.
 >
 > **Best practice Oracle:** sullo standby non usare DBCA in questo flusso; il database standby si crea con `RMAN DUPLICATE ... FOR STANDBY FROM ACTIVE DATABASE`.
 >
@@ -1193,32 +1243,40 @@ Questa e la spina dorsale di Data Guard: stai dicendo al primario chi e lo stand
    - Comandi:
    ```sql
    ALTER SYSTEM SET log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SCOPE=BOTH SID='*';
-   ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_state_2=DEFER SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_2='SERVICE=RACDB_STBY_DG ASYNC NOAFFIRM REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SCOPE=BOTH SID='*';
    ```
    - `dest_1` locale: archivia sempre in FRA, sia in ruolo `PRIMARY` sia in ruolo `STANDBY`.
    - `dest_2` remota:
      - `SERVICE=RACDB_STBY_DG`: usa alias TNS dedicato al redo transport verso standby.
-     - `LGWR ASYNC`: spedizione asincrona (modalita tipica `Maximum Performance`).
+     - `ASYNC NOAFFIRM`: spedizione asincrona, modalita tipica `Maximum Performance`.
      - `REOPEN=15`: se il link cade, ritenta automaticamente ogni 15 secondi.
      - `VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE)`: invia redo solo quando questo DB e primario.
+     - Non usare `LGWR`: in Oracle 19c e' un attributo deprecato di `LOG_ARCHIVE_DEST_n`; `ASYNC` identifica gia' il transport mode.
 
 3. **Attivazione destinazioni (`log_archive_dest_state_n`)**
    - Comandi:
    ```sql
    ALTER SYSTEM SET log_archive_dest_state_1=ENABLE SCOPE=BOTH SID='*';
-   ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET log_archive_dest_state_2=DEFER SCOPE=BOTH SID='*';
    ```
-   - Cosa fa: abilita operativamente le destinazioni appena definite.
-   - Se resta `DEFER`, la configurazione e corretta ma la spedizione non parte.
+   - Cosa fa: abilita subito la destinazione locale e lascia pronta ma ferma la
+     destinazione remota.
+   - `DEST_STATE_2` si porta a `ENABLE` solo nel passo `3.13`, dopo che lo
+     standby e' raggiungibile come `RACDB_STBY_DG`.
 
 4. **Gestione gap redo (`fal_server` / `fal_client`)**
    - Comandi:
    ```sql
    ALTER SYSTEM SET fal_server='RACDB_STBY_DG' SCOPE=BOTH SID='*';
-   ALTER SYSTEM SET fal_client='RACDB' SCOPE=BOTH SID='*';
+   ALTER SYSTEM SET fal_client='RACDB_DG' SCOPE=BOTH SID='*';
    ```
    - Cosa fa: prepara il meccanismo FAL (Fetch Archive Log) per recuperare automaticamente archivelog mancanti.
    - Perche anche sul primario: in caso di switchover i ruoli si invertono, quindi i parametri devono essere gia pronti.
+   - Nota Oracle 19c: `FAL_CLIENT` non e' piu' obbligatorio; se lo valorizzi,
+     deve essere un Oracle Net service name che l'altro sito usa per tornare
+     verso questo database. Per questo qui usiamo `RACDB_DG`, non l'alias
+     generico `RACDB`.
 
 5. **Creazione automatica file su standby (`standby_file_management=AUTO`)**
    - Comando:
@@ -1297,7 +1355,7 @@ Utente fa COMMIT
 4. Il processo `MRP` (Managed Recovery Process) legge gli SRL e applica le modifiche ai datafile standby.
 5. Finche `MRP` e attivo (`APPLYING_LOG`), lo standby resta allineato al primario con lag minimo.
 
-In questa guida usiamo `LGWR ASYNC` (modalita `Maximum Performance`):
+In questa guida usiamo redo transport `ASYNC NOAFFIRM` (modalita `Maximum Performance`):
 - il primario non aspetta l'ack dello standby prima di confermare il commit;
 - massime prestazioni, ma in caso di crash simultaneo primario+rete puo esserci perdita minima degli ultimi redo non ancora arrivati.
 
@@ -1656,11 +1714,11 @@ Nel pfile standby devi fare tre cose:
 *.db_create_file_dest='+DATA'
 *.db_recovery_file_dest='+RECO'
 *.db_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/'
-*.fal_client='RACDB_STBY'
+*.fal_client='RACDB_STBY_DG'
 *.fal_server='RACDB_DG'
 *.log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)'
 *.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY'
-*.log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
+*.log_archive_dest_2='SERVICE=RACDB_DG ASYNC NOAFFIRM REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
 *.log_archive_dest_state_1='ENABLE'
 *.log_archive_dest_state_2='ENABLE'
 *.log_file_name_convert='+DATA/RACDB/','+DATA/RACDB_STBY/','+RECO/RACDB/','+RECO/RACDB_STBY/'
@@ -1733,11 +1791,11 @@ Nota critica sui convert:
 *.db_recovery_file_dest_size=10794m
 *.diagnostic_dest='/u01/app/oracle'
 *.enable_pluggable_database=TRUE
-*.fal_client='RACDB_STBY'
+*.fal_client='RACDB_STBY_DG'
 *.fal_server='RACDB_DG'
 *.log_archive_config='DG_CONFIG=(RACDB,RACDB_STBY)'
 *.log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY'
-*.log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
+*.log_archive_dest_2='SERVICE=RACDB_DG ASYNC NOAFFIRM REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
 *.log_archive_dest_state_1='ENABLE'
 *.log_archive_dest_state_2='ENABLE'
 *.log_archive_format='%t_%s_%r.dbf'
@@ -1965,7 +2023,7 @@ DUPLICATE TARGET DATABASE
     SET cluster_database='FALSE'
     SET remote_listener='racstby-scan.localdomain:1521'
     SET fal_server='RACDB_DG'
-    SET log_archive_dest_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
+    SET log_archive_dest_2='SERVICE=RACDB_DG ASYNC NOAFFIRM REOPEN=15 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB'
   NOFILENAMECHECK;
 ```
 
@@ -2193,7 +2251,184 @@ crsctl stat res -t | grep -A2 RACDB_STBY
 
 ---
 
+## 3.12.1 Pulizia Obbligatoria del Servizio Temporaneo `_AUX`
+
+Quando `srvctl status database -d RACDB_STBY -v` conferma che lo standby e'
+registrato e avviabile dal Clusterware, `RACDB_STBY_AUX` non serve piu'. Va
+rimosso per evitare artefatti temporanei nei file di rete.
+
+Conservare:
+
+- `RACDB_STBY_DG`, usato per redo transport e FAL;
+- `RACDB_STBY_DGMGRL`, usato dal Broker per restart e validazioni statiche;
+- `RACDB_STBY`, nome operativo del database standby.
+
+Rimuovere:
+
+- alias TNS `RACDB_STBY_AUX` da tutti i nodi;
+- blocco statico listener `GLOBAL_DBNAME = RACDB_STBY_AUX` dal solo nodo
+  standby che ha ospitato l'auxiliary, cioe' `racstby1`.
+
+Non eseguire questa pulizia se il duplicate e' fallito e devi ripeterlo subito:
+in quel caso conserva `_AUX`, correggi la causa e rilancia RMAN.
+
+### Backup dei file prima della modifica
+
+Su tutti i nodi, come `oracle`, salva `tnsnames.ora`:
+
+```bash
+su - oracle
+export EVIDENCE_DIR=/tmp/racdb_stby_aux_cleanup_$(date +%Y%m%d_%H%M%S)
+mkdir -p "$EVIDENCE_DIR"
+cp -p "$ORACLE_HOME/network/admin/tnsnames.ora" \
+  "$EVIDENCE_DIR/tnsnames.ora.pre_aux_cleanup"
+```
+
+Su `racstby1`, come `grid`, salva `listener.ora`:
+
+```bash
+su - grid
+export EVIDENCE_DIR=/tmp/racdb_stby_aux_cleanup_$(date +%Y%m%d_%H%M%S)
+mkdir -p "$EVIDENCE_DIR"
+cp -p "$ORACLE_HOME/network/admin/listener.ora" \
+  "$EVIDENCE_DIR/listener.ora.pre_aux_cleanup"
+```
+
+### Rimozione dal TNS
+
+Su `rac1`, `rac2`, `racstby1` e `racstby2`, rimuovi solo il blocco:
+
+```text
+RACDB_STBY_AUX =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = racstby1.localdomain)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = RACDB_STBY_AUX)
+      (UR=A)
+    )
+  )
+```
+
+Esempio operativo:
+
+```bash
+su - oracle
+vi "$ORACLE_HOME/network/admin/tnsnames.ora"
+```
+
+Non rimuovere `RACDB_STBY_DG`, `RACDB_STBY`, `RACDB1_STBY` o `RACDB2_STBY`.
+
+### Rimozione dal listener statico
+
+Su `racstby1`, come `grid`, rimuovi solo questo `SID_DESC`:
+
+```text
+(SID_DESC =
+  (GLOBAL_DBNAME = RACDB_STBY_AUX)
+  (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
+  (SID_NAME = RACDB1)
+)
+```
+
+Lascia invece il blocco:
+
+```text
+(SID_DESC =
+  (GLOBAL_DBNAME = RACDB_STBY_DGMGRL)
+  (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
+  (SID_NAME = RACDB1)
+)
+```
+
+Ricarica il listener:
+
+```bash
+su - grid
+srvctl stop listener
+srvctl start listener
+lsnrctl services
+```
+
+### Verifica post-cleanup
+
+Su tutti i nodi:
+
+```bash
+su - oracle
+grep -n "RACDB_STBY_AUX" "$ORACLE_HOME/network/admin/tnsnames.ora" && {
+  echo "ERRORE: alias RACDB_STBY_AUX ancora presente nel TNS"
+  exit 1
+} || echo "OK: RACDB_STBY_AUX rimosso dal TNS"
+
+tnsping RACDB_STBY_DG
+```
+
+Su `racstby1`:
+
+```bash
+su - grid
+grep -n "RACDB_STBY_AUX" "$ORACLE_HOME/network/admin/listener.ora" && {
+  echo "ERRORE: servizio statico RACDB_STBY_AUX ancora presente nel listener"
+  exit 1
+} || echo "OK: RACDB_STBY_AUX rimosso dal listener"
+
+lsnrctl services | grep RACDB_STBY_DGMGRL
+```
+
+Atteso:
+
+- `tnsping RACDB_STBY_AUX` fallisce, perche' l'alias temporaneo e' stato tolto;
+- `tnsping RACDB_STBY_DG` funziona;
+- `lsnrctl services` mostra ancora `RACDB_STBY_DGMGRL`;
+- `srvctl status database -d RACDB_STBY -v` resta verde.
+
+---
+
 ## 3.13 Avvio Redo Apply (MRP)
+
+### 3.13.0 Abilitazione redo transport sul primary
+
+Nel passo `3.5` hai configurato `LOG_ARCHIVE_DEST_2`, ma lo hai lasciato in
+`DEFER`. Questo e' voluto: prima del duplicate il servizio `RACDB_STBY_DG` non
+e' ancora registrato come database standby, quindi abilitarlo subito puo'
+mandare `DEST_ID=2` in `ERROR`.
+
+Abilita il transport solo adesso, dopo:
+
+- duplicate completato;
+- standby registrato in OCR con `srvctl`;
+- servizio `RACDB_STBY_DG` raggiungibile;
+- `_AUX` temporaneo rimosso o documentato come ancora necessario per retry.
+
+Dal primary:
+
+```bash
+tnsping RACDB_STBY_DG
+sqlplus '/@RACDB_STBY_DG as sysdba'
+```
+
+Se il test SQL passa, abilita la destinazione remota:
+
+```sql
+ALTER SYSTEM SET log_archive_dest_state_2=ENABLE SCOPE=BOTH SID='*';
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+
+SELECT dest_id, status, target, error
+FROM   v$archive_dest
+WHERE  dest_id IN (1,2)
+ORDER  BY dest_id;
+```
+
+Atteso:
+
+- `DEST_ID=1` con `STATUS=VALID`;
+- `DEST_ID=2` con `STATUS=VALID`;
+- colonna `ERROR` vuota.
+
+Se `DEST_ID=2` va in `ERROR`, non proseguire con il test di apply come se fosse
+verde: correggi prima TNS/listener/password file usando il runbook
+`Fix ORA-12514 su DEST_ID=2`.
 
 ```sql
 -- Su racstby1 come sysdba
@@ -2374,8 +2609,9 @@ Prima di passare alla Fase 4:
 
 - conserva il valore manuale dei `LOG_ARCHIVE_DEST_n` remoti per il rollback;
 - verifica che `_DG` funzioni da entrambi i siti;
-- rimuovi il servizio statico temporaneo `RACDB_STBY_AUX` se il duplicate e'
-  concluso e non prevedi un nuovo duplicate;
+- verifica che il servizio statico temporaneo `RACDB_STBY_AUX` sia gia' stato
+  rimosso dal passo `3.12.1`; tenerlo e' ammesso solo se devi ripetere il
+  duplicate e lo documenti nell'evidence pack;
 - conserva `_DGMGRL` e validalo separatamente durante il commissioning Broker;
 - non abilitare FSFO: appartiene alla Fase 4B.
 
@@ -2587,14 +2823,14 @@ Atteso:
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
   VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB' SID='*' SCOPE=BOTH;
 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_STBY_DG LGWR ASYNC REOPEN=15
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_STBY_DG ASYNC NOAFFIRM REOPEN=15
   VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB_STBY' SID='*' SCOPE=BOTH;
 
 -- Fix sullo STANDBY:
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
   VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=RACDB_STBY' SID='*' SCOPE=BOTH;
 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_DG LGWR ASYNC REOPEN=15
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=RACDB_DG ASYNC NOAFFIRM REOPEN=15
   VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=RACDB' SID='*' SCOPE=BOTH;
 ```
 

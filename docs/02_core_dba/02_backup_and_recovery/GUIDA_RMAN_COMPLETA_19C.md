@@ -315,6 +315,10 @@ ORDER BY file_type;
 
 ## 9) Recovery Catalog (raccomandato)
 
+Per una procedura completa e riusabile nel lab usa prima
+[CATRMAN: Recovery Catalog RMAN 19c](./GUIDA_RMAN_CATALOGO_CATRMAN_19C.md).
+La sezione sotto resta un esempio minimo.
+
 ### 9.1 Creazione owner catalog
 
 ```sql

@@ -11,9 +11,10 @@ La baseline Data Guard usa due catene RMAN complete e indipendenti:
 - primary `RACDB`;
 - physical standby `RACDB_STBY`, anche quando resta in `MOUNT`.
 
-Il recovery catalog e' obbligatorio in produzione Data Guard. Ogni backup e'
-associato al relativo `DB_UNIQUE_NAME`, quindi il nome condiviso `DB_NAME=RACDB`
-non basta per separare le catene.
+Il recovery catalog e' obbligatorio in produzione Data Guard. Prima di questa
+guida completa [CATRMAN: Recovery Catalog RMAN 19c](./GUIDA_RMAN_CATALOGO_CATRMAN_19C.md).
+Ogni backup e' associato al relativo `DB_UNIQUE_NAME`, quindi il nome condiviso
+`DB_NAME=RACDB` non basta per separare le catene.
 
 ## Architettura Delle Directory
 
