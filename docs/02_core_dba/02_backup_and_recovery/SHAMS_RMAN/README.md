@@ -19,6 +19,9 @@ nessuna password, hostname reale o path sensibile viene riportato nel repository
 | [Standby SHAMS con RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Creazione physical standby single non-CDB con active duplicate |
 | [SHAMS Produzione MaxPerformance](./SHAMS_PROJECT/GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md) | Coppia produzione `M24SHAMSPEP/M24SHAMSSEP`, Broker `MAXPERFORMANCE`, catalogo e backup |
 | [SHAMS Migration With RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_MIGRATION_WITH_RMAN.md) | Clone produzione -> STG, rename/NID fallback e standby STG |
+| [Recovery DB danneggiato](./SHAMS_PROJECT/GUIDA_SHAMS_RMAN_RECOVERY_DATABASE_DANNEGGIATO.md) | Restore/recover della stessa istanza SHAMS con RMAN |
+| [Restore su nuova istanza](./SHAMS_PROJECT/GUIDA_SHAMS_RMAN_RESTORE_DATABASE_SU_NUOVA_ISTANZA.md) | Ricostruzione su nuovo host con catalogo, backup pieces, pfile, password file e wallet |
+| [Recovery tabella droppata](./SHAMS_PROJECT/GUIDA_SHAMS_RMAN_RECOVERY_TABELLA_DROPPATA.md) | Recycle bin, RMAN `RECOVER TABLE`, clone auxiliary e Data Pump |
 
 ## Script SHAMS pronti
 
@@ -52,5 +55,8 @@ per `M24SHAMSPEC/M24SHAMSSEC/M24SHAMSPEP/M24SHAMSSEP` e cmdfile RMAN.
 - Recovery catalog RMAN 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/managing-recovery-catalog.html
 - RMAN duplicate: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-duplicating-databases.html
 - RMAN in Data Guard: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/using-RMAN-in-oracle-data-guard-configurations.html
+- RMAN complete recovery: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-complete-database-recovery.html
+- RMAN disaster recovery: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-recovery-advanced.html
+- Flashback Table: https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/FLASHBACK-TABLE.html
 - DBNEWID/NID: https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/oracle-dbnewid-utility.html
 - Data Guard MAA: https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/configure-and-deploy-oracle-data-guard.html

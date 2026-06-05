@@ -10,6 +10,18 @@
    [GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md](./GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md).
 4. Per refresh o nuova STG da produzione usa
    [GUIDA_SHAMS_MIGRATION_WITH_RMAN.md](./GUIDA_SHAMS_MIGRATION_WITH_RMAN.md).
+5. Per incident recovery usa:
+   [database danneggiato](./GUIDA_SHAMS_RMAN_RECOVERY_DATABASE_DANNEGGIATO.md),
+   [restore su nuova istanza](./GUIDA_SHAMS_RMAN_RESTORE_DATABASE_SU_NUOVA_ISTANZA.md)
+   oppure [tabella droppata](./GUIDA_SHAMS_RMAN_RECOVERY_TABELLA_DROPPATA.md).
+
+## Procedure di recovery
+
+| Guida | Quando usarla |
+| --- | --- |
+| [Recovery DB danneggiato](./GUIDA_SHAMS_RMAN_RECOVERY_DATABASE_DANNEGGIATO.md) | Datafile perso, tablespace corrotto, controlfile/SPFILE perso, blocchi corrotti o restore completo |
+| [Restore su nuova istanza](./GUIDA_SHAMS_RMAN_RESTORE_DATABASE_SU_NUOVA_ISTANZA.md) | Ricostruzione su nuovo host avendo catalogo, backup pieces, pfile, password file o wallet |
+| [Recovery tabella droppata](./GUIDA_SHAMS_RMAN_RECOVERY_TABELLA_DROPPATA.md) | `DROP TABLE`, recycle bin, `DROP PURGE`, RMAN `RECOVER TABLE`, clone auxiliary |
 
 ## Script RMAN pronti
 
