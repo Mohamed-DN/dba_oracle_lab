@@ -9,6 +9,7 @@
 - Artifact SHAMS PROJECT: [DOCX/PDF versionati](../../../artifacts/shams_project/README.md)
 - Produzione non-CDB RAC: [Produzione RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md)
 - Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) e [Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)
+- Prerequisito RMAN/Data Guard: [CATRMAN recovery catalog](../02_backup_and_recovery/GUIDA_RMAN_CATALOGO_CATRMAN_19C.md)
 - Operativita dopo setup: [Switchover](./GUIDA_SWITCHOVER_COMPLETO.md), [Failover/Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md), [Flashback](./GUIDA_FLASHBACK_DATABASE.md)
 
 Convenzione Broker: `DR_<DB_NAME><ENV>_CONF`, senza sito PE o SE nel nome.
@@ -23,6 +24,7 @@ Usa `DR_RACDB_CONF` per il core lab e `DR_M24SHAMSC_CONF` per SHAMS collaudo.
 | [Failover + Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md) | Scenario distruttivo e recovery |
 | [Flashback Database](./GUIDA_FLASHBACK_DATABASE.md) | Ripristino temporale database |
 | [MAA Best Practices](./GUIDA_MAA_BEST_PRACTICES.md) | Linee guida Oracle MAA |
+| [CATRMAN recovery catalog](../02_backup_and_recovery/GUIDA_RMAN_CATALOGO_CATRMAN_19C.md) | Catalogo RMAN centralizzato per primary/standby, wallet e `DB_UNIQUE_NAME` |
 | [SHAMS PROJECT](./SHAMS_PROJECT/README.md) | PEYTECH: single/RAC, CDB/non-CDB, Broker, Active Data Guard e Observer FSFO |
 | [SHAMS: Network e Broker](./SHAMS_PROJECT/GUIDA_09_DATAGUARD_NETWORK_BROKER_PEYTECH_19C.md) | Rete DG single/RAC, listener, duplicate RMAN, apply e Broker |
 | [SHAMS: ADG e servizi](./SHAMS_PROJECT/GUIDA_10_ACTIVE_DATAGUARD_SERVIZI_ROLE_BASED_PEYTECH_19C.md) | Gate licenza, `READ ONLY WITH APPLY` e servizi role-based |

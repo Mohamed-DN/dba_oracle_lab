@@ -14,6 +14,7 @@ nessuna password, hostname reale o path sensibile viene riportato nel repository
 
 | Guida | Uso |
 | --- | --- |
+| [CATRMAN: Recovery Catalog RMAN 19c](../GUIDA_RMAN_CATALOGO_CATRMAN_19C.md) | Prerequisito catalogo centralizzato, wallet/SEPS e `CONFIGURE DB_UNIQUE_NAME` |
 | [RMAN Backup SHAMS Project](./SHAMS_PROJECT/GUIDA_RMAN_BACKUP_SHAMS_PROJECT.md) | Setup repository, wrapper, cmdfile, schedule e cleanup separato |
 | [Standby SHAMS con RMAN](./SHAMS_PROJECT/GUIDA_SHAMS_STANDBY_RMAN_SINGLE_NON_CDB.md) | Creazione physical standby single non-CDB con active duplicate |
 | [SHAMS Produzione MaxPerformance](./SHAMS_PROJECT/GUIDA_SHAMS_PROD_MAXPERFORMANCE_WITH_RMAN.md) | Coppia produzione `M24SHAMSPEP/M24SHAMSSEP`, Broker `MAXPERFORMANCE`, catalogo e backup |
@@ -48,6 +49,7 @@ per `M24SHAMSPEC/M24SHAMSSEC/M24SHAMSPEP/M24SHAMSSEP` e cmdfile RMAN.
 
 ## Fonti Oracle
 
+- Recovery catalog RMAN 19c: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/managing-recovery-catalog.html
 - RMAN duplicate: https://docs.oracle.com/en/database/oracle/oracle-database/19/bradv/rman-duplicating-databases.html
 - RMAN in Data Guard: https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/using-RMAN-in-oracle-data-guard-configurations.html
 - DBNEWID/NID: https://docs.oracle.com/en/database/oracle/oracle-database/19/sutil/oracle-dbnewid-utility.html

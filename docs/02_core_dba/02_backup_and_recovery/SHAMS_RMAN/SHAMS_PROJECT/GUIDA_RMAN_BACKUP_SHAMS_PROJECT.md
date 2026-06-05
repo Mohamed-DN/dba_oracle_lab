@@ -8,6 +8,9 @@ monitorabili e cleanup separato. La logica riprende lo script aziendale passato
 nei TXT: config esterna, role detection, blocco backup concorrenti e schedule
 cron.
 
+Prima di applicare questa guida, completa il catalogo centralizzato:
+[CATRMAN: Recovery Catalog RMAN 19c](../../GUIDA_RMAN_CATALOGO_CATRMAN_19C.md).
+
 ## Architettura directory
 
 Root unica:
