@@ -95,17 +95,54 @@ Backup FAILED?
 ### 2.1 Step 1: Identifica il Fallimento
 
 ```sql
--- Query 1: Status ultimi job RMAN (ultime 72 ore)
-SELECT input_type,
+/* 
+=======================================================================
+OBIETTIVO: Riepilogo ad alto livello dei job RMAN (Dashboard).
+USO: Controllo mattutino per verificare durata, dimensioni e se i 
+     backup complessivi sono in stato 'COMPLETED' o 'FAILED'.
+VISTA: V$RMAN_BACKUP_JOB_DETAILS
+======================================================================= 
+*/
+SELECT session_key,
+       input_type,
        status,
-       TO_CHAR(start_time, 'DD-MON HH24:MI') AS started,
-       TO_CHAR(end_time, 'DD-MON HH24:MI') AS ended,
-       ROUND(elapsed_seconds/60) AS duration_min,
+       TO_CHAR(start_time, 'YYYY-MM-DD HH24:MI:SS') AS started,
+       TO_CHAR(end_time, 'YYYY-MM-DD HH24:MI:SS') AS ended,
+       ROUND(elapsed_seconds/60, 1) AS duration_min,
        output_bytes_display AS output_size,
-       output_device_type,
-       session_key
+       command_id
 FROM v$rman_backup_job_details
-WHERE start_time > SYSDATE - 3
+WHERE start_time > SYSDATE - 7
+ORDER BY start_time DESC;
+```
+```sql
+/* 
+=======================================================================
+OBIETTIVO: Dettaglio granulare dei singoli Backup Set.
+USO: Verificare l'effettiva rotazione (Full vs Incr vs Archivelog) 
+     e confermare che l'autosave del controlfile sia presente.
+VISTA: V$BACKUP_SET_DETAILS
+======================================================================= 
+*/
+SELECT session_key,
+       recid AS set_no,
+       DECODE(backup_type, 
+              'L', 'Archivelog', 
+              'D', 'DB Full/Incr 0', 
+              'I', 'Incremental 1', 
+              backup_type) AS bkp_type,
+       DECODE(controlfile_included, 
+              'YES', 'Incl. Controlfile', 
+              'NO', 'No', 
+              controlfile_included) AS ctrl_file,
+       pieces,
+       TO_CHAR(start_time, 'YYYY-MM-DD HH24:MI') AS start_time,
+       TO_CHAR(completion_time, 'YYYY-MM-DD HH24:MI') AS comp_time,
+       ROUND(elapsed_seconds / 60, 1) AS elapsed_min,
+       output_bytes_display AS size_display,
+       device_type AS device
+FROM v$backup_set_details
+WHERE start_time > SYSDATE - 7
 ORDER BY start_time DESC;
 ```
 
