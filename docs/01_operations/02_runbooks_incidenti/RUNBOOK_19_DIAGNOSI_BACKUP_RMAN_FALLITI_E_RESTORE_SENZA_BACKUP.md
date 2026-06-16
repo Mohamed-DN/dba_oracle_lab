@@ -179,8 +179,8 @@ WHERE j.start_time > SYSDATE - 7
        OR LOWER(o.output) LIKE '%warn%' 
        OR LOWER(o.output) LIKE '%fail%')
 ORDER BY j.start_time DESC, o.recid;
-
-
+```
+```sql
 /* =======================================================================
 OBIETTIVO: Verificare la presenza di blocchi di dati corrotti.
 USO: Da lanciare se RMAN fallisce per errori I/O o corruzione (es. ORA-19566).
@@ -195,7 +195,8 @@ SELECT file#,
        corruption_type
 FROM v$database_block_corruption
 ORDER BY file#, block#;
-
+```
+```sql
 /* =======================================================================
 OBIETTIVO: Analizzare i "Wait Events" (colli di bottiglia) di RMAN in corso.
 USO: Da usare se il backup è insolitamente lento o sembra bloccato.
