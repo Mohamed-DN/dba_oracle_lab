@@ -159,23 +159,63 @@ ORDER BY start_time DESC;
 ### 2.2 Step 2: Trova l'Errore Specifico
 
 ```sql
--- Query 2: Errori dettagliati
-SELECT TO_CHAR(start_time,'DD-MON HH24:MI') AS ts,
-       operation, status, object_type,
-       SUBSTR(output,1,300) AS error_msg
-FROM v$rman_status
-WHERE start_time > SYSDATE - 3
-  AND status NOT IN ('COMPLETED','RUNNING')
-ORDER BY start_time DESC;
+/* =======================================================================
+OBIETTIVO: Estrarre SOLO le righe di errore/warning di tutti i backup
+           problematici (FAILED o COMPLETED WITH WARNINGS).
+USO: Trovare subito la root cause (ORA- / RMAN-) senza aprire i log testuali.
+VISTE: V$RMAN_OUTPUT, V$RMAN_BACKUP_JOB_DETAILS
+======================================================================= 
+*/
+SELECT o.session_recid AS session_key,
+       TO_CHAR(j.start_time, 'YYYY-MM-DD HH24:MI') AS job_date,
+       j.status,
+       o.output AS error_message
+FROM v$rman_output o
+JOIN v$rman_backup_job_details j ON o.session_recid = j.session_key
+WHERE j.start_time > SYSDATE - 7
+  AND j.status IN ('FAILED', 'COMPLETED WITH WARNINGS')
+  AND (o.output LIKE 'ORA-%' 
+       OR o.output LIKE 'RMAN-%' 
+       OR LOWER(o.output) LIKE '%warn%' 
+       OR LOWER(o.output) LIKE '%fail%')
+ORDER BY j.start_time DESC, o.recid;
 
--- Query 3: Output completo dell'ultimo job fallito
-SELECT output
-FROM v$rman_output
-WHERE session_key = (
-  SELECT MAX(session_key) FROM v$rman_backup_job_details
-  WHERE status = 'FAILED'
-)
-ORDER BY recid;
+
+/* =======================================================================
+OBIETTIVO: Verificare la presenza di blocchi di dati corrotti.
+USO: Da lanciare se RMAN fallisce per errori I/O o corruzione (es. ORA-19566).
+     Se la vista è vuota, il DB è fisicamente sano.
+VISTA: V$DATABASE_BLOCK_CORRUPTION
+======================================================================= 
+*/
+SELECT file#, 
+       block#, 
+       blocks, 
+       corruption_change#, 
+       corruption_type
+FROM v$database_block_corruption
+ORDER BY file#, block#;
+
+/* =======================================================================
+OBIETTIVO: Analizzare i "Wait Events" (colli di bottiglia) di RMAN in corso.
+USO: Da usare se il backup è insolitamente lento o sembra bloccato.
+     Guarda la colonna EVENT per capire l'attesa (es. 'Backup: MML write backup piece').
+VISTE: V$SESSION
+======================================================================= 
+*/
+SELECT sid,
+       serial#,
+       program,
+       module,
+       event,
+       state,
+       seconds_in_wait AS wait_sec,
+       wait_time_micro / 1000000 AS wait_time_sec
+FROM v$session
+WHERE (program LIKE '%rman%' OR module LIKE '%RMAN%')
+  AND status = 'ACTIVE'
+ORDER BY wait_sec DESC;
+
 ```
 
 ### 2.3 Step 3: Check Alert Log
