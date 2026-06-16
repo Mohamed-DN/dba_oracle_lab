@@ -41,9 +41,9 @@ SELECT
     t.bigfile,
     t.status,
     ROUND(alloc.alloc_bytes/1024/1024/1024, 2) AS alloc_gb,
-    ROUND((alloc.alloc_bytes - NVL(f.free_bytes, 0))/1024/1024/1024, 2) AS used_gb,
+    ROUND(GREATEST(alloc.alloc_bytes - NVL(f.free_bytes, 0), 0)/1024/1024/1024, 2) AS used_gb,
     ROUND(alloc.max_bytes/1024/1024/1024, 2) AS max_gb,
-    ROUND((alloc.alloc_bytes - NVL(f.free_bytes, 0)) * 100 /
+    ROUND(GREATEST(alloc.alloc_bytes - NVL(f.free_bytes, 0), 0) * 100 /
           NULLIF(alloc.max_bytes, 0), 1) AS pct_of_max,
     alloc.autoext
 FROM dba_tablespaces t
