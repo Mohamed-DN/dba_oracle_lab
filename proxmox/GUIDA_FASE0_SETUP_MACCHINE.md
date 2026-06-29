@@ -559,4 +559,4 @@ Esattamente come per `rac1`, dovrai creare 5 nuovi dischi (`asm-stby-crs1`, `asm
 Hai completato il setup hardware/hypervisor e installato Oracle Linux con le partizioni corrette. Tutta la configurazione del sistema operativo (utenti, kernel parameters, Chrony, HugePages) è centralizzata nella **[FASE 1](./GUIDA_FASE1_PREPARAZIONE_OS.md)**. 
 Eseguirai quella fase **SOLO su `rac1`**; diventerà la tua **Golden Image** che clonerai per creare tutti gli altri nodi.
 
-📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ Prossimo: [FASE 1: Preparazione OS](./GUIDA_FASE1_PREPARAZIONE_OS.md)**
+📍 [Indice Percorso Lab](./README.md) | **→ Prossimo: [FASE 1: Preparazione OS](./GUIDA_FASE1_PREPARAZIONE_OS.md)**

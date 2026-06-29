@@ -22,7 +22,7 @@ Se un nodo diverge, correggi la golden image o la configurazione locale prima di
 
 ### 📸 Riferimenti Visivi
 
-![Architettura DNS BIND](../../../images/dns_bind_architecture.png)
+![Architettura DNS BIND](../images/dns_bind_architecture.png)
 
 ---
 
@@ -1246,4 +1246,4 @@ cat /usr/bin/scp | grep -q "scp.bkp" && echo "SCP FIX OK" || echo "ERRORE FIX SC
 
 ---
 
-**← [FASE 0: Setup Macchine](./GUIDA_FASE0_SETUP_MACCHINE.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 2: Grid + RAC](./GUIDA_FASE2_GRID_E_RAC.md)**
+**← [FASE 0: Setup Macchine](./GUIDA_FASE0_SETUP_MACCHINE.md)** | 📍 [Indice Percorso Lab](./README.md) | **→ [FASE 2: Grid + RAC](./GUIDA_FASE2_GRID_E_RAC.md)**
