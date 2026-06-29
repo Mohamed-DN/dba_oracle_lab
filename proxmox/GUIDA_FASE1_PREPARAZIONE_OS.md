@@ -1,4 +1,4 @@
-# FASE 1: Preparazione Nodi e OS (Proxmox VE + Oracle Linux 8.10)
+# FASE 1: Preparazione Nodi e OS (Oracle Linux 8.10 su Proxmox)
 
 ## Obiettivo operativo
 
@@ -18,7 +18,11 @@ Se un nodo diverge, correggi la golden image o la configurazione locale prima di
 
 > **Architettura di riferimento**: 2 nodi RAC primario (`rac1`, `rac2`) + 2 nodi RAC standby (`racstby1`, `racstby2`).
 > Tutti i comandi vanno eseguiti come `root` salvo dove diversamente indicato.
-> I passaggi di questa fase vanno eseguiti su **`rac1`** e clonati sugli altri nodi.
+> I passaggi di questa fase vanno ripetuti su **tutti i nodi** salvo dove specificato.
+
+### 📸 Riferimenti Visivi
+
+![Architettura DNS BIND](../../../images/dns_bind_architecture.png)
 
 ---
 
@@ -50,15 +54,36 @@ Se un nodo diverge, correggi la golden image o la configurazione locale prima di
 
 **Perché Oracle RAC lo richiede?**
 - Lo **SCAN** (Single Client Access Name) DEVE risolvere a 3 IP simultaneamente.
-- `/etc/hosts` **NON** basta per lo SCAN. Non supporta il Round-Robin.
+- `/etc/hosts` **NON** basta per lo SCAN. Non supporta il Round-Robin. Se metti 3 IP per `rac-scan` nel file hosts, Linux userà sempre e solo il primo.
 - Il DNS invece permette il **round-robin**: le connessioni dei client vengono distribuite automaticamente tra i 3 IP.
 
 **Che DNS usiamo nel Lab? (Dnsmasq vs BIND)**
-In produzione si usano server DNS complessi come **BIND**. In laboratorio, noi useremo **Dnsmasq**. Dnsmasq è un DNS leggerissimo che fa una cosa magica: **legge il suo file `/etc/hosts` e lo trasforma in record DNS interrogabili dalla rete**.
+In produzione si usano server DNS complessi come **BIND** o Microsoft DNS. In laboratorio, installare BIND richiede decine di file di configurazione composti da sintassi ostica.
+Per **semplificare enormemente**, noi useremo **Dnsmasq**. Dnsmasq è un DNS leggerissimo che fa una cosa magica: **legge il suo file `/etc/hosts` e lo trasforma in record DNS interrogabili dalla rete**.
+
+```text
+  Il trucco di Dnsmasq:
+  ---------------------
+  1. Compiliamo /etc/hosts sul nodo 'dnsnode' con tutti gli IP (inclusi i 3 SCAN)
+  2. Avviamo dnsmasq
+  3. dnsmasq legge quel file e "serve" quelle traduzioni agli altri nodi (rac1, rac2)
+  4. Quando rac1 chiede "chi è rac-scan?", dnsmasq restituisce i 3 IP in round-robin!
+```
+
+**Tipi di record DNS che configuriamo:**
+
+| Tipo | Esempio | Cosa fa |
+|---|---|---|
+| **A** | `rac1 → 192.168.56.101` | Nome → IP (forward) |
+| **PTR** | `192.168.56.101 → rac1` | IP → Nome (reverse) |
+| **SOA** | `localdomain` | Authority della zona |
+| **NS** | `ns1.localdomain` | Chi risponde per questa zona |
 
 ---
 
 ## 1.1 Piano IP e Hostname
+
+Prima di tutto, definiamo il piano di indirizzamento. Questo è il cuore di qualsiasi cluster: se sbagli gli IP, niente funziona.
 
 | Ruolo | Hostname | IP Pubblica | IP Privata (Interconnect) | IP VIP |
 |---|---|---|---|---|
@@ -68,10 +93,11 @@ In produzione si usano server DNS complessi come **BIND**. In laboratorio, noi u
 | Standby Nodo 1 | racstby1 | 192.168.56.111 | 192.168.2.111 | 192.168.56.113 |
 | Standby Nodo 2 | racstby2 | 192.168.56.112 | 192.168.2.112 | 192.168.56.114 |
 | Standby SCAN | racstby-scan | 192.168.56.115, .116, .117 | - | - |
+| Target GoldenGate | dbtarget | 192.168.56.150 | - | - |
 
-> **Perché?** Oracle RAC necessita di minimo 3 tipi di IP per nodo: Pubblica (comunicazione client), Privata (Cache Fusion, il "sangue" del cluster), VIP (failover trasparente).
+> **Perché?** Oracle RAC necessita di minimo 3 tipi di IP per nodo: Pubblica (comunicazione client), Privata (Cache Fusion, il "sangue" del cluster), VIP (failover trasparente). Lo SCAN (Single Client Access Name) è un load balancer DNS integrato nel cluster.
 
-### Come Funzionano le Reti del RAC
+### Come Funzionano le Reti del RAC in Proxmox
 
 ```text
                      +-------------------------------------------+
@@ -107,16 +133,19 @@ In produzione si usano server DNS complessi come **BIND**. In laboratorio, noi u
          |           +-----------------------------------------+
 ```
 
+> **VIP (Virtual IP)**: Quando un nodo crasha, il suo VIP "migra" sull'altro nodo in pochi secondi. I client connessi al VIP vengono re-indirizzati automaticamente senza cambiare configurazione.
+> **SCAN**: I client si connettono SEMPRE allo SCAN, MAI direttamente ai nodi. Lo SCAN load-balancia le connessioni tra i nodi disponibili.
+
 ---
 
 ## 1.2 Il Problema del Copia-Incolla (MobaXterm)
 
 > ⚠️ **ATTENZIONE**: Appena installato il sistema operativo, ti trovi nella console VNC di Proxmox dove **non puoi incollare testo**. Tutte le configurazioni successive (come l'`/etc/hosts`) sono file lunghissimi. 
-> Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. 
+> Per procedere devi **prima dare un IP** alla macchina usando l'interfaccia testuale, e poi collegarti dal tuo PC tramite **MobaXterm**. Questo vale per **TUTTE le macchine** (`rac1`, `rac2`, `racstby1`, etc.) man mano che le crei.
 
-**Passo 1: Assegna un IP Temporaneo e Hostname (dalla console VNC Proxmox)**
+**Passo 1: Assegna un IP Temporaneo e Hostname (dalla console Proxmox)**
 
-Ti trovi nella console VNC di Proxmox per `rac1`. Fai login come `root`.
+Ti trovi nella console di Proxmox. Fai login come `root`.
 
 1. **Imposta l'Hostname**:
    ```bash
@@ -128,39 +157,76 @@ Ti trovi nella console VNC di Proxmox per `rac1`. Fai login come `root`.
    nmtui
    ```
 
-3. **Configura le Schede**:
+3. **Configura le Schede (Step-by-Step)**:
    - Seleziona **Edit a connection** e premi `Invio`.
-   - **SCHEDA 1 (NAT/Internet - vmbr0)**: Assicurati che **IPv4 CONFIGURATION** sia su `<Automatic>` e spunta `[X] Automatically connect`.
-   - **SCHEDA 2 (Pubblica - vmbr1)**: Cambia **IPv4 CONFIGURATION** in `<Manual>`. Inserisci l'indirizzo `192.168.56.101/24`. Lascia vuoto gateway e DNS. Spunta `[X] Automatically connect`.
-   - Esci e fai OK.
+   - **SCHEDA 1 (NAT/Internet - vmbr0)**:
+     - Vai su **Edit...**
+     - Assicurati che **IPv4 CONFIGURATION** sia su `<Automatic>`.
+     - ⚠️ **MOLTO IMPORTANTE**: Scorri in basso e spunta con la barra spaziatrice `[X] Automatically connect`.
+     - Vai su `<OK>` in fondo e premi `Invio`.
+   - **SCHEDA 2 (Pubblica - vmbr1)**:
+     - Vai su **Edit...**
+     - Cambia **IPv4 CONFIGURATION** da `<Automatic>` a `<Manual>`.
+     - Seleziona `<Show>` a destra di IPv4 per espandere i campi.
+     - **Addresses**: Inserisci l'indirizzo per il nodo (es. `192.168.56.101/24`).
+     - **Gateway**: Lascia VUOTO.
+     - **DNS Servers**: Lascia VUOTO.
+     - Spunta `[X] Automatically connect`.
+     - Vai su `<OK>` in fondo e premi `Invio`.
 
-4. **Applica**:
-   ```bash
-   nmcli connection reload
-   systemctl restart NetworkManager
-   ```
+4. **Esci e Applica in OL8**:
+   - Premi `Esc` o seleziona `<Back>` finché non torni al menu principale, poi seleziona **Quit**.
+   - Riavvia il networking per applicare:
+     ```bash
+     nmcli connection reload
+     systemctl restart NetworkManager
+     ```
 
-5. **Verifica TASSATIVA**:
-   - `ip addr`
-   - `ping -c 2 google.com`
+5. **Tabella di Riferimento Rapida (IP Pubblici)**:
+
+| Nodo | Hostname | IP Pubblico (Scheda 2) |
+| :--- | :--- | :--- |
+| **rac1** | `rac1.localdomain` | `192.168.56.101/24` |
+| **rac2** | `rac2.localdomain` | `192.168.56.102/24` |
+| **racstby1** | `racstby1.localdomain` | `192.168.56.111/24` |
+| **racstby2** | `racstby2.localdomain` | `192.168.56.112/24` |
+
+6. **Verifica TASSATIVA**:
+   - Controlla gli IP: `ip addr`
+   - Controlla Internet: `ping -c 2 google.com` (Se non risponde, hai sbagliato lo step della Scheda 1).
 
 **Passo 2: Connettiti tramite MobaXterm**
 Ora che la macchina ha un IP raggiungibile dal tuo PC:
 1. Apri **MobaXterm**.
-2. **Session** -> **SSH** -> Remote Host: `192.168.56.101`.
+2. **Session** -> **SSH** -> Remote Host: `192.168.56.101` (o quello che hai scelto).
 3. Username: `root`.
 4. **Advanced SSH settings**: Spunta **X11-Forwarding** ✅.
 5. Clicca OK e **D'ORA IN POI COPIA-INCOLLA I COMANDI DA QUI!**
 
 ---
 
-## 1.3 Configurazione Rete Permanente (OL8 NetworkManager)
+## 1.3 Configurazione Rete (File Statici su OL8)
 
-> ⚠️ **ATTENZIONE AI NOMI DELLE SCHEDE**: Su Oracle Linux 8 i file in `/etc/sysconfig/network-scripts/` sono stati rimpiazzati nativamente da `nmcli`, ma il sistema li legge ancora per retrocompatibilità. Controlla `ip addr` per i nomi corretti (es. `eth0`, `eth1` o `ens18`).
+> 🛑 **ALT! FERMATI! SEI ANCORA NELLA SCHERMATA VNC DI PROXMOX?**
+>
+> **TUTTI I COMANDI DA QUI IN POI VANNO ESEGUITI VIA MOBAXTERM!**
+> La console di Proxmox non supporta il copia-incolla. Ora che la tua VM ha un IP, minimizza la finestra del browser, apri MobaXterm e crea una sessione SSH verso l'IP che le hai appena dato. Fallo per ogni VM che stai configurando!
+> 
+> **Tabella IP di Riferimento per MobaXterm:**
+> - `rac1`: 192.168.56.101
+> - `rac2`: 192.168.56.102
+> - `racstby1`: 192.168.56.111
+> - `racstby2`: 192.168.56.112
 
-Esempio per `rac1` (adatta `eth0`, `eth1`, `eth2` ai tuoi nomi reali):
+Ora che hai aperto il terminale in MobaXterm e hai fatto login come `root`, rendiamo permanente e rigorosa la configurazione scrivendo i file. 
+
+> ⚠️ **ATTENZIONE AI NOMI DELLE SCHEDE**: I nomi fisici dipendono dall'OS. In Oracle Linux 8, su Proxmox, di solito si chiamano `eth0`, `eth1` e `eth2` (o `ens18`). Sostituisci i nomi negli script se necessario controllando `ip addr`.
+
+Esempio per `rac1` (ricordati di cambiare l'IP al punto 2 e 3 se sei su un'altra VM!):
 
 ### 1. Interfaccia NAT (Internet) $\rightarrow$ `eth0`
+> **Nodo: rac1** | **Utente: root**
+Non usare IP statici qui. Deve prendere IP, Gateway e DNS dal DHCP.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-eth0 <<'EOF'
 TYPE=Ethernet
@@ -172,6 +238,8 @@ EOF
 ```
 
 ### 2. Interfaccia Pubblica (192.168.56.x) $\rightarrow$ `eth1`
+> **Nodo: rac1** | **Utente: root**
+Questa è la rete del Lab dove i nodi comunicano tra loro e con il tuo PC.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-eth1 <<'EOF'
 TYPE=Ethernet
@@ -184,8 +252,10 @@ NETMASK=255.255.255.0
 DOMAIN=localdomain
 EOF
 ```
+> *(Nota: Abbiamo omesso volontariamente il GATEWAY qui per evitare che scavalchi il NAT interrompendo l'accesso a Internet)*
 
 ### 3. Interfaccia Privata (Interconnect) $\rightarrow$ `eth2`
+> **Nodo: rac1** | **Utente: root**
 L'interconnect per il traffico esclusivo del cluster. **NIENTE GATEWAY QUI**.
 ```bash
 cat > /etc/sysconfig/network-scripts/ifcfg-eth2 <<'EOF'
@@ -199,21 +269,29 @@ NETMASK=255.255.255.0
 EOF
 ```
 
-> **Perché BOOTPROTO=static?** L'interconnect del RAC NON deve MAI cambiare IP. Se usi DHCP e l'IP cambia, il cluster va in split-brain.
+> **Perché BOOTPROTO=static?** L'interconnect del RAC NON deve MAI cambiare IP. Se usi DHCP e l'IP cambia, il cluster va in split-brain (i due nodi pensano di essere soli e corrompono i dati).
 
 ```bash
-# Riavvia il networking via NetworkManager (Standard OL8)
+# Riavvia il networking via nmcli
 nmcli connection reload
-systemctl restart NetworkManager
+nmcli connection up eth0
+nmcli connection up eth1
+nmcli connection up eth2
 
-# Verifica
+# Verifica (Sostituisci i nomi se diversi sul tuo sistema)
+ip addr show eth0
 ip addr show eth1
 ip addr show eth2
+
+ping -c 2 rac2        # Da rac1 (dopo aver configurato hosts)
+ping -c 2 rac2-priv   # Da rac1 (rete privata)
 ```
 
 ---
 
-## 1.4 Configurazione /etc/hosts e DNS
+## 1.4 Configurazione /etc/hosts
+
+Esegui su **TUTTI** i nodi (sempre da MobaXterm!):
 
 ```bash
 cat >> /etc/hosts <<'EOF'
@@ -236,11 +314,29 @@ EOF
 ```
 
 > 💡 **IL SEGRETO DEL DBA: Perché non mettiamo lo SCAN qui?**
-> Il file hosts NON fa Round-Robin: Linux userebbe sempre il primo IP. Il DNS invece lo fa! Lo SCAN deve stare solo nel DNS (il tuo `dnsnode`).
+> Hai notato che abbiamo omesso lo SCAN? Ecco perché:
+> 1. **Il file hosts NON fa Round-Robin**: Se scrivi 3 IP per lo SCAN qui, Linux userà sempre e solo il primo. Il bilanciamento del carico morirebbe sul nascere.
+> 2. **Il DNS invece lo fa**: Lo SCAN deve stare solo nel DNS affinché ad ogni richiesta il DNS risponda con un ordine diverso di IP, distribuendo i client su tutto il cluster.
+> 3. **VIP e Privati invece vanno messi**: Servono ai nodi per "parlarsi" velocemente e garantisce che il cluster parta anche se il DNS ha un momento di crisi.
 
-### Configura resolv.conf
+---
+
+## 1.4 Configurazione DNS (Dnsmasq su VM separata)
+
+> **Il DNS è già stato configurato nella Fase 0** sulla VM `dnsnode` con Dnsmasq.
+> Se non hai ancora completato la [Fase 0 — sezione 0.3](./GUIDA_FASE0_SETUP_MACCHINE.md), torna indietro e falla ora.
+>
+> **Perché una VM DNS separata?** (Oracle Base approach)
+> - Il DNS non si ferma quando riavvii i nodi RAC
+> - Lo SCAN funziona sempre, anche durante i restart del cluster
+> - Dnsmasq legge `/etc/hosts` e lo espone come DNS — zero configurazione di zone
+> - Costa solo 1 GB di RAM
+
+### Configura resolv.conf su TUTTI i nodi RAC
 
 ```bash
+# == ESEGUI SU OGNI NODO (rac1, rac2, racstby1, racstby2) ==
+
 # 1. Sblocca il file (se precedentemente protetto)
 chattr -i /etc/resolv.conf 2>/dev/null
 
@@ -252,8 +348,7 @@ options timeout:1
 options attempts:5
 EOF
 
-# 3. CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf
-# Usiamo il metodo corretto per OL8
+# 3. CRITICO: Impedisci a NetworkManager di sovrascrivere resolv.conf (Metodo OL8)
 cat > /etc/NetworkManager/conf.d/90-dns-none.conf <<'EOF'
 [main]
 dns=none
@@ -264,13 +359,46 @@ systemctl restart NetworkManager.service
 chattr +i /etc/resolv.conf
 ```
 
+> 💡 **PERCHÉ "Operation not permitted"?**
+> Se ricevi questo errore pur essendo `root`, è perché il file è "immutabile" (protetto dal comando `chattr +i`). Linux impedisce a CHIUNQUE (anche a root) di modificarlo finché non lo sblocchi con `chattr -i`. 
+> Lo usiamo per evitare che NetworkManager o altri processi cancellino la nostra configurazione DNS, che è vitale per lo SCAN.
+
 > **Cosa fa dns=none?** Dice a NetworkManager di NON toccare `/etc/resolv.conf` dopo un reboot. Senza questo fix, dopo ogni restart il file viene riscritto e lo SCAN smette di funzionare. È uno dei bug più insidiosi!
 
-### Test DNS
+### Test DNS (da ogni nodo)
+
 ```bash
+# Verifica che il DNS risolve gli hostname
 nslookup rac1 192.168.56.50
-nslookup rac-scan 192.168.56.50  # DEVE ritornare 3 IP!
+nslookup rac2 192.168.56.50
+
+# SCAN deve ritornare 3 IP!
+nslookup rac-scan 192.168.56.50
+# Server:  192.168.56.50
+# Address: 192.168.56.50#53
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.105
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.106
+# Name:    rac-scan.localdomain
+# Address: 192.168.56.107
+
+# Standby SCAN
+nslookup racstby-scan 192.168.56.50
 ```
+
+### (Opzionale ma Consigliato) Configurare il DNS su Windows (Host)
+
+Se vuoi accedere a EM Express o altri servizi web del lab direttamente dal browser del tuo PC fisico usando i nomi (es. `https://rac1.localdomain:5500/em`), devi dire a Windows di usare il tuo `dnsnode`.
+
+1. Su Windows, apri **Impostazioni di rete** -> **Modifica opzioni scheda**.
+2. Trova la scheda **VirtualBox Host-Only Network** o **Proxmox TAP/Bridge** (quella relativa a `192.168.56.x`).
+3. Tasto destro -> **Proprietà** -> Doppio clic su **Protocollo Internet versione 4 (TCP/IPv4)**.
+4. Seleziona **Utilizza i seguenti indirizzi server DNS**.
+5. Server DNS preferito: inserisci l'IP del dnsnode (`192.168.56.50`).
+6. Clicca OK. Ora dal tuo browser Windows puoi navigare usando gli hostname del lab!
+
+> **Se il DNS non funziona, NON procedere!** Il Grid installer fallirà se non riesce a risolvere lo SCAN.
 
 ---
 
@@ -278,14 +406,21 @@ nslookup rac-scan 192.168.56.50  # DEVE ritornare 3 IP!
 
 > [!WARNING]
 > I comandi seguenti sono una scorciatoia ammessa solo sulle VM domestiche
-> isolate del Core Lab.
+> isolate del Core Lab. Non sono una baseline enterprise. In produzione mantieni
+> firewall e SELinux secondo policy, apri soltanto i flussi approvati e applica
+> il profilo di produzione.
 
+### Step 1: Disabilitare il Firewall (firewalld)
+Esegui questi due comandi da root per fermare il firewall adesso e impedirne l'avvio al prossimo reboot:
 ```bash
-# Disabilitare il Firewall (firewalld)
 systemctl stop firewalld
 systemctl disable firewalld
+```
 
-# Impostare SELinux permissive
+### Step 2: Impostare SELinux permissive nel Lab (Modifica Manuale)
+Nel lab isolato usa `permissive`: conserva gli eventi AVC senza bloccare l'installazione.
+
+```bash
 sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 setenforce 0
 ```
@@ -295,33 +430,124 @@ setenforce 0
 ## 1.5b Configurare /tmp come Filesystem Dedicato (tmpfs)
 
 > 🛑 **Cosa dice Oracle ufficialmente su `/tmp`?**
-> La documentazione Oracle consiglia **tra i 5 GB e i 10 GB**. Il nostro lab con 8GB di RAM si posiziona nel mezzo. Useremo **4 GB**, senza sprecare RAM preziosa per il database.
+> La documentazione Oracle 19c dà requisiti diversi a seconda del contesto:
+> 
+> | Documento Oracle Ufficiale | Requisito `/tmp` |
+> |---|---|
+> | Grid Infrastructure Installation Checklist | **Almeno 1 GB** libero |
+> | Server Configuration Checklist for Oracle Database | **Almeno 5 GB** di spazio |
+> | Best Practice per ambienti RAC complessi (MOS) | **Consigliati 10 GB** |
+> 
+> Il nostro lab con 8 GB di RAM si posiziona nel mezzo. Useremo **4 GB**, che supera ampiamente il requisito minimo di 1 GB ed è in linea con i 5 GB raccomandati, senza sprecare RAM preziosa per il database.
 
-### 💡 Ma cos'è `tmpfs`? RAM o Storage?
-`tmpfs` è un filesystem che vive interamente nella RAM del server, NON su disco. Quando monti `/tmp` come `tmpfs`, ogni file che ci scrivi dentro va dritto nella memoria RAM. Velocissimo (1000x), ma non persiste al reboot. Non "ruba" RAM se è vuoto: `size=4g` è solo il tetto massimo.
+### 💡 Ma cos'è `tmpfs`? RAM o Storage? — Spiegazione Completa
 
-```bash
-# Aggiungi la riga tmpfs al file fstab per il montaggio permanente
-echo "tmpfs  /tmp  tmpfs  defaults,size=4g,mode=1777  0 0" >> /etc/fstab
+Questa è una delle cose più eleganti di Linux. Normalmente, quando scrivi un file, il percorso è:
 
-# Monta il nuovo tmpfs ADESSO
-mount -o remount /tmp 2>/dev/null || mount /tmp
-
-# Verifica
-df -hT /tmp
+```
+Applicazione → Kernel Linux → Controller Disco → Disco Fisico (HDD/SSD)
+                                                    ↑ LENTO (millisecondi)
 ```
 
-> 💡 **Tip da DBA: Perché `mode=1777`?**
-> È lo "sticky bit" (`drwxrwxrwt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza, l'utente `grid` potrebbe cancellare i file di `oracle`.
+Con `tmpfs`, il percorso diventa:
+
+```
+Applicazione → Kernel Linux → RAM
+                                ↑ VELOCISSIMO (nanosecondi, ~1000x più veloce!)
+```
+
+**`tmpfs` è un filesystem che vive interamente nella RAM del server, NON su disco.** Quando monti `/tmp` come `tmpfs`, ogni file che ci scrivi dentro va dritto nella memoria RAM. Ecco le conseguenze pratiche:
+
+| Caratteristica | `/tmp` su disco (XFS/EXT4) | `/tmp` su `tmpfs` (RAM) |
+|---|---|---|
+| **Velocità** | Lenta (dipende dal disco) | ⚡ Velocissima (~1000x) |
+| **Persistenza** | I file sopravvivono al reboot | ❌ **Tutto sparisce al reboot** |
+| **Spazio occupato** | Occupa spazio su disco fisso | Occupa spazio in RAM |
+| **Rischio di riempire il disco root** | ✅ Sì! `/tmp` e `/` condividono lo spazio | ❌ No, sono separati |
+
+### ⚠️ Ma se `/tmp` usa la RAM, non mi ruba memoria per Oracle?
+
+Domanda fondamentale! La risposta ha **due parti**:
+
+**Parte 1: La RAM si usa SOLO per i file effettivamente presenti.**
+`tmpfs` NON pre-alloca tutta la memoria. Se `/tmp` contiene 200 MB di file → usa 200 MB di RAM. Se è vuoto → usa 0 MB. Il `size=4g` è solo il **tetto massimo** (come un limite di carta di credito: puoi spendere *fino a* 4000€, ma se compri un panino paghi solo 5€).
+
+**Parte 2: Quanto dare a `/tmp` in base alla RAM che hai?**
+Non esiste una risposta unica. La dimensione dipende dalla RAM totale della tua VM:
+
+```
++------------------------------------------------------------------+
+|     GUIDA DI DIMENSIONAMENTO /tmp (tmpfs) PER ORACLE 19c       |
++--------------------+--------------------+------------------------+
+| RAM della VM       | Dimensione /tmp    | Note                  |
++--------------------+--------------------+------------------------+
+| 8 GB  (il nostro!) | size=4g            | OK per lab didattico  |
+| 16 GB              | size=6g            | Confortevole          |
+| 32 GB              | size=10g           | Enterprise standard   |
+| 64 GB+             | size=10g           | 10 GB bastano sempre  |
++--------------------+--------------------+------------------------+
+```
+
+Nel nostro caso con **8 GB di RAM totali**, la dobbiamo dividere tra diversi inquilini:
+
+```
++----------------------------------------------------------+
+|              BUDGET RAM (8 GB totali)                    |
++----------------------------------------------------------+
+|  Sistema Operativo Linux       ~1.0 GB (fisso)          |
+|  Oracle SGA (memoria condivisa)~1.5 GB (per il DB)      |
+|  Oracle PGA (memoria processi) ~0.5 GB (per il DB)      |
+|  Grid Infrastructure (ASM/CRS) ~0.5 GB                  |
+|  -------------------------------------------------       |
+|  /tmp (tmpfs) — TETTO MASSIMO   4.0 GB ← il nostro!    |
+|  -------------------------------------------------       |
+|  Margine di sicurezza          ~0.5 GB                  |
++----------------------------------------------------------+
+```
+
+Ecco perché scegliamo **4 GB**: supera di 4 volte il minimo Oracle (1 GB), è vicino alla best practice (5 GB), e non toglie troppa RAM al DB. Nella pratica, `/tmp` non arriverà mai a usare tutti e 4 i GB (l'installer Oracle ne usa al massimo 1-2 GB di picco), ma il tetto ci protegge da sorprese.
+
+> 📘 **E se la RAM si riempie per davvero?** Linux è furbo: quando la RAM scarseggia, il kernel sposta automaticamente i file "freddi" di `tmpfs` nella **swap** (che è su disco). Ecco perché nella Fase 0 abbiamo creato 8 GB di swap — servono anche come "rete di sicurezza" per `tmpfs`! Quindi il ciclo è: RAM → Swap (disco) → e quando servono di nuovo, Linux li riporta in RAM. Tutto trasparente.
+
+### Comandi da eseguire
+
+**Come utente `root`, copia e incolla questo blocco su `rac1`:**
+
+```bash
+# 1. Verifica la situazione attuale (probabilmente /tmp è su /)
+df -hT /tmp
+
+# 2. Aggiungi la riga tmpfs al file fstab per il montaggio permanente
+# Tetto massimo: 4 GB (sufficiente per Oracle, senza sprecare RAM)
+echo "tmpfs  /tmp  tmpfs  defaults,size=4g,mode=1777  0 0" >> /etc/fstab
+
+# 3. Monta il nuovo tmpfs ADESSO (senza riavviare)
+mount -o remount /tmp 2>/dev/null || mount /tmp
+
+# 4. Verifica che ora /tmp sia su tmpfs
+df -hT /tmp
+# Deve mostrare: tmpfs    tmpfs   4.0G  ...  /tmp
+
+# 5. Verifica che la RAM NON sia stata "rubata"
+free -h
+# La colonna "available" deve mostrare ancora quasi tutta la RAM libera!
+```
+
+> 💡 **Tip da DBA: Perché `size=4g` e `mode=1777`?**
+> - `size=4g`: Tetto massimo di 4 GB. È il giusto compromesso per un lab con 8 GB di RAM: abbastanza per qualsiasi installer Oracle, senza rubare troppa memoria al DB. **Ricorda: la RAM si consuma SOLO per i file effettivamente presenti in /tmp.**
+> - `mode=1777`: È lo "sticky bit" (`drwxrwxrwt`). Significa che chiunque può scrivere in `/tmp`, ma **solo il proprietario** di un file può cancellarlo. Senza lo sticky bit, l'utente `grid` potrebbe cancellare i file temporanei di `oracle` e viceversa, causando crash dell'installer.
+> - `0 0`: Come per `/u01`, non serve né dump né fsck per un filesystem in RAM.
 
 ---
 
-## 1.6 Fix BUG INS-06006 per Oracle Linux 8.10 (TASSATIVO)
+## 1.6 Fix per errore INS-06006 (Protocollo SCP) — OBBLIGATORIO SU OL8!
 
 > [!CAUTION]
-> **ATTENZIONE CRITICA PER OEL 8+**: Nelle versioni recenti di Linux come la nostra OEL 8.10, il comando `scp` è stato silenziosamente aggiornato per usare il protocollo SFTP. L'installer Oracle 19c, che è vecchio, non capisce SFTP e **crasha con l'errore fatale INS-06006**. Il workaround è creare un wrapper che forza il vecchio protocollo.
+> **ATTENZIONE CRITICA PER OEL 8.10**: Nelle versioni recenti di Linux come la nostra OEL 8.10, il comando `scp` è stato silenziosamente aggiornato per usare il protocollo SFTP. L'installer Oracle 19c, che è vecchio, non capisce SFTP e crasha con l'errore fatale **INS-06006**. Il workaround rinomina il vero `scp` e ne crea uno finto che forza il vecchio protocollo.
 
 ```bash
+# Come utente root, su tutti i nodi:
+
 # 1. Backup del vero scp
 cp -p /usr/bin/scp /usr/bin/scp.bkp
 
@@ -340,51 +566,71 @@ cat /usr/bin/scp
 
 ---
 
-## 1.7 Installazione Pacchetti Prerequisiti (OL8 `dnf`)
+## 1.7 Installazione Pacchetti Prerequisiti
 
 ```bash
-# In OL8 usiamo dnf
+# Installa il pacchetto preinstall che configura automatamente
+# kernel params, limiti utente, gruppi e molto altro. In OL8 usiamo dnf!
 dnf install -y oracle-database-preinstall-19c
 
 # Pacchetti aggiuntivi necessari
 dnf install -y ksh libaio-devel net-tools nfs-utils \
     smartmontools sysstat unzip wget xorg-x11-xauth \
-    xorg-x11-utils xterm bind-utils vim
+    xorg-x11-utils xterm bind-utils
 ```
 
-> **Perché oracle-database-preinstall-19c?** Questo RPM magico fa il 70% del lavoro: crea l'utente `oracle`, configura `sysctl.conf`, imposta i limiti di risorse, installa le dipendenze. Senza questo, dovresti fare tutto a mano.
+> **Perché oracle-database-preinstall-19c?** Questo pacchetto RPM magico fa il 70% del lavoro di preparazione OS: crea l'utente `oracle`, configura i parametri kernel (`sysctl.conf`), imposta i limiti di risorse (`limits.conf`), installa le dipendenze RPM. Senza questo, dovresti fare tutto a mano.
 
 ---
 
 ## 1.8 Fix Bug Systemd (RemoveIPC) - CRITICO!
 
-> **Perché?** Su Red Hat 7/8, `systemd` ha un'impostazione predefinita mortale per Oracle: `RemoveIPC=yes`. Questo fa sì che il demone di login distrugga automaticamente i segmenti di memoria condivisa (IPC) quando l'utente si disconnette. Il Clusterware andrà in crash silenzioso (`CRS-4639`)!
+> **Perché?** Su Oracle Linux 7/8, `systemd` ha un'impostazione predefinita mortale per Oracle: `RemoveIPC=yes`. Questo parametro fa sì che il demone di login distrugga automaticamente i segmenti di memoria condivisa (IPC) quando un utente si disconnette. Se questo succede all'utente `grid` durante l'installazione, il servizio vitale del cluster (`ohasd`) andrà in crash silenzioso (`CRS-4639: Could not contact Oracle High Availability Services`) costringendoti a distruggere e rifare mezza installazione!
+
+Dobbiamo assolutamente forzare questo valore a `no` nel file di configurazione principale di systemd.
+
+Esegui questo comando come root per aggiungere (o modificare) la riga nel file di configurazione e riavviare il demone:
 
 ```bash
+# Aggiunge RemoveIPC=no al logind.conf
 echo "RemoveIPC=no" >> /etc/systemd/logind.conf
+
+# Riavvia il gestore dei login per applicare la modifica
 systemctl restart systemd-logind
 ```
 
 ---
 
-## 1.9 Creazione Gruppi e Utenti (Role Separation)
+## 1.9 Creazione Gruppi e Utenti
 
-> **Perché due utenti (oracle e grid)?** Questa è la "Role Separation" Oracle. `grid` installerà il clusterware e gestirà ASM. `oracle` gestirà solo il database. 
+> **Perché due utenti (oracle e grid)?** Questa è una best practice Oracle "Role Separation". L'utente `grid` installerà e gestirà il clusterware e lo storage (ASM). L'utente `oracle` installerà e gestirà solo i motori dei database. Se un account viene compromesso, l'altro resta protetto. Il pacchetto `preinstall` ha già creato l'utente `oracle` base, ora dobbiamo creare il resto.
 
+### Step 1: Creazione dei gruppi ASM
+Creiamo tre gruppi Linux specifici per amministrare lo storage condiviso ASM. I numeri -g indicano il GroupID fisso (devono essere uguali su tutti i nodi!).
 ```bash
-# Step 1: Creazione dei gruppi ASM
 groupadd -g 54327 asmdba
 groupadd -g 54328 asmoper
 groupadd -g 54329 asmadmin
+```
 
-# Step 2: Aggiungi "oracle" al gruppo ASM
+### Step 2: Aggiungi "oracle" al gruppo ASM
+L'utente oracle deve poter leggere lo storage ASM per poterci scrivere i datafile del database. Aggiungiamolo al gruppo `asmdba`:
+```bash
 usermod -a -G asmdba oracle
+```
 
-# Step 3: Creazione dell'utente "grid"
+### Step 3: Creazione dell'utente "grid"
+Creiamo l'utente `grid`, che avrà come gruppo principale `oinstall` e farà parte di tutti i gruppi amministrativi (dba, asmdba, asmadmin, asmoper, racdba):
+```bash
 useradd -u 54331 -g oinstall -G dba,asmdba,asmadmin,asmoper,racdba grid
+```
 
-# Step 4: Imposta password
+### Step 4: Imposta password distinte (Manualmente)
+Usa password forti e diverse per `oracle` e `grid`, conservate nel password manager del lab. Non usare il nome dell'account come password.
+
+```bash
 passwd oracle
+
 passwd grid
 ```
 
@@ -392,24 +638,32 @@ passwd grid
 
 ## 1.10 Creazione Directory (Albero ORACLE_BASE)
 
-> **Perché questa struttura complessa?** Oracle segue l'architettura OFA. Separa i binari di Grid dai binari di Database. Il software Grid risiede in `GRID_HOME`, e *non può mai essere una sottocartella* dell' `ORACLE_BASE` di grid, deve essere "fuori".
+> **Perché questa struttura complessa?** Oracle segue un'architettura rigida chiamata *OFA (Optimal Flexible Architecture)*. Separa i binari di Grid dai binari di Database. Memorizza questo concetto: il software Grid risiede in `GRID_HOME`, e *non può mai essere una sottocartella* dell' `ORACLE_BASE` di grid, deve essere "fuori" (MOS Note 1373511.1).
 
+### Step 1: Crea le cartelle per il Grid Infrastructure (Gestore Cluster)
+Queste ospiteranno l'inventory globale, il path base per i log di grid, e la casa effettiva dei binari 19c.
 ```bash
-# Grid Infrastructure
-mkdir -p /u01/app/19.0.0/grid        # GRID_HOME
-mkdir -p /u01/app/grid                # ORACLE_BASE (grid)
-mkdir -p /u01/app/oraInventory        # Inventario Globale
+mkdir -p /u01/app/19.0.0/grid        # Questa sarà la GRID_HOME
+mkdir -p /u01/app/grid                # Questa sarà la ORACLE_BASE dell'utente grid
+mkdir -p /u01/app/oraInventory        # L'inventario unico per tutto il server
+```
 
-# Database 19c
-mkdir -p /u01/app/oracle                              # ORACLE_BASE (oracle)
-mkdir -p /u01/app/oracle/product/19.0.0/dbhome_1      # DB_HOME
+### Step 2: Crea le cartelle per il Database
+Qui risiederanno invece i binari di Oracle 19c Database.
+```bash
+mkdir -p /u01/app/oracle                              # Questa sarà la ORACLE_BASE dell'utente oracle
+mkdir -p /u01/app/oracle/product/19.0.0/dbhome_1      # Questa sarà la DB_HOME
+```
 
-# Proprietari e Permessi
+### Step 3: Assegna Proprietari e Permessi
+Ora diciamo al sistema operativo che la roba di `grid` appartiene all'utente `grid`, e la roba del database appartiene ad `oracle`. Entrambi fanno parte del gruppo installatori (`oinstall`).
+```bash
 chown -R grid:oinstall   /u01/app/19.0.0/grid
 chown -R grid:oinstall   /u01/app/grid
 chown -R grid:oinstall   /u01/app/oraInventory
 chown -R oracle:oinstall /u01/app/oracle
 
+# Diamo i permessi corretti in lettura/scrittura/esecuzione a tutto l'albero /u01
 chmod -R 775 /u01
 ```
 
@@ -418,6 +672,7 @@ chmod -R 775 /u01
 ## 1.11 Variabili d'Ambiente
 
 ### Per l'utente `grid`
+
 ```bash
 cat > /home/grid/.grid_env <<'ENVEOF'
 host=$(hostname -s)
@@ -445,6 +700,7 @@ chown grid:oinstall /home/grid/.grid_env
 ```
 
 ### Per l'utente `oracle`
+
 ```bash
 cat > /home/oracle/.db_env <<'ENVEOF'
 host=$(hostname -s)
@@ -475,62 +731,168 @@ chown oracle:oinstall /home/oracle/.db_env
 
 ---
 
-## 1.12 Parametri Kernel e Ottimizzazioni (Tassative)
+## 1.12 Parametri Kernel e Ottimizzazioni Golden Image (Tassative)
 
-> 💡 **IMPORTANTE**: Tutti i passaggi di questa sezione rappresentano il cuore della tua **Golden Image**. Vanno eseguiti **SOLO su `rac1`**. Quando clonerai la macchina, queste ottimizzazioni saranno già presenti.
+> 💡 **IMPORTANTE**: Tutti i passaggi di questa sezione rappresentano il cuore della tua **Golden Image**. Vanno eseguiti **SOLO su `rac1`**. Quando clonerai la macchina, queste ottimizzazioni saranno già presenti in tutti i nodi, risparmiandoti ore di lavoro e configurazioni manuali.
 
-### 1. Limits per Grid
-Il pacchetto preinstall crea i limiti per `oracle`, non per `grid`. Dobbiamo copiare e adattare il file:
+### 1.12.1 Oracle Pre-Install Limits
+
+Il pacchetto `oracle-database-preinstall-19c` li ha già configurati, ma verifichiamo:
+
 ```bash
-cp /etc/security/limits.d/oracle-database-preinstall-19c.conf \
-   /etc/security/limits.d/grid-database-preinstall-19c.conf
-   
-sed -i 's/oracle/grid/g' /etc/security/limits.d/grid-database-preinstall-19c.conf
+# Verifica sysctl
+sysctl -a | grep -E "shm|sem|file-max|ip_local_port|rmem|wmem"
 ```
 
-### 2. Disabilitare Transparent HugePages (THP)
-I THP causano frammentazione e crolli delle prestazioni sul DB. In OL8 modifichiamo GRUB:
+Valori attesi minimi:
+```
+kernel.shmmax = 4398046511104
+kernel.shmall = 1073741824
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+fs.file-max = 6815744
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+fs.aio-max-nr = 1048576
+```
+
+Se i limits per l'utente `grid` non esistono (il preinstall li crea solo per `oracle`), dobbiamo crearli noi copiando quelli di oracle.
+
+1. Copia il file di configurazione esistente:
+   ```bash
+   cp /etc/security/limits.d/oracle-database-preinstall-19c.conf \
+      /etc/security/limits.d/grid-database-preinstall-19c.conf
+   ```
+2. Modifica "oracle" in "grid":
+   ```bash
+   sed -i 's/oracle/grid/g' /etc/security/limits.d/grid-database-preinstall-19c.conf
+   ```
+
+---
+
+## 🚀 DBA Pro Tip: Come fare tutto velocemente (MobaXterm)
+
+Se trovi noioso ripetere gli stessi comandi su `rac1`, `rac2`, ecc., usa queste due tecniche:
+
+1. **Multi-Execution Mode (Il Top!)**:
+   In MobaXterm, clicca sul pulsante **"Multi-exec"** (icona con quattro terminali). Qualsiasi comando scriverai in un tab verrà replicato istantaneamente su TUTTI i tab aperti. Perfetto per `/etc/hosts`, installazione pacchetti e setup utenti.
+   > ⚠️ **ATTENZIONE**: Disabilitalo quando devi scrivere IP specifici per ogni nodo!
+
+2. **Copiare i file tra nodi (scp)**:
+   Invece di fare `cat` su ogni macchina, puoi configurare un file su `rac1` e copiarlo sugli altri:
+   ```bash
+   scp /etc/resolv.conf rac2:/etc/
+   ```
+
+---
+
+### 1.12.2 Oracle Best Practices (Tassative)
+Oltre ai parametri standard, Oracle raccomanda fortemente di disabilitare alcune feature di Linux che causano instabilità e degrado delle performance sui cluster RAC:
+
+#### 1. Disabilitare Transparent HugePages (THP)
+I THP causano grave frammentazione della memoria e crolli delle prestazioni sul database. Vanno disabilitati a livello di kernel (`grub`).
+
 ```bash
-# 1. Modifica la configurazione
+# Apri il file di configurazione di GRUB e inserisci 'transparent_hugepage=never'
 sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="transparent_hugepage=never /g' /etc/default/grub
 
-# 2. Ricompila GRUB (Su OL8 EFI e BIOS usano lo stesso path unificato)
+# Ricompila il file grub per applicare la modifica al prossimo riavvio
 grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
-### 3. Disabilitare Avahi Daemon e NOZEROCONF
-Evita pacchetti multicast (Bonjour) che disturbano il Clusterware.
-```bash
-systemctl stop avahi-daemon.socket avahi-daemon.service
-systemctl disable avahi-daemon.socket avahi-daemon.service
+> 💡 **Verifica Live (Senza riavviare)**:
+> Se vuoi essere sicuro che THP sia disabilitato ora (o se lo avevi già nel file), lancia questo:
+> ```bash
+> cat /sys/kernel/mm/transparent_hugepage/enabled
+> ```
+> Se vedi `[never]`, allora sei a posto! Se vedi `[always]`, devi riavviare la macchina dopo aver lanciato `grub2-mkconfig`.
 
+#### 2. Disabilitare Avahi Daemon (mDNS)
+L'Avahi daemon invia pacchetti multicast (Bonjour/mDNS) costanti sulla rete. Sull'interfaccia privata del RAC questo genera "rumore di fondo" che può disturbare il protocollo di heartbeat del Clusterware.
+```bash
+systemctl stop avahi-daemon.socket
+systemctl stop avahi-daemon.service
+systemctl disable avahi-daemon.socket
+systemctl disable avahi-daemon.service
+```
+
+#### 3. Disabilitare NOZEROCONF (Rotta 169.254.x.x)
+Evita che Linux assegni automaticamente indirizzi di link-local (169.254.0.0) sulle interfacce di rete, mantenendo la tabella di routing pulita.
+```bash
 echo "NOZEROCONF=yes" >> /etc/sysconfig/network
 ```
 
-### 4. Configurazione Standard HugePages (Raccomandata)
-Assegniamo 1024 pagine (2GB) di RAM fisica inamovibile ad Oracle per la SGA. Il kernel fatica molto meno, e Oracle non va mai in swap!
+#### 4. Configurazione Standard HugePages (Opzionale ma Raccomandata)
+
+A differenza dei Transparent HugePages (che vanno spenti), gli **Standard HugePages** pre-allocati sono una best practice fondamentale. 
+
+##### 💡 Perché usarli? (Semplificato)
+1. **Pagine Giganti**: Di default Linux usa pagine da 4KB. Per una SGA da 1.5GB, Linux deve gestire milioni di "pezzettini". Con le HugePages, usiamo pagine da **2MB** (512 volte più grandi!). Il processore trova i dati molto più velocemente.
+2. **Niente Swap**: Le HugePages rimangono "inchiodate" nella RAM fisica. Oracle non finirà mai nello "swap" (disco lento), garantendo performance costanti.
+3. **Meno Carico CPU**: Il kernel fatica molto meno a gestire la memoria del database.
+
+##### 🧮 La Matematica del Lab
+- La nostra **SGA** Oracle sarà di circa **1.5 GB**.
+- Configurando **1024 pagine** da 2MB l'una, allochiamo **2 GB** totali di RAM ultra-veloce.
+- In questo modo la SGA ci starà comodamente dentro.
+
 ```bash
+# Imposta 1024 HugePages (2MB l'una = 2GB totali)
 echo "vm.nr_hugepages = 1024" >> /etc/sysctl.d/99-oracle-hugepages.conf
 sysctl -p /etc/sysctl.d/99-oracle-hugepages.conf
 ```
 
+> ⚠️ **Nota**: Una volta dato il comando `sysctl -p`, la RAM viene "sequestrata" dal kernel per Oracle. Non vederla più come "Free" è normale!
+
 ---
 
-## 1.13 Configurazione Chrony (NTP)
+## 1.13 Configurazione NTP/Chrony
 
-Oracle richiede che i clock siano sincronizzati:
+Oracle Clusterware richiede che i clock siano sincronizzati tra tutti i nodi (max 1 secondo di differenza):
+
 ```bash
-# Chrony è lo standard in OL8.
-systemctl enable chronyd --now
+# Su Oracle Linux 8 chronyd è lo standard
+systemctl enable chronyd
+systemctl restart chronyd
+
+# Verifica
 chronyc sources
 ```
-> **Perché?** Se i clock divergono troppo, il Clusterware forza un "node eviction" per proteggere i dati.
+
+> **Perché?** Se i clock dei nodi del cluster divergono troppo, il Clusterware forza un "node eviction" (espelle il nodo dal cluster) per proteggere i dati.
 
 ---
 
-## 1.14 Inventory Location e Chiavi SSH
+## 1.14 Predisposizione SSH
 
-### Inventory Loc
+> ⚠️ **IMPORTANTE**: Abbiamo deciso di **NON** generare le chiavi sulla Golden Image. 
+> Se le generassimo su `rac1` e poi clonassimo, tutti i nodi avrebbero la **stessa identica chiave**, il che non è la best practice di sicurezza.
+> 
+> **COSA FARE ORA**: Salta questo passaggio e vai direttamente al punto 1.15. Genereremo chiavi uniche per ogni nodo nella **Sezione 1.16**, subito dopo la clonazione.
+
+> 🛠️ **OPS! HAI GIÀ GENERATO LE CHIAVI?**
+> Se hai già lanciato i comandi ed è comparsa la "randomart image", non preoccuparti. Per tornare alla Golden Image "pulita" ed evitare chiavi duplicate, lancia questi comandi da root:
+> ```bash
+> rm -rf /home/grid/.ssh
+> rm -rf /home/oracle/.ssh
+> rm -rf /root/.ssh
+> ```
+> Fatto! Ora la tua macchina è di nuovo vergine e pronta per essere clonata correttamente.
+
+---
+
+## 1.15 Inventory Location (Golden Image)
+
+> 💡 **Nodo: rac1** | **Utente: root**
+
+Questo file è fondamentale: dice all'installer di Oracle dove tenere il registro (l'inventario) di tutti i prodotti installati sulla macchina.
+
+**Perché lo facciamo nella Golden Image?**
+Configurandolo qui, tutti i nodi clonati (`rac2`, `racstby`...) avranno già il puntamento corretto e i permessi giusti. Questo evita che l'installer si blocchi chiedendoti di crearlo a mano durante l'installazione del Grid.
+
 ```bash
 cat > /etc/oraInst.loc <<'EOF'
 inventory_loc=/u01/app/oraInventory
@@ -541,101 +903,296 @@ chmod 664 /etc/oraInst.loc
 chown grid:oinstall /etc/oraInst.loc
 ```
 
-### ⚠️ Predisposizione SSH
-> **NON generare le chiavi SSH sulla Golden Image.** 
-> Se lo fai ora, tutti i nodi avrebbero la stessa identica chiave privata copiata! Genereremo le chiavi nella Sezione 1.16, **dopo** la clonazione.
-
 ---
 
 ## 🛑 IL MOMENTO DELLA VERITÀ: Clonazione Golden Image
 
-Hai completato il setup su `rac1`. Spegni la VM.
+Hai appena completato tutta la configurazione OS, utenti, gruppi, limiti e binari su **`rac1`**. 
+
+> 🔍 **Verifica ASM (Prima di clonare)**:
+> Come utente `root`, verifica che il driver ASM sia pronto (anche se non vedi ancora i dischi):
+> ```bash
+> oracleasm status
+> # Deve rispondere: "Checking if ASM is loaded: yes" e "Checking if /dev/oracleasm is mounted: yes"
+> ```
+
+> ⚠️ **ATTENZIONE:** Questo è l'esatto momento in cui devi fermarti. Se procedi oltre o cerchi di fare lo scambio delle chiavi SSH, fallirai. **DEVI CLONARE ORA.**
+
+### 1.16 Procedura di Clonazione (DA RAC1 A TUTTI in Proxmox)
+
+#### Step 1: Spegni `rac1`
 ```bash
+# Da MobaXterm su rac1
 poweroff
 ```
 
-### La Procedura di Clonazione in Proxmox
+> 📸 **SNAPSHOT — "SNAP-02: Golden_Image_Pronta" ⭐ MILESTONE**
+> Appena la macchina è spenta, fai lo snapshot in Proxmox ORA. Questa è la tua **Golden Image**.
 
-In Proxmox, quando fai un Full Clone, vengono clonati anche i dischi locali (inclusi i 5 dischi condivisi di ASM). Dobbiamo evitare di sdoppiare lo storage ASM!
-
-**Per `rac2` (Nodo 2 Primario):**
+#### Step 2: Crea i Cloni (rac2, racstby1, racstby2)
 1. Dalla GUI Proxmox, tasto destro su `rac1` -> **Clone**.
-   - Mode: **Full Clone**
-   - Name: `rac2`
-2. Appena il clone finisce, vai su `rac2` -> **Hardware**.
-3. **Seleziona e fai DETACH e REMOVE** per tutti i 5 dischi ASM che Proxmox ha clonato inutilmente (lascia SOLO il disco OS 50GB e il disco /u01 100GB).
-4. Fai **Add -> Hard Disk**: scegli lo storage locale e nel percorso seleziona l'immagine dei dischi originari di `rac1` (es. `vm-101-disk-2` ecc.). Ricordati di impostare "No Cache".
-5. Vai nella shell dell'host Proxmox e riaggiungi il flag `shared=1` per `rac2` (es. VM 102):
-   ```bash
-   nano /etc/pve/qemu-server/102.conf
-   # Aggiungi ,shared=1 a tutte le righe scsi2, scsi3, ecc.
-   ```
+2. **Mode**: **Full Clone**. Name: `rac2`.
+3. Assicurati che il MAC address policy sia su "Generate new MAC".
+4. Ripeti per creare: `racstby1`, `racstby2`.
 
-**Per `racstby1` e `racstby2` (Standby):**
-La logica è identica, ma ricorda che un RAC Standby **deve avere dischi ASM nuovi e vergini**, NON quelli del primario! 
-- Rimuovi i cloni ASM in Proxmox.
-- Attacca i 5 dischi vuoti creati in Fase 0 specifici per lo Standby.
+#### Step 3: FIX STORAGE (Cruciale!) - Rimuovi i "cloni" dei dischi condivisi
+Quando cloni `rac1` in modalità "Full Clone", Proxmox clona purtroppo anche i dischi ASM RAW (es. `vm-102-disk-2.raw`). Dobbiamo rimuoverli e collegare quelli originali, altrimenti sdoppiamo il cluster!
 
----
+**Per RAC2:**
+1. Seleziona `rac2` -> **Hardware**.
+2. Vedrai molti dischi. **Devi mantenere i primi DUE dischi:**
+   - Il disco del sistema operativo (circa 50GB).
+   - Il disco con i binari Oracle in `/u01` (esattamente **100GB**).
+   > 🛑 **NON RIMUOVERE IL DISCO DA 100GB!** Contiene tutto il software Oracle che hai installato sulla Golden Image.
+3. **Seleziona e fai "Detach", poi "Remove" su tutti gli altri 5 dischi cloni** (quelli da 2GB, 20GB, 15GB).
+4. Ora fai **Add -> Hard Disk** e nel percorso immagine scrivi fisicamente il path dei dischi originali di `rac1` (es. `local-lvm:vm-101-disk-2` ecc.). Ricorda di mettere Cache=None e Discard.
+5. **Dalla shell Proxmox**, entra nel file `/etc/pve/qemu-server/102.conf` e riaggiungi `,shared=1` su questi 5 dischi appena aggiunti.
 
-## 1.15 Customizzazione Cloni (IP e Hostname)
+**Per RACSTBY1 e RACSTBY2:**
+1. Esattamente come per RAC2: **Rimuovi i dischi duplicati dal clone**.
+2. Clicca su **Add -> Hard Disk**.
+3. Seleziona i **5 dischi specifici per lo Standby** creati in Fase 0: `asm_stby_crs1`, `asm_stby_crs2`, `asm_stby_crs3`, `asm_stby_data`, `asm_stby_reco`.
+> 🛑 **FONDAMENTALE**: Un RAC Standby è a tutti gli effetti un cluster indipendente! **DEVE** avere i suoi 3 dischi CRS per il Clusterware e i suoi dischi DATA/RECO. Non condividere МАI i dischi tra il cluster primario e quello di standby.
 
-Accendi i cloni **uno alla volta** usando la console VNC di Proxmox, loggati come root ed esegui i fix di rete. 
-*(Esempio per `rac2`)*:
+#### Step 4: Customizza i Cloni (Le 3 Checklist COMPLETE)
+
+Accendi i cloni **uno alla volta** dalla console VNC di Proxmox. 
+> ⚠️ **ATTENZIONE**: Non usare MobaXterm! Appena accesi, tutti i cloni hanno l'IP `.101` di `rac1` e farebbero conflitto.
+
+Fai il login come `root`. La procedura per "pulire" la Golden Image e adattarla al nuovo nodo è divisa in due fasi: **Sistema** e **Rete**.
+
+##### 🟢 Checklist per `rac2`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+Per fare prima e non sbagliare con `nmtui`, **copia e incolla questo script intero** nel terminale di `rac2` appena lo accendi. Cambierà Hostname, IP Pubblico (a `.102`), IP Privato (a `.102` su subnet `.1.x`) e riavvierà il servizio di rete in un colpo solo tramite nmcli.
 
 ```bash
+# === SCRIPT AUTOMATICO PER RAC2 (OL8 nmcli) ===
 hostnamectl set-hostname rac2.localdomain
 
-# Modifica IP via nmcli
-nmcli con mod eth1 ipv4.addresses 192.168.56.102/24
-nmcli con mod eth2 ipv4.addresses 192.168.1.102/24
-nmcli con reload
-nmcli con up eth1
-nmcli con up eth2
+# Modifica IP Pubblico (eth1) da .101 a .102
+sed -i 's/192.168.56.101/192.168.56.102/g' /etc/sysconfig/network-scripts/ifcfg-eth1
+
+# Modifica IP Privato (eth2) da .101 a .102
+sed -i 's/192.168.1.101/192.168.1.102/g' /etc/sysconfig/network-scripts/ifcfg-eth2
+
+# Riavvia la rete per applicare
+nmcli connection reload
+nmcli connection up eth1
+nmcli connection up eth2
 
 ping -c 2 google.com
 ```
 
-Fai lo stesso per i nodi Standby (ricordando che la Privata è sulla subnet `.2.x`).
-Una volta dati gli IP, **torna su MobaXterm!**
+> 💡 **Fatto!** Ora puoi chiudere la console VNC, aprire **MobaXterm** e collegarti comodamente in SSH all'IP `192.168.56.102` come root.
+
+**2. Storage (Da fare a VM spenta in Proxmox)**
+- [ ] Hai rimosso i cloni inutili?
+- [ ] Hai attaccato i 5 dischi condivisi originali (`crs1`, `crs2`, `crs3`, `data`, `reco`) di `rac1` e hai aggiunto `shared=1`?
+
+##### 🔵 Checklist per `racstby1`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+Incolla questo nel terminale nativo di `racstby1`. Attenzione: la rete privata qui cambia subnet! Questa andrà sulla `.2.x`.
+
+```bash
+# === SCRIPT AUTOMATICO PER RACSTBY1 (OL8 nmcli) ===
+hostnamectl set-hostname racstby1.localdomain
+
+# Modifica IP Pubblico (eth1) da .101 a .111
+sed -i 's/192.168.56.101/192.168.56.111/g' /etc/sysconfig/network-scripts/ifcfg-eth1
+
+# Modifica IP Privato (eth2) da 192.168.1.101 a 192.168.2.111
+sed -i 's/192.168.1.101/192.168.2.111/g' /etc/sysconfig/network-scripts/ifcfg-eth2
+
+# Riavvia la rete per applicare
+nmcli connection reload
+nmcli connection up eth1
+nmcli connection up eth2
+
+ping -c 2 google.com
+```
+
+> 💡 **Fatto!** Ora apri MobaXterm e collegati all'IP `192.168.56.111`.
+
+**2. Storage (Da fare a VM spenta in Proxmox)**
+- [ ] Hai rimosso i cloni RAW inutili?
+- [ ] Hai attaccato i 5 dischi FISICAMENTE DIVERSI creati in Fase 0 per lo standby (`asm_stby_crs1`, `crs2`, `crs3`, `data`, `reco`)?
+
+##### 🔵 Checklist per `racstby2`
+**1. Sistema & Rete (Copia-Incolla questo script)**
+
+```bash
+# === SCRIPT AUTOMATICO PER RACSTBY2 (OL8 nmcli) ===
+hostnamectl set-hostname racstby2.localdomain
+
+# Se hai clonato da rac1 (ip finale .101) o da racstby1 (ip finale .111) usa il comando sed appropriato.
+# Ipotizziamo tu stia clonando dalla Golden Image rac1 (IP .101):
+sed -i 's/192.168.56.101/192.168.56.112/g' /etc/sysconfig/network-scripts/ifcfg-eth1
+sed -i 's/192.168.1.101/192.168.2.112/g' /etc/sysconfig/network-scripts/ifcfg-eth2
+
+# Riavvia la rete per applicare
+nmcli connection reload
+nmcli connection up eth1
+nmcli connection up eth2
+
+ping -c 2 google.com
+```
+
+> 💡 **Fatto!** Ora apri MobaXterm e collegati all'IP `192.168.56.112`.
+
+**2. Storage (Da fare a VM spenta in Proxmox)**
+- [ ] Hai attaccato allo stesso modo i 5 dischi dello standby condividendoli con `racstby1`?
 
 ---
 
-## 1.16 Configurazione Post-Clonazione: SSH Trust
+## 1.17 Configurazione Post-Clonazione: SSH Trust (Chiavi UNICHE)
 
-Ora che i nodi hanno vita propria, scambiamoci le chiavi.
+> 💡 **Nodi: rac1 E rac2** | **Utente: grid / oracle / root**
+> Ora che entrambi i nodi sono vivi e hanno IP diversi, creiamo le loro identità digitali uniche e facciamoli "fidare" l'uno dell'altro.
 
-**Come utente `grid` (su ENTRAMBI i nodi):**
+### STEP 1: Generazione Chiavi (Esegui su ENTRAMBI i nodi)
+Apri due tab in MobaXterm (uno per `rac1` e uno per `rac2`) e attiva il **Multi-Execution Mode**.
+
+**Come utente `grid`:**
 ```bash
 su - grid
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-# Da rac1 manda la chiave a se stesso e a rac2
-ssh-copy-id grid@rac1; ssh-copy-id grid@rac2
-# Da rac2 manda la chiave a se stesso e a rac1
-ssh-copy-id grid@rac1; ssh-copy-id grid@rac2
 ```
 
-**Fai lo STESSO per gli utenti `oracle` e `root`**.
+**Come utente `oracle`:**
+```bash
+su - oracle
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+```
+
+**Come utente `root`:**
+```bash
+su - root
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+```
+
+### STEP 2: Scambio Chiavi (SSH Trust)
+Ora **DISABILITA** il Multi-Execution Mode e procedi nodo per nodo.
+
+#### Per l'utente `grid`:
+```bash
+# Da rac1 manda la chiave a se stesso e a rac2
+ssh-copy-id grid@rac1
+ssh-copy-id grid@rac2
+
+# Da rac2 manda la chiave a se stesso e a rac1
+ssh-copy-id grid@rac1
+ssh-copy-id grid@rac2
+
+# Test finale (NON deve chiedere password)
+ssh grid@rac1 date
+ssh grid@rac2 date
+```
+
+#### Per l'utente `oracle`:
+```bash
+# Da rac1
+ssh-copy-id oracle@rac1
+ssh-copy-id oracle@rac2
+
+# Da rac2
+ssh-copy-id oracle@rac1
+ssh-copy-id oracle@rac2
+
+# Test finale (NON deve chiedere password)
+ssh oracle@rac1 date
+ssh oracle@rac2 date
+```
+
+#### Per l'utente `root`:
+```bash
+# Da rac1
+ssh-copy-id root@rac1
+ssh-copy-id root@rac2
+
+# Da rac2
+ssh-copy-id root@rac1
+ssh-copy-id root@rac2
+
+# Test finale (NON deve chiedere password)
+ssh root@rac1 date
+ssh root@rac2 date
+```
+
+> 💡 **PERCHÉ ORA?** Facendolo in questo momento, ogni macchina genera la sua chiave specifica. Se lo avessimo fatto nella Golden Image, `rac1` e `rac2` sarebbero stati "gemelli identici" a livello di sicurezza SSH (stessa chiave privata), il che è sconsigliato.
 
 ---
 
-## 1.17 Sincronizzazione Dischi ASM
+## 1.18 Sincronizzazione e Creazione Dischi ASM (Post-Clonazione)
 
-> 💡 **Il concetto del "Timbro" ASM**
-> `rac2` condivide gli stessi dischi di `rac1`. Poiché `rac1` in Fase 0 ha già formattato i dischi, `rac2` deve solo leggerli.
+C'è una **differenza fondamentale** tra il modo in cui `rac2` e i nodi standby gestiscono i dischi dopo la clonazione:
+- `rac2` ha ricevuto i dischi originariamente creati su `rac1`. Hanno già l'intestazione ASM. Devi solo "scansionarli".
+- I nodi Standby hanno ricevuto dischi **NUOVI E VUOTI** creati in Fase 0. Devi prima "formattarli" per ASM su `racstby1`, e poi scansionarli su `racstby2`.
 
-**SOLO su `rac2` e `racstby2`:**
+> 💡 **Tip da DBA: Il concetto del "Timbro" ASM**
+> Finché non usi il comando `oracleasm createdisk` (che stiamo per lanciare), Oracle non sa che quei dischi esistono. `createdisk` scrive fisicamente un "header ASM" nel primo megabyte del disco. Lo `scandisks` che farai sull'altro nodo serve semplicemente a dire al kernel: *"Ehi, guarda che l'altro nodo ha appena messo il timbro Oracle su questo disco, leggilo!"*
+
+> 💡 **Utente: root** su tutte le macchine.
+
+### Caso A: Nodi Primari (`rac1` e `rac2`)
+
+**1. SOLO su `rac1` (Creazione):**
+I dischi condivisi che abbiamo partizionato nella Fase 0 devono ora essere "timbrati" per ASM. Questo va fatto **esclusivamente dal primo nodo**.
+
+> ⚠️ **ATTENZIONE ALLA LETTERA DEL DISCO (`/dev/sdX`)!**
+> La lettera assegnata da Linux dipende dall'ordine casuale in cui Proxmox ha attaccato i dischi al riavvio. **NON COPIARE I COMANDI QUI SOTTO ALLA CIECA!**
+> Lancia prima `lsblk` per capire chi è chi, basandoti sulle **dimensioni**.
+
+Sostituisci le lettere `sdX1` nei comandi qui sotto con quelle che vedi nel tuo `lsblk`:
+
 ```bash
-oracleasm scandisks
+# ESEMPIO: Sostituisci sdc1, sdd1 ecc. con le tue lettere reali!
+oracleasm createdisk CRS1 /dev/sdc1
+oracleasm createdisk CRS2 /dev/sdd1
+oracleasm createdisk CRS3 /dev/sde1
+oracleasm createdisk DATA /dev/sdf1
+oracleasm createdisk RECO /dev/sdg1
+
+# Verifica che siano stati creati
 oracleasm listdisks
-# Deve mostrarti tutti i dischi (CRS1, DATA, ecc.)
 ```
 
-**Sui nodi Standby (`racstby1`):**
-Avendo dischi nuovi e vergini, devi fare il comando inverso:
+**2. SOLO su `rac2` (Scansione):**
+Il nodo 2 non deve formattare nulla, condivide i dischi con `rac1`. Deve solo dire al suo kernel di rileggere i dischi per accorgersi del lavoro appena fatto.
+
 ```bash
+# Fai accorgere rac2 dei volumi appena creati da rac1
+oracleasm scandisks
+
+# Verifica che ora anche rac2 veda i 5 dischi (CRS1, CRS2...)
+oracleasm listdisks
+```
+
+### Caso B: Sui nodi Standby (`racstby1` e `racstby2`)
+
+**1. SOLO su `racstby1` (Creazione):**
+Poiché i dischi scelti per lo standby in Proxmox erano vergini, devi "timbrarli" con l'header ASM. 
+
+```bash
+# ESEMPIO: Sostituisci sdb1, sdc1 ecc. con le tue lettere reali in base a lsblk!
 oracleasm createdisk STBY_CRS1 /dev/sdb1
-# ecc... per tutti e 5 i dischi
+oracleasm createdisk STBY_CRS2 /dev/sdc1
+oracleasm createdisk STBY_CRS3 /dev/sdd1
+oracleasm createdisk STBY_DATA /dev/sde1
+oracleasm createdisk STBY_RECO /dev/sdf1
+
+# Verifica che siano stati creati
+oracleasm listdisks
+```
+
+**2. SOLO su `racstby2` (Scansione):**
+Il nodo 2 dello standby non deve formattarli (lo ha già fatto il nodo 1), deve solo accorgersi che l'altro nodo li ha preparati.
+
+```bash
+# Scansiona i dischi appena formattati da racstby1
+oracleasm scandisks
+
+# Verifica che li veda tutti e 5
+oracleasm listdisks
 ```
 
 ---
@@ -645,20 +1202,33 @@ oracleasm createdisk STBY_CRS1 /dev/sdb1
 Esegui questi controlli finali su **ENTRAMBI** i nodi prima di passare alla Fase 2:
 
 ```bash
-# 1. Hostname corretto
+# 1. Hostname corretto (Deve essere rac1 su una e rac2 sull'altra)
 hostname
 
-# 2. Tutti i nodi pingabili
+# 2. Tutti i nodi pingabili (Deve rispondere tutto!)
 ping -c 1 rac1 && ping -c 1 rac2 && ping -c 1 rac1-priv && ping -c 1 rac2-priv
 
-# 3. DNS SCAN funzionante
+# 3. DNS SCAN funzionante (Deve tornare 3 IP)
 nslookup rac-scan.localdomain
 
 # 4. SSH senza password (grid e oracle)
+# Su rac1 prova a entrare in rac2
 su - grid -c "ssh rac2 hostname"
+su - oracle -c "ssh rac2 hostname"
 
-# 5. BUG OEL 8 SCP (Verifica che sia stato wrappato)
+# 5. Eccezione del lab isolato: firewall fermo e SELinux permissive
+systemctl is-active firewalld || echo "Firewall OK (Disabled)"
+getenforce
+
+# 6. BUG OEL 8 SCP (Verifica che sia stato wrappato)
 cat /usr/bin/scp | grep -q "scp.bkp" && echo "SCP FIX OK" || echo "ERRORE FIX SCP MANCANTE!"
 ```
+
+> [!IMPORTANT]
+> **Checkpoint freddo pre-Grid**: spegni tutte le VM collegate allo storage
+> condiviso e conserva insieme configurazioni VM e dischi condivisi. Non
+> creare snapshot indipendenti dei nodi dopo aver collegato i dischi RAC.
+
+---
 
 **← [FASE 0: Setup Macchine](./GUIDA_FASE0_SETUP_MACCHINE.md)** | 📍 [Indice Percorso Lab](../../04_governance_learning/03_esami_e_carriera/README.md) | **→ [FASE 2: Grid + RAC](./GUIDA_FASE2_GRID_E_RAC.md)**
