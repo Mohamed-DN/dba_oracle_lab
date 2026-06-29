@@ -576,7 +576,10 @@ dnf install -y oracle-database-preinstall-19c
 # Pacchetti aggiuntivi necessari
 dnf install -y ksh libaio-devel net-tools nfs-utils \
     smartmontools sysstat unzip wget xorg-x11-xauth \
-    xorg-x11-utils xterm bind-utils
+    xorg-x11-utils xterm bind-utils qemu-guest-agent
+
+# Abilita subito il demone di Proxmox
+systemctl enable --now qemu-guest-agent
 ```
 
 > **Perché oracle-database-preinstall-19c?** Questo pacchetto RPM magico fa il 70% del lavoro di preparazione OS: crea l'utente `oracle`, configura i parametri kernel (`sysctl.conf`), imposta i limiti di risorse (`limits.conf`), installa le dipendenze RPM. Senza questo, dovresti fare tutto a mano.
@@ -849,6 +852,17 @@ sysctl -p /etc/sysctl.d/99-oracle-hugepages.conf
 
 ---
 
+### 1.12.3 Ottimizzazioni Proxmox VE (KVM) — Tassative per Produzione
+
+Se stai usando Proxmox, applica queste ottimizzazioni hardware sulla VM `rac1` prima di clonare:
+
+1. **Abilita NUMA**: Oracle RAC è un mostro avido di memoria. Se i processi finiscono su socket fisici sbagliati, la Cache Fusion ne risente pesantemente. 
+   - Nella GUI di Proxmox: Seleziona la VM -> **Hardware** -> Fai doppio clic su **Processors** e spunta la casella **[X] Enable NUMA**.
+   
+2. **CPU Pinning (Opzionale ma Raccomandato per LAB su Server Grandi)**: Se il tuo hypervisor ha molti core, impedisci a Proxmox di spostare il database tra i vari thread. Ancorare i thread aumenta l'efficacia della CPU Cache (L1/L2). 
+
+---
+
 ## 1.13 Configurazione NTP/Chrony
 
 Oracle Clusterware richiede che i clock siano sincronizzati tra tutti i nodi (max 1 secondo di differenza):
@@ -945,8 +959,9 @@ Quando cloni `rac1` in modalità "Full Clone", Proxmox clona purtroppo anche i d
    - Il disco con i binari Oracle in `/u01` (esattamente **100GB**).
    > 🛑 **NON RIMUOVERE IL DISCO DA 100GB!** Contiene tutto il software Oracle che hai installato sulla Golden Image.
 3. **Seleziona e fai "Detach", poi "Remove" su tutti gli altri 5 dischi cloni** (quelli da 2GB, 20GB, 15GB).
-4. Ora fai **Add -> Hard Disk** e nel percorso immagine scrivi fisicamente il path dei dischi originali di `rac1` (es. `local-lvm:vm-101-disk-2` ecc.). Ricorda di mettere Cache=None e Discard.
-5. **Dalla shell Proxmox**, entra nel file `/etc/pve/qemu-server/102.conf` e riaggiungi `,shared=1` su questi 5 dischi appena aggiunti.
+4. Ora fai **Add -> Hard Disk** e nel percorso immagine scrivi fisicamente il path dei dischi originali di `rac1` (es. `local-lvm:vm-101-disk-2` ecc.). Ricorda di mettere **Cache=None**, **Discard**, e spunta l'opzione **Advanced -> iothread**.
+5. **Dalla shell Proxmox**, entra nel file `/etc/pve/qemu-server/102.conf` e riaggiungi i flag fisicamente in fondo alla riga dei dischi, ad esempio: `,shared=1,iothread=1`.
+   > 💡 **Perché l'IO Thread?** Assegna un thread dedicato dell'hypervisor per ogni disco RAW, sbloccando enormi colli di bottiglia durante l'IO massiccio del database Oracle.
 
 **Per RACSTBY1 e RACSTBY2:**
 1. Esattamente come per RAC2: **Rimuovi i dischi duplicati dal clone**.
