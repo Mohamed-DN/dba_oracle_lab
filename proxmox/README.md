@@ -21,7 +21,7 @@ In questo modulo creiamo l'hardware virtuale, le reti isolate e prepariamo il si
 
 In questo modulo abbandoniamo le vesti da Sistemista Linux e indossiamo quelle da Database Administrator.
 
-* 📍 **FASE 2: Installazione Grid Infrastructure e Binari Database** *(In Arrivo)*
+* 📍 **[FASE 2: Installazione Grid Infrastructure e Binari Database](./GUIDA_FASE2_GRID_E_RAC.md)**
   * *Validazione pre-installazione con `cluvfy`, setup del Clusterware 19c e deploy dei binari RDBMS su tutti i nodi.*
 * 📍 **FASE 3: Creazione del Database (DBCA)** *(In Arrivo)*
   * *Creazione del Container Database (CDB) RAC e della Pluggable Database (PDB) applicativa su storage ASM.*
