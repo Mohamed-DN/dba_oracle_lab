@@ -254,7 +254,7 @@ nslookup google.com 192.168.56.50                # ← DEVE ritornare l'IP di Go
 1. **Create VM** -> Name: `rac1`
 2. **OS:** ISO `OracleLinux-R8-U10-Server-x86_64-dvd.iso`
 3. **System:** Machine `q35`, Qemu Agent `Yes`, SCSI Controller `VirtIO SCSI Single`.
-4. **CPU:** 4 Cores, Type: **Host** (Fondamentale).
+4. **CPU:** 4 Cores, Type: **Host** (Fondamentale) ed **Enable NUMA** spuntato.
 5. **Memory:** 8192 MiB (o 12288 MiB), **Disattiva Ballooning**.
 
 ### Archiviazione — OS + Disco `/u01`
@@ -285,6 +285,7 @@ Vai in **rac1** -> **Hardware** -> **Add** -> **Hard Disk**. Crea 5 dischi.
 **TASSATIVO per i dischi ASM:**
 - **Cache:** `No cache` (o `Direct sync`). ASM **esige** il controllo diretto sui flush disk.
 - **Discard:** `Yes`
+- **Advanced -> iothread:** `Spuntato` (assegna un thread fisico per l'I/O).
 - **No Backup:** `Spuntato` (evita di bloccare i dischi ASM durante i backup Proxmox).
 
 | # | Dimensione | Disk Group ASM | Ruolo |
@@ -308,14 +309,14 @@ Apri la shell dell'host Proxmox (via Web GUI o SSH) e modifica il file della VM 
 nano /etc/pve/qemu-server/101.conf
 ```
 
-Aggiungi il flag `,shared=1` alla fine dei 5 dischi appena aggiunti:
+Aggiungi il flag `,shared=1,iothread=1` alla fine dei 5 dischi appena aggiunti:
 
 ```text
-scsi2: local-lvm:vm-101-disk-2,cache=none,discard=on,size=2G,shared=1
-scsi3: local-lvm:vm-101-disk-3,cache=none,discard=on,size=2G,shared=1
-scsi4: local-lvm:vm-101-disk-4,cache=none,discard=on,size=2G,shared=1
-scsi5: local-lvm:vm-101-disk-5,cache=none,discard=on,size=20G,shared=1
-scsi6: local-lvm:vm-101-disk-6,cache=none,discard=on,size=15G,shared=1
+scsi2: local-lvm:vm-101-disk-2,cache=none,discard=on,size=2G,shared=1,iothread=1
+scsi3: local-lvm:vm-101-disk-3,cache=none,discard=on,size=2G,shared=1,iothread=1
+scsi4: local-lvm:vm-101-disk-4,cache=none,discard=on,size=2G,shared=1,iothread=1
+scsi5: local-lvm:vm-101-disk-5,cache=none,discard=on,size=20G,shared=1,iothread=1
+scsi6: local-lvm:vm-101-disk-6,cache=none,discard=on,size=15G,shared=1,iothread=1
 ```
 
 *(Se ometti `shared=1`, appena accendi `rac2` corromperai il filesystem ASM o avrai dei lock kernel-level che congeleranno la VM).*
