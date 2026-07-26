@@ -49,18 +49,46 @@ Per questo lab useremo:
 8. **Network:** Seleziona *Secure access from everywhere*.
 9. Clicca su **Create**.
 
-### STEP 1: Creazione e Setup del Nodo ZDM (Fix IPv6/FPP)
-1. Crea una VM `zdmnode` su VirtualBox (2 CPU, 10-12GB RAM, Oracle Linux 7/8).
-2. Installa ZDM (richiede pacchetti base come `glibc-devel`, `unzip`, `expect`).
+### STEP 1: Creazione e Setup del Nodo ZDM (Installazione da Zero)
+1. Crea una VM `zdmnode` (2 CPU, 10-12GB RAM, Oracle Linux 7/8).
+2. **Installazione Prerequisiti OS:**
+   ZDM necessita di pacchetti specifici e dell'utente dedicato. Accedi come `root`:
+   ```bash
+   yum install -y oracle-database-preinstall-19c glibc-devel unzip expect wget
+   # Creazione utente zdmuser
+   useradd -g oinstall -G dba zdmuser
+   echo "zdmuser" | passwd --stdin zdmuser
+   
+   # Creazione delle cartelle per ZDM
+   mkdir -p /u01/app/zdmbase
+   mkdir -p /u01/app/zdmhome
+   chown -R zdmuser:oinstall /u01/
+   chmod -R 775 /u01/
+   ```
+3. **Installazione del Software ZDM 26:**
+   Scarica lo zip di ZDM dal sito Oracle, portalo sul nodo (es. `/tmp`) e avvia l'installer:
+   ```bash
+   su - zdmuser
+   cd /tmp
+   unzip V1044434-01.zip -d /tmp/zdm_installer
+   
+   /tmp/zdm_installer/zdminstall.sh setup oraclehome=/u01/app/zdmhome oraclebase=/u01/app/zdmbase ziploc=/tmp/zdm_installer/zdm26.zip -zdm
+   ```
 
 > [!WARNING]
 > **Risoluzione Problemi Avvio ZDM (FPP startup failed)**
-> L'avvio di ZDM tramite `/u01/app/zdmhome/bin/zdmservice start` fallisce se il nome host risolve in IPv6 (`fe80::`) o `127.0.0.1`.
-> **Fix:** Modificare `/etc/hosts` e disabilitare IPv6.
+> L'avvio di ZDM fallisce se il nome host risolve in IPv6 (`fe80::`) o `127.0.0.1`.
+> **Fix:** Modificare `/etc/hosts` e disabilitare IPv6 per forzare un binding pulito su IPv4.
 > ```bash
+> # Da root
 > sed -i '/zdmnode/d' /etc/hosts
 > echo "192.168.56.55    zdmnode.localdomain    zdmnode" >> /etc/hosts
 > sysctl -w net.ipv6.conf.all.disable_ipv6=1
+> 
+> # Ora puoi avviare il servizio:
+> su - zdmuser
+> /u01/app/zdmhome/bin/zdmservice start
+> /u01/app/zdmhome/bin/zdmservice status
 > ```
 
 ### STEP 2: Connettività OCI e API Keys
