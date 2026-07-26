@@ -174,8 +174,8 @@ OCIAUTHENTICATIONDETAILS_USERPRINCIPAL_PRIVATEKEYFILE=/home/zdmuser/.oci/oci_api
 OCIAUTHENTICATIONDETAILS_REGIONID=eu-milan-1              
 ```
 
-### STEP 4: Analisi del Comando `zdmcli` ed Esecuzione
-Lanceremo prima un **Dry-Run** (`-eval`), per far simulare tutto a ZDM senza toccare byte.
+### STEP 4: Simulazione (Dry-Run)
+Lanceremo prima un **Dry-Run** tramite il flag `-eval`. Questo impone a ZDM di simulare tutto (connessioni, privilegi, controlli di spazio, calcolo percorsi) **senza spostare un singolo byte** e senza alterare il DB.
 
 ```bash
 /u01/app/zdmhome/bin/zdmcli migrate database \
@@ -188,7 +188,21 @@ Lanceremo prima un **Dry-Run** (`-eval`), per far simulare tutto a ZDM senza toc
   -rsp /home/zdmuser/zdm_migrazione_rac1.rsp \
   -eval
 ```
-Se il risultato è `SUCCEEDED`, rilancia lo stesso comando senza il flag `-eval` per scatenare la vera migrazione!
+Attendi che il job finisca. Puoi monitorarne lo stato con `zdmcli query job -jobid <ID>`. Se il risultato finale è `SUCCEEDED`, hai il via libera!
+
+### STEP 5: Esecuzione della Migrazione Reale (Go-Live)
+Se (e solo se) il Dry-Run è andato a buon fine, lancia l'**identico comando precedente**, rimuovendo semplicemente il flag `-eval` alla fine. ZDM partirà immediatamente con l'export Data Pump e l'upload su OCI.
+
+```bash
+/u01/app/zdmhome/bin/zdmcli migrate database \
+  -sourcedb sole \
+  -sourcenode 192.168.56.101 \
+  -srcauth zdmauth \
+  -srcarg1 user:oracle \
+  -srcarg2 identity_file:/home/zdmuser/.ssh/id_rsa \
+  -srcarg3 sudo_location:/usr/bin/sudo \
+  -rsp /home/zdmuser/zdm_migrazione_rac1.rsp
+```
 
 ---
 
