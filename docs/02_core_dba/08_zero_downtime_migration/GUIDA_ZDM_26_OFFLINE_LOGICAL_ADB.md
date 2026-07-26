@@ -115,7 +115,7 @@ DATAPUMPSETTINGS_EXPORTDIRECTORYOBJECT_NAME=DATA_PUMP_DIR
 DATAPUMPSETTINGS_IMPORTDIRECTORYOBJECT_NAME=DATA_PUMP_DIR 
 
 # ⚠️ NOVITÀ ZDM 26 (OBBLIGATORIO): Senza NAMESPACENAME, il job fallisce in 0 secondi (NullPointerException).
-DATAPUMPSETTINGS_DATABUCKET_NAMESPACENAME=ax6qpq21dvct    
+DATAPUMPSETTINGS_DATABUCKET_NAMESPACENAME=<IL_TUO_NAMESPACE>    
 DATAPUMPSETTINGS_DATABUCKET_BUCKETNAME=bucket-dn          
 
 # ==========================================
@@ -183,7 +183,7 @@ Una volta concluso il Job ZDM, per verificare la presenza dei dati sull'Autonomo
    export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
    export TNS_ADMIN=/home/zdmuser/wallets/adb_target
    
-   /u01/app/zdmhome/bin/sqlplus admin/LaTuaPassword@jwp9xbanryu8cmik_high
+   /u01/app/zdmhome/bin/sqlplus admin/LaTuaPassword@<NOME_TNS_HIGH>
    ```
    > [!TIP]
    > Se ricevi l'errore `libsqlplus.so: cannot open shared object file`, hai saltato l'export di `LD_LIBRARY_PATH`. Se ti dice `ORA-12154`, `TNS_ADMIN` punta a una cartella vuota o l'alias TNS è sbagliato.
