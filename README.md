@@ -24,6 +24,7 @@
 - 🔴 **Performance & Diagnostica:** [Indice area](./docs/02_core_dba/03_performance_and_diagnostics/README.md)
 - 🟣 **Patching & Upgrade:** [Indice area](./docs/02_core_dba/05_patching_and_upgrades/README.md) · [Upgrade 19c → 26ai](./docs/02_core_dba/05_patching_and_upgrades/GUIDA_UPGRADE_19C_TO_26AI.md)
 - 🔄 **Replica & Migrazione:** [Indice area](./docs/02_core_dba/07_replication_goldengate/README.md)
+- 🚀 **Zero Downtime Migration:** [Indice area](./docs/02_core_dba/08_zero_downtime_migration/README.md) · [ZDM 26 Offline Logical to ADB](./docs/02_core_dba/08_zero_downtime_migration/GUIDA_ZDM_26_OFFLINE_LOGICAL_ADB.md)
 - 📊 **Monitoring:** [Indice area](./docs/02_core_dba/06_monitoring_systems/README.md)
 - ☁️ **Cloud OCI & Terraform:** [Indice area](./docs/03_infra_lab/03_cloud_oci/README.md) · [Codice Terraform](./terraform/oci_base_infrastructure/README.md)
 - 🐳 **Containerizzazione 26ai:** [Guida Podman/Docker](./docs/03_infra_lab/04_containerization/GUIDA_ORACLE_26AI_PODMAN_DOCKER.md)
@@ -63,6 +64,9 @@ mindmap
     GoldenGate [Replica & Eventi]
       Microservices Architecture
       Oracle to PostgreSQL
+    ZDM [Zero Downtime Migration]
+      Logical Migration
+      Physical Migration
 ```
 
 ---
@@ -231,6 +235,8 @@ docs/
 |           +-- GUIDA_UC05_MULTICLOUD_DATA_INTEGRATION.md
 |           +-- GUIDA_UC06_APPLICATION_DATA_STREAMS.md
 |           +-- GUIDA_UC07_STREAM_PROCESSING_ANALYTICS.md
++-- 08_zero_downtime_migration
+|   +-- GUIDA_ZDM_26_OFFLINE_LOGICAL_ADB.md
 +-- 03_infra_lab
 |   +-- 01_proxmox_hardware
 |   |   +-- GUIDA_TRACK_PROXMOX_PRODUCTION_END_TO_END.md
@@ -562,6 +568,14 @@ Regole pratiche:
 | 14 | [Use Case e Knowledge Hub](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_USE_CASES_KNOWLEDGE_HUB.md) | Topologie, top 7 use case con link alle guide operative dedicate |
 | 15 | [Novita GoldenGate 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_26AI_NOVITA.md) | Evoluzione 26ai, AI service, nuove compatibilita, Microservices-first |
 | 16 | [Upgrade GoldenGate 19c -> 26ai](./docs/02_core_dba/07_replication_goldengate/GUIDA_GOLDENGATE_UPGRADE_19C_TO_26AI.md) | Upgrade MA, percorso Classic, backup, rollback e validazioni |
+
+---
+
+### 🚀 Zero Downtime Migration (ZDM)
+
+| Ordine | Guida | Cosa Impari |
+|---|---|---|
+| 1 | [Guida ZDM 26 Offline Logical verso ADB](./docs/02_core_dba/08_zero_downtime_migration/GUIDA_ZDM_26_OFFLINE_LOGICAL_ADB.md) | Architettura, analisi del comando zdmcli, configuration response file, network troubleshooting e connessione OCI via Wallet |
 
 ---
 
