@@ -213,8 +213,24 @@ Una volta concluso il Job ZDM, per verificare la presenza dei dati sull'Autonomo
    
    /u01/app/zdmhome/bin/sqlplus admin/LaTuaPassword@<NOME_TNS_HIGH>
    ```
+   
    > [!TIP]
    > Se ricevi l'errore `libsqlplus.so: cannot open shared object file`, hai saltato l'export di `LD_LIBRARY_PATH`. Se ti dice `ORA-12154`, `TNS_ADMIN` punta a una cartella vuota o l'alias TNS è sbagliato.
+
+3. **Verifica dello Schema e dei Dati:**
+   Una volta connesso al prompt `SQL>`, lancia queste query per confermare che ZDM abbia fatto il suo dovere:
+   
+   ```sql
+   -- Controlla se lo schema è arrivato sano e salvo
+   SELECT username, created FROM dba_users WHERE username = 'ZDM_TEST';
+   
+   -- Verifica quali tabelle sono state importate e il numero di righe stimate
+   SELECT table_name, num_rows FROM dba_tables WHERE owner = 'ZDM_TEST';
+   
+   -- Controlla se ci sono oggetti rimasti invalidi post-import
+   SELECT object_name, object_type, status FROM dba_objects 
+   WHERE owner = 'ZDM_TEST' AND status = 'INVALID';
+   ```
 
 ---
 
