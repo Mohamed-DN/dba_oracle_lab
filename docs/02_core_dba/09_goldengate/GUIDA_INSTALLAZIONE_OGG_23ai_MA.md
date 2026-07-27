@@ -135,4 +135,22 @@ Ecco cosa inserire:
 4. **Enable Strong Password Policy:** ❌ **Togli la spunta.**
    *Perché:* Nei laboratori è fastidioso dover rispettare policy rigide (caratteri speciali, lunghezze minime) se vogliamo usare password semplici come `ogg2026`. Togliendo la spunta, GoldenGate accetterà qualsiasi password gli passiamo.
 
-Premi **Next >** per andare allo Step 3 (User Deployment).
+Premi **Next >** per andare allo Step 3.
+
+### Step 3: User Deployment
+
+Qui andiamo a creare il vero e proprio "spazio di lavoro" (Deployment) per la nostra migrazione. 
+
+![Step 3: User Deployment](img/media__1785140340843.png)
+
+Ecco i campi da compilare:
+
+1. **Deployment Name:** Digita `zdm_hub`.
+   *Perché:* Un'installazione di GoldenGate può gestire decine di migrazioni diverse contemporaneamente. Creando un deployment chiamato `zdm_hub`, isoliamo i processi (Extract, Replicat) e i file di questa specifica architettura ZDM. 
+2. **Deployment Home:** Digita `/u02/deployments/zdm_hub` (dovrebbe compilarsi in automatico appena scrivi il nome sopra).
+3. **Ports:** Lascia i default (`7301`, `7302`, `7303`, `7304`).
+   *Perché:* Il Service Manager (porta `7300`) è il "portinaio" generale dell'edificio GoldenGate. Questi 4 servizi (Administration, Distribution, Receiver, Performance) sono i server web specifici per l'ufficio `zdm_hub`. Ogni deployment avrà un set di 4 porte dedicate.
+4. **Data Store Type:** Lascia `BDB` (Berkeley DB). È il database interno leggero che GoldenGate usa per salvarsi i metadati di configurazione.
+5. **Security & Replication Options:** Lascia tutto vuoto/default.
+
+Premi **Next >**. Ti chiederà di nuovo username e password per il Deployment: inserisci di nuovo `oggadmin` e la password scelta prima (`OggAdmin_2026`) disabilitando la Strong Policy, e continua fino alla fine (Summary -> **Finish**).
