@@ -119,4 +119,20 @@ Ecco esattamente cosa inserire e perché:
 5. **Enable Security:** ❌ **Togli la spunta.** 
    *Perché:* Se lasci la spunta, l'installer (a partire dalla versione 21c/23ai) pretende che tu gli fornisca manualmente i file dei certificati crittografici (Server Certificate, Private Key). Se provi ad andare avanti con i campi vuoti, ti darà l'errore `[INS-85126] Server certificate was not provided`. Togliendo la spunta, il nostro portale web funzionerà in chiaro (HTTP) senza richiedere certificati SSL. (In produzione, ovviamente, i sistemisti ti fornirebbero i certificati ufficiali dell'azienda da caricare qui!).
 
-Premi **Next >** per procedere allo Step 2 (Register Service Manager).
+Premi **Next >** per procedere.
+
+### Step 2: Service Manager Administrator
+
+Qui andiamo a creare l'utenza con i massimi privilegi per amministrare GoldenGate via Web.
+
+![Step 2: Service Manager Administrator](img/media__1785140269005.png)
+
+Ecco cosa inserire:
+
+1. **Username:** Scrivi `oggadmin` (Questo è un utente fittizio Web, NON è l'utente di Linux e NON è l'utente del database).
+2. **Password:** Inserisci una password (es. `OggAdmin_2026`).
+3. **Confirm Password:** Reinserisci la password.
+4. **Enable Strong Password Policy:** ❌ **Togli la spunta.**
+   *Perché:* Nei laboratori è fastidioso dover rispettare policy rigide (caratteri speciali, lunghezze minime) se vogliamo usare password semplici come `ogg2026`. Togliendo la spunta, GoldenGate accetterà qualsiasi password gli passiamo.
+
+Premi **Next >** per andare allo Step 3 (User Deployment).
