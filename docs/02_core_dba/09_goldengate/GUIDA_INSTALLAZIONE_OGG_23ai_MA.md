@@ -147,7 +147,9 @@ Ecco i campi da compilare:
 
 1. **Deployment Name:** Digita `zdm_hub`.
    *Perché:* Un'installazione di GoldenGate può gestire decine di migrazioni diverse contemporaneamente. Creando un deployment chiamato `zdm_hub`, isoliamo i processi (Extract, Replicat) e i file di questa specifica architettura ZDM. 
-2. **Deployment Home:** Digita `/u02/deployments/zdm_hub` (dovrebbe compilarsi in automatico appena scrivi il nome sopra).
+2. **Deployment Home:** Digita `/u02/zdm_hub`. 
+   *(Nota: l'assistente proverà ad autocompilare `/u02/deployments/zdm_hub`, ma tu devi **cancellarlo e scrivere `/u02/zdm_hub`**).*
+   *Perché:* Nello Step 1 abbiamo detto al Service Manager di usare `/u02/deployments` come sua casa. GoldenGate (giustamente) non ti permette di creare lo spazio di lavoro (Deployment) *dentro* la casa del Service Manager (ti darebbe l'errore `INS-85103`). Quindi li mettiamo "fianco a fianco" dentro la root `/u02`.
 3. **Ports:** Lascia i default (`7301`, `7302`, `7303`, `7304`).
    *Perché:* Il Service Manager (porta `7300`) è il "portinaio" generale dell'edificio GoldenGate. Questi 4 servizi (Administration, Distribution, Receiver, Performance) sono i server web specifici per l'ufficio `zdm_hub`. Ogni deployment avrà un set di 4 porte dedicate.
 4. **Data Store Type:** Lascia `BDB` (Berkeley DB). È il database interno leggero che GoldenGate usa per salvarsi i metadati di configurazione.
