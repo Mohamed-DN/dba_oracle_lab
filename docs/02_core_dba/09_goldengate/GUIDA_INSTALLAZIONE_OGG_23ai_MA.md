@@ -28,11 +28,11 @@ sudo chmod -R 775 /u01 /u02
 
 ---
 
-## 2. Installazione Silenziosa dei Binari (Utente `ogg`)
+## 2. Installazione dei Binari (Utente `ogg`)
 
-Questa fase installa il software "motore" di GoldenGate senza configurare alcun servizio. Utilizzeremo la modalità d'installazione **Silent** (senza interfaccia grafica).
+L'installazione del "motore" di GoldenGate può essere fatta in due modi: tramite interfaccia grafica (GUI) o in modalità silenziosa (Silent Mode). In un ambiente di laboratorio, la GUI è ottima per prendere confidenza con i parametri.
 
-1. Accedi al server come utente `ogg`:
+1. Accedi al server come utente `ogg` (assicurati di avere il forwarding X11 attivo se usi SSH/MobaXterm):
    ```bash
    su - ogg
    ```
@@ -44,28 +44,37 @@ Questa fase installa il software "motore" di GoldenGate senza configurare alcun 
    cd /tmp/ogg_installer/fbo_ggs_Linux_x64_Oracle_services_shiphome/Disk1
    ```
 
-3. Crea un file di risposta (Response File) chiamato `oggcore.rsp` per automatizzare le risposte all'installer:
-   ```bash
-   cat <<EOF > /tmp/ogg_installer/oggcore.rsp
-   oracle.install.responseFileVersion=/oracle/install/rspfmt_ogginstall_response_schema_v23_0_0
-   INSTALL_OPTION=ORA23ai
-   SOFTWARE_LOCATION=/u01/app/ogg
-   INVENTORY_LOCATION=/u01/app/oraInventory
-   UNIX_GROUP_NAME=oinstall
-   EOF
-   ```
-   *(Nota: l'`INSTALL_OPTION=ORA23ai` indica la versione del motore. GoldenGate 23ai usa un build unificato).*
+### Opzione A: Installazione Grafica (Consigliata per i Lab)
+Se hai un server X11 configurato, lancia semplicemente:
+```bash
+./runInstaller
+```
+Si aprirà l'Oracle Universal Installer. I parametri chiave da inserire nelle schermate saranno:
+- **Software Location:** `/u01/app/ogg`
+- **Database Version:** Scegli l'opzione unificata 23ai/Oracle.
+- **Inventory Directory:** `/u01/app/oraInventory` (gruppo `oinstall`).
 
-4. Lancia l'installer in modalità silenziosa:
-   ```bash
-   ./runInstaller -silent -nowait -responseFile /tmp/ogg_installer/oggcore.rsp
-   ```
+### Opzione B: Installazione Silenziosa (Per Automazioni)
+Se non hai accesso grafico, crea un file di risposta:
+```bash
+cat <<EOF > /tmp/ogg_installer/oggcore.rsp
+oracle.install.responseFileVersion=/oracle/install/rspfmt_ogginstall_response_schema_v23_0_0
+INSTALL_OPTION=ORA23ai
+SOFTWARE_LOCATION=/u01/app/ogg
+INVENTORY_LOCATION=/u01/app/oraInventory
+UNIX_GROUP_NAME=oinstall
+EOF
+```
+E lancialo:
+```bash
+./runInstaller -silent -nowait -responseFile /tmp/ogg_installer/oggcore.rsp
+```
 
-5. **Esecuzione script Root:**
-   Al termine dell'installazione, l'installer ti chiederà di eseguire uno script come utente `root`. Apri un'altra finestra terminale (o usa `sudo`) ed esegui:
-   ```bash
-   sudo /u01/app/oraInventory/orainstRoot.sh
-   ```
+### Script Root Finale
+Al termine dell'installazione (sia Grafica che Silenziosa), l'installer ti chiederà di eseguire uno script come utente `root`. Apri un'altra finestra terminale ed esegui:
+```bash
+sudo /u01/app/oraInventory/orainstRoot.sh
+```
 
 ---
 
