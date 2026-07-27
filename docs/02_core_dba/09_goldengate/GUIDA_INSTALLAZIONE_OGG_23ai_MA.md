@@ -111,6 +111,11 @@ Ecco esattamente cosa inserire e perché:
 2. **Deployment Home:** Digita `/u02/deployments`. (È la cartella che abbiamo creato apposta per separare i dati dal software).
 3. **Port:** Digita `7300`. (È la porta standard su cui risponderà il portale Web di amministrazione).
 4. **Register as a service/system daemon:** ✔️ **Spunta questa casella!** (In questo modo, se riavvii la VM, GoldenGate ripartirà da solo senza doverlo accendere a mano).
+   
+   > [!TIP]
+   > **Enterprise High Availability (Integrazione XAG):**
+   > Nello screenshot c'è anche una casellina chiamata **"Integrate with XAG"**. Nel nostro lab la ignoriamo perché GoldenGate è su una VM singola (`zdmnode`). Ma nel mondo reale, se installi GoldenGate direttamente sui nodi di un **Cluster RAC** (es. i tuoi nodi AWS), spuntando questa opzione trasformi GoldenGate in una risorsa Cluster! Significa che se il Nodo 1 prende fuoco, il Clusterware accende automaticamente GoldenGate sul Nodo 2 e la migrazione riprende senza perdere un singolo dato e senza intervento umano!
+
 5. **Enable Security:** ✔️ **Lasciala spuntata.** (Lasciando i campi sottostanti vuoti, GoldenGate genererà automaticamente dei certificati "Self-Signed". ZDM preferisce parlare con GoldenGate su connessioni HTTPS sicure, quindi è una best practice lasciarlo abilitato).
 
 Premi **Next >** per procedere allo Step 2 (Register Service Manager).
