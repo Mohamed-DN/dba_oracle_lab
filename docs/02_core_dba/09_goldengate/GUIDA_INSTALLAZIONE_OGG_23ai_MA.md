@@ -8,20 +8,26 @@ A partire dalla release 23ai, Oracle ha rimosso l'architettura *Classic*, renden
 
 ## 1. Prerequisiti di Sistema (Utente `root`)
 
-Prima di scompattare i binari, è necessario preparare l'utente di sistema operativo e la struttura delle directory. Questa separazione garantisce sicurezza e aderenza alle Best Practice Oracle.
+In ambito Enterprise, i binari di GoldenGate non vanno mai mischiati con quelli del database o di ZDM. Si crea un'utenza isolata (`ogg`) per garantire la **Separation of Duties** (SoD) e una maggiore sicurezza.
 
 ```bash
 # 1. Creazione gruppo e utente Oracle GoldenGate (ogg)
+# Usiamo il gruppo 'oinstall' per uniformità con le installazioni Oracle standard.
 sudo groupadd -g 54321 oinstall
 sudo useradd -u 54322 -g oinstall ogg
+
+# Impostiamo una password per l'utente (utile per le sessioni SSH)
 echo "ogg2026" | sudo passwd --stdin ogg
 
 # 2. Creazione della struttura directory
-# /u01 per i binari software, /u02 per le configurazioni e i Trail file
+# /u01 ospiterà i binari "statici" del software (es. gli eseguibili).
+# /u02 ospiterà i dati dinamici (i file Trail, le configurazioni, i log). 
+# Questa separazione evita che un log impazzito riempia il disco di sistema.
 sudo mkdir -p /u01/app/ogg
 sudo mkdir -p /u02/deployments
 
 # 3. Assegnazione permessi
+# Diamo all'utente 'ogg' il controllo totale sulle sue directory.
 sudo chown -R ogg:oinstall /u01 /u02
 sudo chmod -R 775 /u01 /u02
 ```
@@ -30,6 +36,8 @@ sudo chmod -R 775 /u01 /u02
 
 ## 2. Installazione dei Binari (Utente `ogg`)
 
+Questa fase piazza fisicamente i binari (eseguibili e librerie) dentro `/u01`. **Attenzione:** installare il software non avvia ancora nessun servizio di replica, è come installare Word sul PC prima di scriverci un documento.
+
 L'installazione del "motore" di GoldenGate può essere fatta in due modi: tramite interfaccia grafica (GUI) o in modalità silenziosa (Silent Mode). In un ambiente di laboratorio, la GUI è ottima per prendere confidenza con i parametri.
 
 1. Accedi al server come utente `ogg` (assicurati di avere il forwarding X11 attivo se usi SSH/MobaXterm):
@@ -37,7 +45,7 @@ L'installazione del "motore" di GoldenGate può essere fatta in due modi: tramit
    su - ogg
    ```
 
-2. Scompatta il pacchetto software (es. `V1054774-01.zip`) in una directory temporanea:
+2. Scompatta il pacchetto software (es. `V1054774-01.zip`) in una directory temporanea. L'installer non va mai lasciato nella directory finale.
    ```bash
    mkdir -p /tmp/ogg_installer
    unzip /tmp/V1054774-01.zip -d /tmp/ogg_installer
