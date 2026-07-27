@@ -149,12 +149,25 @@ SELECT * FROM dba_apply_progress;
 
 ---
 
-## 4. Troubleshooting: FPP Startup e Sincronia Temporale
+## 4. Troubleshooting e Fix Noti
 
-Oltre al ben noto errore di avvio IPv6 (da fixare in `/etc/hosts` come nella guida Offline), i problemi in `ONLINE_LOGICAL` derivano quasi tutti dal networking verso l'hub GoldenGate.
+Oltre al ben noto errore di avvio IPv6 (da fixare in `/etc/hosts` come nella guida Offline), i problemi in `ONLINE_LOGICAL` derivano quasi tutti dal networking verso l'hub GoldenGate o da utenze bloccate in Cloud.
 
 - **Connessione Refused verso il GG Hub:** Assicurati che il firewall di OCI (Security Lists) o del nodo permetta il traffico sulla porta 443 e sulle porte specifiche assegnate ai deployment (`SourceGG` e `TargetGG`).
 - **ORA-01280 / Archivelog mancanti su AWS RDS:** Se ZDM fallisce durante la fase di *Extract*, significa che RDS ha cancellato i vecchi Archivelog prima che GoldenGate potesse leggerli. Aumenta la retention a 48 ore (`exec rdsadmin.rdsadmin_util.set_configuration...`).
+- **ORA-28000: The account is locked (Target DB):** In Autonomous Database l'utenza `ggadmin` esiste nativamente ma è bloccata "di fabbrica". ZDM 26 fallirà la validazione (Dry-Run) del target se prima non la sblocchi manualmente.
+  *Fix:* Usa il client SQL*Plus dal nodo ZDM importando il wallet del Cloud:
+  ```bash
+  export ORACLE_HOME=/u01/app/zdmhome
+  export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
+  export TNS_ADMIN=/home/zdmuser/wallets/test_adb
+  
+  /u01/app/zdmhome/bin/sqlplus admin/<PASSWORD_ADMIN>@<ALIAS_TNS_HIGH>
+  ```
+  Al prompt `SQL>`, sblocca l'account:
+  ```sql
+  ALTER USER ggadmin IDENTIFIED BY "LaTuaPasswordSicura123!" ACCOUNT UNLOCK;
+  ```
 
 ---
 
