@@ -153,6 +153,7 @@ Ecco i campi da compilare:
 3. **Ports:** Lascia i default (`7301`, `7302`, `7303`, `7304`).
    *Perché:* Il Service Manager (porta `7300`) è il "portinaio" generale dell'edificio GoldenGate. Questi 4 servizi (Administration, Distribution, Receiver, Performance) sono i server web specifici per l'ufficio `zdm_hub`. Ogni deployment avrà un set di 4 porte dedicate.
 4. **Data Store Type:** Lascia `BDB` (Berkeley DB). È il database interno leggero che GoldenGate usa per salvarsi i metadati di configurazione.
-5. **Security & Replication Options:** Lascia tutto vuoto/default.
+5. **Replication Options (TNS_ADMIN):** Digita `/u02`.
+   *Perché:* L'installer 23ai (a differenza delle vecchie versioni) pretende obbligatoriamente che tu gli indichi una cartella in cui, in futuro, andrai a mettere il file `tnsnames.ora` per connetterti al database. Se lo lasci vuoto, ti darà l'errore `INS-85077`. Inserendo `/u02` (che è la nostra cartella dati che abbiamo già creato) lo facciamo felice. Le altre opzioni (Security, Replication Schema) lasciale vuote.
 
 Premi **Next >**. Ti chiederà di nuovo username e password per il Deployment: inserisci di nuovo `oggadmin` e la password scelta prima (`OggAdmin_2026`) disabilitando la Strong Policy, e continua fino alla fine (Summary -> **Finish**).
