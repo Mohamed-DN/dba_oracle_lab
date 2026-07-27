@@ -116,6 +116,7 @@ Ecco esattamente cosa inserire e perché:
    > **Enterprise High Availability (Integrazione XAG):**
    > Nello screenshot c'è anche una casellina chiamata **"Integrate with XAG"**. Nel nostro lab la ignoriamo perché GoldenGate è su una VM singola (`zdmnode`). Ma nel mondo reale, se installi GoldenGate direttamente sui nodi di un **Cluster RAC** (es. i tuoi nodi AWS), spuntando questa opzione trasformi GoldenGate in una risorsa Cluster! Significa che se il Nodo 1 prende fuoco, il Clusterware accende automaticamente GoldenGate sul Nodo 2 e la migrazione riprende senza perdere un singolo dato e senza intervento umano!
 
-5. **Enable Security:** ✔️ **Lasciala spuntata.** (Lasciando i campi sottostanti vuoti, GoldenGate genererà automaticamente dei certificati "Self-Signed". ZDM preferisce parlare con GoldenGate su connessioni HTTPS sicure, quindi è una best practice lasciarlo abilitato).
+5. **Enable Security:** ❌ **Togli la spunta.** 
+   *Perché:* Se lasci la spunta, l'installer (a partire dalla versione 21c/23ai) pretende che tu gli fornisca manualmente i file dei certificati crittografici (Server Certificate, Private Key). Se provi ad andare avanti con i campi vuoti, ti darà l'errore `[INS-85126] Server certificate was not provided`. Togliendo la spunta, il nostro portale web funzionerà in chiaro (HTTP) senza richiedere certificati SSL. (In produzione, ovviamente, i sistemisti ti fornirebbero i certificati ufficiali dell'azienda da caricare qui!).
 
 Premi **Next >** per procedere allo Step 2 (Register Service Manager).
