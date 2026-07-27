@@ -99,27 +99,18 @@ Questo si fa lanciando il tool grafico `oggca.sh` (Oracle GoldenGate Configurati
    ./oggca.sh
    ```
 
-### Schermate del Configuration Assistant (GUI)
+### Step 1: Service Manager Deployment (Schermata Iniziale)
 
-Quando si apre l'assistente, segui questi step:
-1. **Service Manager:** Scegli "Add New Service Manager".
-2. **Directories:** 
-   - *Deployment Home:* `/u02/deployments`
-3. **Register Service Manager:**
-   - *Administrator User:* `oggadmin` (Questo è l'utente Web, non l'utente OS o DB).
-   - *Password:* Scegli una password (es. `OggAdmin_2026`).
-   - *Port:* `7300` (Porta di default del Service Manager).
-4. **Add Deployment:**
-   - *Deployment Name:* `zdm_hub`
-   - *Software Location:* `/u01/app/ogg`
-5. **Deployment Details:**
-   - *Administrator:* Usa lo stesso `oggadmin`.
-   - *Port (Administration Server):* `7301`
-   - *Environment Variables:* Aggiungi `ORACLE_HOME` se il database è sulla stessa macchina (ma nel nostro lab il DB è su `rac1`, quindi puoi lasciare vuoto o mettere il path del client Oracle).
+Appena si apre l'assistente, seleziona **"Add New Service Manager"** e premi Next. Ti troverai davanti a questa schermata:
 
-Clicca su **Finish**. L'assistente avvierà i demoni di GoldenGate.
+![Step 1: Service Manager Deployment](img/media__1785139844892.png)
 
-### Verifica Finale
-Apri un browser (dal tuo PC o dalla VM) e vai su:
-**`https://<IP_ZDM_NODE>:7300`**
-Fai il login con `oggadmin` e vedrai la maestosa console Web di GoldenGate Microservices 23ai!
+Ecco esattamente cosa inserire e perché:
+
+1. **Software Home:** `/u01/app/ogg` (Dovrebbe essere già popolato. È dove hai appena installato i binari).
+2. **Deployment Home:** Digita `/u02/deployments`. (È la cartella che abbiamo creato apposta per separare i dati dal software).
+3. **Port:** Digita `7300`. (È la porta standard su cui risponderà il portale Web di amministrazione).
+4. **Register as a service/system daemon:** ✔️ **Spunta questa casella!** (In questo modo, se riavvii la VM, GoldenGate ripartirà da solo senza doverlo accendere a mano).
+5. **Enable Security:** ✔️ **Lasciala spuntata.** (Lasciando i campi sottostanti vuoti, GoldenGate genererà automaticamente dei certificati "Self-Signed". ZDM preferisce parlare con GoldenGate su connessioni HTTPS sicure, quindi è una best practice lasciarlo abilitato).
+
+Premi **Next >** per procedere allo Step 2 (Register Service Manager).
