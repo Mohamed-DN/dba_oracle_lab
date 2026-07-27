@@ -173,4 +173,20 @@ In questa schermata andiamo a creare l'amministratore specifico per il Deploymen
 Premi **Next >** per arrivare al riepilogo finale (Summary).
 Controlla che sia tutto ok e clicca su **Finish**!
 
-L'assistente (OGGCA) impiegherà circa 1-2 minuti per inizializzare il Web Server, configurare le porte e avviare i demoni in background. Appena vedrai la scritta di successo, avrai completato la Fase 3!
+L'assistente (OGGCA) impiegherà circa 1-2 minuti per inizializzare il Web Server, configurare le porte e avviare i demoni in background. 
+
+---
+
+## 4. Verifica Finale (Dashboard Web)
+
+Per confermare che l'installazione sia andata a buon fine, apri un browser e collegati al Service Manager appena creato:
+
+**URL:** `http://<IP_ZDM_NODE>:7300` *(Usa http:// se hai disabilitato la Security nello Step 1)*
+**Username:** `oggadmin`
+**Password:** *(quella scelta da te)*
+
+Se tutto ha funzionato, vedrai la dashboard di amministrazione di Oracle GoldenGate Microservices 23ai con i servizi in stato **"In esecuzione"**!
+
+![Dashboard Finale GoldenGate 23ai](img/media__1785142499115.png)
+
+🎉 **Congratulazioni! Hai installato e configurato con successo un Hub Bare Metal Oracle GoldenGate 23ai!** 🎉
