@@ -158,4 +158,19 @@ Ecco i campi da compilare:
 6. **Replication Schema:** Digita `ggadmin`.
    *Perché:* Oracle 23ai ti obbliga a dichiarare subito come si chiamerà l'utente del database che GoldenGate userà per salvarsi le sue tabelle interne (checkpoint, heartbeat). Anche se il database non l'abbiamo ancora toccato, scriviamo `ggadmin` per evitare l'errore `INS-85039`. ZDM andrà poi a creare effettivamente questo utente sul DB. Le opzioni di Security lasciale vuote.
 
-Premi **Next >**. Ti chiederà di nuovo username e password per il Deployment: inserisci di nuovo `oggadmin` e la password scelta prima (`OggAdmin_2026`) disabilitando la Strong Policy, e continua fino alla fine (Summary -> **Finish**).
+Premi **Next >** per procedere.
+
+### Step 4: User Deployment Administrator
+
+In questa schermata andiamo a creare l'amministratore specifico per il Deployment `zdm_hub`.
+
+![Step 4: User Deployment Administrator](img/media__1785142110558.png)
+
+1. **Same come Service Manager administrator credentials:** ✔️ **Metti la spunta!**
+   *Perché:* In ambienti enormi potresti avere un "Super Admin" che gestisce l'intero server GoldenGate, e un "Junior Admin" che ha i permessi per toccare solo il deployment `zdm_hub`. Nel nostro lab (e in molte aziende), conviene usare lo stesso utente per tutto per non impazzire.
+2. Cliccando la spunta, i campi si auto-compileranno con l'utente `oggadmin` e la password (`OggAdmin_2026`) che hai impostato allo Step 2.
+
+Premi **Next >** per arrivare al riepilogo finale (Summary).
+Controlla che sia tutto ok e clicca su **Finish**!
+
+L'assistente (OGGCA) impiegherà circa 1-2 minuti per inizializzare il Web Server, configurare le porte e avviare i demoni in background. Appena vedrai la scritta di successo, avrai completato la Fase 3!
