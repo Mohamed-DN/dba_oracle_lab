@@ -158,56 +158,30 @@ Oltre al ben noto errore di avvio IPv6 (da fixare in `/etc/hosts` come nella gui
 
 ---
 
-## 5. Variante Architetturale: Oracle AI Database@Azure
+---
 
-Una delle architetture cloud più recenti e complesse prevede la migrazione verso **Autonomous Database (ADB-S)** o Exadata in hosting all'interno dei data center Microsoft Azure, tramite il servizio **Oracle AI Database@Azure**.
+## 5. Variante Architetturale: Cross-Cloud (Source Azure ➔ Target OCI)
 
-In questo scenario, la topologia di rete e lo storage cambiano radicalmente. Invece di usare un Object Storage OCI (bucket) per parcheggiare i dump di Data Pump, si sfrutta un **NFS Share** (ad esempio fornito da Azure Files o Azure NetApp), e GoldenGate viene spesso eseguito in un **Container Docker** all'interno di una VM su Azure.
+Nel mondo reale (e nel caso d'uso specifico di questa guida), capita spesso che il database sorgente si trovi su una VM in **Microsoft Azure** (o AWS) e il target sia un Autonomous Database nativo su **OCI**.
 
-### 5.1 Il trasporto dati via NFS (Azure Files)
-ZDM orchestra l'export e l'import tramite file system di rete montato su entrambi i lati (Source e Target).
-1. **Lato Source (On-Prem / AWS):** Devi montare la share NFS di Azure a livello di sistema operativo.
-   ```bash
-   mount -t nfs odaamigration.file.core.windows.net:/odaamigration/testmigration /nfstest -o vers=4,minorversion=1,sec=sys
-   ```
-   E poi creare una directory logica sul database Oracle: `CREATE DIRECTORY DATA_PUMP_DIR_NFS AS '/nfstest';`
+Il documento ufficiale Oracle "Oracle AI Database@Azure" descrive un target ospitato su Azure, ma molti concetti e parametri (NFS, Docker) sono preziosissimi anche quando Azure funge solo da "Source".
 
-2. **Lato Target (Autonomous su Azure):** Usa i package nativi OCI/Azure per agganciare la share NFS direttamente dentro ADB:
-   ```sql
-   BEGIN
-     DBMS_CLOUD_ADMIN.ATTACH_FILE_SYSTEM(
-       file_system_name => 'AZUREFILES',
-       file_system_location => 'odaamigration.file.core.windows.net:/odaamigration/testmigration',
-       directory_name => 'FSS_DIR',
-       description => 'Attach Azure Files',
-       params => JSON_OBJECT('nfs_version' value 4)
-     );
-   END;
-   /
-   ```
+### 5.1 Trasporto Dati e Storage
+Quando si sposta una mole di dati da Azure a OCI, ci sono due approcci per ZDM:
+1. **Object Storage (Consigliato per Cross-Cloud):** La VM su Azure (Source) si collega a Internet o via tunnel VPN/FastConnect per caricare i dump sul Bucket OCI. Si usa `DATA_TRANSFER_MEDIUM=OSS` e ZDM gestisce l'upload tramite le chiavi API (`OCIAUTHENTICATIONDETAILS_*`).
+2. **NFS Cross-Cloud (Tramite VPN):** Se hai un collegamento di rete diretto (FastConnect/ExpressRoute) tra Azure e OCI, puoi montare una share NFS (es. Azure Files o OCI File Storage) su **entrambi** i mondi. ZDM sposterà i dump senza usare chiamate REST OCI, basandosi solo su mount point locali. 
+   - *Parametro ZDM:* `DATA_TRANSFER_MEDIUM=NFS`
 
-### 5.2 GoldenGate Hub su Docker
-Se utilizzi una VM Azure (IaaS) per ospitare l'Hub GoldenGate, il metodo più rapido e supportato è usare l'immagine Docker ufficiale di Oracle.
+### 5.2 GoldenGate Hub su Docker (Lato Azure)
+Per abbattere i costi e ottimizzare il traffico di replica, è consigliato far girare il GoldenGate Hub (Microservices) su una VM IaaS direttamente in Azure (vicino alla sorgente). Il metodo più rapido e supportato è l'uso dell'immagine Docker ufficiale di Oracle.
 ```bash
 sudo docker load < ./ora21c-2113000.tar
 sudo docker run --name ogg2113 -p 443:443 docker.io/oracle/goldengate:21.13.0.0.0
 ```
-Affinché ZDM riesca a configurare i flussi, dovrai poi entrare nel container (`docker exec -it ogg2113 /bin/bash`) e copiare al suo interno sia il Wallet dell'Autonomous Database (nella directory `/u02/Deployment/etc/adb`) sia l'Instant Client.
+Affinché ZDM e GoldenGate comunichino con l'Autonomous Database in OCI, dovrai entrare nel container Azure (`docker exec -it ogg2113 /bin/bash`) e copiare al suo interno sia il Wallet (`/u02/Deployment/etc/adb`) sia l'Instant Client.
 
-### 5.3 Parametri Esclusivi `.rsp` per Database@Azure
-Se non c'è connettività verso gli endpoint REST pubblici di OCI (es. traffico vincolato esclusivamente alla VNet Azure locale), si omettono tutte le chiavi `OCIAUTHENTICATIONDETAILS_*` nel file `.rsp` e si forza un "Local Data Pump" via NFS.
-
-Parametri vitali per questo Use Case:
-```ini
-DATA_TRANSFER_MEDIUM=NFS
-DATAPUMPSETTINGS_EXPORTDIRECTORYOBJECT_NAME=DATA_PUMP_DIR_NFS
-DATAPUMPSETTINGS_IMPORTDIRECTORYOBJECT_NAME=FSS_DIR
-
-# Dettagli Target se l'endpoint OCI non è raggiungibile (ZDM 26)
-TARGETDATABASE_DBTYPE=ADBCC
-TARGETDATABASE_CONNECTIONDETAILS_HOST=example.adb.us-ashburn-1.oraclecloud.com
-TARGETDATABASE_CONNECTIONDETAILS_PORT=1522
-TARGETDATABASE_CONNECTIONDETAILS_SERVICENAME=adbzdm_high
-```
+### 5.3 Il parametro ADBCC (Per Ambienti Disconnessi)
+Nel documento tecnico Oracle appare il parametro `TARGETDATABASE_DBTYPE=ADBCC`. 
 > [!IMPORTANT]
-> Quando `TARGETDATABASE_DBTYPE` è settato a `ADBCC`, ZDM sa che si trova in un ambiente blindato (es. Azure o Cloud@Customer) e non cercherà di fare chiamate API Cloud per gestire i file. Si fiderà ciecamente delle share NFS montate (`FSS_DIR`).
+> Usa `ADBCC` **solo** se il tuo Autonomous Database è di tipo Cloud@Customer (on-prem) o ospitato su Azure (Oracle Database@Azure), ovvero in contesti "disconnessi" in cui la VM ZDM non ha accesso a Internet per interrogare le API REST pubbliche del cloud OCI per orchestrare lo storage.
+> Se il tuo target è un Autonomous Database nativo su OCI (raggiungibile via Internet o NAT Gateway), **NON USARE** `ADBCC`, ma usa i classici parametri `TARGETDATABASE_OCID` e `OCIAUTHENTICATIONDETAILS_*`.
