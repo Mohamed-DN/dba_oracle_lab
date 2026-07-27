@@ -78,10 +78,40 @@ sudo /u01/app/oraInventory/orainstRoot.sh
 
 ---
 
-## 3. Creazione del Service Manager e del Deployment
+## 3. Creazione del Service Manager e del Deployment (Utente `ogg`)
 
 L'installazione dei binari (Fase 2) non avvia alcun servizio. Per utilizzare GoldenGate 23ai, devi inizializzare il **Service Manager** (il coordinatore Web) e creare un **Deployment** (l'istanza di replica).
 
-Questo si fa lanciando il tool grafico/silenzioso `oggca.sh` (Oracle GoldenGate Configuration Assistant).
+Questo si fa lanciando il tool grafico `oggca.sh` (Oracle GoldenGate Configuration Assistant).
 
-*... (Sezione in costruzione: verrà popolata nella Fase 3 del lab) ...*
+1. Assicurati di essere loggato come `ogg` con il forwarding X11 attivo.
+2. Lancia il Configuration Assistant:
+   ```bash
+   cd /u01/app/ogg/bin
+   ./oggca.sh
+   ```
+
+### Schermate del Configuration Assistant (GUI)
+
+Quando si apre l'assistente, segui questi step:
+1. **Service Manager:** Scegli "Add New Service Manager".
+2. **Directories:** 
+   - *Deployment Home:* `/u02/deployments`
+3. **Register Service Manager:**
+   - *Administrator User:* `oggadmin` (Questo è l'utente Web, non l'utente OS o DB).
+   - *Password:* Scegli una password (es. `OggAdmin_2026`).
+   - *Port:* `7300` (Porta di default del Service Manager).
+4. **Add Deployment:**
+   - *Deployment Name:* `zdm_hub`
+   - *Software Location:* `/u01/app/ogg`
+5. **Deployment Details:**
+   - *Administrator:* Usa lo stesso `oggadmin`.
+   - *Port (Administration Server):* `7301`
+   - *Environment Variables:* Aggiungi `ORACLE_HOME` se il database è sulla stessa macchina (ma nel nostro lab il DB è su `rac1`, quindi puoi lasciare vuoto o mettere il path del client Oracle).
+
+Clicca su **Finish**. L'assistente avvierà i demoni di GoldenGate.
+
+### Verifica Finale
+Apri un browser (dal tuo PC o dalla VM) e vai su:
+**`https://<IP_ZDM_NODE>:7300`**
+Fai il login con `oggadmin` e vedrai la maestosa console Web di GoldenGate Microservices 23ai!
