@@ -154,6 +154,8 @@ Ecco i campi da compilare:
    *Perché:* Il Service Manager (porta `7300`) è il "portinaio" generale dell'edificio GoldenGate. Questi 4 servizi (Administration, Distribution, Receiver, Performance) sono i server web specifici per l'ufficio `zdm_hub`. Ogni deployment avrà un set di 4 porte dedicate.
 4. **Data Store Type:** Lascia `BDB` (Berkeley DB). È il database interno leggero che GoldenGate usa per salvarsi i metadati di configurazione.
 5. **Replication Options (TNS_ADMIN):** Digita `/u02`.
-   *Perché:* L'installer 23ai (a differenza delle vecchie versioni) pretende obbligatoriamente che tu gli indichi una cartella in cui, in futuro, andrai a mettere il file `tnsnames.ora` per connetterti al database. Se lo lasci vuoto, ti darà l'errore `INS-85077`. Inserendo `/u02` (che è la nostra cartella dati che abbiamo già creato) lo facciamo felice. Le altre opzioni (Security, Replication Schema) lasciale vuote.
+   *Perché:* L'installer 23ai pretende obbligatoriamente che tu gli indichi una cartella in cui, in futuro, andrai a mettere il file `tnsnames.ora`. Inserendo `/u02` evitiamo l'errore `INS-85077`.
+6. **Replication Schema:** Digita `ggadmin`.
+   *Perché:* Oracle 23ai ti obbliga a dichiarare subito come si chiamerà l'utente del database che GoldenGate userà per salvarsi le sue tabelle interne (checkpoint, heartbeat). Anche se il database non l'abbiamo ancora toccato, scriviamo `ggadmin` per evitare l'errore `INS-85039`. ZDM andrà poi a creare effettivamente questo utente sul DB. Le opzioni di Security lasciale vuote.
 
 Premi **Next >**. Ti chiederà di nuovo username e password per il Deployment: inserisci di nuovo `oggadmin` e la password scelta prima (`OggAdmin_2026`) disabilitando la Strong Policy, e continua fino alla fine (Summary -> **Finish**).
