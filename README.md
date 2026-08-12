@@ -72,14 +72,15 @@ mindmap
 ---
 
 ## 📂 Struttura del Repository (Come orientarsi)
-Questo laboratorio è diviso in 4 macro-aree principali per facilitare la navigazione:
+Questo laboratorio è diviso in 5 macro-aree principali per facilitare la navigazione:
 
 *   🛠️ **`01_operations/`**: Il tuo "Pronto Soccorso". Contiene script pronti all'uso, Cheat Sheets rapidi e i Runbook per risolvere gli incidenti di produzione (es. database bloccato, performance degradate). **(Da usare durante le emergenze)**.
 *   🧠 **`02_core_dba/`**: La libreria della conoscenza Enterprise. Contiene tutte le guide approfondite e le procedure architetturali (Data Guard, Backup RMAN, Patching, Tuning, Security, GoldenGate). **(Da usare per studiare e progettare)**.
 *   🏗️ **`03_infra_lab/`**: Le guide per preparare infrastruttura, macchine virtuali, cloud e container e per installare Oracle. Il codice eseguibile Vagrant e Terraform vive nelle directory dedicate alla radice. **(Da usare per tirare su il lab)**.
 *   🎓 **`04_governance_learning/`**: Regole d'oro, standard architetturali, roadmap di studio per Junior/Senior e preparazione per le certificazioni OCP. **(Da usare per la crescita professionale)**.
+*   🔥 **`05_Real_World_Cases/`**: Archivio di casi di studio reali, disastri, emergenze e recovery complessi (es. database crash, limitazioni di licenza) derivati dall'esperienza diretta in produzione. **(Playbook da usare in casi disperati)**.
 
-Le quattro macro-aree precedenti vivono sotto `docs/`. Le directory operative alla radice
+Le cinque macro-aree precedenti vivono sotto `docs/`. Le directory operative alla radice
 completano il repository:
 
 | Directory | Contenuto |
