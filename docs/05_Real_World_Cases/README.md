@@ -13,7 +13,7 @@ Ogni documento è strutturato con la regola del "copia-incolla": deve permettere
 │
 ├── README.md                                          <-- Questo indice
 ├──  08_2026_Rescue_Oracle_XE_12GB_Limit.md             <-- Recupero "a cuore aperto" di XE oltre i limiti fisici
-└── 
+└──  Oracle_Standalone_ASM_UDEV_Post_Migration.md
 ```
 
 ---
