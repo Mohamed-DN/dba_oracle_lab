@@ -17,6 +17,7 @@
 - 🧭 **Start Here:** [mappa operativa rapida](./START_HERE.md)
 - 🟢 **Fondamenti:** [Indice area](./docs/04_governance_learning/01_fondamenti_teorici/README.md)
 - 🏛️ **Core Lab 0→8:** [Indice area](./docs/03_infra_lab/02_oracle_installation_asm/README.md) · [Vagrant Lab](./vagrant_rac_dataguard/README.md)
+- 🚨 **Disaster Recovery Lab:** [Recupero RAC 19c dopo perdita totale ASM](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md)
 - 🔵 **High Availability:** [Indice area](./docs/02_core_dba/04_high_availability_and_rac/README.md)
 - **SHAMS PROJECT Data Guard:** [blueprint S1-S4 e SOP PEYTECH](./docs/02_core_dba/04_high_availability_and_rac/SHAMS_PROJECT/README.md)
 - 🟡 **Backup & Recovery:** [Indice area](./docs/02_core_dba/02_backup_and_recovery/README.md) · [Standard `/backup/rman`](./docs/02_core_dba/02_backup_and_recovery/GUIDA_STANDARD_DIRECTORY_BACKUP_RMAN_19C.md)
@@ -245,6 +246,7 @@ docs/
 |   |   +-- GUIDA_FASE0_SETUP_MACCHINE.md
 |   |   +-- GUIDA_FASE1_PREPARAZIONE_OS.md
 |   |   +-- GUIDA_FASE2_GRID_E_RAC.md
+|   |   +-- GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md
 |   |   +-- GUIDA_FASE8_TEST_VERIFICA.md
 |   |   +-- GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md
 |   |   +-- GUIDA_PERCORSO_LITE_SINGLE_NODE.md
@@ -388,6 +390,16 @@ Segui le fasi **in ordine**. Ogni fase dipende dalla precedente.
 | 8 | **Test Verifica** | [GUIDA_FASE8](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_FASE8_TEST_VERIFICA.md) | Test end-to-end, stress, node crash | 2-3h |
 
 > **Tempo totale stimato**: ~31-32 ore di lavoro pratico.
+
+### Disaster Recovery — Oracle RAC 19c
+**Lab completato:** recupero di un cluster Oracle RAC a due nodi dopo la perdita totale dello storage ASM.
+- Ricostruzione Grid Infrastructure, OCR e Voting Disks
+- Ripristino RMAN e OPEN RESETLOGS
+- Ricostruzione SPFILE e password file condivisi
+- Validazione backup e checksum SHA-256
+- Ripristino RAC con entrambe le istanze OPEN
+
+[Leggi il Disaster Recovery completo](./docs/03_infra_lab/02_oracle_installation_asm/GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md)
 
 ---
 

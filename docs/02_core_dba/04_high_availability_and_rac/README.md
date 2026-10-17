@@ -10,6 +10,7 @@
 - Produzione non-CDB RAC: [Produzione RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md)
 - Lab guidato RAC/Data Guard: parti da [Fase 3 RAC Standby](./GUIDA_FASE3_RAC_STANDBY.md), poi [Fase 4 Broker](./GUIDA_FASE4_DATAGUARD_DGMGRL.md) e [Fase 4B Observer FSFO](./GUIDA_FASE4B_FSFO_OBSERVER.md)
 - Prerequisito RMAN/Data Guard: [CATRMAN recovery catalog](../02_backup_and_recovery/GUIDA_RMAN_CATALOGO_CATRMAN_19C.md)
+- Disaster Recovery RAC: [Disaster Recovery RAC 19c — Perdita Totale ASM (Lab SOLE)](../../03_infra_lab/02_oracle_installation_asm/GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md)
 - Operativita dopo setup: [Switchover](./GUIDA_SWITCHOVER_COMPLETO.md), [Failover/Reinstate](./GUIDA_FAILOVER_E_REINSTATE.md), [Flashback](./GUIDA_FLASHBACK_DATABASE.md)
 
 Convenzione Broker: `DR_<DB_NAME><ENV>_CONF`, senza sito PE o SE nel nome.
@@ -33,6 +34,7 @@ Usa `DR_RACDB_CONF` per il core lab e `DR_M24SHAMSC_CONF` per SHAMS collaudo.
 | [Produzione: RAC Data Guard Non-CDB](./GUIDA_PRODUZIONE_RAC_DATAGUARD_NON_CDB.md) | RAC primary + standby fisico 19c non-CDB |
 | [Data Guard Far Sync](./GUIDA_FAR_SYNC_DATAGUARD.md) | Zero Data Loss a distanza geografica con istanza Far Sync |
 | [Application Continuity & TAF](./GUIDA_APPLICATION_CONTINUITY_TAF.md) | Configurazione failover client trasparente lato DB e pool JDBC/UCP |
+| [Disaster Recovery RAC 19c](../../03_infra_lab/02_oracle_installation_asm/GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md) | Recovery completo dopo perdita totale storage ASM, rebuild GI/OCR e restore RMAN |
 
 > ⚠️ Prima di testare failover: spegni tutte le VM e fai backup della cartella VirtualBox VMs.
 
