@@ -33,6 +33,7 @@ Il percorso contiene dieci checkpoint: `0`, `1`, `2`, `3`, `4`, `4B`, `5`,
 ## Checklist e percorsi alternativi
 
 - [Obiettivi e checklist Fasi 0→8](./OBIETTIVI_E_CHECKLIST_FASI_0_8.md)
+- [Disaster Recovery RAC 19c — Perdita Totale ASM (Lab SOLE)](./GUIDA_DR_RAC19C_PERDITA_TOTALE_ASM_SOLE.md): ricostruzione completa Grid Infrastructure, OCR/Voting, ASM, ripristino RMAN e riavvio RAC a 2 nodi dopo perdita totale delle LUN condivise.
 - [Percorso Oracle Linux 8 e ASMLib v3](./GUIDA_PERCORSO_ORACLE_LINUX8_ASMLIB_V3.md)
 - [Percorso Lite Single Node](./GUIDA_PERCORSO_LITE_SINGLE_NODE.md)
 - [Setup SSH Keys RAC](./GUIDA_SSH_KEYS_RAC.md)
