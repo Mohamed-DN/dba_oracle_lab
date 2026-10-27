@@ -1,12 +1,16 @@
 # 🏛️ Oracle RAC + Data Guard — Enterprise DBA Lab
 
+Laboratorio personale e raccolta di procedure per studiare, riprodurre guasti e verificare recuperi Oracle. Il percorso principale costruisce RAC e Data Guard; le sezioni operative collegano sintomi, diagnostica e procedure. I risultati di laboratorio valgono per gli ambienti e le prove descritti, non qualificano automaticamente un altro sistema.
+
+**Primo accesso:** [START_HERE](START_HERE.md). **Studio:** segui il [percorso per esami e carriera](docs/04_governance_learning/03_esami_e_carriera/README.md). **Un problema concreto:** apri l'[indice dei runbook](docs/01_operations/02_runbooks_incidenti/README.md).
+
 [![Oracle 19c](https://img.shields.io/badge/Oracle-19c-red?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
 [![CI/CD](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/ci.yml)
 [![Security Gates](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/security-gates.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/security-gates.yml)
 [![Release Governance](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/release-governance.yml/badge.svg?branch=master)](https://github.com/Mohamed-DN/dba_oracle_lab/actions/workflows/release-governance.yml)
 [![Ansible](https://img.shields.io/badge/Ansible-Automation-black?logo=ansible)](./automation/)
 [![Scripts](https://img.shields.io/badge/Scripts-1000%2B-blue)](./docs/01_operations/04_libreria_script_completa/)
-[![MAA Gold](https://img.shields.io/badge/MAA_Gold-98%25-green)](./docs/04_governance_learning/03_esami_e_carriera/VALIDAZIONE_BEST_PRACTICES.md)
+[![Checklist MAA](https://img.shields.io/badge/MAA-checklist-blue)](./docs/04_governance_learning/03_esami_e_carriera/VALIDAZIONE_BEST_PRACTICES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 > Guida pratica e operativa per costruire e gestire un laboratorio Oracle RAC + Data Guard.
@@ -671,7 +675,7 @@ Regole pratiche:
 
 ### Ansible Automation (`automation/`)
 
-> **16 playbook production-grade** + ruoli modulari — [Indice completo](./automation/README.md)
+> **16 playbook per il laboratorio** + ruoli modulari — [Indice completo](./automation/README.md)
 
 | Playbook | Cosa Fa |
 |---|---|
@@ -780,3 +784,4 @@ Regole pratiche:
 <p align="center">
   <sub>Built with ☕ and <code>ORA-00001</code> errors — <a href="./LICENSE">MIT License</a> — <a href="./CONTRIBUTING.md">Contributing</a></sub>
 </p>
+
