@@ -12,7 +12,7 @@ Se non sai da dove partire, apri prima la [mappa operativa START_HERE](../START_
 
 ## 🗺️ Struttura del Repository
 
-Il repository è diviso in **4 Macro-Aree** pensate per l'operatività quotidiana del DBA:
+Il repository è diviso in **5 Macro-Aree** pensate per l'operatività quotidiana del DBA:
 
 ### 🚨 1. OPERATIONS (Uso Quotidiano & Incidenti)
 Le risorse di pronto intervento e uso giornaliero. Quello che ti serve "al volo" durante un ticket.
@@ -57,6 +57,13 @@ Materiale didattico, concetti teorici, roadmap professionali e standard aziendal
 | [`04_governance_learning/02_enterprise_standards`](./04_governance_learning/02_enterprise_standards/) | MAA Scorecard, Troubleshooting Decision Tree, Release Policy, Production Profile. |
 | [`04_governance_learning/03_esami_e_carriera`](./04_governance_learning/03_esami_e_carriera/) | Checklist per attività DBA (Junior/Mid/Senior), guide per esami OCP, transizione da lab a produzione. |
 
+### 🔥 5. REAL WORLD CASES (Incidenti Reali & Casi Studio)
+Knowledge base operativa di disastri, post-mortem ed edge-case complessi derivati dall'esperienza diretta in produzione.
+
+| Directory | Contenuto Principale |
+|---|---|
+| [`05_Real_World_Cases`](./05_Real_World_Cases/) | Casi reali di produzione: recupero Oracle XE bloccato sul limite 12 GB, recovery storage ASM + UDEV post-migrazione data center (Zerto/SRM). |
+
 ---
 
 ## 🚀 Ricerca Rapida (Terminale)
@@ -77,4 +84,4 @@ grep -irl "dba_tablespaces" docs/01_operations/04_libreria_script_completa/
 > **Nota:** Questo repository è mantenuto come *Living Document*. Ogni incidente risolto in produzione dovrebbe generare un aggiornamento nella sezione `runbooks_incidenti` o un nuovo script in `libreria_script_completa`.
 
 ---
-*Ultimo aggiornamento della struttura: Maggio 2026*
+*Ultimo aggiornamento della struttura: Ottobre 2026*

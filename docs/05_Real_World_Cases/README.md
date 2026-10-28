@@ -6,14 +6,24 @@ A differenza dei classici Runbook teorici o procedurali (che si trovano in `01_o
 
 Ogni documento è strutturato con la regola del "copia-incolla": deve permettere a un sistemista di uscire da un'emergenza critica senza dover studiare, semplicemente applicando la procedura testata e blindata.
 
-## 🌳 Alberatura e Contenuti
+---
+
+## 📂 Casi Studio Disponibili
+
+| Documento | Ambito | Descrizione |
+|---|---|---|
+| [`08_2026_Rescue_Oracle_XE_12GB_Limit.md`](./08_2026_Rescue_Oracle_XE_12GB_Limit.md) | Oracle XE / Limiti Storage | Recupero "a cuore aperto" di Oracle XE bloccato oltre il tetto fisico dei 12 GB. |
+| [`10_2026_Oracle_Standalone_ASM_UDEV_Post_Migration.md`](./10_2026_Oracle_Standalone_ASM_UDEV_Post_Migration.md) | ASM / UDEV / Migrazione | Runbook operativo post-migrazione (Zerto/SRM/cold move): riallineamento WWID dischi, regole UDEV e ripristino istanza ASM/Oracle Restart. |
+
+---
+
+## 🌲 Alberatura e Contenuti
 
 ```text
 05_Real_World_Cases/
-│
 ├── README.md                                          <-- Questo indice
-├──  08_2026_Rescue_Oracle_XE_12GB_Limit.md             <-- Recupero "a cuore aperto" di XE oltre i limiti fisici
-└──  10_2026_Oracle_Standalone_ASM_UDEV_Post_Migration.md
+├── 08_2026_Rescue_Oracle_XE_12GB_Limit.md             <-- Recupero "a cuore aperto" di XE oltre i limiti fisici
+└── 10_2026_Oracle_Standalone_ASM_UDEV_Post_Migration.md <-- Recovery ASM + UDEV post-migrazione data center
 ```
 
 ---
